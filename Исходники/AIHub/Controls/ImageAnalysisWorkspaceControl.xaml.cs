@@ -46,6 +46,11 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         InitializeComponent();
     }
 
+    public ImageAnalysisWorkspaceControl(AIHub.Services.PromptPairStore promptStore) : this()
+    {
+        _promptStore = promptStore;
+    }
+
     public event EventHandler? BackRequested;
     public event EventHandler? SingleSubscenarioRequested;
     public event EventHandler? SelectImageRequested;
@@ -68,11 +73,13 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
     public void Configure(
         string bundleId,
         Func<string, string> localize,
-        Func<string, object[], string> format)
+        Func<string, object[], string> format,
+        Func<string>? promptLanguage = null)
     {
         _bundleId = bundleId;
         _localize = localize;
         _format = format;
+        _promptLanguage = promptLanguage ?? (() => "ru");
         ApplyLocalization();
     }
 
@@ -84,7 +91,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         StyleComboBox.IsEnabled = !readOnly;
         LengthComboBox.IsEnabled = !readOnly;
         FormComboBox.IsEnabled = !readOnly;
-        WishesTextBox.IsReadOnly = readOnly;
+        RefreshPromptControls();
         RevisionTextBox.IsReadOnly = readOnly;
         SpeechModeGrid.IsEnabled = !readOnly;
         VoiceSettingsToggleButton.IsEnabled = !readOnly;
@@ -170,7 +177,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         SetComboByTag(StyleComboBox, session.Settings.Style);
         SetComboByTag(LengthComboBox, session.Settings.Length);
         SetComboByTag(FormComboBox, session.Settings.Form);
-        WishesTextBox.Text = session.Settings.Wishes;
+        LoadPromptSettings(session.Settings);
         SetStep(ImageAnalysisLiterarySteps.Settings);
         ApplyFile(session.File);
         RenderEvents(session);
@@ -541,8 +548,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         StyleLabelText.Text = _localize("ImageAnalysis.Workspace.Settings.Style");
         LengthLabelText.Text = _localize("ImageAnalysis.Workspace.Settings.Length");
         FormLabelText.Text = _localize("ImageAnalysis.Workspace.Settings.Form");
-        WishesLabelText.Text = _localize("ImageAnalysis.Workspace.Settings.Wishes");
-        WishesTextBox.ToolTip = _localize("ImageAnalysis.Workspace.Settings.WishesHint");
+        RefreshPromptControls();
         GenerateButton.Content = _localize("ImageAnalysis.Workspace.Settings.Generate");
         SetComboText(AccuracyComboBox, "ImageAnalysis.Workspace.Settings.Accuracy.");
         SetComboText(StyleComboBox, "ImageAnalysis.Workspace.Settings.Style.");
@@ -1076,6 +1082,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         CompleteButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
         NewAnalysisButton.IsEnabled = enabled && !_readOnlyMode;
         HomeButton.IsEnabled = enabled;
+        RefreshPromptControls(enabled);
     }
 
     private ImageAnalysisLiterarySettings ReadSettings() => new()
@@ -1084,7 +1091,9 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         Style = GetSelectedTag(StyleComboBox, ImageAnalysisLiteraryStyles.Atmospheric),
         Length = GetSelectedTag(LengthComboBox, ImageAnalysisTextLengths.Standard),
         Form = GetSelectedTag(FormComboBox, ImageAnalysisTextForms.WithTitle),
-        Wishes = WishesTextBox.Text.Trim()
+        Wishes = _wishes.Trim(),
+        PromptMode = SupportsCustomPrompts && _customPromptMode ? PromptModes.Custom : PromptModes.Standard,
+        CustomPrompts = _selectedPromptPair is { } pair ? pair with { } : null
     };
 
     private void UserControl_SizeChanged(object sender, SizeChangedEventArgs e)

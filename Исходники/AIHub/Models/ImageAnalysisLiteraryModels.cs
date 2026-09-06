@@ -84,6 +84,11 @@ public sealed class ImageAnalysisLiterarySettings
     public string Form { get; set; } = ImageAnalysisTextForms.WithTitle;
 
     public string Wishes { get; set; } = string.Empty;
+
+    public string PromptMode { get; set; } = PromptModes.Standard;
+
+    // Immutable snapshot: changes to the preset library must not rewrite a saved work.
+    public PromptPairPreset? CustomPrompts { get; set; }
 }
 
 public sealed class ImageAnalysisFilePassport

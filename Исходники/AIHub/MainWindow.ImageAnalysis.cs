@@ -367,7 +367,7 @@ public partial class MainWindow
             return;
         }
         _imageAnalysisWorkspaceReadOnly = !snapshot.CanStart;
-        ImageAnalysisWorkspacePage.Configure(bundleId, L, LF);
+        ImageAnalysisWorkspacePage.Configure(bundleId, L, LF, () => _appSettings.LanguageCode);
         ImageAnalysisWorkspacePage.SetReadOnlyMode(_imageAnalysisWorkspaceReadOnly);
         HideStandardPages();
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;

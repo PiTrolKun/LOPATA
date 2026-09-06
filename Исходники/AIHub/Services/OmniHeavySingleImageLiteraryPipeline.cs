@@ -49,6 +49,7 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
         ArgumentNullException.ThrowIfNull(passport);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(session);
+        OmniPromptPairAdapter.Validate(settings);
         await EnsureWorkerReadyAsync(session, log, progress, cancellationToken).ConfigureAwait(false);
         EnsureLanguage(session, settings.LanguageCode);
         ApplyProvenance(session);

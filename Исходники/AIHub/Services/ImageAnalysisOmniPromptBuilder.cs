@@ -7,6 +7,8 @@ public static class ImageAnalysisOmniPromptBuilder
     public static string BuildObservationPrompt(ImageAnalysisLiterarySettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
+        OmniPromptPairAdapter.Validate(settings);
+        if (settings.PromptMode == PromptModes.Custom) return OmniPromptPairAdapter.Build(settings, compose: false);
         var isEnglish = IsEnglish(settings.LanguageCode);
         var focus = string.IsNullOrWhiteSpace(settings.Wishes)
             ? string.Empty
@@ -20,6 +22,8 @@ public static class ImageAnalysisOmniPromptBuilder
     public static string BuildComposePrompt(ImageAnalysisLiterarySettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
+        OmniPromptPairAdapter.Validate(settings);
+        if (settings.PromptMode == PromptModes.Custom) return OmniPromptPairAdapter.Build(settings, compose: true);
         var isEnglish = IsEnglish(settings.LanguageCode);
         var template = isEnglish ? ComposeEnglish : ComposeRussian;
         return template

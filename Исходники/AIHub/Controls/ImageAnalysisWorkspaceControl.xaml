@@ -216,13 +216,27 @@
 
                     <StackPanel x:Name="SettingsPanel" Visibility="Collapsed">
                         <TextBlock x:Name="SettingsPanelTitleText" FontSize="{DynamicResource UiFont24}" FontWeight="SemiBold" /><TextBlock x:Name="SettingsPanelDescriptionText" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0" />
-                        <Grid Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <Grid x:Name="StandardSettingsGrid" Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Grid.Row="0" Grid.Column="0"><TextBlock x:Name="AccuracyLabelText" FontWeight="SemiBold" /><ComboBox x:Name="AccuracyComboBox" Height="36" Margin="0,6,0,0" SelectedIndex="1"><ComboBoxItem Tag="strict" /><ComboBoxItem Tag="balanced" /><ComboBoxItem Tag="free" /></ComboBox></StackPanel>
                             <StackPanel Grid.Row="0" Grid.Column="2"><TextBlock x:Name="StyleLabelText" FontWeight="SemiBold" /><ComboBox x:Name="StyleComboBox" Height="36" Margin="0,6,0,0" SelectedIndex="1"><ComboBoxItem Tag="neutral" /><ComboBoxItem Tag="atmospheric" /><ComboBoxItem Tag="dramatic" /><ComboBoxItem Tag="fairy_tale" /></ComboBox></StackPanel>
                             <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0"><TextBlock x:Name="LengthLabelText" FontWeight="SemiBold" /><ComboBox x:Name="LengthComboBox" Height="36" Margin="0,6,0,0" SelectedIndex="1"><ComboBoxItem Tag="brief" /><ComboBoxItem Tag="standard" /><ComboBoxItem Tag="detailed" /></ComboBox></StackPanel>
                             <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0"><TextBlock x:Name="FormLabelText" FontWeight="SemiBold" /><ComboBox x:Name="FormComboBox" Height="36" Margin="0,6,0,0" SelectedIndex="1"><ComboBoxItem Tag="continuous" /><ComboBoxItem Tag="with_title" /></ComboBox></StackPanel>
                         </Grid>
-                        <TextBlock x:Name="WishesLabelText" FontWeight="SemiBold" Margin="0,12,0,0" /><TextBox x:Name="WishesTextBox" MinHeight="64" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Padding="9" Margin="0,6,0,0" /><Button x:Name="GenerateButton" MinWidth="210" Height="42" HorizontalAlignment="Right" Style="{DynamicResource PrimaryButtonStyle}" Margin="0,14,0,0" Click="GenerateButton_Click" />
+                        <DockPanel Margin="0,16,0,0">
+                            <Button x:Name="WishesButton" DockPanel.Dock="Right" MinWidth="0" Width="44" Height="38" Padding="4" Margin="12,0,0,0" Style="{DynamicResource SecondaryButtonStyle}" Click="WishesButton_Click" />
+                            <WrapPanel x:Name="PromptModePanel">
+                                <Button x:Name="StandardPromptButton" MinHeight="38" Margin="0,0,8,0" Click="StandardPromptButton_Click" />
+                                <Button x:Name="CustomPromptButton" MinHeight="38" Click="CustomPromptButton_Click" />
+                            </WrapPanel>
+                        </DockPanel>
+                        <Grid x:Name="CustomPromptPanel" Margin="0,10,0,0" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <ComboBox x:Name="PromptPairComboBox" MinHeight="36" DisplayMemberPath="Name" SelectionChanged="PromptPairComboBox_SelectionChanged" />
+                            <Button x:Name="CreatePromptPairButton" Grid.Column="1" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" MinWidth="0" Width="42" Height="38" Padding="4" Margin="8,0,0,0" Style="{DynamicResource SecondaryButtonStyle}" Click="CreatePromptPairButton_Click" />
+                            <Button x:Name="ManagePromptPairsButton" Grid.Column="2" Content="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" MinWidth="0" Width="42" Height="38" Padding="4" Margin="8,0,0,0" Style="{DynamicResource SecondaryButtonStyle}" Click="ManagePromptPairsButton_Click" />
+                        </Grid>
+                        <TextBlock x:Name="PromptPairStatusText" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <Button x:Name="GenerateButton" MinWidth="210" Height="42" HorizontalAlignment="Right" Style="{DynamicResource PrimaryButtonStyle}" Margin="0,14,0,0" Click="GenerateButton_Click" />
                     </StackPanel>
 
                     <Grid x:Name="ResultEditorPanel" Visibility="Collapsed">

@@ -176,12 +176,33 @@ public partial class MainWindow
         }
     }
 
+    private void ImageAnalysisWorkspacePage_DraftSettingsChanged(object? sender, EventArgs e)
+    {
+        if (_imageAnalysisLiterarySession is null) return;
+        try { _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings); }
+        catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
+        { StatusText.Text = L("PromptPairs.StorageError"); }
+    }
+
     private async void ImageAnalysisWorkspacePage_GenerateRequested(
         object? sender,
         ImageAnalysisSettingsRequestedEventArgs e)
     {
         if (_imageAnalysisLiterarySession?.File is null)
         {
+            return;
+        }
+
+        try
+        {
+            if (e.Settings.PromptMode != PromptModes.Standard
+                && _imageAnalysisLiterarySession.BundleId != ImageAnalysisBundleCatalog.HeavyId)
+                throw new System.IO.InvalidDataException("PromptPairs.Incompatible");
+            OmniPromptPairAdapter.Validate(e.Settings);
+        }
+        catch (System.IO.InvalidDataException ex)
+        {
+            StatusText.Text = L(ex.Message);
             return;
         }
 

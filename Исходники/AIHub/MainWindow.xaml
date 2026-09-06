@@ -2255,6 +2255,7 @@
             SingleSubscenarioRequested="ImageAnalysisWorkspacePage_SingleSubscenarioRequested"
             SelectImageRequested="ImageAnalysisWorkspacePage_SelectImageRequested"
             GenerateRequested="ImageAnalysisWorkspacePage_GenerateRequested"
+            DraftSettingsChanged="ImageAnalysisWorkspacePage_DraftSettingsChanged"
             ReviseRequested="ImageAnalysisWorkspacePage_ReviseRequested"
             PreviewRequested="ImageAnalysisWorkspacePage_PreviewRequested"
             ExportRequested="ImageAnalysisWorkspacePage_ExportRequested"
