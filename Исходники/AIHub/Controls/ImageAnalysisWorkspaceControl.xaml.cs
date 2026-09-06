@@ -87,7 +87,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
     public void SetReadOnlyMode(bool readOnly)
     {
         _readOnlyMode = readOnly;
-        readOnly |= OmniSessionCompatibility.IsLegacyBeta(_session);
+        readOnly |= OmniSessionCompatibility.IsRetiredModelSession(_session);
         SetInteractionEnabled(!_isBusy);
         AccuracyComboBox.IsEnabled = !readOnly;
         StyleComboBox.IsEnabled = !readOnly;
@@ -175,7 +175,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
 
     public void ShowSettings(ImageAnalysisLiterarySession session)
     {
-        if ((session.ContextBlocked || OmniSessionCompatibility.IsLegacyBeta(session)) && session.GetSelectedVersion() is not null)
+        if ((session.ContextBlocked || OmniSessionCompatibility.IsRetiredModelSession(session)) && session.GetSelectedVersion() is not null)
         {
             ShowSession(session);
             return;
@@ -230,7 +230,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
             }
             return;
         }
-        SetStep(session.ContextBlocked || OmniSessionCompatibility.IsLegacyBeta(session) ? ImageAnalysisLiterarySteps.Result : session.CurrentStep == ImageAnalysisLiterarySteps.Subscenario
+        SetStep(session.ContextBlocked || OmniSessionCompatibility.IsRetiredModelSession(session) ? ImageAnalysisLiterarySteps.Result : session.CurrentStep == ImageAnalysisLiterarySteps.Subscenario
             ? ImageAnalysisLiterarySteps.Image
             : session.CurrentStep);
         ApplyFile(session.File);
@@ -1078,9 +1078,9 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
 
     private void SetInteractionEnabled(bool enabled)
     {
-        if (OmniSessionCompatibility.IsLegacyBeta(_session))
+        if (OmniSessionCompatibility.IsRetiredModelSession(_session))
             FooterStatusText.Text = _localize("ImageAnalysis.ModelChanged");
-        var editable = !_readOnlyMode && !OmniSessionCompatibility.IsLegacyBeta(_session)
+        var editable = !_readOnlyMode && !OmniSessionCompatibility.IsRetiredModelSession(_session)
             && _session?.Status != ImageAnalysisLiteraryStatuses.Completed && _session?.ContextBlocked != true;
         BackButton.IsEnabled = enabled;
         SingleScenarioButton.IsEnabled = enabled && !_readOnlyMode;
@@ -1089,11 +1089,11 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         ContinueToSettingsButton.IsEnabled = enabled && editable && _session?.File is not null;
         GenerateButton.IsEnabled = enabled && editable && _session?.ContextBlocked != true;
         ReviseButton.IsEnabled = enabled && editable && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
-        RevisionPanel.IsEnabled = !_readOnlyMode && !OmniSessionCompatibility.IsLegacyBeta(_session) && _session?.ContextBlocked != true;
+        RevisionPanel.IsEnabled = !_readOnlyMode && !OmniSessionCompatibility.IsRetiredModelSession(_session) && _session?.ContextBlocked != true;
         RevisionPanel.Opacity = RevisionPanel.IsEnabled ? 1 : 0.45;
         PreviewButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null;
         ExportButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null;
-        CompleteButton.IsEnabled = enabled && !_readOnlyMode && !OmniSessionCompatibility.IsLegacyBeta(_session) && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
+        CompleteButton.IsEnabled = enabled && !_readOnlyMode && !OmniSessionCompatibility.IsRetiredModelSession(_session) && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
         NewAnalysisButton.IsEnabled = enabled && !_readOnlyMode;
         HomeButton.IsEnabled = enabled;
         if (enabled && _session?.ContextBlocked == true)

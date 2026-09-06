@@ -13,7 +13,7 @@ public sealed class ImageAnalysisBundleInstallationService : IDisposable
 
     private static readonly string[] HeavyArtifactIds =
     [
-        ManagedModelCatalog.Qwen25OmniHeavyArtifactId
+        ManagedModelCatalog.OmniGammaArtifactId
     ];
 
     private readonly ManagedModelLibraryStore _store;

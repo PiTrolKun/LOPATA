@@ -1174,5 +1174,22 @@
     "Texts": [
       "texts/Apache-2.0.txt"
     ]
+  },
+  {
+    "Id": "model-qwen3-8-27b-ridge-37bpw",
+    "Name": "Qwen3.8-27B-Ridge 3.7 bpw + BF16 projector",
+    "Version": "486faa5f2032ff99bdc8993ade1b8fff13d1464c",
+    "Author": "Qwen; Ridge quantization by Empero",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/empero-ai/Qwen3.8-27B-Ridge-GGUF/tree/486faa5f2032ff99bdc8993ade1b8fff13d1464c",
+    "Checked": "2026-09-06",
+    "Ru": "Смешанная GGUF-квантизация Ridge и BF16 модуль изображений опубликованы Empero. Карточка указывает Apache-2.0; оригинальный LICENSE исходной Qwen3.8-27B проверен: https://huggingface.co/Qwen/Qwen3.8-27B/blob/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/LICENSE. Файлы скачиваются отдельно и не входят в установщик. При распространении соблюдайте оригинальные условия и сохраняйте необходимые уведомления. Качество и расход памяти конкретного комплекта проверяются отдельно.",
+    "En": "The Ridge mixed GGUF quantization and BF16 image module are published by Empero. The card declares Apache-2.0; the original upstream Qwen3.8-27B LICENSE was checked: https://huggingface.co/Qwen/Qwen3.8-27B/blob/1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0/LICENSE. Files are downloaded separately and are not bundled with the installer. Follow the original terms and retain required notices when redistributing. Quality and memory use of this specific bundle are evaluated separately.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "95014486033C05437AA8893FD03FCD0AD48D50E98E0B9FEB3FAC9B1FABD72783",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
   }
 ]

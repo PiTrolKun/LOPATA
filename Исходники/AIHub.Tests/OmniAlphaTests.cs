@@ -105,6 +105,7 @@ public sealed class OmniAlphaTests
     [TestMethod]
     [DataRow("light")]
     [DataRow("medium")]
+    [DataRow("heavy")]
     public async Task SharedPipeline_UsesSelectedIdentityCustomPairCheckpointAndRevision(string bundle)
     {
         var root = ManagedModelLibraryTests.CreateRoot();

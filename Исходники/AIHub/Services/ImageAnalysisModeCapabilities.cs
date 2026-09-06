@@ -11,7 +11,7 @@ public static class ImageAnalysisModeCapabilities
     {
         ImageAnalysisBundleCatalog.LightId => ImageAnalysisPipelineIds.OmniAlpha,
         ImageAnalysisBundleCatalog.MediumId => ImageAnalysisPipelineIds.OmniBeta,
-        ImageAnalysisBundleCatalog.HeavyId => ImageAnalysisPipelineIds.OmniHeavy,
+        ImageAnalysisBundleCatalog.HeavyId => ImageAnalysisPipelineIds.OmniGamma,
         _ => ImageAnalysisPipelineIds.Legacy
     };
 
@@ -19,7 +19,7 @@ public static class ImageAnalysisModeCapabilities
     {
         ImageAnalysisBundleCatalog.LightId => ManagedModelCatalog.OmniAlphaArtifactId,
         ImageAnalysisBundleCatalog.MediumId => ManagedModelCatalog.OmniBetaArtifactId,
-        ImageAnalysisBundleCatalog.HeavyId => ManagedModelCatalog.Qwen25OmniHeavyArtifactId,
+        ImageAnalysisBundleCatalog.HeavyId => ManagedModelCatalog.OmniGammaArtifactId,
         _ => ManagedModelCatalog.KimiMediumArtifactId
     };
 }

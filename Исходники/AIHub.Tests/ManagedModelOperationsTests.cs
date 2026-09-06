@@ -149,6 +149,7 @@ public sealed class ManagedModelOperationsTests
     [DataRow("core")]
     [DataRow("light")]
     [DataRow("medium")]
+    [DataRow("heavy")]
     public async Task ParallelDownload_ReusesContiguousPartialAndAssemblesExactPayload(string bundle)
     {
         var root = ManagedModelLibraryTests.CreateRoot();
@@ -166,7 +167,7 @@ public sealed class ManagedModelOperationsTests
             {
                 card.ModelArtifactId = OmniLlamaProfile.ForBundle(bundle)!.ArtifactId;
                 card.Role = ManagedModelRoles.Vision;
-                var projector = (bundle == "light" ? ManagedModelCatalog.CreateOmniAlpha(card.ModelsRoot) : ManagedModelCatalog.CreateOmniBeta(card.ModelsRoot)).Files[1];
+                var projector = (bundle == "light" ? ManagedModelCatalog.CreateOmniAlpha(card.ModelsRoot) : bundle == "medium" ? ManagedModelCatalog.CreateOmniBeta(card.ModelsRoot) : ManagedModelCatalog.CreateOmniGamma(card.ModelsRoot)).Files[1];
                 projector.SizeBytes = payload.Length;
                 projector.Sha256 = card.Files[0].Sha256;
                 card.Files.Add(projector);

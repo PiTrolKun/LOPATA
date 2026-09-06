@@ -39,7 +39,7 @@ public sealed class ImageAnalysisRecommendationServiceTests
     [TestMethod]
     public void Evaluate_TreatsExactHeavyThresholdsAsCompatible()
     {
-        var result = Evaluate(32, 24, 12, 16);
+        var result = Evaluate(32, 24, 12, 20);
 
         Assert.AreEqual(ImageAnalysisBundleCatalog.HeavyId, result.Recommendation?.Bundle.Id);
         Assert.IsTrue(result.Recommendation?.IsFullyCompatible);

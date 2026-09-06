@@ -19,10 +19,10 @@ public static class OmniLlamaProtocol
 
     public static string DescribeDeviceMap(OmniLlamaProfile profile) => JsonSerializer.Serialize(new
     {
-        model = "cuda", projector = "cuda", quantization = profile.Quantization, projectorQuantization = "F16",
+        model = "cuda", projector = "cuda", quantization = profile.Quantization, projectorQuantization = profile.ProjectorQuantization,
         sourceModel = profile.SourceModel, modelRevision = profile.Revision,
         contextTokens = ContextTokens, slots = 1, fit = false,
-        temperature = Temperature, topP = TopP, topK = TopK, minP = 0, reasoning = true
+        temperature = profile.Temperature, topP = TopP, topK = TopK, minP = 0, reasoning = true
     });
 
     public static string[] Arguments(string model, string projector, int port) =>
@@ -32,7 +32,7 @@ public static class OmniLlamaProtocol
         "--reasoning-format", "deepseek", "-fa", "auto", "-n", "-1",
         "--image-max-tokens", OmniContextBudget.ImageTokenUpperBound.ToString(System.Globalization.CultureInfo.InvariantCulture)];
 
-    public static string BuildRequest(IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string imageDataUrl, int maxTokens = -1)
+    public static string BuildRequest(IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string imageDataUrl, int maxTokens = -1, OmniLlamaProfile? profile = null)
     {
         if (conversation.Count == 0 || conversation.Any(m => m.Role is not ("user" or "assistant")))
             throw new InvalidDataException("Invalid Omni conversation roles.");
@@ -54,7 +54,7 @@ public static class OmniLlamaProtocol
         {
             ["messages"] = messages, ["stream"] = true,
             ["stream_options"] = new JsonObject { ["include_usage"] = true },
-            ["temperature"] = Temperature, ["top_p"] = TopP, ["top_k"] = TopK, ["min_p"] = 0,
+            ["temperature"] = (profile ?? OmniLlamaProfile.Alpha).Temperature, ["top_p"] = TopP, ["top_k"] = TopK, ["min_p"] = 0,
             ["chat_template_kwargs"] = new JsonObject { ["enable_thinking"] = true },
             ["max_tokens"] = maxTokens, ["cache_prompt"] = true
         }.ToJsonString();

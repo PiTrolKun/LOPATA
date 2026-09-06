@@ -4,9 +4,12 @@ namespace AIHub.Services;
 
 public static class OmniSessionCompatibility
 {
-    public static bool IsLegacyBeta(ImageAnalysisLiterarySession? session) =>
-        session?.BundleId == ImageAnalysisBundleCatalog.MediumId
-        && session.PipelineId != ImageAnalysisPipelineIds.OmniBeta;
+    public static bool IsRetiredModelSession(ImageAnalysisLiterarySession? session) => session?.BundleId switch
+    {
+        ImageAnalysisBundleCatalog.MediumId => session.PipelineId != ImageAnalysisPipelineIds.OmniBeta,
+        ImageAnalysisBundleCatalog.HeavyId => session.PipelineId != ImageAnalysisPipelineIds.OmniGamma,
+        _ => false
+    };
 
     public static bool RequiresNewSession(ImageAnalysisLiterarySession session, IOmniTextRuntime runtime)
     {

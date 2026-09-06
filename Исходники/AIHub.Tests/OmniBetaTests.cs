@@ -44,11 +44,11 @@ public sealed class OmniBetaTests
     {
         var old = new ImageAnalysisLiterarySession { BundleId = "medium", ModelId = "legacy", Versions = [new() { Text = "Preserved result" }] };
         var snapshot = JsonSerializer.Serialize(old);
-        Assert.IsTrue(OmniSessionCompatibility.IsLegacyBeta(old));
+        Assert.IsTrue(OmniSessionCompatibility.IsRetiredModelSession(old));
         Assert.AreEqual(snapshot, JsonSerializer.Serialize(old));
         var fresh = new ImageAnalysisLiterarySession();
         OmniLlamaProfile.Beta.ApplyToNewSession(fresh);
-        Assert.IsFalse(OmniSessionCompatibility.IsLegacyBeta(fresh));
+        Assert.IsFalse(OmniSessionCompatibility.IsRetiredModelSession(fresh));
         Assert.AreEqual(ManagedModelCatalog.OmniBetaSessionRevision, fresh.ModelRevision);
     }
 }

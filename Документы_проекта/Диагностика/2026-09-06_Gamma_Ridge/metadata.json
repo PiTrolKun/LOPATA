@@ -1,0 +1,62 @@
+{
+  "checked": "2026-09-06",
+  "repository": "empero-ai/Qwen3.8-27B-Ridge-GGUF",
+  "revision": "486faa5f2032ff99bdc8993ade1b8fff13d1464c",
+  "files": [
+    {
+      "rfilename": "Qwen3.8-27B-Ridge-3.7bpw.gguf",
+      "blobId": "b81ee1fb9189954ffa004f1cfc1fc1a104a5d132",
+      "size": 12599187008,
+      "lfs": {
+        "sha256": "95580dbdaad579582ee898257116abc18d7f3625a00c16a15735d41444a09f5e",
+        "size": 12599187008,
+        "pointerSize": 136
+      }
+    },
+    {
+      "rfilename": "mmproj-Qwen3.8-27B-BF16.gguf",
+      "blobId": "2d6b136866d0b17c7f58b74e45eef18253ab6e75",
+      "size": 931145952,
+      "lfs": {
+        "sha256": "52228402ce4823f10705d901813cd43ced71859524cf2d8bf83305ad6b7dcbc2",
+        "size": 931145952,
+        "pointerSize": 134
+      }
+    }
+  ],
+  "headers": [
+    {
+      "url": "https://huggingface.co/empero-ai/Qwen3.8-27B-Ridge-GGUF/resolve/486faa5f2032ff99bdc8993ade1b8fff13d1464c/Qwen3.8-27B-Ridge-3.7bpw.gguf",
+      "version": 3,
+      "tensors": 866,
+      "metadata": {
+        "general.architecture": "qwen35",
+        "general.type": "model",
+        "general.sampling.top_k": 20,
+        "general.sampling.top_p": 0.949999988079071,
+        "general.sampling.temp": 1.0,
+        "general.name": "Qwen3.8 27B Bf16",
+        "general.basename": "Qwen3.8",
+        "general.size_label": "27B",
+        "general.license": "apache-2.0"
+      }
+    },
+    {
+      "url": "https://huggingface.co/empero-ai/Qwen3.8-27B-Ridge-GGUF/resolve/486faa5f2032ff99bdc8993ade1b8fff13d1464c/mmproj-Qwen3.8-27B-BF16.gguf",
+      "version": 3,
+      "tensors": 334,
+      "metadata": {
+        "general.architecture": "clip",
+        "general.type": "mmproj",
+        "general.sampling.top_k": 20,
+        "general.sampling.top_p": 0.949999988079071,
+        "general.sampling.temp": 1.0,
+        "general.name": "Qwen3.8 27B Bf16",
+        "general.finetune": "27b",
+        "general.basename": "Qwen3.8",
+        "general.size_label": "461M",
+        "general.license": "apache-2.0"
+      }
+    }
+  ]
+}

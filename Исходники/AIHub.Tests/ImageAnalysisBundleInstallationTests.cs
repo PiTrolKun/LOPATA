@@ -65,10 +65,10 @@ public sealed class ImageAnalysisBundleInstallationTests
 
             Assert.AreEqual(ImageAnalysisBundleInstallStates.DownloadRequired, snapshot.State);
             Assert.HasCount(1, snapshot.Components);
-            Assert.AreEqual(ManagedModelCatalog.Qwen25OmniHeavyArtifactId, snapshot.Components[0].ModelArtifactId);
-            Assert.AreEqual(ManagedModelCatalog.Qwen25OmniRepository, snapshot.Components[0].RepositoryId);
-            Assert.AreEqual(ManagedModelCatalog.Qwen25OmniRevision, snapshot.Components[0].Revision);
-            StringAssert.Contains(snapshot.Components[0].License, "Qwen Research License");
+            Assert.AreEqual(ManagedModelCatalog.OmniGammaArtifactId, snapshot.Components[0].ModelArtifactId);
+            Assert.AreEqual(ManagedModelCatalog.OmniGammaRepository, snapshot.Components[0].RepositoryId);
+            Assert.AreEqual(ManagedModelCatalog.OmniGammaRevision, snapshot.Components[0].Revision);
+            Assert.AreEqual("Apache-2.0", snapshot.Components[0].License);
             Assert.IsTrue(snapshot.AvailableFreeBytes > 0);
         }
         finally

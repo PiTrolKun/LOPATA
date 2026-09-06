@@ -7,6 +7,8 @@ public static class ImageAnalysisPipelineIds
     public const string OmniBeta = "omni_beta_gguf_single_image_literary";
     public const string OmniBetaVersion = "1";
     public const string Legacy = "legacy_single_image_literary";
+    public const string OmniGamma = "omni_gamma_gguf_single_image_literary";
+    public const string OmniGammaVersion = "1";
     public const string OmniHeavy = "omni_heavy_single_image_literary";
     public const string ContractVersion = "single-image-literary/3";
     public const string LegacyVersion = "1";

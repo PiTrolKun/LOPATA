@@ -25,9 +25,9 @@ public sealed class ImageAnalysisOmniHeavyTests
 
         Assert.IsTrue(heavy.IsAvailable);
         Assert.AreEqual(1, heavy.Components.Count);
-        Assert.AreEqual("Qwen2.5-Omni-3B BF16 · Thinker", heavy.Components[0].ModelName);
+        Assert.AreEqual(ManagedModelCatalog.OmniGammaDisplayName, heavy.Components[0].ModelName);
         Assert.AreEqual("ImageAnalysis.Placement.Gpu", heavy.Components[0].PlacementKey);
-        Assert.AreEqual(16, heavy.Requirements.FreeDiskGb);
+        Assert.AreEqual(20, heavy.Requirements.FreeDiskGb);
     }
 
     [TestMethod]

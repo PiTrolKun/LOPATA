@@ -41,7 +41,7 @@ public static class ImageAnalysisBundleCatalog
             new ImageAnalysisBundleComponent
             {
                 RoleKey = "ImageAnalysis.Role.Omni",
-                ModelName = "Qwen2.5-Omni-3B BF16 · Thinker",
+                ModelName = ManagedModelCatalog.OmniGammaDisplayName,
                 PlacementKey = "ImageAnalysis.Placement.Gpu"
             }
         ],
@@ -50,7 +50,7 @@ public static class ImageAnalysisBundleCatalog
             RamGb = 32,
             VramGb = 24,
             LogicalProcessorCount = 12,
-            FreeDiskGb = 16
+            FreeDiskGb = 20
         },
         IsAvailable = true,
         IsCurrentProjectBundle = false,

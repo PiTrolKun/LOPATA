@@ -76,7 +76,7 @@ public partial class ImageAnalysisWorkspaceControl
     private void RefreshPromptControls(bool? interaction = null)
     {
         if (StandardPromptButton is null) return;
-        var editable = (interaction ?? !_isBusy) && !_readOnlyMode && !OmniSessionCompatibility.IsLegacyBeta(_session)
+        var editable = (interaction ?? !_isBusy) && !_readOnlyMode && !OmniSessionCompatibility.IsRetiredModelSession(_session)
             && _session?.Status != ImageAnalysisLiteraryStatuses.Completed && _session?.ContextBlocked != true;
         var custom = SupportsCustomPrompts && _customPromptMode;
         PromptModePanel.Visibility = SupportsCustomPrompts ? Visibility.Visible : Visibility.Collapsed;
