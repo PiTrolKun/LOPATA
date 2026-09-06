@@ -193,6 +193,8 @@ public sealed class ImageAnalysisLiterarySession
 
     public List<ImageAnalysisHiddenMessage> HiddenConversation { get; set; } = [];
 
+    public bool ContextBlocked { get; set; }
+
     public string AnalysisLanguageCode { get; set; } = string.Empty;
 
     public ImageAnalysisPlacementInfo Placement { get; set; } = new();

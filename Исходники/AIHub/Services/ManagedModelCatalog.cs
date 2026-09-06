@@ -3,7 +3,7 @@ using System.IO;
 
 namespace AIHub.Services;
 
-public static class ManagedModelCatalog
+public static partial class ManagedModelCatalog
 {
     public const string CoreArtifactId = "model-qwen3-8b-core-q4km";
     public const string KimiLegacyArtifactId = "model-kimi-vl-a3b-thinking-2506-q4km";
@@ -38,6 +38,7 @@ public static class ManagedModelCatalog
             CreateKimiMedium(modelsRoot),
             CreateFlorenceLarge(modelsRoot),
             CreateQwen25OmniHeavy(modelsRoot),
+            CreateOmniAlpha(modelsRoot),
             CreateKokoroEnglish(modelsRoot),
             CreateKokoroRussian(modelsRoot)
         ];

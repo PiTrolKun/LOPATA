@@ -146,7 +146,9 @@ public sealed class ManagedModelOperationsTests
     }
 
     [TestMethod]
-    public async Task ParallelDownload_ReusesContiguousPartialAndAssemblesExactPayload()
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task ParallelDownload_ReusesContiguousPartialAndAssemblesExactPayload(bool alpha)
     {
         var root = ManagedModelLibraryTests.CreateRoot();
         try
@@ -159,6 +161,15 @@ public sealed class ManagedModelOperationsTests
             using var client = new HttpClient(handler);
             var store = new ManagedModelLibraryStore(Path.Combine(root, "library"));
             var card = ManagedModelLibraryTests.CreateCard(Path.Combine(root, "models"), payload);
+            if (alpha)
+            {
+                card.ModelArtifactId = ManagedModelCatalog.OmniAlphaArtifactId;
+                card.Role = ManagedModelRoles.Vision;
+                var projector = ManagedModelCatalog.CreateOmniAlpha(card.ModelsRoot).Files[1];
+                projector.SizeBytes = payload.Length;
+                projector.Sha256 = card.Files[0].Sha256;
+                card.Files.Add(projector);
+            }
             store.Upsert(card);
             var targetPath = Path.Combine(card.InstallDirectory, card.Files[0].RelativePath);
             Directory.CreateDirectory(card.InstallDirectory);
@@ -173,7 +184,12 @@ public sealed class ManagedModelOperationsTests
             CollectionAssert.AreEqual(payload, await File.ReadAllBytesAsync(targetPath));
             Assert.IsTrue(handler.MaximumActiveRequests >= 2);
             Assert.IsTrue(handler.RequestedRanges.Count >= 5);
-            Assert.IsTrue(handler.RequestedRanges.All(range => range.From >= prefixLength));
+            if (!alpha) Assert.IsTrue(handler.RequestedRanges.All(range => range.From >= prefixLength));
+            if (alpha)
+            {
+                CollectionAssert.AreEqual(payload, await File.ReadAllBytesAsync(Path.Combine(card.InstallDirectory, card.Files[1].RelativePath)));
+                Assert.AreEqual(ManagedModelStatuses.Installed, store.Load(card.ModelArtifactId)!.Status);
+            }
             Assert.IsFalse(SegmentedModelFileDownloader.GetPartialArtifactPaths(targetPath).Any(File.Exists));
         }
         finally

@@ -45,6 +45,16 @@ Add-Entry 'Qwen/Qwen3-0.6B-GGUF' 'Qwen3-0.6B GGUF' 'catalog revision' 'Apache-2.
 $omni=$entries | Where-Object Id -eq 'model-qwen2-5-omni-3b'
 $omni.Ru='Qwen Research License: некоммерческие исследования и оценка. Бесплатность приложения не разрешает любое использование. Для коммерческого использования требуется отдельное разрешение правообладателя.'
 $omni.En='Qwen Research License: noncommercial research and evaluation. A free application does not authorize every use. Commercial use requires separate permission from the licensor.'
+Add-Entry 'model-qwen2-5-omni-3b-q4km' 'Qwen2.5-Omni-3B Q4_K_M + Q8 projector' '75f1b73b657a50f5092502799457ccb4a4a1f9df' $omni.License 'https://huggingface.co/ggml-org/Qwen2.5-Omni-3B-GGUF/tree/75f1b73b657a50f5092502799457ccb4a4a1f9df' 'Qwen; GGUF conversion by ggml-org' $false 'download' $omni.Ru $omni.En
+$alpha=$entries | Where-Object Id -eq 'model-qwen2-5-omni-3b-q4km'
+$alpha.Checked='2026-09-06'
+$alpha.Ru+=' Карточка GGUF-конверсии отсылает к лицензии исходной Qwen2.5-Omni-3B. Модель и проектор скачиваются отдельно; встроенная генерация речи не используется.'
+$alpha.En+=' The GGUF conversion card refers to the upstream Qwen2.5-Omni-3B license. Model and projector are downloaded separately; built-in speech generation is not used.'
+Add-Entry 'model-qwen3-8-4b-distill-q5km' 'Qwen3.8-4B-Distill Q5_K_M + F16 projector' '796f0c8fbdab2e6e0c14a13d499075850e4a16b3' 'Apache-2.0' 'https://huggingface.co/mradermacher/Qwen3.8-4B-Distill-GGUF/tree/796f0c8fbdab2e6e0c14a13d499075850e4a16b3' 'Empero; Qwen; GGUF conversion by mradermacher' $false 'download' '' ''
+$distill=$entries | Where-Object Id -eq 'model-qwen3-8-4b-distill-q5km'
+$distill.Checked='2026-09-06'
+$distill.Ru='В карточках исходной модели и GGUF-конверсии заявлена Apache-2.0. Модель и проектор скачиваются отдельно. Отдельные файлы LICENSE в этих репозиториях на дату проверки не найдены; приложен стандартный текст Apache-2.0. Исходная модель: https://huggingface.co/empero-ai/Qwen3.8-4B-Distill/tree/c83cb7aa2999d2f35c43e9ae0634a30eb8985a1e. Соблюдайте условия лицензии и сохраняйте необходимые уведомления при распространении.'
+$distill.En='The upstream model and GGUF conversion cards declare Apache-2.0. Model and projector are downloaded separately. Separate LICENSE files were not found in these repositories as of the check date; the standard Apache-2.0 text is included. Upstream model: https://huggingface.co/empero-ai/Qwen3.8-4B-Distill/tree/c83cb7aa2999d2f35c43e9ae0634a30eb8985a1e. Follow the license terms and retain required notices when redistributing.'
 $kokoro=$entries | Where-Object Id -eq 'model-kokoro-ru-sveta'
 $kokoro.License='OpenRAIL (weights, exact variant unavailable); Apache-2.0 (code); eSpeak GPL; accentuator declared MIT'
 $kokoro.Ru='Автор указал OpenRAIL для весов и Apache-2.0 для кода. Точный вариант и полный текст OpenRAIL на дату проверки не найдены. Репозиторий accentuator указывает MIT; применимость к отдельным словарям уточняется. Подтверждение ознакомления не заменяет отсутствующих условий и не предоставляет дополнительных прав.'
@@ -63,7 +73,7 @@ $sources=@{
 foreach($key in $sources.Keys) {
  $name=($key -replace '[^a-zA-Z0-9.-]','_')+'.txt';$path=Join-Path "$dest/texts" $name
  if($RefreshTexts -or !(Test-Path $path)){Invoke-WebRequest $sources[$key] -OutFile $path -TimeoutSec 30}
- foreach($e in $entries){if(($e.License -eq $key -and ($key -ne 'MIT' -or $e.Id -eq 'backend.llama')) -or ($e.Id -eq 'model-qwen2-5-omni-3b' -and $key -eq 'Qwen Research')){$e.Texts=@($e.Texts)+"texts/$name"}}
+ foreach($e in $entries){if(($e.License -eq $key -and ($key -ne 'MIT' -or $e.Id -eq 'backend.llama')) -or ($e.Id -in @('model-qwen2-5-omni-3b','model-qwen2-5-omni-3b-q4km') -and $key -eq 'Qwen Research')){$e.Texts=@($e.Texts)+"texts/$name"}}
 }
 # Per-package copyright notices must be retained, not replaced by a generic MIT example.
 $assets=Get-Content (Join-Path $root 'Исходники/AIHub/obj/project.assets.json') -Raw | ConvertFrom-Json

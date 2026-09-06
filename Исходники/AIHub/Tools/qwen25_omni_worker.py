@@ -215,9 +215,7 @@ class OmniWorker:
             )
             input_tokens = int(inputs["input_ids"].shape[1])
             max_context = self._max_context_tokens()
-            max_new_tokens = max_context - input_tokens - 1
-            if max_new_tokens <= 0:
-                raise RuntimeError("context_exhausted: the hidden conversation fills the physical context window.")
+            max_new_tokens = self._context_output_budget(input_tokens, max_context)
             # The checkpoint's generation_config.json can omit EOS even though
             # Thinker/tokenizer define it. Pass the same boundary to generation
             # and validation; checking it only after generate() is too late.
@@ -612,6 +610,15 @@ class OmniWorker:
         return sorted(eos_values)
 
     @staticmethod
+    def _context_output_budget(input_tokens: int, max_context: int) -> int:
+        boundary = max_context * 95 // 100
+        reserve = 4096  # Same policy as OmniContextBudget; includes reasoning and the final answer.
+        if input_tokens + reserve >= boundary:
+            raise RuntimeError(
+                f"context_exhausted: input={input_tokens}; reserve={reserve}; boundary={boundary}; context={max_context}")
+        return boundary - input_tokens
+
+    @staticmethod
     def _validate_text_completion(output_ids, eos_token_ids: list[int], max_new_tokens: int) -> None:
         tokens = output_ids[0].tolist()
         eos_positions = [index for index, token in enumerate(tokens) if token in eos_token_ids]
@@ -620,7 +627,7 @@ class OmniWorker:
                 raise RuntimeError("generation_boundary_invalid: Omni generated tokens after the first EOS.")
             return
         if len(tokens) >= max_new_tokens:
-            raise RuntimeError("context_exhausted: Omni reached the physical context boundary before EOS.")
+            raise RuntimeError("context_exhausted: Omni reached the safe context budget before EOS.")
         raise RuntimeError("generation_incomplete: Omni stopped before EOS.")
 
     def _ensure_loaded(self) -> None:

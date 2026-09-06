@@ -20,11 +20,13 @@ public partial class MainWindow
     private SoundPlayer? _imageAnalysisOmniPlayer;
 
     private bool IsHeavyImageAnalysis =>
-        _imageAnalysisLiterarySession?.BundleId == ImageAnalysisBundleCatalog.HeavyId
-        || _selectedImageAnalysisBundle?.Id == ImageAnalysisBundleCatalog.HeavyId;
+        ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession?.BundleId)
+        || ImageAnalysisModeCapabilities.UsesOmniConversation(_selectedImageAnalysisBundle?.Id);
 
-    private static string HeavySpeechProfileKey =>
-        $"{ImageAnalysisBundleCatalog.HeavyId}|{ManagedModelCatalog.Qwen25OmniRepository}|{ManagedModelCatalog.Qwen25OmniRevision}";
+    private string HeavySpeechProfileKey =>
+        (_imageAnalysisLiterarySession?.BundleId ?? _selectedImageAnalysisBundle?.Id) == ImageAnalysisBundleCatalog.LightId
+            ? $"{ImageAnalysisBundleCatalog.LightId}|{ManagedModelCatalog.OmniAlphaRepository}|{ManagedModelCatalog.OmniAlphaRevision}"
+            : $"{ImageAnalysisBundleCatalog.HeavyId}|{ManagedModelCatalog.Qwen25OmniRepository}|{ManagedModelCatalog.Qwen25OmniRevision}";
 
     private ImageAnalysisHeavySpeechSettings GetHeavyImageAnalysisSpeechSettings()
     {

@@ -12,7 +12,7 @@ public sealed class ImageAnalysisRecommendationServiceTests
     [TestMethod]
     public void Evaluate_RecommendsLight_WhenOnlyLightMatches()
     {
-        var result = Evaluate(16, 4, 8, 20);
+        var result = Evaluate(16, 8, 8, 20);
 
         Assert.AreEqual(ImageAnalysisBundleCatalog.LightId, result.Recommendation?.Bundle.Id);
         Assert.IsTrue(result.IsComfortableMatch);

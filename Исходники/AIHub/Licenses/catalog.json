@@ -1123,5 +1123,39 @@
     "Texts": [
       "texts/Apache-2.0.txt"
     ]
+  },
+  {
+    "Id": "model-qwen2-5-omni-3b-q4km",
+    "Name": "Qwen2.5-Omni-3B Q4_K_M + Q8 projector",
+    "Version": "75f1b73b657a50f5092502799457ccb4a4a1f9df",
+    "Author": "Qwen; GGUF conversion by ggml-org",
+    "License": "Qwen Research License (non-commercial research/evaluation only)",
+    "Source": "https://huggingface.co/ggml-org/Qwen2.5-Omni-3B-GGUF/tree/75f1b73b657a50f5092502799457ccb4a4a1f9df",
+    "Checked": "2026-09-06",
+    "Ru": "Qwen Research License: некоммерческие исследования и оценка. Бесплатность приложения не разрешает любое использование. Для коммерческого использования требуется отдельное разрешение правообладателя. Карточка GGUF-конверсии отсылает к лицензии исходной Qwen2.5-Omni-3B. Модель и проектор скачиваются отдельно; встроенная генерация речи не используется.",
+    "En": "Qwen Research License: noncommercial research and evaluation. A free application does not authorize every use. Commercial use requires separate permission from the licensor. The GGUF conversion card refers to the upstream Qwen2.5-Omni-3B license. Model and projector are downloaded separately; built-in speech generation is not used.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "8C86F00A71385AACB0B9548AE2ED9F11FDDE6DC5C48413C8084BEC1F01A15825",
+    "Texts": [
+      "texts/Qwen_Research.txt"
+    ]
+  },
+  {
+    "Id": "model-qwen3-8-4b-distill-q5km",
+    "Name": "Qwen3.8-4B-Distill Q5_K_M + F16 projector",
+    "Version": "796f0c8fbdab2e6e0c14a13d499075850e4a16b3",
+    "Author": "Empero; Qwen; GGUF conversion by mradermacher",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/mradermacher/Qwen3.8-4B-Distill-GGUF/tree/796f0c8fbdab2e6e0c14a13d499075850e4a16b3",
+    "Checked": "2026-09-06",
+    "Ru": "В карточках исходной модели и GGUF-конверсии заявлена Apache-2.0. Модель и проектор скачиваются отдельно. Отдельные файлы LICENSE в этих репозиториях на дату проверки не найдены; приложен стандартный текст Apache-2.0. Исходная модель: https://huggingface.co/empero-ai/Qwen3.8-4B-Distill/tree/c83cb7aa2999d2f35c43e9ae0634a30eb8985a1e. Соблюдайте условия лицензии и сохраняйте необходимые уведомления при распространении.",
+    "En": "The upstream model and GGUF conversion cards declare Apache-2.0. Model and projector are downloaded separately. Separate LICENSE files were not found in these repositories as of the check date; the standard Apache-2.0 text is included. Upstream model: https://huggingface.co/empero-ai/Qwen3.8-4B-Distill/tree/c83cb7aa2999d2f35c43e9ae0634a30eb8985a1e. Follow the license terms and retain required notices when redistributing.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "CFBBF04ABD9B0F149E4B847B00AE46A0E55A5AFBDD1A2EE74326ECB8321553A0",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
   }
 ]

@@ -110,7 +110,7 @@ public partial class ImageAnalysisBundleConfirmationControl : UserControl
             return;
         }
         var bundleTitle = _localize(_bundle.TitleKey);
-        var isHeavy = _bundle.Id == ImageAnalysisBundleCatalog.HeavyId;
+        var isHeavy = ImageAnalysisModeCapabilities.UsesOmniConversation(_bundle.Id);
         TitleText.Text = _format("ImageAnalysis.Confirmation.Title", [bundleTitle.ToUpper(CultureInfo.CurrentUICulture)]);
         ModeSymbolText.Text = _bundle.Id switch { "light" => "α", "medium" => "β", "heavy" => "γ", _ => string.Empty };
         DescriptionText.Visibility = isHeavy ? Visibility.Collapsed : Visibility.Visible;
@@ -118,10 +118,10 @@ public partial class ImageAnalysisBundleConfirmationControl : UserControl
             ? "ImageAnalysis.Heavy.StartNotice"
             : "ImageAnalysis.Install.Description");
         StateTitleText.Text = isHeavy && _snapshot.State == ImageAnalysisBundleInstallStates.Ready
-            ? _localize("ImageAnalysis.Install.State.heavy_ready.Title")
+            ? _localize(_bundle.Id == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.ReadyTitle" : "ImageAnalysis.Install.State.heavy_ready.Title")
             : _localize($"ImageAnalysis.Install.State.{_snapshot.State}.Title");
         StateDescriptionText.Text = isHeavy && _snapshot.State == ImageAnalysisBundleInstallStates.Ready
-            ? _localize("ImageAnalysis.Install.State.heavy_ready.Description")
+            ? _localize(_bundle.Id == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.ReadyDescription" : "ImageAnalysis.Install.State.heavy_ready.Description")
             : BuildStateDescription(_snapshot);
         UpdateErrorDetails();
         RefreshComponentItems();
@@ -218,7 +218,7 @@ public partial class ImageAnalysisBundleConfirmationControl : UserControl
 
     private string BuildComponentDetail(ImageAnalysisBundleComponentState component, long storedBytes)
     {
-        if (_bundle?.Id == ImageAnalysisBundleCatalog.HeavyId)
+        if (ImageAnalysisModeCapabilities.UsesOmniConversation(_bundle?.Id))
         {
             return _format(
                 "ImageAnalysis.Install.Component.HeavyProfile",

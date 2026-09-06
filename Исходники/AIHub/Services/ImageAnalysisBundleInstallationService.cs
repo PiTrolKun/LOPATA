@@ -84,6 +84,14 @@ public sealed class ImageAnalysisBundleInstallationService : IDisposable
         {
             return CreateSnapshot(ImageAnalysisBundleInstallStates.NeedsVerification, cards, modelsRoot);
         }
+        if (bundleId == ImageAnalysisBundleCatalog.LightId
+            && cards.All(card => card.Status == ManagedModelStatuses.Installed)
+            && !File.Exists(LlamaBackendPaths.ServerExecutablePath))
+        {
+            foreach (var card in cards)
+                card.LastError = $"Missing managed backend: {LlamaBackendPaths.ServerExecutablePath}";
+            return CreateSnapshot(ImageAnalysisBundleInstallStates.RuntimeIncompatible, cards, modelsRoot);
+        }
         return CreateSnapshot(
             cards.Count == artifactIds.Length
                 && cards.All(card => card.Status == ManagedModelStatuses.Installed)
@@ -144,17 +152,15 @@ public sealed class ImageAnalysisBundleInstallationService : IDisposable
 
     public ManagedModelRemovalResult RemoveVisionFiles(string bundleId) =>
         _removal.RemoveFiles(
-            bundleId == ImageAnalysisBundleCatalog.HeavyId
-                ? ManagedModelCatalog.Qwen25OmniHeavyArtifactId
-                : ManagedModelCatalog.KimiMediumArtifactId,
+            ImageAnalysisModeCapabilities.VisionArtifact(bundleId),
             includePartialFiles: true);
 
     public void Dispose() => _acquisition.Dispose();
 
     private static string[] ResolveArtifactIds(string bundleId) =>
-        bundleId == ImageAnalysisBundleCatalog.HeavyId
-            ? HeavyArtifactIds
-            : MediumArtifactIds;
+        bundleId == ImageAnalysisBundleCatalog.LightId
+            ? [ManagedModelCatalog.OmniAlphaArtifactId]
+            : bundleId == ImageAnalysisBundleCatalog.HeavyId ? HeavyArtifactIds : MediumArtifactIds;
 
     private static ImageAnalysisBundleInstallationSnapshot CreateSnapshot(
         string state,

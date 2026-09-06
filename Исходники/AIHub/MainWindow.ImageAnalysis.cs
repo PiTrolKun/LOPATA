@@ -93,7 +93,8 @@ public partial class MainWindow
     private void RefreshImageAnalysisLocalization()
     {
         if (_imageAnalysisLiteraryCts is not null
-            && _imageAnalysisLiterarySession?.BundleId == ImageAnalysisBundleCatalog.HeavyId
+            && _imageAnalysisLiterarySession is not null
+            && ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession.BundleId)
             && !string.Equals(
                 _imageAnalysisLiterarySession.AnalysisLanguageCode,
                 NormalizeSpeechLanguage(_appSettings.LanguageCode),
@@ -228,7 +229,7 @@ public partial class MainWindow
                     names,
                     ComponentCardViewModel.FormatBytes(snapshot.MissingBytes),
                     snapshot.ModelsRoot),
-                L(bundleId == ImageAnalysisBundleCatalog.HeavyId
+                L(bundleId == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.DownloadTitle" : ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
                     ? "ImageAnalysis.Install.HeavyDownloadTitle"
                     : "ImageAnalysis.Install.DownloadTitle"),
                 MessageBoxButton.YesNo,
@@ -242,10 +243,10 @@ public partial class MainWindow
         {
             var confirmation = WpfMessageBox.Show(
                 this,
-                L(bundleId == ImageAnalysisBundleCatalog.HeavyId
+                L(ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
                     ? "ImageAnalysis.Install.HeavyVerifyConfirm"
                     : "ImageAnalysis.Install.RuntimeConfirm"),
-                L(bundleId == ImageAnalysisBundleCatalog.HeavyId
+                L(ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
                     ? "ImageAnalysis.Install.HeavyVerifyTitle"
                     : "ImageAnalysis.Install.VerifyTitle"),
                 MessageBoxButton.YesNo,
@@ -280,12 +281,12 @@ public partial class MainWindow
                     bundleId);
             ImageAnalysisBundleConfirmationPage.UpdateSnapshot(updated);
             StatusText.Text = updated.CanStart
-                ? L(bundleId == ImageAnalysisBundleCatalog.HeavyId
+                ? L(bundleId == ImageAnalysisBundleCatalog.LightId ? "Status.ImageAnalysisAlphaBundleReady" : ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
                     ? "Status.ImageAnalysisHeavyBundleReady"
                     : "Status.ImageAnalysisBundleReady")
                 : L("Status.ImageAnalysisBundleUpdated");
             if (updated.CanStart
-                && bundleId == ImageAnalysisBundleCatalog.HeavyId
+                && ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
                 && e.Action is ImageAnalysisBundleActions.Download
                     or ImageAnalysisBundleActions.Verify)
             {
@@ -315,9 +316,7 @@ public partial class MainWindow
     private void ImageAnalysisBundleConfirmationPage_RemoveVisionRequested(object? sender, EventArgs e)
     {
         var bundleId = _selectedImageAnalysisBundle?.Id ?? ImageAnalysisBundleCatalog.MediumId;
-        var artifactId = bundleId == ImageAnalysisBundleCatalog.HeavyId
-            ? ManagedModelCatalog.Qwen25OmniHeavyArtifactId
-            : ManagedModelCatalog.KimiMediumArtifactId;
+        var artifactId = ImageAnalysisModeCapabilities.VisionArtifact(bundleId);
         var card = _imageAnalysisBundleInstallationService.LibraryStore.Load(artifactId);
         if (card is null)
         {

@@ -60,7 +60,7 @@ public sealed class ImageAnalysisSessionStore
         {
             session.SessionId, stage, capturedAt = DateTimeOffset.Now,
             session.ModelId, session.ModelRevision, session.RuntimeVersion,
-            promptVersion = ImageAnalysisPipelineIds.OmniHeavyVersion,
+            promptVersion = session.PipelineVersion,
             session.File, session.Settings, conversation, rawProtocol
         }, JsonOptions);
         // A unique append-only artifact is independent of parsing and session versions.

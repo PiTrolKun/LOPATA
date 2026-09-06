@@ -9,6 +9,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using AIHub.Models;
+using AIHub.Services;
 using UserControl = System.Windows.Controls.UserControl;
 using WpfButton = System.Windows.Controls.Button;
 using WpfComboBox = System.Windows.Controls.ComboBox;
@@ -98,7 +99,8 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         ReplaySpeechButton.IsEnabled = !readOnly && _speechCanReplay;
         if (readOnly)
         {
-            FooterStatusText.Text = _localize("ImageAnalysis.Workspace.Status.ReadOnlyHistory");
+            FooterStatusText.Text = _localize(_session?.ContextBlocked == true
+                ? "ImageAnalysis.Context.RestartSession" : "ImageAnalysis.Workspace.Status.ReadOnlyHistory");
         }
     }
 
@@ -172,6 +174,11 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
 
     public void ShowSettings(ImageAnalysisLiterarySession session)
     {
+        if (session.ContextBlocked && session.GetSelectedVersion() is not null)
+        {
+            ShowSession(session);
+            return;
+        }
         _session = session;
         SetComboByTag(AccuracyComboBox, session.Settings.Accuracy);
         SetComboByTag(StyleComboBox, session.Settings.Style);
@@ -222,7 +229,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
             }
             return;
         }
-        SetStep(session.CurrentStep == ImageAnalysisLiterarySteps.Subscenario
+        SetStep(session.ContextBlocked ? ImageAnalysisLiterarySteps.Result : session.CurrentStep == ImageAnalysisLiterarySteps.Subscenario
             ? ImageAnalysisLiterarySteps.Image
             : session.CurrentStep);
         ApplyFile(session.File);
@@ -295,7 +302,9 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
     public void SetOperationError(string message)
     {
         StopActivity();
-        FooterStatusText.Text = _format("ImageAnalysis.Workspace.Status.Error", [message]);
+        FooterStatusText.Text = _session?.ContextBlocked == true
+            ? _localize("ImageAnalysis.Context.RestartSession")
+            : _format("ImageAnalysis.Workspace.Status.Error", [message]);
     }
 
     public void StopActivity()
@@ -505,10 +514,10 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
 
     public void ApplyLocalization()
     {
-        ActivityLegendPanel.Visibility = _bundleId == "heavy"
+        ActivityLegendPanel.Visibility = ImageAnalysisModeCapabilities.UsesOmniConversation(_bundleId)
             ? Visibility.Collapsed
             : Visibility.Visible;
-        DiagnosticsButton.Visibility = _bundleId == "heavy"
+        DiagnosticsButton.Visibility = ImageAnalysisModeCapabilities.UsesOmniConversation(_bundleId)
             ? Visibility.Visible
             : Visibility.Collapsed;
         DiagnosticsButton.ToolTip = _localize("ImageAnalysis.Workspace.HeavyDiagnostics.Title");
@@ -566,7 +575,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         ResultPanelTitleText.Text = _localize("ImageAnalysis.Workspace.Result.Title");
         ResultPanelHintText.Text = _localize("ImageAnalysis.Workspace.Result.Hint");
         VoiceModeTitleText.Text = _localize("ImageAnalysis.Workspace.Voice.Title");
-        var heavyVoice = _bundleId == "heavy";
+        var heavyVoice = ImageAnalysisModeCapabilities.UsesOmniConversation(_bundleId);
         SpeechOffRadioButton.Content = _localize(heavyVoice
             ? "ImageAnalysis.Workspace.HeavyVoice.Choice.off"
             : "ImageAnalysis.Workspace.Voice.Choice.off");
@@ -700,7 +709,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
 
     private void RenderHeavyDiagnostics(ImageAnalysisLiterarySession? session)
     {
-        var isHeavy = _bundleId == "heavy";
+        var isHeavy = ImageAnalysisModeCapabilities.UsesOmniConversation(_bundleId);
         DiagnosticsButton.Visibility = isHeavy ? Visibility.Visible : Visibility.Collapsed;
         DiagnosticsButton.ToolTip = _localize("ImageAnalysis.Workspace.HeavyDiagnostics.Title");
         if (!isHeavy)
@@ -1069,19 +1078,23 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
     private void SetInteractionEnabled(bool enabled)
     {
         var editable = !_readOnlyMode
-            && _session?.Status != ImageAnalysisLiteraryStatuses.Completed;
+            && _session?.Status != ImageAnalysisLiteraryStatuses.Completed && _session?.ContextBlocked != true;
         BackButton.IsEnabled = enabled;
         SingleScenarioButton.IsEnabled = enabled && !_readOnlyMode;
         SelectImageButton.IsEnabled = enabled && editable;
         SelectImageEmptyButton.IsEnabled = enabled && editable;
         ContinueToSettingsButton.IsEnabled = enabled && editable && _session?.File is not null;
-        GenerateButton.IsEnabled = enabled && editable;
-        ReviseButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
+        GenerateButton.IsEnabled = enabled && editable && _session?.ContextBlocked != true;
+        ReviseButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed && !_session.ContextBlocked;
+        RevisionPanel.IsEnabled = _session?.ContextBlocked != true;
+        RevisionPanel.Opacity = _session?.ContextBlocked == true ? 0.45 : 1;
         PreviewButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null;
         ExportButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null;
         CompleteButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
         NewAnalysisButton.IsEnabled = enabled && !_readOnlyMode;
         HomeButton.IsEnabled = enabled;
+        if (enabled && _session?.ContextBlocked == true)
+            FooterStatusText.Text = _localize("ImageAnalysis.Context.RestartSession");
         RefreshPromptControls(enabled);
     }
 
@@ -1158,7 +1171,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
 
     private void OmniSpeakerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!IsInitialized || _suppressSpeechControls || _bundleId != "heavy")
+        if (!IsInitialized || _suppressSpeechControls || !ImageAnalysisModeCapabilities.UsesOmniConversation(_bundleId))
         {
             return;
         }

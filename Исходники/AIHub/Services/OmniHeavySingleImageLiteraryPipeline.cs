@@ -8,15 +8,15 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
     // IOmniSpeechPipeline, // Retired in this scenario; keep the Talker implementation below for restoration.
     IHeavyResourceMonitoringPipeline
 {
-    private readonly Qwen25OmniRuntimeService _runtime;
+    private readonly IOmniTextRuntime _runtime;
     private OmniWarmupResult? _warmup;
 
-    public OmniHeavySingleImageLiteraryPipeline(Qwen25OmniRuntimeService runtime)
+    public OmniHeavySingleImageLiteraryPipeline(IOmniTextRuntime runtime)
     {
         _runtime = runtime;
     }
 
-    public string PipelineId => ImageAnalysisPipelineIds.OmniHeavy;
+    public string PipelineId => _runtime.PipelineId;
 
     public bool IsOmniReady => _runtime.IsReady;
 
@@ -62,18 +62,16 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
         progress?.Report(new ImageAnalysisLiteraryProgress(
             ManagedModelRoles.Core,
             "omni_observe",
-            "Qwen2.5-Omni is describing the visible image."));
-        var visual = await _runtime.GenerateAsync(
-            "analyze",
-            passport.SourcePath,
-            conversation,
-            streamProgress,
-            cancellationToken,
-            raw => SaveResponse(session, storageSettings, "analyze", conversation, raw, log), log).ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(visual.Content))
+            "The selected model is describing the visible image."));
+        var visual = await OmniResponseRecovery.RunAsync(async _ =>
         {
-            throw new InvalidDataException("Omni returned an empty visual report.");
-        }
+            var generated = await GenerateCheckedAsync(session,
+                "analyze", passport.SourcePath, conversation, streamProgress, cancellationToken,
+                raw => SaveResponse(session, storageSettings, "analyze", conversation, raw, log), log).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(generated.Content))
+                throw new ImageAnalysisOmniFormatException(new InvalidDataException("Omni returned an empty visual report."));
+            return generated;
+        }, "analyze", log, progress, cancellationToken).ConfigureAwait(false);
         log(DescribeGeneration("visual", visual));
         conversation.Add(Message("assistant", visual.Content));
         checkpointReady?.Invoke(new ImageAnalysisPipelineCheckpoint(
@@ -86,14 +84,10 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
         progress?.Report(new ImageAnalysisLiteraryProgress(
             ManagedModelRoles.Core,
             "omni_compose",
-            "The same Qwen2.5-Omni conversation is verifying and composing the final result."));
-        var composed = await _runtime.GenerateAsync(
-            "compose",
-            passport.SourcePath,
-            conversation,
-            streamProgress,
-            cancellationToken,
-            raw => SaveResponse(session, storageSettings, "compose", conversation, raw, log), log).ConfigureAwait(false);
+            "The same model conversation is verifying and composing the final result."));
+        var (composed, result) = await GenerateFinalAsync(session, storageSettings, "compose",
+            passport.SourcePath, conversation, visual.Content, visual.ElapsedMilliseconds,
+            log, progress, streamProgress, cancellationToken).ConfigureAwait(false);
         conversation.Add(Message("assistant", composed.Content));
         session.HiddenConversation = CloneConversation(conversation).ToList();
         session.AnalysisLanguageCode = NormalizeLanguage(settings.LanguageCode);
@@ -101,13 +95,6 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
         session.RuntimeMetrics.ComposePassMilliseconds = composed.ElapsedMilliseconds;
         log(DescribeGeneration("compose", composed));
         log($"Omni compose response received: chars={composed.Content.Length}; tokens={composed.GeneratedTokens}; composeMs={composed.ElapsedMilliseconds}.");
-        var result = ParseSavedResponse(
-            visual.Content,
-            composed.Content,
-            conversation,
-            visual.ElapsedMilliseconds,
-            composed.ElapsedMilliseconds,
-            log);
         log($"Omni hidden chat completed: turns={conversation.Count}; visualMs={visual.ElapsedMilliseconds}; composeMs={composed.ElapsedMilliseconds}; visualTokens={visual.GeneratedTokens}; composeTokens={composed.GeneratedTokens}.");
         return result;
     }
@@ -143,22 +130,11 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
         progress?.Report(new ImageAnalysisLiteraryProgress(
             ManagedModelRoles.Core,
             "omni_revise",
-            "Qwen2.5-Omni is creating a new version in the same hidden conversation."));
-        var revised = await _runtime.GenerateAsync(
-            "revise",
-            session.File.SourcePath,
-            conversation,
-            streamProgress,
-            cancellationToken,
-            raw => SaveResponse(session, storageSettings, "revise", conversation, raw, log), log).ConfigureAwait(false);
+            "The selected model is creating a new version in the same hidden conversation."));
+        var (revised, parsed) = await GenerateFinalAsync(session, storageSettings, "revise",
+            session.File.SourcePath, conversation, session.VisualReport, session.RuntimeMetrics.VisualPassMilliseconds,
+            log, progress, streamProgress, cancellationToken).ConfigureAwait(false);
         conversation.Add(Message("assistant", revised.Content));
-        var parsed = ParseSavedResponse(
-            session.VisualReport,
-            revised.Content,
-            conversation,
-            session.RuntimeMetrics.VisualPassMilliseconds,
-            revised.ElapsedMilliseconds,
-            log);
         session.HiddenConversation = CloneConversation(conversation).ToList();
         session.ReviewSummary = parsed.ReviewSummary;
         session.RuntimeMetrics.ComposePassMilliseconds = revised.ElapsedMilliseconds;
@@ -202,12 +178,58 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
 
     public void Dispose() => _runtime.Dispose();
 
+    private Task<(OmniTextGenerationResult, ImageAnalysisLiteraryResult)> GenerateFinalAsync(
+        ImageAnalysisLiterarySession session, StorageSettings storage, string stage, string imagePath,
+        IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string visual, long visualMs,
+        Action<string> log, IProgress<ImageAnalysisLiteraryProgress>? progress,
+        IProgress<ModelStreamChunk>? streamProgress, CancellationToken token) =>
+        OmniResponseRecovery.RunAsync(async attempt =>
+        {
+            var generated = await GenerateCheckedAsync(session, stage, imagePath, conversation, streamProgress, token,
+                raw => SaveResponse(session, storage, stage, conversation, raw, log), log).ConfigureAwait(false);
+            log($"Omni final attempt received: stage={stage}; attempt={attempt}; {DescribeGeneration(stage, generated)}");
+            var candidate = CloneConversation(conversation).ToList();
+            candidate.Add(Message("assistant", generated.Content));
+            var parsed = ParseSavedResponse(visual, generated.Content, candidate, visualMs, generated.ElapsedMilliseconds, log);
+            return (generated, parsed);
+        }, stage, log, progress, token);
+
+    private async Task<OmniTextGenerationResult> GenerateCheckedAsync(
+        ImageAnalysisLiterarySession session, string command, string imagePath,
+        IReadOnlyList<ImageAnalysisHiddenMessage> conversation, IProgress<ModelStreamChunk>? streamProgress,
+        CancellationToken token, Action<string>? responseReceived, Action<string> log)
+    {
+        if (session.ContextBlocked)
+            throw new ImageAnalysisContextExhaustedException("The session requires a new context.");
+        try
+        {
+            var result = await _runtime.GenerateAsync(command, imagePath, conversation, streamProgress,
+                token, responseReceived, log).ConfigureAwait(false);
+            if (result.MaxContextTokens > 0
+                && (long)result.InputTokens + result.GeneratedTokens >= OmniContextBudget.Boundary(result.MaxContextTokens))
+            {
+                session.ContextBlocked = true;
+                log("Omni context reached the session boundary after generation; further requests are blocked.");
+            }
+            return result;
+        }
+        catch (ImageAnalysisContextExhaustedException)
+        {
+            session.ContextBlocked = true;
+            throw;
+        }
+    }
+
     private async Task EnsureWorkerReadyAsync(
         ImageAnalysisLiterarySession session,
         Action<string> log,
         IProgress<ImageAnalysisLiteraryProgress>? progress,
         CancellationToken cancellationToken)
     {
+        if (session.ContextBlocked)
+            throw new ImageAnalysisContextExhaustedException("The session requires a new context.");
+        if (OmniSessionCompatibility.RequiresNewSession(session, _runtime))
+            throw new ImageAnalysisModelChangedException();
         if (_runtime.IsReady)
         {
             return;
@@ -222,13 +244,15 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
 
     private void ApplyProvenance(ImageAnalysisLiterarySession session)
     {
-        session.BundleId = ImageAnalysisBundleCatalog.HeavyId;
-        session.PipelineId = ImageAnalysisPipelineIds.OmniHeavy;
-        session.PipelineVersion = ImageAnalysisPipelineIds.OmniHeavyVersion;
+        // Warming up a replacement must not rewrite the provenance of saved work.
+        if (OmniSessionCompatibility.RequiresNewSession(session, _runtime)) return;
+        session.BundleId = _runtime.BundleId;
+        session.PipelineId = _runtime.PipelineId;
+        session.PipelineVersion = _runtime.PipelineVersion;
         session.ContractVersion = ImageAnalysisPipelineIds.ContractVersion;
-        session.ModelId = ManagedModelCatalog.Qwen25OmniRepository;
-        session.ModelRevision = ManagedModelCatalog.Qwen25OmniRevision;
-        session.RuntimeId = ImageAnalysisRuntimeIds.Qwen25OmniTransformers;
+        session.ModelId = _runtime.ModelId;
+        session.ModelRevision = _runtime.ModelRevision;
+        session.RuntimeId = _runtime.RuntimeId;
         session.RuntimeVersion = _runtime.RuntimeVersion;
         var plan = _warmup?.Plan ?? _runtime.CurrentPlan;
         if (plan is not null)

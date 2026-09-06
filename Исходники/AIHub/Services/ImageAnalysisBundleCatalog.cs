@@ -10,23 +10,14 @@ public static class ImageAnalysisBundleCatalog
 
     public static IReadOnlyList<ImageAnalysisBundleDefinition> Create() =>
     [
-        CreateBundle(
-            LightId,
-            level: 1,
-            titleKey: "ImageAnalysis.Bundle.Light",
-            purposeKey: "ImageAnalysis.Bundle.LightPurpose",
-            statusKey: "ImageAnalysis.Bundle.InDevelopment",
-            visualModel: "SmolVLM2 2.2B Instruct Q4_K_M + Q8 mmproj",
-            localizerModel: "Florence-2-base-ft",
-            requirements: new ImageAnalysisHardwareRequirements
-            {
-                RamGb = 16,
-                VramGb = 4,
-                LogicalProcessorCount = 8,
-                FreeDiskGb = 20
-            },
-            isAvailable: false,
-            isCurrentProjectBundle: false),
+        new ImageAnalysisBundleDefinition
+        {
+            Id = LightId, Level = 1, TitleKey = "ImageAnalysis.Bundle.Light",
+            PurposeKey = "ImageAnalysis.Bundle.LightPurpose", StatusKey = "ImageAnalysis.Bundle.Experimental",
+            Components = [new() { RoleKey = "ImageAnalysis.Role.Omni", ModelName = ManagedModelCatalog.OmniAlphaDisplayName, PlacementKey = "ImageAnalysis.Placement.Gpu" }],
+            Requirements = new() { RamGb = 16, VramGb = 8, LogicalProcessorCount = 8, FreeDiskGb = 8 },
+            IsAvailable = true, IsPreliminary = true
+        },
         CreateBundle(
             MediumId,
             level: 2,

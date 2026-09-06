@@ -352,7 +352,11 @@
             </Border>
         </Grid>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,11,0,0"><Button x:Name="BackButton" Height="38" MinWidth="175" Style="{DynamicResource SecondaryButtonStyle}" Click="BackButton_Click" /><TextBlock x:Name="FooterStatusText" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="14,0,0,0" /></StackPanel>
+        <Grid Grid.Row="4" Margin="0,11,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <Button x:Name="BackButton" Height="38" MinWidth="175" Style="{DynamicResource SecondaryButtonStyle}" Click="BackButton_Click" />
+            <TextBlock Grid.Column="1" x:Name="FooterStatusText" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="14,0,0,0" />
+        </Grid>
 
         <Popup x:Name="EventDetailPopup" Placement="Right" AllowsTransparency="True" StaysOpen="False" PopupAnimation="Fade"><Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="8" Padding="12" MaxWidth="340"><StackPanel><TextBlock x:Name="EventDetailTitleText" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock x:Name="EventDetailText" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,5,0,0" /><TextBlock x:Name="EventDetailTimeText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{DynamicResource UiFont11}" Margin="0,6,0,0" /></StackPanel></Border></Popup>
         <Popup x:Name="SpeechErrorPopup" PlacementTarget="{Binding ElementName=ResultPanel}" Placement="Center" AllowsTransparency="True" StaysOpen="True" PopupAnimation="Fade"><Border Background="#3B1117" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="8" Padding="13" MaxWidth="310"><StackPanel><TextBlock x:Name="SpeechErrorTitleText" Foreground="#FCA5A5" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock x:Name="SpeechErrorText" Foreground="White" TextWrapping="Wrap" Margin="0,5,0,0" /></StackPanel></Border></Popup>

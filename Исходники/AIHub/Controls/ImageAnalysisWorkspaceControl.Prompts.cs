@@ -19,7 +19,7 @@ public partial class ImageAnalysisWorkspaceControl
     private Func<string> _promptLanguage = () => "ru";
     public event EventHandler? DraftSettingsChanged;
 
-    private bool SupportsCustomPrompts => _bundleId == ImageAnalysisBundleCatalog.HeavyId;
+    private bool SupportsCustomPrompts => ImageAnalysisModeCapabilities.UsesOmniConversation(_bundleId);
 
     private void LoadPromptSettings(ImageAnalysisLiterarySettings settings)
     {
@@ -77,7 +77,7 @@ public partial class ImageAnalysisWorkspaceControl
     {
         if (StandardPromptButton is null) return;
         var editable = (interaction ?? !_isBusy) && !_readOnlyMode
-            && _session?.Status != ImageAnalysisLiteraryStatuses.Completed;
+            && _session?.Status != ImageAnalysisLiteraryStatuses.Completed && _session?.ContextBlocked != true;
         var custom = SupportsCustomPrompts && _customPromptMode;
         PromptModePanel.Visibility = SupportsCustomPrompts ? Visibility.Visible : Visibility.Collapsed;
         CustomPromptPanel.Visibility = custom ? Visibility.Visible : Visibility.Collapsed;
@@ -98,7 +98,8 @@ public partial class ImageAnalysisWorkspaceControl
         PromptDialogUi.Label(ManagePromptPairsButton, _localize("PromptPairs.Manage"));
         PromptPairStatusText.Text = custom ? _promptStoreFailed ? _promptError
             : _selectedPromptPair is null ? _localize("PromptPairs.Empty") : string.Empty : string.Empty;
-        GenerateButton.IsEnabled = editable && (!custom || _selectedPromptPair is not null);
+        GenerateButton.IsEnabled = editable && _session?.ContextBlocked != true && (!custom || _selectedPromptPair is not null);
+        GenerateButton.Opacity = _session?.ContextBlocked == true ? 0.45 : 1;
     }
 
     private void RememberPromptSettings()

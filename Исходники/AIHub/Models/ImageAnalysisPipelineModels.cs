@@ -2,6 +2,8 @@ namespace AIHub.Models;
 
 public static class ImageAnalysisPipelineIds
 {
+    public const string OmniAlpha = "omni_alpha_gguf_single_image_literary";
+    public const string OmniAlphaVersion = "2";
     public const string Legacy = "legacy_single_image_literary";
     public const string OmniHeavy = "omni_heavy_single_image_literary";
     public const string ContractVersion = "single-image-literary/3";
@@ -11,6 +13,8 @@ public static class ImageAnalysisPipelineIds
 
 public static class ImageAnalysisRuntimeIds
 {
+    public const string OmniLlama = "qwen2_5_omni_llama_cpp";
+    public const string Qwen35Llama = "qwen35_llama_cpp";
     public const string Legacy = "legacy_kimi_core";
     public const string Qwen25OmniTransformers = "qwen2_5_omni_transformers_worker";
 }

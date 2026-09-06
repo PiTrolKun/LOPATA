@@ -106,6 +106,9 @@ class TextBoundaryTests(unittest.TestCase):
 
     def test_worker_stops_generation_and_stream_at_first_eos(self):
         worker = self.make_worker()
+        # Admission now reserves 4096 tokens. Keep the tiny scripted EOS model,
+        # but supply the production-size admission window for this EOS test.
+        worker._max_context_tokens = lambda: 32768
         messages = [{"role": "user", "content": "Describe the image", "includesImage": True}]
         with patch.object(worker_module, "stream") as streamed:
             result = worker.generate_text(1, str(WORKER_PATH), messages)
@@ -143,6 +146,14 @@ class TextBoundaryTests(unittest.TestCase):
     def test_physical_context_exhaustion_is_not_success(self):
         with self.assertRaisesRegex(RuntimeError, "context_exhausted"):
             worker_module.OmniWorker._validate_text_completion(torch.tensor([[2, 2]]), [3], 2)
+
+    def test_admission_reserves_answer_before_95_percent(self):
+        boundary = 32768 * 95 // 100
+        budget = worker_module.OmniWorker._context_output_budget
+        self.assertEqual(4097, budget(boundary - 4097, 32768))
+        for tokens in (boundary - 4096, boundary, 32769):
+            with self.subTest(tokens=tokens), self.assertRaisesRegex(RuntimeError, "context_exhausted"):
+                budget(tokens, 32768)
 
     def test_eos_at_physical_boundary_is_success(self):
         worker_module.OmniWorker._validate_text_completion(torch.tensor([[2, 3]]), [3], 2)

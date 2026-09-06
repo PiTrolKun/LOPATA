@@ -6,7 +6,7 @@ using AIHub.Models;
 
 namespace AIHub.Services;
 
-public sealed class Qwen25OmniRuntimeService : IDisposable
+public sealed class Qwen25OmniRuntimeService : IOmniTextRuntime
 {
     internal static Encoding ProtocolEncoding { get; } = new UTF8Encoding(
         encoderShouldEmitUTF8Identifier: false);

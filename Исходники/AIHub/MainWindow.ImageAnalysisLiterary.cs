@@ -36,13 +36,11 @@ public partial class MainWindow
     private void ImageAnalysisWorkspacePage_SingleSubscenarioRequested(object? sender, EventArgs e)
     {
         var bundleId = _selectedImageAnalysisBundle?.Id ?? ImageAnalysisBundleCatalog.MediumId;
-        var isHeavy = bundleId == ImageAnalysisBundleCatalog.HeavyId;
+        var isHeavy = ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId);
         _imageAnalysisLiterarySession = new ImageAnalysisLiterarySession
         {
             BundleId = bundleId,
-            PipelineId = isHeavy
-                ? ImageAnalysisPipelineIds.OmniHeavy
-                : ImageAnalysisPipelineIds.Legacy,
+            PipelineId = ImageAnalysisModeCapabilities.Pipeline(bundleId),
             PipelineVersion = isHeavy
                 ? ImageAnalysisPipelineIds.OmniHeavyVersion
                 : ImageAnalysisPipelineIds.LegacyVersion,
@@ -59,6 +57,13 @@ public partial class MainWindow
                 LanguageCode = _appSettings.LanguageCode
             }
         };
+        if (bundleId == ImageAnalysisBundleCatalog.LightId)
+        {
+            _imageAnalysisLiterarySession.PipelineVersion = ImageAnalysisPipelineIds.OmniAlphaVersion;
+            _imageAnalysisLiterarySession.ModelId = ManagedModelCatalog.OmniAlphaRepository;
+            _imageAnalysisLiterarySession.ModelRevision = ManagedModelCatalog.OmniAlphaRevision;
+            _imageAnalysisLiterarySession.RuntimeId = ImageAnalysisRuntimeIds.Qwen35Llama;
+        }
         _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings);
         ImageAnalysisWorkspacePage.ShowImageStep(_imageAnalysisLiterarySession);
         StatusText.Text = L("Status.ImageAnalysisChooseFile");
@@ -66,7 +71,7 @@ public partial class MainWindow
 
     private async void ImageAnalysisWorkspacePage_SelectImageRequested(object? sender, EventArgs e)
     {
-        if (_imageAnalysisLiterarySession is null)
+        if (_imageAnalysisLiterarySession is null || _imageAnalysisLiterarySession.ContextBlocked)
         {
             return;
         }
@@ -188,7 +193,7 @@ public partial class MainWindow
         object? sender,
         ImageAnalysisSettingsRequestedEventArgs e)
     {
-        if (_imageAnalysisLiterarySession?.File is null)
+        if (_imageAnalysisLiterarySession?.File is null || _imageAnalysisLiterarySession.ContextBlocked)
         {
             return;
         }
@@ -196,7 +201,7 @@ public partial class MainWindow
         try
         {
             if (e.Settings.PromptMode != PromptModes.Standard
-                && _imageAnalysisLiterarySession.BundleId != ImageAnalysisBundleCatalog.HeavyId)
+                && !ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession.BundleId))
                 throw new System.IO.InvalidDataException("PromptPairs.Incompatible");
             OmniPromptPairAdapter.Validate(e.Settings);
         }
@@ -236,6 +241,13 @@ public partial class MainWindow
                 || owner.IsCancellationRequested
                 || !ReferenceEquals(_imageAnalysisLiteraryCts, owner))
             {
+                return;
+            }
+            if (value.Stage == OmniResponseRecovery.WaitingStage)
+            {
+                var waiting = L("ImageAnalysis.Context.RetryWaiting");
+                ImageAnalysisWorkspacePage.SetBusy(ManagedModelRoles.Core, waiting);
+                StatusText.Text = waiting;
                 return;
             }
             session.Status = value.Role == ManagedModelRoles.Vision
@@ -331,16 +343,16 @@ public partial class MainWindow
                 ImageAnalysisEventStatuses.Completed,
                 LF("ImageAnalysis.Workspace.Result.VersionName", session.Versions.Count, DateTime.Now.ToString("g")));
             _imageAnalysisSessionStore.Save(session, _storageSettings);
-            var delaySummaryReveal = session.BundleId != ImageAnalysisBundleCatalog.HeavyId
+            var delaySummaryReveal = !ImageAnalysisModeCapabilities.UsesOmniConversation(session.BundleId)
                 && ImageAnalysisSpeechTextService.ShouldDelaySummaryReveal(
-                session.BundleId == ImageAnalysisBundleCatalog.HeavyId
+                ImageAnalysisModeCapabilities.UsesOmniConversation(session.BundleId)
                     ? GetHeavyImageAnalysisSpeechSettings().Mode
                     : _appSettings.ImageAnalysisSpeech?.Mode,
                 session.ReviewSummary);
             ImageAnalysisWorkspacePage.ShowSession(
                 session,
                 showReviewSummary: !delaySummaryReveal);
-            StatusText.Text = L("Status.ImageAnalysisResultReady");
+            StatusText.Text = session.ContextBlocked ? L("ImageAnalysis.Context.RestartSession") : L("Status.ImageAnalysisResultReady");
             _ = SpeakCurrentImageAnalysisSummaryAsync(
                 automatic: true,
                 playbackStarted: delaySummaryReveal
@@ -361,8 +373,13 @@ public partial class MainWindow
         catch (Exception ex)
         {
             session.Status = ImageAnalysisLiteraryStatuses.Failed;
-            var errorMessage = ex is ImageAnalysisOmniFormatException
-                ? L("ImageAnalysis.Heavy.InvalidResultFormat") : ex.Message;
+            var errorMessage = ex switch
+            {
+                ImageAnalysisContextExhaustedException => L("ImageAnalysis.Context.RestartSession"),
+                ImageAnalysisOmniFormatException => L("ImageAnalysis.Context.RetryFailed"),
+                ImageAnalysisModelChangedException => L("ImageAnalysis.Alpha.ModelChanged"),
+                _ => ex.Message
+            };
             session.CurrentStep = session.Versions.Count > 0
                 ? ImageAnalysisLiterarySteps.Result
                 : ImageAnalysisLiterarySteps.Settings;
@@ -399,7 +416,7 @@ public partial class MainWindow
         object? sender,
         ImageAnalysisRevisionRequestedEventArgs e)
     {
-        if (_imageAnalysisLiterarySession?.GetSelectedVersion() is null)
+        if (_imageAnalysisLiterarySession?.GetSelectedVersion() is null || _imageAnalysisLiterarySession.ContextBlocked)
         {
             return;
         }
@@ -421,12 +438,19 @@ public partial class MainWindow
             L("ImageAnalysis.Workspace.Activity.RevisionActive"));
         StartImageAnalysisMatrix(ManagedModelRoles.Core);
         StatusText.Text = L("Status.ImageAnalysisRevisionRunning");
-        var progress = new Progress<ImageAnalysisLiteraryProgress>(_ =>
+        var progress = new Progress<ImageAnalysisLiteraryProgress>(value =>
         {
             if (!acceptProgress
                 || owner.IsCancellationRequested
                 || !ReferenceEquals(_imageAnalysisLiteraryCts, owner))
             {
+                return;
+            }
+            if (value.Stage == OmniResponseRecovery.WaitingStage)
+            {
+                var waiting = L("ImageAnalysis.Context.RetryWaiting");
+                ImageAnalysisWorkspacePage.SetBusy(ManagedModelRoles.Core, waiting);
+                StatusText.Text = waiting;
                 return;
             }
             ImageAnalysisWorkspacePage.SetBusy(
@@ -468,7 +492,7 @@ public partial class MainWindow
                 LF("ImageAnalysis.Workspace.Result.VersionName", session.Versions.Count, DateTime.Now.ToString("g")));
             _imageAnalysisSessionStore.Save(session, _storageSettings);
             ImageAnalysisWorkspacePage.ShowSession(session);
-            StatusText.Text = L("Status.ImageAnalysisRevisionReady");
+            StatusText.Text = session.ContextBlocked ? L("ImageAnalysis.Context.RestartSession") : L("Status.ImageAnalysisRevisionReady");
         }
         catch (OperationCanceledException)
         {
@@ -481,8 +505,13 @@ public partial class MainWindow
         catch (Exception ex)
         {
             session.Status = ImageAnalysisLiteraryStatuses.ResultReady;
-            var errorMessage = ex is ImageAnalysisOmniFormatException
-                ? L("ImageAnalysis.Heavy.InvalidResultFormat") : ex.Message;
+            var errorMessage = ex switch
+            {
+                ImageAnalysisContextExhaustedException => L("ImageAnalysis.Context.RestartSession"),
+                ImageAnalysisOmniFormatException => L("ImageAnalysis.Context.RetryFailed"),
+                ImageAnalysisModelChangedException => L("ImageAnalysis.Alpha.ModelChanged"),
+                _ => ex.Message
+            };
             session.LastError = errorMessage;
             AddImageAnalysisEvent(
                 session,
@@ -512,7 +541,7 @@ public partial class MainWindow
         ImageAnalysisLiterarySession session)
     {
         if (!_restartHeavyAnalysisAfterLanguageChange
-            || session.BundleId != ImageAnalysisBundleCatalog.HeavyId
+            || !ImageAnalysisModeCapabilities.UsesOmniConversation(session.BundleId)
             || session.File is null)
         {
             return;
@@ -722,9 +751,7 @@ public partial class MainWindow
         var pipelineId = session?.PipelineId;
         if (string.IsNullOrWhiteSpace(pipelineId))
         {
-            pipelineId = _selectedImageAnalysisBundle?.Id == ImageAnalysisBundleCatalog.HeavyId
-                ? ImageAnalysisPipelineIds.OmniHeavy
-                : ImageAnalysisPipelineIds.Legacy;
+            pipelineId = ImageAnalysisModeCapabilities.Pipeline(_selectedImageAnalysisBundle?.Id);
         }
         if (_imageAnalysisLiteraryPipeline is not null
             && string.Equals(_imageAnalysisLiteraryPipeline.PipelineId, pipelineId, StringComparison.Ordinal))
@@ -732,13 +759,18 @@ public partial class MainWindow
             return _imageAnalysisLiteraryPipeline;
         }
         _imageAnalysisLiteraryPipeline?.Dispose();
-        _imageAnalysisLiteraryPipeline = pipelineId == ImageAnalysisPipelineIds.OmniHeavy
-            ? new OmniHeavySingleImageLiteraryPipeline(
-                new Qwen25OmniRuntimeService(_imageAnalysisBundleInstallationService.LibraryStore))
-            : new LegacySingleImageLiteraryPipeline(
+        _imageAnalysisLiteraryPipeline = pipelineId switch
+        {
+            ImageAnalysisPipelineIds.OmniAlpha => new OmniHeavySingleImageLiteraryPipeline(
+                new OmniLlamaRuntimeService(_imageAnalysisBundleInstallationService.LibraryStore)),
+            ImageAnalysisPipelineIds.OmniHeavy => new OmniHeavySingleImageLiteraryPipeline(
+                new Qwen25OmniRuntimeService(_imageAnalysisBundleInstallationService.LibraryStore)),
+            ImageAnalysisPipelineIds.Legacy => new LegacySingleImageLiteraryPipeline(
                 new ImageAnalysisLiteraryService(
                     new ImageAnalysisKimiRuntimeService(_imageAnalysisBundleInstallationService.LibraryStore),
-                    new LlamaServerRuntimeService(_userContextService)));
+                    new LlamaServerRuntimeService(_userContextService))),
+            _ => throw new InvalidDataException("Unknown image-analysis pipeline; saved work was not changed.")
+        };
         return _imageAnalysisLiteraryPipeline;
     }
 
@@ -806,8 +838,8 @@ public partial class MainWindow
             return;
         }
         _imageAnalysisMatrixRole = role;
-        var isHeavy = _imageAnalysisLiterarySession?.BundleId == ImageAnalysisBundleCatalog.HeavyId
-            || _selectedImageAnalysisBundle?.Id == ImageAnalysisBundleCatalog.HeavyId;
+        var isHeavy = ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession?.BundleId)
+            || ImageAnalysisModeCapabilities.UsesOmniConversation(_selectedImageAnalysisBundle?.Id);
         var color = isHeavy
             ? Media.Color.FromRgb(42, 210, 108)
             : role switch
@@ -842,8 +874,8 @@ public partial class MainWindow
         var cancellationToken = owner.Token;
         var prepareCoreConcurrently = ImageAnalysisRuntimePreparationPolicy
             .ShouldPrepareCoreConcurrently(_lastPassport);
-        var isHeavy = _selectedImageAnalysisBundle?.Id == ImageAnalysisBundleCatalog.HeavyId
-            || _imageAnalysisLiterarySession?.BundleId == ImageAnalysisBundleCatalog.HeavyId;
+        var isHeavy = ImageAnalysisModeCapabilities.UsesOmniConversation(_selectedImageAnalysisBundle?.Id)
+            || ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession?.BundleId);
         try
         {
             if (isHeavy)

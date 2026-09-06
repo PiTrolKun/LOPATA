@@ -102,7 +102,7 @@ public partial class ImageAnalysisBundleSelectorControl : UserControl
         var actionText = bundle.IsAvailable
             ? _localize("ImageAnalysis.Bundle.Continue")
             : _localize("ImageAnalysis.Bundle.ShowExplanation");
-        var isGamma = bundle.Id == ImageAnalysisBundleCatalog.HeavyId;
+        var isGamma = ImageAnalysisModeCapabilities.UsesOmniConversation(bundle.Id);
         var adviceKey = assessment?.HasCompleteHardwareData != true
             ? "ImageAnalysis.Bundle.Advice.Unknown"
             : assessment.IsFullyCompatible
@@ -131,7 +131,7 @@ public partial class ImageAnalysisBundleSelectorControl : UserControl
             AutomationName = $"{_localize(bundle.TitleKey)}. {actionText}",
             Components = isGamma ?
             [
-                new() { Role = _localize("ImageAnalysis.Bundle.AnalysisRole"), Model = "Qwen2.5-Omni-3B", ShowPlacement = false },
+                new() { Role = _localize("ImageAnalysis.Bundle.AnalysisRole"), Model = bundle.Id == ImageAnalysisBundleCatalog.LightId ? ManagedModelCatalog.OmniAlphaDisplayName : "Qwen2.5-Omni-3B", ShowPlacement = false },
                 new() { Role = _localize("ImageAnalysis.Bundle.OptionalSpeechRole"), Model = "Kokoro", ShowPlacement = false }
             ] : bundle.Components.Select(component => new ImageAnalysisBundleComponentViewModel
             {
@@ -140,7 +140,9 @@ public partial class ImageAnalysisBundleSelectorControl : UserControl
                 Placement = _localize(component.PlacementKey)
             }).ToList(),
             RequirementsText = isGamma
-                ? string.Join(Environment.NewLine + Environment.NewLine,
+                ? bundle.Id == ImageAnalysisBundleCatalog.LightId
+                    ? _localize("ImageAnalysis.Bundle.Alpha.Requirements")
+                    : string.Join(Environment.NewLine + Environment.NewLine,
                     _localize("ImageAnalysis.Bundle.Gamma.Gpu"),
                     _localize("ImageAnalysis.Bundle.Gamma.Vram"),
                     _localize("ImageAnalysis.Bundle.Gamma.Ram"))
