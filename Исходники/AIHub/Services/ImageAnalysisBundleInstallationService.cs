@@ -8,9 +8,7 @@ public sealed class ImageAnalysisBundleInstallationService : IDisposable
 {
     private static readonly string[] MediumArtifactIds =
     [
-        ManagedModelCatalog.CoreArtifactId,
-        ManagedModelCatalog.KimiMediumArtifactId,
-        ManagedModelCatalog.FlorenceLargeArtifactId
+        ManagedModelCatalog.OmniBetaArtifactId
     ];
 
     private static readonly string[] HeavyArtifactIds =
@@ -84,7 +82,7 @@ public sealed class ImageAnalysisBundleInstallationService : IDisposable
         {
             return CreateSnapshot(ImageAnalysisBundleInstallStates.NeedsVerification, cards, modelsRoot);
         }
-        if (bundleId == ImageAnalysisBundleCatalog.LightId
+        if (OmniLlamaProfile.ForBundle(bundleId) is not null
             && cards.All(card => card.Status == ManagedModelStatuses.Installed)
             && !File.Exists(LlamaBackendPaths.ServerExecutablePath))
         {
@@ -148,7 +146,7 @@ public sealed class ImageAnalysisBundleInstallationService : IDisposable
     }
 
     public ManagedModelRemovalResult RemoveVisionFiles() =>
-        _removal.RemoveFiles(ManagedModelCatalog.KimiMediumArtifactId, includePartialFiles: true);
+        RemoveVisionFiles(ImageAnalysisBundleCatalog.MediumId);
 
     public ManagedModelRemovalResult RemoveVisionFiles(string bundleId) =>
         _removal.RemoveFiles(

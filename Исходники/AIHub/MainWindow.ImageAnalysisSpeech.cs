@@ -23,10 +23,17 @@ public partial class MainWindow
         ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession?.BundleId)
         || ImageAnalysisModeCapabilities.UsesOmniConversation(_selectedImageAnalysisBundle?.Id);
 
-    private string HeavySpeechProfileKey =>
-        (_imageAnalysisLiterarySession?.BundleId ?? _selectedImageAnalysisBundle?.Id) == ImageAnalysisBundleCatalog.LightId
-            ? $"{ImageAnalysisBundleCatalog.LightId}|{ManagedModelCatalog.OmniAlphaRepository}|{ManagedModelCatalog.OmniAlphaRevision}"
-            : $"{ImageAnalysisBundleCatalog.HeavyId}|{ManagedModelCatalog.Qwen25OmniRepository}|{ManagedModelCatalog.Qwen25OmniRevision}";
+    private string HeavySpeechProfileKey
+    {
+        get
+        {
+            var bundle = _imageAnalysisLiterarySession?.BundleId ?? _selectedImageAnalysisBundle?.Id;
+            var profile = OmniLlamaProfile.ForBundle(bundle);
+            return profile is not null
+                ? $"{profile.BundleId}|{profile.Repository}|{profile.Revision}"
+                : $"{ImageAnalysisBundleCatalog.HeavyId}|{ManagedModelCatalog.Qwen25OmniRepository}|{ManagedModelCatalog.Qwen25OmniRevision}";
+        }
+    }
 
     private ImageAnalysisHeavySpeechSettings GetHeavyImageAnalysisSpeechSettings()
     {

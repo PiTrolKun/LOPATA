@@ -37,7 +37,8 @@ public sealed class ImageAnalysisBundleInstallationTests
             var snapshot = service.Check(settings);
 
             Assert.AreEqual(ImageAnalysisBundleInstallStates.DownloadRequired, snapshot.State);
-            Assert.HasCount(3, snapshot.Components);
+            Assert.HasCount(1, snapshot.Components);
+            Assert.AreEqual(ManagedModelCatalog.OmniBetaArtifactId, snapshot.Components[0].ModelArtifactId);
             Assert.IsTrue(snapshot.MissingBytes > 0);
             Assert.IsFalse(snapshot.CanStart);
         }
@@ -193,24 +194,24 @@ public sealed class ImageAnalysisBundleInstallationTests
             var modelsRoot = Path.Combine(root, "models");
             Directory.CreateDirectory(modelsRoot);
             var store = new ManagedModelLibraryStore(Path.Combine(root, "library"));
-            var card = ManagedModelCatalog.CreateFlorenceLarge(modelsRoot);
+            var card = ManagedModelCatalog.CreateOmniBeta(modelsRoot);
             var firstFile = card.Files[0];
             Directory.CreateDirectory(card.InstallDirectory);
             File.WriteAllBytes(
-                Path.Combine(card.InstallDirectory, firstFile.RelativePath),
-                new byte[checked((int)firstFile.SizeBytes)]);
+                Path.Combine(card.InstallDirectory, firstFile.RelativePath + ".part"),
+                new byte[128]);
             card.Status = ManagedModelStatuses.SourceUnavailable;
             card.LastError = "Temporary DNS failure";
-            card.StoredBytes = firstFile.SizeBytes;
+            card.StoredBytes = 128;
             store.Upsert(card);
             using var service = new ImageAnalysisBundleInstallationService(store);
 
             var snapshot = service.Check(CreateSettings(modelsRoot));
             var reloaded = snapshot.Components.Single(item =>
-                item.ModelArtifactId == ManagedModelCatalog.FlorenceLargeArtifactId);
+                item.ModelArtifactId == ManagedModelCatalog.OmniBetaArtifactId);
 
             Assert.AreEqual(ImageAnalysisBundleInstallStates.ResumeAvailable, snapshot.State);
-            Assert.AreEqual(ManagedModelStatuses.SourceUnavailable, reloaded.Status);
+            Assert.AreEqual(ManagedModelStatuses.Paused, reloaded.Status);
             Assert.AreEqual("Temporary DNS failure", reloaded.LastError);
         }
         finally

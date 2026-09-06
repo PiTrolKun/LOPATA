@@ -39,6 +39,7 @@ public static partial class ManagedModelCatalog
             CreateFlorenceLarge(modelsRoot),
             CreateQwen25OmniHeavy(modelsRoot),
             CreateOmniAlpha(modelsRoot),
+            CreateOmniBeta(modelsRoot),
             CreateKokoroEnglish(modelsRoot),
             CreateKokoroRussian(modelsRoot)
         ];

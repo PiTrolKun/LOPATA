@@ -203,7 +203,7 @@
   "ImageAnalysis.Bundle.Medium": "Бета",
   "ImageAnalysis.Bundle.Heavy": "Гамма",
   "ImageAnalysis.Bundle.LightPurpose": "Для компьютеров начального игрового уровня и экономного анализа.",
-  "ImageAnalysis.Bundle.MediumPurpose": "Для верхней границы средних игровых ПК и более глубокого анализа.",
+  "ImageAnalysis.Bundle.MediumPurpose": "Анализ изображений и описание для игровых ПК с 32 ГБ оперативной памяти.",
   "ImageAnalysis.Bundle.HeavyPurpose": "Совет программы основан на оценке ресурсов вашего компьютера.",
   "ImageAnalysis.Bundle.Experimental": "Тестовый",
   "ImageAnalysis.Bundle.InDevelopment": "В разработке",
@@ -1182,5 +1182,12 @@
   "ImageAnalysis.Install.Alpha.DownloadTitle": "Загрузка режима «Альфа»",
   "Status.ImageAnalysisAlphaBundleReady": "Статус: модель и проектор режима «Альфа» проверены и готовы к запуску.",
   "Models.Consumer.image-analysis-light": "Анализ изображений — Альфа",
-  "ImageAnalysis.Alpha.ModelChanged": "Эта работа создана другой моделью Альфы. Её можно просматривать и экспортировать. Для продолжения с новой моделью начните новый анализ изображения."
+  "ImageAnalysis.Alpha.ModelChanged": "Эта работа создана другой моделью Альфы. Её можно просматривать и экспортировать. Для продолжения с новой моделью начните новый анализ изображения.",
+  "ImageAnalysis.Bundle.Beta.Requirements": "Целевая конфигурация: 32 ГБ оперативной памяти и видеокарта NVIDIA GeForce RTX с 10–16 ГБ видеопамяти.\n\nПолный расход памяти и качество комплекта уточняются по результатам тестов.",
+  "ImageAnalysis.Install.Beta.ReadyTitle": "Режим «Бета» готов к запуску",
+  "ImageAnalysis.Install.Beta.ReadyDescription": "Файлы модели и проектора проверены. При запуске будут подготовлены анализ изображений и выбранная озвучка.",
+  "ImageAnalysis.Install.Beta.DownloadTitle": "Загрузка режима «Бета»",
+  "Status.ImageAnalysisBetaBundleReady": "Статус: модель и проектор режима «Бета» проверены и готовы к запуску.",
+  "ImageAnalysis.Gguf.StartNotice": "Модель обрабатывает изображение и создаёт описание. Озвучивание использует Kokoro. Для оценки памяти откройте программы, с которыми планируете работать одновременно.",
+  "ImageAnalysis.ModelChanged": "Эта работа создана другой моделью. Её можно просматривать и экспортировать. Для продолжения с новой моделью начните новый анализ изображения."
 }

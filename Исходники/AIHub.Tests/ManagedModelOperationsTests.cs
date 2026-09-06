@@ -146,9 +146,10 @@ public sealed class ManagedModelOperationsTests
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task ParallelDownload_ReusesContiguousPartialAndAssemblesExactPayload(bool alpha)
+    [DataRow("core")]
+    [DataRow("light")]
+    [DataRow("medium")]
+    public async Task ParallelDownload_ReusesContiguousPartialAndAssemblesExactPayload(string bundle)
     {
         var root = ManagedModelLibraryTests.CreateRoot();
         try
@@ -161,11 +162,11 @@ public sealed class ManagedModelOperationsTests
             using var client = new HttpClient(handler);
             var store = new ManagedModelLibraryStore(Path.Combine(root, "library"));
             var card = ManagedModelLibraryTests.CreateCard(Path.Combine(root, "models"), payload);
-            if (alpha)
+            if (bundle != "core")
             {
-                card.ModelArtifactId = ManagedModelCatalog.OmniAlphaArtifactId;
+                card.ModelArtifactId = OmniLlamaProfile.ForBundle(bundle)!.ArtifactId;
                 card.Role = ManagedModelRoles.Vision;
-                var projector = ManagedModelCatalog.CreateOmniAlpha(card.ModelsRoot).Files[1];
+                var projector = (bundle == "light" ? ManagedModelCatalog.CreateOmniAlpha(card.ModelsRoot) : ManagedModelCatalog.CreateOmniBeta(card.ModelsRoot)).Files[1];
                 projector.SizeBytes = payload.Length;
                 projector.Sha256 = card.Files[0].Sha256;
                 card.Files.Add(projector);
@@ -184,8 +185,8 @@ public sealed class ManagedModelOperationsTests
             CollectionAssert.AreEqual(payload, await File.ReadAllBytesAsync(targetPath));
             Assert.IsTrue(handler.MaximumActiveRequests >= 2);
             Assert.IsTrue(handler.RequestedRanges.Count >= 5);
-            if (!alpha) Assert.IsTrue(handler.RequestedRanges.All(range => range.From >= prefixLength));
-            if (alpha)
+            if (bundle == "core") Assert.IsTrue(handler.RequestedRanges.All(range => range.From >= prefixLength));
+            if (bundle != "core")
             {
                 CollectionAssert.AreEqual(payload, await File.ReadAllBytesAsync(Path.Combine(card.InstallDirectory, card.Files[1].RelativePath)));
                 Assert.AreEqual(ManagedModelStatuses.Installed, store.Load(card.ModelArtifactId)!.Status);

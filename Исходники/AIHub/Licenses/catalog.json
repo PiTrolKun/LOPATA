@@ -1157,5 +1157,22 @@
     "Texts": [
       "texts/Apache-2.0.txt"
     ]
+  },
+  {
+    "Id": "model-qwen3-8-9b-distill-q4km",
+    "Name": "Qwen3.8-9B-Distill Q4_K_M + Qwen3.5-9B F16 projector",
+    "Version": "760121cd70bb4c36b2b5ec58eb765e0df5987efe:3885219b6810b007914f3a7950a8d1b469d598a5",
+    "Author": "Empero; Qwen; projector conversion by Unsloth",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/empero-ai/Qwen3.8-9B-Distill-GGUF/tree/760121cd70bb4c36b2b5ec58eb765e0df5987efe",
+    "Checked": "2026-09-06",
+    "Ru": "Составной комплект: текстовая модель Empero и F16 проектор исходной Qwen3.5-9B из Unsloth. В карточках заявлена Apache-2.0; приложен стандартный текст лицензии. Исходник: https://huggingface.co/empero-ai/Qwen3.8-9B-Distill/tree/0934f3d2327ff2df2197495278c4c46ae5a56bd9. Проектор: https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/tree/3885219b6810b007914f3a7950a8d1b469d598a5. Проектор не является проверенной конверсией весов Empero; качество этой пары требует реального теста. Файлы скачиваются отдельно, в установщик не входят. При распространении соблюдайте условия и сохраняйте уведомления.",
+    "En": "Composite bundle: Empero text model and the base Qwen3.5-9B F16 projector converted by Unsloth. The cards declare Apache-2.0; the standard license text is included. Source: https://huggingface.co/empero-ai/Qwen3.8-9B-Distill/tree/0934f3d2327ff2df2197495278c4c46ae5a56bd9. Projector: https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/tree/3885219b6810b007914f3a7950a8d1b469d598a5. The projector is not a verified conversion of Empero weights; this pair requires a real quality test. Files are downloaded separately and are not bundled with the installer. Follow the terms and retain notices when redistributing.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "2F66AA902244EE0BAFFE937C3AB4CA01AB91BD8A6D4C0F2373C625F972BB7BC5",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
   }
 ]

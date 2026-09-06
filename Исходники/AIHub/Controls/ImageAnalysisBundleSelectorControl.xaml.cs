@@ -131,7 +131,7 @@ public partial class ImageAnalysisBundleSelectorControl : UserControl
             AutomationName = $"{_localize(bundle.TitleKey)}. {actionText}",
             Components = isGamma ?
             [
-                new() { Role = _localize("ImageAnalysis.Bundle.AnalysisRole"), Model = bundle.Id == ImageAnalysisBundleCatalog.LightId ? ManagedModelCatalog.OmniAlphaDisplayName : "Qwen2.5-Omni-3B", ShowPlacement = false },
+                new() { Role = _localize("ImageAnalysis.Bundle.AnalysisRole"), Model = bundle.Components[0].ModelName, ShowPlacement = false },
                 new() { Role = _localize("ImageAnalysis.Bundle.OptionalSpeechRole"), Model = "Kokoro", ShowPlacement = false }
             ] : bundle.Components.Select(component => new ImageAnalysisBundleComponentViewModel
             {
@@ -142,6 +142,7 @@ public partial class ImageAnalysisBundleSelectorControl : UserControl
             RequirementsText = isGamma
                 ? bundle.Id == ImageAnalysisBundleCatalog.LightId
                     ? _localize("ImageAnalysis.Bundle.Alpha.Requirements")
+                    : bundle.Id == ImageAnalysisBundleCatalog.MediumId ? _localize("ImageAnalysis.Bundle.Beta.Requirements")
                     : string.Join(Environment.NewLine + Environment.NewLine,
                     _localize("ImageAnalysis.Bundle.Gamma.Gpu"),
                     _localize("ImageAnalysis.Bundle.Gamma.Vram"),

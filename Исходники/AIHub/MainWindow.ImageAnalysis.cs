@@ -229,7 +229,7 @@ public partial class MainWindow
                     names,
                     ComponentCardViewModel.FormatBytes(snapshot.MissingBytes),
                     snapshot.ModelsRoot),
-                L(bundleId == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.DownloadTitle" : ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
+                L(bundleId == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.DownloadTitle" : bundleId == ImageAnalysisBundleCatalog.MediumId ? "ImageAnalysis.Install.Beta.DownloadTitle" : ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
                     ? "ImageAnalysis.Install.HeavyDownloadTitle"
                     : "ImageAnalysis.Install.DownloadTitle"),
                 MessageBoxButton.YesNo,
@@ -281,7 +281,7 @@ public partial class MainWindow
                     bundleId);
             ImageAnalysisBundleConfirmationPage.UpdateSnapshot(updated);
             StatusText.Text = updated.CanStart
-                ? L(bundleId == ImageAnalysisBundleCatalog.LightId ? "Status.ImageAnalysisAlphaBundleReady" : ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
+                ? L(bundleId == ImageAnalysisBundleCatalog.LightId ? "Status.ImageAnalysisAlphaBundleReady" : bundleId == ImageAnalysisBundleCatalog.MediumId ? "Status.ImageAnalysisBetaBundleReady" : ImageAnalysisModeCapabilities.UsesOmniConversation(bundleId)
                     ? "Status.ImageAnalysisHeavyBundleReady"
                     : "Status.ImageAnalysisBundleReady")
                 : L("Status.ImageAnalysisBundleUpdated");

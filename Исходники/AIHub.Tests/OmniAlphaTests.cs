@@ -103,28 +103,30 @@ public sealed class OmniAlphaTests
     }
 
     [TestMethod]
-    public async Task SharedPipeline_UsesAlphaIdentityCustomPairCheckpointAndRevision()
+    [DataRow("light")]
+    [DataRow("medium")]
+    public async Task SharedPipeline_UsesSelectedIdentityCustomPairCheckpointAndRevision(string bundle)
     {
         var root = ManagedModelLibraryTests.CreateRoot();
         try
         {
             var storage = new StorageSettings();
             storage.Results.Locations.Add(new() { Path = root });
-            var runtime = new FakeRuntime();
+            var runtime = new FakeRuntime(bundle);
             using var pipeline = new OmniHeavySingleImageLiteraryPipeline(runtime);
             var settings = new ImageAnalysisLiterarySettings
             {
                 LanguageCode = "en", PromptMode = PromptModes.Custom,
                 CustomPrompts = OmniPromptPairAdapter.CreateDefault("en") with { Name = "Alpha", AnalysisPrompt = "COUNT THE RED SIGNS", ComposePrompt = "EXPLAIN EACH SIGN" }
             };
-            var session = new ImageAnalysisLiterarySession { BundleId = "light", Settings = settings, File = new() { SourcePath = "test.png" } };
+            var session = new ImageAnalysisLiterarySession { BundleId = bundle, Settings = settings, File = new() { SourcePath = "test.png" } };
             ImageAnalysisPipelineCheckpoint? checkpoint = null;
             await pipeline.PrepareAsync(storage, session, false, _ => { }, null, CancellationToken.None);
             var result = await pipeline.CreateAsync(session.File, settings, storage, session, _ => { }, null, null, c => checkpoint = c, CancellationToken.None);
             session.VisualReport = result.VisualReport;
-            Assert.AreEqual(ImageAnalysisPipelineIds.OmniAlpha, session.PipelineId);
-            Assert.AreEqual("light", session.BundleId);
-            Assert.AreEqual(ManagedModelCatalog.OmniAlphaRevision, session.ModelRevision);
+            Assert.AreEqual(runtime.PipelineId, session.PipelineId);
+            Assert.AreEqual(bundle, session.BundleId);
+            Assert.AreEqual(runtime.ModelRevision, session.ModelRevision);
             Assert.AreEqual(2, checkpoint!.HiddenConversation.Count);
             Assert.AreEqual(3, runtime.Requests[1].Count);
             StringAssert.Contains(runtime.Requests[1][0].Content, "COUNT THE RED SIGNS");
@@ -136,7 +138,7 @@ public sealed class OmniAlphaTests
             var store = new ImageAnalysisSessionStore(); store.Save(session, storage);
             var loaded = store.Load(session.SessionId, storage)!;
             Assert.AreEqual(settings.CustomPrompts, loaded.Settings.CustomPrompts);
-            Assert.AreEqual(ImageAnalysisPipelineIds.OmniAlpha, loaded.PipelineId);
+            Assert.AreEqual(runtime.PipelineId, loaded.PipelineId);
             Assert.AreEqual(3, Directory.GetFiles(store.GetProjectsDirectory(storage), "*.json", SearchOption.AllDirectories).Count(p => p.Contains("OmniResponses")));
         }
         finally { ManagedModelLibraryTests.DeleteRoot(root); }
@@ -199,14 +201,15 @@ public sealed class OmniAlphaTests
         Assert.IsTrue(OmniSessionCompatibility.RequiresNewSession(session, runtime));
     }
 
-    private sealed class FakeRuntime : IOmniTextRuntime
+    private sealed class FakeRuntime(string bundle = "light") : IOmniTextRuntime
     {
         public List<List<ImageAnalysisHiddenMessage>> Requests { get; } = [];
-        public string BundleId => "light";
-        public string PipelineId => ImageAnalysisPipelineIds.OmniAlpha;
-        public string PipelineVersion => ImageAnalysisPipelineIds.OmniAlphaVersion;
-        public string ModelId => ManagedModelCatalog.OmniAlphaRepository;
-        public string ModelRevision => ManagedModelCatalog.OmniAlphaRevision;
+        private OmniLlamaProfile Profile => OmniLlamaProfile.ForBundle(bundle)!;
+        public string BundleId => bundle;
+        public string PipelineId => Profile.PipelineId;
+        public string PipelineVersion => Profile.PipelineVersion;
+        public string ModelId => Profile.Repository;
+        public string ModelRevision => Profile.Revision;
         public string RuntimeId => ImageAnalysisRuntimeIds.Qwen35Llama;
         public string RuntimeVersion => "test";
         public string DeviceMapJson => "{}";

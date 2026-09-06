@@ -114,14 +114,14 @@ public partial class ImageAnalysisBundleConfirmationControl : UserControl
         TitleText.Text = _format("ImageAnalysis.Confirmation.Title", [bundleTitle.ToUpper(CultureInfo.CurrentUICulture)]);
         ModeSymbolText.Text = _bundle.Id switch { "light" => "α", "medium" => "β", "heavy" => "γ", _ => string.Empty };
         DescriptionText.Visibility = isHeavy ? Visibility.Collapsed : Visibility.Visible;
-        DescriptionText.Text = _localize(isHeavy
+        DescriptionText.Text = _localize(OmniLlamaProfile.ForBundle(_bundle.Id) is not null ? "ImageAnalysis.Gguf.StartNotice" : isHeavy
             ? "ImageAnalysis.Heavy.StartNotice"
             : "ImageAnalysis.Install.Description");
         StateTitleText.Text = isHeavy && _snapshot.State == ImageAnalysisBundleInstallStates.Ready
-            ? _localize(_bundle.Id == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.ReadyTitle" : "ImageAnalysis.Install.State.heavy_ready.Title")
+            ? _localize(_bundle.Id == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.ReadyTitle" : _bundle.Id == ImageAnalysisBundleCatalog.MediumId ? "ImageAnalysis.Install.Beta.ReadyTitle" : "ImageAnalysis.Install.State.heavy_ready.Title")
             : _localize($"ImageAnalysis.Install.State.{_snapshot.State}.Title");
         StateDescriptionText.Text = isHeavy && _snapshot.State == ImageAnalysisBundleInstallStates.Ready
-            ? _localize(_bundle.Id == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.ReadyDescription" : "ImageAnalysis.Install.State.heavy_ready.Description")
+            ? _localize(_bundle.Id == ImageAnalysisBundleCatalog.LightId ? "ImageAnalysis.Install.Alpha.ReadyDescription" : _bundle.Id == ImageAnalysisBundleCatalog.MediumId ? "ImageAnalysis.Install.Beta.ReadyDescription" : "ImageAnalysis.Install.State.heavy_ready.Description")
             : BuildStateDescription(_snapshot);
         UpdateErrorDetails();
         RefreshComponentItems();

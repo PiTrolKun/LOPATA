@@ -15,10 +15,12 @@ public static class OmniLlamaProtocol
     public const double TopP = 0.95;
     public const int TopK = 20;
 
-    public static string DeviceMapJson => JsonSerializer.Serialize(new
+    public static string DeviceMapJson => DescribeDeviceMap(OmniLlamaProfile.Alpha);
+
+    public static string DescribeDeviceMap(OmniLlamaProfile profile) => JsonSerializer.Serialize(new
     {
-        model = "cuda", projector = "cuda", quantization = "Q5_K_M", projectorQuantization = "F16",
-        sourceModel = ManagedModelCatalog.OmniAlphaSourceModel,
+        model = "cuda", projector = "cuda", quantization = profile.Quantization, projectorQuantization = "F16",
+        sourceModel = profile.SourceModel, modelRevision = profile.Revision,
         contextTokens = ContextTokens, slots = 1, fit = false,
         temperature = Temperature, topP = TopP, topK = TopK, minP = 0, reasoning = true
     });
@@ -59,7 +61,7 @@ public static class OmniLlamaProtocol
     }
 
     public static async Task<OmniTextGenerationResult> ReadAsync(Stream stream,
-        IProgress<ModelStreamChunk>? progress, Action<string>? saveRaw, CancellationToken cancellationToken)
+        IProgress<ModelStreamChunk>? progress, Action<string>? saveRaw, CancellationToken cancellationToken, OmniLlamaProfile? profile = null)
     {
         var timer = Stopwatch.StartNew();
         var raw = new StringBuilder();
@@ -115,18 +117,18 @@ public static class OmniLlamaProtocol
             }
         }
         finally { saveRaw?.Invoke(raw.ToString()); }
-        if (finish == "length") throw new ImageAnalysisContextExhaustedException("The Alpha response reached the safe context budget. Start a new session.");
+        if (finish == "length") throw new ImageAnalysisContextExhaustedException("The Omni response reached the safe context budget. Start a new session.");
         var tail = answer.Complete();
         text.Append(tail);
         if (tail.Length > 0) progress?.Report(new ModelStreamChunk(tail));
         if (done && finish == "stop" && string.IsNullOrWhiteSpace(text.ToString()))
-            throw new ImageAnalysisOmniFormatException(new InvalidDataException("The completed Alpha response has no final answer."));
+            throw new ImageAnalysisOmniFormatException(new InvalidDataException("The completed Omni response has no final answer."));
         if (!done || finish != "stop" || string.IsNullOrWhiteSpace(text.ToString()))
-            throw new InvalidDataException($"Incomplete Alpha response: finish={finish}; done={done}; chars={text.Length}.");
+            throw new InvalidDataException($"Incomplete Omni response: finish={finish}; done={done}; chars={text.Length}.");
         progress?.Report(new ModelStreamChunk(string.Empty, true));
         var decodeMs = Math.Max(1, timer.ElapsedMilliseconds - firstTokenMs);
         return new(text.ToString().Trim(), timer.ElapsedMilliseconds, inputTokens, outputTokens, ContextTokens,
             "eos", firstTokenMs, decodeMs, firstTokenMs, outputTokens * 1000.0 / decodeMs,
-            0, "qwen35-q5km-f16", "llama.cpp-auto", RawProtocol: raw.ToString());
+            0, (profile ?? OmniLlamaProfile.Alpha).DiagnosticProfile, "llama.cpp-auto", RawProtocol: raw.ToString());
     }
 }

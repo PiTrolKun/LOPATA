@@ -1,464 +1,464 @@
 [
   {
-    "Source": "installer",
+    "Id": "builtin.dotnet",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "02599044D600B2D36A41D85897C72A664E8EC3B8AD3E62DABAF2D65EA1688166",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.dotnet"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.wpf-images",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "A57E4FF07EAE66EE5D5A0237ED54BD749201B0700A7C3ED9ABE0E63E6DC8338B",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.wpf-images"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.openxml",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.openxml"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.closedxml",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.closedxml"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.pdfpig",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.pdfpig"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.sharpcompress",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.sharpcompress"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.csvhelper",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "1F5BD2B8D0B7ED01EE8E0A8AECFAD21DA5A2D2DA9F5FE71AEEB507FBED5C02FF",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.csvhelper"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.anglesharp",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.anglesharp"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.markdig",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8965535BCBF8A7ACEBFFC9339FE9ACB75BEB8EF94C57472EE91F5B7C6AA72769",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.markdig"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.yamldotnet",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.yamldotnet"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.mimekit",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.mimekit"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "builtin.sqlite",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "builtin.sqlite"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.java.temurin21",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CDFF30F189DFB7EA6D06ADD4031F56C0344FF4E6CBD839035588EFFFC0EC212B",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.java.temurin21"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.apache-tika",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.apache-tika"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.imagemagick",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "1FC8FF2E8681AEC5D983D31DE3FFFE77B5C60C530535D3363993A7DED1F8B67A",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.imagemagick"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.tesseract",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.tesseract"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "language.tesseract.eng",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "language.tesseract.eng"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "language.tesseract.rus",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "language.tesseract.rus"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.ffmpeg",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "B9B71BE7EAB2905AC9B041CF19B18DF5E84AF540B11101AF5AD12E776D7FFD75",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.ffmpeg"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.libreoffice",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "5770398BF9B876B565FEB585639FD82EC1C3E3B4CC6B5A1DF4C62A5990133CCB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.libreoffice"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.whisper.cpu",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.whisper.cpu"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.whisper.cuda124",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "F7329C4CCDD68DB10FCAC764945340C8D8FA8404DB7DDE21BF5B03C9C5CCE015",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.whisper.cuda124"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "model.whisper.small",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "model.whisper.small"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "model.vision.smolvlm2.projector",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "model.vision.smolvlm2.projector"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "model.vision.smolvlm2.q4km",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "model.vision.smolvlm2.q4km"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "viewer.webview2",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "A91C7C9566CB3F85816294ED3AD8D39BA2D829B21431D44883A1BE2C5C99A45A",
     "AppVersion": "__APP_VERSION__",
-    "Id": "viewer.webview2"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "viewer.pdfjs",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "viewer.pdfjs"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "viewer.epubjs",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8965535BCBF8A7ACEBFFC9339FE9ACB75BEB8EF94C57472EE91F5B7C6AA72769",
     "AppVersion": "__APP_VERSION__",
-    "Id": "viewer.epubjs"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "viewer.libvlc",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "19F1AAA374960C1CFC62998FB3DDD89200BFD5807BF88A30DED1B0E16C01C23C",
     "AppVersion": "__APP_VERSION__",
-    "Id": "viewer.libvlc"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "viewer.openseadragon",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "6D0F3133470B8D2B4BD5ACEA2C85B35D09DE37B848FE9ABF2735E4C6C1FAF7E9",
     "AppVersion": "__APP_VERSION__",
-    "Id": "viewer.openseadragon"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "viewer.babylon",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "viewer.babylon"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "viewer.avalonedit",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "viewer.avalonedit"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "model-qwen3-8b-core-q4km",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "model-qwen3-8b-core-q4km"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "lopata",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "2B3B61BAF6A7D09AF716189037B08FEE45DB4CE1CB885935277DA06F0E05B1E4",
     "AppVersion": "__APP_VERSION__",
-    "Id": "lopata"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.AngleSharp",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.AngleSharp"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.BouncyCastle.Cryptography",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "6F05C3FC420ED378C1066A060E784AEDB79943A663D5E707AA565690A0AC1D93",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.BouncyCastle.Cryptography"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.ClosedXML",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.ClosedXML"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.ClosedXML.Parser",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.ClosedXML.Parser"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.CsvHelper",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "2ABE8394291DC8EF30A417BE1BA471D26F567EF10D0DE27022DA23D3C0441103",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.CsvHelper"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.DocumentFormat.OpenXml",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.DocumentFormat.OpenXml"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.DocumentFormat.OpenXml.Framework",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.DocumentFormat.OpenXml.Framework"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.ExcelNumberFormat",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.ExcelNumberFormat"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.Markdig",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8965535BCBF8A7ACEBFFC9339FE9ACB75BEB8EF94C57472EE91F5B7C6AA72769",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.Markdig"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.Microsoft.Data.Sqlite",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.Microsoft.Data.Sqlite"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.Microsoft.Data.Sqlite.Core",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.Microsoft.Data.Sqlite.Core"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.MimeKit",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.MimeKit"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.PdfPig",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.PdfPig"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.RBush.Signed",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.RBush.Signed"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.SharpCompress",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.SharpCompress"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.SixLabors.Fonts",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.SixLabors.Fonts"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.SQLitePCLRaw.bundle_e_sqlite3",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.SQLitePCLRaw.bundle_e_sqlite3"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.SQLitePCLRaw.core",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.SQLitePCLRaw.core"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.SQLitePCLRaw.lib.e_sqlite3",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.SQLitePCLRaw.lib.e_sqlite3"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.SQLitePCLRaw.provider.e_sqlite3",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.SQLitePCLRaw.provider.e_sqlite3"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.System.Speech",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.System.Speech"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "nuget.YamlDotNet",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "8E52B8B0452ECDC4023ACE5F2B9BA0BD849380D475A2F62B2D59C81F23D7B3CB",
     "AppVersion": "__APP_VERSION__",
-    "Id": "nuget.YamlDotNet"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "backend.llama",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "F88AA98AA74492D206D426C2E850EF58BBE607F8246464B3D6D0FE7557E4185D",
     "AppVersion": "__APP_VERSION__",
-    "Id": "backend.llama"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "backend.chatllm",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "0372FB9F790966397705EF3A215D126E4C836B2836EB9C5A76BA21C0C94B3241",
     "AppVersion": "__APP_VERSION__",
-    "Id": "backend.chatllm"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "runtime.espeak",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "232FB389879255FB3C67711AC53FC6B142177C320498A1275476135A3EAA47C7",
     "AppVersion": "__APP_VERSION__",
-    "Id": "runtime.espeak"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "native.cuda",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "418DB426CFD3C6E28BACB0095BF00EB7C62C9BAF028D440F53F1930CB270C9B0",
     "AppVersion": "__APP_VERSION__",
-    "Id": "native.cuda"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "native.openssl",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "F66CACCE2EC7851A29A10542C3E95B79FA8F420D30B1E25D071E6E482685BD99",
     "AppVersion": "__APP_VERSION__",
-    "Id": "native.openssl"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "native.vulkan",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "6C74521456DF4ED47AEBE7644A41BF3B8F58D576444C16B1E7431A184F3313ED",
     "AppVersion": "__APP_VERSION__",
-    "Id": "native.vulkan"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "native.imagemagick",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "E763AB4587C0EC5EA385937B16CF46E81DFBA073EC7CAE0D4DEE27DDB916C995",
     "AppVersion": "__APP_VERSION__",
-    "Id": "native.imagemagick"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "native.libomp",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "4095546A081587FD8598AB42C76FDDEEF601C9FD2FEA79D5FCF680334F599785",
     "AppVersion": "__APP_VERSION__",
-    "Id": "native.libomp"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "bge-reranker-v2-m3-tool",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "bge-reranker-v2-m3-tool"
+    "Source": "installer"
   },
   {
-    "Source": "installer",
+    "Id": "Qwen/Qwen3-0.6B-GGUF",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
-    "Id": "Qwen/Qwen3-0.6B-GGUF"
+    "Source": "installer"
   }
 ]

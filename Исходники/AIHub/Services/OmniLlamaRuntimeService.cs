@@ -8,8 +8,9 @@ using AIHub.Models;
 
 namespace AIHub.Services;
 
-public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : IOmniTextRuntime
+public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library, OmniLlamaProfile? profile = null) : IOmniTextRuntime
 {
+    private readonly OmniLlamaProfile _profile = profile ?? OmniLlamaProfile.Alpha;
     private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly ImageAnalysisHeavyResourcePlanningService _resources = new();
@@ -19,14 +20,14 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
     private bool _ready;
     private bool _disposed;
     private OmniWarmupResult? _warmup;
-    public string BundleId => ImageAnalysisBundleCatalog.LightId;
-    public string PipelineId => ImageAnalysisPipelineIds.OmniAlpha;
-    public string PipelineVersion => ImageAnalysisPipelineIds.OmniAlphaVersion;
-    public string ModelId => ManagedModelCatalog.OmniAlphaRepository;
-    public string ModelRevision => ManagedModelCatalog.OmniAlphaRevision;
+    public string BundleId => _profile.BundleId;
+    public string PipelineId => _profile.PipelineId;
+    public string PipelineVersion => _profile.PipelineVersion;
+    public string ModelId => _profile.Repository;
+    public string ModelRevision => _profile.Revision;
     public string RuntimeId => ImageAnalysisRuntimeIds.Qwen35Llama;
     public string RuntimeVersion => LlamaBackendPaths.Release;
-    public string DeviceMapJson => OmniLlamaProtocol.DeviceMapJson;
+    public string DeviceMapJson => OmniLlamaProtocol.DescribeDeviceMap(_profile);
     public bool IsReady
     {
         get
@@ -41,24 +42,24 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
         IProgress<ImageAnalysisLiteraryProgress>? progress, CancellationToken cancellationToken, bool reuseCurrentPlan = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        await ComponentLicenseGate.EnsureAsync(ManagedModelCatalog.OmniAlphaArtifactId, cancellationToken);
+        await ComponentLicenseGate.EnsureAsync(_profile.ArtifactId, cancellationToken);
         await ComponentLicenseGate.EnsureAsync("basic", cancellationToken);
         await _gate.WaitAsync(cancellationToken);
         try
         {
             if (IsReady && _warmup is not null) return _warmup with { AlreadyLoaded = true };
             Stop();
-            var card = library.Load(ManagedModelCatalog.OmniAlphaArtifactId)
-                ?? throw new InvalidDataException("The Alpha model is not registered. Download it using the model button.");
+            var card = library.Load(_profile.ArtifactId)
+                ?? throw new InvalidDataException("The Omni model is not registered. Download it using the model button.");
             if (card.Status != ManagedModelStatuses.Installed || card.Revision != ModelRevision)
-                throw new InvalidDataException("Download and verify the complete Alpha model and projector first.");
+                throw new InvalidDataException("Download and verify the complete Omni model and projector first.");
             if (!File.Exists(LlamaBackendPaths.ServerExecutablePath))
                 throw new FileNotFoundException("The managed llama.cpp backend is missing.", LlamaBackendPaths.ServerExecutablePath);
             var model = ResolveFile(card, "main_model");
             var projector = ResolveFile(card, "projector");
             var before = await _resources.CaptureCurrentAsync(cancellationToken);
             CurrentPlan = new([before], before.AvailableRamBytes, before.AvailableVramBytes,
-                before.CommitAvailableBytes, 0, 0, 0, 0, true, "alpha_gpu_model_and_projector_fixed_no_fit");
+                before.CommitAvailableBytes, 0, 0, 0, 0, true, _profile.Label + "_gpu_model_and_projector_fixed_no_fit");
             using var listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start();
             _port = ((IPEndPoint)listener.LocalEndpoint).Port;
@@ -78,17 +79,17 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
             _process = process;
             process.OutputDataReceived += (_, e) => { if (e.Data is { } line) RetainLine(line, log); };
             process.ErrorDataReceived += (_, e) => { if (e.Data is { } line) RetainLine(line, log); };
-            if (!process.Start()) throw new InvalidOperationException("Alpha llama-server failed to start.");
+            if (!process.Start()) throw new InvalidOperationException("Omni llama-server failed to start.");
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-            log(RuntimeResourceDiagnostics.DescribeLaunch("Alpha", process, DeviceMapJson, model));
-            progress?.Report(new(ManagedModelRoles.Vision, "runtime_loading", "Preparing Alpha model and projector."));
+            log(RuntimeResourceDiagnostics.DescribeLaunch(_profile.Label, process, DeviceMapJson, model));
+            progress?.Report(new(ManagedModelRoles.Vision, "runtime_loading", "Preparing Omni model and projector."));
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromMinutes(8));
             while (true)
             {
                 timeout.Token.ThrowIfCancellationRequested();
-                if (process.HasExited) throw new InvalidOperationException($"Alpha runtime exited ({process.ExitCode}): {ErrorTail()}");
+                if (process.HasExited) throw new InvalidOperationException($"Omni runtime exited ({process.ExitCode}): {ErrorTail()}");
                 try
                 {
                     using var response = await _http.GetAsync($"http://127.0.0.1:{_port}/health", timeout.Token);
@@ -99,13 +100,13 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
             }
             var after = await _resources.CaptureCurrentAsync(cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            if (!ReferenceEquals(_process, process)) throw new OperationCanceledException("Alpha startup was stopped.");
+            if (!ReferenceEquals(_process, process)) throw new OperationCanceledException("Omni startup was stopped.");
             _ready = true;
             _warmup = new(false, timer.ElapsedMilliseconds, CurrentPlan, RuntimeVersion, DeviceMapJson,
                 RuntimeResourceDiagnostics.Capture(process).PeakWorkingSetBytes,
                 before.AvailableRamBytes, after.AvailableRamBytes, before.CommitAvailableBytes, after.CommitAvailableBytes,
                 before.AvailableVramBytes, after.AvailableVramBytes);
-            log(RuntimeResourceDiagnostics.DescribeSnapshot("Alpha", process, "loaded"));
+            log(RuntimeResourceDiagnostics.DescribeSnapshot(_profile.Label, process, "loaded"));
             return _warmup;
         }
         catch { Stop(); throw; }
@@ -120,13 +121,13 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            if (!IsReady) throw new InvalidOperationException("The Alpha runtime is not ready.");
-            diagnosticReceived?.Invoke(RuntimeResourceDiagnostics.DescribeSnapshot("Alpha", _process!, command + "_before"));
+            if (!IsReady) throw new InvalidOperationException("The Omni runtime is not ready.");
+            diagnosticReceived?.Invoke(RuntimeResourceDiagnostics.DescribeSnapshot(_profile.Label, _process!, command + "_before"));
             // WPF decodes every accepted source format into PNG at its original pixel size, without resizing.
             var dataUrl = await Task.Run(() => LoadImageDataUrl(imagePath), cancellationToken);
             var inputBudget = await OmniLlamaContextProbe.MeasureAsync(_http, new Uri($"http://127.0.0.1:{_port}/"),
                 conversation, dataUrl, cancellationToken);
-            diagnosticReceived?.Invoke($"Alpha context admission: stage={command}; inputUpperBound={inputBudget}; reserve={OmniContextBudget.ResponseReserveTokens}; context={OmniLlamaProtocol.ContextTokens}.");
+            diagnosticReceived?.Invoke($"Omni context admission: stage={command}; inputUpperBound={inputBudget}; reserve={OmniContextBudget.ResponseReserveTokens}; context={OmniLlamaProtocol.ContextTokens}.");
             var outputBudget = OmniContextBudget.OutputBudget(inputBudget, OmniLlamaProtocol.ContextTokens);
             var request = OmniLlamaProtocol.BuildRequest(conversation, dataUrl, outputBudget);
             using var message = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{_port}/v1/chat/completions")
@@ -137,10 +138,10 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
                 var error = await response.Content.ReadAsStringAsync(cancellationToken);
                 responseReceived?.Invoke(error);
                 if (error.Contains("context", StringComparison.OrdinalIgnoreCase)) throw new ImageAnalysisContextExhaustedException(error);
-                throw new InvalidOperationException($"Alpha HTTP {(int)response.StatusCode}: {error}");
+                throw new InvalidOperationException($"Omni HTTP {(int)response.StatusCode}: {error}");
             }
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            return await OmniLlamaProtocol.ReadAsync(stream, streamProgress, responseReceived, cancellationToken);
+            return await OmniLlamaProtocol.ReadAsync(stream, streamProgress, responseReceived, cancellationToken, _profile);
         }
         catch (OperationCanceledException) { Stop(); throw; }
         finally
@@ -148,7 +149,7 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
             try
             {
                 if (_process is { HasExited: false } process)
-                    diagnosticReceived?.Invoke(RuntimeResourceDiagnostics.DescribeSnapshot("Alpha", process, command + "_after"));
+                    diagnosticReceived?.Invoke(RuntimeResourceDiagnostics.DescribeSnapshot(_profile.Label, process, command + "_after"));
             }
             catch (InvalidOperationException) { } // The UI may stop and dispose this owned process concurrently.
             _gate.Release();
@@ -179,7 +180,7 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
     private void RetainLine(string line, Action<string> log)
     {
         lock (_stderr) { _stderr.Enqueue(line); while (_stderr.Count > 30) _stderr.Dequeue(); }
-        log("Alpha backend: " + line);
+        log(_profile.Label + " backend: " + line);
     }
     private string ErrorTail() { lock (_stderr) return string.Join(Environment.NewLine, _stderr); }
     private static string ResolveFile(ManagedModelArtifactCard card, string purpose)
@@ -188,7 +189,7 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library) : 
         var root = Path.GetFullPath(card.InstallDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         var path = Path.GetFullPath(Path.Combine(root, file.RelativePath));
         if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(path) || new FileInfo(path).Length != file.SizeBytes)
-            throw new InvalidDataException("A verified Alpha file is missing or changed.");
+            throw new InvalidDataException("A verified Omni file is missing or changed.");
         return path;
     }
     public void Stop()

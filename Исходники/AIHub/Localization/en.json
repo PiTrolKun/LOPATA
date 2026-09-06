@@ -203,7 +203,7 @@
   "ImageAnalysis.Bundle.Medium": "Beta",
   "ImageAnalysis.Bundle.Heavy": "Gamma",
   "ImageAnalysis.Bundle.LightPurpose": "For entry-level gaming PCs and resource-efficient analysis.",
-  "ImageAnalysis.Bundle.MediumPurpose": "For upper mid-range gaming PCs and deeper analysis.",
+  "ImageAnalysis.Bundle.MediumPurpose": "Image analysis and descriptions for gaming PCs with 32 GB RAM.",
   "ImageAnalysis.Bundle.HeavyPurpose": "The app bases its advice on an assessment of your computer resources.",
   "ImageAnalysis.Bundle.Experimental": "Testing",
   "ImageAnalysis.Bundle.InDevelopment": "In development",
@@ -1182,5 +1182,12 @@
   "ImageAnalysis.Install.Alpha.DownloadTitle": "Download Alpha mode",
   "Status.ImageAnalysisAlphaBundleReady": "Status: Alpha model and projector are verified and ready to start.",
   "Models.Consumer.image-analysis-light": "Image analysis — Alpha",
-  "ImageAnalysis.Alpha.ModelChanged": "This work was created with a different Alpha model. You can view and export it. Start a new image analysis to continue with the new model."
+  "ImageAnalysis.Alpha.ModelChanged": "This work was created with a different Alpha model. You can view and export it. Start a new image analysis to continue with the new model.",
+  "ImageAnalysis.Bundle.Beta.Requirements": "Target configuration: 32 GB RAM and an NVIDIA GeForce RTX GPU with 10–16 GB VRAM.\n\nFull memory use and bundle quality are being evaluated.",
+  "ImageAnalysis.Install.Beta.ReadyTitle": "Beta mode is ready to start",
+  "ImageAnalysis.Install.Beta.ReadyDescription": "Model and projector files are verified. Image analysis and the selected speech option will be prepared at startup.",
+  "ImageAnalysis.Install.Beta.DownloadTitle": "Downloading Beta mode",
+  "Status.ImageAnalysisBetaBundleReady": "Status: the Beta model and projector are verified and ready to start.",
+  "ImageAnalysis.Gguf.StartNotice": "The model analyzes the image and writes the description. Speech uses Kokoro. Open the other programs you plan to use alongside it when evaluating memory use.",
+  "ImageAnalysis.ModelChanged": "This work was created by a different model. You can view and export it. Start a new image analysis to use the current model."
 }
