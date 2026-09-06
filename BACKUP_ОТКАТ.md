@@ -2,6 +2,10 @@
 
 ## 2026-09-06 — закрытие кастомных промптов, 0.1.45-dev
 
+Результат публикации: c49ebef, push origin/main успешен. UTF-8/scanner и staged
+diff --check прошли. Снимок документов перед записью результата находится
+в close_custom_prompts_20260906/before_publication_record внутри _backups.
+
 Backup: _backups/close_custom_prompts_20260906 — активное ТЗ, CONTEXTHUB.md,
 Диалог_сжато.md, этот файл, ТЗ/README.md и README/ROADMAP документов проекта.
 После приёмки пользователя ТЗ перемещено в ТЗ/Архив с проверкой абсолютных путей,
