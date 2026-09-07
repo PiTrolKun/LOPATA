@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory)][string]$InstallerPath,
     [Parameter(Mandatory)][string]$NotesPath,
     [switch]$Publish,
-    [switch]$PruneInstallers
+    [switch]$PruneInstallers,
+    [switch]$ResumeDraft
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,7 +37,9 @@ $tag = "v$($receipt.version)"
 $releases = @(Invoke-GitHub @('api', "repos/$repo/releases?per_page=100", '--paginate', '--slurp') |
     Out-String | ConvertFrom-Json | ForEach-Object { $_ })
 $releases = @($releases | ForEach-Object { $_ })
-if ($releases | Where-Object { $_.tag_name -eq $tag }) { throw "Release $tag already exists. Do not overwrite published installers." }
+$existing = $releases | Where-Object { $_.tag_name -eq $tag } | Select-Object -First 1
+if ($existing -and (-not $ResumeDraft -or -not $existing.draft)) { throw "Release $tag already exists. Only an explicit ResumeDraft may continue an unpublished release." }
+if ($ResumeDraft -and (-not $existing -or $existing.target_commitish -ne $receipt.sourceCommit)) { throw 'Draft must exist and refer to the exact build commit.' }
 Write-Host "Version: $($receipt.version); source: $($receipt.sourceCommit)"
 Write-Host "Installer: $installer; size: $($file.Length); SHA256: $($receipt.sha256)"
 Write-Host "Release notes: $notes"
@@ -59,9 +62,22 @@ $manifest = Join-Path $manifestDirectory 'lopata-update.json'
 $create = @('release', 'create', $tag, '--repo', $repo, '--target', $receipt.sourceCommit,
     '--title', "LOPATA $($receipt.version)", '--notes-file', $notes, '--draft')
 if ($receipt.version.EndsWith('-beta')) { $create += '--prerelease' }
-Invoke-GitHub $create
-Invoke-GitHub @('release', 'upload', $tag, $installer, $manifest, '--repo', $repo)
-$release = Invoke-GitHub @('api', "repos/$repo/releases/tags/$tag") | Out-String | ConvertFrom-Json
+if (-not $existing) { Invoke-GitHub $create }
+# Drafts do not necessarily resolve through /releases/tags/{tag}. Resolve their database ID first.
+$releaseId = Invoke-GitHub @('release', 'view', $tag, '--repo', $repo, '--json', 'databaseId', '--jq', '.databaseId')
+if ($releaseId -notmatch '^\d+$') { throw 'Cannot identify draft release.' }
+$release = Invoke-GitHub @('api', "repos/$repo/releases/$releaseId") | Out-String | ConvertFrom-Json
+foreach ($upload in @($installer, $manifest)) {
+    $uploadName = [IO.Path]::GetFileName($upload)
+    $remoteAsset = $release.assets | Where-Object name -eq $uploadName | Select-Object -First 1
+    if ($remoteAsset) {
+        if ($remoteAsset.digest -ne ('sha256:' + (Get-FileHash -LiteralPath $upload).Hash.ToLowerInvariant())) {
+            throw "Draft asset $uploadName differs from the selected build. No overwrite performed."
+        }
+    }
+    else { Invoke-GitHub @('release', 'upload', $tag, $upload, '--repo', $repo) }
+}
+$release = Invoke-GitHub @('api', "repos/$repo/releases/$releaseId") | Out-String | ConvertFrom-Json
 $asset = @($release.assets | Where-Object { $_.name -eq $file.Name })
 if ($asset.Count -ne 1 -or $asset[0].size -ne $file.Length -or $asset[0].digest -ne "sha256:$($receipt.sha256)") {
     throw 'Uploaded installer verification failed. The release remains a draft.'
