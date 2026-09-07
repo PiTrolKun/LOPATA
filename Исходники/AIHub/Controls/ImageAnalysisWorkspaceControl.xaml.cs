@@ -643,13 +643,16 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
 
     private void ApplyFile(ImageAnalysisFilePassport? passport)
     {
+        SelectedImagePreview.ToolTip = passport?.SourcePath;
+        MissingImageText.Text = _localize("ImageInput.Missing");
+        MissingImageText.Visibility = passport is not null && !File.Exists(passport.SourcePath) ? Visibility.Visible : Visibility.Collapsed;
         _hasSelectedFile = passport is not null;
         UpdateFileSelectionPresentation();
         if (passport is null)
         {
-            SelectedImageCard.Visibility = Visibility.Collapsed;
+            SelectedImageCard.Visibility = _session is null ? Visibility.Collapsed : Visibility.Visible;
             SelectedFileTitleText.Text = _localize("ImageAnalysis.Workspace.Image.NoFile");
-            SelectedFileDetailsText.Text = _localize("ImageAnalysis.Workspace.Image.NoFileHint");
+            SelectedFileDetailsText.Text = _localize("ImageInput.Hint");
             SelectedImagePreview.Source = null;
             SelectImageEmptyButton.Visibility = Visibility.Visible;
             FileValidationPanel.Visibility = Visibility.Collapsed;
@@ -665,8 +668,10 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         SelectedImagePreview.Source = LoadPreview(passport.SourcePath);
         FileValidationPanel.Visibility = Visibility.Visible;
         FileValidationPanel.BorderBrush = new SolidColorBrush(MediaColor.FromRgb(34, 197, 94));
-        FileValidationText.Text = _localize("ImageAnalysis.Workspace.FileReady");
-        ContinueToSettingsButton.IsEnabled = true;
+        var exists = File.Exists(passport.SourcePath);
+        FileValidationText.Text = _localize(exists ? "ImageAnalysis.Workspace.FileReady" : "ImageInput.Missing");
+        if (!exists) FileValidationPanel.BorderBrush = new SolidColorBrush(MediaColor.FromRgb(245, 158, 11));
+        ContinueToSettingsButton.IsEnabled = exists;
     }
 
     private void RenderEvents(ImageAnalysisLiterarySession? session)
@@ -1086,9 +1091,9 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         SingleScenarioButton.IsEnabled = enabled && !_readOnlyMode;
         SelectImageButton.IsEnabled = enabled && editable;
         SelectImageEmptyButton.IsEnabled = enabled && editable;
-        ContinueToSettingsButton.IsEnabled = enabled && editable && _session?.File is not null;
-        GenerateButton.IsEnabled = enabled && editable && _session?.ContextBlocked != true;
-        ReviseButton.IsEnabled = enabled && editable && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
+        ContinueToSettingsButton.IsEnabled = enabled && editable && File.Exists(_session?.File?.SourcePath);
+        GenerateButton.IsEnabled = enabled && editable && File.Exists(_session?.File?.SourcePath) && _session?.ContextBlocked != true;
+        ReviseButton.IsEnabled = enabled && editable && File.Exists(_session?.File?.SourcePath) && _session?.GetSelectedVersion() is not null && _session.Status != ImageAnalysisLiteraryStatuses.Completed;
         RevisionPanel.IsEnabled = !_readOnlyMode && !OmniSessionCompatibility.IsRetiredModelSession(_session) && _session?.ContextBlocked != true;
         RevisionPanel.Opacity = RevisionPanel.IsEnabled ? 1 : 0.45;
         PreviewButton.IsEnabled = enabled && _session?.GetSelectedVersion() is not null;

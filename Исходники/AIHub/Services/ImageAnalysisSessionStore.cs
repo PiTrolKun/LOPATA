@@ -109,7 +109,7 @@ public sealed class ImageAnalysisSessionStore
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(session);
-        if (session.File is null || !File.Exists(session.File.SourcePath))
+        if (session.File is null)
         {
             throw new FileNotFoundException("The source image is unavailable for the internal backup.");
         }
@@ -129,22 +129,31 @@ public sealed class ImageAnalysisSessionStore
         var imagePath = Path.Combine(backupDirectory, "source" + extension.ToLowerInvariant());
         var descriptionPath = Path.Combine(backupDirectory, "description.md");
 
-        await using (var source = new FileStream(
-            session.File.SourcePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            bufferSize: 1024 * 1024,
-            useAsync: true))
-        await using (var destination = new FileStream(
-            imagePath,
-            FileMode.Create,
-            FileAccess.Write,
-            FileShare.None,
-            bufferSize: 1024 * 1024,
-            useAsync: true))
+        if (session.File.StorageKind == ImageAssetKinds.External && File.Exists(session.File.SourcePath))
         {
-            await source.CopyToAsync(destination, cancellationToken);
+            await using (var source = new FileStream(
+                session.File.SourcePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                bufferSize: 1024 * 1024,
+                useAsync: true))
+            await using (var destination = new FileStream(
+                imagePath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 1024 * 1024,
+                useAsync: true))
+            {
+                await source.CopyToAsync(destination, cancellationToken);
+            }
+
+        }
+        else
+        {
+            imagePath = session.File.StorageKind == ImageAssetKinds.Saved && File.Exists(session.File.SourcePath)
+                ? session.File.SourcePath : string.Empty;
         }
 
         await File.WriteAllTextAsync(

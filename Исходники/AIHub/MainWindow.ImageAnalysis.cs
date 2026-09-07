@@ -66,6 +66,7 @@ public partial class MainWindow
         ImageAnalysisBundleConfirmationPage.Configure(bundle, snapshot, L, LF, hasHistory);
         HideStandardPages();
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;
+        EndImageInputSession();
         ImageAnalysisWorkspacePage.Visibility = Visibility.Collapsed;
         ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Visible;
     }
@@ -87,11 +88,13 @@ public partial class MainWindow
         CoreMemoryIndicatorPanel.Visibility = Visibility.Visible;
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;
         ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Collapsed;
+        EndImageInputSession();
         ImageAnalysisWorkspacePage.Visibility = Visibility.Collapsed;
     }
 
     private void RefreshImageAnalysisLocalization()
     {
+        OpenImagesFolderButton.Content = L("ImageInput.Folder");
         if (_imageAnalysisLiteraryCts is not null
             && _imageAnalysisLiterarySession is not null
             && ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession.BundleId)

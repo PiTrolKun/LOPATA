@@ -93,6 +93,9 @@ public sealed class ImageAnalysisLiterarySettings
 
 public sealed class ImageAnalysisFilePassport
 {
+    // Old sessions remain external and are never eligible for temporary cleanup.
+    public string StorageKind { get; set; } = "external";
+
     public string SourcePath { get; set; } = string.Empty;
 
     public string DisplayName { get; set; } = string.Empty;

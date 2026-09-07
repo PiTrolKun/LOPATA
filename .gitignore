@@ -39,6 +39,7 @@ Runtime/**
 **/AI_HUB/Tasks/**
 **/AI_HUB/Tools/**
 **/AI_HUB/Scenarios/**
+**/AI_HUB/Images/**
 
 # Generated test installers stay local
 Тесты/Установщики/*.exe

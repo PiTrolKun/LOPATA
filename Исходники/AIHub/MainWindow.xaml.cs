@@ -145,6 +145,7 @@ public partial class MainWindow : Window
         ChoiceSessionFilesItemsControl.ItemsSource = _sessionFileCards;
         ExecutorSessionFilesItemsControl.ItemsSource = _sessionFileCards;
         InitializeAppData();
+        InitializeImageInput();
         InitializeComponentCatalogUi();
         InitializeManagedModelsUi();
         RefreshPreviousSessions();
@@ -1036,6 +1037,9 @@ public partial class MainWindow : Window
         }
         finally
         {
+            EndImageInputSession();
+            _imageAssets?.Dispose();
+            _imageInputHttp?.Dispose();
             base.OnClosed(e);
         }
     }

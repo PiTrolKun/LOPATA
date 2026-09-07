@@ -98,7 +98,7 @@ public partial class ImageAnalysisWorkspaceControl
         PromptDialogUi.Label(ManagePromptPairsButton, _localize("PromptPairs.Manage"));
         PromptPairStatusText.Text = custom ? _promptStoreFailed ? _promptError
             : _selectedPromptPair is null ? _localize("PromptPairs.Empty") : string.Empty : string.Empty;
-        GenerateButton.IsEnabled = editable && _session?.ContextBlocked != true && (!custom || _selectedPromptPair is not null);
+        GenerateButton.IsEnabled = editable && System.IO.File.Exists(_session?.File?.SourcePath) && _session?.ContextBlocked != true && (!custom || _selectedPromptPair is not null);
         GenerateButton.Opacity = _session?.ContextBlocked == true ? 0.45 : 1;
     }
 

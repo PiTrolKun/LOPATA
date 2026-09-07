@@ -827,6 +827,7 @@
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            FontSize="{DynamicResource UiPageTitleFontSize}"
                            FontWeight="SemiBold" />
+                <Button x:Name="OpenImagesFolderButton" Content="Открыть папку изображений" HorizontalAlignment="Left" Margin="0,8,0,8" Click="OpenImagesFolderButton_Click" />
                 <Button x:Name="ComponentLicensesButton" Content="Лицензии компонентов"
                         HorizontalAlignment="Left" Margin="0,8,0,8" Click="ComponentLicensesButton_Click" />
                 <TextBlock x:Name="SettingsDescriptionText"

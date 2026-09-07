@@ -22,6 +22,7 @@ public partial class MainWindow
 
     private void ShowImageAnalysisSubscenarioSelection()
     {
+        EndImageInputSession();
         _sessionAudioPlayer?.Clear();
         CancelImageAnalysisSpeech();
         SaveCurrentImageAnalysisSession();
@@ -58,115 +59,15 @@ public partial class MainWindow
 
     private async void ImageAnalysisWorkspacePage_SelectImageRequested(object? sender, EventArgs e)
     {
-        if (_imageAnalysisLiterarySession is null || _imageAnalysisLiterarySession.ContextBlocked
-            || OmniSessionCompatibility.IsRetiredModelSession(_imageAnalysisLiterarySession))
-        {
-            return;
-        }
+        if (!ImageAnalysisWorkspacePage.CanImportImage) return;
         var dialog = new WpfOpenFileDialog
         {
             Title = L("ImageAnalysis.Workspace.DialogTitle"),
             Filter = L("ImageAnalysis.Workspace.DialogFilter"),
-            Multiselect = false,
-            CheckFileExists = true
+            Multiselect = false, CheckFileExists = true
         };
-        if (dialog.ShowDialog(this) != true || !File.Exists(dialog.FileName))
-        {
-            return;
-        }
-
-        CancelImageAnalysisLiteraryOperation();
-        _imageAnalysisLiteraryCts = new CancellationTokenSource();
-        AddImageAnalysisEvent(
-            _imageAnalysisLiterarySession,
-            ImageAnalysisEventCodes.FileCheckStarted,
-            string.Empty,
-            ImageAnalysisEventStatuses.Active,
-            Path.GetFileName(dialog.FileName));
-        ImageAnalysisWorkspacePage.ShowFileChecking(dialog.FileName);
-        ImageAnalysisWorkspacePage.RefreshActivity(_imageAnalysisLiterarySession);
-        try
-        {
-            var passport = await _imageAnalysisFileValidationService.ValidateAsync(
-                dialog.FileName,
-                _imageAnalysisLiteraryCts.Token);
-            _imageAnalysisLiterarySession.File = passport;
-            _imageAnalysisLiterarySession.VisualReport = string.Empty;
-            _imageAnalysisLiterarySession.HiddenConversation.Clear();
-            _imageAnalysisLiterarySession.AnalysisLanguageCode = string.Empty;
-            _imageAnalysisLiterarySession.Observations.Clear();
-            _imageAnalysisLiterarySession.ReviewSummary = new ImageAnalysisReviewSummary();
-            _imageAnalysisLiterarySession.Events.Clear();
-            _imageAnalysisLiterarySession.Versions.Clear();
-            _imageAnalysisLiterarySession.SelectedVersionId = string.Empty;
-            _imageAnalysisLiterarySession.CompletedAt = null;
-            _imageAnalysisLiterarySession.InternalImageCopyPath = string.Empty;
-            _imageAnalysisLiterarySession.InternalDescriptionCopyPath = string.Empty;
-            _imageAnalysisLiterarySession.Status = ImageAnalysisLiteraryStatuses.FileReady;
-            _imageAnalysisLiterarySession.CurrentStep = ImageAnalysisLiterarySteps.Image;
-            _imageAnalysisLiterarySession.LastError = string.Empty;
-            AddImageAnalysisEvent(
-                _imageAnalysisLiterarySession,
-                ImageAnalysisEventCodes.FileCheckStarted,
-                string.Empty,
-                ImageAnalysisEventStatuses.Completed,
-                passport.DisplayName);
-            AddImageAnalysisEvent(
-                _imageAnalysisLiterarySession,
-                ImageAnalysisEventCodes.FileReady,
-                string.Empty,
-                ImageAnalysisEventStatuses.Completed,
-                passport.DisplayName);
-            _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings);
-            ImageAnalysisWorkspacePage.SetValidatedFile(_imageAnalysisLiterarySession);
-            StatusText.Text = LF("Status.ImageAnalysisFileSelected", passport.DisplayName);
-        }
-        catch (OperationCanceledException)
-        {
-            AddImageAnalysisEvent(
-                _imageAnalysisLiterarySession,
-                ImageAnalysisEventCodes.FileRejected,
-                string.Empty,
-                ImageAnalysisEventStatuses.Failed,
-                L("ImageAnalysis.Workspace.FileCancelled"));
-            _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings);
-            if (_imageAnalysisLiterarySession.File is null)
-            {
-                ImageAnalysisWorkspacePage.SetFileError(L("ImageAnalysis.Workspace.FileCancelled"));
-                ImageAnalysisWorkspacePage.RefreshActivity(_imageAnalysisLiterarySession);
-            }
-            else
-            {
-                ImageAnalysisWorkspacePage.ShowSession(_imageAnalysisLiterarySession);
-                ImageAnalysisWorkspacePage.SetOperationError(L("ImageAnalysis.Workspace.FileCancelled"));
-            }
-        }
-        catch (Exception ex)
-        {
-            _imageAnalysisLiterarySession.LastError = ex.Message;
-            AddImageAnalysisEvent(
-                _imageAnalysisLiterarySession,
-                ImageAnalysisEventCodes.FileRejected,
-                string.Empty,
-                ImageAnalysisEventStatuses.Failed,
-                ex.Message);
-            _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings);
-            if (_imageAnalysisLiterarySession.File is null)
-            {
-                ImageAnalysisWorkspacePage.SetFileError(ex.Message);
-            }
-            else
-            {
-                ImageAnalysisWorkspacePage.ShowSession(_imageAnalysisLiterarySession);
-                ImageAnalysisWorkspacePage.SetOperationError(ex.Message);
-            }
-            StatusText.Text = L("Status.ImageAnalysisFileRejected");
-        }
-        finally
-        {
-            _imageAnalysisLiteraryCts?.Dispose();
-            _imageAnalysisLiteraryCts = null;
-        }
+        if (dialog.ShowDialog(this) == true)
+            await ImportWorkspaceImageAsync(new ImageInput(FilePath: dialog.FileName));
     }
 
     private void ImageAnalysisWorkspacePage_DraftSettingsChanged(object? sender, EventArgs e)
@@ -643,6 +544,7 @@ public partial class MainWindow
             }
             CancelImageAnalysisSpeech();
             _sessionAudioPlayer?.Clear();
+            _imageAssets?.EndSession(session);
             session.Status = ImageAnalysisLiteraryStatuses.Completed;
             session.CompletedAt = DateTimeOffset.Now;
             session.CurrentStep = ImageAnalysisLiterarySteps.Result;
@@ -667,8 +569,11 @@ public partial class MainWindow
         }
     }
 
-    private void ImageAnalysisWorkspacePage_CancelRequested(object? sender, EventArgs e) =>
+    private void ImageAnalysisWorkspacePage_CancelRequested(object? sender, EventArgs e)
+    {
+        _imageImportCts?.Cancel();
         _imageAnalysisLiteraryCts?.Cancel();
+    }
 
     private void ImageAnalysisWorkspacePage_NewAnalysisRequested(object? sender, EventArgs e)
     {
@@ -708,6 +613,7 @@ public partial class MainWindow
         }
         CancelImageAnalysisSpeech();
         _sessionAudioPlayer?.Clear();
+        if (_imageAnalysisLiterarySession?.SessionId != session.SessionId) EndImageInputSession();
         _imageAnalysisLiterarySession = session;
         if (session.CurrentStep == ImageAnalysisLiterarySteps.Subscenario)
         {
