@@ -732,4 +732,7 @@ public sealed record OmniTextGenerationResult(
     int? LastTokenId = null,
     string RawProtocol = "");
 
-public sealed class ImageAnalysisContextExhaustedException(string message) : Exception(message);
+public sealed class ImageAnalysisContextExhaustedException(string message, bool outputTruncated = false) : Exception(message)
+{
+    public bool OutputTruncated { get; } = outputTruncated;
+}

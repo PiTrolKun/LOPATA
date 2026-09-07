@@ -1,0 +1,52 @@
+[
+  {
+    "batch": "0d41626f7a7b4c29a620dc64bb4921a0",
+    "section": "582c6a80c93b42239fddbca7ee188c06",
+    "accepted": false
+  },
+  {
+    "batch": "0d41626f7a7b4c29a620dc64bb4921a0",
+    "section": "7e872e04ad0c4f90a452faabcaf80ac0",
+    "accepted": true
+  },
+  {
+    "batch": "0d41626f7a7b4c29a620dc64bb4921a0",
+    "section": "dda7536c6c0c46709b88625409ad7e77",
+    "accepted": true
+  },
+  {
+    "batch": "7fef25e0f30c40468db76c994c26ab25",
+    "section": "074b779b94e046c988baee835ae955ce",
+    "accepted": true
+  },
+  {
+    "batch": "7fef25e0f30c40468db76c994c26ab25",
+    "section": "09eef586a85c4560afead418df334610",
+    "accepted": true
+  },
+  {
+    "batch": "7fef25e0f30c40468db76c994c26ab25",
+    "section": "67ee4c365de246d79dc817b611d3f5b5",
+    "accepted": true
+  },
+  {
+    "batch": "7fef25e0f30c40468db76c994c26ab25",
+    "section": "6be8da029b544736ac3b0dc0391d6632",
+    "accepted": true
+  },
+  {
+    "batch": "7fef25e0f30c40468db76c994c26ab25",
+    "section": "a6631e4f46364872ae42517c8e60cb3b",
+    "accepted": true
+  },
+  {
+    "batch": "7fef25e0f30c40468db76c994c26ab25",
+    "section": "b08c23b9461b401ea0a14aa21cad0dd2",
+    "accepted": true
+  },
+  {
+    "batch": "7fef25e0f30c40468db76c994c26ab25",
+    "section": "bb1a7f566da74a638f440d05d3b99a35",
+    "accepted": true
+  }
+]

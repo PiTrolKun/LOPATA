@@ -22,6 +22,7 @@ public partial class MainWindow
 
     private void ShowImageAnalysisSubscenarioSelection()
     {
+        CloseImageBatch();
         EndImageInputSession();
         _sessionAudioPlayer?.Clear();
         CancelImageAnalysisSpeech();
@@ -72,6 +73,7 @@ public partial class MainWindow
 
     private void ImageAnalysisWorkspacePage_DraftSettingsChanged(object? sender, EventArgs e)
     {
+        if (_batchJob is not null) return;
         if (_imageAnalysisLiterarySession is null) return;
         try { _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings); }
         catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
@@ -82,6 +84,13 @@ public partial class MainWindow
         object? sender,
         ImageAnalysisSettingsRequestedEventArgs e)
     {
+        if (_batchJob is not null)
+        {
+            _batchJob.Settings = e.Settings;
+            _batchJob.Settings.LanguageCode = _appSettings.LanguageCode;
+            _batchJob.SingleDocument = ImageAnalysisWorkspacePage.BatchSingleDocument;
+            await RunImageBatchAsync(); return;
+        }
         if (_imageAnalysisLiterarySession?.File is null || _imageAnalysisLiterarySession.ContextBlocked
             || OmniSessionCompatibility.IsRetiredModelSession(_imageAnalysisLiterarySession))
         {
@@ -571,6 +580,7 @@ public partial class MainWindow
 
     private void ImageAnalysisWorkspacePage_CancelRequested(object? sender, EventArgs e)
     {
+        _batchCts?.Cancel();
         _imageImportCts?.Cancel();
         _imageAnalysisLiteraryCts?.Cancel();
     }
@@ -953,6 +963,7 @@ public partial class MainWindow
 
     private void SaveCurrentImageAnalysisSession()
     {
+        if (_batchJob is not null) return;
         try
         {
             if (_imageAnalysisLiterarySession is not null)
@@ -975,6 +986,8 @@ public partial class MainWindow
 
     private void DisposeImageAnalysisLiteraryRuntime()
     {
+        _batchCts?.Cancel();
+        CleanupBatchInputs();
         CancelImageAnalysisRuntimePreparation(stopModels: true);
         CancelImageAnalysisLiteraryOperation();
         SaveCurrentImageAnalysisSession();

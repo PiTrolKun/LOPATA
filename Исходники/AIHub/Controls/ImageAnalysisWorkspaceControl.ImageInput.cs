@@ -18,12 +18,13 @@ public sealed class ImageInputEventArgs(ImageInput input) : EventArgs
 public partial class ImageAnalysisWorkspaceControl
 {
     public event EventHandler<ImageInputEventArgs>? ImageInputRequested;
-    public bool CanImportImage => _session is not null && !_isBusy && !_readOnlyMode
+    public bool CanImportImage => !IsBatch && _session is not null && !_isBusy && !_readOnlyMode
         && _session.Status != ImageAnalysisLiteraryStatuses.Completed && !_session.ContextBlocked
         && !OmniSessionCompatibility.IsRetiredModelSession(_session);
 
     public void RefreshImageAvailability()
     {
+        if (IsBatch) return;
         if (_isBusy || _session is null) return;
         ApplyFile(_session.File);
         SetInteractionEnabled(true);
@@ -64,6 +65,7 @@ public partial class ImageAnalysisWorkspaceControl
 
     private void ImageInput_DragOver(object sender, DragEventArgs e)
     {
+        if (IsBatch) return;
         if (IsTextTarget(e.OriginalSource)) return;
         e.Handled = true;
         var accept = CanImportImage && ImageTransferReader.MayContainImage(e.Data);
@@ -75,6 +77,7 @@ public partial class ImageAnalysisWorkspaceControl
     private void ClearDropHighlight() => SelectedImageCard.SetResourceReference(Border.BorderBrushProperty, "LineBrush");
     private void ImageInput_Drop(object sender, DragEventArgs e)
     {
+        if (IsBatch) return;
         ClearDropHighlight();
         if (IsTextTarget(e.OriginalSource)) return;
         e.Handled = true;

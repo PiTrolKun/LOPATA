@@ -1,0 +1,62 @@
+[
+  {
+    "file": "20260907T145652283-3-analyze.txt",
+    "detailsKind": "String",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145701838-6-analyze.txt",
+    "detailsKind": "Object",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145712865-9-analyze.txt",
+    "detailsKind": "Object",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145722758-12-analyze.txt",
+    "detailsKind": "String",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145729482-15-analyze.txt",
+    "detailsKind": "Array",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145738522-18-analyze.txt",
+    "detailsKind": "Array",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145745253-21-analyze.txt",
+    "detailsKind": "Array",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145755721-24-analyze.txt",
+    "detailsKind": "Array",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145806551-27-analyze.txt",
+    "detailsKind": "Array",
+    "passed": true,
+    "preserved": true
+  },
+  {
+    "file": "20260907T145815928-30-analyze.txt",
+    "detailsKind": "Object",
+    "passed": true,
+    "preserved": true
+  }
+]

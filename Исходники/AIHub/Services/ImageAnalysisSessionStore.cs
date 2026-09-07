@@ -29,6 +29,8 @@ public sealed class ImageAnalysisSessionStore
     public void Save(ImageAnalysisLiterarySession session, StorageSettings storageSettings)
     {
         ArgumentNullException.ThrowIfNull(session);
+        // Batch voice shares presentation data; the durable job belongs to ImageBatchStore.
+        if (session.SubscenarioId == "literary_batch") return;
         ValidateSessionId(session.SessionId);
         session.UpdatedAt = DateTimeOffset.Now;
         var sessionDirectory = GetSessionDirectory(session.SessionId, storageSettings);

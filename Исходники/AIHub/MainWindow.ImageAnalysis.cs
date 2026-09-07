@@ -385,6 +385,20 @@ public partial class MainWindow
 
     private void ImageAnalysisWorkspacePage_BackRequested(object? sender, EventArgs e)
     {
+        if (ImageAnalysisWorkspacePage.IsBatch)
+        {
+            if (_batchCts is not null || _batchImporting) return;
+            if (ImageAnalysisWorkspacePage.IsBatchSettings && _batchJob is not null)
+            {
+                _batchJob.Settings = ImageAnalysisWorkspacePage.BatchSettings;
+                _batchJob.Settings.LanguageCode = _appSettings.LanguageCode;
+                _batchJob.SingleDocument = ImageAnalysisWorkspacePage.BatchSingleDocument;
+                BatchStore.Save(_batchJob);
+                _batchView!.Files(_batchJob); ImageAnalysisWorkspacePage.ShowBatchContent(_batchView); return;
+            }
+            if (_batchJob is not null) { ShowBatchSelector(); return; }
+            CloseImageBatch(); ShowImageAnalysisSubscenarioSelection(); return;
+        }
         CancelImageAnalysisLiteraryOperation();
         CancelImageAnalysisRuntimePreparation(stopModels: true);
         StopImageAnalysisSpeechSession();

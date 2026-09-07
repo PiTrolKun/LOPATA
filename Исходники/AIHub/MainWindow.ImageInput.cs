@@ -20,11 +20,20 @@ public partial class MainWindow
         _imageInputHttp = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
         Activated += (_, _) => ImageAnalysisWorkspacePage.RefreshImageAvailability();
         PreviewKeyDown += ImageInputWindow_KeyDown;
+        InitializeImageBatch();
         ImageAnalysisWorkspacePage.ImageInputRequested += async (_, e) => await ImportWorkspaceImageAsync(e.Input);
     }
 
     private void ImageInputWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
+        if (IsActive && ImageAnalysisWorkspacePage.IsVisible && _batchView?.AcceptsInput == true && !e.IsRepeat
+            && e.Key == System.Windows.Input.Key.V && System.Windows.Input.Keyboard.Modifiers == System.Windows.Input.ModifierKeys.Control)
+        {
+            e.Handled = true;
+            try { var data = System.Windows.Clipboard.GetDataObject(); if (data is not null) _ = ImportBatchTransferAsync(data); }
+            catch { StatusText.Text = L("ImageInput.ClipboardBusy"); }
+            return;
+        }
         if (!IsActive || !ImageAnalysisWorkspacePage.IsVisible || e.IsRepeat
             || e.Key != System.Windows.Input.Key.V
             || System.Windows.Input.Keyboard.Modifiers != System.Windows.Input.ModifierKeys.Control
@@ -35,6 +44,7 @@ public partial class MainWindow
 
     private void EndImageInputSession()
     {
+        CleanupBatchInputs();
         _imageImportCts?.Cancel();
         _imageAssets?.EndSession(_imageAnalysisLiterarySession);
     }

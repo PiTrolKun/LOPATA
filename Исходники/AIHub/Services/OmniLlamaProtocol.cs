@@ -117,7 +117,7 @@ public static class OmniLlamaProtocol
             }
         }
         finally { saveRaw?.Invoke(raw.ToString()); }
-        if (finish == "length") throw new ImageAnalysisContextExhaustedException("The Omni response reached the safe context budget. Start a new session.");
+        if (finish == "length") throw new ImageAnalysisContextExhaustedException("The Omni response reached the safe context budget. Start a new session.", outputTruncated: true);
         var tail = answer.Complete();
         text.Append(tail);
         if (tail.Length > 0) progress?.Report(new ModelStreamChunk(tail));

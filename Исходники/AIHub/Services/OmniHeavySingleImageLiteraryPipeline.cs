@@ -10,6 +10,7 @@ public sealed class OmniHeavySingleImageLiteraryPipeline :
 {
     private readonly IOmniTextRuntime _runtime;
     private OmniWarmupResult? _warmup;
+    public IOmniTextRuntime TextRuntime => _runtime;
 
     public OmniHeavySingleImageLiteraryPipeline(IOmniTextRuntime runtime)
     {

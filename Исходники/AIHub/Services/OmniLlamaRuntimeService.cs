@@ -124,11 +124,14 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library, Om
             if (!IsReady) throw new InvalidOperationException("The Omni runtime is not ready.");
             diagnosticReceived?.Invoke(RuntimeResourceDiagnostics.DescribeSnapshot(_profile.Label, _process!, command + "_before"));
             // WPF decodes every accepted source format into PNG at its original pixel size, without resizing.
-            var dataUrl = await Task.Run(() => LoadImageDataUrl(imagePath), cancellationToken);
+            var hasImage = conversation.Any(m => m.IncludesImage);
+            var dataUrl = hasImage ? await Task.Run(() => LoadImageDataUrl(imagePath), cancellationToken) : string.Empty;
             var inputBudget = await OmniLlamaContextProbe.MeasureAsync(_http, new Uri($"http://127.0.0.1:{_port}/"),
                 conversation, dataUrl, cancellationToken, _profile);
             diagnosticReceived?.Invoke($"Omni context admission: stage={command}; inputUpperBound={inputBudget}; reserve={OmniContextBudget.ResponseReserveTokens}; context={OmniLlamaProtocol.ContextTokens}.");
             var outputBudget = OmniContextBudget.OutputBudget(inputBudget, OmniLlamaProtocol.ContextTokens);
+            if (!hasImage && (long)inputBudget * 3 > (long)OmniContextBudget.Boundary(OmniLlamaProtocol.ContextTokens) * 2)
+                throw new ImageAnalysisContextExhaustedException("Text batch input leaves less than half its size for output.");
             var request = OmniLlamaProtocol.BuildRequest(conversation, dataUrl, outputBudget, _profile);
             using var message = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{_port}/v1/chat/completions")
             { Content = new StringContent(request, Encoding.UTF8, "application/json") };

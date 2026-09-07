@@ -22,9 +22,6 @@ public partial class MainWindow
         ContentRendered += async (_, _) =>
         {
             if (!_appSettings.Updates.CheckOnStartup) return;
-            var last = _appSettings.Updates.LastCheckUtc;
-            if (last is not null && DateTimeOffset.UtcNow - last >= TimeSpan.Zero
-                && DateTimeOffset.UtcNow - last < TimeSpan.FromHours(6)) return;
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_updateLifetime.Token);
             timeout.CancelAfter(TimeSpan.FromSeconds(25));
             try
