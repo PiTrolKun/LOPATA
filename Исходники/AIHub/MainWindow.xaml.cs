@@ -482,6 +482,8 @@ public partial class MainWindow : Window
 
     private void ApplyLocalization()
     {
+        AboutButton.ToolTip = L("About.Title");
+        System.Windows.Automation.AutomationProperties.SetName(AboutButton, L("About.Title"));
         ApplicationUpdatesButton.Content = L("Updates.Title");
         ApplicationUpdateNotice.Content = L("Updates.Available");
         ComponentLicensesButton.Content = L("licenses.title");
