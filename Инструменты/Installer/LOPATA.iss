@@ -30,6 +30,9 @@
 AppId={{85E9F5C5-2B18-43B1-84E2-A99B25E9B9E8}
 AppName={#AppName}
 AppVersion={#AppVersion}
+#ifdef NumericVersion
+VersionInfoVersion={#NumericVersion}
+#endif
 AppPublisher={#AppPublisher}
 AppPublisherURL=https://github.com/PiTrolKun/LOPATA
 AppSupportURL=https://github.com/PiTrolKun/LOPATA
@@ -77,10 +80,32 @@ procedure GetSystemTime(var Value: TLicenseSystemTime);
   external 'GetSystemTime@kernel32.dll stdcall';
 function MoveFileEx(Existing, NewName: String; Flags: Integer): Boolean;
   external 'MoveFileExW@kernel32.dll stdcall';
+function OpenProcess(Access: LongWord; InheritHandle: Boolean; ProcessId: LongWord): THandle;
+  external 'OpenProcess@kernel32.dll stdcall';
+function WaitForSingleObject(Handle: THandle; Milliseconds: LongWord): LongWord;
+  external 'WaitForSingleObject@kernel32.dll stdcall';
+function CloseHandle(Handle: THandle): Boolean;
+  external 'CloseHandle@kernel32.dll stdcall';
 
 function InitializeSetup(): Boolean;
+var
+  ProcessId: Integer;
+  ProcessHandle: THandle;
 begin
   Result := (not WizardSilent) or (ExpandConstant('{param:ACCEPTLICENSES|0}') = '1');
+  if not Result then Exit;
+  ProcessId := StrToIntDef(ExpandConstant('{param:WAITFORPID|0}'), 0);
+  if ProcessId > 0 then
+  begin
+    ProcessHandle := OpenProcess($00100000, False, ProcessId);
+    if ProcessHandle <> 0 then
+    begin
+      Result := WaitForSingleObject(ProcessHandle, 120000) = 0;
+      CloseHandle(ProcessHandle);
+      if not Result then
+        MsgBox('Программа ещё работает. Закройте ЛОПАТУ и повторите запуск установщика.', mbError, MB_OK);
+    end;
+  end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

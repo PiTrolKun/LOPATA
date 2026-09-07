@@ -156,6 +156,7 @@ public partial class MainWindow : Window
         UpdateCoreVoiceControls();
         _ = RefreshModelCatalogOnStartupAsync();
         UpdatePrimaryActionButton();
+        InitializeApplicationUpdates();
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -481,6 +482,8 @@ public partial class MainWindow : Window
 
     private void ApplyLocalization()
     {
+        ApplicationUpdatesButton.Content = L("Updates.Title");
+        ApplicationUpdateNotice.Content = L("Updates.Available");
         ComponentLicensesButton.Content = L("licenses.title");
         HeaderProductNameText.Text = L("App.ProductName");
         HeaderSubtitleText.Text = L("App.Subtitle");
@@ -1015,6 +1018,8 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        _updateLifetime.Cancel();
+        _updateHttp.Dispose();
         try
         {
             CancelCoreSpeech(revealFullText: false, "app_closed");

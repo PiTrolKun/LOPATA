@@ -45,6 +45,8 @@ Runtime/**
 Тесты/Установщики/*.exe
 Тесты/Установщики/*.msi
 Тесты/Установщики/*.zip
+Тесты/Установщики/*.build.json
+Тесты/Установщики/release-*/
 Тесты/HuggingFaceCatalogProbe/**
 
 # Local logs and temporary files

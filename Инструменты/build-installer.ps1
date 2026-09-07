@@ -1,8 +1,10 @@
 param(
-    [switch]$SkipPublish
+    [switch]$SkipPublish,
+    [switch]$PublicBeta
 )
 
 $ErrorActionPreference = 'Stop'
+if ($PublicBeta -and $SkipPublish) { throw 'Public beta requires a fresh dotnet publish; SkipPublish is only for internal builds.' }
 
 function Write-Step {
     param([string]$Message)
@@ -78,6 +80,11 @@ if (-not (Test-Path -LiteralPath (Join-Path $chatLlmBackendDir 'imagemagick\magi
 }
 
 $version = (Get-Content -LiteralPath $versionPath -Raw).Trim()
+if ($PublicBeta) {
+    if ($version -notmatch '^\d+\.\d+\.\d+-dev$') { throw 'PublicBeta requires an internal X.Y.Z-dev version.' }
+    $version = $version -replace '-dev$', '-beta'
+    $publishDir = Join-Path $repoRoot "Runtime\Publish\LOPATA-$version-win-x64"
+}
 if ([string]::IsNullOrWhiteSpace($version)) {
     throw "Файл VERSION пустой."
 }
@@ -97,7 +104,8 @@ if (-not $SkipPublish) {
         --self-contained true `
         --output $publishDir `
         -p:PublishSingleFile=false `
-        -p:PublishReadyToRun=false
+        -p:PublishReadyToRun=false `
+        "-p:AIHubVersion=$version"
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet publish завершился с ошибкой: $LASTEXITCODE"
     }
@@ -107,6 +115,8 @@ else {
 }
 
 $exePath = Join-Path $publishDir 'AIHub.exe'
+$payloadVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $publishDir 'AIHub.dll')).ProductVersion
+if ($payloadVersion -ne $version) { throw "Payload version mismatch: $payloadVersion / $version" }
 $licenseCatalog = Join-Path $publishDir 'Licenses\catalog.json'
 foreach ($required in @('catalog.json', 'installer.txt', 'installer-receipt.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $publishDir "Licenses\$required"))) {
@@ -144,6 +154,7 @@ Write-Host "ISCC: $iscc"
 
 $arguments = @(
     "/DAppVersion=$version",
+    "/DNumericVersion=$($version -replace '-.*$', '')",
     "/DPublishDir=$(Escape-InnoDefineValue $publishDir)",
     "/DBackendDir=$(Escape-InnoDefineValue $backendDir)",
     "/DChatLlmBackendDir=$(Escape-InnoDefineValue $chatLlmBackendDir)",
@@ -164,3 +175,22 @@ if (-not (Test-Path -LiteralPath $setupPath)) {
 
 Write-Host ""
 Write-Host "Готово: $setupPath" -ForegroundColor Green
+
+# Local receipt only. This script never uploads or publishes a release.
+$sourceCommit = (& git -C $repoRoot rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0) { throw 'Cannot identify source commit.' }
+$sourceChanges = & git -C $repoRoot status --porcelain --untracked-files=all -- 'Исходники' 'Инструменты' 'VERSION' 'Каталоги' 'LICENSE' 'NOTICE.md' 'THIRD_PARTY_NOTICES.md'
+if ($LASTEXITCODE -ne 0) { throw 'Cannot verify source state.' }
+$receipt = [ordered]@{
+    schemaVersion = 1
+    version = $version
+    fileName = [IO.Path]::GetFileName($setupPath)
+    size = (Get-Item -LiteralPath $setupPath).Length
+    sha256 = (Get-FileHash -LiteralPath $setupPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    sourceCommit = $sourceCommit
+    sourceDirty = [bool]$sourceChanges
+    payloadVersion = $payloadVersion
+    builtAtUtc = [DateTime]::UtcNow.ToString('o')
+}
+$receipt | ConvertTo-Json | Set-Content -LiteralPath "$setupPath.build.json" -Encoding utf8
+Write-Host "Local build receipt: $setupPath.build.json"

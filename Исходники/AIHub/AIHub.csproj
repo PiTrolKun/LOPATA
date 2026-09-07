@@ -10,7 +10,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
-    <AIHubVersion>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\..\VERSION').Trim())</AIHubVersion>
+    <AIHubVersion Condition="'$(AIHubVersion)' == ''">$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\..\VERSION').Trim())</AIHubVersion>
     <AIHubNumericVersion>$([System.Text.RegularExpressions.Regex]::Replace('$(AIHubVersion)', '-.*$', ''))</AIHubNumericVersion>
     <Version>$(AIHubVersion)</Version>
     <AssemblyVersion>$(AIHubNumericVersion).0</AssemblyVersion>
