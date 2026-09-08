@@ -1,3 +1,5 @@
+using AIHub.Services;
+
 namespace AIHub.Models;
 
 public sealed class ImageBatchJob
@@ -5,6 +7,7 @@ public sealed class ImageBatchJob
     public int Schema { get; set; } = 1;
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public DateTimeOffset Created { get; set; } = DateTimeOffset.Now;
+    public string BundleId { get; set; } = ImageAnalysisBundleCatalog.LightId;
     public string ModelRevision { get; set; } = string.Empty;
     public ImageAnalysisLiterarySettings Settings { get; set; } = new();
     public bool SingleDocument { get; set; } = true;

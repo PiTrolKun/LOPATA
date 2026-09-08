@@ -545,7 +545,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         SingleScenarioButton.Content = _localize("ImageAnalysis.Workspace.Subscenario.Single.Start");
         MultipleScenarioTitleText.Text = _localize("ImageAnalysis.Workspace.Subscenario.Multiple.Title");
         MultipleScenarioDescriptionText.Text = _localize("ImageAnalysis.Workspace.Subscenario.Multiple.Description");
-        MultipleScenarioButton.IsEnabled = _bundleId == ImageAnalysisBundleCatalog.LightId;
+        MultipleScenarioButton.IsEnabled = ImageBatchProfiles.IsEnabled(_bundleId);
         MultipleScenarioButton.Content = _localize(MultipleScenarioButton.IsEnabled ? "ImageAnalysis.Workspace.Subscenario.Single.Start" : "ImageAnalysis.Bundle.InDevelopment");
         UpdateHistoryTitle();
         HistoryEmptyText.Text = _localize("ImageAnalysis.Workspace.History.Empty");
@@ -1091,7 +1091,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
             && _session?.Status != ImageAnalysisLiteraryStatuses.Completed && _session?.ContextBlocked != true;
         BackButton.IsEnabled = enabled;
         SingleScenarioButton.IsEnabled = enabled && !_readOnlyMode;
-        MultipleScenarioButton.IsEnabled = enabled && !_readOnlyMode && _bundleId == ImageAnalysisBundleCatalog.LightId;
+        MultipleScenarioButton.IsEnabled = enabled && !_readOnlyMode && ImageBatchProfiles.IsEnabled(_bundleId);
         SelectImageButton.IsEnabled = enabled && editable;
         SelectImageEmptyButton.IsEnabled = enabled && editable;
         ContinueToSettingsButton.IsEnabled = enabled && editable && File.Exists(_session?.File?.SourcePath);

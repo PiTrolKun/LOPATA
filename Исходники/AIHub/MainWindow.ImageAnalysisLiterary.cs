@@ -32,7 +32,7 @@ public partial class MainWindow
         ImageAnalysisWorkspacePage.ShowSubscenarioSelection(
             _imageAnalysisSessionStore.LoadAll(_storageSettings)
                 .Where(session => string.Equals(session.BundleId, bundleId, StringComparison.Ordinal))
-                .ToList(), bundleId == ImageAnalysisBundleCatalog.LightId ? BatchStore.LoadAll().ToList() : []);
+                .ToList(), BatchStore.LoadAll().Where(job => string.Equals(job.BundleId, bundleId, StringComparison.Ordinal)).ToList());
     }
 
     private void ImageAnalysisWorkspacePage_SingleSubscenarioRequested(object? sender, EventArgs e)

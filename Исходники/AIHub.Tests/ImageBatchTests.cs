@@ -103,6 +103,29 @@ public sealed class ImageBatchTests
     }
     private const string English = "The landscape shows a dark forest and a distant castle under the pale moonlight.";
     [TestMethod]
+    public async Task GammaTimeout_SplitsImmediately_AndReusesAnalysesOnResume()
+    {
+        var job = Job(3); job.BundleId = ImageAnalysisBundleCatalog.HeavyId;
+        var store = new ImageBatchStore(_root); var fake = new Fake { TimeoutGroups = true };
+        await new ImageBatchProcessor(store, fake).RunAsync(job, null, default);
+        CollectionAssert.AreEqual(new[] { 2, 1, 1, 1 }, fake.Formats.Select(g => g.Count).ToArray());
+        Assert.AreEqual(1, fake.Restarts);
+        Assert.IsTrue(job.Items.All(i => i.Status == "ready"));
+        CollectionAssert.AreEqual(job.Items.Select(i => i.Id).ToArray(), fake.Formats.Where(g => g.Count == 1).Select(g => g[0].Id).ToArray());
+        await new ImageBatchProcessor(store, fake).RunAsync(job, null, default);
+        Assert.AreEqual(3, fake.Analyses); Assert.AreEqual(4, fake.Formats.Count);
+    }
+
+    [TestMethod]
+    public async Task SingleTimeout_RemainsBoundedToThreeAttempts_ThenContinues()
+    {
+        var job = Job(2, false); job.BundleId = ImageAnalysisBundleCatalog.HeavyId;
+        var fake = new Fake { TimeoutFirstFormats = 3 };
+        await new ImageBatchProcessor(new(_root), fake).RunAsync(job, null, default);
+        Assert.AreEqual(4, fake.Formats.Count); Assert.AreEqual(3, fake.Restarts);
+        Assert.AreEqual("error", job.Items[0].Status); Assert.AreEqual("ready", job.Items[1].Status);
+    }
+    [TestMethod]
     public void LanguageGuard_AllowsNamesAndQuotes_ButRejectsEnglishNarrative()
     {
         Assert.IsFalse(ImageBatchLanguageGuard.Matches(new("1", "Title", [English]), "ru"));
@@ -115,6 +138,8 @@ public sealed class ImageBatchTests
     private sealed class Fake : IImageBatchModel
     {
         public int Analyses, FailFirst, Splits, MaxGroup = 4, TruncateFirst, Restarts, EnglishFirst;
+        public bool TimeoutGroups;
+        public int TimeoutFirstFormats;
         public Action<int>? AfterAnalyze;
         public List<IReadOnlyList<(string Id, ImageBatchAnalysis Analysis)>> Formats = [];
         public void Restart() { Restarts++; }
@@ -128,6 +153,7 @@ public sealed class ImageBatchTests
         {
             if (items.Count > MaxGroup) { Splits++; throw new ImageAnalysisContextExhaustedException("fixture context limit"); }
             Formats.Add(items);
+            if ((TimeoutGroups && items.Count > 1) || Formats.Count <= TimeoutFirstFormats) throw new TimeoutException("fixture timeout");
             return Task.FromResult<IReadOnlyList<ImageBatchSection>>(items.Select(i => new ImageBatchSection(i.Id, "Описание " + i.Id, [Formats.Count <= EnglishFirst ? English : i.Analysis.Details])).ToArray());
         }
     }

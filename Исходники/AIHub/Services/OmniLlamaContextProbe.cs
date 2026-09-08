@@ -9,12 +9,12 @@ namespace AIHub.Services;
 public static class OmniLlamaContextProbe
 {
     public static async Task<int> MeasureAsync(HttpClient http, Uri server,
-        IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string imageDataUrl, CancellationToken token, OmniLlamaProfile? profile = null)
+        IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string imageDataUrl, CancellationToken token, OmniLlamaProfile? profile = null, string? command = null)
     {
         // Use the same image markers, reasoning setting and generation prefix as the real request.
         // /tokenize is text-only; adding the full projector bound deliberately overestimates vision.
         using var template = await PostAsync(http, new Uri(server, "apply-template"),
-            OmniLlamaProtocol.BuildRequest(conversation, imageDataUrl, profile: profile), token).ConfigureAwait(false);
+            OmniLlamaProtocol.BuildRequest(conversation, imageDataUrl, profile: profile, command: command), token).ConfigureAwait(false);
         var prompt = template.RootElement.GetProperty("prompt").GetString()
             ?? throw new InvalidDataException("The runtime returned no chat template.");
         using var tokens = await PostAsync(http, new Uri(server, "tokenize"),

@@ -45,7 +45,7 @@ public partial class MainWindow
             if (action == "back") { ShowBatchSelector(); return; }
             if (action == "new")
             {
-                _batchJob = new() { Settings = new() { LanguageCode = _appSettings.LanguageCode }, ModelRevision = OmniLlamaProfile.Alpha.Revision };
+                _batchJob = ImageBatchProfiles.Create(_selectedImageAnalysisBundle?.Id ?? ImageAnalysisBundleCatalog.MediumId, _appSettings.LanguageCode);
                 BatchStore.Save(_batchJob); _batchView!.Files(_batchJob); ImageAnalysisWorkspacePage.ShowBatchContent(_batchView); return;
             }
             if (action.StartsWith("load:", StringComparison.Ordinal))
@@ -150,7 +150,7 @@ public partial class MainWindow
     private async Task RunImageBatchAsync()
     {
         var job = _batchJob; if (job is null || _batchCts is not null || job.Items.Count == 0) return;
-        if (job.ModelRevision != OmniLlamaProfile.Alpha.Revision) { StatusText.Text = L("Batch.ModelChanged"); return; }
+        if (!ImageBatchProfiles.CanContinue(job)) { StatusText.Text = L("Batch.ModelChanged"); return; }
         OmniPromptPairAdapter.Validate(job.Settings);
         using var owner = new CancellationTokenSource(); _batchCts = owner;
         CancelImageAnalysisSpeech(); _sessionAudioPlayer?.Clear();
@@ -162,7 +162,8 @@ public partial class MainWindow
         try
         {
             if (_imageAnalysisRuntimePreparationTask is not null) await _imageAnalysisRuntimePreparationTask.WaitAsync(owner.Token);
-            var pipeline = (OmniHeavySingleImageLiteraryPipeline)GetImageAnalysisLiteraryPipeline();
+            var pipeline = (OmniHeavySingleImageLiteraryPipeline)GetImageAnalysisLiteraryPipeline(_imageAnalysisLiterarySession);
+            LogImageAnalysisRuntime($"Batch {job.Id}: bundle={job.BundleId}, model={pipeline.TextRuntime.ModelId}, revision={pipeline.TextRuntime.ModelRevision}; shared runtime for analysis and formatting.");
             var rawNumber = 0;
             var model = new ImageBatchModel(pipeline.TextRuntime, LogImageAnalysisRuntime,
                 new Progress<ModelStreamChunk>(c => { if (ReferenceEquals(_batchCts, owner) && !owner.IsCancellationRequested) ChoiceMatrixRain.Feed(c.Text); }),
@@ -193,11 +194,7 @@ public partial class MainWindow
             }
         }
     }
-    private ImageAnalysisLiterarySession BatchSpeechSession(ImageBatchJob job)
-    {
-        var session = new ImageAnalysisLiterarySession { SubscenarioId = "literary_batch", File = job.Items.FirstOrDefault()?.File, Settings = job.Settings, BundleId = ImageAnalysisBundleCatalog.LightId };
-        OmniLlamaProfile.Alpha.ApplyToNewSession(session); return session;
-    }
+    private ImageAnalysisLiterarySession BatchSpeechSession(ImageBatchJob job) => ImageBatchProfiles.Session(job);
     private void ShowBatchResults()
     {
         if (_batchJob is not { } job || _batchView is null) return;

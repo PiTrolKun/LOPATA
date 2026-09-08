@@ -32,7 +32,7 @@ public static class OmniLlamaProtocol
         "--reasoning-format", "deepseek", "-fa", "auto", "-n", "-1",
         "--image-max-tokens", OmniContextBudget.ImageTokenUpperBound.ToString(System.Globalization.CultureInfo.InvariantCulture)];
 
-    public static string BuildRequest(IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string imageDataUrl, int maxTokens = -1, OmniLlamaProfile? profile = null)
+    public static string BuildRequest(IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string imageDataUrl, int maxTokens = -1, OmniLlamaProfile? profile = null, string? command = null)
     {
         if (conversation.Count == 0 || conversation.Any(m => m.Role is not ("user" or "assistant")))
             throw new InvalidDataException("Invalid Omni conversation roles.");
@@ -50,12 +50,16 @@ public static class OmniLlamaProtocol
             }
             messages.Add(new JsonObject { ["role"] = message.Role, ["content"] = content });
         }
+        var templateOptions = new JsonObject { ["enable_thinking"] = true };
+        // Batch formatting has no image history; single-image composition retains its image.
+        if (profile == OmniLlamaProfile.Gamma && command == "compose" && !conversation.Any(m => m.IncludesImage))
+            templateOptions["reasoning_effort"] = "medium";
         return new JsonObject
         {
             ["messages"] = messages, ["stream"] = true,
             ["stream_options"] = new JsonObject { ["include_usage"] = true },
             ["temperature"] = (profile ?? OmniLlamaProfile.Alpha).Temperature, ["top_p"] = TopP, ["top_k"] = TopK, ["min_p"] = 0,
-            ["chat_template_kwargs"] = new JsonObject { ["enable_thinking"] = true },
+            ["chat_template_kwargs"] = templateOptions,
             ["max_tokens"] = maxTokens, ["cache_prompt"] = true
         }.ToJsonString();
     }

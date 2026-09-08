@@ -57,7 +57,8 @@ public sealed class ImageBatchProcessor(ImageBatchStore store, IImageBatchModel 
             }
             // Fixed small ceiling limits output length; admission is still measured in actual tokens
             // by the runtime. Oversized groups split recursively, without discarding details.
-            foreach (var group in pending.Chunk(job.SingleDocument ? 4 : 1))
+            var groupSize = job.SingleDocument ? (job.BundleId == ImageAnalysisBundleCatalog.HeavyId ? 2 : 4) : 1;
+            foreach (var group in pending.Chunk(groupSize))
                 await Format(group, job, Report, token);
             token.ThrowIfCancellationRequested();
             Report("save");
@@ -83,15 +84,17 @@ public sealed class ImageBatchProcessor(ImageBatchStore store, IImageBatchModel 
                     if (!ImageBatchLanguageGuard.Matches(section, job.Settings.LanguageCode))
                         throw new InvalidDataException("The description language does not match the requested output language.");
                 return sections;
-            }, null, job, report, token);
+            }, null, job, report, token, splitOnTimeout: group.Length > 1 && job.BundleId == ImageAnalysisBundleCatalog.HeavyId);
             if (!result.Select(s => s.Id).SequenceEqual(group.Select(i => i.Id))) throw new InvalidDataException("Invalid section order.");
             foreach (var section in result) Validate(section, section.Id);
             foreach (var section in result) store.SaveMaterial(job, section.Id, "final", section);
             foreach (var item in group) { item.Status = "ready"; item.Error = ""; }
         }
         catch (OperationCanceledException) { throw; }
-        catch (ImageAnalysisContextExhaustedException) when (group.Length > 1)
+        catch (Exception ex) when (group.Length > 1 && (ex is ImageAnalysisContextExhaustedException
+            || (ex is TimeoutException && job.BundleId == ImageAnalysisBundleCatalog.HeavyId)))
         {
+            report("retry");
             var half = group.Length / 2;
             await Format(group[..half], job, report, token);
             await Format(group[half..], job, report, token);
@@ -103,7 +106,7 @@ public sealed class ImageBatchProcessor(ImageBatchStore store, IImageBatchModel 
         store.Save(job); report("format");
     }
 
-    private async Task<T> Retry<T>(Func<Task<T>> run, ImageBatchItem? item, ImageBatchJob job, Action<string> report, CancellationToken token)
+    private async Task<T> Retry<T>(Func<Task<T>> run, ImageBatchItem? item, ImageBatchJob job, Action<string> report, CancellationToken token, bool splitOnTimeout = false)
     {
         for (var attempt = 1; ; attempt++)
         {
@@ -111,6 +114,7 @@ public sealed class ImageBatchProcessor(ImageBatchStore store, IImageBatchModel 
             if (item is not null) { item.Attempts++; store.Save(job); }
             try { return await run(); }
             catch (OperationCanceledException) { throw; }
+            catch (TimeoutException) when (splitOnTimeout) { model.Restart(); throw; }
             catch (ImageAnalysisContextExhaustedException ex) when (!ex.OutputTruncated) { throw; }
             catch (Exception) { model.Restart(); if (attempt >= 3) throw; report("retry"); }
         }
