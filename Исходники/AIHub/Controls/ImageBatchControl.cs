@@ -10,12 +10,14 @@ using Orientation = System.Windows.Controls.Orientation;
 namespace AIHub.Controls;
 
 /// <summary>Small batch surface inside the existing workspace; model activity and voice remain shared.</summary>
-public sealed class ImageBatchControl : System.Windows.Controls.UserControl
+public sealed partial class ImageBatchControl : System.Windows.Controls.UserControl
 {
     private readonly Func<string, string> _l;
     private readonly Grid _grid = new();
     private readonly WrapPanel _actions = new() { Orientation = Orientation.Horizontal };
     private readonly ListBox _list = new();
+    private readonly Button _next = new() { HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0), Visibility = Visibility.Collapsed };
+    private string _nextAction = "settings";
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 4) };
     public event Action<string>? Action;
     public ImageBatchItem? Selected => (_list.SelectedItem as ListBoxItem)?.Tag as ImageBatchItem;
@@ -31,6 +33,13 @@ public sealed class ImageBatchControl : System.Windows.Controls.UserControl
         _actions.Margin = new Thickness(0, 0, 0, 10); _grid.Children.Add(_actions);
         Grid.SetRow(_list, 1); _grid.Children.Add(_list);
         Grid.SetRow(_status, 2); _grid.Children.Add(_status);
+        Grid.SetRow(_next, 3); _grid.Children.Add(_next);
+        _next.SetResourceReference(StyleProperty, "PrimaryButtonStyle");
+        ToolTipService.SetShowOnDisabled(_next, true);
+        _next.Click += (_, _) => Action?.Invoke(_nextAction);
+        _list.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch;
+        ScrollViewer.SetHorizontalScrollBarVisibility(_list, ScrollBarVisibility.Disabled);
+        InitializeReordering();
         // The visible progress bar belongs to the workspace footer.
         _list.SetResourceReference(BackgroundProperty, "PanelBrush");
         _list.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
@@ -44,31 +53,46 @@ public sealed class ImageBatchControl : System.Windows.Controls.UserControl
     }
     public void Selector(IEnumerable<ImageBatchJob> jobs)
     {
+        _next.Visibility = Visibility.Collapsed;
         AcceptsInput = false; _actions.Children.Clear(); _list.Items.Clear();
-        Add("Batch.Title", "new");
-        _status.Text = _l("Batch.History");
-        foreach (var job in jobs.OrderByDescending(j => j.Created))
-        {
-            var b = new Button { Content = $"{job.Created:g} · {job.Items.Count} · {_l("Batch.State." + job.Status)}", Tag = job, Margin = new Thickness(0, 4, 0, 4) };
-            b.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
-            b.Click += (_, _) => Action?.Invoke("load:" + job.Id); _list.Items.Add(b);
-        }
+        var card = new Border { BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8), Padding = new Thickness(14), Margin = new Thickness(0, 14, 0, 0), HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch };
+        card.SetResourceReference(BackgroundProperty, "SecondaryButtonBackgroundBrush");
+        card.SetResourceReference(Border.BorderBrushProperty, "AccentBrush");
+        var row = new Grid(); row.ColumnDefinitions.Add(new()); row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        var text = new StackPanel();
+        var title = new TextBlock { Text = _l("Batch.Title"), FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 12, 5) };
+        title.SetResourceReference(TextBlock.FontSizeProperty, "UiFont18");
+        text.Children.Add(title);
+        var description = new TextBlock { Text = _l("Batch.Independent"), TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 16, 0) };
+        description.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush"); text.Children.Add(description); row.Children.Add(text);
+        var start = new Button { Content = _l("ImageAnalysis.Workspace.Subscenario.Single.Start"), MinWidth = 160, Height = 40 };
+        start.SetResourceReference(StyleProperty, "PrimaryButtonStyle"); start.Click += (_, _) => Action?.Invoke("new");
+        Grid.SetColumn(start, 1); row.Children.Add(start); card.Child = row;
+        // Selector occupies the full row, rather than a content-width action button.
+        _list.Items.Add(card);
+        _list.HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch;
+        _status.Text = _l("Batch.Independent");
     }
     public void Files(ImageBatchJob job)
     {
         AcceptsInput = !job.Started; _actions.Children.Clear();
-        Add("Batch.Add", "add", !job.Started); Add("Batch.Remove", "remove", !job.Started);
-        Add("Batch.Up", "up", !job.Started); Add("Batch.Down", "down", !job.Started);
-        Add(job.Started ? "Batch.Resume" : "Batch.Configure", job.Started ? "run" : "settings", job.Items.Count > 0);
+        Add("Batch.Add", "add", !job.Started);
+        _next.Content = _l(job.Started ? "Batch.Resume" : "Batch.Configure");
+        _nextAction = job.Started ? "run" : "settings";
+        _next.IsEnabled = job.Items.Count > 0; _next.Visibility = Visibility.Visible;
+        _next.ToolTip = job.Items.Count == 0 ? _l("Batch.AddAtLeastOne") : null;
         RenderItems(job); _status.Text = _l(job.Started ? "Batch.ResumeHint" : "Batch.DropHint");
+        if (job.Items.Count == 0) _status.Text = _l("Batch.AddAtLeastOne") + " " + _status.Text;
     }
     public void Running(ImageBatchJob job)
     {
+        _next.Visibility = Visibility.Collapsed;
         AcceptsInput = false; _actions.Children.Clear(); Add("Common.Cancel", "cancel");
         RenderItems(job);
     }
     public void Results(ImageBatchJob job, string report)
     {
+        _next.Visibility = Visibility.Collapsed;
         AcceptsInput = false; _actions.Children.Clear();
         bool complete = job.Status == "completed";
         Add("ImageAnalysis.Workspace.Result.Preview", "preview", complete && job.SingleDocument);
@@ -81,7 +105,9 @@ public sealed class ImageBatchControl : System.Windows.Controls.UserControl
         var selected = Selected?.Id; _list.Items.Clear();
         foreach (var item in job.Items)
         {
-            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            var row = new Grid();
+            row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+            row.ColumnDefinitions.Add(new()); row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
             var thumbnail = new Image { Width = 72, Height = 48, Margin = new Thickness(0, 0, 12, 0), ToolTip = item.File.SourcePath };
             try
             {
@@ -90,8 +116,18 @@ public sealed class ImageBatchControl : System.Windows.Controls.UserControl
             }
             catch { /* Missing originals do not prevent reading persisted descriptions. */ }
             row.Children.Add(thumbnail);
-            row.Children.Add(new TextBlock { Text = item.File.DisplayName + "\n" + _l("Batch.Item." + item.Status), VerticalAlignment = VerticalAlignment.Center, ToolTip = string.IsNullOrEmpty(item.Error) ? item.File.SourcePath : item.Error });
-            var entry = new ListBoxItem { Content = row, Tag = item, Margin = new Thickness(0, 3, 0, 3) };
+            var label = new TextBlock { Text = item.File.DisplayName + "\n" + _l("Batch.Item." + item.Status), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center, ToolTip = string.IsNullOrEmpty(item.Error) ? item.File.SourcePath : item.Error };
+            Grid.SetColumn(label, 1); row.Children.Add(label);
+            var entry = new ListBoxItem { Content = row, Tag = item, HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch, Margin = new Thickness(0, 3, 0, 3) };
+            if (AcceptsInput)
+            {
+                var remove = new Button { Content = "×", ToolTip = _l("Batch.Remove"), Width = 30, Height = 30, MinWidth = 0, Padding = new Thickness(0), Margin = new Thickness(10, 0, 0, 0) };
+                remove.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+                System.Windows.Automation.AutomationProperties.SetName(remove, _l("Batch.Remove"));
+                remove.Click += (_, e) => { e.Handled = true; entry.IsSelected = true; Action?.Invoke("remove"); };
+                Grid.SetColumn(remove, 2); row.Children.Add(remove);
+                AttachReordering(entry, item, job);
+            }
             _list.Items.Add(entry); if (selected == item.Id) entry.IsSelected = true;
         }
     }

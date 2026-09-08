@@ -32,7 +32,7 @@ public partial class MainWindow
                 ? System.Windows.DragDropEffects.Copy : System.Windows.DragDropEffects.None;
         };
         _batchView.Drop += async (_, e) => { e.Handled = true; await ImportBatchTransferAsync(e.Data); };
-        _batchView.Selector(BatchStore.LoadAll());
+        _batchView.Selector([]);
         ImageAnalysisWorkspacePage.ShowBatchContent(_batchView, ImageAnalysisLiterarySteps.Subscenario);
     }
     private async void BatchAction(string action)
@@ -57,6 +57,9 @@ public partial class MainWindow
             var job = _batchJob; if (job is null) return;
             switch (action)
             {
+                case "reordered":
+                    if (!job.Started) BatchStore.Save(job);
+                    break;
                 case "add":
                     var dialog = new Microsoft.Win32.OpenFileDialog { Multiselect = true, CheckFileExists = true, Filter = L("ImageAnalysis.Workspace.DialogFilter"), Title = L("Batch.Add") };
                     if (dialog.ShowDialog(this) == true) await ImportBatchInputsAsync(dialog.FileNames.Select(p => new ImageInput(FilePath: p)).ToArray());

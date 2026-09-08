@@ -29,7 +29,17 @@ public partial class ImageAnalysisWorkspaceControl
         _batchFolderOption = new() { GroupName = "BatchOutput", Margin = new Thickness(0, 5, 0, 5) };
         _batchSingleOption.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
         _batchFolderOption.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
-        _batchOutputOptions.Children.Add(_batchSingleOption); _batchOutputOptions.Children.Add(_batchFolderOption);
+        var outputChoices = new StackPanel();
+        outputChoices.Children.Add(_batchSingleOption); outputChoices.Children.Add(_batchFolderOption);
+        var outputFrame = new Border
+        {
+            Child = outputChoices, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(12, 6, 12, 6), Margin = new Thickness(0, 0, 0, 12),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left
+        };
+        outputFrame.SetResourceReference(Border.BorderBrushProperty, "AccentBrush");
+        outputFrame.SetResourceReference(Border.BackgroundProperty, "SecondaryButtonBackgroundBrush");
+        _batchOutputOptions.Children.Add(outputFrame);
         var hint = new TextBlock { TextWrapping = TextWrapping.Wrap };
         hint.Text = _localize("Batch.CustomHint"); _batchOutputOptions.Children.Add(hint);
         SettingsPanel.Children.Insert(0, _batchOutputOptions);
@@ -57,7 +67,7 @@ public partial class ImageAnalysisWorkspaceControl
         _batchOutputOptions!.Visibility = Visibility.Visible;
         _batchSingleOption!.Content = _localize("Batch.Single"); _batchSingleOption.IsChecked = single;
         _batchFolderOption!.Content = _localize("Batch.Folder"); _batchFolderOption.IsChecked = !single;
-        ((TextBlock)_batchOutputOptions.Children[2]).Text = _localize("Batch.CustomHint");
+        ((TextBlock)_batchOutputOptions.Children[1]).Text = _localize("Batch.CustomHint");
         SetComboByTag(FormComboBox, ImageAnalysisTextForms.WithTitle);
         FormComboBox.IsEnabled = false;
         FormComboBox.ToolTip = _localize("Batch.Headings");

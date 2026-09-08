@@ -105,12 +105,13 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         }
     }
 
-    public void ShowSubscenarioSelection(IReadOnlyList<ImageAnalysisLiterarySession> sessions)
+    public void ShowSubscenarioSelection(IReadOnlyList<ImageAnalysisLiterarySession> sessions, IReadOnlyList<ImageBatchJob>? batches = null)
     {
         _session = null;
         SetHistoryExpanded(false, animate: false);
         SetVoiceSettingsExpanded(false, animate: false);
         RenderHistory(sessions);
+        RenderBatchHistory(sessions, batches ?? []);
         SetStep(ImageAnalysisLiterarySteps.Subscenario);
         ApplyFile(null);
         RenderEvents(null);

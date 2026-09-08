@@ -32,7 +32,7 @@ public partial class MainWindow
         ImageAnalysisWorkspacePage.ShowSubscenarioSelection(
             _imageAnalysisSessionStore.LoadAll(_storageSettings)
                 .Where(session => string.Equals(session.BundleId, bundleId, StringComparison.Ordinal))
-                .ToList());
+                .ToList(), bundleId == ImageAnalysisBundleCatalog.LightId ? BatchStore.LoadAll().ToList() : []);
     }
 
     private void ImageAnalysisWorkspacePage_SingleSubscenarioRequested(object? sender, EventArgs e)
@@ -613,6 +613,10 @@ public partial class MainWindow
         {
             ShowImageAnalysisSubscenarioSelection();
             return;
+        }
+        if (e.SessionId.StartsWith("batch:", StringComparison.Ordinal))
+        {
+            ShowBatchSelector(); BatchAction("load:" + e.SessionId[6..]); return;
         }
         var session = _imageAnalysisSessionStore.Load(e.SessionId, _storageSettings);
         if (session is null)
