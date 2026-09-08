@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.IO;
 using AIHub.Controls;
 using AIHub.Models;
@@ -73,6 +73,7 @@ public partial class MainWindow
 
     private void HideStandardPages()
     {
+        LiteraryPage.Visibility = Visibility.Collapsed;
         CoreMemoryIndicatorPanel.Visibility = Visibility.Collapsed;
         WelcomePage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
@@ -85,6 +86,7 @@ public partial class MainWindow
 
     private void HideImageAnalysisPages()
     {
+        LiteraryPage.Visibility = Visibility.Collapsed;
         CoreMemoryIndicatorPanel.Visibility = Visibility.Visible;
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;
         ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Collapsed;

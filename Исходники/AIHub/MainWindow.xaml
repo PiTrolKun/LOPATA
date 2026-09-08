@@ -1,4 +1,4 @@
-<Window x:Class="AIHub.MainWindow"
+﻿<Window x:Class="AIHub.MainWindow"
         x:Name="RootWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -1901,6 +1901,8 @@
             </Border>
         </Grid>
 
+        <controls:LiteraryNavigationControl x:Name="LiteraryPage" Grid.Row="1" Visibility="Collapsed" />
+
         <Grid x:Name="WorkStartPage"
               Grid.Row="1"
               Margin="{DynamicResource UiPageMargin}"
@@ -1980,6 +1982,43 @@
                                 MinWidth="148"
                                 VerticalAlignment="Bottom"
                                 Click="SelectImageAnalysisButton_Click" />
+                    </Grid>
+                </Border>
+
+                <Border Background="{DynamicResource PanelBrush}"
+                        BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="{DynamicResource UiCardPadding}"
+                        HorizontalAlignment="Stretch" Margin="0,14,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock x:Name="LiteraryScenarioTitleText"
+                                       Text="Литературная работа"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       FontSize="{DynamicResource UiCardTitleFontSize}"
+                                       FontWeight="SemiBold" />
+                            <TextBlock x:Name="LiteraryScenarioDescriptionText"
+                                       Text="Создавайте и развивайте произведения с помощью ИИ: от первых идей до больших историй."
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       FontSize="{DynamicResource UiBodyFontSize}"
+                                       LineHeight="{DynamicResource UiLineHeight22}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,20,0" />
+                        </StackPanel>
+
+                        <Button x:Name="SelectLiteraryScenarioButton"
+                                Grid.Column="1"
+                                Content="Выбрать сценарий"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                MinWidth="148"
+                                VerticalAlignment="Bottom"
+                                Click="SelectLiteraryScenarioButton_Click" />
                     </Grid>
                 </Border>
 

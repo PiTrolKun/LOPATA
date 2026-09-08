@@ -1,0 +1,105 @@
+using System.IO;
+using System.Text.Json;
+using AIHub.Models;
+
+namespace AIHub.Services;
+
+public sealed class LiteraryProjectStore(string indexPath)
+{
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    public static LiteraryProjectStore Default() => new(Path.Combine(AppDataPaths.BaseDirectory, "Literary", "projects.json"));
+
+    public LiteraryProjectIndex Load()
+    {
+        if (!File.Exists(indexPath)) return new();
+        var index = JsonSerializer.Deserialize<LiteraryProjectIndex>(File.ReadAllText(indexPath));
+        if (index is null || index.SchemaVersion != 1 || index.Projects is null
+            || index.Projects.Any(p => p is null || string.IsNullOrWhiteSpace(p.Id) || string.IsNullOrWhiteSpace(p.ProjectPath))
+            || index.Projects.Select(p => p.Id).Distinct().Count() != index.Projects.Count)
+            throw new InvalidDataException("Invalid literary project index: " + indexPath);
+        return index;
+    }
+
+    public static bool IsValidProjectName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name) || name.Length > 100 || name != name.Trim()
+            || name.EndsWith('.') || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return false;
+        var stem = name.Split('.')[0].ToUpperInvariant();
+        return stem is not ("CON" or "PRN" or "AUX" or "NUL" or "CONIN$" or "CONOUT$")
+            && !System.Text.RegularExpressions.Regex.IsMatch(stem, @"^(COM|LPT)[0-9¹²³]$");
+    }
+
+    public LiteraryProjectEntry Create(string parent, LiteraryProject project, IReadOnlyList<string> materials)
+    {
+        if (!Path.IsPathFullyQualified(parent) || !Directory.Exists(parent)) throw new DirectoryNotFoundException(parent);
+        if (!IsValidProjectName(project.ProjectName)) throw new ArgumentException("Invalid project folder name.");
+        if (project.Genres.Count == 0 && string.IsNullOrWhiteSpace(project.CustomGenres)) throw new ArgumentException("A genre is required.");
+        var destination = Path.Combine(Path.GetFullPath(parent), project.ProjectName);
+        if (Directory.Exists(destination) || File.Exists(destination)) throw new IOException("Already exists: " + destination);
+        using var indexLock = AcquireLock();
+        var index = Load(); // Do not create a project if its index is unreadable.
+        if (index.Projects.Any(p => p.Id == project.Id)) throw new InvalidDataException("Duplicate project identifier.");
+        var staging = Path.Combine(Path.GetFullPath(parent), ".lopata-new-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(staging);
+        try
+        {
+            project.Materials = [];
+            if (project.BasedOnExistingWorld && materials.Count > 0)
+            {
+                Directory.CreateDirectory(Path.Combine(staging, "Materials"));
+                for (var i = 0; i < materials.Count; i++)
+                {
+                    var relative = Path.Combine("Materials", $"{i + 1:D4}_" + Path.GetFileName(materials[i]));
+                    File.Copy(materials[i], Path.Combine(staging, relative), false);
+                    project.Materials.Add(relative);
+                }
+            }
+            File.WriteAllText(Path.Combine(staging, "project.json"), JsonSerializer.Serialize(project, JsonOptions));
+            var entry = new LiteraryProjectEntry(project.Id, project.ProjectName, destination);
+            Directory.Move(staging, destination); // Never replace an existing project directory.
+            index.Projects.Add(entry);
+            try { Save(index); }
+            catch
+            {
+                // Roll back only the folder just created by this operation.
+                Directory.Move(destination, staging);
+                throw;
+            }
+            return entry;
+        }
+        finally
+        {
+            if (Directory.Exists(staging)) Directory.Delete(staging, true);
+        }
+    }
+
+    public void SetActive(string id)
+    {
+        using var indexLock = AcquireLock();
+        var index = Load();
+        if (!index.Projects.Any(p => p.Id == id)) throw new ArgumentException("Unknown project.");
+        index.ActiveId = id;
+        Save(index);
+    }
+
+    public static LiteraryProject ReadProject(string directory) =>
+        JsonSerializer.Deserialize<LiteraryProject>(File.ReadAllText(Path.Combine(directory, "project.json")))
+        is { SchemaVersion: 1 } project ? project : throw new InvalidDataException("Unsupported literary project.");
+
+    private FileStream AcquireLock()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(indexPath))!);
+        return new FileStream(indexPath + ".lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+    }
+
+    private void Save(LiteraryProjectIndex index)
+    {
+        var temp = indexPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temp, JsonSerializer.Serialize(index, JsonOptions));
+            File.Move(temp, indexPath, true);
+        }
+        finally { if (File.Exists(temp)) File.Delete(temp); }
+    }
+}

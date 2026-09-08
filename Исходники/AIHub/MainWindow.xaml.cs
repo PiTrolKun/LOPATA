@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -334,6 +334,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (e.Key == System.Windows.Input.Key.Escape && LiteraryPage.Visibility == Visibility.Visible)
+        {
+            LiteraryPage.GoBack();
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key == System.Windows.Input.Key.Escape && TryHandleImageAnalysisEscape())
         {
             e.Handled = true;
@@ -627,6 +634,7 @@ public partial class MainWindow : Window
         DeletePreviousWorkSelectionButton.Content = L("WorkStart.DeleteSelected");
         BackFromWorkStartButton.Content = L("Settings.Back");
         RefreshImageAnalysisLocalization();
+        RefreshLiteraryLocalization();
         ChoiceScenarioTitleText.Text = L("ChoiceScenario.Title");
         ChoiceScenarioDescriptionText.Text = L("ChoiceScenario.Description");
         ChoiceScenarioCoreThoughtTitleText.Text = L("ChoiceScenario.CoreThoughtTitle");
@@ -2445,6 +2453,7 @@ public partial class MainWindow : Window
     {
         FrameworkElement[] pages =
         [
+            LiteraryPage,
             ImageAnalysisWorkspacePage,
             ImageAnalysisBundleConfirmationPage,
             ImageAnalysisBundleSelectorPage,
