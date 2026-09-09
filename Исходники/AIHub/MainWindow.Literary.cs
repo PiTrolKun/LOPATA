@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 
 namespace AIHub;
 
@@ -7,8 +7,8 @@ public partial class MainWindow
     private void SelectLiteraryScenarioButton_Click(object sender, RoutedEventArgs e)
     {
         CancelCoreSpeech(revealFullText: false, "open_literary_navigation");
-        HideImageAnalysisPages();
-        HideStandardPages();
+        if (!HideImageAnalysisPages()) return;
+        if (!HideStandardPages()) return;
         LiteraryPage.Configure(L, language: _appSettings.LanguageCode, initialFolder: _storageSettings.Results.Locations.FirstOrDefault()?.Path ?? "");
         LiteraryPage.BackRequested -= LiteraryBackRequested;
         LiteraryPage.BackRequested += LiteraryBackRequested;

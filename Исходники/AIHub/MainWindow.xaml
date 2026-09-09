@@ -69,6 +69,7 @@
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F3F3F3" />
         <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1F1F1F" />
+        <SolidColorBrush x:Key="ChatUserTextBrush" Color="#1D4ED8" />
         <SolidColorBrush x:Key="TextSecondaryBrush" Color="#5D6470" />
         <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="BrandBackdropBrush" Color="#DBD7D7" />

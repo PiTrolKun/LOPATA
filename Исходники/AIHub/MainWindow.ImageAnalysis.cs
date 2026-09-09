@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.IO;
 using AIHub.Controls;
 using AIHub.Models;
@@ -51,7 +51,7 @@ public partial class MainWindow
                 LF);
         }
 
-        HideStandardPages();
+        if (!HideStandardPages()) return;
         ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Collapsed;
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Visible;
         ImageAnalysisBundleSelectorPage.UpdateResponsiveLayout(ActualWidth);
@@ -64,15 +64,16 @@ public partial class MainWindow
         var hasHistory = _imageAnalysisSessionStore.LoadAll(_storageSettings)
             .Any(session => string.Equals(session.BundleId, bundle.Id, StringComparison.Ordinal));
         ImageAnalysisBundleConfirmationPage.Configure(bundle, snapshot, L, LF, hasHistory);
-        HideStandardPages();
+        if (!HideStandardPages()) return;
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;
         EndImageInputSession();
         ImageAnalysisWorkspacePage.Visibility = Visibility.Collapsed;
         ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Visible;
     }
 
-    private void HideStandardPages()
+    private bool HideStandardPages()
     {
+        if (LiteraryPage.IsVisible && !LiteraryPage.CanLeave()) return false;
         LiteraryPage.Visibility = Visibility.Collapsed;
         CoreMemoryIndicatorPanel.Visibility = Visibility.Collapsed;
         WelcomePage.Visibility = Visibility.Collapsed;
@@ -82,16 +83,19 @@ public partial class MainWindow
         ProfileReminderPage.Visibility = Visibility.Collapsed;
         WorkStartPage.Visibility = Visibility.Collapsed;
         ChoiceScenarioPage.Visibility = Visibility.Collapsed;
+        return true;
     }
 
-    private void HideImageAnalysisPages()
+    private bool HideImageAnalysisPages()
     {
+        if (LiteraryPage.IsVisible && !LiteraryPage.CanLeave()) return false;
         LiteraryPage.Visibility = Visibility.Collapsed;
         CoreMemoryIndicatorPanel.Visibility = Visibility.Visible;
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;
         ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Collapsed;
         EndImageInputSession();
         ImageAnalysisWorkspacePage.Visibility = Visibility.Collapsed;
+        return true;
     }
 
     private void RefreshImageAnalysisLocalization()
@@ -373,7 +377,7 @@ public partial class MainWindow
         _imageAnalysisWorkspaceReadOnly = !snapshot.CanStart;
         ImageAnalysisWorkspacePage.Configure(bundleId, L, LF, () => _appSettings.LanguageCode);
         ImageAnalysisWorkspacePage.SetReadOnlyMode(_imageAnalysisWorkspaceReadOnly);
-        HideStandardPages();
+        if (!HideStandardPages()) return;
         ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;
         ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Collapsed;
         ImageAnalysisWorkspacePage.Visibility = Visibility.Visible;

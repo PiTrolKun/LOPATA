@@ -14,9 +14,10 @@ public sealed class LiteraryChatControl : UserControl
     private readonly LiteraryChatRuntime _runtime;
     private readonly LiteraryChatProfile _profile;
     private readonly Func<string> _draft;
+    private readonly Func<LiteraryEditorSnapshot>? _snapshot;
     private readonly LiteraryProject _project;
     private readonly List<ImageAnalysisHiddenMessage> _history = [];
-    private readonly TextBox _transcript = LiteraryWorkspaceParts.TextArea();
+    private readonly LiteraryTranscript _transcript = new();
     private readonly TextBox _input = LiteraryWorkspaceParts.TextArea(false);
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap };
     private readonly Button _send = new(), _clear = new();
@@ -24,13 +25,13 @@ public sealed class LiteraryChatControl : UserControl
     private string _statusKey = "Literary.Writer.Ready";
     private readonly List<(bool User, string Text)> _display = [];
     public LiteraryChatControl(Func<string, string> localize, LiteraryChatRuntime runtime,
-        LiteraryChatProfile profile, Func<string> draft, LiteraryProject project)
+        LiteraryChatProfile profile, Func<string> draft, LiteraryProject project, Func<LiteraryEditorSnapshot>? snapshot = null)
     {
         _profile = profile;
-        _runtime = runtime; _draft = draft; _project = project;
+        _runtime = runtime; _draft = draft; _project = project; _snapshot = snapshot;
         _l = LocalizeRole(localize);
         _send.Click += async (_, _) => { if (_cts is not null) _cts.Cancel(); else await SendAsync(); };
-        _clear.Click += (_, _) => { _history.Clear(); _display.Clear(); _transcript.Clear(); SetStatus("Literary.Writer.Ready"); UpdateButtons(); };
+        _clear.Click += (_, _) => { _history.Clear(); _display.Clear(); _transcript.Clear(); _runtime.ResetAnchor(_profile); SetStatus("Literary.Writer.Ready"); UpdateButtons(); };
         _runtime.BusyChanged += () => Dispatcher.BeginInvoke(new Action(UpdateButtons));
         _input.PreviewKeyDown += async (_, e) =>
         {
@@ -86,38 +87,54 @@ public sealed class LiteraryChatControl : UserControl
         _status.Text = _l(_runtime.IsBusy && _cts is null ? "Literary.Shared.Waiting" : _statusKey);
     }
     private void SetStatus(string key) { _statusKey = key; _status.Text = _l(key); }
-    private string Transcript() => string.Join("\n\n", _display.Select(m => _l(m.User ? "Literary.Writer.You" : "Literary.Workspace.Writer") + ":\n" + m.Text));
+    private void BeginReply() => _transcript.BeginReply(_display, _l("Literary.Writer.You"), _l("Literary.Workspace.Writer"));
     private async Task SendAsync()
     {
         var text = _input.Text; if (string.IsNullOrWhiteSpace(text) || _cts is not null || _runtime.IsBusy) return;
         var request = _history.Concat([new ImageAnalysisHiddenMessage { Role = "user", Content = text }]).ToArray();
         using var cts = new CancellationTokenSource(); _cts = cts;
         _display.Add((true, text)); _input.Clear();
-        var prefix = Transcript() + "\n\n" + _l("Literary.Workspace.Writer") + ":\n";
+        BeginReply();
         using var streamDisplay = new LiteraryStreamDisplay(_transcript);
         var recovered = false;
-        _transcript.Text = prefix; SetStatus("Literary.Writer.Working"); UpdateButtons();
+        var limited = false;
+        var finished = false;
+        SetStatus("Literary.Writer.Working"); UpdateButtons();
         try
         {
-            var result = await _runtime.SendAsync(_profile, request, _draft(), _project, streamDisplay, cts.Token,
+            var snapshot = _snapshot?.Invoke();
+            var result = await _runtime.SendAsync(_profile, request, snapshot?.Text ?? _draft(), _project, streamDisplay, cts.Token,
                 async () => await Dispatcher.InvokeAsync(() =>
                 {
                     PreservePartial();
                     recovered = true;
-                    streamDisplay.Reset(Transcript() + "\n\n" + _l("Literary.Workspace.Writer") + ":\n");
+                    streamDisplay.Reset(BeginReply);
                     SetStatus("Literary.Loop.Retrying");
-                }));
+                }), snapshot, key =>
+                {
+                    if (key == "Literary.Context.Limited") limited = true;
+                    Dispatcher.BeginInvoke(new Action(() => { if (_cts == cts && !finished) SetStatus(key); }));
+                });
+            finished = true;
             if (_profile == LiteraryChatProfile.Advisor)
             { _history.Add(request[^1]); _history.Add(new ImageAnalysisHiddenMessage { Role = "assistant", Content = result }); }
-            _display.Add((false, result)); SetStatus(recovered ? "Literary.Loop.Recovered" : "Literary.Writer.Ready");
+            _display.Add((false, result));
+            var changed = false;
+            if (snapshot is not null)
+            {
+                try { changed = _snapshot!().Revision != snapshot.Revision; }
+                catch (System.IO.IOException) { changed = true; }
+            }
+            SetStatus(changed ? "Literary.Context.Changed" : limited ? "Literary.Context.Limited" : recovered ? "Literary.Loop.Recovered" : "Literary.Writer.Ready");
         }
+        catch (LiterarySourceException) { PreservePartial(); SetStatus("Literary.Context.SourceError"); _input.Text = text; }
         catch (LiteraryLoopException) { PreservePartial(); SetStatus("Literary.Loop.Stopped"); _input.Text = text; }
         catch (LiteraryDraftLimitException) { PreservePartial(); SetStatus("Literary.Draft.TokenLimit"); _input.Text = text; }
         catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); SetStatus(ex.OutputTruncated ? "Literary.Shared.OutputLimit" : "Literary.Writer.Context"); _input.Text = text; }
         catch (OperationCanceledException) { PreservePartial(); SetStatus(cts.IsCancellationRequested ? "Literary.Writer.Cancelled" : "Literary.Writer.Timeout"); _input.Text = text; }
         catch (System.IO.FileNotFoundException) { PreservePartial(); SetStatus("Literary.Writer.Missing"); _input.Text = text; }
         catch (Exception) { PreservePartial(); SetStatus("Literary.Writer.Error"); _input.Text = text; }
-        finally { await streamDisplay.CompleteAsync(); _cts = null; UpdateButtons(); }
+        finally { finished = true; await streamDisplay.CompleteAsync(); _cts = null; UpdateButtons(); }
         void PreservePartial()
         {
             var partial = streamDisplay.Snapshot();

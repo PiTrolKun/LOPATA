@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -206,6 +206,7 @@ public partial class MainWindow : Window
         SetBrush("BrandBackdropBrush", _isDarkTheme ? "#00000000" : "#DBD7D7");
         SetBrush("LineBrush", _isDarkTheme ? "#2D374B" : "#DADDE3");
         SetBrush("TextPrimaryBrush", _isDarkTheme ? "#F8FAFC" : "#1F1F1F");
+        SetBrush("ChatUserTextBrush", _isDarkTheme ? "#93C5FD" : "#1D4ED8");
         SetBrush("TextSecondaryBrush", _isDarkTheme ? "#AAB4C4" : "#5D6470");
         SetBrush("StepBadgeBrush", _isDarkTheme ? "#1E3A5F" : "#EAF1FF");
         SetBrush("SecondaryButtonBackgroundBrush", _isDarkTheme ? "#111827" : "#F8F8F8");
@@ -1232,7 +1233,7 @@ public partial class MainWindow : Window
 
     private void BackToStartButton_Click(object sender, RoutedEventArgs e)
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         SetupPage.Visibility = Visibility.Collapsed;
         WelcomePage.Visibility = Visibility.Visible;
         SettingsPage.Visibility = Visibility.Collapsed;
@@ -1249,8 +1250,8 @@ public partial class MainWindow : Window
         _settingsReturnPage = null;
         _settingsReturnStatusText = null;
 
-        HideImageAnalysisPages();
-        HideStandardPages();
+        if (!HideImageAnalysisPages()) return;
+        if (!HideStandardPages()) return;
 
         if (returnPage is null)
         {
@@ -1268,7 +1269,7 @@ public partial class MainWindow : Window
 
     private void BackFromProfileButton_Click(object sender, RoutedEventArgs e)
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         ProfilePage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
@@ -1303,7 +1304,7 @@ public partial class MainWindow : Window
 
     private void BackFromProfileReminderButton_Click(object sender, RoutedEventArgs e)
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         ProfileReminderPage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
@@ -1316,7 +1317,7 @@ public partial class MainWindow : Window
 
     private void BackFromWorkStartButton_Click(object sender, RoutedEventArgs e)
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         WorkStartPage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
@@ -1857,7 +1858,7 @@ public partial class MainWindow : Window
         ResumableScenarioSession session,
         bool requestExecutorDownload)
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         PauseActiveSession("another_session_opened");
         _choiceScenarioCts?.Cancel();
         CancelExecutorSession("restoring_archived_session");
@@ -2414,7 +2415,7 @@ public partial class MainWindow : Window
 
     private void ShowSetupPage(ComputerPassport passport)
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         PassportSummaryText.Text = BuildPassportSummary(passport);
         PassportPathText.Text = LF("Setup.PassportPath", AppDataPaths.ComputerPassportPath);
         WelcomePage.Visibility = Visibility.Collapsed;
@@ -2434,7 +2435,7 @@ public partial class MainWindow : Window
             _settingsReturnStatusText = StatusText.Text;
         }
 
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         CancelCoreSpeech(revealFullText: false, "open_settings");
         WelcomePage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
@@ -2472,7 +2473,7 @@ public partial class MainWindow : Window
 
     private void ShowProfilePage()
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         CancelCoreSpeech(revealFullText: false, "open_profile");
         WelcomePage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
@@ -2485,7 +2486,7 @@ public partial class MainWindow : Window
 
     private void ShowProfileReminderPage()
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         CancelCoreSpeech(revealFullText: false, "open_profile_reminder");
         WelcomePage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
@@ -2498,7 +2499,7 @@ public partial class MainWindow : Window
 
     private void ShowWorkStartPage()
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         CancelCoreSpeech(revealFullText: false, "open_work_start");
         PreviousWorkExpander.IsExpanded = false;
         WelcomePage.Visibility = Visibility.Collapsed;
@@ -2513,7 +2514,7 @@ public partial class MainWindow : Window
 
     private void StartChoiceScenario()
     {
-        HideImageAnalysisPages();
+        if (!HideImageAnalysisPages()) return;
         PauseActiveSession("new_scenario_started");
         _choiceScenarioLog?.Write("scenario_session_end", new { Reason = "restart" });
         _choiceScenarioLog?.Dispose();

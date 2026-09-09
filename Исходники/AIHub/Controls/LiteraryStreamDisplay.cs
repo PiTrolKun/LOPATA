@@ -1,6 +1,7 @@
 using System.Text;
 using System.Windows.Threading;
 using AIHub.Models;
+using TextBoxBase = System.Windows.Controls.Primitives.TextBoxBase;
 using TextBox = System.Windows.Controls.TextBox;
 
 namespace AIHub.Controls;
@@ -10,11 +11,11 @@ public sealed class LiteraryStreamDisplay : IProgress<ModelStreamChunk>, IDispos
 {
     private readonly object _gate = new();
     private readonly StringBuilder _received = new();
-    private readonly TextBox _target;
+    private readonly TextBoxBase _target;
     private readonly DispatcherTimer _timer;
     private int _shown;
     private bool _closed;
-    public LiteraryStreamDisplay(TextBox target)
+    public LiteraryStreamDisplay(TextBoxBase target)
     {
         _target = target;
         target.IsUndoEnabled = false;
@@ -32,7 +33,17 @@ public sealed class LiteraryStreamDisplay : IProgress<ModelStreamChunk>, IDispos
     public string Snapshot() { lock (_gate) return _received.ToString(); }
 
     // Called on the UI thread after the old HTTP stream is disposed and before a retry starts.
-    public void Reset(string prefix)
+    public void Reset(string prefix) => Reset(() =>
+    {
+        if (_target is TextBox text) text.Text = prefix;
+        else if (_target is System.Windows.Controls.RichTextBox rich)
+        {
+            rich.Document.Blocks.Clear();
+            rich.AppendText(prefix);
+        }
+    });
+
+    public void Reset(Action resetTranscript)
     {
         _target.Dispatcher.VerifyAccess();
         lock (_gate)
@@ -40,7 +51,7 @@ public sealed class LiteraryStreamDisplay : IProgress<ModelStreamChunk>, IDispos
             if (_closed) throw new ObjectDisposedException(nameof(LiteraryStreamDisplay));
             _received.Clear(); _shown = 0;
         }
-        _target.Text = prefix;
+        resetTranscript();
     }
 
     private void OnTick(object? sender, EventArgs e) => Drain();
@@ -56,7 +67,8 @@ public sealed class LiteraryStreamDisplay : IProgress<ModelStreamChunk>, IDispos
             _shown += count;
         }
         var follow = _target.VerticalOffset + _target.ViewportHeight >= _target.ExtentHeight - 2;
-        _target.AppendText(next);
+        if (_target is LiteraryTranscript transcript) transcript.AppendResponse(next);
+        else _target.AppendText(next);
         if (follow) _target.ScrollToEnd();
         return true;
     }

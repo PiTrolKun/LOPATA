@@ -324,6 +324,7 @@ public partial class MainWindow
 
     protected override void OnClosing(CancelEventArgs e)
     {
+        if (!LiteraryPage.CanLeave()) { e.Cancel = true; base.OnClosing(e); return; }
         SaveCurrentWindowPlacement();
         base.OnClosing(e);
     }

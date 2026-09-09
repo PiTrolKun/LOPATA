@@ -1,0 +1,45 @@
+{
+  "note": "Accept Russian declension of the known source title; original literal-match report is retained.",
+  "checks": [
+    {
+      "role": "Writer",
+      "name": "draft",
+      "ok": true
+    },
+    {
+      "role": "Writer",
+      "name": "edit",
+      "ok": true
+    },
+    {
+      "role": "Writer",
+      "name": "history",
+      "ok": true
+    },
+    {
+      "role": "Writer",
+      "name": "search",
+      "ok": true
+    },
+    {
+      "role": "Advisor",
+      "name": "draft",
+      "ok": true
+    },
+    {
+      "role": "Advisor",
+      "name": "edit",
+      "ok": true
+    },
+    {
+      "role": "Advisor",
+      "name": "history",
+      "ok": true
+    },
+    {
+      "role": "Advisor",
+      "name": "search",
+      "ok": true
+    }
+  ]
+}

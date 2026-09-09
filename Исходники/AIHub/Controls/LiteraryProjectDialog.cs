@@ -27,13 +27,7 @@ public sealed class LiteraryProjectDialog : Window
         var close = LiteraryUi.Button(l("Literary.Close"), Close);
         close.IsCancel = true;
         close.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
-        if (mode == LiteraryProjectDialogMode.Export)
-        {
-            footer.Children.Add(LiteraryUi.Text(l("Literary.Format")));
-            footer.Children.Add(new ComboBox { IsEnabled = false, ToolTip = l("Literary.FormatsPending"), MinHeight = 30 });
-            footer.Children.Add(LiteraryUi.Text(l("Literary.FormatsPending")));
-        }
-        else footer.Children.Add(LiteraryUi.Text(l(mode == LiteraryProjectDialogMode.Active ? "Literary.StarHint" : "Literary.SelectionHint")));
+        footer.Children.Add(LiteraryUi.Text(l(mode == LiteraryProjectDialogMode.Active ? "Literary.StarHint" : "Literary.SelectionHint")));
         footer.Children.Add(close);
         if (projects.Projects.Count == 0)
         {
@@ -42,9 +36,9 @@ public sealed class LiteraryProjectDialog : Window
         else
         {
             var list = new ListBox { HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch };
-            if (mode == LiteraryProjectDialogMode.Select)
+            if (mode is LiteraryProjectDialogMode.Select or LiteraryProjectDialogMode.Export)
             {
-                var open = LiteraryUi.Button(l("Literary.Workspace.Open"), () =>
+                var open = LiteraryUi.Button(l(mode == LiteraryProjectDialogMode.Export ? "Literary.Export" : "Literary.Workspace.Open"), () =>
                 {
                     SelectedProject = projects.Projects.FirstOrDefault(p => p.Id == (list.SelectedItem as ListBoxItem)?.Tag as string);
                     if (SelectedProject is not null) DialogResult = true;

@@ -19,6 +19,7 @@ public sealed class LiteraryNavigationControl : UserControl
     public bool ShowingProjects { get; private set; }
     public event Action? BackRequested;
     public event Action? HomeRequested;
+    public bool CanLeave() => _workspace?.CanLeave() ?? true;
 
     public void Configure(Func<string, string> localize, bool projects = false, string? language = null, string? initialFolder = null)
     {
@@ -33,7 +34,7 @@ public sealed class LiteraryNavigationControl : UserControl
 
     public void GoBack()
     {
-        if (_workspace is not null) { _workspace = null; ShowingProjects = true; Render(); return; }
+        if (_workspace is not null) { if (!CanLeave()) return; _workspace = null; ShowingProjects = true; Render(); return; }
         if (_creation is not null) { if (!_creation.IsSaving) { _creation = null; Render(); } return; }
         if (ShowingProjects) { ShowingProjects = false; Render(); }
         else BackRequested?.Invoke();
@@ -118,7 +119,11 @@ public sealed class LiteraryNavigationControl : UserControl
     {
         LoadProjects();
         var dialog = new LiteraryProjectDialog(_projects, _l, mode, id => _store.SetActive(id)) { Owner = Window.GetWindow(this) };
-        if (dialog.ShowDialog() == true && dialog.SelectedProject is { } selected) OpenWorkspace(selected);
+        if (dialog.ShowDialog() == true && dialog.SelectedProject is { } selected)
+        {
+            if (mode == LiteraryProjectDialogMode.Export) _ = LiteraryExportDialog.ShowAsync(this, _l, selected.ProjectPath, selected.Title);
+            else OpenWorkspace(selected);
+        }
         Render();
     }
 

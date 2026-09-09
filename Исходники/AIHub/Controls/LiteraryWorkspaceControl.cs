@@ -25,17 +25,21 @@ public sealed class LiteraryWorkspaceControl : UserControl
     public ContentControl WriterHost { get; } = new();
     public ContentControl TreeHost { get; } = new();
     public ContentControl AdvisorHost { get; } = new();
+    public bool CanLeave() => _draft.CanLeave();
 
     public LiteraryWorkspaceControl(LiteraryProjectEntry entry, LiteraryProject project, Func<string, string> localize)
     {
         _entry = entry; _project = project; _l = localize;
         _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
-        _writer = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Writer, () => _draft.Text, project);
-        _advisor = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Advisor, () => _draft.Text, project);
-        Unloaded += (_, _) => { _draft.Save(); _runtime.Stop(); if (System.Windows.Application.Current is { } app) app.Exit -= OnAppExit; };
+        _writer = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Writer, () => _draft.Text, project,
+            () => _draft.Capture(project.Id, entry.ProjectPath));
+        _advisor = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Advisor, () => _draft.Text, project,
+            () => _draft.Capture(project.Id, entry.ProjectPath));
+        Unloaded += (_, _) => { _runtime.Stop(); if (System.Windows.Application.Current is { } app) app.Exit -= OnAppExit; };
         Loaded += (_, _) => { if (System.Windows.Application.Current is { } app) { app.Exit -= OnAppExit; app.Exit += OnAppExit; } };
         IsVisibleChanged += (_, _) => { if (!IsVisible) { _draft.Save(); _runtime.Stop(); } };
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryScrollResources.xaml", UriKind.Relative) });
+        _draft.ChapterChanged += () => EditorHost.Content = BuildEditor();
         Render();
     }
 
@@ -94,7 +98,7 @@ public sealed class LiteraryWorkspaceControl : UserControl
         var footer = new DockPanel { Margin = new Thickness(0, 12, 0, 0) };
         var navigation = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
         navigation.Children.Add(LiteraryUi.Button(_l("Literary.Back"), () => BackRequested?.Invoke()));
-        navigation.Children.Add(LiteraryUi.Button(_l("Literary.Home"), () => HomeRequested?.Invoke()));
+        navigation.Children.Add(LiteraryUi.Button(_l("Literary.Home"), () => { if (CanLeave()) HomeRequested?.Invoke(); }));
         DockPanel.SetDock(navigation, Dock.Left); footer.Children.Add(navigation);
         footer.Children.Add(LiteraryUi.Text(_l("Literary.Writer.Footer") + " · " + _l("Literary.Form." + _project.Form)));
         Grid.SetRow(footer, 4); root.Children.Add(footer);
@@ -113,11 +117,12 @@ public sealed class LiteraryWorkspaceControl : UserControl
         if (_draft.Parent is Panel previous) previous.Children.Remove(_draft);
         var panel = new DockPanel();
         var header = new WrapPanel();
-        var title = LiteraryUi.Text(_l("Literary.Workspace.Chapter"), true); title.Margin = new Thickness(0, 0, 14, 4); header.Children.Add(title);
-        header.Children.Add(PendingButton("✎", LiteraryWorkspaceAction.RenameChapter));
+        var title = LiteraryUi.Text(_draft.ChapterLabel, true); title.Margin = new Thickness(0, 0, 14, 4); header.Children.Add(title);
+        var rename = LiteraryUi.Button("✎", async () => await _draft.RenameAsync()); rename.MinWidth = 0; rename.Width = 34; rename.Padding = new Thickness(4);
+        rename.ToolTip = _l("Literary.Workspace.Action.RenameChapter"); header.Children.Add(rename);
         header.Children.Add(PendingButton(_l("Literary.Workspace.History"), LiteraryWorkspaceAction.History));
-        header.Children.Add(PendingButton(_l("Literary.Export"), LiteraryWorkspaceAction.Export));
-        header.Children.Add(PendingButton(_l("Literary.Workspace.Finish"), LiteraryWorkspaceAction.FinishChapter));
+        header.Children.Add(LiteraryUi.Button(_l("Literary.Export"), async () => await LiteraryExportDialog.ShowAsync(this, _l, _entry.ProjectPath, _project.WorkTitle, _draft)));
+        header.Children.Add(LiteraryUi.Button(_l("Literary.Workspace.Finish"), async () => await _draft.FinishAsync()));
         DockPanel.SetDock(header, Dock.Top); panel.Children.Add(header);
         var bottom = new WrapPanel();
         foreach (var key in new[] { "Literary.Workspace.Style", "Literary.Workspace.Mode" })
