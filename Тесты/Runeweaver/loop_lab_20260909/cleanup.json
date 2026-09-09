@@ -1,0 +1,9 @@
+{
+  "removed": true,
+  "ownedServersRunning": 0,
+  "utc": "2026-09-09T11:30:54.5694297Z",
+  "method": "Verified owned files removed individually without Force/Recurse, then empty directories",
+  "bytesRemoved": 1321623697,
+  "evidencePreserved": "Тесты/Runeweaver/loop_lab_20260909",
+  "path": "H:\\AI_HUB\\_tmp\\loop_backend_b9000_20260909"
+}

@@ -1,0 +1,53 @@
+{
+  "name": "seed_24",
+  "pid": 52648,
+  "seed": 24,
+  "slot": 0,
+  "first_seconds": 0.5470000000204891,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 515,
+    "prompt_tokens": 1377,
+    "total_tokens": 1892,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 517.541,
+    "prompt_per_token_ms": 0.37584676833696445,
+    "prompt_per_second": 2660.6587690637066,
+    "predicted_n": 515,
+    "predicted_ms": 15843.447,
+    "predicted_per_token_ms": 30.763974757281552,
+    "predicted_per_second": 32.50555261112054
+  },
+  "done": true,
+  "seconds": 16.391,
+  "chars": 1746,
+  "sha256": "9d8bacfef8ce14b2a759fbdd97fe44a786bb77c369709880d28f44e9e1230b92",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я занимался редактированием текста, то предложил бы следующие правки:",
+      1
+    ],
+    [
+      "Уточнить мотивацию Антона:",
+      1
+    ],
+    [
+      "В текущем варианте Антон ведет себя слишком уверенно, хотя сам признает, что не знает, что происходит. Можно добавить детали о его прошлом опыте или знаниях, которые объясняют его спокойствие.",
+      1
+    ]
+  ],
+  "words": 236,
+  "short_quoted_list_run": 0
+}

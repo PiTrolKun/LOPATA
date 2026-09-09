@@ -1,0 +1,54 @@
+{
+  "name": "raw_no_thinking_seed_1",
+  "pid": 42096,
+  "seed": 1,
+  "slot": 0,
+  "first_seconds": 0.0779999999795109,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1015,
+    "prompt_tokens": 323,
+    "total_tokens": 1338,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 323,
+    "prompt_ms": 62.193,
+    "prompt_per_token_ms": 0.19254798761609906,
+    "prompt_per_second": 5193.510523692377,
+    "predicted_n": 1015,
+    "predicted_ms": 6760.808,
+    "predicted_per_token_ms": 6.660894581280788,
+    "predicted_per_second": 150.1299844633955
+  },
+  "done": true,
+  "seconds": 6.844,
+  "chars": 3023,
+  "sha256": "a7191aaa850607667d63c6bae287cbf387468253db94eea017b795ab427b57df",
+  "loop": false,
+  "detector_version": 2,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "— Я не понимаю.",
+      3
+    ],
+    [
+      "— Да.",
+      2
+    ],
+    [
+      "— Что?",
+      2
+    ]
+  ],
+  "words": 485,
+  "short_quoted_list_run": 0
+}

@@ -1,0 +1,53 @@
+{
+  "name": "advisor_errors_repeat1.05",
+  "pid": 57864,
+  "seed": 431,
+  "slot": 0,
+  "first_seconds": 0.125,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 117,
+    "prompt_tokens": 211,
+    "total_tokens": 328,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 211,
+    "prompt_ms": 125.184,
+    "prompt_per_token_ms": 0.5932890995260663,
+    "prompt_per_second": 1685.5189161554192,
+    "predicted_n": 117,
+    "predicted_ms": 3316.628,
+    "predicted_per_token_ms": 28.347247863247865,
+    "predicted_per_second": 35.276793176684265
+  },
+  "done": true,
+  "seconds": 3.437,
+  "chars": 402,
+  "sha256": "4ea4c8499a429fd684c4b933c0714e9ea933bd5c29f9552f2e9a1e37c7fec0b8",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте есть внутреннее противоречие:",
+      1
+    ],
+    [
+      "> Запасных ключей не было. Через минуту Антон, стоя внутри дома, молча передал Лере тот самый ключ.",
+      1
+    ],
+    [
+      "Если у Леры был единственный ключ от шкафа, и она его заперла внутри шкафа, то как Антон, не заходя в дом, смог передать ей этот же ключ? Это внутреннее противоречие, так как описывается ситуация, при которой Антон не мог получить ключ, чтобы передать его Лере.",
+      1
+    ]
+  ],
+  "words": 66,
+  "short_quoted_list_run": 0
+}

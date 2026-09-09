@@ -1,0 +1,45 @@
+{
+  "name": "writer_1.05_20",
+  "pid": 30492,
+  "seed": 20,
+  "slot": 0,
+  "first_seconds": 0.125,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 12,
+    "prompt_tokens": 121,
+    "total_tokens": 133,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 121,
+    "prompt_ms": 84.941,
+    "prompt_per_token_ms": 0.7019917355371901,
+    "prompt_per_second": 1424.5181949823996,
+    "predicted_n": 12,
+    "predicted_ms": 311.728,
+    "predicted_per_token_ms": 25.977333333333334,
+    "predicted_per_second": 38.49509829081764
+  },
+  "done": true,
+  "seconds": 0.437,
+  "chars": 35,
+  "sha256": "a0bbf777df1e7d776b324060c48b8bd765131841405b67ec9b502dc9f1c53461",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Мрачная улица казалась заброшенной.",
+      1
+    ]
+  ],
+  "words": 4,
+  "short_quoted_list_run": 0
+}

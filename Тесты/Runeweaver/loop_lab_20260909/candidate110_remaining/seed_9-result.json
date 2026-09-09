@@ -1,0 +1,53 @@
+{
+  "name": "seed_9",
+  "pid": 11052,
+  "seed": 9,
+  "slot": 0,
+  "first_seconds": 0.5310000000754371,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 554,
+    "prompt_tokens": 1377,
+    "total_tokens": 1931,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 516.129,
+    "prompt_per_token_ms": 0.37482135076252726,
+    "prompt_per_second": 2667.9376667461042,
+    "predicted_n": 554,
+    "predicted_ms": 15877.237,
+    "predicted_per_token_ms": 28.659272563176895,
+    "predicted_per_second": 34.89272094382669
+  },
+  "done": true,
+  "seconds": 16.406,
+  "chars": 1694,
+  "sha256": "deef8325ab04b01a1a13b20c29e32700c7f1f565ed2bc89511fe0694e0505857",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором текста, то внес бы следующие изменения:",
+      1
+    ],
+    [
+      "Добавил бы больше деталей в описание внешности и одежды персонажей:",
+      1
+    ],
+    [
+      "Антон сидел на старом, потрескавшемся деревянном скамейке, укутанный в серую куртку с потертым воротником.",
+      1
+    ]
+  ],
+  "words": 240,
+  "short_quoted_list_run": 0
+}

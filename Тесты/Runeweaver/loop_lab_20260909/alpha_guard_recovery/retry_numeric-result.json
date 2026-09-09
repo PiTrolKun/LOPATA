@@ -1,0 +1,61 @@
+{
+  "name": "retry_numeric",
+  "pid": 63720,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.0779999999795109,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 2127,
+    "prompt_tokens": 321,
+    "total_tokens": 2448,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 321,
+    "prompt_ms": 57.867,
+    "prompt_per_token_ms": 0.18027102803738318,
+    "prompt_per_second": 5547.203069106745,
+    "predicted_n": 2127,
+    "predicted_ms": 15620.358,
+    "predicted_per_token_ms": 7.34384485190409,
+    "predicted_per_second": 136.168454013666
+  },
+  "done": true,
+  "seconds": 15.703,
+  "chars": 7784,
+  "sha256": "cfb0c4b63bed8bbee1d9bb11869ae56d469ba1db83404ade9f0de453e09ee042",
+  "loop": false,
+  "literal_loop": false,
+  "numeric_loop": false,
+  "detector_version": 3,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "numeric_periodic": {
+    "words": 3,
+    "unit": "#",
+    "copies": 3
+  },
+  "repeated_lines": [
+    [
+      "Thinking Process:",
+      1
+    ],
+    [
+      "Analyze the Request:**",
+      1
+    ],
+    [
+      "Length:** 700–900 words (Russian).",
+      1
+    ]
+  ],
+  "words": 1220,
+  "short_quoted_list_run": 0
+}

@@ -1,0 +1,52 @@
+{
+  "name": "seed_28",
+  "pid": 53304,
+  "seed": 28,
+  "slot": 0,
+  "first_seconds": 0.2190000000409782,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 627,
+    "prompt_tokens": 1377,
+    "total_tokens": 2004,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 208.067,
+    "prompt_per_token_ms": 0.15110167029774874,
+    "prompt_per_second": 6618.0605285797365,
+    "predicted_n": 627,
+    "predicted_ms": 6751.737,
+    "predicted_per_token_ms": 10.76832057416268,
+    "predicted_per_second": 92.86499163104249
+  },
+  "done": true,
+  "seconds": 6.969,
+  "chars": 2080,
+  "sha256": "f9f8cde432910b659b5418bcf935d30c9fcb5c231f2b1d2cf416a5bf369f9865",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, я бы внес следующие исправления и дополнения:",
+      1
+    ],
+    [
+      "Более детальное описание персонажей:",
+      1
+    ],
+    [
+      "Добавить информацию о внешности Антона и Леры (например, цвет волос, глаз, особенности лица).",
+      1
+    ]
+  ],
+  "words": 296
+}

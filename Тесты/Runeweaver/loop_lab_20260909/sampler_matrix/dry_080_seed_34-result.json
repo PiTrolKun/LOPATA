@@ -1,0 +1,52 @@
+{
+  "name": "dry_080_seed_34",
+  "pid": 63072,
+  "seed": 34,
+  "slot": 0,
+  "first_seconds": 0.5779999999795109,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 466,
+    "prompt_tokens": 1377,
+    "total_tokens": 1843,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 531.219,
+    "prompt_per_token_ms": 0.3857799564270153,
+    "prompt_per_second": 2592.1512596499747,
+    "predicted_n": 466,
+    "predicted_ms": 14475.722,
+    "predicted_per_token_ms": 31.063781115879827,
+    "predicted_per_second": 32.19183126064455
+  },
+  "done": true,
+  "seconds": 15.047,
+  "chars": 1462,
+  "sha256": "ceb5412357a25935fd016f527e950cb3f3db3f01f1bbb5767fa585e58f40e2d7",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором, то внес бы следующие правки:",
+      1
+    ],
+    [
+      "Уточнить, кто именно говорит в диалоге:",
+      1
+    ],
+    [
+      "Антон тихо сказал\":",
+      1
+    ]
+  ],
+  "words": 182
+}

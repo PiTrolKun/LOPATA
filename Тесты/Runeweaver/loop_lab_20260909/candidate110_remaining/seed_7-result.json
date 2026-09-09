@@ -1,0 +1,53 @@
+{
+  "name": "seed_7",
+  "pid": 11052,
+  "seed": 7,
+  "slot": 0,
+  "first_seconds": 0.2660000000614673,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 457,
+    "prompt_tokens": 1377,
+    "total_tokens": 1834,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 220.241,
+    "prompt_per_token_ms": 0.15994262890341324,
+    "prompt_per_second": 6252.241862323545,
+    "predicted_n": 457,
+    "predicted_ms": 5150.895,
+    "predicted_per_token_ms": 11.271105032822758,
+    "predicted_per_second": 88.72244532260898
+  },
+  "done": true,
+  "seconds": 5.407,
+  "chars": 1502,
+  "sha256": "c4f5cc31c0e66463150d76532199beff6a83b1a3fa5700cb95f70816b6fc281f",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы мне нужно было что-то исправить в данном тексте, я бы сосредоточился на следующем:",
+      1
+    ],
+    [
+      "Уточнение деталей:",
+      1
+    ],
+    [
+      "Автор не уточняет, какой именно поезд они ждут (обычный или нет). Это могло бы добавить больше информации и интриги.",
+      1
+    ]
+  ],
+  "words": 215,
+  "short_quoted_list_run": 0
+}

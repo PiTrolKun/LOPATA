@@ -1,0 +1,53 @@
+{
+  "name": "seed_20",
+  "pid": 66988,
+  "seed": 20,
+  "slot": 0,
+  "first_seconds": 0.5619999999180436,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1214,
+    "prompt_tokens": 1377,
+    "total_tokens": 2591,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 545.737,
+    "prompt_per_token_ms": 0.39632316630355846,
+    "prompt_per_second": 2523.1934063477465,
+    "predicted_n": 1214,
+    "predicted_ms": 38224.562,
+    "predicted_per_token_ms": 31.48645963756178,
+    "predicted_per_second": 31.759683734243968
+  },
+  "done": true,
+  "seconds": 38.781,
+  "chars": 3896,
+  "sha256": "4387ca6bf772b489d710b073e158fd9e89ef37455bf58497b8e75044e8c0157c",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте присутствуют некоторые элементы, которые можно улучшить для более сильного воздействия на читателя:",
+      1
+    ],
+    [
+      "Употребление местоимений:",
+      1
+    ],
+    [
+      "В некоторых диалогах используется много местоимений (\"ты\", \"он\", \"она\"), что может привести к путанице. Например, в предложении \"Он взглянул на нее и тихо ответил:\" можно уточнить, кто именно смотрит и отвечает (Антон или Лера).",
+      1
+    ]
+  ],
+  "words": 545,
+  "short_quoted_list_run": 0
+}

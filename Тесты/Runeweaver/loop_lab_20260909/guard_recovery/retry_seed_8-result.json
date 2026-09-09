@@ -1,0 +1,53 @@
+{
+  "name": "retry_seed_8",
+  "pid": 53484,
+  "seed": 8,
+  "slot": 0,
+  "first_seconds": 0.515999999945052,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 489,
+    "prompt_tokens": 1377,
+    "total_tokens": 1866,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 508.227,
+    "prompt_per_token_ms": 0.36908278867102395,
+    "prompt_per_second": 2709.419216216376,
+    "predicted_n": 489,
+    "predicted_ms": 14384.44,
+    "predicted_per_token_ms": 29.4160327198364,
+    "predicted_per_second": 33.99506689172467
+  },
+  "done": true,
+  "seconds": 14.906,
+  "chars": 1609,
+  "sha256": "86765d657f00c25e9b6e4254551a0d33be083e7f76d6e3463b56202efbe22285",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Смягчить переход от диалога к описанию:",
+      2
+    ],
+    [
+      "Если бы я редактировал этот текст, я бы предложил некоторые правки для улучшения стилистики и логической последовательности:",
+      1
+    ],
+    [
+      "Убрать избыточное описание одежды Антона:",
+      1
+    ]
+  ],
+  "words": 208,
+  "short_quoted_list_run": 0
+}

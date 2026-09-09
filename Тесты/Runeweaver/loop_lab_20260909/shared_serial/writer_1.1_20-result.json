@@ -1,0 +1,45 @@
+{
+  "name": "writer_1.1_20",
+  "pid": 30492,
+  "seed": 20,
+  "slot": 0,
+  "first_seconds": 0.030999999959021807,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 27,
+    "prompt_tokens": 121,
+    "total_tokens": 148,
+    "prompt_tokens_details": {
+      "cached_tokens": 120
+    }
+  },
+  "timings": {
+    "cache_n": 120,
+    "prompt_n": 1,
+    "prompt_ms": 12.299,
+    "prompt_per_token_ms": 12.299,
+    "prompt_per_second": 81.30742336775349,
+    "predicted_n": 27,
+    "predicted_ms": 303.617,
+    "predicted_per_token_ms": 11.245074074074076,
+    "predicted_per_second": 88.92782683446579
+  },
+  "done": true,
+  "seconds": 0.328,
+  "chars": 73,
+  "sha256": "936c107cca31013489f22c65e348aea79bb56ac12bec51ed4089f0770d91dbb8",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Мгновенная вспышка. В ушах гул. Он открывает глаза и видит перед собой...",
+      1
+    ]
+  ],
+  "words": 12,
+  "short_quoted_list_run": 0
+}

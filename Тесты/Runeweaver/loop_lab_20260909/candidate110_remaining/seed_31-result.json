@@ -1,0 +1,53 @@
+{
+  "name": "seed_31",
+  "pid": 11052,
+  "seed": 31,
+  "slot": 0,
+  "first_seconds": 0.515999999945052,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 558,
+    "prompt_tokens": 1377,
+    "total_tokens": 1935,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 507.152,
+    "prompt_per_token_ms": 0.3683021060275962,
+    "prompt_per_second": 2715.1623182004605,
+    "predicted_n": 558,
+    "predicted_ms": 16142.137,
+    "predicted_per_token_ms": 28.928560931899643,
+    "predicted_per_second": 34.56791377746329
+  },
+  "done": true,
+  "seconds": 16.656,
+  "chars": 1919,
+  "sha256": "804637da3f7387f50ed22c7fe449841ca3599668e8ff207942646eba83980168",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, я бы внес следующие правки:",
+      1
+    ],
+    [
+      "Уточнить связь между Антоном и Лерой:",
+      1
+    ],
+    [
+      "В текущем варианте не совсем понятно, как они связаны друг с другом (знакомые, друзья, пара). Можно добавить несколько строк в начале или во время диалога, чтобы прояснить их отношения.",
+      1
+    ]
+  ],
+  "words": 277,
+  "short_quoted_list_run": 0
+}

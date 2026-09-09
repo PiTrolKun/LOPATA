@@ -1,0 +1,52 @@
+{
+  "name": "seed_10",
+  "pid": 66832,
+  "seed": 10,
+  "slot": 0,
+  "first_seconds": 0.21899999992456287,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 566,
+    "prompt_tokens": 1377,
+    "total_tokens": 1943,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 206.04,
+    "prompt_per_token_ms": 0.1496296296296296,
+    "prompt_per_second": 6683.168316831683,
+    "predicted_n": 566,
+    "predicted_ms": 6055.348,
+    "predicted_per_token_ms": 10.698494699646643,
+    "predicted_per_second": 93.47109365143011
+  },
+  "done": true,
+  "seconds": 6.281,
+  "chars": 1735,
+  "sha256": "d3bd4557615fdf989914ccb6e8b7d0f7fb81dd787921073b480f284b3268572a",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я работал над этим текстом как редактор, я бы предложил следующие правки:",
+      1
+    ],
+    [
+      "Уточнить время суток:",
+      1
+    ],
+    [
+      "Антон сидел на старом, потрескавшемся деревянном скамейке, укутавшись в серую куртку. Лера ходила взад-вперед по платформе, выдыхая облачка пара.\" — здесь не указано время суток, но позже мы узнаем, что часы показывают 03:17. Можно добавить \"в три часа ночи",
+      1
+    ]
+  ],
+  "words": 255
+}

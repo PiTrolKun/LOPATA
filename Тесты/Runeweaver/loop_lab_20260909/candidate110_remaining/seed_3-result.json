@@ -1,0 +1,53 @@
+{
+  "name": "seed_3",
+  "pid": 11052,
+  "seed": 3,
+  "slot": 0,
+  "first_seconds": 0.515999999945052,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 489,
+    "prompt_tokens": 1377,
+    "total_tokens": 1866,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 506.749,
+    "prompt_per_token_ms": 0.3680094408133624,
+    "prompt_per_second": 2717.3215931358523,
+    "predicted_n": 489,
+    "predicted_ms": 12969.585,
+    "predicted_per_token_ms": 26.52266871165644,
+    "predicted_per_second": 37.70359652988126
+  },
+  "done": true,
+  "seconds": 13.484,
+  "chars": 1680,
+  "sha256": "712d8bfdd2c4934d9dab84e91a9560efaada114f7c5e009b16a1650e33f954f2",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если говорить об исправлениях, то я бы предложил следующее:",
+      1
+    ],
+    [
+      "Убрать излишние детали:",
+      1
+    ],
+    [
+      "Некоторые описания, например, \"укутавшись в серую куртку",
+      1
+    ]
+  ],
+  "words": 231,
+  "short_quoted_list_run": 0
+}

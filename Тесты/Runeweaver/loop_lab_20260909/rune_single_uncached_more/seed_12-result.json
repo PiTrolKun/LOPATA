@@ -1,0 +1,52 @@
+{
+  "name": "seed_12",
+  "pid": 53304,
+  "seed": 12,
+  "slot": 0,
+  "first_seconds": 0.23400000005494803,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 513,
+    "prompt_tokens": 1377,
+    "total_tokens": 1890,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 232.883,
+    "prompt_per_token_ms": 0.16912345679012347,
+    "prompt_per_second": 5912.840353310461,
+    "predicted_n": 513,
+    "predicted_ms": 5498.123,
+    "predicted_per_token_ms": 10.717588693957115,
+    "predicted_per_second": 93.30456957765405
+  },
+  "done": true,
+  "seconds": 5.734,
+  "chars": 1773,
+  "sha256": "400c18f01956b1f38f92f9973f8c258ee96da6423d8ec4e6474b4577bfe27256",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я работал над этим текстом как редактор, то предложил бы следующие корректировки:",
+      1
+    ],
+    [
+      "Уточнить диалоги:",
+      1
+    ],
+    [
+      "В некоторых случаях диалоги звучат не очень естественно. Например, \"Лера резко обернулась к нему.\" и \"Как ты можешь это знать?\" — эта последовательность кажется неестественной.",
+      1
+    ]
+  ],
+  "words": 252
+}

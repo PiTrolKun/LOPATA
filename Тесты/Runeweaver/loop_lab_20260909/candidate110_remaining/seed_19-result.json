@@ -1,0 +1,53 @@
+{
+  "name": "seed_19",
+  "pid": 11052,
+  "seed": 19,
+  "slot": 0,
+  "first_seconds": 0.5470000000204891,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 570,
+    "prompt_tokens": 1377,
+    "total_tokens": 1947,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 511.651,
+    "prompt_per_token_ms": 0.3715693536673929,
+    "prompt_per_second": 2691.287615972606,
+    "predicted_n": 570,
+    "predicted_ms": 16387.142,
+    "predicted_per_token_ms": 28.749371929824562,
+    "predicted_per_second": 34.78336857030958
+  },
+  "done": true,
+  "seconds": 16.922,
+  "chars": 1905,
+  "sha256": "5dfdc84622ebb3d4e2de664b6cc05c0643982f1e5a128fe4cae7df9d4b3cc2a8",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, то сделал бы несколько изменений для усиления атмосферы и структуры повествования:",
+      1
+    ],
+    [
+      "Увеличил бы количество деталей в описании заброшенного вокзала:",
+      1
+    ],
+    [
+      "Можно добавить подробности о состоянии зданий, вагонов, рекламных плакатов.",
+      1
+    ]
+  ],
+  "words": 259,
+  "short_quoted_list_run": 0
+}

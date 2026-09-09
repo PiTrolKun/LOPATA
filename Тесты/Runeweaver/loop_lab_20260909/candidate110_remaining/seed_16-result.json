@@ -1,0 +1,53 @@
+{
+  "name": "seed_16",
+  "pid": 11052,
+  "seed": 16,
+  "slot": 0,
+  "first_seconds": 0.5150000000139698,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 507.513,
+    "prompt_per_token_ms": 0.3685642701525054,
+    "prompt_per_second": 2713.230991127321,
+    "predicted_n": 2048,
+    "predicted_ms": 59198.152,
+    "predicted_per_token_ms": 28.90534765625,
+    "predicted_per_second": 34.5956745406512
+  },
+  "done": true,
+  "seconds": 59.719,
+  "chars": 4878,
+  "sha256": "fa84f7f86b8378ac56825143ed90e3a53e0d9ed07ee9b996e04e0da7caaf291e",
+  "loop": true,
+  "periodic": {
+    "words": 297,
+    "unit": "покидали оставляли оставив назад мимо в темноту за платформой тишина свежий позади",
+    "copies": 24
+  },
+  "repeated_lines": [
+    [
+      "назад",
+      25
+    ],
+    [
+      "мимо",
+      25
+    ],
+    [
+      "в темноту",
+      25
+    ]
+  ],
+  "words": 381,
+  "short_quoted_list_run": 273
+}

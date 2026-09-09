@@ -1,0 +1,53 @@
+{
+  "name": "seed_27",
+  "pid": 11052,
+  "seed": 27,
+  "slot": 0,
+  "first_seconds": 0.5320000000065193,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 454,
+    "prompt_tokens": 1377,
+    "total_tokens": 1831,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 507.058,
+    "prompt_per_token_ms": 0.3682338416848221,
+    "prompt_per_second": 2715.665663494117,
+    "predicted_n": 454,
+    "predicted_ms": 12927.239,
+    "predicted_per_token_ms": 28.474094713656388,
+    "predicted_per_second": 35.11964155687073
+  },
+  "done": true,
+  "seconds": 13.454,
+  "chars": 1564,
+  "sha256": "905b7dcb0cd71c96184587bf2cbd7acf24a93a4e1f19c9a9298f644f20febc53",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если говорить об исправлениях, то я бы предложил следующее:",
+      1
+    ],
+    [
+      "Убрать повторение:",
+      1
+    ],
+    [
+      "В тексте несколько раз упоминается, что часы застыли на 03:17. Чтобы избежать излишнего повтора, можно сократить описание до одного-двух упоминаний.",
+      1
+    ]
+  ],
+  "words": 213,
+  "short_quoted_list_run": 0
+}

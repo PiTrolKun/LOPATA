@@ -1,0 +1,52 @@
+{
+  "name": "seed_8",
+  "pid": 66832,
+  "seed": 8,
+  "slot": 0,
+  "first_seconds": 0.2339999999385327,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 587,
+    "prompt_tokens": 1377,
+    "total_tokens": 1964,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 207.296,
+    "prompt_per_token_ms": 0.15054175744371823,
+    "prompt_per_second": 6642.6752083976535,
+    "predicted_n": 587,
+    "predicted_ms": 6291.827,
+    "predicted_per_token_ms": 10.718614991482113,
+    "predicted_per_second": 93.29563575095119
+  },
+  "done": true,
+  "seconds": 6.516,
+  "chars": 2035,
+  "sha256": "230feac99969d49a2972e3790a48b6f5a77f66da5c3236068134226c2dc68a89",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я работал над этим текстом, я бы предложил следующие изменения:",
+      1
+    ],
+    [
+      "Уточнить описание Антона:",
+      1
+    ],
+    [
+      "В текущем варианте Антон выглядит слишком спокойным и уверенным, что может вызвать у читателя подозрения или недоверие к его мотивам. Я бы добавил больше деталей, чтобы показать, что он тоже испытывает напряжение, но по каким-то причинам пытается это скрыть.",
+      1
+    ]
+  ],
+  "words": 287
+}

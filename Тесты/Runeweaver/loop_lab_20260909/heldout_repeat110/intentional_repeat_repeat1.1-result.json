@@ -1,0 +1,45 @@
+{
+  "name": "intentional_repeat_repeat1.1",
+  "pid": 57864,
+  "seed": 431,
+  "slot": 0,
+  "first_seconds": 0.062000000034458935,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 81,
+    "prompt_tokens": 52,
+    "total_tokens": 133,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 52,
+    "prompt_ms": 53.967,
+    "prompt_per_token_ms": 1.037826923076923,
+    "prompt_per_second": 963.5518001741805,
+    "predicted_n": 81,
+    "predicted_ms": 2291.107,
+    "predicted_per_token_ms": 28.28527160493827,
+    "predicted_per_second": 35.354088656706125
+  },
+  "done": true,
+  "seconds": 2.359,
+  "chars": 189,
+  "sha256": "b63404f931b3c1a983869d39aab36f6b86456a1b3e32e4c431c88bdd9c039ae9",
+  "loop": false,
+  "periodic": {
+    "words": 30,
+    "unit": "мы вернёмся домой",
+    "copies": 10
+  },
+  "repeated_lines": [
+    [
+      "Мы вернёмся домой.",
+      10
+    ]
+  ],
+  "words": 30,
+  "short_quoted_list_run": 0
+}

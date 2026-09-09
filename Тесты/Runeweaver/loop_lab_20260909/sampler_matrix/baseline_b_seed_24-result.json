@@ -1,0 +1,52 @@
+{
+  "name": "baseline_b_seed_24",
+  "pid": 63072,
+  "seed": 24,
+  "slot": 0,
+  "first_seconds": 0.23499999998603016,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 207.901,
+    "prompt_per_token_ms": 0.15098111837327524,
+    "prompt_per_second": 6623.344765056445,
+    "predicted_n": 2048,
+    "predicted_ms": 22352.191,
+    "predicted_per_token_ms": 10.91415576171875,
+    "predicted_per_second": 91.62412758552395
+  },
+  "done": true,
+  "seconds": 22.578,
+  "chars": 4433,
+  "sha256": "74f6d884458a7bcbfe4ddc66ff8742f9a095ade8fe797722571a20692f85fd38",
+  "loop": true,
+  "periodic": {
+    "words": 267,
+    "unit": "свет поезд часы антон лера дыхание глаза руку платформу вокзал",
+    "copies": 26
+  },
+  "repeated_lines": [
+    [
+      "Вокзал",
+      29
+    ],
+    [
+      "Поезд",
+      28
+    ],
+    [
+      "Свет",
+      28
+    ]
+  ],
+  "words": 323
+}

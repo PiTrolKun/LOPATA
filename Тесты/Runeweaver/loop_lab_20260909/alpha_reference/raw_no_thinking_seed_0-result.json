@@ -1,0 +1,54 @@
+{
+  "name": "raw_no_thinking_seed_0",
+  "pid": 42096,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.10900000005494803,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1143,
+    "prompt_tokens": 323,
+    "total_tokens": 1466,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 323,
+    "prompt_ms": 60.702,
+    "prompt_per_token_ms": 0.18793188854489162,
+    "prompt_per_second": 5321.07673552766,
+    "predicted_n": 1143,
+    "predicted_ms": 7248.21,
+    "predicted_per_token_ms": 6.341391076115485,
+    "predicted_per_second": 157.69410654492626
+  },
+  "done": true,
+  "seconds": 7.359,
+  "chars": 3535,
+  "sha256": "a56d2d2e7c571b18f3ea4ee404267f4d7752d9f0dab7050519a90958f358490d",
+  "loop": false,
+  "detector_version": 2,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Антон стоит спиной к Лере, уперев ладонь в холодный гранит поручня. На его пальцах — следы пота, хотя на улице уже тридцать градусов.",
+      1
+    ],
+    [
+      "— Поезд задерживается, — сказал он, не оборачиваясь.",
+      1
+    ],
+    [
+      "Лера замерла, глядя на его спину. Задорная усмешка, которая обычно облетала её губы к началу третьего курса, тут же сгорела. Она медленно поправила длинноволосую косу, которая зацепилась за петлю на сумке.",
+      1
+    ]
+  ],
+  "words": 584,
+  "short_quoted_list_run": 0
+}

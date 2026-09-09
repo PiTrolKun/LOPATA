@@ -1,0 +1,34 @@
+{
+  "name": "guard_seed_24",
+  "pid": 53484,
+  "seed": 24,
+  "slot": 0,
+  "first_seconds": 0.5150000000139698,
+  "guard_stopped": true,
+  "guard_seconds": 19.734000000054948,
+  "seconds": 19.734,
+  "chars": 1482,
+  "sha256": "f375494f3f756957d42d10bd8577c9af25dff5747e5fbac123a940a562c0dceb",
+  "loop": true,
+  "periodic": {
+    "words": 61,
+    "unit": "лера дыхание глаза руку платформу вокзал свет поезд часы антон",
+    "copies": 6
+  },
+  "repeated_lines": [
+    [
+      "Поезд",
+      8
+    ],
+    [
+      "Свет",
+      8
+    ],
+    [
+      "Вокзал",
+      8
+    ]
+  ],
+  "words": 117,
+  "short_quoted_list_run": 89
+}

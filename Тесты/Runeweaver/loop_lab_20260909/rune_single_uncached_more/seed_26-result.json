@@ -1,0 +1,52 @@
+{
+  "name": "seed_26",
+  "pid": 53304,
+  "seed": 26,
+  "slot": 0,
+  "first_seconds": 0.25,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 218.387,
+    "prompt_per_token_ms": 0.15859622367465503,
+    "prompt_per_second": 6305.320371633843,
+    "predicted_n": 2048,
+    "predicted_ms": 22397.33,
+    "predicted_per_token_ms": 10.9361962890625,
+    "predicted_per_second": 91.43947068690777
+  },
+  "done": true,
+  "seconds": 22.641,
+  "chars": 5891,
+  "sha256": "425b783697954e0d64fb19d6799abb4d68cb888cfbc288cff164845892e9fb84",
+  "loop": true,
+  "periodic": {
+    "words": 511,
+    "unit": "или платформы или на платформе или на вокзале или направление или направились или направляясь или встречу или к свету или навстречу или в темноту или за платформой",
+    "copies": 18
+  },
+  "repeated_lines": [
+    [
+      "или \"на платформе",
+      19
+    ],
+    [
+      "или \"на вокзале",
+      19
+    ],
+    [
+      "или \"направление",
+      19
+    ]
+  ],
+  "words": 720
+}

@@ -1,0 +1,34 @@
+{
+  "name": "guard_seed_16",
+  "pid": 53484,
+  "seed": 16,
+  "slot": 0,
+  "first_seconds": 0.26500000001396984,
+  "guard_stopped": true,
+  "guard_seconds": 14.359000000054948,
+  "seconds": 14.359,
+  "chars": 1822,
+  "sha256": "856e676f95f5bf34f747c372d4084f13fcfeee49a193f55a625911f8c36e52b7",
+  "loop": true,
+  "periodic": {
+    "words": 72,
+    "unit": "назад мимо в темноту за платформой тишина свежий позади покидали оставляли оставив",
+    "copies": 6
+  },
+  "repeated_lines": [
+    [
+      "назад",
+      6
+    ],
+    [
+      "мимо",
+      6
+    ],
+    [
+      "в темноту",
+      6
+    ]
+  ],
+  "words": 155,
+  "short_quoted_list_run": 85
+}

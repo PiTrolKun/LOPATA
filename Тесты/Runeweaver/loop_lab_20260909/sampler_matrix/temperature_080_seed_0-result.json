@@ -1,0 +1,52 @@
+{
+  "name": "temperature_080_seed_0",
+  "pid": 63072,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.5779999999795109,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 734,
+    "prompt_tokens": 1377,
+    "total_tokens": 2111,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 541.012,
+    "prompt_per_token_ms": 0.3928917937545388,
+    "prompt_per_second": 2545.230050350085,
+    "predicted_n": 734,
+    "predicted_ms": 22802.783,
+    "predicted_per_token_ms": 31.066461852861035,
+    "predicted_per_second": 32.18905341510289
+  },
+  "done": true,
+  "seconds": 23.375,
+  "chars": 2277,
+  "sha256": "9092a33c2690e28c9fd3bea3c3de0bfabb6949f99015a6f76db35ffcd2f66d3d",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте присутствуют некоторые стилистические и грамматические недочеты, которые можно исправить для повышения качества произведения. Вот основные замечания:",
+      1
+    ],
+    [
+      "В предложении \"Антон сидел на старом, потрескавшемся деревянном скамейке, укутавшись в серую куртку\" можно убрать повтор \"деревянный\":",
+      1
+    ],
+    [
+      "Антон сидел на старой, потрескавшейся скамейке, укутавшись в серую куртку.",
+      1
+    ]
+  ],
+  "words": 317
+}

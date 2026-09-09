@@ -1,0 +1,53 @@
+{
+  "name": "advisor_1.1_34",
+  "pid": 30492,
+  "seed": 34,
+  "slot": 1,
+  "first_seconds": 0.062000000034458935,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 630,
+    "prompt_tokens": 1377,
+    "total_tokens": 2007,
+    "prompt_tokens_details": {
+      "cached_tokens": 1376
+    }
+  },
+  "timings": {
+    "cache_n": 1376,
+    "prompt_n": 1,
+    "prompt_ms": 25.33,
+    "prompt_per_token_ms": 25.33,
+    "prompt_per_second": 39.478878799842086,
+    "predicted_n": 630,
+    "predicted_ms": 17670.9,
+    "predicted_per_token_ms": 28.04904761904762,
+    "predicted_per_second": 35.65183437176374
+  },
+  "done": true,
+  "seconds": 17.718,
+  "chars": 2239,
+  "sha256": "288f494f42167dd66062083de47d0d6680952137f8040a4617505750ce900a0d",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, то предложил бы следующие изменения:",
+      1
+    ],
+    [
+      "Более детальное описание Антона и Леры:",
+      1
+    ],
+    [
+      "Внешность персонажей осталась неопределенной. Можно было бы добавить несколько строк о том, как выглядят герои, чтобы лучше представить их в воображении читателя.",
+      1
+    ]
+  ],
+  "words": 310,
+  "short_quoted_list_run": 0
+}

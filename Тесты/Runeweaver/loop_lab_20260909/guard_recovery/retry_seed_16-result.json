@@ -1,0 +1,53 @@
+{
+  "name": "retry_seed_16",
+  "pid": 53484,
+  "seed": 16,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 480,
+    "prompt_tokens": 1377,
+    "total_tokens": 1857,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 493.529,
+    "prompt_per_token_ms": 0.3584088598402324,
+    "prompt_per_second": 2790.1095984227877,
+    "predicted_n": 480,
+    "predicted_ms": 13820.809,
+    "predicted_per_token_ms": 28.793352083333332,
+    "predicted_per_second": 34.730239018569755
+  },
+  "done": true,
+  "seconds": 14.343,
+  "chars": 1592,
+  "sha256": "ed163ce1b01eda89334e382c9c6672e644c7746506c84b1b0176597a45b21004",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, я бы внес следующие правки:",
+      1
+    ],
+    [
+      "Убрать повторение: \"Лера ходила взад-вперед по платформе\" и \"она пошла обратно по платформе",
+      1
+    ],
+    [
+      "заменив на что-то более лаконичное.",
+      1
+    ]
+  ],
+  "words": 225,
+  "short_quoted_list_run": 0
+}

@@ -1,0 +1,52 @@
+{
+  "name": "seed_3",
+  "pid": 66832,
+  "seed": 3,
+  "slot": 0,
+  "first_seconds": 0.2190000000409782,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 836,
+    "prompt_tokens": 1377,
+    "total_tokens": 2213,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 205.24,
+    "prompt_per_token_ms": 0.1490486564996369,
+    "prompt_per_second": 6709.218475930618,
+    "predicted_n": 836,
+    "predicted_ms": 8980.858,
+    "predicted_per_token_ms": 10.742653110047847,
+    "predicted_per_second": 93.08687432759766
+  },
+  "done": true,
+  "seconds": 9.204,
+  "chars": 2715,
+  "sha256": "899b5acce8f938659fffbac41d604564764cf05c4f27cdd33448717f4ae71a70",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, то внес бы следующие изменения:",
+      1
+    ],
+    [
+      "Уточнить причину спокойствия Антона:",
+      1
+    ],
+    [
+      "Сейчас текст оставляет неясным, почему Антон так спокоен в этой странной ситуации. Чтобы добавить глубины персонажу и интриги, можно было бы намекнуть на его прошлый опыт или знания, которые он пока не раскрывает.",
+      1
+    ]
+  ],
+  "words": 388
+}

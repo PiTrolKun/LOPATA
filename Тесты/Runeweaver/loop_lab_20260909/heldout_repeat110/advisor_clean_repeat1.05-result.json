@@ -1,0 +1,45 @@
+{
+  "name": "advisor_clean_repeat1.05",
+  "pid": 57864,
+  "seed": 431,
+  "slot": 0,
+  "first_seconds": 0.10900000005494803,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 23,
+    "prompt_tokens": 213,
+    "total_tokens": 236,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 213,
+    "prompt_ms": 99.397,
+    "prompt_per_token_ms": 0.46665258215962446,
+    "prompt_per_second": 2142.9218185659524,
+    "predicted_n": 23,
+    "predicted_ms": 625.587,
+    "predicted_per_token_ms": 27.199434782608694,
+    "predicted_per_second": 36.765469870697444
+  },
+  "done": true,
+  "seconds": 0.734,
+  "chars": 78,
+  "sha256": "b6255680e730212c489c1ed361d1a72ae5b7b2d11a2b14ef52b3440564e974b1",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте нет внутренних противоречий по фактам. Всё согласуется друг с другом.",
+      1
+    ]
+  ],
+  "words": 12,
+  "short_quoted_list_run": 0
+}

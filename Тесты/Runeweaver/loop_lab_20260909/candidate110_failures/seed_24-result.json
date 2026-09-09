@@ -1,0 +1,53 @@
+{
+  "name": "seed_24",
+  "pid": 66988,
+  "seed": 24,
+  "slot": 0,
+  "first_seconds": 0.2970000000204891,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 433,
+    "prompt_tokens": 1377,
+    "total_tokens": 1810,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 272.511,
+    "prompt_per_token_ms": 0.19790196078431374,
+    "prompt_per_second": 5053.00703457842,
+    "predicted_n": 433,
+    "predicted_ms": 4868.123,
+    "predicted_per_token_ms": 11.242778290993071,
+    "predicted_per_second": 88.94598595803762
+  },
+  "done": true,
+  "seconds": 5.172,
+  "chars": 1416,
+  "sha256": "66ca5bf9bbea06f5ed0ae1e608a6765ce1e8c3f117967cddb29e10fa4c5a05b1",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я занимался редактированием данного текста, то предложил бы следующие изменения:",
+      1
+    ],
+    [
+      "Убрать повторение \"Лера вздрогнула\":",
+      1
+    ],
+    [
+      "В первом случае: \"— Не бойся. Все будет хорошо,\" — тихо ответил Антон.",
+      1
+    ]
+  ],
+  "words": 184,
+  "short_quoted_list_run": 0
+}

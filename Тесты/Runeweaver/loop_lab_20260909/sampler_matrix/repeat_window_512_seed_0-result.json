@@ -1,0 +1,52 @@
+{
+  "name": "repeat_window_512_seed_0",
+  "pid": 63072,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.21899999992456287,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1165,
+    "prompt_tokens": 1377,
+    "total_tokens": 2542,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 208.813,
+    "prompt_per_token_ms": 0.15164342774146694,
+    "prompt_per_second": 6594.417014266353,
+    "predicted_n": 1165,
+    "predicted_ms": 13625.741,
+    "predicted_per_token_ms": 11.695915021459227,
+    "predicted_per_second": 85.49993721442378
+  },
+  "done": true,
+  "seconds": 13.844,
+  "chars": 3732,
+  "sha256": "792896d82780127027ad12820d067ce774f6f258583e0c82c02039fc54afe702",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я редактировал этот текст, я бы внес следующие изменения:",
+      1
+    ],
+    [
+      "Убрать лишние детали:",
+      1
+    ],
+    [
+      "В описании одежды Антона можно убрать упоминание \"серой куртки",
+      1
+    ]
+  ],
+  "words": 547
+}

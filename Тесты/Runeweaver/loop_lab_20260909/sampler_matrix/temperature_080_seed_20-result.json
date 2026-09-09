@@ -1,0 +1,52 @@
+{
+  "name": "temperature_080_seed_20",
+  "pid": 63072,
+  "seed": 20,
+  "slot": 0,
+  "first_seconds": 0.5630000000819564,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 528,
+    "prompt_tokens": 1377,
+    "total_tokens": 1905,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 535.053,
+    "prompt_per_token_ms": 0.38856427015250544,
+    "prompt_per_second": 2573.576823230596,
+    "predicted_n": 528,
+    "predicted_ms": 16460.605,
+    "predicted_per_token_ms": 31.175388257575758,
+    "predicted_per_second": 32.076585277394116
+  },
+  "done": true,
+  "seconds": 17.016,
+  "chars": 1688,
+  "sha256": "bd3c7ef2433071ad1363873f379b5a3d5d9b1cb3cefed62a20798df46ba4af29",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "При составлении исправлений я учитывал общую структуру и стиль текста, стараясь сохранить его атмосферу и мистическую направленность:",
+      1
+    ],
+    [
+      "Первое предложение можно сделать более динамичным, например:",
+      1
+    ],
+    [
+      "Антон сидел на старом, потрескавшемся деревянном скамейке, укутавшись в серую куртку. Лера ходила взад-вперед по платформе, выдыхая облачка пара в холодном августовском воздухе.",
+      1
+    ]
+  ],
+  "words": 236
+}

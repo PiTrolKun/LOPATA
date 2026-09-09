@@ -1,0 +1,53 @@
+{
+  "name": "seed_5",
+  "pid": 11052,
+  "seed": 5,
+  "slot": 0,
+  "first_seconds": 0.23499999998603016,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 532,
+    "prompt_tokens": 1377,
+    "total_tokens": 1909,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 229.073,
+    "prompt_per_token_ms": 0.16635657225853304,
+    "prompt_per_second": 6011.184207654329,
+    "predicted_n": 532,
+    "predicted_ms": 6131.45,
+    "predicted_per_token_ms": 11.525281954887218,
+    "predicted_per_second": 86.76577318578803
+  },
+  "done": true,
+  "seconds": 6.375,
+  "chars": 1842,
+  "sha256": "01e62929c1e0ecb89ae8753af23b36fd4070c5516853d3518d23cf5380ab35ea",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если говорить об улучшениях текста, я предложил бы следующее:",
+      1
+    ],
+    [
+      "Более четкая мотивация персонажей:",
+      1
+    ],
+    [
+      "Причины, по которым Антон и Лера оказались на заброшенном вокзале в такой странной ситуации, остаются неясными. Мотивирующие детали могли бы добавить глубины персонажам.",
+      1
+    ]
+  ],
+  "words": 245,
+  "short_quoted_list_run": 0
+}

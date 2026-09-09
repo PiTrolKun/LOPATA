@@ -1,0 +1,53 @@
+{
+  "name": "seed_15",
+  "pid": 11052,
+  "seed": 15,
+  "slot": 0,
+  "first_seconds": 0.5,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 506,
+    "prompt_tokens": 1377,
+    "total_tokens": 1883,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 473.667,
+    "prompt_per_token_ms": 0.3439847494553377,
+    "prompt_per_second": 2907.1056248377026,
+    "predicted_n": 506,
+    "predicted_ms": 14635.371,
+    "predicted_per_token_ms": 28.923658102766797,
+    "predicted_per_second": 34.573773360443
+  },
+  "done": true,
+  "seconds": 15.14,
+  "chars": 1610,
+  "sha256": "39fbfc832abaad13d4f04bd1a68a9a0ab71d2fe18b1775bd0dda84b95470e211",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте есть несколько мест, которые можно улучшить или уточнить:",
+      1
+    ],
+    [
+      "Антон тихо сказал:\" — фраза в кавычках не нужна, достаточно просто начать предложение с \"Тихо сказал Антон:\".",
+      1
+    ],
+    [
+      "Лера ходила взад-вперед по платформе, выдыхая облачка пара.\" — эта деталь усиливает атмосферу холода и тревоги, но можно добавить больше конкретики: \"Лера ходила взад-вперед по платформе, ее дыхание вырывалось изо рта облачками пара в ледяном воздухе.",
+      1
+    ]
+  ],
+  "words": 231,
+  "short_quoted_list_run": 0
+}

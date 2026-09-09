@@ -1,0 +1,45 @@
+{
+  "name": "advisor_clean_repeat1.1",
+  "pid": 57864,
+  "seed": 431,
+  "slot": 0,
+  "first_seconds": 0.10900000005494803,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 23,
+    "prompt_tokens": 213,
+    "total_tokens": 236,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 213,
+    "prompt_ms": 111.819,
+    "prompt_per_token_ms": 0.5249718309859155,
+    "prompt_per_second": 1904.8641107504093,
+    "predicted_n": 23,
+    "predicted_ms": 621.073,
+    "predicted_per_token_ms": 27.003173913043476,
+    "predicted_per_second": 37.032683758591986
+  },
+  "done": true,
+  "seconds": 0.734,
+  "chars": 92,
+  "sha256": "2db50efd566d4bf54534e27643130b66e46c70fbb521e2a711113c05690a69a3",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте нет внутренних противоречий. Все события последовательны и согласованы между собой.",
+      1
+    ]
+  ],
+  "words": 12,
+  "short_quoted_list_run": 0
+}

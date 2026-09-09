@@ -1,0 +1,590 @@
+[
+  {
+    "name": "writer_1.05_20",
+    "pid": 30492,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.125,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 12,
+      "prompt_tokens": 121,
+      "total_tokens": 133,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 121,
+      "prompt_ms": 84.941,
+      "prompt_per_token_ms": 0.7019917355371901,
+      "prompt_per_second": 1424.5181949823996,
+      "predicted_n": 12,
+      "predicted_ms": 311.728,
+      "predicted_per_token_ms": 25.977333333333334,
+      "predicted_per_second": 38.49509829081764
+    },
+    "done": true,
+    "seconds": 0.437,
+    "chars": 35,
+    "sha256": "a0bbf777df1e7d776b324060c48b8bd765131841405b67ec9b502dc9f1c53461",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Мрачная улица казалась заброшенной.",
+        1
+      ]
+    ],
+    "words": 4,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_1.05_20",
+    "pid": 30492,
+    "seed": 20,
+    "slot": 1,
+    "first_seconds": 0.5320000000065193,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 511.937,
+      "prompt_per_token_ms": 0.3717770515613653,
+      "prompt_per_second": 2689.7840945272565,
+      "predicted_n": 2048,
+      "predicted_ms": 59841.074,
+      "predicted_per_token_ms": 29.2192744140625,
+      "predicted_per_second": 34.223984683162605
+    },
+    "done": true,
+    "seconds": 60.375,
+    "chars": 4966,
+    "sha256": "2e94e84901a08245bb8ecaeec1b7aab5dfb71b87c20d61f160be742123a5bd48",
+    "loop": true,
+    "periodic": {
+      "words": 270,
+      "unit": "антон",
+      "copies": 270
+    },
+    "repeated_lines": [
+      [
+        "Антон",
+        270
+      ],
+      [
+        "Антон был",
+        3
+      ],
+      [
+        "Антон пошел",
+        2
+      ]
+    ],
+    "words": 393,
+    "short_quoted_list_run": 318
+  },
+  {
+    "name": "writer_1.05_24",
+    "pid": 30492,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.030999999959021807,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 14,
+      "prompt_tokens": 121,
+      "total_tokens": 135,
+      "prompt_tokens_details": {
+        "cached_tokens": 120
+      }
+    },
+    "timings": {
+      "cache_n": 120,
+      "prompt_n": 1,
+      "prompt_ms": 17.226,
+      "prompt_per_token_ms": 17.226,
+      "prompt_per_second": 58.05178218971323,
+      "predicted_n": 14,
+      "predicted_ms": 386.017,
+      "predicted_per_token_ms": 27.572642857142856,
+      "predicted_per_second": 36.26783276384201
+    },
+    "done": true,
+    "seconds": 0.422,
+    "chars": 32,
+    "sha256": "cf23cd99d1c6aa9c60a852bfe6f4664696d7e6004826d18b40aedbab9f22d142",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Ветер стихал, но тучи сгущались.",
+        1
+      ]
+    ],
+    "words": 5,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_1.05_24",
+    "pid": 30492,
+    "seed": 24,
+    "slot": 1,
+    "first_seconds": 0.0470000000204891,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 1376
+      }
+    },
+    "timings": {
+      "cache_n": 1376,
+      "prompt_n": 1,
+      "prompt_ms": 20.487,
+      "prompt_per_token_ms": 20.487,
+      "prompt_per_second": 48.8114414018646,
+      "predicted_n": 2048,
+      "predicted_ms": 55614.81,
+      "predicted_per_token_ms": 27.1556689453125,
+      "predicted_per_second": 36.82472348642385
+    },
+    "done": true,
+    "seconds": 55.656,
+    "chars": 5677,
+    "sha256": "ea9f71c3484c669fbf46668311aeb64a18fe4d9221985e6de5cf614b885dab85",
+    "loop": false,
+    "periodic": {
+      "words": 405,
+      "unit": "можно усилить эффект добавив они пошли навстречу свету не зная что ждет их впереди лера колебалась затем взяла его за руку и поднялась можно уточнить детали показав ее внутреннее состояние лера колебалась сердце колотилось в груди но взяла антона за руку и поднялась в последний раз лера оглянулась на заброшенный вокзал можно добавить детали усиливающие чувство тревоги в последний раз лера оглянулась на заброшенный вокзал на часы стрелки которых все так же застыли в неподвижности и на снег лежащий на платформе как будто прикрывая что то свежий снег можно усилить контраст добавив свежий чистый снег такой неожиданный в августе пора можно заменить на более эмоциональное настало время они вместе пошли навстречу свету",
+      "copies": 3
+    },
+    "repeated_lines": [
+      [
+        "И",
+        15
+      ],
+      [
+        "Е",
+        9
+      ],
+      [
+        "Я",
+        9
+      ]
+    ],
+    "words": 736,
+    "short_quoted_list_run": 104
+  },
+  {
+    "name": "writer_1.05_34",
+    "pid": 30492,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.0470000000204891,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 14,
+      "prompt_tokens": 121,
+      "total_tokens": 135,
+      "prompt_tokens_details": {
+        "cached_tokens": 120
+      }
+    },
+    "timings": {
+      "cache_n": 120,
+      "prompt_n": 1,
+      "prompt_ms": 11.856,
+      "prompt_per_token_ms": 11.856,
+      "prompt_per_second": 84.34547908232119,
+      "predicted_n": 14,
+      "predicted_ms": 143.406,
+      "predicted_per_token_ms": 10.243285714285715,
+      "predicted_per_second": 97.624925038004
+    },
+    "done": true,
+    "seconds": 0.188,
+    "chars": 35,
+    "sha256": "eb967aabcff7f008ef2a0b071ce9a234ad399cf0aeb2795710a17c380ef7f62f",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Ветер стих, и тишина стала давящей.",
+        1
+      ]
+    ],
+    "words": 6,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_1.05_34",
+    "pid": 30492,
+    "seed": 34,
+    "slot": 1,
+    "first_seconds": 0.03100000007543713,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 1376
+      }
+    },
+    "timings": {
+      "cache_n": 1376,
+      "prompt_n": 1,
+      "prompt_ms": 11.392,
+      "prompt_per_token_ms": 11.392,
+      "prompt_per_second": 87.78089887640449,
+      "predicted_n": 2048,
+      "predicted_ms": 23309.574,
+      "predicted_per_token_ms": 11.3816279296875,
+      "predicted_per_second": 87.86089355386761
+    },
+    "done": true,
+    "seconds": 23.343,
+    "chars": 4321,
+    "sha256": "d465a704eb8cdbc70862cdae149120bb2bc3e4fc13b09bdfc2c8f085a2904fac",
+    "loop": true,
+    "periodic": {
+      "words": 326,
+      "unit": "плат вок",
+      "copies": 163
+    },
+    "repeated_lines": [
+      [
+        "Плат",
+        163
+      ],
+      [
+        "Вок",
+        163
+      ],
+      [
+        "Если бы я был автором, то внес бы следующие правки:",
+        1
+      ]
+    ],
+    "words": 353,
+    "short_quoted_list_run": 334
+  },
+  {
+    "name": "writer_1.1_20",
+    "pid": 30492,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.030999999959021807,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 27,
+      "prompt_tokens": 121,
+      "total_tokens": 148,
+      "prompt_tokens_details": {
+        "cached_tokens": 120
+      }
+    },
+    "timings": {
+      "cache_n": 120,
+      "prompt_n": 1,
+      "prompt_ms": 12.299,
+      "prompt_per_token_ms": 12.299,
+      "prompt_per_second": 81.30742336775349,
+      "predicted_n": 27,
+      "predicted_ms": 303.617,
+      "predicted_per_token_ms": 11.245074074074076,
+      "predicted_per_second": 88.92782683446579
+    },
+    "done": true,
+    "seconds": 0.328,
+    "chars": 73,
+    "sha256": "936c107cca31013489f22c65e348aea79bb56ac12bec51ed4089f0770d91dbb8",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Мгновенная вспышка. В ушах гул. Он открывает глаза и видит перед собой...",
+        1
+      ]
+    ],
+    "words": 12,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_1.1_20",
+    "pid": 30492,
+    "seed": 20,
+    "slot": 1,
+    "first_seconds": 0.03200000000651926,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 619,
+      "prompt_tokens": 1377,
+      "total_tokens": 1996,
+      "prompt_tokens_details": {
+        "cached_tokens": 1376
+      }
+    },
+    "timings": {
+      "cache_n": 1376,
+      "prompt_n": 1,
+      "prompt_ms": 11.998,
+      "prompt_per_token_ms": 11.998,
+      "prompt_per_second": 83.3472245374229,
+      "predicted_n": 619,
+      "predicted_ms": 7162.324,
+      "predicted_per_token_ms": 11.570798061389336,
+      "predicted_per_second": 86.42446222762332
+    },
+    "done": true,
+    "seconds": 7.188,
+    "chars": 1929,
+    "sha256": "d2d112f9aa0afb6165014ceade0ffc756b27db1f0adc195cf0776521ef4b6194",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствуют некоторые неоднозначности и повторы, которые можно устранить для улучшения стилистики и логики повествования:",
+        1
+      ],
+      [
+        "Избежать повторов:",
+        1
+      ],
+      [
+        "В начале текста упоминается \"серый\" цвет куртки Антона, а затем — \"серая\" куртка (второй раз). Лучше использовать одно из этих слов.",
+        1
+      ]
+    ],
+    "words": 259,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "writer_1.1_24",
+    "pid": 30492,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.03100000007543713,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 14,
+      "prompt_tokens": 121,
+      "total_tokens": 135,
+      "prompt_tokens_details": {
+        "cached_tokens": 120
+      }
+    },
+    "timings": {
+      "cache_n": 120,
+      "prompt_n": 1,
+      "prompt_ms": 13.416,
+      "prompt_per_token_ms": 13.416,
+      "prompt_per_second": 74.53786523553966,
+      "predicted_n": 14,
+      "predicted_ms": 144.045,
+      "predicted_per_token_ms": 10.28892857142857,
+      "predicted_per_second": 97.19184976916937
+    },
+    "done": true,
+    "seconds": 0.172,
+    "chars": 32,
+    "sha256": "cf23cd99d1c6aa9c60a852bfe6f4664696d7e6004826d18b40aedbab9f22d142",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Ветер стихал, но тучи сгущались.",
+        1
+      ]
+    ],
+    "words": 5,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_1.1_24",
+    "pid": 30492,
+    "seed": 24,
+    "slot": 1,
+    "first_seconds": 0.03200000000651926,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1234,
+      "prompt_tokens": 1377,
+      "total_tokens": 2611,
+      "prompt_tokens_details": {
+        "cached_tokens": 1376
+      }
+    },
+    "timings": {
+      "cache_n": 1376,
+      "prompt_n": 1,
+      "prompt_ms": 12.011,
+      "prompt_per_token_ms": 12.011,
+      "prompt_per_second": 83.2570144034635,
+      "predicted_n": 1234,
+      "predicted_ms": 22651.791,
+      "predicted_per_token_ms": 18.35639465153971,
+      "predicted_per_second": 54.47692855721651
+    },
+    "done": true,
+    "seconds": 22.688,
+    "chars": 3824,
+    "sha256": "37efc5bf27d20908f26e6b7345bc8b1d8cd05e3053e92c6c9ec76c6990ebcc6f",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я занимался редактированием данного текста, то предложил бы следующие изменения:",
+        1
+      ],
+      [
+        "Убрать повторение \"Лера вздрогнула\":",
+        1
+      ],
+      [
+        "В первом случае: \"— Не бойся. Все будет хорошо,\" — сказал Антон.",
+        1
+      ]
+    ],
+    "words": 553,
+    "short_quoted_list_run": 1
+  },
+  {
+    "name": "writer_1.1_34",
+    "pid": 30492,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.03100000007543713,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 14,
+      "prompt_tokens": 121,
+      "total_tokens": 135,
+      "prompt_tokens_details": {
+        "cached_tokens": 120
+      }
+    },
+    "timings": {
+      "cache_n": 120,
+      "prompt_n": 1,
+      "prompt_ms": 19.937,
+      "prompt_per_token_ms": 19.937,
+      "prompt_per_second": 50.1579976927321,
+      "predicted_n": 14,
+      "predicted_ms": 388.296,
+      "predicted_per_token_ms": 27.73542857142857,
+      "predicted_per_second": 36.05496837464202
+    },
+    "done": true,
+    "seconds": 0.422,
+    "chars": 35,
+    "sha256": "eb967aabcff7f008ef2a0b071ce9a234ad399cf0aeb2795710a17c380ef7f62f",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Ветер стих, и тишина стала давящей.",
+        1
+      ]
+    ],
+    "words": 6,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_1.1_34",
+    "pid": 30492,
+    "seed": 34,
+    "slot": 1,
+    "first_seconds": 0.062000000034458935,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 630,
+      "prompt_tokens": 1377,
+      "total_tokens": 2007,
+      "prompt_tokens_details": {
+        "cached_tokens": 1376
+      }
+    },
+    "timings": {
+      "cache_n": 1376,
+      "prompt_n": 1,
+      "prompt_ms": 25.33,
+      "prompt_per_token_ms": 25.33,
+      "prompt_per_second": 39.478878799842086,
+      "predicted_n": 630,
+      "predicted_ms": 17670.9,
+      "predicted_per_token_ms": 28.04904761904762,
+      "predicted_per_second": 35.65183437176374
+    },
+    "done": true,
+    "seconds": 17.718,
+    "chars": 2239,
+    "sha256": "288f494f42167dd66062083de47d0d6680952137f8040a4617505750ce900a0d",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я был автором этого текста, то предложил бы следующие изменения:",
+        1
+      ],
+      [
+        "Более детальное описание Антона и Леры:",
+        1
+      ],
+      [
+        "Внешность персонажей осталась неопределенной. Можно было бы добавить несколько строк о том, как выглядят герои, чтобы лучше представить их в воображении читателя.",
+        1
+      ]
+    ],
+    "words": 310,
+    "short_quoted_list_run": 0
+  }
+]

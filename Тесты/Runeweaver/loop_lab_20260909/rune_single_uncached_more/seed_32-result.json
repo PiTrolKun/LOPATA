@@ -1,0 +1,52 @@
+{
+  "name": "seed_32",
+  "pid": 53304,
+  "seed": 32,
+  "slot": 0,
+  "first_seconds": 0.23400000005494803,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 220.396,
+    "prompt_per_token_ms": 0.1600551924473493,
+    "prompt_per_second": 6247.84478847166,
+    "predicted_n": 2048,
+    "predicted_ms": 22290.437,
+    "predicted_per_token_ms": 10.88400244140625,
+    "predicted_per_second": 91.87796542526286
+  },
+  "done": true,
+  "seconds": 22.515,
+  "chars": 4781,
+  "sha256": "8955a7e487ca5e7cebcbdb96dc2246699c3000de5d0574aeee1997911fa47951",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "С",
+      32
+    ],
+    [
+      "Т",
+      25
+    ],
+    [
+      "Р",
+      24
+    ]
+  ],
+  "words": 557
+}

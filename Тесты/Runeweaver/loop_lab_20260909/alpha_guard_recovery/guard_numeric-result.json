@@ -1,0 +1,42 @@
+{
+  "name": "guard_numeric",
+  "pid": 63720,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.0940000000409782,
+  "guard_stopped": true,
+  "guard_seconds": 20.04700000002049,
+  "seconds": 20.063,
+  "chars": 9371,
+  "sha256": "9a300937779e27e8fc102d2d40e86e45acaa6da516ced81d82f2a027bdebd473",
+  "loop": true,
+  "literal_loop": false,
+  "numeric_loop": true,
+  "detector_version": 3,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "numeric_periodic": {
+    "words": 128,
+    "unit": "я пришла антон смотрит на часы стрелки показывают # # лера смотрит на него ты ждал чтобы",
+    "copies": 7
+  },
+  "repeated_lines": [
+    [
+      "Лера смотрит на него. «Ты ждал, чтобы я пришла».",
+      8
+    ],
+    [
+      "Let's write.*",
+      2
+    ],
+    [
+      "Антон смотрит на часы. 03:17.",
+      2
+    ]
+  ],
+  "words": 1429,
+  "short_quoted_list_run": 0
+}

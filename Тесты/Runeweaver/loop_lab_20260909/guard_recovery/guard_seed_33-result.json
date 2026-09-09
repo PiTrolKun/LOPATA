@@ -1,0 +1,34 @@
+{
+  "name": "guard_seed_33",
+  "pid": 53484,
+  "seed": 33,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "guard_stopped": true,
+  "guard_seconds": 13.265999999945052,
+  "seconds": 13.266,
+  "chars": 1308,
+  "sha256": "8b253f47f7bef582954c4e5330f01d60eeb508ce5ccc965d47c1ba875d3cf8f5",
+  "loop": true,
+  "periodic": {
+    "words": 52,
+    "unit": "антон",
+    "copies": 52
+  },
+  "repeated_lines": [
+    [
+      "Антон",
+      50
+    ],
+    [
+      "— Антон",
+      2
+    ],
+    [
+      "Если говорить об исправлениях в тексте, то я бы предложил следующие коррективы:",
+      1
+    ]
+  ],
+  "words": 120,
+  "short_quoted_list_run": 0
+}

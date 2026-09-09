@@ -1,0 +1,52 @@
+{
+  "name": "dry_080_seed_0",
+  "pid": 63072,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.2809999999590218,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 228.425,
+    "prompt_per_token_ms": 0.16588598402323892,
+    "prompt_per_second": 6028.236839225128,
+    "predicted_n": 2048,
+    "predicted_ms": 25022.091,
+    "predicted_per_token_ms": 12.21781787109375,
+    "predicted_per_second": 81.84767611947379
+  },
+  "done": true,
+  "seconds": 25.297,
+  "chars": 4386,
+  "sha256": "fc160052cc97c692207a73270c1126aaee78e941aa60e9bac3bd29d8a4d76194",
+  "loop": true,
+  "periodic": {
+    "words": 336,
+    "unit": "л ч с в ан",
+    "copies": 67
+  },
+  "repeated_lines": [
+    [
+      "Ан",
+      68
+    ],
+    [
+      "Л",
+      67
+    ],
+    [
+      "Ч",
+      67
+    ]
+  ],
+  "words": 449
+}

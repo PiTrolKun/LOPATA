@@ -1,0 +1,52 @@
+{
+  "name": "baseline_b_seed_34",
+  "pid": 63072,
+  "seed": 34,
+  "slot": 0,
+  "first_seconds": 0.2339999999385327,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 218.423,
+    "prompt_per_token_ms": 0.15862236746550473,
+    "prompt_per_second": 6304.281142553668,
+    "predicted_n": 2048,
+    "predicted_ms": 22270.626,
+    "predicted_per_token_ms": 10.8743291015625,
+    "predicted_per_second": 91.95969614863992
+  },
+  "done": true,
+  "seconds": 22.516,
+  "chars": 4974,
+  "sha256": "074f9dd9712f8ff79b851fd5642951cf2b513301b6ee720d1ae518fff738c87e",
+  "loop": true,
+  "periodic": {
+    "words": 256,
+    "unit": "антон лера",
+    "copies": 128
+  },
+  "repeated_lines": [
+    [
+      "Антон",
+      130
+    ],
+    [
+      "Лера",
+      129
+    ],
+    [
+      "Если бы я был автором, то внес бы следующие правки:",
+      1
+    ]
+  ],
+  "words": 450
+}

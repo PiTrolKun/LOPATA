@@ -1,0 +1,1274 @@
+[
+  {
+    "name": "baseline_a_seed_0",
+    "pid": 63072,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.28100000007543713,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 250.569,
+      "prompt_per_token_ms": 0.1819673202614379,
+      "prompt_per_second": 5495.492259617112,
+      "predicted_n": 2048,
+      "predicted_ms": 22286.313,
+      "predicted_per_token_ms": 10.88198876953125,
+      "predicted_per_second": 91.89496710380044
+    },
+    "done": true,
+    "seconds": 22.578,
+    "chars": 4861,
+    "sha256": "d8ecb6f46210e4ccf24cbad88d8426f67a55def5e183f5932e344f236677b5ef",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "—",
+        19
+      ],
+      [
+        "и",
+        11
+      ],
+      [
+        "Лера",
+        9
+      ]
+    ],
+    "words": 386,
+    "condition": "baseline_a"
+  },
+  {
+    "name": "baseline_a_seed_20",
+    "pid": 63072,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.25,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 217.304,
+      "prompt_per_token_ms": 0.15780973129992737,
+      "prompt_per_second": 6336.74483672643,
+      "predicted_n": 2048,
+      "predicted_ms": 22257.456,
+      "predicted_per_token_ms": 10.8678984375,
+      "predicted_per_second": 92.01410978864791
+    },
+    "done": true,
+    "seconds": 22.516,
+    "chars": 5537,
+    "sha256": "4b66ee18cc2b5af76b7ce88148e46b19fa24eed951936f98ffc3163de4d15203",
+    "loop": true,
+    "periodic": {
+      "words": 497,
+      "unit": "взглянул антон молча антон протянул антон сказал антон смотрел антон встал антон пошел антон не отводя антон знал антон выглядел антон отвел антон произнес антон присел антон тихо антон спокойным антон",
+      "copies": 16
+    },
+    "repeated_lines": [
+      [
+        "Антон взглянул",
+        16
+      ],
+      [
+        "Антон молча",
+        16
+      ],
+      [
+        "Антон протянул",
+        16
+      ]
+    ],
+    "words": 537,
+    "condition": "baseline_a"
+  },
+  {
+    "name": "baseline_a_seed_24",
+    "pid": 63072,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.23499999998603016,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 219.424,
+      "prompt_per_token_ms": 0.15934931009440814,
+      "prompt_per_second": 6275.521365028439,
+      "predicted_n": 2048,
+      "predicted_ms": 22349.426,
+      "predicted_per_token_ms": 10.9128056640625,
+      "predicted_per_second": 91.63546303157852
+    },
+    "done": true,
+    "seconds": 22.579,
+    "chars": 4433,
+    "sha256": "74f6d884458a7bcbfe4ddc66ff8742f9a095ade8fe797722571a20692f85fd38",
+    "loop": true,
+    "periodic": {
+      "words": 267,
+      "unit": "свет поезд часы антон лера дыхание глаза руку платформу вокзал",
+      "copies": 26
+    },
+    "repeated_lines": [
+      [
+        "Вокзал",
+        29
+      ],
+      [
+        "Поезд",
+        28
+      ],
+      [
+        "Свет",
+        28
+      ]
+    ],
+    "words": 323,
+    "condition": "baseline_a"
+  },
+  {
+    "name": "baseline_a_seed_34",
+    "pid": 63072,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.23400000005494803,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 219.751,
+      "prompt_per_token_ms": 0.15958678286129266,
+      "prompt_per_second": 6266.183089041688,
+      "predicted_n": 2048,
+      "predicted_ms": 22274.095,
+      "predicted_per_token_ms": 10.87602294921875,
+      "predicted_per_second": 91.94537421161219
+    },
+    "done": true,
+    "seconds": 22.5,
+    "chars": 4974,
+    "sha256": "074f9dd9712f8ff79b851fd5642951cf2b513301b6ee720d1ae518fff738c87e",
+    "loop": true,
+    "periodic": {
+      "words": 256,
+      "unit": "антон лера",
+      "copies": 128
+    },
+    "repeated_lines": [
+      [
+        "Антон",
+        130
+      ],
+      [
+        "Лера",
+        129
+      ],
+      [
+        "Если бы я был автором, то внес бы следующие правки:",
+        1
+      ]
+    ],
+    "words": 450,
+    "condition": "baseline_a"
+  },
+  {
+    "name": "baseline_b_seed_0",
+    "pid": 63072,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.21799999999348074,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 209.31,
+      "prompt_per_token_ms": 0.15200435729847495,
+      "prompt_per_second": 6578.758778844775,
+      "predicted_n": 2048,
+      "predicted_ms": 22246.646,
+      "predicted_per_token_ms": 10.8626201171875,
+      "predicted_per_second": 92.05882091170058
+    },
+    "done": true,
+    "seconds": 22.468,
+    "chars": 4861,
+    "sha256": "d8ecb6f46210e4ccf24cbad88d8426f67a55def5e183f5932e344f236677b5ef",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "—",
+        19
+      ],
+      [
+        "и",
+        11
+      ],
+      [
+        "Лера",
+        9
+      ]
+    ],
+    "words": 386,
+    "condition": "baseline_b"
+  },
+  {
+    "name": "baseline_b_seed_20",
+    "pid": 63072,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.2339999999385327,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 208.782,
+      "prompt_per_token_ms": 0.15162091503267974,
+      "prompt_per_second": 6595.396154840934,
+      "predicted_n": 2048,
+      "predicted_ms": 22254.996,
+      "predicted_per_token_ms": 10.866697265625,
+      "predicted_per_second": 92.0242807502639
+    },
+    "done": true,
+    "seconds": 22.484,
+    "chars": 5537,
+    "sha256": "4b66ee18cc2b5af76b7ce88148e46b19fa24eed951936f98ffc3163de4d15203",
+    "loop": true,
+    "periodic": {
+      "words": 497,
+      "unit": "взглянул антон молча антон протянул антон сказал антон смотрел антон встал антон пошел антон не отводя антон знал антон выглядел антон отвел антон произнес антон присел антон тихо антон спокойным антон",
+      "copies": 16
+    },
+    "repeated_lines": [
+      [
+        "Антон взглянул",
+        16
+      ],
+      [
+        "Антон молча",
+        16
+      ],
+      [
+        "Антон протянул",
+        16
+      ]
+    ],
+    "words": 537,
+    "condition": "baseline_b"
+  },
+  {
+    "name": "baseline_b_seed_24",
+    "pid": 63072,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.23499999998603016,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 207.901,
+      "prompt_per_token_ms": 0.15098111837327524,
+      "prompt_per_second": 6623.344765056445,
+      "predicted_n": 2048,
+      "predicted_ms": 22352.191,
+      "predicted_per_token_ms": 10.91415576171875,
+      "predicted_per_second": 91.62412758552395
+    },
+    "done": true,
+    "seconds": 22.578,
+    "chars": 4433,
+    "sha256": "74f6d884458a7bcbfe4ddc66ff8742f9a095ade8fe797722571a20692f85fd38",
+    "loop": true,
+    "periodic": {
+      "words": 267,
+      "unit": "свет поезд часы антон лера дыхание глаза руку платформу вокзал",
+      "copies": 26
+    },
+    "repeated_lines": [
+      [
+        "Вокзал",
+        29
+      ],
+      [
+        "Поезд",
+        28
+      ],
+      [
+        "Свет",
+        28
+      ]
+    ],
+    "words": 323,
+    "condition": "baseline_b"
+  },
+  {
+    "name": "baseline_b_seed_34",
+    "pid": 63072,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.2339999999385327,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 218.423,
+      "prompt_per_token_ms": 0.15862236746550473,
+      "prompt_per_second": 6304.281142553668,
+      "predicted_n": 2048,
+      "predicted_ms": 22270.626,
+      "predicted_per_token_ms": 10.8743291015625,
+      "predicted_per_second": 91.95969614863992
+    },
+    "done": true,
+    "seconds": 22.516,
+    "chars": 4974,
+    "sha256": "074f9dd9712f8ff79b851fd5642951cf2b513301b6ee720d1ae518fff738c87e",
+    "loop": true,
+    "periodic": {
+      "words": 256,
+      "unit": "антон лера",
+      "copies": 128
+    },
+    "repeated_lines": [
+      [
+        "Антон",
+        130
+      ],
+      [
+        "Лера",
+        129
+      ],
+      [
+        "Если бы я был автором, то внес бы следующие правки:",
+        1
+      ]
+    ],
+    "words": 450,
+    "condition": "baseline_b"
+  },
+  {
+    "name": "repeat_window_512_seed_0",
+    "pid": 63072,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.21899999992456287,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1165,
+      "prompt_tokens": 1377,
+      "total_tokens": 2542,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 208.813,
+      "prompt_per_token_ms": 0.15164342774146694,
+      "prompt_per_second": 6594.417014266353,
+      "predicted_n": 1165,
+      "predicted_ms": 13625.741,
+      "predicted_per_token_ms": 11.695915021459227,
+      "predicted_per_second": 85.49993721442378
+    },
+    "done": true,
+    "seconds": 13.844,
+    "chars": 3732,
+    "sha256": "792896d82780127027ad12820d067ce774f6f258583e0c82c02039fc54afe702",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я редактировал этот текст, я бы внес следующие изменения:",
+        1
+      ],
+      [
+        "Убрать лишние детали:",
+        1
+      ],
+      [
+        "В описании одежды Антона можно убрать упоминание \"серой куртки",
+        1
+      ]
+    ],
+    "words": 547,
+    "condition": "repeat_window_512"
+  },
+  {
+    "name": "repeat_window_512_seed_20",
+    "pid": 63072,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.2190000000409782,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 519,
+      "prompt_tokens": 1377,
+      "total_tokens": 1896,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 210.285,
+      "prompt_per_token_ms": 0.1527124183006536,
+      "prompt_per_second": 6548.255938369356,
+      "predicted_n": 519,
+      "predicted_ms": 5972.132,
+      "predicted_per_token_ms": 11.506998073217726,
+      "predicted_per_second": 86.90363843264015
+    },
+    "done": true,
+    "seconds": 6.203,
+    "chars": 1659,
+    "sha256": "66ea2badc1b33480231ee5fac696b055bfdb2ef973ef424168f965eff2639a82",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В данном тексте можно сделать несколько правок и дополнений, чтобы улучшить его качество:",
+        1
+      ],
+      [
+        "Уточнить время суток:",
+        1
+      ],
+      [
+        "В первом абзаце указано, что часы застыли на 03:17. Однако позже упоминается, что на улице лежит снег в августе. Это противоречие можно устранить, уточнив время суток. Например, можно написать: \"Ночь была холодной и странной — свежий снег покрывал платформу заброшенного вокзала.\". Такой вариант позволит сохранить загадочность ситуации без временных несоответствий.",
+        1
+      ]
+    ],
+    "words": 225,
+    "condition": "repeat_window_512"
+  },
+  {
+    "name": "repeat_window_512_seed_24",
+    "pid": 63072,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.25,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 582,
+      "prompt_tokens": 1377,
+      "total_tokens": 1959,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 208.632,
+      "prompt_per_token_ms": 0.15151198257080611,
+      "prompt_per_second": 6600.138042102842,
+      "predicted_n": 582,
+      "predicted_ms": 6663.903,
+      "predicted_per_token_ms": 11.450005154639175,
+      "predicted_per_second": 87.33620522387555
+    },
+    "done": true,
+    "seconds": 6.922,
+    "chars": 1962,
+    "sha256": "a95ebf79cc24c598674490ae95962e42f889d88c01a720f29e4d139a6265b62b",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я занимался редактированием данного текста, я бы внес следующие изменения:",
+        1
+      ],
+      [
+        "Уточнить характеристики персонажей:",
+        1
+      ],
+      [
+        "Антон может быть более конкретно описан в начале, чтобы сразу дать представление о его спокойном и уверенном характере.",
+        1
+      ]
+    ],
+    "words": 270,
+    "condition": "repeat_window_512"
+  },
+  {
+    "name": "repeat_window_512_seed_34",
+    "pid": 63072,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.23499999998603016,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 219.595,
+      "prompt_per_token_ms": 0.15947349310094408,
+      "prompt_per_second": 6270.634577290011,
+      "predicted_n": 2048,
+      "predicted_ms": 25597.694,
+      "predicted_per_token_ms": 12.4988740234375,
+      "predicted_per_second": 80.00720689918397
+    },
+    "done": true,
+    "seconds": 25.828,
+    "chars": 5037,
+    "sha256": "75a24c954c9c3ff0ef5ae040fa4d2d94d172fb054dda4420473c39ccb52c954d",
+    "loop": true,
+    "periodic": {
+      "words": 353,
+      "unit": "без",
+      "copies": 353
+    },
+    "repeated_lines": [
+      [
+        "без",
+        353
+      ],
+      [
+        "безмол",
+        3
+      ],
+      [
+        "Если бы я был автором, я бы внес следующие правки:",
+        1
+      ]
+    ],
+    "words": 428,
+    "condition": "repeat_window_512"
+  },
+  {
+    "name": "repeat_110_seed_0",
+    "pid": 63072,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.23400000005494803,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 449,
+      "prompt_tokens": 1377,
+      "total_tokens": 1826,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 209.721,
+      "prompt_per_token_ms": 0.15230283224400873,
+      "prompt_per_second": 6565.866079219535,
+      "predicted_n": 449,
+      "predicted_ms": 5000.445,
+      "predicted_per_token_ms": 11.13684855233853,
+      "predicted_per_second": 89.7920085112425
+    },
+    "done": true,
+    "seconds": 5.234,
+    "chars": 1614,
+    "sha256": "d1007278c9ac0d7c6ac369fe155e737d4365bd0826b52f52e6b0bd93b411a969",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если говорить об улучшениях текста, я бы предложил следующее:",
+        1
+      ],
+      [
+        "Уточнить мотивацию Антона: его спокойствие и уверенность выглядят несколько неестественно в такой ситуации. Можно добавить детали о том, что он знает или понимает больше, чем говорит.",
+        1
+      ],
+      [
+        "Добавить описания персонажей: сейчас мы знаем их только по поведению и диалогам. Небольшие фрагменты о внешности, привычках помогут лучше представить героев.",
+        1
+      ]
+    ],
+    "words": 237,
+    "condition": "repeat_110"
+  },
+  {
+    "name": "repeat_110_seed_20",
+    "pid": 63072,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.2190000000409782,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1214,
+      "prompt_tokens": 1377,
+      "total_tokens": 2591,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 208.002,
+      "prompt_per_token_ms": 0.15105446623093682,
+      "prompt_per_second": 6620.128652609109,
+      "predicted_n": 1214,
+      "predicted_ms": 20240.255,
+      "predicted_per_token_ms": 16.672368204283362,
+      "predicted_per_second": 59.97948148380541
+    },
+    "done": true,
+    "seconds": 20.453,
+    "chars": 3896,
+    "sha256": "4387ca6bf772b489d710b073e158fd9e89ef37455bf58497b8e75044e8c0157c",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствуют некоторые элементы, которые можно улучшить для более сильного воздействия на читателя:",
+        1
+      ],
+      [
+        "Употребление местоимений:",
+        1
+      ],
+      [
+        "В некоторых диалогах используется много местоимений (\"ты\", \"он\", \"она\"), что может привести к путанице. Например, в предложении \"Он взглянул на нее и тихо ответил:\" можно уточнить, кто именно смотрит и отвечает (Антон или Лера).",
+        1
+      ]
+    ],
+    "words": 545,
+    "condition": "repeat_110"
+  },
+  {
+    "name": "repeat_110_seed_24",
+    "pid": 63072,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.35900000005494803,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 433,
+      "prompt_tokens": 1377,
+      "total_tokens": 1810,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 345.772,
+      "prompt_per_token_ms": 0.2511053013798112,
+      "prompt_per_second": 3982.3930219913705,
+      "predicted_n": 433,
+      "predicted_ms": 8360.687,
+      "predicted_per_token_ms": 19.30874595842956,
+      "predicted_per_second": 51.790002424441916
+    },
+    "done": true,
+    "seconds": 8.718,
+    "chars": 1416,
+    "sha256": "66ca5bf9bbea06f5ed0ae1e608a6765ce1e8c3f117967cddb29e10fa4c5a05b1",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я занимался редактированием данного текста, то предложил бы следующие изменения:",
+        1
+      ],
+      [
+        "Убрать повторение \"Лера вздрогнула\":",
+        1
+      ],
+      [
+        "В первом случае: \"— Не бойся. Все будет хорошо,\" — тихо ответил Антон.",
+        1
+      ]
+    ],
+    "words": 184,
+    "condition": "repeat_110"
+  },
+  {
+    "name": "repeat_110_seed_34",
+    "pid": 63072,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.4059999999590218,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 634,
+      "prompt_tokens": 1377,
+      "total_tokens": 2011,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 363.263,
+      "prompt_per_token_ms": 0.2638075526506899,
+      "prompt_per_second": 3790.642041716332,
+      "predicted_n": 634,
+      "predicted_ms": 7585.763,
+      "predicted_per_token_ms": 11.964925867507887,
+      "predicted_per_second": 83.5776177030577
+    },
+    "done": true,
+    "seconds": 7.984,
+    "chars": 2091,
+    "sha256": "54170afbb67a3c45efcc725bea13c304ef98fb78f4878b24cce256fb0491508b",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я был автором текста, то предложил бы следующие исправления:",
+        1
+      ],
+      [
+        "Уточнить мотивы Антона:",
+        1
+      ],
+      [
+        "В текущем варианте остается неясным, почему Антон так спокоен и уверен в происходящем. Можно было бы добавить небольшое пояснение о его прошлом опыте или знаниях, которые позволяют ему вести себя таким образом.",
+        1
+      ]
+    ],
+    "words": 306,
+    "condition": "repeat_110"
+  },
+  {
+    "name": "dry_080_seed_0",
+    "pid": 63072,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.2809999999590218,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 228.425,
+      "prompt_per_token_ms": 0.16588598402323892,
+      "prompt_per_second": 6028.236839225128,
+      "predicted_n": 2048,
+      "predicted_ms": 25022.091,
+      "predicted_per_token_ms": 12.21781787109375,
+      "predicted_per_second": 81.84767611947379
+    },
+    "done": true,
+    "seconds": 25.297,
+    "chars": 4386,
+    "sha256": "fc160052cc97c692207a73270c1126aaee78e941aa60e9bac3bd29d8a4d76194",
+    "loop": true,
+    "periodic": {
+      "words": 336,
+      "unit": "л ч с в ан",
+      "copies": 67
+    },
+    "repeated_lines": [
+      [
+        "Ан",
+        68
+      ],
+      [
+        "Л",
+        67
+      ],
+      [
+        "Ч",
+        67
+      ]
+    ],
+    "words": 449,
+    "condition": "dry_080"
+  },
+  {
+    "name": "dry_080_seed_20",
+    "pid": 63072,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.2809999999590218,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1069,
+      "prompt_tokens": 1377,
+      "total_tokens": 2446,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 230.614,
+      "prompt_per_token_ms": 0.16747567175018155,
+      "prompt_per_second": 5971.016503768202,
+      "predicted_n": 1069,
+      "predicted_ms": 31863.329,
+      "predicted_per_token_ms": 29.806668849391958,
+      "predicted_per_second": 33.54953903278594
+    },
+    "done": true,
+    "seconds": 32.141,
+    "chars": 3436,
+    "sha256": "3a513988db22fc64ce05e50eefc46f60f2ff6cd021f667cd07eaeca7b78d3877",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствуют некоторые моменты, которые можно улучшить для более четкой передачи смысла и эмоций:",
+        1
+      ],
+      [
+        "Повторение информации:",
+        1
+      ],
+      [
+        "В начале текста упоминается, что часы застыли на 03:17, а затем эта деталь повторяется несколько раз. Можно убрать лишние упоминания, чтобы избежать избыточности.",
+        1
+      ]
+    ],
+    "words": 479,
+    "condition": "dry_080"
+  },
+  {
+    "name": "dry_080_seed_24",
+    "pid": 63072,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.6089999999385327,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 553.466,
+      "prompt_per_token_ms": 0.4019360929557008,
+      "prompt_per_second": 2487.957706525785,
+      "predicted_n": 2048,
+      "predicted_ms": 64606.186,
+      "predicted_per_token_ms": 31.5459892578125,
+      "predicted_per_second": 31.69975085667493
+    },
+    "done": true,
+    "seconds": 65.219,
+    "chars": 4862,
+    "sha256": "d9a7b0103928092c08521c733d3b324b81448026f6c128ae452368dd05a7922e",
+    "loop": true,
+    "periodic": {
+      "words": 302,
+      "unit": "антон",
+      "copies": 302
+    },
+    "repeated_lines": [
+      [
+        "Антон",
+        302
+      ],
+      [
+        "Если бы я занимался редактированием данного текста, я бы предложил следующие изменения:",
+        1
+      ],
+      [
+        "Уточнить детали описания:",
+        1
+      ]
+    ],
+    "words": 370,
+    "condition": "dry_080"
+  },
+  {
+    "name": "dry_080_seed_34",
+    "pid": 63072,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.5779999999795109,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 466,
+      "prompt_tokens": 1377,
+      "total_tokens": 1843,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 531.219,
+      "prompt_per_token_ms": 0.3857799564270153,
+      "prompt_per_second": 2592.1512596499747,
+      "predicted_n": 466,
+      "predicted_ms": 14475.722,
+      "predicted_per_token_ms": 31.063781115879827,
+      "predicted_per_second": 32.19183126064455
+    },
+    "done": true,
+    "seconds": 15.047,
+    "chars": 1462,
+    "sha256": "ceb5412357a25935fd016f527e950cb3f3db3f01f1bbb5767fa585e58f40e2d7",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я был автором, то внес бы следующие правки:",
+        1
+      ],
+      [
+        "Уточнить, кто именно говорит в диалоге:",
+        1
+      ],
+      [
+        "Антон тихо сказал\":",
+        1
+      ]
+    ],
+    "words": 182,
+    "condition": "dry_080"
+  },
+  {
+    "name": "temperature_080_seed_0",
+    "pid": 63072,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.5779999999795109,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 734,
+      "prompt_tokens": 1377,
+      "total_tokens": 2111,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 541.012,
+      "prompt_per_token_ms": 0.3928917937545388,
+      "prompt_per_second": 2545.230050350085,
+      "predicted_n": 734,
+      "predicted_ms": 22802.783,
+      "predicted_per_token_ms": 31.066461852861035,
+      "predicted_per_second": 32.18905341510289
+    },
+    "done": true,
+    "seconds": 23.375,
+    "chars": 2277,
+    "sha256": "9092a33c2690e28c9fd3bea3c3de0bfabb6949f99015a6f76db35ffcd2f66d3d",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствуют некоторые стилистические и грамматические недочеты, которые можно исправить для повышения качества произведения. Вот основные замечания:",
+        1
+      ],
+      [
+        "В предложении \"Антон сидел на старом, потрескавшемся деревянном скамейке, укутавшись в серую куртку\" можно убрать повтор \"деревянный\":",
+        1
+      ],
+      [
+        "Антон сидел на старой, потрескавшейся скамейке, укутавшись в серую куртку.",
+        1
+      ]
+    ],
+    "words": 317,
+    "condition": "temperature_080"
+  },
+  {
+    "name": "temperature_080_seed_20",
+    "pid": 63072,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.5630000000819564,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 528,
+      "prompt_tokens": 1377,
+      "total_tokens": 1905,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 535.053,
+      "prompt_per_token_ms": 0.38856427015250544,
+      "prompt_per_second": 2573.576823230596,
+      "predicted_n": 528,
+      "predicted_ms": 16460.605,
+      "predicted_per_token_ms": 31.175388257575758,
+      "predicted_per_second": 32.076585277394116
+    },
+    "done": true,
+    "seconds": 17.016,
+    "chars": 1688,
+    "sha256": "bd3c7ef2433071ad1363873f379b5a3d5d9b1cb3cefed62a20798df46ba4af29",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "При составлении исправлений я учитывал общую структуру и стиль текста, стараясь сохранить его атмосферу и мистическую направленность:",
+        1
+      ],
+      [
+        "Первое предложение можно сделать более динамичным, например:",
+        1
+      ],
+      [
+        "Антон сидел на старом, потрескавшемся деревянном скамейке, укутавшись в серую куртку. Лера ходила взад-вперед по платформе, выдыхая облачка пара в холодном августовском воздухе.",
+        1
+      ]
+    ],
+    "words": 236,
+    "condition": "temperature_080"
+  },
+  {
+    "name": "temperature_080_seed_24",
+    "pid": 63072,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.5779999999795109,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 448,
+      "prompt_tokens": 1377,
+      "total_tokens": 1825,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 549.464,
+      "prompt_per_token_ms": 0.3990297748729122,
+      "prompt_per_second": 2506.0786511946185,
+      "predicted_n": 448,
+      "predicted_ms": 14069.657,
+      "predicted_per_token_ms": 31.405484374999997,
+      "predicted_per_second": 31.841572257234134
+    },
+    "done": true,
+    "seconds": 14.656,
+    "chars": 1493,
+    "sha256": "24ab7ffac6c2d989606cc72ce525c2d13052130d2d71bd1bc32262618ea0c047",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я проводил редакторскую правку текста, я бы предложил следующие исправления:",
+        1
+      ],
+      [
+        "Антон сидел на старом, потрескавшемся деревянном скамейке",
+        1
+      ],
+      [
+        "Вместо \"потрескавшемся\" можно использовать \"выцветшем",
+        1
+      ]
+    ],
+    "words": 182,
+    "condition": "temperature_080"
+  },
+  {
+    "name": "temperature_080_seed_34",
+    "pid": 63072,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.5470000000204891,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 576,
+      "prompt_tokens": 1377,
+      "total_tokens": 1953,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 530.406,
+      "prompt_per_token_ms": 0.3851895424836601,
+      "prompt_per_second": 2596.1244782298845,
+      "predicted_n": 576,
+      "predicted_ms": 18015.38,
+      "predicted_per_token_ms": 31.276701388888892,
+      "predicted_per_second": 31.972681120242815
+    },
+    "done": true,
+    "seconds": 18.563,
+    "chars": 1819,
+    "sha256": "2d25b29ef4ce76a7be8bf50181443374de321bf7ad98f09585b09fdaba39897a",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я был автором текста, то предложил бы следующие изменения:",
+        1
+      ],
+      [
+        "Более подробное описание внешнего вида Антона и Леры. Сейчас они предстают перед читателем как типовые персонажи без индивидуальных черт.",
+        1
+      ],
+      [
+        "Пример: \"Антон сидел на старой деревянной скамейке, одетый в потертую серую куртку с капюшоном. Его темные волосы были коротко подстрижены, а глаза сосредоточенно смотрели вдаль. Лера ходила взад-вперед по платформе, кутаясь в длинный черный плащ. Ее светлые волосы были собраны в тугой хвост, а губы под тонким свитером были плотно сжаты.",
+        1
+      ]
+    ],
+    "words": 270,
+    "condition": "temperature_080"
+  }
+]

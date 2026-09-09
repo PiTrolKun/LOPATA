@@ -1,0 +1,13 @@
+{
+  "repository": "limloop/MN-12B-Runeweaver-RP-RU-GGUF",
+  "revision": "84fa96954eef3eec4e92433e133c5bb1c774fc22",
+  "filename": "MN-12B-Runeweaver-RP-RU.Q4_K_M.gguf",
+  "size": 7477218976,
+  "sha256": "75b3107399b2f813b7ae0b98758e65aa5694b4de38b7576636e661c98506a565",
+  "workers": 8,
+  "chunk_bytes": 33554432,
+  "context": 8192,
+  "temperature": 0.8,
+  "repeat_penalty": 1.05,
+  "backend": "Runtime/Backends/llama.cpp/b9442/win-cuda-12.4-x64/llama-cli.exe"
+}

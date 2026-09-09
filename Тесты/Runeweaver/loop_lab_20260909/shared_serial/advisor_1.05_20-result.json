@@ -1,0 +1,53 @@
+{
+  "name": "advisor_1.05_20",
+  "pid": 30492,
+  "seed": 20,
+  "slot": 1,
+  "first_seconds": 0.5320000000065193,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 511.937,
+    "prompt_per_token_ms": 0.3717770515613653,
+    "prompt_per_second": 2689.7840945272565,
+    "predicted_n": 2048,
+    "predicted_ms": 59841.074,
+    "predicted_per_token_ms": 29.2192744140625,
+    "predicted_per_second": 34.223984683162605
+  },
+  "done": true,
+  "seconds": 60.375,
+  "chars": 4966,
+  "sha256": "2e94e84901a08245bb8ecaeec1b7aab5dfb71b87c20d61f160be742123a5bd48",
+  "loop": true,
+  "periodic": {
+    "words": 270,
+    "unit": "антон",
+    "copies": 270
+  },
+  "repeated_lines": [
+    [
+      "Антон",
+      270
+    ],
+    [
+      "Антон был",
+      3
+    ],
+    [
+      "Антон пошел",
+      2
+    ]
+  ],
+  "words": 393,
+  "short_quoted_list_run": 318
+}

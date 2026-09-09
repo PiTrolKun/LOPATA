@@ -1,0 +1,103 @@
+Thinking Process:
+
+1.  **Analyze the Request:**
+    *   **Length:** 700–900 words (Russian).
+    *   **Setting:** Night, abandoned railway station.
+    *   **Characters:** Anton and Lera. Waiting for a train that doesn't exist on the schedule.
+    *   **Plot Point:** Anton knows the truth but can't explain it directly. Lera gradually realizes he's hiding something.
+    *   **Character Dynamics:** Anton = short, cautious speech. Lera = emotional, asks many questions.
+    *   **Mandatory Details (3):**
+        1.  Clock on the wall stopped at 03:17.
+        2.  Fresh snow is lying on the platform in August.
+        3.  An old speaker buzzes once, then instead of a broadcast plays breath sounds.
+    *   **Constraint:** Do not confirm supernatural elements until the very last paragraph. Keep all explanations plausible/ordinary at least until the end.
+    *   **Style:** Visually dense but not over-descriptive. Show emotions through actions, pauses, and speech (no telling). No forbidden phrases like "this is just the beginning," "he couldn't believe his eyes," or "a chill ran down his spine."
+    *   **Ending:** One short line of dialogue from Lera.
+
+2.  **Drafting Strategy:**
+    *   Start with atmosphere and the clock (Detail 1).
+    *   Introduce the snow anomaly (Detail 2) early to build unease.
+    *   Establish Anton's silence vs. Lera's noise.
+    *   Build tension through small conversations about schedules, weather, and why they are there.
+    *   The speaker (Detail 3) serves as the climax of the "normal" explanation before breaking it.
+    *   End with the final line that shatters the illusion without explicit statement of the supernatural, but implying a change in reality.
+
+3.  **Step-by-Step Construction:**
+    *   *Opening:* Anton checking the clock. Lera is restless. The snow on August heat (ironic/uncanny).
+    *   *Middle:* Lera presses Anton about where he's going. He gives vague answers. She notices the station is empty, yet they are here waiting for a specific destination.
+    *   *Climax of scene:* The speaker buzzes. It plays breath.
+    *   *Resolution:* They look at each other. The implication shifts from "broken machine" to something else.
+    *   *Closing Line:* Lera's question that confirms the shift in perception without naming ghosts/spirits explicitly (maybe asking about someone).
+
+4.  **Word Count Management:** I need to be careful. 700-900 words is a tight range for Russian prose. I'll need to pace the dialogue and description closely.
+
+    *   *Plan:*
+        *   Intro: Atmosphere, clock (Detail 1), snow (Detail 2). ~150 words.
+        *   Dialogue Phase 1: Anton explains nothing. Lera questions. ~200 words.
+        *   Dialogue Phase 2: The speaker breaks silence. Breathing sound. ~300 words.
+        *   Ending: The realization and final line. ~150 words.
+
+    *   *Refining the "Supernatural" constraint:* I need to make sure the reader thinks it's a ghost train or a glitching machine until the very end.
+    *   *Ending Line:* Lera must say something that implies she knows what he is waiting for, or she realizes the destination isn't real.
+
+5.  **Drafting - Section by Section (Mental Check):**
+    *   Start with Anton fiddling with a ticket stub or his phone? No, just standing.
+    *   Lera coughs or shivers (showing heat vs cold).
+    *   Anton: "Wait here." Lera: "Why?"
+    *   Anton checks the clock. It's stopped.
+    *   Snow is there. Why?
+    *   They argue about the schedule.
+    *   The speaker activates. Breath sound.
+    *   They look at each other.
+    *   Final line: "Who came?" or "Where to?" -> Let's make it a question about the person waiting.
+
+    *Let's write.*
+
+    (Self-Correction during drafting): Ensure Anton is short and brief. Lera is probing. Don't over-explain the snow or clock initially, let them be observations first.
+    Make sure the breathing sound in the speaker sounds like a human breath at first (normal) then something else? No, just "breath" is enough to unsettle without confirming ghost. Wait, if it's normal air intake, it's mundane. If it's deep inhalation/exhalation that matches a heartbeat or long hold... let's make it sound *too* human and sustained.
+    Actually, the prompt says "instead of an announcement hears breathing." I'll keep it ambiguous at first — maybe just mechanical noise or someone coughing? No, just "breathing" implies life where there is none.
+
+    Let's write.
+
+    (Counting words as I go in Russian to hit 700-900 range).
+</think>
+
+Колокольня вокзала стоит в стороне от платформы, её башенка обвалилась три дня назад, но никто не поменял на ней часы. Они висят на стене, будто прибиты гвоздями без явного крепления, и стрелки стоят неподвижно: 03:17. Лера смотрит на них, потом переводит взгляд на Антона.
+
+— Ты слышишь это? — спрашивает она. Голос её дрожит, но не от холода. В воздухе висит запах гари и мокрого асфальта.
+
+Антон кивает. Его рука лежит в кармане жёсткой папки с документами, пальцы сжаты в кулаке так, что кожа на запястье белесая.
+
+— Поезд идёт, — говорит он. Коротко. Без эмоций.
+
+Лера смеется, но это не смешок. Она снимает капюшон куртки и вздрагивает, когда её руки касаются тёплой ткани. На платформе лежит свежий снег. В августе. Он лежит ровным сугробом у края рельсов, как будто кто-то только что сошел с поезда, задержался на станции и забыл убрать его.
+
+— Почему? — Лера тянется к снегу, но отталкивает руку Антона локтем. — Почему здесь снег? Мы в июле.
+
+Антон не смотрит ей в глаза. Он смотрит на часы. Его взгляд скользит по циферблату так быстро, будто пытается найти там что-то, чего нет.
+
+— Это жара была вчера. Люди сгорели на платформе под окнами. Кто-то принес снег для полива цветов. Поезд стоит у терминала №4. Я знаю этот номер. Он не едет дальше этого вокзала. Но он будет.
+
+Лера поправляет куртку, и её движения становятся мелкими, как у человека, который не может уснуть в постели из-за шума, но боится открыть окно.
+
+— Если ты знаешь, — она говорит, глядя на него, — почему не сказал? Я могу ждать часами, Антон. Но я не буду стоять на этом пустом месте и смотреть на снег, который здесь был месяц назад. Это невозможно, если это не так.
+
+Антон поправляет воротник жакета. Он не отвечает. Его плечи напрягаются, мышцы в шее сжимаются, но он не говорит. Лера понимает — он не может сказать это вслух. Если скажет, она уйдет. Или не придет. Это не вопрос доверия. Это вопрос физики, и Антон знает физику слишком хорошо.
+
+Динамик на перроне издаёт странный треск. Старый динамик, его корпус покрыт ржавчиной и паутинами, как старый телевизор в бабушкиной комнате. Он включается один раз с глухим щелчком. Через секунду из него вырывается звук — ровное, глубокое дыхание.
+
+Лера замерла. Она слушает не меньше минуты. Дыхание не прерывается. Не хрипит. Оно ровное и слишком частое.
+
+— Кто-то здесь? — Антон спрашивает, и его голос впервые звучит не как команда, а как вопрос. Он смотрит на Леру с таким взглядом, который обычно ей нравится, когда он волнуется за неё. Но сейчас это выглядит иначе.
+
+Лера подходит к динамику. Включает громкость. Звук становится тише. Дыхание продолжает. Она касается ржавого корпуса, и у неё на ладони остается запах старого табака и мокрого железа.
+
+— Это не может быть здесь, — произносит она тихо. Не обращаясь к Антону. — Мы стоим в августе. Никто не должен дышать здесь.
+
+Антон стоит у края платформы. Его тень отбрасывается на снег, но тень имеет форму поезда, который никогда не был на этом пути. Он медленно опускает голову. Не из-за дождя или холода. Из-за того, что он видит то, чего не может сказать.
+
+— Ты не поверишь, если скажу. Но я знаю, кто едет.
+
+Лера смотрит на него. На лицо, которое она знает с детства и которого никогда не видела таким. Она делает шаг к нему, но не касается его плеча. Не говорит ничего.
+
+Кто-то там есть?

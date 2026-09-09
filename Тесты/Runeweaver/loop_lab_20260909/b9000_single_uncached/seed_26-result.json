@@ -1,0 +1,53 @@
+{
+  "name": "seed_26",
+  "pid": 52648,
+  "seed": 26,
+  "slot": 0,
+  "first_seconds": 0.5470000000204891,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 539,
+    "prompt_tokens": 1377,
+    "total_tokens": 1916,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 533.208,
+    "prompt_per_token_ms": 0.38722440087145965,
+    "prompt_per_second": 2582.481883242562,
+    "predicted_n": 539,
+    "predicted_ms": 16659.994,
+    "predicted_per_token_ms": 30.909079777365488,
+    "predicted_per_second": 32.3529528281943
+  },
+  "done": true,
+  "seconds": 17.219,
+  "chars": 1809,
+  "sha256": "00812e0d5241777f137afa37487036bcf33d8c7ae9d26780fb558eee4834a880",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, я бы внес следующие правки:",
+      1
+    ],
+    [
+      "Уточнить мотивы Антона:",
+      1
+    ],
+    [
+      "В текущем варианте Антон выглядит слишком загадочным и непонятным. Его спокойствие и уверенность в ситуации, которая явно выходит за рамки обыденного, требуют объяснения. Можно добавить флешбэк или диалог, раскрывающий его знания о происходящем.",
+      1
+    ]
+  ],
+  "words": 243,
+  "short_quoted_list_run": 0
+}

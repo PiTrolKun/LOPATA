@@ -1,0 +1,52 @@
+{
+  "name": "dry_080_seed_24",
+  "pid": 63072,
+  "seed": 24,
+  "slot": 0,
+  "first_seconds": 0.6089999999385327,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 553.466,
+    "prompt_per_token_ms": 0.4019360929557008,
+    "prompt_per_second": 2487.957706525785,
+    "predicted_n": 2048,
+    "predicted_ms": 64606.186,
+    "predicted_per_token_ms": 31.5459892578125,
+    "predicted_per_second": 31.69975085667493
+  },
+  "done": true,
+  "seconds": 65.219,
+  "chars": 4862,
+  "sha256": "d9a7b0103928092c08521c733d3b324b81448026f6c128ae452368dd05a7922e",
+  "loop": true,
+  "periodic": {
+    "words": 302,
+    "unit": "антон",
+    "copies": 302
+  },
+  "repeated_lines": [
+    [
+      "Антон",
+      302
+    ],
+    [
+      "Если бы я занимался редактированием данного текста, я бы предложил следующие изменения:",
+      1
+    ],
+    [
+      "Уточнить детали описания:",
+      1
+    ]
+  ],
+  "words": 370
+}

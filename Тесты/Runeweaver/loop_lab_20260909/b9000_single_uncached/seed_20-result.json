@@ -1,0 +1,53 @@
+{
+  "name": "seed_20",
+  "pid": 52648,
+  "seed": 20,
+  "slot": 0,
+  "first_seconds": 0.5320000000065193,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 463,
+    "prompt_tokens": 1377,
+    "total_tokens": 1840,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 516.99,
+    "prompt_per_token_ms": 0.37544662309368193,
+    "prompt_per_second": 2663.494458306737,
+    "predicted_n": 463,
+    "predicted_ms": 14257.265,
+    "predicted_per_token_ms": 30.793228941684664,
+    "predicted_per_second": 32.47467168492695
+  },
+  "done": true,
+  "seconds": 14.797,
+  "chars": 1616,
+  "sha256": "054b67fd0324e6fb87894478616209387c7259a935cb1edd77cb9ed93629dd2f",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте присутствуют некоторые моменты, которые можно улучшить для повышения его качества и ясности:",
+      1
+    ],
+    [
+      "Стиль:",
+      1
+    ],
+    [
+      "Некоторые предложения повторяют одно и то же действие (например, Лера ходит взад-вперед по платформе), что может утомлять читателя. Лучше было бы сконцентрироваться на ключевых моментах или описать это действие более разнообразно.",
+      1
+    ]
+  ],
+  "words": 222,
+  "short_quoted_list_run": 0
+}

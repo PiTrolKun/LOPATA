@@ -1,0 +1,34 @@
+{
+  "name": "guard_seed_8",
+  "pid": 53484,
+  "seed": 8,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "guard_stopped": true,
+  "guard_seconds": 21.89000000001397,
+  "seconds": 21.89,
+  "chars": 1837,
+  "sha256": "ecbc7d93e2c7efae9d3cb91f557f85beea26ac348f081ee6876f9b0e09b85001",
+  "loop": true,
+  "periodic": {
+    "words": 66,
+    "unit": "приближающий появился подошла взяла встала сделал направились пошли оставили увидел услышал",
+    "copies": 6
+  },
+  "repeated_lines": [
+    [
+      "взяла",
+      8
+    ],
+    [
+      "встала",
+      7
+    ],
+    [
+      "подошла",
+      7
+    ]
+  ],
+  "words": 144,
+  "short_quoted_list_run": 86
+}

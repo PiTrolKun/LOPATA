@@ -1,0 +1,52 @@
+{
+  "name": "seed_31",
+  "pid": 53304,
+  "seed": 31,
+  "slot": 0,
+  "first_seconds": 0.21799999999348074,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 474,
+    "prompt_tokens": 1377,
+    "total_tokens": 1851,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 208.715,
+    "prompt_per_token_ms": 0.15157225853304285,
+    "prompt_per_second": 6597.513355532664,
+    "predicted_n": 474,
+    "predicted_ms": 5090.132,
+    "predicted_per_token_ms": 10.738675105485232,
+    "predicted_per_second": 93.12135716716189
+  },
+  "done": true,
+  "seconds": 5.312,
+  "chars": 1644,
+  "sha256": "9d175ad0821ee14a7542bb74d3f6292e14aa3086365104a152751e8cfea0102d",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, я бы внес следующие исправления:",
+      1
+    ],
+    [
+      "Уточнить диалоги:",
+      1
+    ],
+    [
+      "В некоторых местах диалоги выглядят как монологи, например: \"Антон тихо сказал:\" и \"Лера вздохнула и встала.\". Чтобы сделать их более естественными, можно добавить реакцию собеседника или использовать тире перед репликой.",
+      1
+    ]
+  ],
+  "words": 239
+}

@@ -1,0 +1,4 @@
+# Preserve evidence bytes, including interrupted output and line endings.
+*.json -text whitespace=cr-at-eol
+# A stopped model may end mid-word or on an indented empty line; keep that evidence.
+*.txt -text whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof

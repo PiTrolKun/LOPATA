@@ -1,0 +1,53 @@
+{
+  "name": "seed_25",
+  "pid": 11052,
+  "seed": 25,
+  "slot": 0,
+  "first_seconds": 0.26599999994505197,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 559,
+    "prompt_tokens": 1377,
+    "total_tokens": 1936,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 242.007,
+    "prompt_per_token_ms": 0.17574945533769062,
+    "prompt_per_second": 5689.918060221398,
+    "predicted_n": 559,
+    "predicted_ms": 10114.848,
+    "predicted_per_token_ms": 18.094540250447228,
+    "predicted_per_second": 55.26528920652095
+  },
+  "done": true,
+  "seconds": 10.375,
+  "chars": 1862,
+  "sha256": "4cfcb013b2f813ee2e36f9c97fa005f177cb7d2e6e27fa1cd3211f978ad16bdc",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, то внес бы некоторые изменения для улучшения сюжета и стилистики:",
+      1
+    ],
+    [
+      "Усилить контраст между Антоном и Лерой:",
+      1
+    ],
+    [
+      "Можно добавить больше диалогов или внутренних монологов Леры, чтобы подчеркнуть ее страх и беспокойство.",
+      1
+    ]
+  ],
+  "words": 251,
+  "short_quoted_list_run": 0
+}

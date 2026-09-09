@@ -1,0 +1,53 @@
+{
+  "name": "seed_13",
+  "pid": 11052,
+  "seed": 13,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1251,
+    "prompt_tokens": 1377,
+    "total_tokens": 2628,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 511.969,
+    "prompt_per_token_ms": 0.371800290486565,
+    "prompt_per_second": 2689.6159728421057,
+    "predicted_n": 1251,
+    "predicted_ms": 36021.672,
+    "predicted_per_token_ms": 28.79430215827338,
+    "predicted_per_second": 34.729093085962255
+  },
+  "done": true,
+  "seconds": 36.546,
+  "chars": 3857,
+  "sha256": "257d28489561c541b0b5b1eb251c4ca45e05eddd51cbcccf935188ac546530fe",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если говорить об исправлениях в тексте, то я бы предложил следующее:",
+      1
+    ],
+    [
+      "Устранить повторение:",
+      1
+    ],
+    [
+      "В одном абзаце использованы дважды фразы \"тихо сказал\" и \"прошептала",
+      1
+    ]
+  ],
+  "words": 555,
+  "short_quoted_list_run": 0
+}

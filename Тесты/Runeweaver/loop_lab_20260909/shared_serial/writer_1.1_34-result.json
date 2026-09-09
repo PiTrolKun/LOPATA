@@ -1,0 +1,45 @@
+{
+  "name": "writer_1.1_34",
+  "pid": 30492,
+  "seed": 34,
+  "slot": 0,
+  "first_seconds": 0.03100000007543713,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 14,
+    "prompt_tokens": 121,
+    "total_tokens": 135,
+    "prompt_tokens_details": {
+      "cached_tokens": 120
+    }
+  },
+  "timings": {
+    "cache_n": 120,
+    "prompt_n": 1,
+    "prompt_ms": 19.937,
+    "prompt_per_token_ms": 19.937,
+    "prompt_per_second": 50.1579976927321,
+    "predicted_n": 14,
+    "predicted_ms": 388.296,
+    "predicted_per_token_ms": 27.73542857142857,
+    "predicted_per_second": 36.05496837464202
+  },
+  "done": true,
+  "seconds": 0.422,
+  "chars": 35,
+  "sha256": "eb967aabcff7f008ef2a0b071ce9a234ad399cf0aeb2795710a17c380ef7f62f",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Ветер стих, и тишина стала давящей.",
+      1
+    ]
+  ],
+  "words": 6,
+  "short_quoted_list_run": 0
+}

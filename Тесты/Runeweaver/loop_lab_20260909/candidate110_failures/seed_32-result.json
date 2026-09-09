@@ -1,0 +1,53 @@
+{
+  "name": "seed_32",
+  "pid": 66988,
+  "seed": 32,
+  "slot": 0,
+  "first_seconds": 0.21899999992456287,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 465,
+    "prompt_tokens": 1377,
+    "total_tokens": 1842,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 215.758,
+    "prompt_per_token_ms": 0.1566870007262164,
+    "prompt_per_second": 6382.150372176234,
+    "predicted_n": 465,
+    "predicted_ms": 5474.371,
+    "predicted_per_token_ms": 11.772840860215053,
+    "predicted_per_second": 84.94126539834438
+  },
+  "done": true,
+  "seconds": 5.703,
+  "chars": 1477,
+  "sha256": "39dc74809fd58915bc1524d8c8ead408859cbed3cdfda432486cddcaa2f5edfd",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я работал над текстом как редактор, то предложил бы следующие правки:",
+      1
+    ],
+    [
+      "Уточнить описание Антона:",
+      1
+    ],
+    [
+      "Антон сидел на старой деревянной скамейке, укутавшись в серую куртку, и выглядел спокойным, но напряженность читалась в его глазах.",
+      1
+    ]
+  ],
+  "words": 210,
+  "short_quoted_list_run": 0
+}

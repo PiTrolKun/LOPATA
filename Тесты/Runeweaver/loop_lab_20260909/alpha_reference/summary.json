@@ -1,0 +1,326 @@
+[
+  {
+    "name": "raw_thinking_seed_0",
+    "pid": 42096,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.10999999998603016,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 8192,
+      "prompt_tokens": 321,
+      "total_tokens": 8513,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 321,
+      "prompt_ms": 95.609,
+      "prompt_per_token_ms": 0.2978473520249221,
+      "prompt_per_second": 3357.4245102448513,
+      "predicted_n": 8192,
+      "predicted_ms": 73305.983,
+      "predicted_per_token_ms": 8.948484252929687,
+      "predicted_per_second": 111.7507693744452
+    },
+    "done": true,
+    "seconds": 73.422,
+    "chars": 23578,
+    "sha256": "3cca157ef4a3a6ce5434a210da6a0eb404594d2da69c26c346f8cfb78ea95e20",
+    "loop": false,
+    "detector_version": 2,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Лера смотрит на него. «Ты ждал, чтобы я пришла».",
+        140
+      ],
+      [
+        "Let's write.*",
+        2
+      ],
+      [
+        "Антон смотрит на часы. 03:17.",
+        2
+      ]
+    ],
+    "words": 3664,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "raw_thinking_seed_1",
+    "pid": 42096,
+    "seed": 1,
+    "slot": 0,
+    "first_seconds": 0.0779999999795109,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1911,
+      "prompt_tokens": 321,
+      "total_tokens": 2232,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 321,
+      "prompt_ms": 50.911,
+      "prompt_per_token_ms": 0.158601246105919,
+      "prompt_per_second": 6305.120700830862,
+      "predicted_n": 1911,
+      "predicted_ms": 12416.693,
+      "predicted_per_token_ms": 6.497484563055991,
+      "predicted_per_second": 153.90571386439208
+    },
+    "done": true,
+    "seconds": 12.484,
+    "chars": 5653,
+    "sha256": "ee31440c2d277f22ec0d67cda83ad45da66fb776a3af49b7b29a40465af741a4",
+    "loop": false,
+    "detector_version": 2,
+    "periodic": {
+      "words": 3,
+      "unit": "нет",
+      "copies": 3
+    },
+    "repeated_lines": [
+      [
+        "— Не знаю.",
+        14
+      ],
+      [
+        "— Кто?",
+        14
+      ],
+      [
+        "— Нет.",
+        7
+      ]
+    ],
+    "words": 918,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "repeat110_thinking_seed_0",
+    "pid": 42096,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.0779999999795109,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 2127,
+      "prompt_tokens": 321,
+      "total_tokens": 2448,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 321,
+      "prompt_ms": 50.364,
+      "prompt_per_token_ms": 0.15689719626168225,
+      "prompt_per_second": 6373.600190612343,
+      "predicted_n": 2127,
+      "predicted_ms": 15090.229,
+      "predicted_per_token_ms": 7.094606958157028,
+      "predicted_per_second": 140.9521353188212
+    },
+    "done": true,
+    "seconds": 15.172,
+    "chars": 7784,
+    "sha256": "cfb0c4b63bed8bbee1d9bb11869ae56d469ba1db83404ade9f0de453e09ee042",
+    "loop": false,
+    "detector_version": 2,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Thinking Process:",
+        1
+      ],
+      [
+        "Analyze the Request:**",
+        1
+      ],
+      [
+        "Length:** 700–900 words (Russian).",
+        1
+      ]
+    ],
+    "words": 1220,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "repeat110_thinking_seed_1",
+    "pid": 42096,
+    "seed": 1,
+    "slot": 0,
+    "first_seconds": 0.09299999999348074,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1634,
+      "prompt_tokens": 321,
+      "total_tokens": 1955,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 321,
+      "prompt_ms": 52.49,
+      "prompt_per_token_ms": 0.1635202492211838,
+      "prompt_per_second": 6115.450562011812,
+      "predicted_n": 1634,
+      "predicted_ms": 11692.117,
+      "predicted_per_token_ms": 7.155518359853121,
+      "predicted_per_second": 139.7522792493438
+    },
+    "done": true,
+    "seconds": 11.781,
+    "chars": 5667,
+    "sha256": "8487c131558a3ada0df690f922d90b1546d7ab4af194d99ca849dd1ea0813f5f",
+    "loop": false,
+    "detector_version": 2,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Here is a completed scene following all the given constraints and requirements. I will write it in Russian, focusing on visual details, distinct character voices, and building tension until the supernatural element becomes undeniable.",
+        1
+      ],
+      [
+        "Plan:**",
+        1
+      ],
+      [
+        "Setting the Scene:** Establish the abandoned station, the snow in August, and the stopped clock immediately to ground the reader.",
+        1
+      ]
+    ],
+    "words": 935,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "raw_no_thinking_seed_0",
+    "pid": 42096,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.10900000005494803,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1143,
+      "prompt_tokens": 323,
+      "total_tokens": 1466,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 323,
+      "prompt_ms": 60.702,
+      "prompt_per_token_ms": 0.18793188854489162,
+      "prompt_per_second": 5321.07673552766,
+      "predicted_n": 1143,
+      "predicted_ms": 7248.21,
+      "predicted_per_token_ms": 6.341391076115485,
+      "predicted_per_second": 157.69410654492626
+    },
+    "done": true,
+    "seconds": 7.359,
+    "chars": 3535,
+    "sha256": "a56d2d2e7c571b18f3ea4ee404267f4d7752d9f0dab7050519a90958f358490d",
+    "loop": false,
+    "detector_version": 2,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Антон стоит спиной к Лере, уперев ладонь в холодный гранит поручня. На его пальцах — следы пота, хотя на улице уже тридцать градусов.",
+        1
+      ],
+      [
+        "— Поезд задерживается, — сказал он, не оборачиваясь.",
+        1
+      ],
+      [
+        "Лера замерла, глядя на его спину. Задорная усмешка, которая обычно облетала её губы к началу третьего курса, тут же сгорела. Она медленно поправила длинноволосую косу, которая зацепилась за петлю на сумке.",
+        1
+      ]
+    ],
+    "words": 584,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "raw_no_thinking_seed_1",
+    "pid": 42096,
+    "seed": 1,
+    "slot": 0,
+    "first_seconds": 0.0779999999795109,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1015,
+      "prompt_tokens": 323,
+      "total_tokens": 1338,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 323,
+      "prompt_ms": 62.193,
+      "prompt_per_token_ms": 0.19254798761609906,
+      "prompt_per_second": 5193.510523692377,
+      "predicted_n": 1015,
+      "predicted_ms": 6760.808,
+      "predicted_per_token_ms": 6.660894581280788,
+      "predicted_per_second": 150.1299844633955
+    },
+    "done": true,
+    "seconds": 6.844,
+    "chars": 3023,
+    "sha256": "a7191aaa850607667d63c6bae287cbf387468253db94eea017b795ab427b57df",
+    "loop": false,
+    "detector_version": 2,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "— Я не понимаю.",
+        3
+      ],
+      [
+        "— Да.",
+        2
+      ],
+      [
+        "— Что?",
+        2
+      ]
+    ],
+    "words": 485,
+    "short_quoted_list_run": 0
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "name": "seed_26",
+  "pid": 66988,
+  "seed": 26,
+  "slot": 0,
+  "first_seconds": 0.25,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 409,
+    "prompt_tokens": 1377,
+    "total_tokens": 1786,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 216.234,
+    "prompt_per_token_ms": 0.1570326797385621,
+    "prompt_per_second": 6368.101223674353,
+    "predicted_n": 409,
+    "predicted_ms": 4731.644,
+    "predicted_per_token_ms": 11.56881173594132,
+    "predicted_per_second": 86.4393010125022
+  },
+  "done": true,
+  "seconds": 4.984,
+  "chars": 1239,
+  "sha256": "a6a7103d0477f06f4658e398609f1d7bf78a7630c22ddb784d67fd353e9d2d45",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "и т.д.",
+      3
+    ],
+    [
+      "Поезд",
+      2
+    ],
+    [
+      "Антон",
+      2
+    ]
+  ],
+  "words": 153,
+  "short_quoted_list_run": 8
+}

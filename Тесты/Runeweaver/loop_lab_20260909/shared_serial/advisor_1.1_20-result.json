@@ -1,0 +1,53 @@
+{
+  "name": "advisor_1.1_20",
+  "pid": 30492,
+  "seed": 20,
+  "slot": 1,
+  "first_seconds": 0.03200000000651926,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 619,
+    "prompt_tokens": 1377,
+    "total_tokens": 1996,
+    "prompt_tokens_details": {
+      "cached_tokens": 1376
+    }
+  },
+  "timings": {
+    "cache_n": 1376,
+    "prompt_n": 1,
+    "prompt_ms": 11.998,
+    "prompt_per_token_ms": 11.998,
+    "prompt_per_second": 83.3472245374229,
+    "predicted_n": 619,
+    "predicted_ms": 7162.324,
+    "predicted_per_token_ms": 11.570798061389336,
+    "predicted_per_second": 86.42446222762332
+  },
+  "done": true,
+  "seconds": 7.188,
+  "chars": 1929,
+  "sha256": "d2d112f9aa0afb6165014ceade0ffc756b27db1f0adc195cf0776521ef4b6194",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте присутствуют некоторые неоднозначности и повторы, которые можно устранить для улучшения стилистики и логики повествования:",
+      1
+    ],
+    [
+      "Избежать повторов:",
+      1
+    ],
+    [
+      "В начале текста упоминается \"серый\" цвет куртки Антона, а затем — \"серая\" куртка (второй раз). Лучше использовать одно из этих слов.",
+      1
+    ]
+  ],
+  "words": 259,
+  "short_quoted_list_run": 0
+}

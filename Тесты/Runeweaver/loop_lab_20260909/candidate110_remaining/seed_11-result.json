@@ -1,0 +1,53 @@
+{
+  "name": "seed_11",
+  "pid": 11052,
+  "seed": 11,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 379,
+    "prompt_tokens": 1377,
+    "total_tokens": 1756,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 502.426,
+    "prompt_per_token_ms": 0.3648700072621641,
+    "prompt_per_second": 2740.7021133460453,
+    "predicted_n": 379,
+    "predicted_ms": 10980.685,
+    "predicted_per_token_ms": 28.972783641160948,
+    "predicted_per_second": 34.515150921823185
+  },
+  "done": true,
+  "seconds": 11.516,
+  "chars": 1245,
+  "sha256": "c8773fc21c81fffa16c7b687b40f2de76e0bdabe8b4d135790cfb46aac39c75a",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я редактировал этот текст, то:",
+      1
+    ],
+    [
+      "Убрал бы некоторые повторения:",
+      1
+    ],
+    [
+      "Антон тихо сказал:\" -> \"Антон тихо произнес:",
+      1
+    ]
+  ],
+  "words": 169,
+  "short_quoted_list_run": 0
+}

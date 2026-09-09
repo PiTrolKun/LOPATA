@@ -1,0 +1,52 @@
+{
+  "name": "seed_19",
+  "pid": 53304,
+  "seed": 19,
+  "slot": 0,
+  "first_seconds": 0.23400000005494803,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 494,
+    "prompt_tokens": 1377,
+    "total_tokens": 1871,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 217.315,
+    "prompt_per_token_ms": 0.15781771968046476,
+    "prompt_per_second": 6336.424084853784,
+    "predicted_n": 494,
+    "predicted_ms": 5315.395,
+    "predicted_per_token_ms": 10.759908906882591,
+    "predicted_per_second": 92.93758977460752
+  },
+  "done": true,
+  "seconds": 5.547,
+  "chars": 1753,
+  "sha256": "39c46048435edbf15a4b5e78d04a0bcda044758c711d6eab89c267f7f12e315b",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, то, возможно, внес бы следующие изменения:",
+      1
+    ],
+    [
+      "Уточнить мотивы Антона:",
+      1
+    ],
+    [
+      "В текущей версии его спокойствие и уверенность могут показаться странными или неубедительными. Было бы полезно добавить больше информации о том, что он знает или почему ведет себя именно так.",
+      1
+    ]
+  ],
+  "words": 247
+}

@@ -1,0 +1,34 @@
+{
+  "name": "guard_seed_34",
+  "pid": 53484,
+  "seed": 34,
+  "slot": 0,
+  "first_seconds": 0.5310000000754371,
+  "guard_stopped": true,
+  "guard_seconds": 24.06200000003446,
+  "seconds": 24.062,
+  "chars": 2211,
+  "sha256": "ede8a5212316cb63719196f7edc9d3f25f26c5ad74c9412aecab46dc7d445861",
+  "loop": true,
+  "periodic": {
+    "words": 52,
+    "unit": "антон лера",
+    "copies": 26
+  },
+  "repeated_lines": [
+    [
+      "Антон",
+      28
+    ],
+    [
+      "Лера",
+      27
+    ],
+    [
+      "Если бы я был автором, то внес бы следующие правки:",
+      1
+    ]
+  ],
+  "words": 246,
+  "short_quoted_list_run": 57
+}

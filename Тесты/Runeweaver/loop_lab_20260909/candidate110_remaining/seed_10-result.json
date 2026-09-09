@@ -1,0 +1,53 @@
+{
+  "name": "seed_10",
+  "pid": 11052,
+  "seed": 10,
+  "slot": 0,
+  "first_seconds": 0.5310000000754371,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 506,
+    "prompt_tokens": 1377,
+    "total_tokens": 1883,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 515.103,
+    "prompt_per_token_ms": 0.3740762527233115,
+    "prompt_per_second": 2673.2517574155077,
+    "predicted_n": 506,
+    "predicted_ms": 14622.394,
+    "predicted_per_token_ms": 28.89801185770751,
+    "predicted_per_second": 34.60445669840383
+  },
+  "done": true,
+  "seconds": 15.156,
+  "chars": 1749,
+  "sha256": "fe02dd86f2a5e23b5b2d9fb8178c837f08321a2c25cb8f66dbe7fef068563f4a",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я работал над этим текстом как редактор, то предложил бы следующие изменения:",
+      1
+    ],
+    [
+      "Уточнить время действия:",
+      1
+    ],
+    [
+      "В первой фразе указано \"Антон сидел на старом, потрескавшемся деревянном скамейке",
+      1
+    ]
+  ],
+  "words": 236,
+  "short_quoted_list_run": 0
+}

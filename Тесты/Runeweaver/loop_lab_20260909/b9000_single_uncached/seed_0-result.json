@@ -1,0 +1,53 @@
+{
+  "name": "seed_0",
+  "pid": 52648,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.5620000000344589,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 536.472,
+    "prompt_per_token_ms": 0.38959477124183006,
+    "prompt_per_second": 2566.769561132734,
+    "predicted_n": 2048,
+    "predicted_ms": 63725.01,
+    "predicted_per_token_ms": 31.1157275390625,
+    "predicted_per_second": 32.1380883267025
+  },
+  "done": true,
+  "seconds": 64.281,
+  "chars": 5380,
+  "sha256": "d6f98a70aafe997d3304e656987c40b19060dfe54642d101b679fc7636bc9221",
+  "loop": true,
+  "periodic": {
+    "words": 273,
+    "unit": "заменить на",
+    "copies": 136
+  },
+  "repeated_lines": [
+    [
+      "Заменить \"на",
+      147
+    ],
+    [
+      "Убрать \"на",
+      5
+    ],
+    [
+      "Заменить \"за",
+      5
+    ]
+  ],
+  "words": 588,
+  "short_quoted_list_run": 0
+}

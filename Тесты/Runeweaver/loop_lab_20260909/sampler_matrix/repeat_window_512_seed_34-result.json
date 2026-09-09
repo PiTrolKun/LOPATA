@@ -1,0 +1,52 @@
+{
+  "name": "repeat_window_512_seed_34",
+  "pid": 63072,
+  "seed": 34,
+  "slot": 0,
+  "first_seconds": 0.23499999998603016,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 219.595,
+    "prompt_per_token_ms": 0.15947349310094408,
+    "prompt_per_second": 6270.634577290011,
+    "predicted_n": 2048,
+    "predicted_ms": 25597.694,
+    "predicted_per_token_ms": 12.4988740234375,
+    "predicted_per_second": 80.00720689918397
+  },
+  "done": true,
+  "seconds": 25.828,
+  "chars": 5037,
+  "sha256": "75a24c954c9c3ff0ef5ae040fa4d2d94d172fb054dda4420473c39ccb52c954d",
+  "loop": true,
+  "periodic": {
+    "words": 353,
+    "unit": "без",
+    "copies": 353
+  },
+  "repeated_lines": [
+    [
+      "без",
+      353
+    ],
+    [
+      "безмол",
+      3
+    ],
+    [
+      "Если бы я был автором, я бы внес следующие правки:",
+      1
+    ]
+  ],
+  "words": 428
+}

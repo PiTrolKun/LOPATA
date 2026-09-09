@@ -1,0 +1,53 @@
+{
+  "name": "seed_33",
+  "pid": 11052,
+  "seed": 33,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 515.139,
+    "prompt_per_token_ms": 0.3741023965141612,
+    "prompt_per_second": 2673.064939754124,
+    "predicted_n": 2048,
+    "predicted_ms": 59513.601,
+    "predicted_per_token_ms": 29.05937548828125,
+    "predicted_per_second": 34.41230181988148
+  },
+  "done": true,
+  "seconds": 60.047,
+  "chars": 5804,
+  "sha256": "5e8a268675b5ce4ea7f0c4842d8c0bbe76dfc033f03639ca9d792d6331559d37",
+  "loop": true,
+  "periodic": {
+    "words": 373,
+    "unit": "антон",
+    "copies": 373
+  },
+  "repeated_lines": [
+    [
+      "Антон",
+      371
+    ],
+    [
+      "— Антон",
+      2
+    ],
+    [
+      "Если говорить об исправлениях в тексте, то я бы предложил следующие коррективы:",
+      1
+    ]
+  ],
+  "words": 441,
+  "short_quoted_list_run": 0
+}

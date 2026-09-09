@@ -1,0 +1,53 @@
+{
+  "name": "advisor_1.05_34",
+  "pid": 30492,
+  "seed": 34,
+  "slot": 1,
+  "first_seconds": 0.03100000007543713,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 1376
+    }
+  },
+  "timings": {
+    "cache_n": 1376,
+    "prompt_n": 1,
+    "prompt_ms": 11.392,
+    "prompt_per_token_ms": 11.392,
+    "prompt_per_second": 87.78089887640449,
+    "predicted_n": 2048,
+    "predicted_ms": 23309.574,
+    "predicted_per_token_ms": 11.3816279296875,
+    "predicted_per_second": 87.86089355386761
+  },
+  "done": true,
+  "seconds": 23.343,
+  "chars": 4321,
+  "sha256": "d465a704eb8cdbc70862cdae149120bb2bc3e4fc13b09bdfc2c8f085a2904fac",
+  "loop": true,
+  "periodic": {
+    "words": 326,
+    "unit": "плат вок",
+    "copies": 163
+  },
+  "repeated_lines": [
+    [
+      "Плат",
+      163
+    ],
+    [
+      "Вок",
+      163
+    ],
+    [
+      "Если бы я был автором, то внес бы следующие правки:",
+      1
+    ]
+  ],
+  "words": 353,
+  "short_quoted_list_run": 334
+}

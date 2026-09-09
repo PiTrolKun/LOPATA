@@ -1,0 +1,52 @@
+{
+  "name": "repeat_110_seed_34",
+  "pid": 63072,
+  "seed": 34,
+  "slot": 0,
+  "first_seconds": 0.4059999999590218,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 634,
+    "prompt_tokens": 1377,
+    "total_tokens": 2011,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 363.263,
+    "prompt_per_token_ms": 0.2638075526506899,
+    "prompt_per_second": 3790.642041716332,
+    "predicted_n": 634,
+    "predicted_ms": 7585.763,
+    "predicted_per_token_ms": 11.964925867507887,
+    "predicted_per_second": 83.5776177030577
+  },
+  "done": true,
+  "seconds": 7.984,
+  "chars": 2091,
+  "sha256": "54170afbb67a3c45efcc725bea13c304ef98fb78f4878b24cce256fb0491508b",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором текста, то предложил бы следующие исправления:",
+      1
+    ],
+    [
+      "Уточнить мотивы Антона:",
+      1
+    ],
+    [
+      "В текущем варианте остается неясным, почему Антон так спокоен и уверен в происходящем. Можно было бы добавить небольшое пояснение о его прошлом опыте или знаниях, которые позволяют ему вести себя таким образом.",
+      1
+    ]
+  ],
+  "words": 306
+}

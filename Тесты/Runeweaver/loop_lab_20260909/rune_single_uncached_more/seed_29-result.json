@@ -1,0 +1,52 @@
+{
+  "name": "seed_29",
+  "pid": 53304,
+  "seed": 29,
+  "slot": 0,
+  "first_seconds": 0.2190000000409782,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 208.129,
+    "prompt_per_token_ms": 0.15114669571532316,
+    "prompt_per_second": 6616.089060150196,
+    "predicted_n": 2048,
+    "predicted_ms": 22195.839,
+    "predicted_per_token_ms": 10.83781201171875,
+    "predicted_per_second": 92.26954655780303
+  },
+  "done": true,
+  "seconds": 22.422,
+  "chars": 5110,
+  "sha256": "551ad45af5f9ed1484bbffd5ee23c02f074b8342d755e9e3457a27af1f559760",
+  "loop": true,
+  "periodic": {
+    "words": 360,
+    "unit": "повторяется е повторяется р повторяется у повторяется с повторяется в повторяется м повторяется е повторяется т повторяется о повторяется д повторяется р повторяется а повторяется з повторяется т повторяется и повторяется н",
+    "copies": 11
+  },
+  "repeated_lines": [
+    [
+      "Повторяется \"т",
+      23
+    ],
+    [
+      "Повторяется \"е",
+      22
+    ],
+    [
+      "Повторяется \"р",
+      22
+    ]
+  ],
+  "words": 457
+}

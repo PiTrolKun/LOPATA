@@ -1,0 +1,52 @@
+{
+  "name": "baseline_a_seed_20",
+  "pid": 63072,
+  "seed": 20,
+  "slot": 0,
+  "first_seconds": 0.25,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 217.304,
+    "prompt_per_token_ms": 0.15780973129992737,
+    "prompt_per_second": 6336.74483672643,
+    "predicted_n": 2048,
+    "predicted_ms": 22257.456,
+    "predicted_per_token_ms": 10.8678984375,
+    "predicted_per_second": 92.01410978864791
+  },
+  "done": true,
+  "seconds": 22.516,
+  "chars": 5537,
+  "sha256": "4b66ee18cc2b5af76b7ce88148e46b19fa24eed951936f98ffc3163de4d15203",
+  "loop": true,
+  "periodic": {
+    "words": 497,
+    "unit": "взглянул антон молча антон протянул антон сказал антон смотрел антон встал антон пошел антон не отводя антон знал антон выглядел антон отвел антон произнес антон присел антон тихо антон спокойным антон",
+    "copies": 16
+  },
+  "repeated_lines": [
+    [
+      "Антон взглянул",
+      16
+    ],
+    [
+      "Антон молча",
+      16
+    ],
+    [
+      "Антон протянул",
+      16
+    ]
+  ],
+  "words": 537
+}

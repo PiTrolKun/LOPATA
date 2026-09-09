@@ -1,0 +1,53 @@
+{
+  "name": "seed_22",
+  "pid": 11052,
+  "seed": 22,
+  "slot": 0,
+  "first_seconds": 0.23499999998603016,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 470,
+    "prompt_tokens": 1377,
+    "total_tokens": 1847,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 219.48,
+    "prompt_per_token_ms": 0.15938997821350762,
+    "prompt_per_second": 6273.920174958995,
+    "predicted_n": 470,
+    "predicted_ms": 5694.175,
+    "predicted_per_token_ms": 12.115265957446809,
+    "predicted_per_second": 82.54049094030302
+  },
+  "done": true,
+  "seconds": 5.938,
+  "chars": 1578,
+  "sha256": "95580f8987320c2ad273f75d5d12ea6f333925ac5f2972ef2daa1110b730915f",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если говорить об исправлениях в тексте, то я бы предложил следующие корректировки:",
+      1
+    ],
+    [
+      "Уточнить время суток:",
+      1
+    ],
+    [
+      "В первом абзаце указано \"03:17",
+      1
+    ]
+  ],
+  "words": 214,
+  "short_quoted_list_run": 0
+}

@@ -1,0 +1,53 @@
+{
+  "name": "seed_18",
+  "pid": 11052,
+  "seed": 18,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 957,
+    "prompt_tokens": 1377,
+    "total_tokens": 2334,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 508.652,
+    "prompt_per_token_ms": 0.3693914306463326,
+    "prompt_per_second": 2707.155383248272,
+    "predicted_n": 957,
+    "predicted_ms": 23675.907,
+    "predicted_per_token_ms": 24.739714733542318,
+    "predicted_per_second": 40.42083794297722
+  },
+  "done": true,
+  "seconds": 24.203,
+  "chars": 2996,
+  "sha256": "be0a40e90eae99dec464469b929dc7565b69cd02465aaa801d8c92a1d8132910",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я редактировал этот текст, то предложил бы следующие правки:",
+      1
+    ],
+    [
+      "Стиль:",
+      1
+    ],
+    [
+      "Убрать излишние детали в описании обстановки и сосредоточиться на ключевых деталях, создающих атмосферу.",
+      1
+    ]
+  ],
+  "words": 430,
+  "short_quoted_list_run": 0
+}

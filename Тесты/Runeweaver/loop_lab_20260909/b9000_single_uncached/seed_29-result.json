@@ -1,0 +1,53 @@
+{
+  "name": "seed_29",
+  "pid": 52648,
+  "seed": 29,
+  "slot": 0,
+  "first_seconds": 0.5470000000204891,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 491,
+    "prompt_tokens": 1377,
+    "total_tokens": 1868,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 524.966,
+    "prompt_per_token_ms": 0.38123892519970953,
+    "prompt_per_second": 2623.0270150828815,
+    "predicted_n": 491,
+    "predicted_ms": 15273.573,
+    "predicted_per_token_ms": 31.107073319755603,
+    "predicted_per_second": 32.1470293820575
+  },
+  "done": true,
+  "seconds": 15.813,
+  "chars": 1556,
+  "sha256": "da6c2ee8c0493b7e509a11002740789e0cffe64e485bc6d0bd07040d770c2385",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте присутствует несколько моментов, которые можно улучшить:",
+      1
+    ],
+    [
+      "Повторение:",
+      1
+    ],
+    [
+      "Лера ходила взад-вперед по платформе...\" (повторяется дважды)",
+      1
+    ]
+  ],
+  "words": 200,
+  "short_quoted_list_run": 0
+}

@@ -1,0 +1,53 @@
+{
+  "name": "seed_14",
+  "pid": 11052,
+  "seed": 14,
+  "slot": 0,
+  "first_seconds": 0.5620000000344589,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 408,
+    "prompt_tokens": 1377,
+    "total_tokens": 1785,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 528.274,
+    "prompt_per_token_ms": 0.38364124909222946,
+    "prompt_per_second": 2606.6018770562246,
+    "predicted_n": 408,
+    "predicted_ms": 11827.149,
+    "predicted_per_token_ms": 28.988110294117647,
+    "predicted_per_second": 34.49690200064276
+  },
+  "done": true,
+  "seconds": 12.39,
+  "chars": 1375,
+  "sha256": "f7c1b9e78cd9e0d975f44e475329e4e443bd05e264092f2d0748249a4e1a5c7f",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте есть несколько моментов, которые можно улучшить:",
+      1
+    ],
+    [
+      "Повторение: фраза \"Лера вздрогнула\" используется дважды (во второй раз — с небольшими изменениями). Это может показаться излишним и отвлекающим внимание.",
+      1
+    ],
+    [
+      "Неясность в деталях:",
+      1
+    ]
+  ],
+  "words": 182,
+  "short_quoted_list_run": 0
+}

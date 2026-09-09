@@ -1,0 +1,52 @@
+{
+  "name": "seed_25",
+  "pid": 53304,
+  "seed": 25,
+  "slot": 0,
+  "first_seconds": 0.21799999999348074,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 298,
+    "prompt_tokens": 1377,
+    "total_tokens": 1675,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 207.905,
+    "prompt_per_token_ms": 0.1509840232389252,
+    "prompt_per_second": 6623.217334840432,
+    "predicted_n": 298,
+    "predicted_ms": 3209.005,
+    "predicted_per_token_ms": 10.768473154362416,
+    "predicted_per_second": 92.86367581228448
+  },
+  "done": true,
+  "seconds": 3.437,
+  "chars": 999,
+  "sha256": "97ae267255714deae4ba7ca6ae535c85a129252501425d1c93b3010bf038d8b0",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, то внес бы некоторые изменения для улучшения повествования и раскрытия персонажей:",
+      1
+    ],
+    [
+      "Более подробно описать внешность и характер Антона в начале. Сейчас он представлен слишком абстрактно, без конкретных черт.",
+      1
+    ],
+    [
+      "Сделать диалоги более естественными и развернутыми, чтобы лучше передать эмоции и мысли персонажей.",
+      1
+    ]
+  ],
+  "words": 147
+}

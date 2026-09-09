@@ -1,0 +1,53 @@
+{
+  "name": "seed_28",
+  "pid": 11052,
+  "seed": 28,
+  "slot": 0,
+  "first_seconds": 0.5470000000204891,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 573,
+    "prompt_tokens": 1377,
+    "total_tokens": 1950,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 517.046,
+    "prompt_per_token_ms": 0.37548729121278146,
+    "prompt_per_second": 2663.20598167281,
+    "predicted_n": 573,
+    "predicted_ms": 16664.313,
+    "predicted_per_token_ms": 29.08257068062827,
+    "predicted_per_second": 34.384855829340225
+  },
+  "done": true,
+  "seconds": 17.203,
+  "chars": 1722,
+  "sha256": "affb9f2d8c3dd7adaf516708e4bd75dc56ad4438568e9307e68298db21e07ba5",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, я бы внес следующие коррективы:",
+      1
+    ],
+    [
+      "Убрать лишние детали в описании:",
+      1
+    ],
+    [
+      "Антон сидел на старом, потрескавшемся деревянном скамейке\" можно заменить на более краткое \"Антон сидел на старой скамье",
+      1
+    ]
+  ],
+  "words": 240,
+  "short_quoted_list_run": 5
+}

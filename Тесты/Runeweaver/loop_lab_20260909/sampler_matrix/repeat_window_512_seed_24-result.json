@@ -1,0 +1,52 @@
+{
+  "name": "repeat_window_512_seed_24",
+  "pid": 63072,
+  "seed": 24,
+  "slot": 0,
+  "first_seconds": 0.25,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 582,
+    "prompt_tokens": 1377,
+    "total_tokens": 1959,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 208.632,
+    "prompt_per_token_ms": 0.15151198257080611,
+    "prompt_per_second": 6600.138042102842,
+    "predicted_n": 582,
+    "predicted_ms": 6663.903,
+    "predicted_per_token_ms": 11.450005154639175,
+    "predicted_per_second": 87.33620522387555
+  },
+  "done": true,
+  "seconds": 6.922,
+  "chars": 1962,
+  "sha256": "a95ebf79cc24c598674490ae95962e42f889d88c01a720f29e4d139a6265b62b",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я занимался редактированием данного текста, я бы внес следующие изменения:",
+      1
+    ],
+    [
+      "Уточнить характеристики персонажей:",
+      1
+    ],
+    [
+      "Антон может быть более конкретно описан в начале, чтобы сразу дать представление о его спокойном и уверенном характере.",
+      1
+    ]
+  ],
+  "words": 270
+}

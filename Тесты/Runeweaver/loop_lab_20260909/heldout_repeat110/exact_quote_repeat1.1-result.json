@@ -1,0 +1,45 @@
+{
+  "name": "exact_quote_repeat1.1",
+  "pid": 57864,
+  "seed": 431,
+  "slot": 0,
+  "first_seconds": 0.06299999996554106,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 20,
+    "prompt_tokens": 44,
+    "total_tokens": 64,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 44,
+    "prompt_ms": 59.9,
+    "prompt_per_token_ms": 1.3613636363636363,
+    "prompt_per_second": 734.5575959933223,
+    "predicted_n": 20,
+    "predicted_ms": 554.298,
+    "predicted_per_token_ms": 27.7149,
+    "predicted_per_second": 36.08167447834919
+  },
+  "done": true,
+  "seconds": 0.625,
+  "chars": 56,
+  "sha256": "00e69fa74069e2e3b12a4cc0855bbfcd51e1f81aa251f7c6cfbe732ecf7ecfe0",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Антон сидел на старой, потрескавшейся деревянной скамье.",
+      1
+    ]
+  ],
+  "words": 7,
+  "short_quoted_list_run": 0
+}

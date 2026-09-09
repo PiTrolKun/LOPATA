@@ -1,0 +1,52 @@
+{
+  "name": "seed_2",
+  "pid": 66832,
+  "seed": 2,
+  "slot": 0,
+  "first_seconds": 0.23499999998603016,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 564,
+    "prompt_tokens": 1377,
+    "total_tokens": 1941,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 205.298,
+    "prompt_per_token_ms": 0.14909077705156137,
+    "prompt_per_second": 6707.323013375678,
+    "predicted_n": 564,
+    "predicted_ms": 6042.742,
+    "predicted_per_token_ms": 10.714081560283688,
+    "predicted_per_second": 93.33511177541587
+  },
+  "done": true,
+  "seconds": 6.266,
+  "chars": 1895,
+  "sha256": "f912cd26f9fb00f5bae7f03230d9f92e18a1ea1a2570d514ebd572c7806669a3",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если говорить о возможных исправлениях или улучшениях в тексте, я бы предложил следующее:",
+      1
+    ],
+    [
+      "Более подробное описание персонажей:",
+      1
+    ],
+    [
+      "Автор мог бы дать больше информации о прошлом и характере Антона, чтобы объяснить его странную уверенность.",
+      1
+    ]
+  ],
+  "words": 276
+}

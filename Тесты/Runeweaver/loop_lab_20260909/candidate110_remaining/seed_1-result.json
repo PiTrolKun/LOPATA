@@ -1,0 +1,53 @@
+{
+  "name": "seed_1",
+  "pid": 11052,
+  "seed": 1,
+  "slot": 0,
+  "first_seconds": 0.29599999997299165,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1110,
+    "prompt_tokens": 1377,
+    "total_tokens": 2487,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 272.217,
+    "prompt_per_token_ms": 0.19768845315904138,
+    "prompt_per_second": 5058.46438686783,
+    "predicted_n": 1110,
+    "predicted_ms": 13745.53,
+    "predicted_per_token_ms": 12.383360360360362,
+    "predicted_per_second": 80.7535249641156
+  },
+  "done": true,
+  "seconds": 14.046,
+  "chars": 3461,
+  "sha256": "4266d6900b9aca09bef2dbd1534e73661c4fa9205b13abe2b6f66ecdd4976c77",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Без названия",
+      1
+    ],
+    [
+      "Антон сидел на старой, потрескавшейся деревянной скамейке, укутавшись в серую куртку. Лера ходила взад-вперед по платформе, выдыхая облачка пара. Часы на стене застыли на 03:17, стрелки как будто боялись двигаться дальше.",
+      1
+    ],
+    [
+      "Антон тихо сказал:",
+      1
+    ]
+  ],
+  "words": 517,
+  "short_quoted_list_run": 0
+}

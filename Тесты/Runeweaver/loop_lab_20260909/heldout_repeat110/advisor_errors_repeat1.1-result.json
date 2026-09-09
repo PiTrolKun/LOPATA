@@ -1,0 +1,53 @@
+{
+  "name": "advisor_errors_repeat1.1",
+  "pid": 57864,
+  "seed": 431,
+  "slot": 0,
+  "first_seconds": 0.10899999993853271,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 88,
+    "prompt_tokens": 211,
+    "total_tokens": 299,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 211,
+    "prompt_ms": 108.936,
+    "prompt_per_token_ms": 0.5162843601895735,
+    "prompt_per_second": 1936.9170889329514,
+    "predicted_n": 88,
+    "predicted_ms": 2513.948,
+    "predicted_per_token_ms": 28.567590909090907,
+    "predicted_per_second": 35.00470176789655
+  },
+  "done": true,
+  "seconds": 2.625,
+  "chars": 313,
+  "sha256": "8a4324aa49b218a537c2d9422893c5bce7836cebeba5143b66ca4ec905478c53",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте есть внутреннее противоречие:",
+      1
+    ],
+    [
+      "> Запасных ключей не было. Через минуту Антон, стоя внутри дома, молча передал Лере тот самый ключ.",
+      1
+    ],
+    [
+      "Если у шкафа был только один ключ и он находился внутри шкафа, то как Антон смог его передать Лере, будучи внутри дома? Это противоречит условию отсутствия запасных ключей.",
+      1
+    ]
+  ],
+  "words": 49,
+  "short_quoted_list_run": 0
+}

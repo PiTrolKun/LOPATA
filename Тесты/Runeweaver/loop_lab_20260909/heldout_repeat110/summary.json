@@ -1,0 +1,590 @@
+[
+  {
+    "name": "writer_scene_repeat1.05",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.2190000000409782,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1870,
+      "prompt_tokens": 396,
+      "total_tokens": 2266,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 396,
+      "prompt_ms": 190.769,
+      "prompt_per_token_ms": 0.481739898989899,
+      "prompt_per_second": 2075.808962672132,
+      "predicted_n": 1870,
+      "predicted_ms": 49069.275,
+      "predicted_per_token_ms": 26.24025401069519,
+      "predicted_per_second": 38.10938718780744
+    },
+    "done": true,
+    "seconds": 49.282,
+    "chars": 5707,
+    "sha256": "29c99cba7fbc5dd8a01921ce62d2e7621bd325be01979b525436f7603b0f51a8",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Ночь окутала заброшенный железнодорожный вокзал, нависшим туманом сгущая тени и заволакивая платформу непроницаемым мраком. Небо затянуто низкими серыми облаками, сквозь которые едва проглядывает тусклая луна. Вокруг царит зловещая тишина, нарушаемая лишь редким шорохом ветра в облетевших деревьях неподалеку.",
+        1
+      ],
+      [
+        "Антон и Лера сидят на краю платформы, скрестив ноги и обняв руками колени. Свежий снег ложится на землю тонким белым покрывалом, хотя на календаре уже август. Неожиданно для столь теплого времени года, ночная погода решила преподнести сюрприз.",
+        1
+      ],
+      [
+        "Часы на стене вокзала застыли на 03:17, словно время здесь остановилось и больше не течет. Лишь редкие снежинки плавно кружатся в воздухе, укутанные непроглядным мраком ночи. Свежий снег шуршит под ногами, когда Лера встает и начинает расхаживать взад-вперед по платформе.",
+        1
+      ]
+    ],
+    "words": 876,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "writer_continue_repeat1.05",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.875,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 592,
+      "prompt_tokens": 2324,
+      "total_tokens": 2916,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 2324,
+      "prompt_ms": 835.455,
+      "prompt_per_token_ms": 0.3594901032702238,
+      "prompt_per_second": 2781.7177466171124,
+      "predicted_n": 592,
+      "predicted_ms": 17455.841,
+      "predicted_per_token_ms": 29.486217905405407,
+      "predicted_per_second": 33.91414942425289
+    },
+    "done": true,
+    "seconds": 18.328,
+    "chars": 1844,
+    "sha256": "06ebcb9d943b8457e2da45ea282eb86ad909fa9d0779ffd8738477dbba7cb17c",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Лера смотрит на Антона, пытаясь понять то, что он хочет ей сказать. Его глаза полны мрачной решимости и какой-то новой, непонятной ей отчаяницей.",
+        1
+      ],
+      [
+        "— Такой, как мы ожидали? — переспрашивает она, пытаясь собраться с мыслями после увиденного. — Но что это было тогда?",
+        1
+      ],
+      [
+        "Антон вздыхает и отводит взгляд, глядя на падающий снег.",
+        1
+      ]
+    ],
+    "words": 300,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_errors_repeat1.05",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.125,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 117,
+      "prompt_tokens": 211,
+      "total_tokens": 328,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 211,
+      "prompt_ms": 125.184,
+      "prompt_per_token_ms": 0.5932890995260663,
+      "prompt_per_second": 1685.5189161554192,
+      "predicted_n": 117,
+      "predicted_ms": 3316.628,
+      "predicted_per_token_ms": 28.347247863247865,
+      "predicted_per_second": 35.276793176684265
+    },
+    "done": true,
+    "seconds": 3.437,
+    "chars": 402,
+    "sha256": "4ea4c8499a429fd684c4b933c0714e9ea933bd5c29f9552f2e9a1e37c7fec0b8",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте есть внутреннее противоречие:",
+        1
+      ],
+      [
+        "> Запасных ключей не было. Через минуту Антон, стоя внутри дома, молча передал Лере тот самый ключ.",
+        1
+      ],
+      [
+        "Если у Леры был единственный ключ от шкафа, и она его заперла внутри шкафа, то как Антон, не заходя в дом, смог передать ей этот же ключ? Это внутреннее противоречие, так как описывается ситуация, при которой Антон не мог получить ключ, чтобы передать его Лере.",
+        1
+      ]
+    ],
+    "words": 66,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_clean_repeat1.05",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.10900000005494803,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 23,
+      "prompt_tokens": 213,
+      "total_tokens": 236,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 213,
+      "prompt_ms": 99.397,
+      "prompt_per_token_ms": 0.46665258215962446,
+      "prompt_per_second": 2142.9218185659524,
+      "predicted_n": 23,
+      "predicted_ms": 625.587,
+      "predicted_per_token_ms": 27.199434782608694,
+      "predicted_per_second": 36.765469870697444
+    },
+    "done": true,
+    "seconds": 0.734,
+    "chars": 78,
+    "sha256": "b6255680e730212c489c1ed361d1a72ae5b7b2d11a2b14ef52b3440564e974b1",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте нет внутренних противоречий по фактам. Всё согласуется друг с другом.",
+        1
+      ]
+    ],
+    "words": 12,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "exact_quote_repeat1.05",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.06199999991804361,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 21,
+      "prompt_tokens": 44,
+      "total_tokens": 65,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 44,
+      "prompt_ms": 55.054,
+      "prompt_per_token_ms": 1.2512272727272729,
+      "prompt_per_second": 799.2153158716895,
+      "predicted_n": 21,
+      "predicted_ms": 575.42,
+      "predicted_per_token_ms": 27.40095238095238,
+      "predicted_per_second": 36.495081853255016
+    },
+    "done": true,
+    "seconds": 0.641,
+    "chars": 58,
+    "sha256": "34a46a749c148d86db67da029e3a399099edba6a871c84d164dfb83e73513595",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Антон сидел на старом, потрескавшемся деревянном скамейке.",
+        1
+      ]
+    ],
+    "words": 7,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "intentional_repeat_repeat1.05",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.06299999996554106,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 81,
+      "prompt_tokens": 52,
+      "total_tokens": 133,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 52,
+      "prompt_ms": 55.125,
+      "prompt_per_token_ms": 1.0600961538461537,
+      "prompt_per_second": 943.3106575963719,
+      "predicted_n": 81,
+      "predicted_ms": 2271.556,
+      "predicted_per_token_ms": 28.0439012345679,
+      "predicted_per_second": 35.65837690111976
+    },
+    "done": true,
+    "seconds": 2.344,
+    "chars": 189,
+    "sha256": "b63404f931b3c1a983869d39aab36f6b86456a1b3e32e4c431c88bdd9c039ae9",
+    "loop": false,
+    "periodic": {
+      "words": 30,
+      "unit": "мы вернёмся домой",
+      "copies": 10
+    },
+    "repeated_lines": [
+      [
+        "Мы вернёмся домой.",
+        10
+      ]
+    ],
+    "words": 30,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "writer_scene_repeat1.1",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.2029999999795109,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 730,
+      "prompt_tokens": 396,
+      "total_tokens": 1126,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 396,
+      "prompt_ms": 173.95,
+      "prompt_per_token_ms": 0.43926767676767675,
+      "prompt_per_second": 2276.5162402989367,
+      "predicted_n": 730,
+      "predicted_ms": 20848.646,
+      "predicted_per_token_ms": 28.55978904109589,
+      "predicted_per_second": 35.01426423567266
+    },
+    "done": true,
+    "seconds": 21.047,
+    "chars": 2193,
+    "sha256": "bf035797df599173e8c3fd2b69aa741d36fdc420cc7afc771a2dc35ba15c4b6c",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Ночь обволакивала заброшенный вокзал молочно-серым туманом, приглушая звуки и заставляя время растягиваться бесконечной лентой ожидания. Антон и Лера стояли на платформе под ржавым навесом, по плечи окутанные августовским снегом.",
+        1
+      ],
+      [
+        "Антон то и дело посматривал на часы, которые висели над кассой - стрелки застряли на 03:17. Его руки были глубоко засунуты в карманы старого плаща, пальцы беспрестанно перебирал монетки.",
+        1
+      ],
+      [
+        "Почему ты так уверен, что он придет? – Лера поежилась и подобрала повыше воротник куртки. Ее дыхание вырывалось белыми облачками пара.",
+        1
+      ]
+    ],
+    "words": 324,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "writer_continue_repeat1.1",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.8589999999385327,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 560,
+      "prompt_tokens": 2324,
+      "total_tokens": 2884,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 2324,
+      "prompt_ms": 846.635,
+      "prompt_per_token_ms": 0.36430077452667814,
+      "prompt_per_second": 2744.9845565090036,
+      "predicted_n": 560,
+      "predicted_ms": 16487.702,
+      "predicted_per_token_ms": 29.442325,
+      "predicted_per_second": 33.964708969145605
+    },
+    "done": true,
+    "seconds": 17.344,
+    "chars": 1786,
+    "sha256": "688b9b6ce647f4af769ed94ea599ca40a3ab4e8724eca4f963fbf48bf1fed8a2",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Лера смотрит вслед уходящему призраку поезда, пытаясь осмыслить увиденное. Ее сердце бьется учащенно, мысли путаются в голове. Антон подходит ближе, его лицо напряжено и серьезно.",
+        1
+      ],
+      [
+        "— Это было предупреждение, — тихо говорит он. — О том, что мы не одни во тьме. И что некоторые вещи лучше оставлять непознанными.",
+        1
+      ],
+      [
+        "Лера оборачивается к нему, ее глаза полны вопросов. Она хочет спросить о многом, но слова застревают в горле. Антон смотрит на нее со смесью вины и заботы.",
+        1
+      ]
+    ],
+    "words": 282,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_errors_repeat1.1",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.10899999993853271,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 88,
+      "prompt_tokens": 211,
+      "total_tokens": 299,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 211,
+      "prompt_ms": 108.936,
+      "prompt_per_token_ms": 0.5162843601895735,
+      "prompt_per_second": 1936.9170889329514,
+      "predicted_n": 88,
+      "predicted_ms": 2513.948,
+      "predicted_per_token_ms": 28.567590909090907,
+      "predicted_per_second": 35.00470176789655
+    },
+    "done": true,
+    "seconds": 2.625,
+    "chars": 313,
+    "sha256": "8a4324aa49b218a537c2d9422893c5bce7836cebeba5143b66ca4ec905478c53",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте есть внутреннее противоречие:",
+        1
+      ],
+      [
+        "> Запасных ключей не было. Через минуту Антон, стоя внутри дома, молча передал Лере тот самый ключ.",
+        1
+      ],
+      [
+        "Если у шкафа был только один ключ и он находился внутри шкафа, то как Антон смог его передать Лере, будучи внутри дома? Это противоречит условию отсутствия запасных ключей.",
+        1
+      ]
+    ],
+    "words": 49,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "advisor_clean_repeat1.1",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.10900000005494803,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 23,
+      "prompt_tokens": 213,
+      "total_tokens": 236,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 213,
+      "prompt_ms": 111.819,
+      "prompt_per_token_ms": 0.5249718309859155,
+      "prompt_per_second": 1904.8641107504093,
+      "predicted_n": 23,
+      "predicted_ms": 621.073,
+      "predicted_per_token_ms": 27.003173913043476,
+      "predicted_per_second": 37.032683758591986
+    },
+    "done": true,
+    "seconds": 0.734,
+    "chars": 92,
+    "sha256": "2db50efd566d4bf54534e27643130b66e46c70fbb521e2a711113c05690a69a3",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте нет внутренних противоречий. Все события последовательны и согласованы между собой.",
+        1
+      ]
+    ],
+    "words": 12,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "exact_quote_repeat1.1",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.06299999996554106,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 20,
+      "prompt_tokens": 44,
+      "total_tokens": 64,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 44,
+      "prompt_ms": 59.9,
+      "prompt_per_token_ms": 1.3613636363636363,
+      "prompt_per_second": 734.5575959933223,
+      "predicted_n": 20,
+      "predicted_ms": 554.298,
+      "predicted_per_token_ms": 27.7149,
+      "predicted_per_second": 36.08167447834919
+    },
+    "done": true,
+    "seconds": 0.625,
+    "chars": 56,
+    "sha256": "00e69fa74069e2e3b12a4cc0855bbfcd51e1f81aa251f7c6cfbe732ecf7ecfe0",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Антон сидел на старой, потрескавшейся деревянной скамье.",
+        1
+      ]
+    ],
+    "words": 7,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "intentional_repeat_repeat1.1",
+    "pid": 57864,
+    "seed": 431,
+    "slot": 0,
+    "first_seconds": 0.062000000034458935,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 81,
+      "prompt_tokens": 52,
+      "total_tokens": 133,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 52,
+      "prompt_ms": 53.967,
+      "prompt_per_token_ms": 1.037826923076923,
+      "prompt_per_second": 963.5518001741805,
+      "predicted_n": 81,
+      "predicted_ms": 2291.107,
+      "predicted_per_token_ms": 28.28527160493827,
+      "predicted_per_second": 35.354088656706125
+    },
+    "done": true,
+    "seconds": 2.359,
+    "chars": 189,
+    "sha256": "b63404f931b3c1a983869d39aab36f6b86456a1b3e32e4c431c88bdd9c039ae9",
+    "loop": false,
+    "periodic": {
+      "words": 30,
+      "unit": "мы вернёмся домой",
+      "copies": 10
+    },
+    "repeated_lines": [
+      [
+        "Мы вернёмся домой.",
+        10
+      ]
+    ],
+    "words": 30,
+    "short_quoted_list_run": 0
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "name": "seed_6",
+  "pid": 11052,
+  "seed": 6,
+  "slot": 0,
+  "first_seconds": 0.2190000000409782,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 564,
+    "prompt_tokens": 1377,
+    "total_tokens": 1941,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 208.865,
+    "prompt_per_token_ms": 0.1516811909949165,
+    "prompt_per_second": 6592.775237593661,
+    "predicted_n": 564,
+    "predicted_ms": 6305.321,
+    "predicted_per_token_ms": 11.179647163120567,
+    "predicted_per_second": 89.44826123840484
+  },
+  "done": true,
+  "seconds": 6.532,
+  "chars": 1760,
+  "sha256": "18c4f9425f6f1b9559aae34cabc5d359bc51e59e79d7993268ecf74dcabf7737",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Антон молча встал и протянул ей руку.\" -> \"Антон безмолвно поднялся и протянул Лере руку",
+      2
+    ],
+    [
+      "для более подходящей характеристики его действий.",
+      2
+    ],
+    [
+      "Некоторые предложения можно сформулировать более лаконично или точно:",
+      1
+    ]
+  ],
+  "words": 244,
+  "short_quoted_list_run": 0
+}

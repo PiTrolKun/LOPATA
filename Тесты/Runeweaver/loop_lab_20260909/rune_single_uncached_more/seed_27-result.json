@@ -1,0 +1,52 @@
+{
+  "name": "seed_27",
+  "pid": 53304,
+  "seed": 27,
+  "slot": 0,
+  "first_seconds": 0.23400000005494803,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 423,
+    "prompt_tokens": 1377,
+    "total_tokens": 1800,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 206.145,
+    "prompt_per_token_ms": 0.1497058823529412,
+    "prompt_per_second": 6679.764243614932,
+    "predicted_n": 423,
+    "predicted_ms": 4555.188,
+    "predicted_per_token_ms": 10.768765957446808,
+    "predicted_per_second": 92.86115084602436
+  },
+  "done": true,
+  "seconds": 4.781,
+  "chars": 1407,
+  "sha256": "909475d4218fd88c9aa99ed0ec6b60ef4dd16b0ead026ac3a2f85a16803cc794",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором, я бы внес следующие изменения:",
+      1
+    ],
+    [
+      "Уточнить время суток, когда герои оказались на вокзале. Сейчас не понятно, утро это или ночь.",
+      1
+    ],
+    [
+      "Добавить больше деталей о внешнем виде Антона и Леры, чтобы читатель мог лучше представить их.",
+      1
+    ]
+  ],
+  "words": 208
+}

@@ -1,0 +1,53 @@
+{
+  "name": "seed_34",
+  "pid": 52648,
+  "seed": 34,
+  "slot": 0,
+  "first_seconds": 0.5150000000139698,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 515.708,
+    "prompt_per_token_ms": 0.3745156136528685,
+    "prompt_per_second": 2670.115646838909,
+    "predicted_n": 2048,
+    "predicted_ms": 58845.936,
+    "predicted_per_token_ms": 28.7333671875,
+    "predicted_per_second": 34.802743217475545
+  },
+  "done": true,
+  "seconds": 59.359,
+  "chars": 4858,
+  "sha256": "da694f557d7c1f8f51b6a7400e093d56f6c9ec7dbdf81fb6da585ea8d0f5ce95",
+  "loop": true,
+  "periodic": {
+    "words": 279,
+    "unit": "платформа вокзал",
+    "copies": 139
+  },
+  "repeated_lines": [
+    [
+      "Платформа",
+      141
+    ],
+    [
+      "Вокзал",
+      141
+    ],
+    [
+      "Если бы я был автором, то внес бы следующие правки:",
+      1
+    ]
+  ],
+  "words": 307,
+  "short_quoted_list_run": 287
+}

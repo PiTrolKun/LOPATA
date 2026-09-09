@@ -1,0 +1,52 @@
+{
+  "name": "seed_13",
+  "pid": 53304,
+  "seed": 13,
+  "slot": 0,
+  "first_seconds": 0.2190000000409782,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1120,
+    "prompt_tokens": 1377,
+    "total_tokens": 2497,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 205.263,
+    "prompt_per_token_ms": 0.14906535947712418,
+    "prompt_per_second": 6708.466698820537,
+    "predicted_n": 1120,
+    "predicted_ms": 12091.106,
+    "predicted_per_token_ms": 10.795630357142857,
+    "predicted_per_second": 92.6300704005076
+  },
+  "done": true,
+  "seconds": 12.312,
+  "chars": 3571,
+  "sha256": "25a7972e1550f502dc5936dfd8f471c7184b3dcaf31d9f232775580d8671321d",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы мне нужно было внести изменения в текст, я бы предложил следующее:",
+      1
+    ],
+    [
+      "Уточнить мотивы Антона:",
+      1
+    ],
+    [
+      "В тексте не совсем ясно, почему Антон так спокоен и уверен. Можно добавить фрагмент, который объяснил бы его поведение, например, воспоминание о прошлом опыте или полученной информации.",
+      1
+    ]
+  ],
+  "words": 538
+}

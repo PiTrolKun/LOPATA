@@ -1,0 +1,52 @@
+{
+  "name": "seed_23",
+  "pid": 53304,
+  "seed": 23,
+  "slot": 0,
+  "first_seconds": 0.2190000000409782,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 531,
+    "prompt_tokens": 1377,
+    "total_tokens": 1908,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 215.221,
+    "prompt_per_token_ms": 0.1562970225127088,
+    "prompt_per_second": 6398.0745373360405,
+    "predicted_n": 531,
+    "predicted_ms": 5751.646,
+    "predicted_per_token_ms": 10.83172504708098,
+    "predicted_per_second": 92.32139808326174
+  },
+  "done": true,
+  "seconds": 5.969,
+  "chars": 1891,
+  "sha256": "9b5aa43f7de177d06031ea601dced6bed367f314a7af64ee21d4f2f683c7bd64",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я был автором этого текста, то предложил бы следующие изменения для улучшения повествования:",
+      1
+    ],
+    [
+      "Более подробное описание персонажей:",
+      1
+    ],
+    [
+      "Увеличить количество деталей о внешности и характере Антона и Леры, чтобы лучше передать их различия и сделать персонажей более запоминающимися.",
+      1
+    ]
+  ],
+  "words": 245
+}

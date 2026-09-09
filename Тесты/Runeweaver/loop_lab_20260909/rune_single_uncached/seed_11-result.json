@@ -1,0 +1,52 @@
+{
+  "name": "seed_11",
+  "pid": 66832,
+  "seed": 11,
+  "slot": 0,
+  "first_seconds": 0.23499999998603016,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 540,
+    "prompt_tokens": 1377,
+    "total_tokens": 1917,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 217.903,
+    "prompt_per_token_ms": 0.15824473493100943,
+    "prompt_per_second": 6319.3255714698735,
+    "predicted_n": 540,
+    "predicted_ms": 5784.276,
+    "predicted_per_token_ms": 10.711622222222221,
+    "predicted_per_second": 93.35654107791537
+  },
+  "done": true,
+  "seconds": 6.016,
+  "chars": 1577,
+  "sha256": "f9b438c8913b47fd60bc868a9af7727c86fc1f9105551f949dfd429f988b051f",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "— Антон взглянул на нее и тихо ответил:",
+      2
+    ],
+    [
+      "Объяснение: устранение лишнего повтора",
+      2
+    ],
+    [
+      "Если бы я редактировал этот текст, я бы сделал несколько изменений для улучшения стиля, структуры и логики:",
+      1
+    ]
+  ],
+  "words": 217
+}

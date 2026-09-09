@@ -1,0 +1,52 @@
+{
+  "name": "seed_18",
+  "pid": 53304,
+  "seed": 18,
+  "slot": 0,
+  "first_seconds": 0.23400000005494803,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 497,
+    "prompt_tokens": 1377,
+    "total_tokens": 1874,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 217.446,
+    "prompt_per_token_ms": 0.1579128540305011,
+    "prompt_per_second": 6332.606716150217,
+    "predicted_n": 497,
+    "predicted_ms": 5337.516,
+    "predicted_per_token_ms": 10.739468812877263,
+    "predicted_per_second": 93.11447497300243
+  },
+  "done": true,
+  "seconds": 5.578,
+  "chars": 1733,
+  "sha256": "3b25b369b9a23fe41f1f100f0afe62bb8840294dd1139e4aeb3d56f465624ca4",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если бы я редактировал этот текст, я бы предложил следующие исправления и дополнения:",
+      1
+    ],
+    [
+      "Уточнить мотивы Антона:",
+      1
+    ],
+    [
+      "Сейчас Антон предстает как человек, знающий больше, чем говорит, но не понятно, откуда у него такая уверенность. Можно добавить небольшой диалог или внутренний монолог, чтобы объяснить его поведение.",
+      1
+    ]
+  ],
+  "words": 248
+}

@@ -1,0 +1,52 @@
+{
+  "name": "dry_080_seed_20",
+  "pid": 63072,
+  "seed": 20,
+  "slot": 0,
+  "first_seconds": 0.2809999999590218,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1069,
+    "prompt_tokens": 1377,
+    "total_tokens": 2446,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 230.614,
+    "prompt_per_token_ms": 0.16747567175018155,
+    "prompt_per_second": 5971.016503768202,
+    "predicted_n": 1069,
+    "predicted_ms": 31863.329,
+    "predicted_per_token_ms": 29.806668849391958,
+    "predicted_per_second": 33.54953903278594
+  },
+  "done": true,
+  "seconds": 32.141,
+  "chars": 3436,
+  "sha256": "3a513988db22fc64ce05e50eefc46f60f2ff6cd021f667cd07eaeca7b78d3877",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте присутствуют некоторые моменты, которые можно улучшить для более четкой передачи смысла и эмоций:",
+      1
+    ],
+    [
+      "Повторение информации:",
+      1
+    ],
+    [
+      "В начале текста упоминается, что часы застыли на 03:17, а затем эта деталь повторяется несколько раз. Можно убрать лишние упоминания, чтобы избежать избыточности.",
+      1
+    ]
+  ],
+  "words": 479
+}

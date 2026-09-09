@@ -1,0 +1,53 @@
+{
+  "name": "seed_29",
+  "pid": 66988,
+  "seed": 29,
+  "slot": 0,
+  "first_seconds": 0.25,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 573,
+    "prompt_tokens": 1377,
+    "total_tokens": 1950,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 218.329,
+    "prompt_per_token_ms": 0.15855410312273058,
+    "prompt_per_second": 6306.9954060156915,
+    "predicted_n": 573,
+    "predicted_ms": 6712.418,
+    "predicted_per_token_ms": 11.71451657940663,
+    "predicted_per_second": 85.36417130160845
+  },
+  "done": true,
+  "seconds": 6.968,
+  "chars": 1888,
+  "sha256": "b71c72ea14a9d5f686e39f1b16af7316bc813ec73be9e5d16e02134f64de3506",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "В тексте присутствует несколько моментов, которые можно улучшить:",
+      1
+    ],
+    [
+      "Повторение:",
+      1
+    ],
+    [
+      "Описание снега на платформе и его необычности для августа повторяется дважды (в диалоге Леры с Антоном и в описании действий героев). Можно сократить одно из упоминаний.",
+      1
+    ]
+  ],
+  "words": 270,
+  "short_quoted_list_run": 0
+}

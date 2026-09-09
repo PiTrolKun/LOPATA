@@ -1,0 +1,373 @@
+[
+  {
+    "name": "seed_0",
+    "pid": 66988,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.5939999999245629,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 449,
+      "prompt_tokens": 1377,
+      "total_tokens": 1826,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 549.68,
+      "prompt_per_token_ms": 0.39918663761801015,
+      "prompt_per_second": 2505.0938727987195,
+      "predicted_n": 449,
+      "predicted_ms": 13999.658,
+      "predicted_per_token_ms": 31.17963919821826,
+      "predicted_per_second": 32.0722120497515
+    },
+    "done": true,
+    "seconds": 14.594,
+    "chars": 1614,
+    "sha256": "d1007278c9ac0d7c6ac369fe155e737d4365bd0826b52f52e6b0bd93b411a969",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если говорить об улучшениях текста, я бы предложил следующее:",
+        1
+      ],
+      [
+        "Уточнить мотивацию Антона: его спокойствие и уверенность выглядят несколько неестественно в такой ситуации. Можно добавить детали о том, что он знает или понимает больше, чем говорит.",
+        1
+      ],
+      [
+        "Добавить описания персонажей: сейчас мы знаем их только по поведению и диалогам. Небольшие фрагменты о внешности, привычках помогут лучше представить героев.",
+        1
+      ]
+    ],
+    "words": 237,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_20",
+    "pid": 66988,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.5619999999180436,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 1214,
+      "prompt_tokens": 1377,
+      "total_tokens": 2591,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 545.737,
+      "prompt_per_token_ms": 0.39632316630355846,
+      "prompt_per_second": 2523.1934063477465,
+      "predicted_n": 1214,
+      "predicted_ms": 38224.562,
+      "predicted_per_token_ms": 31.48645963756178,
+      "predicted_per_second": 31.759683734243968
+    },
+    "done": true,
+    "seconds": 38.781,
+    "chars": 3896,
+    "sha256": "4387ca6bf772b489d710b073e158fd9e89ef37455bf58497b8e75044e8c0157c",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствуют некоторые элементы, которые можно улучшить для более сильного воздействия на читателя:",
+        1
+      ],
+      [
+        "Употребление местоимений:",
+        1
+      ],
+      [
+        "В некоторых диалогах используется много местоимений (\"ты\", \"он\", \"она\"), что может привести к путанице. Например, в предложении \"Он взглянул на нее и тихо ответил:\" можно уточнить, кто именно смотрит и отвечает (Антон или Лера).",
+        1
+      ]
+    ],
+    "words": 545,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_24",
+    "pid": 66988,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.2970000000204891,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 433,
+      "prompt_tokens": 1377,
+      "total_tokens": 1810,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 272.511,
+      "prompt_per_token_ms": 0.19790196078431374,
+      "prompt_per_second": 5053.00703457842,
+      "predicted_n": 433,
+      "predicted_ms": 4868.123,
+      "predicted_per_token_ms": 11.242778290993071,
+      "predicted_per_second": 88.94598595803762
+    },
+    "done": true,
+    "seconds": 5.172,
+    "chars": 1416,
+    "sha256": "66ca5bf9bbea06f5ed0ae1e608a6765ce1e8c3f117967cddb29e10fa4c5a05b1",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я занимался редактированием данного текста, то предложил бы следующие изменения:",
+        1
+      ],
+      [
+        "Убрать повторение \"Лера вздрогнула\":",
+        1
+      ],
+      [
+        "В первом случае: \"— Не бойся. Все будет хорошо,\" — тихо ответил Антон.",
+        1
+      ]
+    ],
+    "words": 184,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_26",
+    "pid": 66988,
+    "seed": 26,
+    "slot": 0,
+    "first_seconds": 0.25,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 409,
+      "prompt_tokens": 1377,
+      "total_tokens": 1786,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 216.234,
+      "prompt_per_token_ms": 0.1570326797385621,
+      "prompt_per_second": 6368.101223674353,
+      "predicted_n": 409,
+      "predicted_ms": 4731.644,
+      "predicted_per_token_ms": 11.56881173594132,
+      "predicted_per_second": 86.4393010125022
+    },
+    "done": true,
+    "seconds": 4.984,
+    "chars": 1239,
+    "sha256": "a6a7103d0477f06f4658e398609f1d7bf78a7630c22ddb784d67fd353e9d2d45",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "и т.д.",
+        3
+      ],
+      [
+        "Поезд",
+        2
+      ],
+      [
+        "Антон",
+        2
+      ]
+    ],
+    "words": 153,
+    "short_quoted_list_run": 8
+  },
+  {
+    "name": "seed_29",
+    "pid": 66988,
+    "seed": 29,
+    "slot": 0,
+    "first_seconds": 0.25,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 573,
+      "prompt_tokens": 1377,
+      "total_tokens": 1950,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 218.329,
+      "prompt_per_token_ms": 0.15855410312273058,
+      "prompt_per_second": 6306.9954060156915,
+      "predicted_n": 573,
+      "predicted_ms": 6712.418,
+      "predicted_per_token_ms": 11.71451657940663,
+      "predicted_per_second": 85.36417130160845
+    },
+    "done": true,
+    "seconds": 6.968,
+    "chars": 1888,
+    "sha256": "b71c72ea14a9d5f686e39f1b16af7316bc813ec73be9e5d16e02134f64de3506",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствует несколько моментов, которые можно улучшить:",
+        1
+      ],
+      [
+        "Повторение:",
+        1
+      ],
+      [
+        "Описание снега на платформе и его необычности для августа повторяется дважды (в диалоге Леры с Антоном и в описании действий героев). Можно сократить одно из упоминаний.",
+        1
+      ]
+    ],
+    "words": 270,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_32",
+    "pid": 66988,
+    "seed": 32,
+    "slot": 0,
+    "first_seconds": 0.21899999992456287,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 465,
+      "prompt_tokens": 1377,
+      "total_tokens": 1842,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 215.758,
+      "prompt_per_token_ms": 0.1566870007262164,
+      "prompt_per_second": 6382.150372176234,
+      "predicted_n": 465,
+      "predicted_ms": 5474.371,
+      "predicted_per_token_ms": 11.772840860215053,
+      "predicted_per_second": 84.94126539834438
+    },
+    "done": true,
+    "seconds": 5.703,
+    "chars": 1477,
+    "sha256": "39dc74809fd58915bc1524d8c8ead408859cbed3cdfda432486cddcaa2f5edfd",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я работал над текстом как редактор, то предложил бы следующие правки:",
+        1
+      ],
+      [
+        "Уточнить описание Антона:",
+        1
+      ],
+      [
+        "Антон сидел на старой деревянной скамейке, укутавшись в серую куртку, и выглядел спокойным, но напряженность читалась в его глазах.",
+        1
+      ]
+    ],
+    "words": 210,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_34",
+    "pid": 66988,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.26599999994505197,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 634,
+      "prompt_tokens": 1377,
+      "total_tokens": 2011,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 230.995,
+      "prompt_per_token_ms": 0.1677523602033406,
+      "prompt_per_second": 5961.167990649149,
+      "predicted_n": 634,
+      "predicted_ms": 7686.374,
+      "predicted_per_token_ms": 12.123618296529967,
+      "predicted_per_second": 82.48362621959326
+    },
+    "done": true,
+    "seconds": 7.953,
+    "chars": 2091,
+    "sha256": "54170afbb67a3c45efcc725bea13c304ef98fb78f4878b24cce256fb0491508b",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я был автором текста, то предложил бы следующие исправления:",
+        1
+      ],
+      [
+        "Уточнить мотивы Антона:",
+        1
+      ],
+      [
+        "В текущем варианте остается неясным, почему Антон так спокоен и уверен в происходящем. Можно было бы добавить небольшое пояснение о его прошлом опыте или знаниях, которые позволяют ему вести себя таким образом.",
+        1
+      ]
+    ],
+    "words": 306,
+    "short_quoted_list_run": 0
+  }
+]

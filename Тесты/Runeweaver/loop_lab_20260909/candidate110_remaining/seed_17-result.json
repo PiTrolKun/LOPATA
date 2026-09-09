@@ -1,0 +1,53 @@
+{
+  "name": "seed_17",
+  "pid": 11052,
+  "seed": 17,
+  "slot": 0,
+  "first_seconds": 0.5309999999590218,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 450,
+    "prompt_tokens": 1377,
+    "total_tokens": 1827,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 514.28,
+    "prompt_per_token_ms": 0.3734785766158315,
+    "prompt_per_second": 2677.529750330559,
+    "predicted_n": 450,
+    "predicted_ms": 12922.604,
+    "predicted_per_token_ms": 28.716897777777778,
+    "predicted_per_second": 34.822702916532926
+  },
+  "done": true,
+  "seconds": 13.453,
+  "chars": 1517,
+  "sha256": "6557c0ed3515f5d75fefa333cb84ec00ff1fe391b0867383a999d98c546f6eeb",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Если говорить об улучшениях текста, то я бы предложил следующее:",
+      1
+    ],
+    [
+      "Усилить контраст между персонажами:",
+      1
+    ],
+    [
+      "Лера могла бы быть более настойчивой в своих вопросах и попытках понять происходящее.",
+      1
+    ]
+  ],
+  "words": 217,
+  "short_quoted_list_run": 0
+}

@@ -1,0 +1,53 @@
+{
+  "name": "writer_continue_repeat1.05",
+  "pid": 57864,
+  "seed": 431,
+  "slot": 0,
+  "first_seconds": 0.875,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 592,
+    "prompt_tokens": 2324,
+    "total_tokens": 2916,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 2324,
+    "prompt_ms": 835.455,
+    "prompt_per_token_ms": 0.3594901032702238,
+    "prompt_per_second": 2781.7177466171124,
+    "predicted_n": 592,
+    "predicted_ms": 17455.841,
+    "predicted_per_token_ms": 29.486217905405407,
+    "predicted_per_second": 33.91414942425289
+  },
+  "done": true,
+  "seconds": 18.328,
+  "chars": 1844,
+  "sha256": "06ebcb9d943b8457e2da45ea282eb86ad909fa9d0779ffd8738477dbba7cb17c",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Лера смотрит на Антона, пытаясь понять то, что он хочет ей сказать. Его глаза полны мрачной решимости и какой-то новой, непонятной ей отчаяницей.",
+      1
+    ],
+    [
+      "— Такой, как мы ожидали? — переспрашивает она, пытаясь собраться с мыслями после увиденного. — Но что это было тогда?",
+      1
+    ],
+    [
+      "Антон вздыхает и отводит взгляд, глядя на падающий снег.",
+      1
+    ]
+  ],
+  "words": 300,
+  "short_quoted_list_run": 0
+}

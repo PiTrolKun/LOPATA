@@ -1,0 +1,54 @@
+{
+  "name": "raw_thinking_seed_0",
+  "pid": 42096,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.10999999998603016,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 8192,
+    "prompt_tokens": 321,
+    "total_tokens": 8513,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 321,
+    "prompt_ms": 95.609,
+    "prompt_per_token_ms": 0.2978473520249221,
+    "prompt_per_second": 3357.4245102448513,
+    "predicted_n": 8192,
+    "predicted_ms": 73305.983,
+    "predicted_per_token_ms": 8.948484252929687,
+    "predicted_per_second": 111.7507693744452
+  },
+  "done": true,
+  "seconds": 73.422,
+  "chars": 23578,
+  "sha256": "3cca157ef4a3a6ce5434a210da6a0eb404594d2da69c26c346f8cfb78ea95e20",
+  "loop": false,
+  "detector_version": 2,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Лера смотрит на него. «Ты ждал, чтобы я пришла».",
+      140
+    ],
+    [
+      "Let's write.*",
+      2
+    ],
+    [
+      "Антон смотрит на часы. 03:17.",
+      2
+    ]
+  ],
+  "words": 3664,
+  "short_quoted_list_run": 0
+}

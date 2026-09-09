@@ -1,0 +1,320 @@
+[
+  {
+    "name": "seed_0",
+    "pid": 52648,
+    "seed": 0,
+    "slot": 0,
+    "first_seconds": 0.5620000000344589,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 536.472,
+      "prompt_per_token_ms": 0.38959477124183006,
+      "prompt_per_second": 2566.769561132734,
+      "predicted_n": 2048,
+      "predicted_ms": 63725.01,
+      "predicted_per_token_ms": 31.1157275390625,
+      "predicted_per_second": 32.1380883267025
+    },
+    "done": true,
+    "seconds": 64.281,
+    "chars": 5380,
+    "sha256": "d6f98a70aafe997d3304e656987c40b19060dfe54642d101b679fc7636bc9221",
+    "loop": true,
+    "periodic": {
+      "words": 273,
+      "unit": "заменить на",
+      "copies": 136
+    },
+    "repeated_lines": [
+      [
+        "Заменить \"на",
+        147
+      ],
+      [
+        "Убрать \"на",
+        5
+      ],
+      [
+        "Заменить \"за",
+        5
+      ]
+    ],
+    "words": 588,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_20",
+    "pid": 52648,
+    "seed": 20,
+    "slot": 0,
+    "first_seconds": 0.5320000000065193,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 463,
+      "prompt_tokens": 1377,
+      "total_tokens": 1840,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 516.99,
+      "prompt_per_token_ms": 0.37544662309368193,
+      "prompt_per_second": 2663.494458306737,
+      "predicted_n": 463,
+      "predicted_ms": 14257.265,
+      "predicted_per_token_ms": 30.793228941684664,
+      "predicted_per_second": 32.47467168492695
+    },
+    "done": true,
+    "seconds": 14.797,
+    "chars": 1616,
+    "sha256": "054b67fd0324e6fb87894478616209387c7259a935cb1edd77cb9ed93629dd2f",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствуют некоторые моменты, которые можно улучшить для повышения его качества и ясности:",
+        1
+      ],
+      [
+        "Стиль:",
+        1
+      ],
+      [
+        "Некоторые предложения повторяют одно и то же действие (например, Лера ходит взад-вперед по платформе), что может утомлять читателя. Лучше было бы сконцентрироваться на ключевых моментах или описать это действие более разнообразно.",
+        1
+      ]
+    ],
+    "words": 222,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_24",
+    "pid": 52648,
+    "seed": 24,
+    "slot": 0,
+    "first_seconds": 0.5470000000204891,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 515,
+      "prompt_tokens": 1377,
+      "total_tokens": 1892,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 517.541,
+      "prompt_per_token_ms": 0.37584676833696445,
+      "prompt_per_second": 2660.6587690637066,
+      "predicted_n": 515,
+      "predicted_ms": 15843.447,
+      "predicted_per_token_ms": 30.763974757281552,
+      "predicted_per_second": 32.50555261112054
+    },
+    "done": true,
+    "seconds": 16.391,
+    "chars": 1746,
+    "sha256": "9d8bacfef8ce14b2a759fbdd97fe44a786bb77c369709880d28f44e9e1230b92",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я занимался редактированием текста, то предложил бы следующие правки:",
+        1
+      ],
+      [
+        "Уточнить мотивацию Антона:",
+        1
+      ],
+      [
+        "В текущем варианте Антон ведет себя слишком уверенно, хотя сам признает, что не знает, что происходит. Можно добавить детали о его прошлом опыте или знаниях, которые объясняют его спокойствие.",
+        1
+      ]
+    ],
+    "words": 236,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_26",
+    "pid": 52648,
+    "seed": 26,
+    "slot": 0,
+    "first_seconds": 0.5470000000204891,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 539,
+      "prompt_tokens": 1377,
+      "total_tokens": 1916,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 533.208,
+      "prompt_per_token_ms": 0.38722440087145965,
+      "prompt_per_second": 2582.481883242562,
+      "predicted_n": 539,
+      "predicted_ms": 16659.994,
+      "predicted_per_token_ms": 30.909079777365488,
+      "predicted_per_second": 32.3529528281943
+    },
+    "done": true,
+    "seconds": 17.219,
+    "chars": 1809,
+    "sha256": "00812e0d5241777f137afa37487036bcf33d8c7ae9d26780fb558eee4834a880",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "Если бы я был автором этого текста, я бы внес следующие правки:",
+        1
+      ],
+      [
+        "Уточнить мотивы Антона:",
+        1
+      ],
+      [
+        "В текущем варианте Антон выглядит слишком загадочным и непонятным. Его спокойствие и уверенность в ситуации, которая явно выходит за рамки обыденного, требуют объяснения. Можно добавить флешбэк или диалог, раскрывающий его знания о происходящем.",
+        1
+      ]
+    ],
+    "words": 243,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_29",
+    "pid": 52648,
+    "seed": 29,
+    "slot": 0,
+    "first_seconds": 0.5470000000204891,
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 491,
+      "prompt_tokens": 1377,
+      "total_tokens": 1868,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 524.966,
+      "prompt_per_token_ms": 0.38123892519970953,
+      "prompt_per_second": 2623.0270150828815,
+      "predicted_n": 491,
+      "predicted_ms": 15273.573,
+      "predicted_per_token_ms": 31.107073319755603,
+      "predicted_per_second": 32.1470293820575
+    },
+    "done": true,
+    "seconds": 15.813,
+    "chars": 1556,
+    "sha256": "da6c2ee8c0493b7e509a11002740789e0cffe64e485bc6d0bd07040d770c2385",
+    "loop": false,
+    "periodic": {
+      "words": 0,
+      "unit": "",
+      "copies": 0
+    },
+    "repeated_lines": [
+      [
+        "В тексте присутствует несколько моментов, которые можно улучшить:",
+        1
+      ],
+      [
+        "Повторение:",
+        1
+      ],
+      [
+        "Лера ходила взад-вперед по платформе...\" (повторяется дважды)",
+        1
+      ]
+    ],
+    "words": 200,
+    "short_quoted_list_run": 0
+  },
+  {
+    "name": "seed_34",
+    "pid": 52648,
+    "seed": 34,
+    "slot": 0,
+    "first_seconds": 0.5150000000139698,
+    "finish": "length",
+    "usage": {
+      "completion_tokens": 2048,
+      "prompt_tokens": 1377,
+      "total_tokens": 3425,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 1377,
+      "prompt_ms": 515.708,
+      "prompt_per_token_ms": 0.3745156136528685,
+      "prompt_per_second": 2670.115646838909,
+      "predicted_n": 2048,
+      "predicted_ms": 58845.936,
+      "predicted_per_token_ms": 28.7333671875,
+      "predicted_per_second": 34.802743217475545
+    },
+    "done": true,
+    "seconds": 59.359,
+    "chars": 4858,
+    "sha256": "da694f557d7c1f8f51b6a7400e093d56f6c9ec7dbdf81fb6da585ea8d0f5ce95",
+    "loop": true,
+    "periodic": {
+      "words": 279,
+      "unit": "платформа вокзал",
+      "copies": 139
+    },
+    "repeated_lines": [
+      [
+        "Платформа",
+        141
+      ],
+      [
+        "Вокзал",
+        141
+      ],
+      [
+        "Если бы я был автором, то внес бы следующие правки:",
+        1
+      ]
+    ],
+    "words": 307,
+    "short_quoted_list_run": 287
+  }
+]

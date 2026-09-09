@@ -1,0 +1,54 @@
+{
+  "name": "raw_thinking_seed_1",
+  "pid": 42096,
+  "seed": 1,
+  "slot": 0,
+  "first_seconds": 0.0779999999795109,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1911,
+    "prompt_tokens": 321,
+    "total_tokens": 2232,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 321,
+    "prompt_ms": 50.911,
+    "prompt_per_token_ms": 0.158601246105919,
+    "prompt_per_second": 6305.120700830862,
+    "predicted_n": 1911,
+    "predicted_ms": 12416.693,
+    "predicted_per_token_ms": 6.497484563055991,
+    "predicted_per_second": 153.90571386439208
+  },
+  "done": true,
+  "seconds": 12.484,
+  "chars": 5653,
+  "sha256": "ee31440c2d277f22ec0d67cda83ad45da66fb776a3af49b7b29a40465af741a4",
+  "loop": false,
+  "detector_version": 2,
+  "periodic": {
+    "words": 3,
+    "unit": "нет",
+    "copies": 3
+  },
+  "repeated_lines": [
+    [
+      "— Не знаю.",
+      14
+    ],
+    [
+      "— Кто?",
+      14
+    ],
+    [
+      "— Нет.",
+      7
+    ]
+  ],
+  "words": 918,
+  "short_quoted_list_run": 0
+}

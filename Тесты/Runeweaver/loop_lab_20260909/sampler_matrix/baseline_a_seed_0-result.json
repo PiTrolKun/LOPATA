@@ -1,0 +1,52 @@
+{
+  "name": "baseline_a_seed_0",
+  "pid": 63072,
+  "seed": 0,
+  "slot": 0,
+  "first_seconds": 0.28100000007543713,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 250.569,
+    "prompt_per_token_ms": 0.1819673202614379,
+    "prompt_per_second": 5495.492259617112,
+    "predicted_n": 2048,
+    "predicted_ms": 22286.313,
+    "predicted_per_token_ms": 10.88198876953125,
+    "predicted_per_second": 91.89496710380044
+  },
+  "done": true,
+  "seconds": 22.578,
+  "chars": 4861,
+  "sha256": "d8ecb6f46210e4ccf24cbad88d8426f67a55def5e183f5932e344f236677b5ef",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "—",
+      19
+    ],
+    [
+      "и",
+      11
+    ],
+    [
+      "Лера",
+      9
+    ]
+  ],
+  "words": 386
+}

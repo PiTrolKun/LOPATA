@@ -1,0 +1,53 @@
+{
+  "name": "seed_8",
+  "pid": 11052,
+  "seed": 8,
+  "slot": 0,
+  "first_seconds": 0.2339999999385327,
+  "finish": "length",
+  "usage": {
+    "completion_tokens": 2048,
+    "prompt_tokens": 1377,
+    "total_tokens": 3425,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1377,
+    "prompt_ms": 220.123,
+    "prompt_per_token_ms": 0.15985693536673928,
+    "prompt_per_second": 6255.593463654412,
+    "predicted_n": 2048,
+    "predicted_ms": 41265.23,
+    "predicted_per_token_ms": 20.1490380859375,
+    "predicted_per_second": 49.6301607915429
+  },
+  "done": true,
+  "seconds": 41.5,
+  "chars": 5019,
+  "sha256": "59338b404a5abed975260571021e81af3e152b2c282a8973ab5b68402047bbc6",
+  "loop": true,
+  "periodic": {
+    "words": 261,
+    "unit": "оставили увидел услышал приближающий появился подошла взяла встала сделал направились пошли",
+    "copies": 23
+  },
+  "repeated_lines": [
+    [
+      "взяла",
+      26
+    ],
+    [
+      "встала",
+      25
+    ],
+    [
+      "подошла",
+      25
+    ]
+  ],
+  "words": 338,
+  "short_quoted_list_run": 280
+}

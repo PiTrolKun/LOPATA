@@ -1,0 +1,3 @@
+# Exact captured requests/replies are diagnostic evidence.
+*.json -text whitespace=cr-at-eol
+*.txt -text whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof

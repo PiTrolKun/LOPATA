@@ -1,0 +1,45 @@
+{
+  "name": "writer_1.05_24",
+  "pid": 30492,
+  "seed": 24,
+  "slot": 0,
+  "first_seconds": 0.030999999959021807,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 14,
+    "prompt_tokens": 121,
+    "total_tokens": 135,
+    "prompt_tokens_details": {
+      "cached_tokens": 120
+    }
+  },
+  "timings": {
+    "cache_n": 120,
+    "prompt_n": 1,
+    "prompt_ms": 17.226,
+    "prompt_per_token_ms": 17.226,
+    "prompt_per_second": 58.05178218971323,
+    "predicted_n": 14,
+    "predicted_ms": 386.017,
+    "predicted_per_token_ms": 27.572642857142856,
+    "predicted_per_second": 36.26783276384201
+  },
+  "done": true,
+  "seconds": 0.422,
+  "chars": 32,
+  "sha256": "cf23cd99d1c6aa9c60a852bfe6f4664696d7e6004826d18b40aedbab9f22d142",
+  "loop": false,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Ветер стихал, но тучи сгущались.",
+      1
+    ]
+  ],
+  "words": 5,
+  "short_quoted_list_run": 0
+}

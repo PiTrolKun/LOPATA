@@ -1,0 +1,54 @@
+{
+  "name": "repeat110_thinking_seed_1",
+  "pid": 42096,
+  "seed": 1,
+  "slot": 0,
+  "first_seconds": 0.09299999999348074,
+  "finish": "stop",
+  "usage": {
+    "completion_tokens": 1634,
+    "prompt_tokens": 321,
+    "total_tokens": 1955,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 321,
+    "prompt_ms": 52.49,
+    "prompt_per_token_ms": 0.1635202492211838,
+    "prompt_per_second": 6115.450562011812,
+    "predicted_n": 1634,
+    "predicted_ms": 11692.117,
+    "predicted_per_token_ms": 7.155518359853121,
+    "predicted_per_second": 139.7522792493438
+  },
+  "done": true,
+  "seconds": 11.781,
+  "chars": 5667,
+  "sha256": "8487c131558a3ada0df690f922d90b1546d7ab4af194d99ca849dd1ea0813f5f",
+  "loop": false,
+  "detector_version": 2,
+  "periodic": {
+    "words": 0,
+    "unit": "",
+    "copies": 0
+  },
+  "repeated_lines": [
+    [
+      "Here is a completed scene following all the given constraints and requirements. I will write it in Russian, focusing on visual details, distinct character voices, and building tension until the supernatural element becomes undeniable.",
+      1
+    ],
+    [
+      "Plan:**",
+      1
+    ],
+    [
+      "Setting the Scene:** Establish the abandoned station, the snow in August, and the stopped clock immediately to ground the reader.",
+      1
+    ]
+  ],
+  "words": 935,
+  "short_quoted_list_run": 0
+}
