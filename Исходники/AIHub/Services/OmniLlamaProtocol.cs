@@ -65,7 +65,8 @@ public static class OmniLlamaProtocol
     }
 
     public static async Task<OmniTextGenerationResult> ReadAsync(Stream stream,
-        IProgress<ModelStreamChunk>? progress, Action<string>? saveRaw, CancellationToken cancellationToken, OmniLlamaProfile? profile = null)
+        IProgress<ModelStreamChunk>? progress, Action<string>? saveRaw, CancellationToken cancellationToken, OmniLlamaProfile? profile = null,
+        Action<string>? onRawLine = null)
     {
         var timer = Stopwatch.StartNew();
         var raw = new StringBuilder();
@@ -83,6 +84,7 @@ public static class OmniLlamaProtocol
             while (await reader.ReadLineAsync(cancellationToken) is { } line)
             {
                 raw.AppendLine(line);
+                onRawLine?.Invoke(line);
                 if (!line.StartsWith("data:", StringComparison.Ordinal)) continue;
                 var data = line[5..].Trim();
                 if (data == "[DONE]") { done = true; break; }

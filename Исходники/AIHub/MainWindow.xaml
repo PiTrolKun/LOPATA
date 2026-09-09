@@ -847,6 +847,17 @@
                           HorizontalContentAlignment="Stretch">
                 <StackPanel MaxWidth="1320"
                             HorizontalAlignment="Stretch">
+                <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource LineBrush}"
+                        BorderThickness="1" CornerRadius="8" Padding="{DynamicResource UiPanelPadding}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <CheckBox x:Name="DetailedLiteraryDiagnosticsCheckBox" Margin="0,0,0,8"
+                                  Foreground="{DynamicResource TextPrimaryBrush}"
+                                  Checked="DetailedLiteraryDiagnostics_Changed" Unchecked="DetailedLiteraryDiagnostics_Changed" />
+                        <TextBlock x:Name="DetailedLiteraryDiagnosticsHint" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" MaxWidth="850" HorizontalAlignment="Left" />
+                        <Button x:Name="OpenLiteraryDiagnosticsButton" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OpenLiteraryDiagnostics_Click" />
+                    </StackPanel>
+                </Border>
                 <Border Background="{DynamicResource PanelBrush}"
                         BorderBrush="{DynamicResource LineBrush}"
                         BorderThickness="1"

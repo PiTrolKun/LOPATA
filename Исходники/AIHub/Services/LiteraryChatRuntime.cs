@@ -21,6 +21,7 @@ public sealed class LiteraryChatRuntime : IDisposable
     private int _port;
     private readonly object _logGate = new();
     private readonly string _logPath;
+    private LiteraryRequestDiagnostics? _diagnostics;
     public LiteraryChatRuntime(LiteraryChatProfile profile = LiteraryChatProfile.WriterCpu)
     {
         _profile = profile;
@@ -31,39 +32,46 @@ public sealed class LiteraryChatRuntime : IDisposable
     public static string[] Arguments(string model, int port, LiteraryChatProfile profile = LiteraryChatProfile.WriterCpu) =>
     ["-m", model, "--host", IPAddress.Loopback.ToString(), "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
         "-c", OmniLlamaProtocol.ContextTokens.ToString(), "-np", "1", "-ngl", profile == LiteraryChatProfile.WriterCpu ? "0" : "99", "--device", profile == LiteraryChatProfile.WriterCpu ? "none" : "CUDA0",
-        profile == LiteraryChatProfile.WriterCpu ? "--no-op-offload" : "--op-offload", "--fit", "off", "--cache-ram", "0", "--no-context-shift", "--offline", "--jinja", "--reasoning-format", "deepseek",
+        profile == LiteraryChatProfile.WriterCpu ? "--no-op-offload" : "--op-offload", "--fit", "off", "--cache-ram", "0", "--no-context-shift", "--offline", "--jinja", "--reasoning-format", "none", "-n", "-1",
+        .. (profile == LiteraryChatProfile.WriterCpu ? new[] { "--reasoning", "off" } : Array.Empty<string>()),
         "-t", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString(), "-tb", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString()];
 
     public async Task<string> SendAsync(IReadOnlyList<ImageAnalysisHiddenMessage> history,
         IProgress<ModelStreamChunk>? progress, CancellationToken token)
     {
         await _gate.WaitAsync(token);
+        using var diagnostics = new LiteraryRequestDiagnostics(Component, Log);
+        _diagnostics = diagnostics;
         try
         {
-            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
-            deadline.CancelAfter(TimeSpan.FromMinutes(15));
-            var ct = deadline.Token;
-            await PrepareAsync(ct);
+            diagnostics.Write("input", history);
+            var ct = token;
+            await PrepareAsync(ct).ConfigureAwait(false);
+            diagnostics.Write("process_ready", new { pid = _process!.Id, arguments = _process.StartInfo.ArgumentList.ToArray() });
+            diagnostics.Watch(_process);
             var server = new Uri($"http://{IPAddress.Loopback}:{_port}/");
-            var count = await OmniLlamaContextProbe.MeasureAsync(_http, server, history, "", ct);
-            var budget = Math.Min(8192, OmniContextBudget.OutputBudget(count, OmniLlamaProtocol.ContextTokens));
-            Log($"request input={count}; outputBudget={budget}");
+            var body = LiteraryRawProtocol.BuildRequest(history);
+            diagnostics.Write("request", new { endpoint = server, json = body });
             using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(server, "v1/chat/completions"))
-            { Content = new StringContent(OmniLlamaProtocol.BuildRequest(history, "", budget), Encoding.UTF8, "application/json") };
+            { Content = new StringContent(body, Encoding.UTF8, "application/json") };
             using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            diagnostics.Write("http", new { status = (int)response.StatusCode, headers = response.Headers.ToString(), contentHeaders = response.Content.Headers.ToString() });
+            if (!response.IsSuccessStatusCode) diagnostics.Write("http_error_body", await response.Content.ReadAsStringAsync(ct));
             response.EnsureSuccessStatusCode();
             await using var stream = await response.Content.ReadAsStreamAsync(ct);
-            var result = await OmniLlamaProtocol.ReadAsync(stream, progress, null, ct);
-            Log(RuntimeResourceDiagnostics.DescribeSnapshot(Component, _process!, "answer"));
-            return result.Content;
+            var result = await LiteraryRawProtocol.ReadAsync(stream, new DiagnosticProgress(progress, diagnostics),
+                line => diagnostics.Write("sse", line), ct).ConfigureAwait(false);
+            diagnostics.Write("result", result);
+            return result;
         }
         catch (Exception ex)
         {
+            diagnostics.Write("failure", new { exception = ex.ToString(), userCancelled = token.IsCancellationRequested });
             Log("request failed: " + ex.GetType().Name + ": " + ex.Message);
             Stop();
             throw;
         }
-        finally { _gate.Release(); }
+        finally { _diagnostics = null; _gate.Release(); }
     }
 
     private async Task PrepareAsync(CancellationToken token)
@@ -90,8 +98,12 @@ public sealed class LiteraryChatRuntime : IDisposable
         foreach (var arg in Arguments(model, _port, _profile)) info.ArgumentList.Add(arg);
         var process = new Process { StartInfo = info };
         _process = process;
-        process.OutputDataReceived += (_, e) => { if (e.Data is { } line) Log(line); };
-        process.ErrorDataReceived += (_, e) => { if (e.Data is { } line) Log(line); };
+        process.OutputDataReceived += (_, e) => { if (e.Data is { } line) { Log(line); _diagnostics?.Write("stdout", line); } };
+        process.ErrorDataReceived += (_, e) => { if (e.Data is { } line) { Log(line); _diagnostics?.Write("stderr", line); } };
+        process.EnableRaisingEvents = true;
+        process.Exited += (_, _) => { try { _diagnostics?.Write("process_exit", new { pid = process.Id, exitCode = process.ExitCode }); } catch (InvalidOperationException) { } };
+        _diagnostics?.Write("launch", new { executable = info.FileName, arguments = info.ArgumentList.ToArray(), model, modelBytes = new FileInfo(model).Length,
+            backend = FileVersionInfo.GetVersionInfo(info.FileName).FileVersion });
         token.ThrowIfCancellationRequested();
         if (!process.Start()) throw new InvalidOperationException("Writer runtime did not start.");
         process.BeginOutputReadLine(); process.BeginErrorReadLine();
@@ -120,6 +132,7 @@ public sealed class LiteraryChatRuntime : IDisposable
     }
     public void Stop()
     {
+        _diagnostics?.Write("process_stop", "Stopping owned runtime process.");
         var process = Interlocked.Exchange(ref _process, null);
         if (process is null) return;
         try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
@@ -127,4 +140,8 @@ public sealed class LiteraryChatRuntime : IDisposable
         finally { process.Dispose(); }
     }
     public void Dispose() { Stop(); _http.Dispose(); }
+    private sealed class DiagnosticProgress(IProgress<ModelStreamChunk>? target, LiteraryRequestDiagnostics diagnostics) : IProgress<ModelStreamChunk>
+    {
+        public void Report(ModelStreamChunk value) { diagnostics.Write("visible_chunk", value); target?.Report(value); }
+    }
 }

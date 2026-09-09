@@ -1669,5 +1669,9 @@
   "ImageAnalysis.Install.Beta.DownloadTitle": "Downloading Beta mode",
   "Status.ImageAnalysisBetaBundleReady": "Status: the Beta model and projector are verified and ready to start.",
   "ImageAnalysis.Gguf.StartNotice": "The model analyzes the image and writes the description. Speech uses Kokoro. Open the other programs you plan to use alongside it when evaluating memory use.",
-  "ImageAnalysis.ModelChanged": "This work was created by a different model. You can view and export it. Start a new image analysis to use the current model."
+  "ImageAnalysis.ModelChanged": "This work was created by a different model. You can view and export it. Start a new image analysis to use the current model.",
+  "Diagnostics.Literary.Open": "Open detailed logs",
+  "Diagnostics.Literary.Hint": "Saves full conversations, reasoning, server responses and process resources locally. Files may be large and contain personal data. Enabling applies to the next request; disabling stops current recording. Existing logs remain. Each log is limited to 128 MiB.",
+  "Diagnostics.Literary.Enabled": "Detailed AI1 and AI2 logs",
+  "Diagnostics.Literary.OpenFailed": "Could not open the log folder."
 }

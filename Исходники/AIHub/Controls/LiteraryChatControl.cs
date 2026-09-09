@@ -1,4 +1,3 @@
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using AIHub.Models;
@@ -71,7 +70,7 @@ public sealed class LiteraryChatControl : UserControl
         var inputRow = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
         _send.SetResourceReference(StyleProperty, "PrimaryButtonStyle"); _send.MinWidth = 0; _send.Width = 38; _send.Padding = new Thickness(4); _send.Margin = new Thickness(8, 0, 0, 0);
         DockPanel.SetDock(_send, Dock.Right); inputRow.Children.Add(_send);
-        _input.Height = 68; _input.MaxLength = 24000; _input.ToolTip = _l("Literary.Writer.InputHint"); inputRow.Children.Add(_input);
+        _input.Height = 68; _input.MaxLength = 0; _input.ToolTip = _l("Literary.Writer.InputHint"); inputRow.Children.Add(_input);
         DockPanel.SetDock(inputRow, Dock.Bottom); panel.Children.Add(inputRow);
         panel.Children.Add(_transcript);
         Content = LiteraryWorkspaceParts.Card(panel);
@@ -89,21 +88,16 @@ public sealed class LiteraryChatControl : UserControl
     private string Transcript() => string.Join("\n\n", _display.Select(m => _l(m.User ? "Literary.Writer.You" : "Literary.Workspace.Writer") + ":\n" + m.Text));
     private async Task SendAsync()
     {
-        var text = _input.Text.Trim(); if (text.Length == 0 || _cts is not null) return;
+        var text = _input.Text; if (string.IsNullOrWhiteSpace(text) || _cts is not null) return;
         var request = _history.Concat([new ImageAnalysisHiddenMessage { Role = "user", Content = text }]).ToArray();
         using var cts = new CancellationTokenSource(); _cts = cts;
         _display.Add((true, text)); _input.Clear();
         var prefix = Transcript() + "\n\n" + _l("Literary.Workspace.Writer") + ":\n";
-        var partial = new StringBuilder();
+        using var streamDisplay = new LiteraryStreamDisplay(_transcript);
         _transcript.Text = prefix; SetStatus("Literary.Writer.Working"); UpdateButtons();
         try
         {
-            var progress = new Progress<ModelStreamChunk>(chunk =>
-            {
-                if (_cts != cts || cts.IsCancellationRequested) return;
-                partial.Append(chunk.Text); _transcript.Text = prefix + partial; _transcript.ScrollToEnd();
-            });
-            var result = await _runtime.SendAsync(request, progress, cts.Token);
+            var result = await _runtime.SendAsync(request, streamDisplay, cts.Token);
             _history.Add(request[^1]); _history.Add(new ImageAnalysisHiddenMessage { Role = "assistant", Content = result });
             _display.Add((false, result)); SetStatus("Literary.Writer.Ready");
         }
@@ -111,10 +105,16 @@ public sealed class LiteraryChatControl : UserControl
         catch (OperationCanceledException) { PreservePartial(); SetStatus(cts.IsCancellationRequested ? "Literary.Writer.Cancelled" : "Literary.Writer.Timeout"); _input.Text = text; }
         catch (System.IO.FileNotFoundException) { PreservePartial(); SetStatus("Literary.Writer.Missing"); _input.Text = text; }
         catch (Exception) { PreservePartial(); SetStatus("Literary.Writer.Error"); _input.Text = text; }
-        finally { _cts = null; _transcript.Text = Transcript(); _transcript.ScrollToEnd(); UpdateButtons(); }
+        finally { await streamDisplay.CompleteAsync(); _cts = null; UpdateButtons(); }
         void PreservePartial()
         {
-            if (partial.Length > 0) _display.Add((false, partial + "\n[" + _l("Literary.Writer.Incomplete") + "]"));
+            var partial = streamDisplay.Snapshot();
+            if (partial.Length > 0)
+            {
+                var marker = "\n[" + _l("Literary.Writer.Incomplete") + "]";
+                _display.Add((false, partial + marker));
+                streamDisplay.Report(new ModelStreamChunk(marker));
+            }
         }
     }
 }

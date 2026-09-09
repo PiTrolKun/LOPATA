@@ -2,6 +2,7 @@ namespace AIHub.Models;
 
 public sealed class AppSettings
 {
+    public bool DetailedLiteraryDiagnostics { get; set; }
     public ApplicationUpdateSettings Updates { get; set; } = new();
     public string LanguageCode { get; set; } = "ru";
 

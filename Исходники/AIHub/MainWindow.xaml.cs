@@ -443,6 +443,7 @@ public partial class MainWindow : Window
     private void InitializeLocalization()
     {
         _appSettings = _appSettingsStore.LoadOrCreate();
+        LiteraryRequestDiagnostics.Enabled = _appSettings.DetailedLiteraryDiagnostics;
         _appSettings.CoreVoice ??= new CoreVoiceSettings();
         _appSettings.CoreAutonomy ??= new CoreAutonomySettings();
         _appSettings.ModelDownloads ??= new ModelDownloadSettings();
@@ -492,6 +493,7 @@ public partial class MainWindow : Window
         AboutButton.ToolTip = L("About.Title");
         System.Windows.Automation.AutomationProperties.SetName(AboutButton, L("About.Title"));
         ApplicationUpdatesButton.Content = L("Updates.Title");
+        RefreshDetailedDiagnosticsSettings();
         ApplicationUpdateNotice.Content = L("Updates.Available");
         ComponentLicensesButton.Content = L("licenses.title");
         HeaderProductNameText.Text = L("App.ProductName");
