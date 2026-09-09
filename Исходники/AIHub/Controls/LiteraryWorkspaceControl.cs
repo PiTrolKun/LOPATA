@@ -15,6 +15,8 @@ public sealed class LiteraryWorkspaceControl : UserControl
     private Func<string, string> _l;
     private readonly LiteraryChatControl _writer;
     private readonly LiteraryChatControl _advisor;
+    private readonly LiteraryChatRuntime _runtime = new();
+    private readonly LiteraryDraftControl _draft;
     public event Action? BackRequested;
     public event Action? HomeRequested;
     public event Action<LiteraryWorkspaceAction>? ActionRequested;
@@ -27,13 +29,18 @@ public sealed class LiteraryWorkspaceControl : UserControl
     public LiteraryWorkspaceControl(LiteraryProjectEntry entry, LiteraryProject project, Func<string, string> localize)
     {
         _entry = entry; _project = project; _l = localize;
-        _writer = new LiteraryChatControl(localize);
-        _advisor = new LiteraryChatControl(localize, LiteraryChatProfile.AdvisorGpu);
+        _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
+        _writer = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Writer, () => _draft.Text, project);
+        _advisor = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Advisor, () => _draft.Text, project);
+        Unloaded += (_, _) => { _draft.Save(); _runtime.Stop(); if (System.Windows.Application.Current is { } app) app.Exit -= OnAppExit; };
+        Loaded += (_, _) => { if (System.Windows.Application.Current is { } app) { app.Exit -= OnAppExit; app.Exit += OnAppExit; } };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) { _draft.Save(); _runtime.Stop(); } };
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryScrollResources.xaml", UriKind.Relative) });
         Render();
     }
 
-    public void ApplyLocalization(Func<string, string> localize) { _l = localize; _writer.ApplyLocalization(localize); _advisor.ApplyLocalization(localize); Render(); }
+    private void OnAppExit(object sender, ExitEventArgs e) { _draft.Save(); _runtime.Stop(); }
+    public void ApplyLocalization(Func<string, string> localize) { _l = localize; _draft.ApplyLocalization(localize); _writer.ApplyLocalization(localize); _advisor.ApplyLocalization(localize); Render(); }
 
     private Button PendingButton(string label, LiteraryWorkspaceAction action)
     {
@@ -103,6 +110,7 @@ public sealed class LiteraryWorkspaceControl : UserControl
 
     private UIElement BuildEditor()
     {
+        if (_draft.Parent is Panel previous) previous.Children.Remove(_draft);
         var panel = new DockPanel();
         var header = new WrapPanel();
         var title = LiteraryUi.Text(_l("Literary.Workspace.Chapter"), true); title.Margin = new Thickness(0, 0, 14, 4); header.Children.Add(title);
@@ -111,19 +119,14 @@ public sealed class LiteraryWorkspaceControl : UserControl
         header.Children.Add(PendingButton(_l("Literary.Export"), LiteraryWorkspaceAction.Export));
         header.Children.Add(PendingButton(_l("Literary.Workspace.Finish"), LiteraryWorkspaceAction.FinishChapter));
         DockPanel.SetDock(header, Dock.Top); panel.Children.Add(header);
-        var status = LiteraryUi.Text(_l("Literary.Workspace.Autosave")); DockPanel.SetDock(status, Dock.Top); panel.Children.Add(status);
         var bottom = new WrapPanel();
-        bottom.Children.Add(LiteraryUi.Text(_l("Literary.Workspace.Counts")));
         foreach (var key in new[] { "Literary.Workspace.Style", "Literary.Workspace.Mode" })
         {
             var combo = new System.Windows.Controls.ComboBox { IsEnabled = false, MinWidth = 120, Margin = new Thickness(12, 4, 0, 0), ToolTip = _l("Literary.Pending") };
             combo.Items.Add(_l(key)); combo.SelectedIndex = 0; bottom.Children.Add(combo);
         }
         DockPanel.SetDock(bottom, Dock.Bottom); panel.Children.Add(bottom);
-        var overlay = new Grid();
-        overlay.Children.Add(LiteraryWorkspaceParts.TextArea());
-        var placeholder = LiteraryUi.Text(_l("Literary.Workspace.EditorHint")); placeholder.Margin = new Thickness(12); placeholder.VerticalAlignment = VerticalAlignment.Top; placeholder.IsHitTestVisible = false;
-        overlay.Children.Add(placeholder); panel.Children.Add(overlay);
+        panel.Children.Add(_draft);
         return LiteraryWorkspaceParts.Card(panel);
     }
 }

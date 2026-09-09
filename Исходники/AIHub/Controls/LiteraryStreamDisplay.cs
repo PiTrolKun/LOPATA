@@ -31,6 +31,18 @@ public sealed class LiteraryStreamDisplay : IProgress<ModelStreamChunk>, IDispos
 
     public string Snapshot() { lock (_gate) return _received.ToString(); }
 
+    // Called on the UI thread after the old HTTP stream is disposed and before a retry starts.
+    public void Reset(string prefix)
+    {
+        _target.Dispatcher.VerifyAccess();
+        lock (_gate)
+        {
+            if (_closed) throw new ObjectDisposedException(nameof(LiteraryStreamDisplay));
+            _received.Clear(); _shown = 0;
+        }
+        _target.Text = prefix;
+    }
+
     private void OnTick(object? sender, EventArgs e) => Drain();
 
     private bool Drain()

@@ -8,5 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AIHub\AIHub.csproj" />
+    <None Update="Fixtures\LiteraryLoops\*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

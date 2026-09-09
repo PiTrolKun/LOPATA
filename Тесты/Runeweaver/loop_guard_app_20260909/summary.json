@@ -1,0 +1,22 @@
+{
+  "recovered": true,
+  "attempts": [
+    {
+      "name": "initial",
+      "finish": "loop_stopped",
+      "Evidence": {
+        "Kind": "literal",
+        "PeriodWords": 2,
+        "RepeatedWords": 48
+      },
+      "seconds": 10.4387671
+    },
+    {
+      "name": "retry",
+      "finish": "stop",
+      "seconds": 8.4391052
+    }
+  ],
+  "ui": "passed",
+  "appVersion": "0.1.80.0"
+}

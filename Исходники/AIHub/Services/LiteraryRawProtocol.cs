@@ -17,21 +17,31 @@ public static class LiteraryRawProtocol
         });
 
     public static async Task<string> ReadAsync(Stream stream, IProgress<ModelStreamChunk>? progress,
-        Action<string> rawLine, CancellationToken token)
+        Action<string> rawLine, CancellationToken token, bool requireComplete = false)
     {
         var text = new StringBuilder();
+        string? finishReason = null;
         using var reader = new StreamReader(stream, Encoding.UTF8, false, leaveOpen: true);
         while (await reader.ReadLineAsync(token).ConfigureAwait(false) is { } line)
         {
             rawLine(line);
             if (!line.StartsWith("data:", StringComparison.Ordinal)) continue;
             var data = line[5..].Trim();
-            if (data == "[DONE]") return text.ToString();
+            if (data == "[DONE]")
+            {
+                if (requireComplete && finishReason == "length")
+                    throw new ImageAnalysisContextExhaustedException("Server stopped at the output limit.", outputTruncated: true);
+                if (requireComplete && (finishReason != "stop" || text.Length == 0))
+                    throw new IOException("Server did not produce a complete text reply.");
+                return text.ToString();
+            }
             if (data.Length == 0) continue;
             using var doc = JsonDocument.Parse(data);
             var root = doc.RootElement;
             if (root.TryGetProperty("error", out var error)) throw new IOException(error.ToString());
             if (!root.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0) continue;
+            if (choices[0].TryGetProperty("finish_reason", out var reason) && reason.ValueKind == JsonValueKind.String)
+                finishReason = reason.GetString();
             if (!choices[0].TryGetProperty("delta", out var delta)) continue;
             foreach (var field in new[] { "reasoning_content", "content" })
                 if (delta.TryGetProperty(field, out var value) && value.ValueKind == JsonValueKind.String

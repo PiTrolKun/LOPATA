@@ -1,0 +1,2 @@
+# Regression fixtures preserve the model output verbatim.
+*.txt -text whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof
