@@ -4807,3 +4807,5 @@ Backup: _backups/literary_persona_prompts_20260909_225224/files.txt. Для от
 
 
 2026-09-10: финальные ворота 0.1.86-dev подтверждены: штатный start-aihub.ps1, Responding=True, Qdrant auto-start=0, нормальное закрытие главного окна, 496/496 тестов, UTF-8 scanner exit 0 и diff check exit 0. После стендов AIHub/Qdrant/Probe не остались запущенными. ТЗ ожидает приёмки; без commit/push и установщика.
+
+2026-09-10: опубликован commit 7abb6f7 в origin/main (PiTrolKun/LOPATA), push подтверждён. Закрыты ТЗ удаления проекта и процессов/Qdrant (частично, без визуальной группировки). Версия 0.1.87-dev; UTF-8 и staged diff check прошли. Установщик не собирался/не публиковался. Посторонние untracked файлы оставлены локально.
