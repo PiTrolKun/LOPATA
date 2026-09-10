@@ -1,0 +1,84 @@
+{
+  "files": [
+    {
+      "name": "1_Pooling/config.json",
+      "algorithm": "gitsha1",
+      "hash": "9746b45fd2637c3d206b02b51627d1bf2ccec0ae",
+      "size": 298
+    },
+    {
+      "name": "2_Normalize/config.json",
+      "algorithm": "gitsha1",
+      "hash": "0967ef424bce6791893e9a57bb952f80fd536e93",
+      "size": 3
+    },
+    {
+      "name": "README.md",
+      "algorithm": "gitsha1",
+      "hash": "71bc64e993b7a4bcffa9066843a223e5773ed1d9",
+      "size": 25861
+    },
+    {
+      "name": "config.json",
+      "algorithm": "gitsha1",
+      "hash": "a678b7cd769e8624d9206670ed8dde682ee9ab63",
+      "size": 1562
+    },
+    {
+      "name": "config_sentence_transformers.json",
+      "algorithm": "gitsha1",
+      "hash": "c3910a4fccbc906159982ac758ffbd0125e344b0",
+      "size": 223
+    },
+    {
+      "name": "configuration_gigarembed.py",
+      "algorithm": "gitsha1",
+      "hash": "f300c1ae22158a8f9e0371f3f3515223a4210eb4",
+      "size": 150
+    },
+    {
+      "name": "model.safetensors",
+      "algorithm": "sha256",
+      "hash": "9ce03c6c5ae02baebb42ce3015b6f3e628c5fec7b7745bc2490f6ff961a654a5",
+      "size": 967470272
+    },
+    {
+      "name": "modeling_gigarembed.py",
+      "algorithm": "gitsha1",
+      "hash": "d4ac81d095a9ad78cc9edd158ac1ba543f008ffc",
+      "size": 4655
+    },
+    {
+      "name": "modules.json",
+      "algorithm": "gitsha1",
+      "hash": "a32b46a13926a0aeb8367448eef21d776acd09b9",
+      "size": 350
+    },
+    {
+      "name": "sentence_bert_config.json",
+      "algorithm": "gitsha1",
+      "hash": "b3030f4edaca7791ed3d3bfd6dd41bb25b54718c",
+      "size": 55
+    },
+    {
+      "name": "special_tokens_map.json",
+      "algorithm": "gitsha1",
+      "hash": "492d4b2966a1763442d426d880dbc29f94906e4c",
+      "size": 551
+    },
+    {
+      "name": "tokenizer.json",
+      "algorithm": "sha256",
+      "hash": "0870f9c0f06a677f7e939e7765ae3a5d9582f2a6d7e7258176ecd1a3eab96cef",
+      "size": 10728166
+    },
+    {
+      "name": "tokenizer_config.json",
+      "algorithm": "gitsha1",
+      "hash": "f95d12101ece72299ec4263908d5c8153a4840c0",
+      "size": 212
+    }
+  ],
+  "revision": "0c94f705aa35719324fb46f7e75b0a5c275da6e4",
+  "repo": "ai-sage/Giga-Embeddings-instruct-480M-0826"
+}

@@ -299,3 +299,8 @@ PDF.js, EPUB.js, LibVLC, OpenSeadragon, Babylon.js, AvalonEdit). Они не в�
 Документы_проекта/Лицензии/2026-09-05_подготовка.md.
 Kokoro RU: точный OpenRAIL-текст пока отсутствует; код Apache-2.0, accentuator
 декларирует MIT отдельно. Нативный OpenSSL 1.1.1k — OpenSSL AND SSLeay.
+# Literary source indexing (0.1.88-dev)
+
+Giga-Embeddings-instruct-480M-0826 is separately downloaded from ai-sage, revision 0c94f705aa35719324fb46f7e75b0a5c275da6e4. Its card declares MIT; no separate LICENSE/copyright notice is present in that snapshot. Runeweaver GGUF is separately downloaded from limloop, whose card declares Apache-2.0; complete merge provenance has not been independently audited. Acknowledgement does not replace missing terms or grant additional rights.
+
+The isolated indexing runtime downloads Python 3.12.10, pip 25.3, PyTorch 2.10.0 with CUDA 12.8, and Transformers 5.3.0. Original primary licenses are retained under `Исходники/AIHub/Licenses/texts`; installed packages retain their own notices. NVIDIA terms: https://docs.nvidia.com/cuda/archive/12.8.0/eula/index.html. Transitive versions are recorded in installation reports, with their respective licenses. Models and this runtime are not bundled by this change. Full source URLs and review notes are in the component license catalog.

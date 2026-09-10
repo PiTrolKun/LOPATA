@@ -29,7 +29,7 @@ public sealed class LiteraryProjectStore(string indexPath)
             && !System.Text.RegularExpressions.Regex.IsMatch(stem, @"^(COM|LPT)[0-9¹²³]$");
     }
 
-    public LiteraryProjectEntry Create(string parent, LiteraryProject project, IReadOnlyList<string> materials)
+    public LiteraryProjectEntry Create(string parent, LiteraryProject project, IReadOnlyList<string> materials, Action<string>? initializeStaging = null)
     {
         if (!Path.IsPathFullyQualified(parent) || !Directory.Exists(parent)) throw new DirectoryNotFoundException(parent);
         if (!IsValidProjectName(project.ProjectName)) throw new ArgumentException("Invalid project folder name.");
@@ -54,6 +54,7 @@ public sealed class LiteraryProjectStore(string indexPath)
                     project.Materials.Add(relative);
                 }
             }
+            initializeStaging?.Invoke(staging);
             File.WriteAllText(Path.Combine(staging, "project.json"), JsonSerializer.Serialize(project, JsonOptions));
             var entry = new LiteraryProjectEntry(project.Id, project.ProjectName, destination);
             Directory.Move(staging, destination); // Never replace an existing project directory.

@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace AIHub.Services;
 
-public sealed class QdrantRuntime(QdrantOptions options, OwnedProcessRegistry? registry = null)
+public sealed partial class QdrantRuntime(QdrantOptions options, OwnedProcessRegistry? registry = null)
 {
     public static QdrantRuntime Shared { get; } = new(new());
     private readonly OwnedProcessRegistry _registry = registry ?? OwnedProcessRegistry.Shared;

@@ -10,7 +10,7 @@ using UserControl = System.Windows.Controls.UserControl;
 
 namespace AIHub.Controls;
 
-public sealed class LiteraryProjectCreateControl : UserControl
+public sealed partial class LiteraryProjectCreateControl : UserControl
 {
     private readonly Func<string, string> _l;
     private readonly LiteraryProjectStore _store;
@@ -82,6 +82,8 @@ public sealed class LiteraryProjectCreateControl : UserControl
         buttons.Margin = new Thickness(0, 12, 0, 18);
         _sections.Children.Add(buttons);
         Content = root;
+        Unloaded += (_, _) => { if (!_saving) CancelIndexing(); };
+        IsVisibleChanged += (_, _) => { if (!IsVisible && !_saving) CancelIndexing(); };
     }
 
     private StackPanel Section(string key)
@@ -144,10 +146,10 @@ public sealed class LiteraryProjectCreateControl : UserControl
         Field(panel, "Literary.Create.Type", _type);
         var sourcePanel = new StackPanel();
         Field(sourcePanel, "Literary.Create.Source", _source);
-        sourcePanel.Children.Add(LiteraryUi.Button(_l("Literary.Create.AddMaterials"), AddMaterials));
+        sourcePanel.Children.Add(BuildSourcePreparation());
         sourcePanel.Children.Add(LiteraryUi.Text(_l("Literary.Create.MaterialsHint")));
         sourcePanel.Children.Add(_materialRows); panel.Children.Add(sourcePanel);
-        _type.SelectionChanged += (_, _) => sourcePanel.Visibility = _type.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+        _type.SelectionChanged += (_, _) => { sourcePanel.Visibility = _type.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed; RestartIndexing(); };
         _type.SelectedIndex = 0;
         Field(panel, "Literary.Create.Cultures", _countries);
         Field(panel, "Literary.Create.CultureNotes", _cultureNotes);
@@ -156,11 +158,12 @@ public sealed class LiteraryProjectCreateControl : UserControl
 
     private void AddMaterials()
     {
-        var dialog = new Microsoft.Win32.OpenFileDialog { Multiselect = true, Title = _l("Literary.Create.AddMaterials") };
+        var dialog = new Microsoft.Win32.OpenFileDialog { Multiselect = true, Title = _l("Literary.Create.AddMaterials"), Filter = "TXT, EPUB, PDF|*.txt;*.epub;*.pdf" };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
         foreach (var path in dialog.FileNames)
             if (!_materials.Contains(path, StringComparer.OrdinalIgnoreCase)) _materials.Add(path);
         RenderMaterials();
+        RestartIndexing();
     }
 
     private void RenderMaterials()
@@ -169,7 +172,7 @@ public sealed class LiteraryProjectCreateControl : UserControl
         foreach (var path in _materials)
         {
             var row = new DockPanel { Margin = new Thickness(0, 5, 0, 0) };
-            var remove = LiteraryUi.Button("×", () => { _materials.Remove(path); RenderMaterials(); });
+            var remove = LiteraryUi.Button("×", () => { _materials.Remove(path); RenderMaterials(); RestartIndexing(); });
             remove.ToolTip = _l("Literary.Create.Remove");
             System.Windows.Automation.AutomationProperties.SetName(remove, _l("Literary.Create.Remove") + " " + Path.GetFileName(path));
             remove.MinWidth = 28; remove.Padding = new Thickness(5); DockPanel.SetDock(remove, Dock.Right);
@@ -182,6 +185,8 @@ public sealed class LiteraryProjectCreateControl : UserControl
     private async Task SaveAsync()
     {
         if (_saving) return;
+        if (_type.SelectedIndex == 1 && _materials.Count > 0 && _preparedIndex?.Ready != true)
+        { _error.Text = _l("Literary.Rag.Wait"); return; }
         if (!Path.IsPathFullyQualified(_folder.Text.Trim()) || !Directory.Exists(_folder.Text.Trim()))
         { _error.Text = _l("Literary.Create.InvalidFolder"); _folder.BringIntoView(); _folder.Focus(); return; }
         if (!LiteraryProjectStore.IsValidProjectName(_name.Text.Trim()))
@@ -196,17 +201,22 @@ public sealed class LiteraryProjectCreateControl : UserControl
             Include = _include.Text.Trim(), Avoid = _avoid.Text.Trim(), BasedOnExistingWorld = _type.SelectedIndex == 1,
             WorldSource = _type.SelectedIndex == 1 ? _source.Text.Trim() : "", CultureCountries = _countries.SelectedIds.ToList(), CultureNotes = _cultureNotes.Text.Trim()
         };
-        var parent = _folder.Text.Trim(); var materials = _materials.ToArray();
+        var parent = _folder.Text.Trim();
+        var index = _type.SelectedIndex == 1 ? _preparedIndex : null;
+        var materials = index?.Sources.ToArray() ?? _materials.ToArray();
         _saving = true; _sections.IsEnabled = false; _create.IsEnabled = false; _cancel.IsEnabled = false;
         _error.Text = _l("Literary.Create.Saving");
         try
         {
-            CreatedProject = await Task.Run(() => _store.Create(parent, project, materials));
+            index?.SetDestination(Path.Combine(parent, project.ProjectName));
+            CreatedProject = await Task.Run(() => _store.Create(parent, project, materials, index is null ? null : index.CopyInto));
+            index?.Commit();
+            if (index is not null) { await index.DisposeAsync(); _preparedIndex = null; }
             _saving = false; ProjectCreated?.Invoke(CreatedProject);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or System.Text.Json.JsonException)
         { _error.Text = _l("Literary.Create.SaveError") + "\n" + ex.Message; }
-        finally { _saving = false; _sections.IsEnabled = true; _create.IsEnabled = true; _cancel.IsEnabled = true; }
+        finally { _saving = false; _sections.IsEnabled = true; UpdateCreateAvailability(); _cancel.IsEnabled = true; }
     }
 
     private static TextBox Input(bool multiline = false) => new()

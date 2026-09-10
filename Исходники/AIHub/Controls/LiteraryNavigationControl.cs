@@ -16,10 +16,17 @@ public sealed class LiteraryNavigationControl : UserControl
     private string _language = "ru", _initialFolder = "", _notice = "";
     private LiteraryProjectCreateControl? _creation;
     private LiteraryWorkspaceControl? _workspace;
+    private LiteraryPreparationControl? _preparation;
     public bool ShowingProjects { get; private set; }
     public event Action? BackRequested;
     public event Action? HomeRequested;
-    public bool CanLeave() => _workspace?.CanLeave() ?? true;
+    public bool CanLeave()
+    {
+        if (_creation?.IsSaving == true) return false;
+        _preparation?.Cancel();
+        _creation?.CancelIndexing();
+        return _workspace?.CanLeave() ?? true;
+    }
 
     public void Configure(Func<string, string> localize, bool projects = false, string? language = null, string? initialFolder = null)
     {
@@ -34,14 +41,16 @@ public sealed class LiteraryNavigationControl : UserControl
 
     public void GoBack()
     {
+        if (_preparation is not null) { _preparation.Cancel(); _preparation = null; ShowingProjects = false; Render(); return; }
         if (_workspace is not null) { if (!CanLeave()) return; _workspace = null; ShowingProjects = true; Render(); return; }
-        if (_creation is not null) { if (!_creation.IsSaving) { _creation = null; Render(); } return; }
+        if (_creation is not null) { if (!_creation.IsSaving) { _creation.CancelIndexing(); _creation = null; Render(); } return; }
         if (ShowingProjects) { ShowingProjects = false; Render(); }
         else BackRequested?.Invoke();
     }
 
     private void Render()
     {
+        if (_preparation is not null) { Content = _preparation; return; }
         if (_workspace is not null) { Content = _workspace; return; }
         if (_creation is not null) { Content = _creation; return; }
         var root = new Grid { Margin = new Thickness(56, 36, 56, 28) };
@@ -60,7 +69,7 @@ public sealed class LiteraryNavigationControl : UserControl
         if (!ShowingProjects)
         {
             body.Children.Add(Card("Literary.Import", "Literary.ImportHint", "Literary.Pending", null));
-            body.Children.Add(Card("Literary.Work", "Literary.WorkHint", "Literary.Start", () => { ShowingProjects = true; Render(); }));
+            body.Children.Add(Card("Literary.Work", "Literary.WorkHint", "Literary.Start", Prepare));
         }
         else
         {
@@ -119,7 +128,14 @@ public sealed class LiteraryNavigationControl : UserControl
     {
         LoadProjects();
         var dialog = new LiteraryProjectDialog(_projects, _l, mode, id => _store.SetActive(id),
-            async (entry, removal) => { await Task.Run(() => _store.Remove(entry, removal)); LoadProjects(); }) { Owner = Window.GetWindow(this) };
+            async (entry, removal) => { await Task.Run(() => _store.Remove(entry, removal)); LoadProjects();
+                if (removal == LiteraryProjectRemoval.DeleteFiles)
+                {
+                    using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                    try { await LiterarySourceIndex.RecoverAsync(cleanup.Token); }
+                    catch (Exception ex) { OwnedProcessRegistry.Log("rag_cleanup_pending", "Qdrant", detail: ex.Message); }
+                }
+            }) { Owner = Window.GetWindow(this) };
         if (dialog.ShowDialog() == true && dialog.SelectedProject is { } selected)
         {
             if (mode == LiteraryProjectDialogMode.Export) _ = LiteraryExportDialog.ShowAsync(this, _l, selected.ProjectPath, selected.Title);
@@ -152,6 +168,16 @@ public sealed class LiteraryNavigationControl : UserControl
             ShowingProjects = true;
             OpenWorkspace(entry);
         };
+        Render();
+    }
+
+    private void Prepare()
+    {
+        var page = new LiteraryPreparationControl(_l);
+        _preparation = page;
+        page.Ready += () => { if (_preparation != page) return; _preparation = null; ShowingProjects = true; Render(); };
+        page.BackRequested += GoBack;
+        page.HomeRequested += () => { page.Cancel(); _preparation = null; HomeRequested?.Invoke(); };
         Render();
     }
 

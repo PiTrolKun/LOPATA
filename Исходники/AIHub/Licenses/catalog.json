@@ -1209,5 +1209,55 @@
       "texts/qdrant-LICENSE.txt",
       "texts/Apache-2.0.txt"
     ]
+  },
+  {
+    "Id": "model.giga-embeddings-480m",
+    "Name": "ai-sage/Giga-Embeddings-instruct-480M-0826",
+    "Version": "0c94f705aa35719324fb46f7e75b0a5c275da6e4",
+    "Author": "ai-sage",
+    "License": "MIT (declared by publisher)",
+    "Source": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-480M-0826",
+    "Checked": "2026-09-10",
+    "Ru": "Карточка автора указывает MIT. В закреплённом репозитории отдельный LICENSE отсутствует; точный текст уведомления правообладателя не опубликован. Скачиваются отдельно веса, токенизатор и код модели закреплённой версии. Ознакомление не создаёт дополнительных прав. Пока используется только для индексации первоисточника.",
+    "En": "The publisher declares MIT. The pinned repository has no separate LICENSE or copyright notice. Weights, tokenizer and pinned model code are downloaded separately. Acknowledgement does not grant additional rights. Currently used only to index project source books.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "57CFD72B5F1C391F18D5919C0786BC16C6EFD7BDDF10DBF77B5DBF8E0C1D998A",
+    "Texts": []
+  },
+  {
+    "Id": "model.runeweaver",
+    "Name": "MN-12B-Runeweaver-RP-RU Q4_K_M",
+    "Version": "84fa96954eef3eec4e92433e133c5bb1c774fc22",
+    "Author": "limloop and upstream model authors",
+    "License": "Apache-2.0 (declared by publisher)",
+    "Source": "https://huggingface.co/limloop/MN-12B-Runeweaver-RP-RU-GGUF",
+    "Checked": "2026-09-10",
+    "Ru": "Автор GGUF указывает Apache-2.0. Это объединённая модель; отдельный аудит всех исходных моделей не завершён. Веса скачиваются отдельно либо используются из уже зарегистрированного файла. Условия исходных компонентов сохраняют силу.",
+    "En": "The GGUF publisher declares Apache-2.0. This is a merge; a separate audit of every upstream model is not complete. Weights are downloaded separately or reused from an existing registered file. Upstream component terms still apply.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "89C62B5ED7A005671DE54B190BCBDC474F83EE86E8630485D183FCA8416C591C",
+    "Texts": []
+  },
+  {
+    "Id": "runtime.giga-python",
+    "Name": "Giga Python processing environment",
+    "Version": "Python 3.12.10 / PyTorch 2.10.0 cu128 / Transformers 5.3.0 / pip 25.3",
+    "Author": "Python Software Foundation, PyTorch, Hugging Face, pip and dependency authors",
+    "License": "PSF-2.0; BSD-3-Clause; Apache-2.0; MIT; NVIDIA CUDA terms; dependency licenses",
+    "Source": "https://pytorch.org/get-started/previous-versions/",
+    "Checked": "2026-09-10",
+    "Ru": "Изолированное окружение скачивается отдельно: Python, pip, PyTorch с CUDA 12.8 и Transformers. Приложены оригинальные основные лицензии; пакеты сохраняют собственные LICENSE/NOTICE. Условия NVIDIA: https://docs.nvidia.com/cuda/archive/12.8.0/eula/index.html. Точный состав транзитивных зависимостей фиксируется при установке; отдельный аудит всех зависимостей не завершён.",
+    "En": "A separate environment downloads Python, pip, PyTorch with CUDA 12.8 and Transformers. Original primary licenses are included; packages retain their LICENSE/NOTICE files. NVIDIA terms: https://docs.nvidia.com/cuda/archive/12.8.0/eula/index.html. Transitive package versions are recorded during installation; a separate review of every dependency is incomplete.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "804831AE2DC9C842838EC01540036E93111EFF5BF1A945F86AD1B0C00DF6BE37",
+    "Texts": [
+      "texts/python-3.12.10-LICENSE.txt",
+      "texts/pytorch-LICENSE.txt",
+      "texts/transformers-LICENSE.txt",
+      "texts/pip-LICENSE.txt"
+    ]
   }
 ]

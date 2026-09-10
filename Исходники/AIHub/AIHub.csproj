@@ -44,6 +44,7 @@
     <Content Include="Tools\*.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Tools\giga-manifest.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="..\..\Каталоги\huggingface-catalog-seed.json" Link="Catalogs\huggingface-catalog-seed.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

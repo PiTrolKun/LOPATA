@@ -51,6 +51,7 @@ internal static class LiteraryProjectDeletion
                 throw new IOException("A project file is read-only: " + file);
             using var probe = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None);
         }
+        LiterarySourceIndex.QueueProjectDeletion(root);
         foreach (var file in files.Where(p => !string.Equals(p, manifest, StringComparison.OrdinalIgnoreCase)))
         {
             CheckLink(file);
