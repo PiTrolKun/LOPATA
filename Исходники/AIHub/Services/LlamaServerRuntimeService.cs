@@ -473,7 +473,7 @@ public sealed class LlamaServerRuntimeService : IDisposable
 
         _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         log($"Starting llama-server: {Path.GetFileName(model.Path)} on {Endpoint}; gpu-layers={gpuLayers}");
-        _process.Start();
+        OwnedProcessRegistry.Shared.Start(_process, "LlamaServerRuntimeService");
         log(RuntimeResourceDiagnostics.DescribeLaunch(
             "AI HUB core / llama-server",
             _process,

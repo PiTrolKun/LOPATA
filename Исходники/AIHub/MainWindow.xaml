@@ -857,6 +857,7 @@
                         <TextBlock x:Name="DetailedLiteraryDiagnosticsHint" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextSecondaryBrush}" MaxWidth="850" HorizontalAlignment="Left" />
                         <Button x:Name="OpenLiteraryDiagnosticsButton" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OpenLiteraryDiagnostics_Click" />
+                        <Button x:Name="OpenProcessesButton" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OpenProcesses_Click" />
                     </StackPanel>
                 </Border>
                 <Border Background="{DynamicResource PanelBrush}"

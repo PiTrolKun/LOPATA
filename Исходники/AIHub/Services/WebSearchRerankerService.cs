@@ -144,7 +144,7 @@ public sealed class WebSearchRerankerService
             CreateNoWindow = true
         };
 
-        process.Start();
+        OwnedProcessRegistry.Shared.Start(process, "WebSearchRerankerService");
         await process.StandardInput.WriteAsync(payloadJson.AsMemory(), cancellationToken);
         process.StandardInput.Close();
 

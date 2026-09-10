@@ -79,7 +79,7 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library, Om
             _process = process;
             process.OutputDataReceived += (_, e) => { if (e.Data is { } line) RetainLine(line, log); };
             process.ErrorDataReceived += (_, e) => { if (e.Data is { } line) RetainLine(line, log); };
-            if (!process.Start()) throw new InvalidOperationException("Omni llama-server failed to start.");
+            if (!OwnedProcessRegistry.Shared.Start(process, "OmniLlamaRuntimeService")) throw new InvalidOperationException("Omni llama-server failed to start.");
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             log(RuntimeResourceDiagnostics.DescribeLaunch(_profile.Label, process, DeviceMapJson, model));

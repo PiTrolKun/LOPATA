@@ -17,6 +17,7 @@ public partial class MainWindow
             DetailedLiteraryDiagnosticsCheckBox.IsChecked = _appSettings.DetailedLiteraryDiagnostics;
             DetailedLiteraryDiagnosticsHint.Text = L("Diagnostics.Literary.Hint");
             OpenLiteraryDiagnosticsButton.Content = L("Diagnostics.Literary.Open");
+            OpenProcessesButton.Content = L("Processes.Title");
         }
         finally { _refreshingDiagnostics = false; }
     }
@@ -38,4 +39,7 @@ public partial class MainWindow
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
         { System.Windows.MessageBox.Show(this, L("Diagnostics.Literary.OpenFailed"), L("Settings.Title")); }
     }
+
+    private void OpenProcesses_Click(object sender, RoutedEventArgs e) =>
+        new ProcessDiagnosticsWindow(this, L).ShowDialog();
 }

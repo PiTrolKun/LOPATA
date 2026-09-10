@@ -198,7 +198,7 @@ public sealed class LiteraryChatRuntime : IDisposable
         _diagnostics?.Write("launch", new { executable = info.FileName, arguments = info.ArgumentList.ToArray(), model, modelBytes = new FileInfo(model).Length,
             backend = FileVersionInfo.GetVersionInfo(info.FileName).FileVersion });
         token.ThrowIfCancellationRequested();
-        if (!process.Start()) throw new InvalidOperationException("Literary runtime did not start.");
+        if (!OwnedProcessRegistry.Shared.Start(process, "LiteraryChatRuntime")) throw new InvalidOperationException("Literary runtime did not start.");
         process.BeginOutputReadLine(); process.BeginErrorReadLine();
         Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process, "shared weights; unified KV=24576; Writer=8192 Advisor=16384; slots=2; sequential", model));
         using var startup = CancellationTokenSource.CreateLinkedTokenSource(token);

@@ -100,7 +100,7 @@ public sealed class ImageAnalysisRuntimeCompatibilityService
         {
             startInfo.ArgumentList.Add(argument);
         }
-        using var process = Process.Start(startInfo)
+        using var process = OwnedProcessRegistry.Shared.Start(startInfo, "ImageAnalysisRuntimeCompatibilityService")
             ?? throw new InvalidOperationException("The local Kimi runtime could not be started.");
         var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
         var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
@@ -151,7 +151,7 @@ public sealed class ImageAnalysisRuntimeCompatibilityService
         startInfo.Environment["HF_HUB_OFFLINE"] = "1";
         startInfo.Environment["TRANSFORMERS_OFFLINE"] = "1";
         startInfo.Environment["HF_DATASETS_OFFLINE"] = "1";
-        using var process = Process.Start(startInfo)
+        using var process = OwnedProcessRegistry.Shared.Start(startInfo, "ImageAnalysisRuntimeCompatibilityService")
             ?? throw new InvalidOperationException("The local Florence runtime could not be started.");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(FlorenceTimeout);

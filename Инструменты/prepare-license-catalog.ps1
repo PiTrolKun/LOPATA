@@ -72,6 +72,10 @@ $kokoro.En='The author declares OpenRAIL for weights and Apache-2.0 for code. Th
 $kimi=$entries | Where-Object Id -eq 'model-kimi-vl-a3b-thinking-2506-chatllm-q4_1'
 $kimi.Ru='Исходная модель Moonshot заявлена под MIT. Карточка конвертации на ModelScope указывает other, сообщает об исследовательском/учебном назначении и отсылает к соглашениям соответствующих моделей. Отдельный полный текст лицензии конвертации не найден.'
 $kimi.En='The upstream Moonshot model declares MIT. The conversion card on ModelScope lists other, describes research/study purposes and refers to the respective model agreements. A separate full conversion license was not found.'
+Add-Entry 'backend.qdrant' 'Qdrant' '1.19.1' 'Apache-2.0' 'https://github.com/qdrant/qdrant/releases/tag/v1.19.1' 'Qdrant contributors' $false 'download' 'Локальный сервер поиска и хранения. Официальная Windows x64 сборка скачивается отдельно; в установщик не входит. Приложен оригинальный LICENSE версии 1.19.1. При распространении сохраняйте лицензию и применимые уведомления; отдельный аудит всех зависимостей готового бинарного файла не завершён.' 'Local search and storage server. The official Windows x64 binary is downloaded separately, not bundled in the installer. Original version 1.19.1 LICENSE is included. Retain the license and applicable notices when redistributing; a separate audit of all binary dependencies is not complete.'
+$qdrant = $entries | Where-Object Id -eq 'backend.qdrant'
+$qdrant.Checked = '2026-09-10'
+$qdrant.Texts = @('texts/qdrant-LICENSE.txt')
 $sources=@{
  'MIT'='https://raw.githubusercontent.com/ggml-org/llama.cpp/b9442/LICENSE'
  'Apache-2.0'='https://www.apache.org/licenses/LICENSE-2.0.txt'

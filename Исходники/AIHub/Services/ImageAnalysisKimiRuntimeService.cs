@@ -229,7 +229,7 @@ public sealed class ImageAnalysisKimiRuntimeService : IDisposable
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, args) => LogBackendLine(args.Data, log);
         process.ErrorDataReceived += (_, args) => LogBackendLine(args.Data, log);
-        process.Start();
+        OwnedProcessRegistry.Shared.Start(process, "ImageAnalysisKimiRuntimeService");
         log(RuntimeResourceDiagnostics.DescribeLaunch(
             "Kimi visual analyst / chatllm.cpp",
             process,

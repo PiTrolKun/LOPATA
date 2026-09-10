@@ -1,0 +1,1 @@
+PASS: RU/EN, dark/light, no auto-start, Start/Stop via WPF, graceful shutdown.

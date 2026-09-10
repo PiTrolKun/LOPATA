@@ -1,5 +1,15 @@
 # THIRD PARTY NOTICES — AI_HUB
 
+## Qdrant 1.19.1 — optional downloaded runtime (2026-09-10)
+
+Qdrant contributors; Apache License 2.0. Official source and Windows binary:
+https://github.com/qdrant/qdrant/releases/tag/v1.19.1.
+The original upstream LICENSE is retained in `Исходники/AIHub/Licenses/texts/qdrant-LICENSE.txt`
+and copied beside the downloaded executable. This runtime is not bundled with the installer.
+Retain applicable licenses/notices when redistributing; the separate audit of all native
+binary dependencies has not been completed. Pinned artifact hashes and delivery details:
+`Тесты/ProcessInfrastructure/README.md`.
+
 Этот файл предназначен для уведомлений о сторонних библиотеках, инструментах, моделях, backends и материалах.
 
 ## Runtime-зависимости

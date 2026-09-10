@@ -1191,5 +1191,23 @@
     "Texts": [
       "texts/Apache-2.0.txt"
     ]
+  },
+  {
+    "Id": "backend.qdrant",
+    "Name": "Qdrant",
+    "Version": "1.19.1",
+    "Author": "Qdrant contributors",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/qdrant/qdrant/releases/tag/v1.19.1",
+    "Checked": "2026-09-10",
+    "Ru": "Локальный сервер поиска и хранения. Официальная Windows x64 сборка скачивается отдельно; в установщик не входит. Приложен оригинальный LICENSE версии 1.19.1. При распространении сохраняйте лицензию и применимые уведомления; отдельный аудит всех зависимостей готового бинарного файла не завершён.",
+    "En": "Local search and storage server. The official Windows x64 binary is downloaded separately, not bundled in the installer. Original version 1.19.1 LICENSE is included. Retain the license and applicable notices when redistributing; a separate audit of all binary dependencies is not complete.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "89DD09C71C4C366BAA1231C16C19BB9EB42AFB2AD51B6B379ED5F469C4BCB071",
+    "Texts": [
+      "texts/qdrant-LICENSE.txt",
+      "texts/Apache-2.0.txt"
+    ]
   }
 ]

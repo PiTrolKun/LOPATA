@@ -71,7 +71,7 @@ public sealed class LlamaCliRuntimeService
 
             using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             log($"Starting llama-cli: {Path.GetFileName(model.Path)}");
-            process.Start();
+            OwnedProcessRegistry.Shared.Start(process, "LlamaCliRuntimeService");
 
             using var registration = cancellationToken.Register(() =>
             {

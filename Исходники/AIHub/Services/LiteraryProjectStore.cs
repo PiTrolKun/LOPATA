@@ -82,6 +82,22 @@ public sealed class LiteraryProjectStore(string indexPath)
         Save(index);
     }
 
+    public void Remove(LiteraryProjectEntry expected, LiteraryProjectRemoval mode)
+    {
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        using var indexLock = AcquireLock();
+        var index = Load();
+        var entry = index.Projects.SingleOrDefault(p => p.Id == expected.Id)
+            ?? throw new IOException("Project is no longer registered.");
+        if (!string.Equals(entry.ProjectPath, expected.ProjectPath, StringComparison.OrdinalIgnoreCase))
+            throw new IOException("Project location has changed. Reopen the project list.");
+        if (mode == LiteraryProjectRemoval.DeleteFiles)
+            LiteraryProjectDeletion.Delete(entry, index.Projects, indexPath);
+        index.Projects.Remove(entry);
+        if (index.ActiveId == entry.Id) index.ActiveId = null;
+        Save(index); // On failure the old index remains available for retry.
+    }
+
     public static LiteraryProject ReadProject(string directory) =>
         JsonSerializer.Deserialize<LiteraryProject>(File.ReadAllText(Path.Combine(directory, "project.json")))
         is { SchemaVersion: 1 } project ? project : throw new InvalidDataException("Unsupported literary project.");

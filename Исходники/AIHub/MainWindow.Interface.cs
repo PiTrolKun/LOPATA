@@ -322,9 +322,22 @@ public partial class MainWindow
         }
     }
 
-    protected override void OnClosing(CancelEventArgs e)
+    private bool _processShutdownComplete, _processShutdownPending;
+    protected override async void OnClosing(CancelEventArgs e)
     {
+        if (_processShutdownPending) { e.Cancel = true; base.OnClosing(e); return; }
         if (!LiteraryPage.CanLeave()) { e.Cancel = true; base.OnClosing(e); return; }
+        if (!_processShutdownComplete)
+        {
+            e.Cancel = true;
+            base.OnClosing(e);
+            _processShutdownPending = true;
+            try { await AIHub.Services.QdrantRuntime.Shared.ShutdownAsync(); }
+            catch (Exception ex) { AIHub.Services.OwnedProcessRegistry.Log("shutdown_failed", "Qdrant", detail: ex.GetType().Name); }
+            finally { _processShutdownPending = false; _processShutdownComplete = true; }
+            _ = Dispatcher.BeginInvoke(new Action(Close));
+            return;
+        }
         SaveCurrentWindowPlacement();
         base.OnClosing(e);
     }

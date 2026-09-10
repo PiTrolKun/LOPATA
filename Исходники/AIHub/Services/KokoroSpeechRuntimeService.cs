@@ -524,7 +524,7 @@ public sealed class KokoroSpeechRuntimeService : IDisposable
         startInfo.Environment["TRANSFORMERS_OFFLINE"] = "1";
         startInfo.Environment["HF_DATASETS_OFFLINE"] = "1";
         startInfo.Environment["PYTHONIOENCODING"] = "utf-8";
-        var process = Process.Start(startInfo)
+        var process = OwnedProcessRegistry.Shared.Start(startInfo, "KokoroSpeechRuntimeService")
             ?? throw new InvalidOperationException("The local Kokoro worker could not be started.");
         _process = process;
         _errorDrainTask = Task.Run(async () =>

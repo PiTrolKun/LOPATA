@@ -1,0 +1,13 @@
+{
+  "result": {
+    "SearchPassed": true,
+    "RestartReadPassed": true,
+    "GracefulRestart": true,
+    "MemoryBytes": 68456448
+  },
+  "firstPid": 28780,
+  "recovered": true,
+  "secondOwnerRejected": true,
+  "startupTimeoutCleaned": true,
+  "finalPid": null
+}

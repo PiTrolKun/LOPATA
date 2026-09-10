@@ -438,7 +438,7 @@ public sealed class Qwen25OmniRuntimeService : IOmniTextRuntime
         startInfo.Environment["HF_DATASETS_OFFLINE"] = "1";
         startInfo.Environment["PYTHONNOUSERSITE"] = "1";
         startInfo.Environment["PYTHONIOENCODING"] = "utf-8";
-        var process = Process.Start(startInfo)
+        var process = OwnedProcessRegistry.Shared.Start(startInfo, "Qwen25OmniRuntimeService")
             ?? throw new InvalidOperationException("The isolated Qwen2.5-Omni worker could not be started.");
         lock (_processSync)
         {

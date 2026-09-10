@@ -118,7 +118,8 @@ public sealed class LiteraryNavigationControl : UserControl
     private void OpenProjects(LiteraryProjectDialogMode mode)
     {
         LoadProjects();
-        var dialog = new LiteraryProjectDialog(_projects, _l, mode, id => _store.SetActive(id)) { Owner = Window.GetWindow(this) };
+        var dialog = new LiteraryProjectDialog(_projects, _l, mode, id => _store.SetActive(id),
+            async (entry, removal) => { await Task.Run(() => _store.Remove(entry, removal)); LoadProjects(); }) { Owner = Window.GetWindow(this) };
         if (dialog.ShowDialog() == true && dialog.SelectedProject is { } selected)
         {
             if (mode == LiteraryProjectDialogMode.Export) _ = LiteraryExportDialog.ShowAsync(this, _l, selected.ProjectPath, selected.Title);

@@ -144,7 +144,7 @@ public sealed class ImageAnalysisHeavyResourcePlanningService
             };
             startInfo.ArgumentList.Add("--query-gpu=memory.free,memory.total");
             startInfo.ArgumentList.Add("--format=csv,noheader,nounits");
-            using var process = Process.Start(startInfo);
+            using var process = OwnedProcessRegistry.Shared.Start(startInfo, "ImageAnalysisHeavyResourcePlanningService");
             if (process is null)
             {
                 return (0, 0);

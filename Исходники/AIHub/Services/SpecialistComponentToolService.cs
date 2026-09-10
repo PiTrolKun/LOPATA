@@ -270,7 +270,7 @@ public sealed class SpecialistComponentToolService
                     outputBase,
                     language)
             };
-            if (!process.Start())
+            if (!OwnedProcessRegistry.Shared.Start(process, "SpecialistComponentToolService"))
             {
                 throw new SessionFileToolException(
                     "whisper_start_failed",
@@ -366,7 +366,7 @@ public sealed class SpecialistComponentToolService
         CancellationToken cancellationToken)
     {
         using var process = new Process { StartInfo = startInfo };
-        if (!process.Start())
+        if (!OwnedProcessRegistry.Shared.Start(process, "SpecialistComponentToolService"))
         {
             throw new SessionFileToolException(
                 "component_start_failed",

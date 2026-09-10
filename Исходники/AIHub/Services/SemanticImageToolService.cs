@@ -324,7 +324,7 @@ public sealed class SemanticImageToolService
             diagnostics.Add("stdout", eventArgs.Data);
         process.ErrorDataReceived += (_, eventArgs) =>
             diagnostics.Add("stderr", eventArgs.Data);
-        process.Start();
+        OwnedProcessRegistry.Shared.Start(process, "SemanticImageToolService");
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         return process;
