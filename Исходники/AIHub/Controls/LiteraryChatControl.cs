@@ -20,7 +20,8 @@ public sealed class LiteraryChatControl : UserControl
     private readonly LiteraryTranscript _transcript = new();
     private readonly TextBox _input = LiteraryWorkspaceParts.TextArea(false);
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap };
-    private readonly Button _send = new(), _clear = new();
+    private readonly Button _send = new(), _clear = new(), _anchorButton = new();
+    private readonly LiteraryPlotAnchorStore? _anchorStore;
     private CancellationTokenSource? _cts;
     private string _statusKey = "Literary.Writer.Ready";
     private readonly List<(bool User, string Text)> _display = [];
@@ -39,19 +40,20 @@ public sealed class LiteraryChatControl : UserControl
         _l = LocalizeRole(localize);
         if (directory is not null)
         {
+            _anchorStore = new(new LiteraryProjectLayout(directory), profile);
             _dialogStore = new(new LiteraryProjectLayout(directory), profile);
             _dialog = _dialogStore.Load();
             foreach (var message in _dialog.Messages)
             {
                 _display.Add((message.User, message.Text + (!message.Complete ? "\n[" + _l("Literary.Writer.Incomplete") + "]" : "")));
-                if (profile == LiteraryChatProfile.Advisor && message.Complete)
-                    _history.Add(new() { Role = message.User ? "user" : "assistant", Content = message.Text });
             }
+            _history.AddRange(LiteraryDialogueStore.Context(_dialog));
             _input.Text = _dialog.Input;
             _transcript.ShowHistory(_display, _l("Literary.Writer.You"), _l("Literary.Workspace.Writer"));
         }
         _send.Click += async (_, _) => { if (_cts is not null) _cts.Cancel(); else await SendAsync(); };
         _clear.Click += (_, _) => { if (ActionsBlocked) return; _history.Clear(); _display.Clear(); _transcript.Clear(); if (_dialog is not null) { _dialog.Id = Guid.NewGuid().ToString("N"); _dialog.Messages.Clear(); } SaveDialogue(); _runtime.ResetAnchor(_profile); SetStatus("Literary.Writer.Ready"); UpdateButtons(); };
+        _anchorButton.Click += (_, _) => { if (!ActionsBlocked && !_runtime.IsBusy && _anchorStore is not null) LiteraryPlotAnchorDialog.Open(this, _l, _anchorStore, _profile); };
         _runtime.BusyChanged += () => Dispatcher.BeginInvoke(new Action(UpdateButtons));
         _input.PreviewKeyDown += async (_, e) =>
         {
@@ -92,13 +94,15 @@ public sealed class LiteraryChatControl : UserControl
     private void Render()
     {
         // Reuse the active input/history controls when the application language changes.
-        foreach (var element in new FrameworkElement[] { _transcript, _input, _status, _send, _clear })
+        foreach (var element in new FrameworkElement[] { _transcript, _input, _status, _send, _clear, _anchorButton })
             if (element.Parent is System.Windows.Controls.Panel parent) parent.Children.Remove(element);
         var panel = new DockPanel();
         var heading = new WrapPanel();
         heading.Children.Add(LiteraryUi.Text(_l("Literary.Workspace.Writer"), true));
         _clear.Content = _l("Literary.Writer.Clear");
         _clear.Margin = new Thickness(8, 0, 0, 0); _clear.SetResourceReference(StyleProperty, "SecondaryButtonStyle"); heading.Children.Add(_clear);
+        _anchorButton.Content = _l("Literary.Anchor.Title"); _anchorButton.ToolTip = _l("Literary.Anchor.Hint");
+        _anchorButton.Margin = new Thickness(8, 0, 0, 0); _anchorButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle"); heading.Children.Add(_anchorButton);
         DockPanel.SetDock(heading, Dock.Top); panel.Children.Add(heading);
         var notice = LiteraryUi.Text(_l("Literary.Writer.Temporary")); DockPanel.SetDock(notice, Dock.Top); panel.Children.Add(notice);
         _status.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
@@ -121,6 +125,7 @@ public sealed class LiteraryChatControl : UserControl
         _send.IsEnabled = !ActionsBlocked && (_cts is not null || (!_runtime.IsBusy && !string.IsNullOrWhiteSpace(_input.Text)));
         _send.Opacity = _send.IsEnabled ? 1 : 0.45;
         _input.IsReadOnly = _cts is not null; _clear.IsEnabled = !ActionsBlocked && !_runtime.IsBusy && _cts is null && _display.Count > 0;
+        _anchorButton.IsEnabled = !ActionsBlocked && !_runtime.IsBusy && _cts is null && _anchorStore is not null;
         _status.Text = _l(_runtime.IsBusy && _cts is null ? "Literary.Shared.Waiting" : _statusKey);
     }
     private void SetStatus(string key) { _statusKey = key; _status.Text = _l(key); }
@@ -157,8 +162,7 @@ public sealed class LiteraryChatControl : UserControl
                     Dispatcher.BeginInvoke(new Action(() => { if (_cts == cts && !finished) SetStatus(key); }));
                 });
             finished = true;
-            if (_profile == LiteraryChatProfile.Advisor)
-            { _history.Add(request[^1]); _history.Add(new ImageAnalysisHiddenMessage { Role = "assistant", Content = result }); }
+            _history.Add(request[^1]); _history.Add(new ImageAnalysisHiddenMessage { Role = "assistant", Content = result });
             _display.Add((false, result));
             _dialog?.Messages.Add(new(false, result));
             var changed = false;
@@ -170,6 +174,7 @@ public sealed class LiteraryChatControl : UserControl
             SetStatus(changed ? "Literary.Context.Changed" : limited ? "Literary.Context.Limited" : recovered ? "Literary.Loop.Recovered" : "Literary.Writer.Ready");
         }
         catch (LiterarySourceException) { PreservePartial(); SetStatus("Literary.Context.SourceError"); _input.Text = text; }
+        catch (LiteraryPlotAnchorException) { PreservePartial(); SetStatus("Literary.Anchor.LoadError"); _input.Text = text; }
         catch (LiteraryLoopException) { PreservePartial(); SetStatus("Literary.Loop.Stopped"); _input.Text = text; }
         catch (LiteraryDraftLimitException) { PreservePartial(); SetStatus("Literary.Draft.TokenLimit"); _input.Text = text; }
         catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); SetStatus(ex.OutputTruncated ? "Literary.Shared.OutputLimit" : "Literary.Writer.Context"); _input.Text = text; }

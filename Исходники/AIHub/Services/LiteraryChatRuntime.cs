@@ -58,7 +58,12 @@ public sealed class LiteraryChatRuntime : IDisposable
             _layout?.EnsurePresent();
             if (editor is not null && (editor.ProjectId != project.Id || editor.Text != draft))
                 throw new InvalidDataException("Editor snapshot does not match the request.");
-            var messages = LiteraryModelPolicy.Messages(role, history, draft, project, includeDraft: editor is null);
+            LiteraryPlotAnchor? anchor = null;
+            try { if (_layout is not null) anchor = new LiteraryPlotAnchorStore(_layout, role).Load(); }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or JsonException or UnauthorizedAccessException)
+            { throw new LiteraryPlotAnchorException(ex); }
+            diagnostics.Write("plot_anchor", new { role, anchor?.Revision, anchor?.UpdatedAt, characters = anchor?.Text.Length ?? 0 });
+            var messages = LiteraryModelPolicy.Messages(role, history, draft, project, includeDraft: editor is null, plotAnchor: anchor?.Text ?? "");
             diagnostics.Write("input", messages);
             await PrepareAsync(ct).ConfigureAwait(false);
             diagnostics.Write("process_ready", new { pid = _process!.Id, role, slot = LiteraryModelPolicy.Slot(role), arguments = _process.StartInfo.ArgumentList.ToArray() });
@@ -78,8 +83,9 @@ public sealed class LiteraryChatRuntime : IDisposable
                     diagnostics.Write(kind, data);
                     if (kind == "read_plan") Log("Read action: " + JsonSerializer.Serialize(data));
                     else if (kind == "source_evicted") Log("Source block evicted for context budget.");
-                }, role, _layout is null ? null : new LiteraryRagReader(editor));
-                messages = await reading.PrepareAsync(messages, (input, _) => InferAsync(input, true), activity, ct);
+                }, role, _layout is null ? null : new LiteraryRagReader(editor), anchor?.Text ?? "");
+                messages = await reading.PrepareAsync(messages, (input, _) => InferAsync(input, true, reading.StepResponseFormat()), activity, ct,
+                    (input, _) => InferAsync(input, true, LiteraryReadRouting.ResponseFormat(editor)));
             }
             if (!await FitsAsync(messages, ct)) throw new ImageAnalysisContextExhaustedException("Mandatory context exceeds the role budget.");
             activity?.Invoke("Literary.Writer.Working");
@@ -95,7 +101,7 @@ public sealed class LiteraryChatRuntime : IDisposable
                 return promptTokens + LiteraryModelPolicy.ReplyTokens(role) + LiteraryModelPolicy.SafetyTokens <= LiteraryModelPolicy.ContextTokens(role);
             }
 
-            Task<string> InferAsync(IReadOnlyList<ImageAnalysisHiddenMessage> input, bool planning) => LiteraryLoopRecovery.RunAsync(async recovery =>
+            Task<string> InferAsync(IReadOnlyList<ImageAnalysisHiddenMessage> input, bool planning, JsonObject? format = null) => LiteraryLoopRecovery.RunAsync(async recovery =>
             {
                 ct.ThrowIfCancellationRequested();
                 // AwaitIdle can retire a server that did not acknowledge cancellation.
@@ -104,8 +110,8 @@ public sealed class LiteraryChatRuntime : IDisposable
                 if (planning)
                 {
                     var json = JsonNode.Parse(body)!.AsObject();
-                    json["max_tokens"] = 256; json["temperature"] = 0;
-                    json["response_format"] = LiteraryReadingSession.ResponseFormat(); body = json.ToJsonString();
+                    json["max_tokens"] = 384; json["temperature"] = 0;
+                    json["response_format"] = format ?? LiteraryReadingSession.ResponseFormat(); body = json.ToJsonString();
                 }
                 diagnostics.Write("attempt", new { attempt = recovery ? 2 : 1, recovery, planning });
                 diagnostics.Write("request", new { endpoint = Server, json = body });

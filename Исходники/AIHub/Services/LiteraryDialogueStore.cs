@@ -18,6 +18,20 @@ public sealed class LiteraryDialogue
 
 public sealed class LiteraryDialogueStore(LiteraryProjectLayout layout, LiteraryChatProfile role)
 {
+    public static IEnumerable<AIHub.Models.ImageAnalysisHiddenMessage> Context(LiteraryDialogue dialogue)
+    {
+        LiteraryDialogueMessage? pending = null;
+        foreach (var message in dialogue.Messages)
+        {
+            if (message.User) { pending = message; continue; }
+            if (pending is not null && message.Complete)
+            {
+                yield return new() { Role = "user", Content = pending.Text };
+                yield return new() { Role = "assistant", Content = message.Text };
+            }
+            pending = null;
+        }
+    }
     private string? _lastSaved;
     public string FilePath => Path.Combine(layout.Dialogs, role.ToString(), "dialog.json");
     public LiteraryDialogue Load()

@@ -54,7 +54,8 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
                 _ => new { error = "Unknown RAG operation." }
             };
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or HttpRequestException or LiteraryEmbeddingException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException
+            or KeyNotFoundException or InvalidOperationException or HttpRequestException or LiteraryEmbeddingException)
         { data = new { error = "RAG unavailable: " + ex.Message, action.Action }; }
         var json = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(data))!.AsObject();
         json["projectId"] = snapshot.ProjectId;
@@ -110,7 +111,7 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
     {
         if (string.IsNullOrWhiteSpace(query) || query.Length > 120) throw new InvalidDataException("Invalid query.");
         var collections = new List<(string Id, LiterarySource? Source)>();
-        var sections = References();
+        var sections = reference ? References() : [];
         if (reference)
         {
             var path = Path.Combine(_layout.Rag, "Source", "manifest.json");

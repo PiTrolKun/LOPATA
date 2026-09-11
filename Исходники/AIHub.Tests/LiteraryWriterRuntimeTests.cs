@@ -10,15 +10,15 @@ namespace AIHub.Tests;
 public sealed class LiteraryChatRuntimeTests
 {
     [TestMethod]
-    public void WriterUsesAcceptedDraftAndLatestTaskWhileCriticRetainsOwnConversation()
+    public void BothRolesRetainConversationWithDraftSeparateFromProposals()
     {
         ImageAnalysisHiddenMessage[] history = [new() { Role = "user", Content = "старое задание" },
             new() { Role = "assistant", Content = "непринятый ответ" }, new() { Role = "user", Content = "новое задание" }];
         var project = new LiteraryProject { Premise = "Русский замысел" };
         var writer = LiteraryModelPolicy.Messages(LiteraryChatProfile.Writer, history, "Принятый текст", project);
-        Assert.AreEqual(2, writer.Length);
+        Assert.AreEqual(4, writer.Length);
         Assert.IsTrue(writer[0].Content.Contains("Принятый текст"));
-        Assert.IsFalse(writer.Any(m => m.Content.Contains("непринятый ответ")));
+        Assert.AreEqual("непринятый ответ", writer[2].Content);
         Assert.AreEqual("новое задание", writer[^1].Content);
         var critic = LiteraryModelPolicy.Messages(LiteraryChatProfile.Advisor, history, "Принятый текст", project);
         Assert.AreEqual(4, critic.Length);
