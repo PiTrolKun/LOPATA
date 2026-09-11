@@ -9,6 +9,8 @@ public sealed class LiteraryChapterStore
     public static IReadOnlyList<int> AutosaveIntervals { get; } = Array.AsReadOnly(new[] { 10, 20, 30, 40, 50, 60, 90, 120, 150, 180 });
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
     private readonly string _root, _indexPath, _journalPath;
+    private readonly string? _projectIdentity;
+    private readonly string _projectFile;
     public LiteraryChapterIndex Index { get; private set; } = new();
     public LiteraryChapterPart Active => Index.Parts.Single(p => p.Id == Index.ActiveId);
     public string FilePath => Resolve(Active.FileName);
@@ -17,6 +19,8 @@ public sealed class LiteraryChapterStore
 
     public LiteraryChapterStore(string directory)
     {
+        _projectFile = Path.Combine(Path.GetFullPath(directory), "project.json");
+        _projectIdentity = File.Exists(_projectFile) ? File.ReadAllText(_projectFile) : null;
         _root = Path.Combine(Path.GetFullPath(directory), "chapters");
         _indexPath = Path.Combine(_root, "index.json"); _journalPath = Path.Combine(_root, "pending.json");
     }
@@ -30,6 +34,8 @@ public sealed class LiteraryChapterStore
 
     private FileStream Enter()
     {
+        if (_projectIdentity is not null && (!File.Exists(_projectFile) || File.ReadAllText(_projectFile) != _projectIdentity))
+            throw new IOException("Project disappeared or changed identity.");
         Directory.CreateDirectory(_root);
         return new FileStream(Path.Combine(_root, ".lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
     }

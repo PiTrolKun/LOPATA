@@ -85,16 +85,37 @@ public static class GigaEmbeddingInstallation
         await RunAsync([Script, "--check"], null, ct);
         await File.WriteAllTextAsync(Path.Combine(Root, "ready.json"), JsonSerializer.Serialize(new { python = "3.12.10", torch = "2.10.0", transformers = "5.3.0", checkedAt = DateTimeOffset.UtcNow }), ct);
     }
-    public static async Task RunAsync(IEnumerable<string> arguments, Action<string>? onLine, CancellationToken ct)
+    public static async Task RunAsync(IEnumerable<string> arguments, Action<string>? onLine, CancellationToken ct, string? logDirectory = null)
     {
         var info = new ProcessStartInfo(Python) { WorkingDirectory = Root, UseShellExecute = false,
             RedirectStandardOutput = true, RedirectStandardError = true };
         foreach (var arg in arguments) info.ArgumentList.Add(arg);
         info.Environment["PYTHONUTF8"] = "1"; info.Environment["PYTHONUNBUFFERED"] = "1";
         info.Environment["HF_HUB_OFFLINE"] = "1"; info.Environment["TRANSFORMERS_OFFLINE"] = "1";
-        var logs = Path.Combine(AppDataPaths.BaseDirectory, "Diagnostics", "Giga"); Directory.CreateDirectory(logs);
+        ct.ThrowIfCancellationRequested();
+        if (logDirectory is not null && !Directory.Exists(Path.GetDirectoryName(logDirectory))) throw new DirectoryNotFoundException("Project embedding data disappeared.");
+        var logs = logDirectory ?? Path.Combine(AppDataPaths.BaseDirectory, "Diagnostics", "Giga"); Directory.CreateDirectory(logs);
         var log = Path.Combine(logs, DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" + Guid.NewGuid().ToString("N") + ".log");
         using var process = OwnedProcessRegistry.Shared.Start(info, "Giga-Embeddings");
+        using var sampling = new CancellationTokenSource();
+        long peakWorkingSet = 0, peakPrivate = 0;
+        double cpuMilliseconds = 0;
+        var resourceTask = SampleAsync();
+        async Task SampleAsync()
+        {
+            try
+            {
+                while (!sampling.IsCancellationRequested && !process.HasExited)
+                {
+                    process.Refresh();
+                    peakWorkingSet = Math.Max(peakWorkingSet, process.WorkingSet64);
+                    peakPrivate = Math.Max(peakPrivate, process.PrivateMemorySize64);
+                    cpuMilliseconds = process.TotalProcessorTime.TotalMilliseconds;
+                    await Task.Delay(200, sampling.Token);
+                }
+            }
+            catch (Exception ex) when (ex is OperationCanceledException or InvalidOperationException or System.ComponentModel.Win32Exception) { }
+        }
         var error = new System.Text.StringBuilder();
         async Task Pump(StreamReader reader, bool stderr)
         {
@@ -110,12 +131,20 @@ public static class GigaEmbeddingInstallation
         try
         {
             await Task.WhenAll(process.WaitForExitAsync(ct), stdout, stderr);
-            if (process.ExitCode != 0) throw new IOException($"Giga worker exited {process.ExitCode}: {error}");
+            if (process.ExitCode != 0)
+            {
+                var detail = error.ToString();
+                if (detail.Contains("FileNotFoundError") || detail.Contains("PermissionError") || detail.Contains("No space left") || detail.Contains("disk is full"))
+                    throw new IOException($"Giga storage failure: {detail}");
+                throw new LiteraryEmbeddingException($"Giga worker exited {process.ExitCode}: {detail}");
+            }
         }
         finally
         {
             if (!process.HasExited) process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync(CancellationToken.None);
+            sampling.Cancel(); await resourceTask;
+            if (Directory.Exists(logs)) await File.AppendAllTextAsync(log, JsonSerializer.Serialize(new { resources = new { peakWorkingSet, peakPrivate, cpuMilliseconds } }) + "\n");
             try { await Task.WhenAll(stdout, stderr); } catch (OperationCanceledException) { }
         }
     }

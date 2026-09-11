@@ -1,5 +1,9 @@
 # REESTR — зависимости, модели, backends и инструменты
 
+## 2026-09-11 — Vikhr Nemo, внешний исследовательский стенд
+
+AI-модель Vikhrmodels/Vikhr-Nemo-12B-Instruct-R-21-09-24; квантизация bartowski/Vikhr-Nemo-12B-Instruct-R-21-09-24-GGUF, Q4_K_M, ревизия dcc5f466261d7d69b5f3d92c65de3c9c58f368f1. Источники: https://huggingface.co/Vikhrmodels/Vikhr-Nemo-12B-Instruct-R-21-09-24 и https://huggingface.co/bartowski/Vikhr-Nemo-12B-Instruct-R-21-09-24-GGUF. В карточках Apache-2.0, проверено 11.09.2026. Только локальное скачивание для проверки генерации/RAG, не управляемый компонент приложения и не поставка в установщике. При будущей поставке сохранить LICENSE/применимые NOTICE и оформить штатный каталог лицензий; сейчас распространение не выполняется. Размер и SHA256 зафиксированы в Инструменты/VikhrNemo/config.json. Новых библиотек/backend не добавлено.
+
 ## 2026-09-10 — Qdrant, инфраструктура без сценариев
 
 Qdrant 1.19.1 — опциональный локальный runtime-сервер памяти, официальный Windows x64 EXE. Apache-2.0, источник https://github.com/qdrant/qdrant/releases/tag/v1.19.1; оригинальный LICENSE сохранён в Licenses/texts/qdrant-LICENSE.txt. Компонент backend.qdrant внесён через prepare-license-catalog.ps1, дата проверки 2026-09-10. Скачивается отдельно, в установщик не включён; распространение требует соблюдения LICENSE/применимых уведомлений, полный аудит зависимостей бинарника не завершён. SHA256/размеры и устройство поставки: [отчёт](../Тесты/ProcessInfrastructure/README.md).
@@ -275,3 +279,8 @@ Runeweaver, проверка2026-09-09: b9442 обслуживает два не
 - Формат: исходники Materials, извлечённый текст/хеши/векторы/manifest в Rag/Source. 1024D masked mean + L2, Cosine Qdrant, отдельная UUID-коллекция и временная область с журналом восстановления. В чаты поиск не подключён.
 - Runeweaver GGUF получил штатную проверку, лицензионный ID `model.runeweaver` и скачивание недостающего: revision `84fa96954eef3eec4e92433e133c5bb1c774fc22`, Q4_K_M, прежний SHA256. Apache-2.0 заявлен limloop; аудит всех частей merge не завершён. Ранее зарегистрированный файл используется без копирования.
 - Источники и ограничения: `Тесты/LiteraryRag/README.md`, `Исходники/AIHub/Licenses/catalog.json`. Установщик не пересобирался.
+
+
+## 2026-09-11 — RAG/диалоги, формат хранения 2
+
+0.1.89-dev переиспользует прежние Qdrant 1.19.1, Giga-Embeddings и Runeweaver с закреплёнными ревизиями. Новых зависимостей/загрузок нет. `storage.json` version 2 описывает проектную организацию; физический Qdrant находится в Rag/Qdrant, диалоги v1 — Dialogs/{Writer,Advisor}/dialog.json. project.json и индекс глав v1 сохранены. Поиск Giga: документ без инструкции, запрос с префиксом Instruct/Query, masked mean pooling и L2, 1024 измерения. Короткий query-worker CPU, индексирование auto; лицензии и установщик не менялись. См. Тесты/LiteraryMemory/README.md, включая ресурсный контроль и известные ошибки ответов модели.

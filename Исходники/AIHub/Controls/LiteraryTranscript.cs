@@ -26,6 +26,12 @@ public sealed class LiteraryTranscript : RichTextBox
     }
 
     public void Clear() { Document.Blocks.Clear(); _response = null; }
+    public void ShowHistory(IEnumerable<(bool User, string Text)> messages, string userLabel, string modelLabel)
+    {
+        Clear();
+        foreach (var message in messages) AddMessage(message.User, message.User ? userLabel : modelLabel, message.Text);
+        ScrollToEnd();
+    }
 
     // Keep line breaks inside the themed run: RichTextBox.AppendText would create
     // paragraphs with copied local colors that stop following theme changes.

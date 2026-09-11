@@ -1,0 +1,9 @@
+{
+  "repository": "bartowski/Vikhr-Nemo-12B-Instruct-R-21-09-24-GGUF",
+  "revision": "dcc5f466261d7d69b5f3d92c65de3c9c58f368f1",
+  "filename": "Vikhr-Nemo-12B-Instruct-R-21-09-24-Q4_K_M.gguf",
+  "size": 7477218976,
+  "sha256": "564145ccf95bdce3ae476f9e96da16a0443043cfbb6aad4eac425f85bf7e0486",
+  "workers": 8,
+  "chunk_bytes": 33554432
+}

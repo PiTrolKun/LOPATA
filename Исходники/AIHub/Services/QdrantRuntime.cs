@@ -37,6 +37,7 @@ public sealed partial class QdrantRuntime(QdrantOptions options, OwnedProcessReg
     private async Task StartCoreAsync(CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
+        options.ValidateStorage?.Invoke();
         if (IsReady) return;
         await StopCoreAsync().ConfigureAwait(false);
         State = "Starting";
@@ -44,6 +45,7 @@ public sealed partial class QdrantRuntime(QdrantOptions options, OwnedProcessReg
         {
             if (!await QdrantInstaller.IsInstalledAsync(options, token).ConfigureAwait(false))
                 throw new FileNotFoundException("Install and verify Qdrant first.");
+            options.ValidateStorage?.Invoke();
             Directory.CreateDirectory(options.DataDirectory);
             _lease = new FileStream(Path.Combine(options.DataDirectory, ".owner.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             using var listener = new TcpListener(IPAddress.Loopback, 0);

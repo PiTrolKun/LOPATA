@@ -18,6 +18,7 @@ public sealed class LiteraryNavigationControl : UserControl
     private LiteraryWorkspaceControl? _workspace;
     private LiteraryPreparationControl? _preparation;
     public bool ShowingProjects { get; private set; }
+    public bool IsIndexing => _workspace?.IsIndexing == true;
     public event Action? BackRequested;
     public event Action? HomeRequested;
     public bool CanLeave()
@@ -41,6 +42,7 @@ public sealed class LiteraryNavigationControl : UserControl
 
     public void GoBack()
     {
+        if (IsIndexing) return;
         if (_preparation is not null) { _preparation.Cancel(); _preparation = null; ShowingProjects = false; Render(); return; }
         if (_workspace is not null) { if (!CanLeave()) return; _workspace = null; ShowingProjects = true; Render(); return; }
         if (_creation is not null) { if (!_creation.IsSaving) { _creation.CancelIndexing(); _creation = null; Render(); } return; }
@@ -148,6 +150,7 @@ public sealed class LiteraryNavigationControl : UserControl
     {
         try
         {
+            _store.PruneMissing();
             var index = _store.Load();
             _projects.SetProjects(index.Projects);
             if (index.ActiveId is not null && index.Projects.Any(p => p.Id == index.ActiveId)) _projects.SetActive(index.ActiveId);

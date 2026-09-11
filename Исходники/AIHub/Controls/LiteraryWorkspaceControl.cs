@@ -8,14 +8,14 @@ using Panel = System.Windows.Controls.Panel;
 
 namespace AIHub.Controls;
 
-public sealed class LiteraryWorkspaceControl : UserControl
+public sealed partial class LiteraryWorkspaceControl : UserControl
 {
     private readonly LiteraryProjectEntry _entry;
     private readonly LiteraryProject _project;
     private Func<string, string> _l;
     private readonly LiteraryChatControl _writer;
     private readonly LiteraryChatControl _advisor;
-    private readonly LiteraryChatRuntime _runtime = new();
+    private readonly LiteraryChatRuntime _runtime;
     private readonly LiteraryDraftControl _draft;
     public event Action? BackRequested;
     public event Action? HomeRequested;
@@ -25,21 +25,35 @@ public sealed class LiteraryWorkspaceControl : UserControl
     public ContentControl WriterHost { get; } = new();
     public ContentControl TreeHost { get; } = new();
     public ContentControl AdvisorHost { get; } = new();
-    public bool CanLeave() => _draft.CanLeave();
+    public bool CanLeave()
+    {
+        if (!(_writer.SaveDialogue() & _advisor.SaveDialogue())
+            && System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Literary.Dialog.LeaveError"), _l("Literary.Work"),
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
+        _memoryCancellation?.Cancel();
+        return _draft.CanLeave();
+    }
 
-    public LiteraryWorkspaceControl(LiteraryProjectEntry entry, LiteraryProject project, Func<string, string> localize)
+    public LiteraryWorkspaceControl(LiteraryProjectEntry entry, LiteraryProject project, Func<string, string> localize,
+        Func<IProgress<LiteraryPreparationProgress>, CancellationToken, Task>? memoryPreparation = null)
     {
         _entry = entry; _project = project; _l = localize;
+        _memoryPreparation = memoryPreparation;
+        _runtime = new LiteraryChatRuntime(entry.ProjectPath);
         _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
         _writer = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Writer, () => _draft.Text, project,
-            () => _draft.Capture(project.Id, entry.ProjectPath));
+            () => _draft.Capture(project.Id, entry.ProjectPath), entry.ProjectPath);
         _advisor = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Advisor, () => _draft.Text, project,
-            () => _draft.Capture(project.Id, entry.ProjectPath));
+            () => _draft.Capture(project.Id, entry.ProjectPath), entry.ProjectPath);
         Unloaded += (_, _) => { _runtime.Stop(); if (System.Windows.Application.Current is { } app) app.Exit -= OnAppExit; };
         Loaded += (_, _) => { if (System.Windows.Application.Current is { } app) { app.Exit -= OnAppExit; app.Exit += OnAppExit; } };
         IsVisibleChanged += (_, _) => { if (!IsVisible) { _draft.Save(); _runtime.Stop(); } };
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryScrollResources.xaml", UriKind.Relative) });
-        _draft.ChapterChanged += () => EditorHost.Content = BuildEditor();
+        _draft.CanFixFiles = () => !_runtime.IsBusy && !Indexing;
+        _draft.ChapterChanged += async () => { EditorHost.Content = BuildEditor(); await PrepareMemoryAsync(); };
+        _memoryRetry.Click += async (_, _) => await PrepareMemoryAsync();
+        Loaded += async (_, _) => { AttachMemoryGuard(); if (!_memoryStarted) { _memoryStarted = true; await PrepareMemoryAsync(); } };
+        Unloaded += (_, _) => DetachMemoryGuard();
         Render();
     }
 
@@ -87,6 +101,12 @@ public sealed class LiteraryWorkspaceControl : UserControl
         AdvisorHost.Content = _advisor;
         var tree = new StackPanel(); tree.Children.Add(LiteraryUi.Text(_l("Literary.Workspace.Tree"), true));
         tree.Children.Add(LiteraryUi.Text(_l("Literary.Workspace.TreeHint")));
+        foreach (var element in new FrameworkElement[] { _memoryProgress, _memoryStatus, _memoryRetry })
+            if (element.Parent is Panel oldParent) oldParent.Children.Remove(element);
+        _memoryStatus.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
+        _memoryRetry.Content = _l("Literary.Rag.Retry"); _memoryRetry.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+        _memoryRetry.Visibility = Visibility.Collapsed;
+        tree.Children.Add(_memoryProgress); tree.Children.Add(_memoryStatus); tree.Children.Add(_memoryRetry);
         TreeHost.Content = LiteraryWorkspaceParts.Card(tree);
         foreach (var (host, index) in new[] { (WriterHost, 0), (TreeHost, 2), (AdvisorHost, 4) }) { Grid.SetColumn(host, index); columns.Children.Add(host); }
         foreach (var index in new[] { 1, 3 })

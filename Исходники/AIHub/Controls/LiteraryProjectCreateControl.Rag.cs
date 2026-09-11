@@ -8,6 +8,7 @@ namespace AIHub.Controls;
 public sealed partial class LiteraryProjectCreateControl
 {
     private LiterarySourceIndex? _preparedIndex;
+    private LiteraryProjectReservation? _reservation;
     private CancellationTokenSource? _indexCancellation;
     private Task _indexTask = Task.CompletedTask;
     private int _indexGeneration;
@@ -68,15 +69,21 @@ public sealed partial class LiteraryProjectCreateControl
             await previous;
             cancellation.Token.ThrowIfCancellationRequested();
             if (paths.Length == 0) return;
+            if (!System.IO.Directory.Exists(_folder.Text.Trim()) || !LiteraryProjectStore.IsValidProjectName(_name.Text.Trim()))
+            { _indexStatus.Text = _l("Literary.Rag.LocationFirst"); return; }
             _indexProgress.IsIndeterminate = true;
-            index = new LiterarySourceIndex();
+            if (_reservation is null)
+                _reservation = new LiteraryProjectReservation(_folder.Text.Trim(), _name.Text.Trim());
+            if (!string.Equals(_reservation.Root, System.IO.Path.Combine(_folder.Text.Trim(), _name.Text.Trim()), StringComparison.OrdinalIgnoreCase))
+                throw new System.IO.IOException("Prepared project location changed. Restore its folder and name.");
+            index = new LiterarySourceIndex(projectRoot: _reservation.Root);
             var progress = new Progress<LiteraryPreparationProgress>(p =>
             {
                 if (generation != _indexGeneration) return;
                 _indexStatus.Text = _l("Literary.Rag." + p.Stage) + (p.Detail.Length > 0 ? " · " + p.Detail : "")
                     + (p.Percent >= 0 ? $" · {p.Percent:0}%" : "");
                 _indexProgress.IsIndeterminate = p.Percent < 0;
-                if (p.Percent >= 0) _indexProgress.Value = p.Percent;
+                if (p.Percent >= 0) _indexProgress.Value = p.Stage == "Ready" ? 100 : Math.Min(99, p.Percent);
             });
             await index.PrepareAsync(paths, progress, cancellation.Token);
             cancellation.Token.ThrowIfCancellationRequested();

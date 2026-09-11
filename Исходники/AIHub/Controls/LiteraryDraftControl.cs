@@ -27,6 +27,9 @@ public sealed class LiteraryDraftControl : UserControl
     public string Text => _editor.Text;
     public string ChapterLabel => _loadFailed ? _l("Literary.Workspace.Chapter") : Path.GetFileNameWithoutExtension(Store.Active.FileName);
     public event Action? ChapterChanged;
+    public Func<bool>? CanFixFiles { get; set; }
+    private bool _externalBlocked;
+    public void BlockActions(bool blocked) { _externalBlocked = blocked; _editor.IsReadOnly = blocked || _loadFailed || _busy; }
 
     public LiteraryEditorSnapshot Capture(string projectId, string directory)
     {
@@ -71,7 +74,7 @@ public sealed class LiteraryDraftControl : UserControl
         _status.ToolTip = _l("Literary.Editor.IntervalHint");
         _status.MouseRightButtonUp += async (_, e) =>
         {
-            e.Handled = true; if (_busy || _loadFailed) return;
+            e.Handled = true; if (_externalBlocked || _busy || _loadFailed) return;
             var menu = new ContextMenu(); var item = new MenuItem { Header = _l("Literary.Editor.Interval") };
             item.Click += async (_, _) =>
             {
@@ -168,11 +171,12 @@ public sealed class LiteraryDraftControl : UserControl
 
     private async Task InsertTextCoreAsync(string incoming)
     {
-        if (_busy || _loadFailed) { ShowMessage("Literary.Editor.Busy"); return; }
+        if (_externalBlocked || _busy || _loadFailed) { ShowMessage("Literary.Editor.Busy"); return; }
         // WPF uses CRLF. Count and persist the same representation as the editor.
         incoming = incoming.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", "\r\n");
         while (WouldOverflow(incoming))
         {
+            if (CanFixFiles?.Invoke() == false) { ShowMessage("Literary.Shared.Waiting"); return; }
             var choice = LiteraryEditorDialogs.Choose(this, _l, "Literary.Editor.Overflow", _l("Literary.Editor.OverflowHint"),
                 "Literary.Editor.EditPaste", "Literary.Editor.Continue", "Literary.Editor.Cancel");
             if (choice == 0)
@@ -195,12 +199,13 @@ public sealed class LiteraryDraftControl : UserControl
 
     public async Task FinishAsync()
     {
+        if (_externalBlocked || CanFixFiles?.Invoke() == false) { ShowMessage("Literary.Shared.Waiting"); return; }
         if (!await SaveAsync()) { ShowMessage("Literary.Draft.SaveError"); return; }
         if (await RunAsync(Store.Finish)) { LoadCurrent(); Refresh(); ChapterChanged?.Invoke(); }
     }
     public async Task RenameAsync()
     {
-        if (_busy || _loadFailed) return;
+        if (_externalBlocked || _busy || _loadFailed) return;
         var name = LiteraryEditorDialogs.Edit(this, _l, "Literary.Workspace.Action.RenameChapter", Store.Active.Title, false);
         if (name is null || !await SaveAsync()) return;
         if (await RunAsync(() => Store.Rename(name))) { Refresh(); ChapterChanged?.Invoke(); }
@@ -212,7 +217,7 @@ public sealed class LiteraryDraftControl : UserControl
         _statusKey = "Literary.Editor.Saving"; Refresh();
         try { await Task.Run(action); _statusKey = _accepted == _saved ? "Literary.Draft.Saved" : "Literary.Draft.Unsaved"; return true; }
         catch (Exception ex) when (IsStorageError(ex)) { _statusKey = "Literary.Draft.SaveError"; return false; }
-        finally { _busy = false; _editor.IsReadOnly = _loadFailed; Refresh(); }
+        finally { _busy = false; _editor.IsReadOnly = _externalBlocked || _loadFailed; Refresh(); }
     }
     private void OfferRecovery()
     {

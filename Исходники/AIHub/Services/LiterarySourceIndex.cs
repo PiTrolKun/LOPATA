@@ -18,15 +18,17 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
     private readonly ILiterarySourceEmbedding _embedding;
     private readonly string _stagingRoot;
     private bool _committed, _disposed, _collectionAttempted;
+    private readonly bool _ownRuntime;
     private string Marker => Path.Combine(DirectoryPath, "pending.json");
     public sealed record Pending(string Id, string? ProjectPath);
     public sealed record Manifest(string Id, string ModelRevision, int Dimension, int Points, string Kind);
 
-    public LiterarySourceIndex(QdrantRuntime? runtime = null, ILiterarySourceEmbedding? embedding = null, string? stagingRoot = null)
+    public LiterarySourceIndex(QdrantRuntime? runtime = null, ILiterarySourceEmbedding? embedding = null, string? stagingRoot = null, string? projectRoot = null)
     {
-        _runtime = runtime ?? QdrantRuntime.Shared;
+        _ownRuntime = projectRoot is not null;
+        _runtime = runtime ?? (projectRoot is null ? QdrantRuntime.Shared : new QdrantRuntime(new() { DataDirectory = Path.Combine(projectRoot, "Rag", "Qdrant"), ValidateStorage = () => { if (!Directory.Exists(projectRoot) || (!File.Exists(Path.Combine(projectRoot, ".creation")) && !File.Exists(Path.Combine(projectRoot, "project.json")))) throw new IOException("Project preparation no longer exists."); } }));
         _embedding = embedding ?? new GigaSourceEmbedding();
-        _stagingRoot = Path.GetFullPath(stagingRoot ?? StagingRoot);
+        _stagingRoot = Path.GetFullPath(stagingRoot ?? (projectRoot is null ? StagingRoot : Path.Combine(projectRoot, "Rag", "Staging")));
         DirectoryPath = Path.Combine(_stagingRoot, Id); Directory.CreateDirectory(DirectoryPath);
         _lease = new FileStream(Path.Combine(DirectoryPath, "owner.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         File.WriteAllText(Marker, JsonSerializer.Serialize(new Pending(Id, null)));
@@ -56,30 +58,9 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
         await _embedding.EmbedAsync(inputPath, vectorsPath, progress, ct);
         // The worker has exited; all GPU allocations are released before Qdrant import.
         _collectionAttempted = true;
-        await _runtime.CreateLiteraryIndexAsync(Id, ct);
-        var batch = new List<JsonElement>();
-        using (var reader = File.OpenText(vectorsPath))
-        {
-            while (await reader.ReadLineAsync(ct) is { } line)
-            {
-                using var doc = JsonDocument.Parse(line);
-                ValidatePoint(doc.RootElement);
-                batch.Add(doc.RootElement.Clone()); PointCount++;
-                if (batch.Count == 32) { await FlushAsync(); }
-            }
-            if (batch.Count > 0) await FlushAsync();
-        }
-        async Task FlushAsync()
-        {
-            await _runtime.WriteLiteraryPointsAsync(Id, batch, ct);
-            progress.Report(new("Writing", -1, PointCount.ToString())); batch.Clear();
-        }
-        if (PointCount == 0 || await _runtime.LiteraryPointCountAsync(Id, ct) != PointCount)
-            throw new InvalidDataException("Qdrant point count mismatch.");
-        using (var firstLine = File.OpenText(vectorsPath))
-        using (var first = JsonDocument.Parse((await firstLine.ReadLineAsync(ct))!))
-            await _runtime.VerifyLiterarySearchAsync(Id, first.RootElement, ct);
+        PointCount = await LiteraryRagImport.ReplaceAsync(_runtime, Id, vectorsPath, progress, ct);
         await File.WriteAllTextAsync(Path.Combine(DirectoryPath, "manifest.json"), JsonSerializer.Serialize(new Manifest(Id, GigaEmbeddingInstallation.Revision, 1024, PointCount, "reference")), ct);
+        if (_ownRuntime) await _runtime.StopAsync();
         Ready = true; progress.Report(new("Ready", 100, PointCount.ToString()));
     }
     public static void ValidatePoint(JsonElement point)
@@ -88,7 +69,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
         if (vector.GetArrayLength() != 1024 || vector.EnumerateArray().Any(x => !float.IsFinite(x.GetSingle())))
             throw new InvalidDataException("Invalid Giga vector.");
         var norm = vector.EnumerateArray().Sum(x => Math.Pow(x.GetDouble(), 2));
-        if (Math.Abs(norm - 1) > 0.01 || point.GetProperty("payload").GetProperty("kind").GetString() != "reference")
+        if (Math.Abs(norm - 1) > 0.01 || point.GetProperty("payload").GetProperty("kind").GetString() is not ("reference" or "project"))
             throw new InvalidDataException("Invalid reference point.");
     }
     public void SetDestination(string destination)
@@ -103,7 +84,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
         if (!Ready) throw new InvalidOperationException("Index is not ready.");
         var folder = Path.Combine(projectStaging, "Rag", "Source"); Directory.CreateDirectory(folder);
         foreach (var name in new[] { "text.json", "sources.json", "vectors.jsonl", "manifest.json" })
-            File.Copy(Path.Combine(DirectoryPath, name), Path.Combine(folder, name), false);
+            File.Copy(Path.Combine(DirectoryPath, name), Path.Combine(folder, name), true);
     }
     public void Commit() { _committed = true; }
     public async ValueTask DisposeAsync()
@@ -119,7 +100,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
             _lease.Dispose(); DeleteStaging(DirectoryPath, _stagingRoot);
         }
         catch (Exception ex) { OwnedProcessRegistry.Log("rag_cleanup_pending", "Giga", detail: ex.Message); }
-        finally { _lease.Dispose(); }
+        finally { _lease.Dispose(); if (_ownRuntime) await _runtime.StopAsync(); }
     }
     private static void DeleteStaging(string directory, string stagingRoot)
     {
@@ -169,6 +150,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
     }
     public static void QueueProjectDeletion(string projectPath)
     {
+        if (File.Exists(Path.Combine(projectPath, "storage.json"))) return;
         var path = Path.Combine(projectPath, "Rag", "Source", "manifest.json");
         if (!File.Exists(path)) return;
         var manifest = JsonSerializer.Deserialize<Manifest>(File.ReadAllText(path)) ?? throw new InvalidDataException("Invalid RAG manifest.");

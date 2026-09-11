@@ -370,6 +370,7 @@ public partial class MainWindow : Window
 
     private void OpenDebugChatWindow()
     {
+        if (LiteraryPage.Visibility == Visibility.Visible && LiteraryPage.IsIndexing) return;
         try
         {
             if (_debugChatWindow is not null)

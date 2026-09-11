@@ -76,7 +76,7 @@
   "Literary.Editor.Exported": "Document saved.",
   "Literary.Editor.ExportEmpty": "There is no text to export yet.",
   "Literary.Editor.ExportError": "Could not export the project. Check access to all source files and the destination folder.",
-  "Literary.Advisor.Temporary": "The advisor sees the current draft and its conversation, and can read project history. Chat history is temporary.",
+  "Literary.Advisor.Temporary": "The advisor sees the current draft and its conversation, and can read project history. Chat history is saved in the project.",
   "Literary.Advisor.Working": "AI2 · Runeweaver. Analyzing text…",
   "Literary.Advisor.Ready": "Critic and analyst. The shared model loads on the first request.",
   "Literary.Advisor.Error": "Could not obtain an AI2 response. See the LiteraryShared log for details.",
@@ -1772,5 +1772,12 @@
   "Processes.State.Stopping": "Stopping",
   "Processes.Stop": "Stop",
   "Processes.Title": "Internal processes",
-  "Processes.Working": "Working…"
+  "Processes.Working": "Working…",
+  "Literary.Dialog.SaveError": "Could not save the chat. Your input remains on screen.",
+  "Literary.Rag.NotReady": "The file is saved. Its index is not ready; retry preparation or continue with direct reading.",
+  "Literary.Rag.Attempt": "Processing attempt",
+  "Literary.Rag.ProjectWait": "Preparing project memory. You can type messages; sending resumes when preparation finishes.",
+  "Literary.Dialog.LeaveError": "Could not save the conversation or input. Leave without saving these changes?",
+  "Literary.Project.Unavailable": "The project folder is unavailable. Work stopped; text on screen remains in memory.",
+  "Literary.Rag.LocationFirst": "Choose the storage folder and project name first, then press Retry."
 }

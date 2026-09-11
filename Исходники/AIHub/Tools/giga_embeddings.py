@@ -4,6 +4,8 @@ import json
 import os
 import sys
 import time
+import hashlib
+import math
 
 
 def emit(**data):
@@ -23,12 +25,42 @@ def windows(offsets, capacity, overlap=48):
         start = end - overlap
 
 
+def resume_checkpoint(path, signature, chunks):
+    marker = path + ".identity"
+    completed = 0
+    if os.path.exists(path):
+        with open(marker, encoding="ascii") as saved:
+            if saved.read() != signature:
+                raise ValueError("Embedding checkpoint identity changed")
+        # A crash may interrupt only the last append. Retain complete, validated rows.
+        with open(path, "rb+") as saved:
+            valid_end = 0
+            for line in saved:
+                try:
+                    point = json.loads(line)
+                    if point["id"] != completed + 1 or point["payload"] != chunks[completed] or len(point["vector"]) != 1024 or not all(math.isfinite(v) for v in point["vector"]) or abs(sum(v*v for v in point["vector"]) - 1) > 0.02:
+                        raise ValueError("Invalid checkpoint row")
+                except (ValueError, KeyError, IndexError, TypeError):
+                    if saved.read(1):
+                        raise ValueError("Corrupt embedding checkpoint")
+                    break
+                completed += 1
+                valid_end += len(line)
+            saved.truncate(valid_end)
+    else:
+        with open(marker, "w", encoding="ascii") as saved:
+            saved.write(signature)
+    return completed
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--model")
     parser.add_argument("--input")
     parser.add_argument("--output")
+    parser.add_argument("--query", action="store_true")
+    parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
     args = parser.parse_args()
     import torch
     import transformers
@@ -40,7 +72,7 @@ def main():
         return
     started = time.monotonic()
     torch.set_num_threads(max(1, min(4, (os.cpu_count() or 2) // 2)))
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = ("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device
     dtype = (torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16) if device == "cuda" else torch.float32
     emit(stage="Loading", device=device)
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True, local_files_only=True)
@@ -53,6 +85,12 @@ def main():
     chunks = []
     for section in sections:
         text = section["text"]
+        if args.query:
+            text = "Instruct: Given a query, retrieve relevant passages\nQuery: " + text
+            if len(tokenizer(text)["input_ids"]) > 512:
+                raise ValueError("Query exceeds the embedding context")
+            chunks.append(dict(source="query", section="query", offset=0, text=text, kind="reference"))
+            continue
         tokens = tokenizer(text, add_special_tokens=False, return_offsets_mapping=True, truncation=False)
         capacity = 512 - tokenizer.num_special_tokens_to_add(pair=False)
         for begin, end in windows(tokens["offset_mapping"], capacity):
@@ -69,11 +107,13 @@ def main():
                     pending[0:0] = [(offset, part[:mid]), (offset + mid, part[mid:])]
                 elif part.strip():
                     chunks.append(dict(source=section["source"], section=section["section"],
-                                       offset=offset, text=part, kind="reference"))
+                                       offset=offset, text=part, kind=section.get("kind", "reference")))
     if not chunks:
         raise ValueError("No indexable text")
-    with open(args.output, "x", encoding="utf-8") as output, torch.inference_mode():
-        for i in range(0, len(chunks), 4):
+    signature = hashlib.sha256(json.dumps([args.model, args.query, chunks], ensure_ascii=False).encode()).hexdigest()
+    completed = resume_checkpoint(args.output, signature, chunks)
+    with open(args.output, "a", encoding="utf-8") as output, torch.inference_mode():
+        for i in range(completed, len(chunks), 4):
             batch = chunks[i:i + 4]
             inputs = tokenizer([c["text"] for c in batch], padding=True, truncation=False, return_tensors="pt").to(device)
             hidden = model(**inputs).last_hidden_state
@@ -83,6 +123,8 @@ def main():
                 raise ValueError("Non-finite embedding")
             for j, (chunk, vector) in enumerate(zip(batch, vectors.cpu().tolist())):
                 output.write(json.dumps(dict(id=i + j + 1, payload=chunk, vector=vector), ensure_ascii=False) + "\n")
+            output.flush()
+            os.fsync(output.fileno())
             emit(stage="Embedding", done=min(i + 4, len(chunks)), total=len(chunks), device=device)
     emit(stage="Complete", total=len(chunks), device=device, seconds=round(time.monotonic() - started, 3),
          peak_vram_bytes=torch.cuda.max_memory_allocated() if device == "cuda" else 0)

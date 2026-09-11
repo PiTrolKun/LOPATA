@@ -20,14 +20,16 @@ public sealed class LiteraryChatRuntime : IDisposable
     private CancellationTokenSource? _active;
     private readonly object _logGate = new();
     private readonly string _logPath;
+    private readonly LiteraryProjectLayout? _layout;
     private LiteraryRequestDiagnostics? _diagnostics;
     private readonly Dictionary<LiteraryChatProfile, string> _anchors = [];
     public void ResetAnchor(LiteraryChatProfile role) => _anchors.Remove(role);
     public bool IsBusy => Volatile.Read(ref _busy) != 0;
     public event Action? BusyChanged;
-    public LiteraryChatRuntime()
+    public LiteraryChatRuntime(string? projectDirectory = null)
     {
-        var folder = Path.Combine(AppDataPaths.BaseDirectory, "Diagnostics", "LiteraryShared");
+        _layout = projectDirectory is null ? null : new LiteraryProjectLayout(projectDirectory);
+        var folder = _layout?.EnsureFolder("Diagnostics/LiteraryShared") ?? Path.Combine(AppDataPaths.BaseDirectory, "Diagnostics", "LiteraryShared");
         Directory.CreateDirectory(folder);
         _logPath = Path.Combine(folder, DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" + Guid.NewGuid().ToString("N") + ".log");
     }
@@ -47,12 +49,13 @@ public sealed class LiteraryChatRuntime : IDisposable
         using var active = CancellationTokenSource.CreateLinkedTokenSource(token);
         _active = active;
         Interlocked.Exchange(ref _busy, 1); BusyChanged?.Invoke();
-        using var diagnostics = new LiteraryRequestDiagnostics("Literary" + role, Log);
+        using var diagnostics = new LiteraryRequestDiagnostics("Literary" + role, Log, _layout?.EnsureFolder("Diagnostics/LiteraryDetailed"));
         _diagnostics = diagnostics;
         var requested = false;
         try
         {
             var ct = active.Token;
+            _layout?.EnsurePresent();
             if (editor is not null && (editor.ProjectId != project.Id || editor.Text != draft))
                 throw new InvalidDataException("Editor snapshot does not match the request.");
             var messages = LiteraryModelPolicy.Messages(role, history, draft, project, includeDraft: editor is null);
@@ -75,7 +78,7 @@ public sealed class LiteraryChatRuntime : IDisposable
                     diagnostics.Write(kind, data);
                     if (kind == "read_plan") Log("Read action: " + JsonSerializer.Serialize(data));
                     else if (kind == "source_evicted") Log("Source block evicted for context budget.");
-                }, role);
+                }, role, _layout is null ? null : new LiteraryRagReader(editor));
                 messages = await reading.PrepareAsync(messages, (input, _) => InferAsync(input, true), activity, ct);
             }
             if (!await FitsAsync(messages, ct)) throw new ImageAnalysisContextExhaustedException("Mandatory context exceeds the role budget.");

@@ -22,6 +22,7 @@ internal static class LiteraryExportDialog
         if (dialog.ShowDialog() != true) return;
         var format = (Format)combo.SelectedItem;
         var save = new Microsoft.Win32.SaveFileDialog { FileName = LiteraryChapterFiles.SafeTitle(title) + "." + format.Extension,
+            InitialDirectory = new LiteraryProjectLayout(directory).EnsureFolder("Exports"),
             DefaultExt = "." + format.Extension, Filter = format.Label + "|*." + format.Extension, OverwritePrompt = true };
         if (save.ShowDialog(Window.GetWindow(owner)) != true) return;
         // Do not let export overwrite any source in this project (including its index/backups).

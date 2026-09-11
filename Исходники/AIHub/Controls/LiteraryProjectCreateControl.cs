@@ -82,7 +82,7 @@ public sealed partial class LiteraryProjectCreateControl : UserControl
         buttons.Margin = new Thickness(0, 12, 0, 18);
         _sections.Children.Add(buttons);
         Content = root;
-        Unloaded += (_, _) => { if (!_saving) CancelIndexing(); };
+        Unloaded += async (_, _) => { if (!_saving) { CancelIndexing(); try { await _indexTask; } finally { _reservation?.Dispose(); _reservation = null; } } };
         IsVisibleChanged += (_, _) => { if (!IsVisible && !_saving) CancelIndexing(); };
     }
 
@@ -203,15 +203,18 @@ public sealed partial class LiteraryProjectCreateControl : UserControl
         };
         var parent = _folder.Text.Trim();
         var index = _type.SelectedIndex == 1 ? _preparedIndex : null;
-        var materials = index?.Sources.ToArray() ?? _materials.ToArray();
+        var materials = _type.SelectedIndex == 1 ? index?.Sources.ToArray() ?? _materials.ToArray() : [];
         _saving = true; _sections.IsEnabled = false; _create.IsEnabled = false; _cancel.IsEnabled = false;
         _error.Text = _l("Literary.Create.Saving");
         try
         {
             index?.SetDestination(Path.Combine(parent, project.ProjectName));
-            CreatedProject = await Task.Run(() => _store.Create(parent, project, materials, index is null ? null : index.CopyInto));
+            CreatedProject = await Task.Run(() => _reservation is null
+                ? _store.Create(parent, project, materials, index is null ? null : index.CopyInto)
+                : _store.CreateReserved(_reservation, project, materials, index is null ? null : index.CopyInto));
             index?.Commit();
             if (index is not null) { await index.DisposeAsync(); _preparedIndex = null; }
+            _reservation?.Dispose(); _reservation = null;
             _saving = false; ProjectCreated?.Invoke(CreatedProject);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or System.Text.Json.JsonException)

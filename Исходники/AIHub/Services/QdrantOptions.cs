@@ -12,6 +12,7 @@ public sealed record QdrantOptions
     public static Uri DownloadUri { get; } = new($"https://github.com/qdrant/qdrant/releases/download/v{Version}/qdrant-x86_64-pc-windows-msvc.zip");
     public string InstallDirectory { get; init; } = Path.Combine(AppDataPaths.BackendsDirectory, "qdrant", Version, "win-x64");
     public string DataDirectory { get; init; } = Path.Combine(AppDataPaths.BaseDirectory, "Memory", "Qdrant");
+    public Action? ValidateStorage { get; init; }
     public string HelperExecutable { get; init; } = Path.ChangeExtension(typeof(QdrantOptions).Assembly.Location, ".exe");
     public TimeSpan StartupTimeout { get; init; } = TimeSpan.FromSeconds(30);
     public TimeSpan StopTimeout { get; init; } = TimeSpan.FromSeconds(10);

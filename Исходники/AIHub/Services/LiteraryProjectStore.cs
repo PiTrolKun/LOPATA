@@ -20,6 +20,35 @@ public sealed class LiteraryProjectStore(string indexPath)
         return index;
     }
 
+    public void PruneMissing()
+    {
+        using var indexLock = AcquireLock();
+        var index = Load();
+        var missing = index.Projects.Where(p => ConfirmedMissing(p.ProjectPath)).ToArray();
+        if (missing.Length > 0)
+        {
+            foreach (var entry in missing) index.Projects.Remove(entry);
+            if (missing.Any(p => p.Id == index.ActiveId)) index.ActiveId = null;
+            Save(index);
+        }
+    }
+
+    private static bool ConfirmedMissing(string path)
+    {
+        try { _ = File.GetAttributes(path); return false; }
+        catch (Exception ex) when (ex is DirectoryNotFoundException or FileNotFoundException)
+        {
+            try
+            {
+                var root = Path.GetPathRoot(Path.GetFullPath(path))!;
+                return !root.StartsWith(@"\\") && new DriveInfo(root).IsReady;
+            }
+            catch { return false; }
+        }
+        catch (IOException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
+    }
+
     public static bool IsValidProjectName(string name)
     {
         if (string.IsNullOrWhiteSpace(name) || name.Length > 100 || name != name.Trim()
@@ -81,6 +110,41 @@ public sealed class LiteraryProjectStore(string indexPath)
         if (!index.Projects.Any(p => p.Id == id)) throw new ArgumentException("Unknown project.");
         index.ActiveId = id;
         Save(index);
+    }
+
+    public LiteraryProjectEntry CreateReserved(LiteraryProjectReservation reservation, LiteraryProject project,
+        IReadOnlyList<string> materials, Action<string>? initialize)
+    {
+        var destination = reservation.Root;
+        if (Path.GetFileName(destination) != project.ProjectName || !File.Exists(Path.Combine(destination, ".creation")))
+            throw new IOException("Prepared project path changed.");
+        using var indexLock = AcquireLock(); var index = Load();
+        // Recover a crash between the project-file commit and registration, preserving identity.
+        if (File.Exists(Path.Combine(destination, "project.json"))) project.Id = ReadProject(destination).Id;
+        if (index.Projects.Any(p => p.Id == project.Id || string.Equals(p.ProjectPath, destination, StringComparison.OrdinalIgnoreCase)))
+            throw new IOException("Project is already registered.");
+        project.Materials = [];
+        Directory.CreateDirectory(Path.Combine(destination, "Materials"));
+        for (var i = 0; i < materials.Count; i++)
+        {
+            var relative = Path.Combine("Materials", $"{i + 1:D4}_" + Path.GetFileName(materials[i]));
+            File.Copy(materials[i], Path.Combine(destination, relative), true); project.Materials.Add(relative);
+        }
+        initialize?.Invoke(destination);
+        LiteraryChapterFiles.Write(Path.Combine(destination, "project.json"), JsonSerializer.Serialize(project, JsonOptions));
+        var entry = new LiteraryProjectEntry(project.Id, project.ProjectName, destination);
+        index.Projects.Add(entry);
+        try
+        {
+            var layout = new LiteraryProjectLayout(destination); layout.Initialize(); layout.CommitLayout();
+            Save(index);
+        }
+        catch { File.Delete(Path.Combine(destination, "project.json")); throw; }
+        // Registration is committed. A failed marker cleanup must not make the caller roll back the index.
+        try { File.Delete(Path.Combine(destination, ".creation")); }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        return entry;
     }
 
     public void Remove(LiteraryProjectEntry expected, LiteraryProjectRemoval mode)

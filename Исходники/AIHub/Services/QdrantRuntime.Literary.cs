@@ -6,6 +6,18 @@ namespace AIHub.Services;
 
 public sealed partial class QdrantRuntime
 {
+    public async Task<JsonElement[]> SearchLiteraryAsync(string id, float[] query, CancellationToken ct)
+    {
+        await StartAsync(ct);
+        await _gate.WaitAsync(ct);
+        try
+        {
+            using var result = await RequestAsync(HttpMethod.Post, "collections/" + LiteraryCollection(id) + "/points/query",
+                new { query, limit = 16, with_payload = true }, ct);
+            return result.RootElement.GetProperty("result").GetProperty("points").EnumerateArray().Select(p => p.Clone()).ToArray();
+        }
+        finally { _gate.Release(); }
+    }
     public static string LiteraryCollection(string id) => "lopata_source_" + Guid.Parse(id).ToString("N");
 
     public async Task CreateLiteraryIndexAsync(string id, CancellationToken ct)
@@ -64,7 +76,7 @@ public sealed partial class QdrantRuntime
                 new { query = point.GetProperty("vector"), limit = 1, with_payload = true }, ct);
             var hits = search.RootElement.GetProperty("result").GetProperty("points");
             if (hits.GetArrayLength() != 1 || hits[0].GetProperty("score").GetDouble() < 0.99
-                || hits[0].GetProperty("payload").GetProperty("kind").GetString() != "reference")
+                || hits[0].GetProperty("payload").GetProperty("kind").GetString() != point.GetProperty("payload").GetProperty("kind").GetString())
                 throw new System.IO.InvalidDataException("Qdrant source index search verification failed.");
         }
         finally { _gate.Release(); }
