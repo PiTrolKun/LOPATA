@@ -58,7 +58,7 @@ public sealed class LiteraryProjectStore(string indexPath)
             && !System.Text.RegularExpressions.Regex.IsMatch(stem, @"^(COM|LPT)[0-9¹²³]$");
     }
 
-    public LiteraryProjectEntry Create(string parent, LiteraryProject project, IReadOnlyList<string> materials, Action<string>? initializeStaging = null)
+    public LiteraryProjectEntry Create(string parent, LiteraryProject project, IReadOnlyList<string> materials, Action<string>? initializeStaging = null, Action<string>? initializeProject = null)
     {
         if (!Path.IsPathFullyQualified(parent) || !Directory.Exists(parent)) throw new DirectoryNotFoundException(parent);
         if (!IsValidProjectName(project.ProjectName)) throw new ArgumentException("Invalid project folder name.");
@@ -85,6 +85,7 @@ public sealed class LiteraryProjectStore(string indexPath)
             }
             initializeStaging?.Invoke(staging);
             File.WriteAllText(Path.Combine(staging, "project.json"), JsonSerializer.Serialize(project, JsonOptions));
+            initializeProject?.Invoke(staging);
             var entry = new LiteraryProjectEntry(project.Id, project.ProjectName, destination);
             Directory.Move(staging, destination); // Never replace an existing project directory.
             index.Projects.Add(entry);
@@ -113,7 +114,7 @@ public sealed class LiteraryProjectStore(string indexPath)
     }
 
     public LiteraryProjectEntry CreateReserved(LiteraryProjectReservation reservation, LiteraryProject project,
-        IReadOnlyList<string> materials, Action<string>? initialize)
+        IReadOnlyList<string> materials, Action<string>? initialize, Action<string>? initializeProject = null)
     {
         var destination = reservation.Root;
         if (Path.GetFileName(destination) != project.ProjectName || !File.Exists(Path.Combine(destination, ".creation")))
@@ -137,6 +138,7 @@ public sealed class LiteraryProjectStore(string indexPath)
         try
         {
             var layout = new LiteraryProjectLayout(destination); layout.Initialize(); layout.CommitLayout();
+            initializeProject?.Invoke(destination);
             Save(index);
         }
         catch { File.Delete(Path.Combine(destination, "project.json")); throw; }

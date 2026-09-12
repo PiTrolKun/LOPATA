@@ -18,19 +18,24 @@ internal static class LiteraryPlotAnchorDialog
         var count = LiteraryUi.Text(""); bottom.Children.Add(count);
         var status = LiteraryUi.Text(""); bottom.Children.Add(status);
         var row = new WrapPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Right }; bottom.Children.Add(row);
-        var input = LiteraryWorkspaceParts.TextArea(false); input.Text = anchor.Text; input.MinHeight = 120; panel.Children.Add(input);
+        var fields = new StackPanel();
+        fields.Children.Add(LiteraryUi.Text(l("Literary.Anchor.Positive")));
+        var input = LiteraryWorkspaceParts.TextArea(false); input.Text = anchor.Text; input.Height = 170; fields.Children.Add(input);
+        fields.Children.Add(LiteraryUi.Text(l("Literary.Anchor.Negative")));
+        var avoid = LiteraryWorkspaceParts.TextArea(false); avoid.Text = anchor.Avoid; avoid.Height = 100; fields.Children.Add(avoid);
+        panel.Children.Add(new ScrollViewer { Content = fields, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         var window = LiteraryEditorDialogs.Create(owner, l("Literary.Anchor.Title") + " — " + l(role == LiteraryChatProfile.Writer ? "Literary.Workspace.Writer" : "Literary.Workspace.Advisor"), panel, 760);
         window.SizeToContent = SizeToContent.Manual; window.Height = Math.Min(570, window.MaxHeight); window.MinWidth = 420; window.MinHeight = 320;
         var save = LiteraryUi.Button(l("Literary.Anchor.Save"), () =>
         {
-            try { store.Save(input.Text, anchor.Revision); window.DialogResult = true; }
+            try { store.Save(input.Text, avoid.Text, anchor.Revision); window.DialogResult = true; }
             catch (Exception ex) when (ex is System.IO.IOException or System.IO.InvalidDataException or System.Text.Json.JsonException or UnauthorizedAccessException)
             { status.Text = l("Literary.Anchor.SaveError"); }
         }, true);
         row.Children.Add(save);
         var cancel = LiteraryUi.Button(l("Literary.Editor.Cancel"), () => window.DialogResult = false); cancel.IsCancel = true; row.Children.Add(cancel);
-        void Update() { count.Text = string.Format(l("Literary.Anchor.Count"), input.Text.Length, LiteraryPlotAnchorStore.MaxCharacters); save.IsEnabled = input.Text.Length <= LiteraryPlotAnchorStore.MaxCharacters; }
-        input.TextChanged += (_, _) => Update(); Update();
+        void Update() { var length = input.Text.Length + avoid.Text.Length; count.Text = string.Format(l("Literary.Anchor.Count"), length, LiteraryPlotAnchorStore.MaxCharacters); save.IsEnabled = length <= LiteraryPlotAnchorStore.MaxCharacters; }
+        input.TextChanged += (_, _) => Update(); avoid.TextChanged += (_, _) => Update(); Update();
         window.Loaded += (_, _) => input.Focus();
         try { window.ShowDialog(); } catch { window.Close(); throw; }
     }

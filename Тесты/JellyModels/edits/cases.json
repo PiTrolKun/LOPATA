@@ -1,0 +1,9 @@
+[
+  {"id":"recipient","text":"Лизавета передала ключ Томскому.","expected":{"giver":"Лизавета","item":"ключ","recipient":"Томскому","state":"completed","uncertain":"no"}},
+  {"id":"direction","text":"Ключ Лизавете передал Германн.","expected":{"giver":"Германн","item":"Ключ","recipient":"Лизавете","state":"completed","uncertain":"no"}},
+  {"id":"negation","text":"Лизавета не передавала ключ Германну.","expected":{"giver":"Лизавета","item":"ключ","recipient":"Германну","state":"not_happened","uncertain":"no"}},
+  {"id":"intention","text":"Лизавета собиралась передать ключ Германну, но пока не передала.","expected":{"giver":"Лизавета","item":"ключ","recipient":"Германну","state":"planned","uncertain":"no"}},
+  {"id":"contrast","text":"Лизавета передала ключ Томскому, а не Германну.","expected":{"giver":"Лизавета","item":"ключ","recipient":"Томскому","state":"completed","uncertain":"no"}},
+  {"id":"ambiguous","text":"Лизавета встретила Анну. Она передала ключ Германну.","expected":{"giver":["Она",null],"item":"ключ","recipient":"Германну","state":"completed","uncertain":"yes"}},
+  {"id":"no_transfer","text":"Ключ остался у Лизаветы: передачи Германну не было.","expected":{"giver":"Лизаветы","item":"Ключ","recipient":"Германну","state":"not_happened","uncertain":"no"}}
+]

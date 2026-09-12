@@ -18,7 +18,7 @@ public sealed partial class LiteraryWorkspaceControl
     private readonly System.Windows.Threading.DispatcherTimer _presenceTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private bool _projectMissing;
     private readonly Func<IProgress<LiteraryPreparationProgress>, CancellationToken, Task>? _memoryPreparation;
-    private bool Indexing => _memoryCancellation is not null;
+    private bool Indexing => _memoryCancellation is not null || _jellyEditing;
     public bool IsIndexing => Indexing;
     private async Task PrepareMemoryAsync()
     {
@@ -50,9 +50,17 @@ public sealed partial class LiteraryWorkspaceControl
                 await LiteraryStorageMigration.MigrateAsync(_entry.ProjectPath, progress, cancellation.Token);
                 await new LiteraryWorkIndex(new LiteraryProjectLayout(_entry.ProjectPath)).PrepareAsync(progress, cancellation.Token);
             }
-            _memoryStatus.Text = _l("Literary.Rag.Ready");
+            var jellyReady = await PrepareJellyAsync(progress, cancellation.Token);
+            _memoryStatus.Text = _l(jellyReady ? "Literary.Rag.Ready" : "Literary.Jelly.Deferred");
+            if (!jellyReady) _memoryRetry.Visibility = Visibility.Visible;
         }
         catch (OperationCanceledException) { _memoryStatus.Text = _l("Literary.Prepare.Cancelled"); }
+        catch (Exception failure) when (failure.GetBaseException() is LiteraryGpuMemoryException)
+        {
+            var ex = (LiteraryGpuMemoryException)failure.GetBaseException();
+            _memoryStatus.Text = string.Format(_l("Literary.Jelly.GpuMemory"), ex.RequiredBytes / 1073741824.0, ex.FreeBytes / 1073741824.0);
+            _memoryRetry.Visibility = Visibility.Visible;
+        }
         catch (Exception ex)
         {
             _memoryStatus.Text = _l("Literary.Rag.NotReady") + " " + ex.Message;
@@ -71,8 +79,11 @@ public sealed partial class LiteraryWorkspaceControl
     }
     private void BlockButtons(DependencyObject root)
     {
+        // EditorHost already blocks this subtree. Child IsEnabled is coerced to
+        // false by the parent; storing it would permanently disable its actions.
+        if (ReferenceEquals(root, EditorHost)) return;
         if (root is System.Windows.Controls.Primitives.ButtonBase button)
-        { _blockedButtons.Add((button, button.IsEnabled)); button.IsEnabled = false; }
+        { _blockedButtons.Add((button, button.IsEnabled)); button.IsEnabled = false; return; }
         for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
             BlockButtons(System.Windows.Media.VisualTreeHelper.GetChild(root, i));
     }

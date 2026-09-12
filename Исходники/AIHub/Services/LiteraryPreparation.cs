@@ -11,7 +11,7 @@ public static class LiteraryPreparation
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
     public static readonly string[] Licenses = ["model.runeweaver", "backend.llama", "native.cuda", QdrantOptions.LicenseId,
-        GigaEmbeddingInstallation.LicenseId, GigaEmbeddingInstallation.RuntimeLicenseId];
+        GigaEmbeddingInstallation.LicenseId, GigaEmbeddingInstallation.RuntimeLicenseId, .. LiteraryJellyInstallation.Licenses];
     public static async Task<IReadOnlyList<LiteraryComponentState>> CheckAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
     {
         var result = new List<LiteraryComponentState>();
@@ -28,6 +28,12 @@ public static class LiteraryPreparation
         result.Add(new("Giga", await GigaEmbeddingInstallation.ModelReadyAsync(ct)));
         progress.Report(new("Checking", -1, "Python / PyTorch"));
         result.Add(new("Python", await GigaEmbeddingInstallation.RuntimeReadyAsync(ct)));
+        foreach (var mode in LiteraryJellyInstallation.Modes)
+        {
+            progress.Report(new("JellyModels", -1, mode));
+            result.Add(new("Jelly." + mode, await LiteraryJellyInstallation.FindModelAsync(mode, ct) is not null));
+            result.Add(new("Jelly." + mode + ".Runtime", await LiteraryJellyInstallation.FindDependenciesAsync(mode, ct) is not null));
+        }
         return result;
     }
     private static async Task<bool> LlamaReadyAsync(CancellationToken ct)
@@ -76,6 +82,8 @@ public static class LiteraryPreparation
                 new InlineProgress<double>(p => progress.Report(new("Qdrant", p))), ct);
             if (Missing("Giga")) await GigaEmbeddingInstallation.InstallModelAsync(progress, ct);
             if (Missing("Python")) await GigaEmbeddingInstallation.InstallRuntimeAsync(progress, ct);
+            foreach (var mode in LiteraryJellyInstallation.Modes)
+                if (Missing("Jelly." + mode) || Missing("Jelly." + mode + ".Runtime")) await LiteraryJellyInstallation.InstallAsync(mode, progress, ct);
             progress.Report(new("Checking"));
             await QdrantRuntime.Shared.StartAsync(ct);
             await LiterarySourceIndex.RecoverAsync(ct);

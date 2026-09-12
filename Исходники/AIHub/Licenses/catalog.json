@@ -1259,5 +1259,56 @@
       "texts/transformers-LICENSE.txt",
       "texts/pip-LICENSE.txt"
     ]
+  },
+  {
+    "Id": "model.jelly-gliner",
+    "Name": "GLiNER2.5 Multi",
+    "Version": "aaecfe45db1d828c963717054ccb868e8ad1f1d5",
+    "Author": "Fastino",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/fastino/gliner2.5-multi-v1",
+    "Checked": "2026-09-12",
+    "Ru": "Карточка закреплённой модели указывает Apache-2.0. Модель и токенизатор скачиваются отдельно. Отдельный LICENSE в пакете отсутствует; сохраняется карточка автора. Полный аудит исходных обучающих данных не проводился.",
+    "En": "The pinned model card declares Apache-2.0. Model and tokenizer are downloaded separately. No separate LICENSE is present in the package; the model card is retained. Training data have not been independently audited.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "7180F934B086DDC19EE5171E04681F64CF0D10820EF6C2E6219B9A6155B9C2B3",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "model.jelly-nuextract",
+    "Name": "NuExtract3",
+    "Version": "c99dc8f5641b866aa0192b6ea78f84bf9f3535f1",
+    "Author": "NuMind",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/numind/NuExtract3",
+    "Checked": "2026-09-12",
+    "Ru": "Веса и токенизатор скачиваются отдельно, оригинальный LICENSE сохраняется рядом с моделью. Карточка и LICENSE указывают Apache-2.0. Полный аудит исходных обучающих данных не проводился.",
+    "En": "Weights and tokenizer are downloaded separately; the original LICENSE is retained beside the model. The card and LICENSE declare Apache-2.0. Training data have not been independently audited.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "7E79BDAB76242D7889EEF7AC5C1C000F1B898F9D6A6A1C2A62190F7F77B1D532",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "runtime.jelly-python",
+    "Name": "Jelly isolated extraction libraries",
+    "Version": "GLiNER2 2.0.0 / Transformers 4.57.6 and 5.5.4",
+    "Author": "Fastino, Hugging Face and dependency authors",
+    "License": "Apache-2.0; MIT; BSD; dependency licenses",
+    "Source": "https://github.com/fastino-ai/GLiNER2",
+    "Checked": "2026-09-12",
+    "Ru": "Две изолированные группы Python-пакетов используют подготовленный PyTorch/CUDA. Версии фиксируются в манифесте и отчёте установки. Оригинальные LICENSE/NOTICE сохраняются в пакетах. Полный аудит всех транзитивных зависимостей не завершён; применяются также условия Python, PyTorch и NVIDIA.",
+    "En": "Two isolated Python package sets use the prepared PyTorch/CUDA runtime. Versions are pinned in the manifest and installation report. Packages retain original LICENSE/NOTICE files. Full transitive dependency review is incomplete; Python, PyTorch and NVIDIA terms also apply.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "EA4EA792B399FC28F29AD4EE4BA7DB755B61B0ED614B24FD4EF70254CD4942C0",
+    "Texts": [
+      "texts/transformers-LICENSE.txt"
+    ]
   }
 ]

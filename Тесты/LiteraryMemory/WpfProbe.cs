@@ -62,13 +62,25 @@ static class WpfProbe
                     waiting.SetException(new IOException("Injected index failure"));
                     Pump(() => !writer.ActionsBlocked);
                     if (!workspace.EditorHost.IsEnabled || ((Button)Field(workspace, "_memoryRetry")).Visibility != Visibility.Visible) throw new Exception("Failure did not unlock workspace.");
+                    CheckEditorButtons(workspace, L);
                     if (!workspace.CanLeave()) throw new Exception("Cannot leave after failure.");
                     owner.Content = null; owner.UpdateLayout();
                     var restored = new LiteraryWorkspaceControl(entry, project, L, (_, _) => Task.CompletedTask);
                     owner.Content = restored; owner.UpdateLayout();
                     var restoredWriter = (LiteraryChatControl)Field(restored, "_writer");
                     Pump(() => !restoredWriter.ActionsBlocked);
+                    CheckEditorButtons(restored, L);
                     if (((TextBox)Field(restoredWriter, "_input")).Text != "Вопрос во время индексации") throw new Exception("Unsent input did not restore.");
+                    var draft = (LiteraryDraftControl)Field(restored, "_draft");
+                    var activeBefore = draft.Store.Index.ActiveId;
+                    var completed = false; draft.ChapterChanged += () => completed = true;
+                    var finish = Descendants(restored.EditorHost).OfType<Button>().Single(b => Equals(b.Content, L("Literary.Workspace.Finish")));
+                    var peer = new System.Windows.Automation.Peers.ButtonAutomationPeer(finish);
+                    ((System.Windows.Automation.Provider.IInvokeProvider)peer.GetPattern(System.Windows.Automation.Peers.PatternInterface.Invoke)).Invoke();
+                    // Empty fixture parts need no model; invoke the actual completion handler.
+                    Pump(() => completed && draft.Store.Index.ActiveId != activeBefore && !restored.IsIndexing);
+                    CheckEditorButtons(restored, L);
+                    Console.WriteLine($"PASS editor actions after failure, success and completed part: {language}/{dark}");
                     var unavailable = entry.ProjectPath + "-offline";
                     Directory.Move(entry.ProjectPath, unavailable);
                     Pump(() => restoredWriter.ActionsBlocked);
@@ -84,6 +96,21 @@ static class WpfProbe
         if (failure is not null) throw new Exception("WPF probe failed", failure);
     }
     private static object Field(object value, string name) => value.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(value)!;
+    private static void CheckEditorButtons(LiteraryWorkspaceControl workspace, Func<string, string> l)
+    {
+        var buttons = Descendants(workspace.EditorHost).OfType<Button>().ToArray();
+        foreach (var label in new[] { "✎", l("Literary.Jelly.Title"), l("Literary.Export"), l("Literary.Workspace.Finish") })
+            if (!buttons.Single(b => Equals(b.Content, label)).IsEnabled) throw new Exception("Editor action remained disabled: " + label);
+        if (buttons.Single(b => Equals(b.Content, l("Literary.Workspace.History"))).IsEnabled) throw new Exception("History placeholder was enabled.");
+    }
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i); yield return child;
+            foreach (var nested in Descendants(child)) yield return nested;
+        }
+    }
     private static void Pump(Func<bool> done)
     {
         var until = DateTime.UtcNow.AddSeconds(15);

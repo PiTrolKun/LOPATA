@@ -15,6 +15,7 @@ public sealed class LiteraryProject
     public string Premise { get; set; } = "";
     public string Include { get; set; } = "";
     public string Avoid { get; set; } = "";
+    public string JellyExecutor { get; set; } = "runeweaver";
     public bool BasedOnExistingWorld { get; set; }
     public string WorldSource { get; set; } = "";
     public List<string> Materials { get; set; } = [];

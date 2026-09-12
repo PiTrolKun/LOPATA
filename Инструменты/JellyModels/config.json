@@ -1,0 +1,120 @@
+{
+  "workers": 8,
+  "chunk_bytes": 33554432,
+  "models": [
+    {
+      "repository": "fastino/gliner2.5-multi-v1",
+      "revision": "aaecfe45db1d828c963717054ccb868e8ad1f1d5",
+      "directory": "GLiNER2.5-Multi",
+      "files": [
+        {
+          "filename": "README.md",
+          "size": 21622,
+          "git_blob_sha1": "1bb58788bd88ecb84481a82949d4a01871d463a1"
+        },
+        {
+          "filename": "config.json",
+          "size": 3151,
+          "git_blob_sha1": "c4c540f52d2e48b5ca2582c6fc23f72b5ae9c79c"
+        },
+        {
+          "filename": "encoder_config/config.json",
+          "size": 857,
+          "git_blob_sha1": "0bb5e495baad2e7fdc35500f0072d5f2d957ed5a"
+        },
+        {
+          "filename": "model.safetensors",
+          "size": 1149461028,
+          "sha256": "c1ff4ec0bc00031c15530b8f3c33d3677f27949e6a0cb52e1247a6224b6c5395"
+        },
+        {
+          "filename": "tokenizer.json",
+          "size": 16035853,
+          "sha256": "c62446df87ae18ec98b133f8f84fc449a07cc89bbf8ef192a4cb5f9c53777a7a"
+        },
+        {
+          "filename": "tokenizer_config.json",
+          "size": 645,
+          "git_blob_sha1": "5efd586306801b08ca13390b0619a94c943046e4"
+        }
+      ]
+    },
+    {
+      "repository": "numind/NuExtract3",
+      "revision": "c99dc8f5641b866aa0192b6ea78f84bf9f3535f1",
+      "directory": "NuExtract3",
+      "files": [
+        {
+          "filename": "LICENSE",
+          "size": 11343,
+          "git_blob_sha1": "1d5180a42f1c3383ba7c7bd0a50f0837ef0168df"
+        },
+        {
+          "filename": "README.md",
+          "size": 25492,
+          "git_blob_sha1": "849085f61f5144530409520ef1e31a7ce4fc316a"
+        },
+        {
+          "filename": "TYPES.md",
+          "size": 4075,
+          "git_blob_sha1": "ab2befe8ffa86ba77d49d636432c9fd4aec53f8c"
+        },
+        {
+          "filename": "chat_template.jinja",
+          "size": 6752,
+          "git_blob_sha1": "ddfc2b0873555e4e0bcecd8952ebfee8700113bf"
+        },
+        {
+          "filename": "config.json",
+          "size": 2897,
+          "git_blob_sha1": "7beb11671d76abf3b84f32d76fe0cd511491a35f"
+        },
+        {
+          "filename": "generation_config.json",
+          "size": 115,
+          "git_blob_sha1": "0e3ee5c218a41835fa4db9bb897c9779286e2b3e"
+        },
+        {
+          "filename": "model.safetensors",
+          "size": 9078620504,
+          "sha256": "aca0a9d61da5df4fa4b1475b68c0a7205e5f8f5f20beb5055fde0622991f9ed7"
+        },
+        {
+          "filename": "model.safetensors.index.json",
+          "size": 56330,
+          "git_blob_sha1": "c1c415dfc3fb93d84876a157a678a4f219c5f526"
+        },
+        {
+          "filename": "model_mtp.safetensors",
+          "size": 241200704,
+          "sha256": "7f993d7b896c6d3c72ee66fd446b28bcf316d5f5ce4a0427c0442dfe461cbe1b"
+        },
+        {
+          "filename": "processor_config.json",
+          "size": 1191,
+          "git_blob_sha1": "33818c7f9e991ad735fd240209f4fa73e6c28c50"
+        },
+        {
+          "filename": "task_instructions_markdown.txt",
+          "size": 2748,
+          "git_blob_sha1": "8cdce822bd354ad6c146c7e66fdb1c612b3b7ab9"
+        },
+        {
+          "filename": "task_instructions_structured.txt",
+          "size": 11021,
+          "git_blob_sha1": "52191ac49a7d3e4d54ac6a3500792b65901699d1"
+        },
+        {
+          "filename": "tokenizer.json",
+          "size": 19989343,
+          "sha256": "87a7830d63fcf43bf241c3c5242e96e62dd3fdc29224ca26fed8ea333db72de4"
+        },
+        {
+          "filename": "tokenizer_config.json",
+          "size": 1169,
+          "git_blob_sha1": "43f5bc3aee8542f435eeed34300cf63acf4e484a"
+        }
+      ]
+    }
+  ]
+}

@@ -27,6 +27,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
     public ContentControl AdvisorHost { get; } = new();
     public bool CanLeave()
     {
+        if (_jellyEditing) return false;
         if (!(_writer.SaveDialogue() & _advisor.SaveDialogue())
             && System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Literary.Dialog.LeaveError"), _l("Literary.Work"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
@@ -141,6 +142,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         var rename = LiteraryUi.Button("✎", async () => await _draft.RenameAsync()); rename.MinWidth = 0; rename.Width = 34; rename.Padding = new Thickness(4);
         rename.ToolTip = _l("Literary.Workspace.Action.RenameChapter"); header.Children.Add(rename);
         header.Children.Add(PendingButton(_l("Literary.Workspace.History"), LiteraryWorkspaceAction.History));
+        header.Children.Add(LiteraryUi.Button(_l("Literary.Jelly.Title"), async () => await OpenJellyAsync()));
         header.Children.Add(LiteraryUi.Button(_l("Literary.Export"), async () => await LiteraryExportDialog.ShowAsync(this, _l, _entry.ProjectPath, _project.WorkTitle, _draft)));
         header.Children.Add(LiteraryUi.Button(_l("Literary.Workspace.Finish"), async () => await _draft.FinishAsync()));
         DockPanel.SetDock(header, Dock.Top); panel.Children.Add(header);

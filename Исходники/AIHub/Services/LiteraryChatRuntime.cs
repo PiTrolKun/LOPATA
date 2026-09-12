@@ -11,12 +11,13 @@ using AIHub.Models;
 namespace AIHub.Services;
 
 /// <summary>One workspace owns one model process. Two slots, one active generation.</summary>
-public sealed class LiteraryChatRuntime : IDisposable
+public sealed partial class LiteraryChatRuntime : IDisposable
 {
     private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Process? _process;
     private int _port, _busy;
+    private volatile bool _disposed;
     private CancellationTokenSource? _active;
     private readonly object _logGate = new();
     private readonly string _logPath;
@@ -63,7 +64,7 @@ public sealed class LiteraryChatRuntime : IDisposable
             catch (Exception ex) when (ex is IOException or InvalidDataException or JsonException or UnauthorizedAccessException)
             { throw new LiteraryPlotAnchorException(ex); }
             diagnostics.Write("plot_anchor", new { role, anchor?.Revision, anchor?.UpdatedAt, characters = anchor?.Text.Length ?? 0 });
-            var messages = LiteraryModelPolicy.Messages(role, history, draft, project, includeDraft: editor is null, plotAnchor: anchor?.Text ?? "");
+            var messages = LiteraryModelPolicy.Messages(role, history, draft, project, includeDraft: editor is null, plotAnchor: anchor?.Context ?? "");
             diagnostics.Write("input", messages);
             await PrepareAsync(ct).ConfigureAwait(false);
             diagnostics.Write("process_ready", new { pid = _process!.Id, role, slot = LiteraryModelPolicy.Slot(role), arguments = _process.StartInfo.ArgumentList.ToArray() });
@@ -78,12 +79,14 @@ public sealed class LiteraryChatRuntime : IDisposable
                     fullTextIncluded = true, editor.ActiveId, editor.Unsaved });
                 _anchors[role] = editor.Revision;
                 activity?.Invoke("Literary.Context.Checking");
+                var jelly = _layout is null ? null : await Task.Run(() => new LiteraryJellyContext(_layout, editor,
+                    history.LastOrDefault()?.Content + " " + draft, (kind, data) => diagnostics.Write(kind, data)), ct);
                 reading = new LiteraryReadingSession(new LiteraryProjectReader(editor), FitsAsync, (kind, data) =>
                 {
                     diagnostics.Write(kind, data);
                     if (kind == "read_plan") Log("Read action: " + JsonSerializer.Serialize(data));
                     else if (kind == "source_evicted") Log("Source block evicted for context budget.");
-                }, role, _layout is null ? null : new LiteraryRagReader(editor), anchor?.Text ?? "");
+                }, role, _layout is null ? null : new LiteraryRagReader(editor), anchor?.Context ?? "", jelly);
                 messages = await reading.PrepareAsync(messages, (input, _) => InferAsync(input, true, reading.StepResponseFormat()), activity, ct,
                     (input, _) => InferAsync(input, true, LiteraryReadRouting.ResponseFormat(editor)));
             }
@@ -187,6 +190,7 @@ public sealed class LiteraryChatRuntime : IDisposable
     }
     private async Task PrepareAsync(CancellationToken token)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (_process is { HasExited: false }) return;
         StopProcess();
         var model = await LiteraryModelLocation.ResolveAsync(token).ConfigureAwait(false);
@@ -200,6 +204,10 @@ public sealed class LiteraryChatRuntime : IDisposable
         };
         foreach (var key in info.Environment.Keys.Where(k => k.StartsWith("LLAMA_ARG_", StringComparison.Ordinal)).ToArray()) info.Environment.Remove(key);
         foreach (var arg in Arguments(model, _port)) info.ArgumentList.Add(arg);
+        if (_layout is not null)
+        {
+            info.ArgumentList.Add("--slot-save-path"); info.ArgumentList.Add(_layout.EnsureFolder("Dialogs/RuntimeCache"));
+        }
         var process = new Process { StartInfo = info };
         _process = process;
         process.OutputDataReceived += (_, e) => { if (e.Data is { } line) { Log(line); _diagnostics?.Write("stdout", line); } };
@@ -245,7 +253,7 @@ public sealed class LiteraryChatRuntime : IDisposable
         catch (InvalidOperationException) { }
         finally { process.Dispose(); }
     }
-    public void Dispose() { Stop(); _http.Dispose(); }
+    public void Dispose() { _disposed = true; Stop(); _http.Dispose(); }
     private sealed class DiagnosticProgress(IProgress<ModelStreamChunk>? target, LiteraryRequestDiagnostics diagnostics) : IProgress<ModelStreamChunk>
     {
         public void Report(ModelStreamChunk value) { diagnostics.Write("visible_chunk", value); target?.Report(value); }

@@ -78,7 +78,7 @@ public sealed partial class LiteraryProjectCreateControl : UserControl
             e.Handled = true;
         };
         root.Children.Add(scroll);
-        BuildIdentity(); BuildIdea(); BuildWorld();
+        BuildIdentity(); BuildIdea(); BuildWorld(); BuildMemory();
         buttons.Margin = new Thickness(0, 12, 0, 18);
         _sections.Children.Add(buttons);
         Content = root;
@@ -193,12 +193,14 @@ public sealed partial class LiteraryProjectCreateControl : UserControl
         { _error.Text = _l("Literary.Create.InvalidName"); _name.BringIntoView(); _name.Focus(); return; }
         if (_genres.SelectedIds.Count == 0 && string.IsNullOrWhiteSpace(_genreNotes.Text))
         { _error.Text = _l("Literary.Create.GenreRequired"); _genres.BringIntoView(); return; }
+        if (!ValidateAnchors()) return;
+        var initializeAnchors = InitialAnchors();
         var project = new LiteraryProject
         {
             ProjectName = _name.Text.Trim(), WorkTitle = string.IsNullOrWhiteSpace(_title.Text) ? _l("Literary.Create.Untitled") : _title.Text.Trim(),
             Author = _author.Text.Trim(), LanguageCode = _language, Form = (string)((ComboBoxItem)_form.SelectedItem).Tag,
             Genres = _genres.SelectedIds.ToList(), CustomGenres = _genreNotes.Text.Trim(), Premise = _premise.Text.Trim(),
-            Include = _include.Text.Trim(), Avoid = _avoid.Text.Trim(), BasedOnExistingWorld = _type.SelectedIndex == 1,
+            Include = _include.Text.Trim(), Avoid = _avoid.Text.Trim(), JellyExecutor = (string)((ComboBoxItem)_jellyMode.SelectedItem).Tag, BasedOnExistingWorld = _type.SelectedIndex == 1,
             WorldSource = _type.SelectedIndex == 1 ? _source.Text.Trim() : "", CultureCountries = _countries.SelectedIds.ToList(), CultureNotes = _cultureNotes.Text.Trim()
         };
         var parent = _folder.Text.Trim();
@@ -210,8 +212,8 @@ public sealed partial class LiteraryProjectCreateControl : UserControl
         {
             index?.SetDestination(Path.Combine(parent, project.ProjectName));
             CreatedProject = await Task.Run(() => _reservation is null
-                ? _store.Create(parent, project, materials, index is null ? null : index.CopyInto)
-                : _store.CreateReserved(_reservation, project, materials, index is null ? null : index.CopyInto));
+                ? _store.Create(parent, project, materials, index is null ? null : index.CopyInto, initializeAnchors)
+                : _store.CreateReserved(_reservation, project, materials, index is null ? null : index.CopyInto, initializeAnchors));
             index?.Commit();
             if (index is not null) { await index.DisposeAsync(); _preparedIndex = null; }
             _reservation?.Dispose(); _reservation = null;
