@@ -21,6 +21,8 @@ public sealed class LiteraryProject
     public List<string> Materials { get; set; } = [];
     public List<string> CultureCountries { get; set; } = [];
     public string CultureNotes { get; set; } = "";
+    // Approved onboarding text, distinct from manuscript history and profile data.
+    public string CreationBrief { get; set; } = "";
 }
 
 public sealed class LiteraryProjectIndex

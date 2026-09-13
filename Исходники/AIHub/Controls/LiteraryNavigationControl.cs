@@ -8,7 +8,7 @@ using Orientation = System.Windows.Controls.Orientation;
 
 namespace AIHub.Controls;
 
-public sealed class LiteraryNavigationControl : UserControl
+public sealed partial class LiteraryNavigationControl : UserControl
 {
     private Func<string, string> _l = key => key;
     private readonly LiteraryProjectSelection _projects = new();
@@ -18,11 +18,16 @@ public sealed class LiteraryNavigationControl : UserControl
     private LiteraryWorkspaceControl? _workspace;
     private LiteraryPreparationControl? _preparation;
     public bool ShowingProjects { get; private set; }
-    public bool IsIndexing => _workspace?.IsIndexing == true;
+    public bool IsIndexing => _workspace?.IsIndexing == true || _interview?.IsIndexing == true;
     public event Action? BackRequested;
     public event Action? HomeRequested;
     public bool CanLeave()
     {
+        if (_interview is not null)
+        {
+            if (!_interview.CanLeave()) return false;
+            _interview=null; _choosingCreation=true; return true;
+        }
         if (_creation?.IsSaving == true) return false;
         _preparation?.Cancel();
         _creation?.CancelIndexing();
@@ -37,12 +42,15 @@ public sealed class LiteraryNavigationControl : UserControl
         if (initialFolder is not null) _initialFolder = initialFolder;
         LoadProjects();
         _workspace?.ApplyLocalization(localize);
+        _interview?.ApplyLocalization(localize);
         Render();
     }
 
     public void GoBack()
     {
         if (IsIndexing) return;
+        if (_interview is not null) { if (!_interview.CanLeave()) return; _interview=null; _choosingCreation=true; Render(); return; }
+        if (_choosingCreation) { if (_creationPage!="choice") _creationPage="choice"; else _choosingCreation=false; Render(); return; }
         if (_preparation is not null) { _preparation.Cancel(); _preparation = null; ShowingProjects = false; Render(); return; }
         if (_workspace is not null) { if (!CanLeave()) return; _workspace = null; ShowingProjects = true; Render(); return; }
         if (_creation is not null) { if (!_creation.IsSaving) { _creation.CancelIndexing(); _creation = null; Render(); } return; }
@@ -52,6 +60,7 @@ public sealed class LiteraryNavigationControl : UserControl
 
     private void Render()
     {
+        if (_interview is not null) { Content = _interview; return; }
         if (_preparation is not null) { Content = _preparation; return; }
         if (_workspace is not null) { Content = _workspace; return; }
         if (_creation is not null) { Content = _creation; return; }
@@ -72,6 +81,10 @@ public sealed class LiteraryNavigationControl : UserControl
         {
             body.Children.Add(Card("Literary.Import", "Literary.ImportHint", "Literary.Pending", null));
             body.Children.Add(Card("Literary.Work", "Literary.WorkHint", "Literary.Start", Prepare));
+        }
+        else if (_choosingCreation)
+        {
+            BuildCreationModes(body);
         }
         else
         {
@@ -159,8 +172,9 @@ public sealed class LiteraryNavigationControl : UserControl
         { _notice = _l("Literary.Create.LoadError") + " " + ex.Message; }
     }
 
-    private void CreateProject()
+    private void CreateExpertProject()
     {
+        _choosingCreation=false;
         _creation = new LiteraryProjectCreateControl(_l, _language, _initialFolder, _store);
         _creation.CancelRequested += GoBack;
         _creation.ProjectCreated += entry =>
@@ -184,17 +198,17 @@ public sealed class LiteraryNavigationControl : UserControl
         Render();
     }
 
-    private void OpenWorkspace(LiteraryProjectEntry entry)
+    private void OpenWorkspace(LiteraryProjectEntry entry, LiteraryChatRuntime? preparedRuntime = null)
     {
         try
         {
             var project = LiteraryProjectStore.ReadProject(entry.ProjectPath);
-            _workspace = new LiteraryWorkspaceControl(entry, project, _l);
+            _workspace = new LiteraryWorkspaceControl(entry, project, _l, preparedRuntime: preparedRuntime);
             _workspace.BackRequested += GoBack;
             _workspace.HomeRequested += () => { _workspace = null; HomeRequested?.Invoke(); };
         }
         catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
-        { _notice = _l("Literary.Create.LoadError") + " " + ex.Message; }
+        { preparedRuntime?.Dispose(); _notice = _l("Literary.Create.LoadError") + " " + ex.Message; }
         Render();
     }
 }

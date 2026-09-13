@@ -36,11 +36,12 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
     }
 
     public LiteraryWorkspaceControl(LiteraryProjectEntry entry, LiteraryProject project, Func<string, string> localize,
-        Func<IProgress<LiteraryPreparationProgress>, CancellationToken, Task>? memoryPreparation = null)
+        Func<IProgress<LiteraryPreparationProgress>, CancellationToken, Task>? memoryPreparation = null,
+        LiteraryChatRuntime? preparedRuntime = null)
     {
         _entry = entry; _project = project; _l = localize;
         _memoryPreparation = memoryPreparation;
-        _runtime = new LiteraryChatRuntime(entry.ProjectPath);
+        _runtime = preparedRuntime ?? new LiteraryChatRuntime(entry.ProjectPath);
         _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
         _writer = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Writer, () => _draft.Text, project,
             () => _draft.Capture(project.Id, entry.ProjectPath), entry.ProjectPath);

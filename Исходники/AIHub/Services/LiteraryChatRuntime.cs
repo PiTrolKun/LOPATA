@@ -21,18 +21,33 @@ public sealed partial class LiteraryChatRuntime : IDisposable
     private CancellationTokenSource? _active;
     private readonly object _logGate = new();
     private readonly string _logPath;
-    private readonly LiteraryProjectLayout? _layout;
+    private LiteraryProjectLayout? _layout;
+    private readonly string? _preparationRoot;
     private LiteraryRequestDiagnostics? _diagnostics;
     private readonly Dictionary<LiteraryChatProfile, string> _anchors = [];
     public void ResetAnchor(LiteraryChatProfile role) => _anchors.Remove(role);
     public bool IsBusy => Volatile.Read(ref _busy) != 0;
     public event Action? BusyChanged;
-    public LiteraryChatRuntime(string? projectDirectory = null)
+    public LiteraryChatRuntime(string? projectDirectory = null, bool preparing = false)
     {
-        _layout = projectDirectory is null ? null : new LiteraryProjectLayout(projectDirectory);
-        var folder = _layout?.EnsureFolder("Diagnostics/LiteraryShared") ?? Path.Combine(AppDataPaths.BaseDirectory, "Diagnostics", "LiteraryShared");
+        _preparationRoot = preparing ? projectDirectory ?? throw new ArgumentNullException(nameof(projectDirectory)) : null;
+        _layout = projectDirectory is null || preparing ? null : new LiteraryProjectLayout(projectDirectory);
+        var folder = _layout?.EnsureFolder("Diagnostics/LiteraryShared") ?? Path.Combine(_preparationRoot ?? AppDataPaths.BaseDirectory, "Diagnostics", "LiteraryShared");
+        if (_preparationRoot is not null) ValidatePreparation();
         Directory.CreateDirectory(folder);
         _logPath = Path.Combine(folder, DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" + Guid.NewGuid().ToString("N") + ".log");
+    }
+    private void ValidatePreparation()
+    {
+        if (_preparationRoot is null) return;
+        LiteraryProjectLayout.CheckTreePath(_preparationRoot);
+        if (!Directory.Exists(_preparationRoot) || (!File.Exists(Path.Combine(_preparationRoot, ".creation")) && !File.Exists(Path.Combine(_preparationRoot, "project.json"))))
+            throw new IOException("Project preparation is no longer available.");
+    }
+    public void CompletePreparation(string root)
+    {
+        if (IsBusy || !string.Equals(Path.GetFullPath(root), _preparationRoot, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException();
+        _layout = new LiteraryProjectLayout(root);
     }
     public static string[] Arguments(string model, int port) =>
     ["-m", model, "--host", IPAddress.Loopback.ToString(), "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -204,9 +219,12 @@ public sealed partial class LiteraryChatRuntime : IDisposable
         };
         foreach (var key in info.Environment.Keys.Where(k => k.StartsWith("LLAMA_ARG_", StringComparison.Ordinal)).ToArray()) info.Environment.Remove(key);
         foreach (var arg in Arguments(model, _port)) info.ArgumentList.Add(arg);
-        if (_layout is not null)
+        if (_layout is not null || _preparationRoot is not null)
         {
-            info.ArgumentList.Add("--slot-save-path"); info.ArgumentList.Add(_layout.EnsureFolder("Dialogs/RuntimeCache"));
+            ValidatePreparation();
+            var cacheFolder = _layout?.EnsureFolder("Dialogs/RuntimeCache") ?? Path.Combine(_preparationRoot!, "Dialogs", "RuntimeCache");
+            LiteraryProjectLayout.CheckTreePath(cacheFolder); Directory.CreateDirectory(cacheFolder);
+            info.ArgumentList.Add("--slot-save-path"); info.ArgumentList.Add(cacheFolder);
         }
         var process = new Process { StartInfo = info };
         _process = process;
