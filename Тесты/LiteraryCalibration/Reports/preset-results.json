@@ -1,0 +1,202 @@
+[
+  {
+    "key": "Meaning",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 38
+          },
+          "Explanation": "Фраза не содержит смысловой нагрузки, так как не объясняет, почему инженер строит лодку в небольшом городе и что это значит для сюжета или мира произведения.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Coherence",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 38
+          },
+          "Explanation": "Два независимых предложения, не связанных между собой. Неясно, как они относятся друг к другу.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Retelling",
+    "result": {
+      "Findings": [],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Contradictions",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 38
+          },
+          "Explanation": "В одном предложении перечислены два не связанных между собой факта: \"Небольшой город\" и \"Инженер строит лодку\". Эти утверждения не имеют внутренней связи, что может вызвать у читателя путаницу или вопросы о контексте.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Names",
+    "result": {
+      "Findings": [],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Roles",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 17,
+            "Length": 21
+          },
+          "Explanation": "В данном предложении не ясно, кто именно строит лодку — инженер или рассказчик. Смешение ролей автора, персонажа и рассказчика.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Chronology",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 17,
+            "Length": 21
+          },
+          "Explanation": "Временное указание неясно. Может относиться к настоящему времени (строит) или прошлому (строил).",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Causality",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 17,
+            "Length": 21
+          },
+          "Explanation": "В данном контексте не ясно, почему именно инженер занимается строительством лодки. Обычно это делают судостроители или плотники. Инженер — специалист в другой области.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Rules",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 38
+          },
+          "Explanation": "В данном описании нет некорректных запретов, отрицаний или конфликтов условий.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Statuses",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 17,
+            "Length": 21
+          },
+          "Explanation": "Фраза \"строит лодку\" указывает на действие, которое уже происходит, хотя это может быть план или желание инженера. Чтобы избежать смешения планируемого и фактического, можно изменить фразу на \"Инженер собирается построить лодку\" или \"Инженер планирует построить лодку\".",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Repetition",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 38
+          },
+          "Explanation": "Дублирование содержания без нового смысла: 'Небольшой город' и 'Инженер строит лодку' уже были упомянуты ранее в описании, без добавления новой информации.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "key": "Clarity",
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 38
+          },
+          "Explanation": "В данном описании не ясно, в каком городе происходит действие и кто именно этот инженер. Также непонятно, для чего он строит лодку и почему это важно для сюжета или замысла.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "manual": {
+      "Findings": [],
+      "Partial": false
+    }
+  }
+]

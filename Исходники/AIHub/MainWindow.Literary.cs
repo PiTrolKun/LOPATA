@@ -4,6 +4,7 @@ namespace AIHub;
 
 public partial class MainWindow
 {
+    private void LiteraryCalibration_Click(object sender, RoutedEventArgs e) => LiteraryPage.OpenCalibration();
     private void SelectLiteraryScenarioButton_Click(object sender, RoutedEventArgs e)
     {
         CancelCoreSpeech(revealFullText: false, "open_literary_navigation");
@@ -23,6 +24,9 @@ public partial class MainWindow
 
     private void RefreshLiteraryLocalization()
     {
+        LiteraryScenarioPlaceholderButton.ToolTip = L("Literary.Calibration.Title");
+        System.Windows.Automation.AutomationProperties.SetName(
+            LiteraryScenarioPlaceholderButton, L("Literary.Calibration.Title"));
         LiteraryScenarioTitleText.Text = L("Literary.Title");
         LiteraryScenarioDescriptionText.Text = L("Literary.Description");
         SelectLiteraryScenarioButton.Content = L("ImageAnalysis.Scenario.Select");

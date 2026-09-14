@@ -18,6 +18,10 @@ public sealed partial class LiteraryNavigationControl : UserControl
     private LiteraryWorkspaceControl? _workspace;
     private LiteraryPreparationControl? _preparation;
     public bool ShowingProjects { get; private set; }
+    public static readonly DependencyProperty IsCalibrationAvailableProperty = DependencyProperty.Register(
+        nameof(IsCalibrationAvailable), typeof(bool), typeof(LiteraryNavigationControl), new PropertyMetadata(false));
+    public bool IsCalibrationAvailable => (bool)GetValue(IsCalibrationAvailableProperty);
+    public void OpenCalibration() => _workspace?.OpenCalibration();
     public bool IsIndexing => _workspace?.IsIndexing == true || _interview?.IsIndexing == true;
     public event Action? BackRequested;
     public event Action? HomeRequested;
@@ -60,6 +64,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
 
     private void Render()
     {
+        SetValue(IsCalibrationAvailableProperty, _workspace is not null);
         if (_interview is not null) { Content = _interview; return; }
         if (_preparation is not null) { Content = _preparation; return; }
         if (_workspace is not null) { Content = _workspace; return; }

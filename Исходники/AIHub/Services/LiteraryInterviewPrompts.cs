@@ -34,7 +34,7 @@ public static class LiteraryInterviewPrompts
     public static string Packet(LiteraryInterviewState state) => JsonSerializer.Serialize(new
     {
         kind = "confirmed_creation_intent_not_manuscript_events",
-        sections = state.Records.Where(r => r.Step is >= 4 and <= 34 && r.Step != 10).Select(r => new { r.Topic, r.Question, r.Text, r.Meaning }),
+        sections = state.Records.Where(r => r.Step is >= 4 and <= 34 && r.Step != 10).Select(r => new { r.Topic, r.Step, r.Adaptive, r.Question, r.Text, r.Meaning }),
         route = state.Route.Where(r => r.Title.Length > 0 || r.Description.Length > 0)
     }, LiteraryInterviewSession.Json);
     public static LiteraryProject Project(LiteraryInterviewState state, string untitled)

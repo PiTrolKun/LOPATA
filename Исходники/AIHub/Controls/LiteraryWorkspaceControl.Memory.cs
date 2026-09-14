@@ -75,6 +75,7 @@ public sealed partial class LiteraryWorkspaceControl
             _writer.ActionsBlocked = _advisor.ActionsBlocked = _projectMissing;
             _writer.RefreshAvailability(); _advisor.RefreshAvailability();
             _draft.BlockActions(_projectMissing); EditorHost.IsEnabled = !_projectMissing;
+            if (!cancellation.IsCancellationRequested) ScheduleFirstCalibration();
         }
     }
     private void BlockButtons(DependencyObject root)

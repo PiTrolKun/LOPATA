@@ -37,6 +37,7 @@
   <ItemGroup>
     <Resource Include="Assets\AppIcon.ico" />
     <Resource Include="Assets\lopata_brand.png" />
+    <Resource Include="Assets\scenario-calibration.png" />
     <Content Include="Licenses\**\*"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Localization\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

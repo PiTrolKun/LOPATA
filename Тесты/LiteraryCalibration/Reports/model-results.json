@@ -1,0 +1,401 @@
+[
+  {
+    "Name": "retelling",
+    "repeat": 1,
+    "seconds": 9.6594197,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 20
+          },
+          "Explanation": "Служебный оборот разговора с моделью попал в описание.",
+          "Related": [],
+          "Suggestions": []
+        },
+        {
+          "Target": {
+            "FieldId": "f1",
+            "Start": 0,
+            "Length": 10
+          },
+          "Explanation": "Служебный оборот разговора с моделью попал в описание.",
+          "Related": [],
+          "Suggestions": []
+        },
+        {
+          "Target": {
+            "FieldId": "f1",
+            "Start": 31,
+            "Length": 29
+          },
+          "Explanation": "Служебный оборот разговора с моделью попал в описание.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "retelling",
+    "repeat": 2,
+    "seconds": 1.6642587,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 20
+          },
+          "Explanation": "служебный оборот разговора с моделью",
+          "Related": [],
+          "Suggestions": []
+        },
+        {
+          "Target": {
+            "FieldId": "f1",
+            "Start": 0,
+            "Length": 10
+          },
+          "Explanation": "служебный оборот разговора с моделью",
+          "Related": [],
+          "Suggestions": []
+        },
+        {
+          "Target": {
+            "FieldId": "f1",
+            "Start": 31,
+            "Length": 29
+          },
+          "Explanation": "служебный оборот разговора с моделью",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "retelling",
+    "repeat": 3,
+    "seconds": 1.7885391,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 0,
+            "Length": 69
+          },
+          "Explanation": "Служебный оборот 'Пользователь считает' не относится к сюжету или цитате и должен быть отмечен.",
+          "Related": [],
+          "Suggestions": []
+        },
+        {
+          "Target": {
+            "FieldId": "f1",
+            "Start": 0,
+            "Length": 61
+          },
+          "Explanation": "Служебный оборот 'Вы указали' не относится к сюжету или цитате и должен быть отмечен.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "contradiction",
+    "repeat": 1,
+    "seconds": 1.5940271,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 25,
+            "Length": 64
+          },
+          "Explanation": "Внутренне несовместимо с f1. В одном тексте утверждается, что Лев единственный ребёнок, а в другом — что у него есть родная сестра Нина.",
+          "Related": [
+            {
+              "FieldId": "f1",
+              "Start": 0,
+              "Length": 76
+            }
+          ],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "contradiction",
+    "repeat": 2,
+    "seconds": 1.2992991,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 25,
+            "Length": 64
+          },
+          "Explanation": "Противоречит утверждению о наличии родной сестры Нины.",
+          "Related": [
+            {
+              "FieldId": "f1",
+              "Start": 0,
+              "Length": 76
+            }
+          ],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "contradiction",
+    "repeat": 3,
+    "seconds": 1.293871,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 25,
+            "Length": 64
+          },
+          "Explanation": "Противоречит утверждению о наличии родной сестры Нины.",
+          "Related": [
+            {
+              "FieldId": "f1",
+              "Start": 0,
+              "Length": 76
+            }
+          ],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "ambiguity",
+    "repeat": 1,
+    "seconds": 0.6850754,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 28,
+            "Length": 22
+          },
+          "Explanation": "Неясно, чей дом - Павла или Ивана.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "ambiguity",
+    "repeat": 2,
+    "seconds": 0.9597745,
+    "error": "Citation not found."
+  },
+  {
+    "Name": "ambiguity",
+    "repeat": 3,
+    "seconds": 0.7369256,
+    "error": "Citation not found."
+  },
+  {
+    "Name": "negation",
+    "repeat": 1,
+    "seconds": 0.9012845,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 34,
+            "Length": 29
+          },
+          "Explanation": "Двойное отрицание. Правильно: 'Посторонним вход разрешен.' или 'Вход посторонним не запрещен.'",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "negation",
+    "repeat": 2,
+    "seconds": 0.8334418,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 34,
+            "Length": 29
+          },
+          "Explanation": "Конфликт условий: посторонним разрешено входить, так как им ничего не запрещено.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "negation",
+    "repeat": 3,
+    "seconds": 0.895564,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 34,
+            "Length": 29
+          },
+          "Explanation": "Двойное отрицание. Правильно: 'Посторонним вход разрешен.' или 'Вход посторонним не запрещён.'",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "clean",
+    "repeat": 1,
+    "seconds": 0.1529228,
+    "result": {
+      "Findings": [],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "clean",
+    "repeat": 2,
+    "seconds": 0.1395948,
+    "result": {
+      "Findings": [],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "clean",
+    "repeat": 3,
+    "seconds": 0.1310977,
+    "result": {
+      "Findings": [],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "fantasy",
+    "repeat": 1,
+    "seconds": 1.304473,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 72,
+            "Length": 49
+          },
+          "Explanation": "Фраза 'чтобы их не унесло в небо' противоречит описанию гравитации, которая по вторникам работает вверх. Если дома привязаны, то они должны подниматься вверх, а не уноситься в небо.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "fantasy",
+    "repeat": 2,
+    "seconds": 1.6073827,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 72,
+            "Length": 49
+          },
+          "Explanation": "Формулировка «привязные дома» не объясняет, как они предотвращают полёт вверх по вторникам, когда гравитация работает в обратную сторону. Слово «привязные» обычно используется для описания домов, которые крепко зафиксированы на земле, но это не решает проблему с необычной гравитацией.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "fantasy",
+    "repeat": 3,
+    "seconds": 0.5823266,
+    "error": "Invalid citation."
+  },
+  {
+    "Name": "names",
+    "repeat": 1,
+    "seconds": 1.1002316,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 12,
+            "Length": 11
+          },
+          "Explanation": "Имя героя не соответствует его обращению. В тексте герой называется «Да Ну Нафиг», но друзья обращаются к нему как к «Да Нафигу». Это несоответствие в падежных формах имени.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  },
+  {
+    "Name": "names",
+    "repeat": 2,
+    "seconds": 0.910221,
+    "error": "Citation not found."
+  },
+  {
+    "Name": "names",
+    "repeat": 3,
+    "seconds": 1.0534954,
+    "result": {
+      "Findings": [
+        {
+          "Target": {
+            "FieldId": "f0",
+            "Start": 12,
+            "Length": 11
+          },
+          "Explanation": "Имя героя и обращение к нему совпадают. Это может вызвать путаницу у читателя, так как обычно имя и обращение различаются. Например, можно использовать уменьшительно-ласкательную форму или кличку.",
+          "Related": [],
+          "Suggestions": []
+        }
+      ],
+      "Partial": false
+    }
+  }
+]

@@ -155,6 +155,31 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
+        <!-- All scenario toolbar actions use circles, distinct from global actions. -->
+        <Style x:Key="ScenarioButtonStyle" TargetType="Button" BasedOn="{StaticResource ThemeButtonStyle}">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Ellipse Fill="{TemplateBinding Background}"
+                                     Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1.5" />
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource StepBadgeBrush}" />
+                </Trigger>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource TextPrimaryBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="ChoiceOptionButtonStyle" TargetType="Button">
             <Setter Property="MinHeight" Value="76" />
             <Setter Property="Margin" Value="5" />
@@ -258,6 +283,33 @@
                 <StackPanel Grid.Column="2"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
+                    <StackPanel x:Name="ScenarioToolbar" Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding IsVisible, ElementName=LiteraryPage}" Value="True" />
+                                            <Condition Binding="{Binding IsCalibrationAvailable, ElementName=LiteraryPage}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <StackPanel x:Name="ScenarioButtons" Orientation="Horizontal">
+                            <StackPanel.Resources>
+                                <Style TargetType="Button" BasedOn="{StaticResource ScenarioButtonStyle}" />
+                            </StackPanel.Resources>
+                            <Button x:Name="LiteraryScenarioPlaceholderButton"
+                                    IsEnabled="{Binding IsCalibrationAvailable, ElementName=LiteraryPage}"
+                                    Click="LiteraryCalibration_Click" ToolTipService.ShowOnDisabled="True">
+                                <Image Source="Assets/scenario-calibration.png" Margin="4" Stretch="Uniform" />
+                            </Button>
+                        </StackPanel>
+                        <Border Width="1" Margin="16,0" Background="{DynamicResource TextSecondaryBrush}" />
+                    </StackPanel>
                     <Button x:Name="ProfileButton"
                             Content="👤"
                             Style="{StaticResource ThemeButtonStyle}"
