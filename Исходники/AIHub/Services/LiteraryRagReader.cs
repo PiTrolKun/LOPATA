@@ -10,6 +10,10 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
 {
     private readonly LiteraryProjectLayout _layout = new(snapshot.Directory);
     private sealed record Section(string Source, string Name, string Text);
+    public sealed record ReferenceScope(string Number, string Source, string Section);
+    public IReadOnlyList<ReferenceScope> ReferenceScopes() => References().Select((s,i)=>new ReferenceScope("ref:"+i,s.Source,s.Name)).ToArray();
+    public async Task<string> SearchScopedAsync(string query, bool reference, string scope, bool section, CancellationToken ct)
+        => ParagraphJson.Encode(await SearchAsync(query, reference, ct, scope, section, 6000));
     private List<Section> References()
     {
         _layout.EnsurePresent();
@@ -107,11 +111,20 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
             note = "A multiword query is also resolved semantically. Matching phrases alone do not identify all events or prove absence of a fact.",
             semantic = await SearchAsync(query, true, ct) };
     }
-    private async Task<object> SearchAsync(string query, bool reference, CancellationToken ct)
+    private async Task<object> SearchAsync(string query, bool reference, CancellationToken ct, string scope = "", bool section = false, int queryLimit = 120)
     {
-        if (string.IsNullOrWhiteSpace(query) || query.Length > 120) throw new InvalidDataException("Invalid query.");
+        if (string.IsNullOrWhiteSpace(query) || query.Length > queryLimit) throw new InvalidDataException("Search query is empty or exceeds its input budget.");
         var collections = new List<(string Id, LiterarySource? Source)>();
         var sections = reference ? References() : [];
+        object? filter = null;
+        if (reference && scope.Length > 0)
+        {
+            var selected = sections.Select((s,i)=>(s,i)).Where(x=>section ? "ref:"+x.i==scope : x.s.Source==scope).ToArray();
+            if (selected.Length==0) throw new InvalidDataException("Reference scope disappeared.");
+            var conditions = new List<object> { new { key="source", match=new { value=selected[0].s.Source } } };
+            if(section) conditions.Add(new { key="section", match=new { value=selected[0].s.Name } });
+            filter = new { must=conditions };
+        }
         if (reference)
         {
             var path = Path.Combine(_layout.Rag, "Source", "manifest.json");
@@ -120,10 +133,11 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
             if (manifest.ModelRevision != GigaEmbeddingInstallation.Revision || manifest.Kind != "reference") throw new InvalidDataException("Reference index is incompatible.");
             collections.Add((manifest.Id, null));
         }
-        else foreach (var source in snapshot.Sources.Where(s => s.Id != snapshot.ActiveId))
+        else foreach (var source in snapshot.Sources.Where(s => s.Id != snapshot.ActiveId && (scope.Length==0 || s.Id==scope)))
         {
             var text = LiteraryChapterFiles.Read(Path.Combine(_layout.Root, "chapters", source.FileName));
             if (LiteraryWorkIndex.Current(_layout, source, text) is { } manifest) collections.Add((manifest.Collection, source));
+            else if(queryLimit!=120) throw new InvalidDataException("A selected project part has no current index: "+source.Number);
         }
         if (collections.Count == 0) return new { error = "No current indexed parts. Use list/read/search for saved files." };
         var cache = _layout.EnsureFolder(Path.Combine("Rag", "Queries", LiteraryWorkIndex.Revision(GigaEmbeddingInstallation.Revision + query)));
@@ -144,7 +158,7 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
             foreach (var collection in collections)
             {
                 _layout.EnsurePresent();
-                foreach (var hit in await runtime.SearchLiteraryAsync(collection.Id, vector, ct))
+                foreach (var hit in await runtime.SearchLiteraryAsync(collection.Id, vector, ct, filter))
                 {
                     var payload = hit.GetProperty("payload"); var text = payload.GetProperty("text").GetString()!;
                     var sourceId = payload.GetProperty("source").GetString(); var sectionId = payload.GetProperty("section").GetString();

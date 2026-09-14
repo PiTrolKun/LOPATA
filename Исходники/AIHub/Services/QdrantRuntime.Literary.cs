@@ -6,14 +6,14 @@ namespace AIHub.Services;
 
 public sealed partial class QdrantRuntime
 {
-    public async Task<JsonElement[]> SearchLiteraryAsync(string id, float[] query, CancellationToken ct)
+    public async Task<JsonElement[]> SearchLiteraryAsync(string id, float[] query, CancellationToken ct, object? filter = null)
     {
         await StartAsync(ct);
         await _gate.WaitAsync(ct);
         try
         {
             using var result = await RequestAsync(HttpMethod.Post, "collections/" + LiteraryCollection(id) + "/points/query",
-                new { query, limit = 16, with_payload = true }, ct);
+                new { query, limit = 16, with_payload = true, filter }, ct);
             return result.RootElement.GetProperty("result").GetProperty("points").EnumerateArray().Select(p => p.Clone()).ToArray();
         }
         finally { _gate.Release(); }

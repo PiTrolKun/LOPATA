@@ -110,7 +110,9 @@ public sealed class LiteraryLoopTests
             using var normal = JsonDocument.Parse(LiteraryModelPolicy.Request(role, messages));
             using var retry = JsonDocument.Parse(LiteraryModelPolicy.Request(role, messages, recovery: true));
             Assert.AreEqual(normal.RootElement.GetProperty("messages").GetRawText(), retry.RootElement.GetProperty("messages").GetRawText());
-            foreach (var key in new[] { "max_tokens", "id_slot", "temperature" })
+            Assert.IsFalse(normal.RootElement.TryGetProperty("max_tokens",out _));
+            Assert.IsFalse(retry.RootElement.TryGetProperty("max_tokens",out _));
+            foreach (var key in new[] { "id_slot", "temperature" })
                 Assert.AreEqual(normal.RootElement.GetProperty(key).GetRawText(), retry.RootElement.GetProperty(key).GetRawText());
             Assert.AreEqual(1.05, normal.RootElement.GetProperty("repeat_penalty").GetDouble());
             Assert.AreEqual(1.1, retry.RootElement.GetProperty("repeat_penalty").GetDouble());

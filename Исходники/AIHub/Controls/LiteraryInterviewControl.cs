@@ -26,7 +26,7 @@ public sealed partial class LiteraryInterviewControl : UserControl
     private bool _busy, _dirty, _closing, _savingProject, _transferred, _testNavigating, _saveFailed;
     private string _error = "";
     private readonly TextBlock _status = new(), _budget = new();
-    private readonly ProgressBar _contextFill = new() { Minimum=0, Maximum=LiteraryChatRuntime.InterviewContext, Width=140, Height=8, Margin=new Thickness(12,8,0,8) };
+    private readonly ProgressBar _contextFill = new() { Minimum=0, Maximum=1, Width=140, Height=8, Margin=new Thickness(12,8,0,8) };
     private readonly ProgressBar _progress = new() { Height = 8, Minimum = 0, Maximum = 100 };
     private readonly DispatcherTimer _autosave = new() { Interval = TimeSpan.FromMilliseconds(750) };
     private StackPanel _body = new();
@@ -107,7 +107,8 @@ public sealed partial class LiteraryInterviewControl : UserControl
         _status.Text = _saveFailed ? _error : _session.Root is null ? T("LocationFirst")
             : S.SavedAt is { } at ? T("Saved") + " " + at.ToLocalTime().ToString("HH:mm:ss") : T("Unsaved");
         _budget.Text = S.AiDisabled ? T("AiOff") : S.PromptTokens == 0 ? T("ContextBefore")
-            : T("Context") + $" {S.PromptTokens:N0} / {LiteraryChatRuntime.InterviewContext:N0}";
+            : _runtime is { ContextCapacity: > 0 } ? T("Context") + $" {S.PromptTokens:N0} / {_runtime.ContextCapacity:N0}" : T("ContextBefore");
+        _contextFill.Maximum=Math.Max(1,_runtime?.ContextCapacity??0);
         _contextFill.Value=S.PromptTokens;
         _contextFill.ToolTip=_budget.Text;
     }

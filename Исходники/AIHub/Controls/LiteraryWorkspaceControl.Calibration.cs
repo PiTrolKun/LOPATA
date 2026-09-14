@@ -29,7 +29,7 @@ public sealed partial class LiteraryWorkspaceControl
             System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Literary.Calibration.ReadError"),
                 _l("Literary.Calibration.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
         }
-        finally { _calibrationOpen = false; }
+        finally { _calibrationOpen = false; _parameters?.Refresh(); }
     }
     private void ScheduleFirstCalibration()
     {

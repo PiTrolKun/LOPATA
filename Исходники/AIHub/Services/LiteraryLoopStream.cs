@@ -10,7 +10,7 @@ public static class LiteraryLoopStream
         Action<string> rawLine, CancellationToken token)
     {
         var guarded = new GuardedProgress(progress);
-        var result = await LiteraryRawProtocol.ReadAsync(stream, guarded, rawLine, token, requireComplete: true).ConfigureAwait(false);
+        var result = await LiteraryRawProtocol.ReadAsync(stream, guarded, rawLine, token, requireComplete: true, includeReasoning: false).ConfigureAwait(false);
         guarded.Complete();
         return result;
     }

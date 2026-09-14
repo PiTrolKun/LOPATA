@@ -19,9 +19,15 @@ public sealed class LiteraryCalibrationLabels
     public string Get(CalibrationField field)
     {
         if(field.Adaptive==true) return field.Label;
-        var step=field.Step;
-        if(step is null && _known.TryGetValue((field.Topic,field.Label.Trim()),out var matched)) step=matched;
+        var step=StepNumber(field);
         if(step is >=4 and <=34) return _localize("Literary.Calibration.Field"+step);
         return string.IsNullOrWhiteSpace(field.Label)?_localize("Literary.Calibration.Other"):field.Label;
+    }
+    public int? StepNumber(CalibrationField field)
+    {
+        if(field.Adaptive==true) return null;
+        var step=field.Step;
+        if(step is null && _known.TryGetValue((field.Topic,field.Label.Trim()),out var matched)) step=matched;
+        return step;
     }
 }

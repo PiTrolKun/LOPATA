@@ -8,19 +8,10 @@ public enum LiteraryChatProfile { Writer, Advisor }
 /// <summary>Logical per-role budgets within one unified KV pool. No silent history trimming.</summary>
 public static class LiteraryModelPolicy
 {
-    public const int DraftCharacters = 7500, DraftTokens = 2500, Pages = 3;
-    public const int WriterContext = 8192, AdvisorContext = 16384, SafetyTokens = 256;
-    public const int SharedContext = WriterContext + AdvisorContext;
-    public static int ReplyTokens(LiteraryChatProfile role) => role == LiteraryChatProfile.Writer ? 3000 : 2048;
-    public static int ContextTokens(LiteraryChatProfile role) => role == LiteraryChatProfile.Writer ? WriterContext : AdvisorContext;
-    public static int Slot(LiteraryChatProfile role) => role == LiteraryChatProfile.Writer ? 0 : 1;
+    public const int DraftCharacters = 7500, Pages = 3, SlotCount = 1;
+    public static object Thinking(bool enabled = true) => new { enable_thinking = enabled, reasoning_effort = "medium" };
+    public static int Slot(LiteraryChatProfile role) => 0;
 
-    public static void ValidateBudget(LiteraryChatProfile role, int promptTokens, int draftTokens)
-    {
-        if (draftTokens > DraftTokens) throw new LiteraryDraftLimitException();
-        if (promptTokens + ReplyTokens(role) + SafetyTokens > ContextTokens(role))
-            throw new ImageAnalysisContextExhaustedException("Prompt exceeds the role budget with reserved output.");
-    }
 
     public static ImageAnalysisHiddenMessage[] Messages(LiteraryChatProfile role,
         IReadOnlyList<ImageAnalysisHiddenMessage> conversation, string draft, LiteraryProject project, bool includeDraft = true, string plotAnchor = "")
@@ -43,8 +34,9 @@ public static class LiteraryModelPolicy
 
     public static string Request(LiteraryChatProfile role, IReadOnlyList<ImageAnalysisHiddenMessage> messages, bool recovery = false) =>
         JsonSerializer.Serialize(new { messages = messages.Select(m => new { role = m.Role, content = m.Content }),
-            id_slot = Slot(role), max_tokens = ReplyTokens(role), temperature = role == LiteraryChatProfile.Writer ? .8 : .5,
-            repeat_penalty = recovery ? 1.1 : 1.05, cache_prompt = !recovery, stream = true, stream_options = new { include_usage = true } });
+            id_slot = Slot(role), temperature = role == LiteraryChatProfile.Writer ? .8 : .4,
+            top_k = 40, top_p = .95, min_p = .05, chat_template_kwargs = Thinking(),
+            repeat_penalty = recovery ? 1.1 : 1.05, cache_prompt = false, stream = true, stream_options = new { include_usage = true } });
 }
 
 public sealed class LiteraryDraftLimitException : Exception;

@@ -17,7 +17,7 @@ public static class LiteraryRawProtocol
         });
 
     public static async Task<string> ReadAsync(Stream stream, IProgress<ModelStreamChunk>? progress,
-        Action<string> rawLine, CancellationToken token, bool requireComplete = false)
+        Action<string> rawLine, CancellationToken token, bool requireComplete = false, bool includeReasoning = true)
     {
         var text = new StringBuilder();
         string? finishReason = null;
@@ -44,12 +44,15 @@ public static class LiteraryRawProtocol
                 finishReason = reason.GetString();
             if (!choices[0].TryGetProperty("delta", out var delta)) continue;
             foreach (var field in new[] { "reasoning_content", "content" })
+            {
+                if (field == "reasoning_content" && !includeReasoning) continue;
                 if (delta.TryGetProperty(field, out var value) && value.ValueKind == JsonValueKind.String
                     && value.GetString() is { Length: > 0 } chunk)
                 {
                     text.Append(chunk);
                     progress?.Report(new ModelStreamChunk(chunk));
                 }
+            }
         }
         throw new EndOfStreamException("Chat stream disconnected before [DONE].");
     }

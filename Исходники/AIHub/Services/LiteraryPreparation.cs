@@ -10,12 +10,12 @@ public sealed record LiteraryComponentState(string Key, bool Ready);
 public static class LiteraryPreparation
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
-    public static readonly string[] Licenses = ["model.runeweaver", "backend.llama", "native.cuda", QdrantOptions.LicenseId,
+    public static readonly string[] Licenses = [ManagedModelCatalog.OmniGammaArtifactId, "backend.llama", "native.cuda", QdrantOptions.LicenseId,
         GigaEmbeddingInstallation.LicenseId, GigaEmbeddingInstallation.RuntimeLicenseId, .. LiteraryJellyInstallation.Licenses];
     public static async Task<IReadOnlyList<LiteraryComponentState>> CheckAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
     {
         var result = new List<LiteraryComponentState>();
-        progress.Report(new("Checking", -1, "Runeweaver"));
+        progress.Report(new("Checking", -1, LiteraryModelLocation.DisplayName));
         var rune = false;
         try { await LiteraryModelLocation.ResolveAsync(ct); rune = true; }
         catch (Exception ex) when (ex is IOException or JsonException or KeyNotFoundException) { }
@@ -67,10 +67,8 @@ public static class LiteraryPreparation
             if (Missing("Llama")) await InstallLlamaAsync(progress, ct);
             if (Missing("Runeweaver"))
             {
-                var folder = new StorageSettingsStore().LoadOrCreate().Models.Locations.FirstOrDefault()?.Path;
-                var path = Path.Combine(string.IsNullOrWhiteSpace(folder) ? AppDataPaths.ComponentModelsDirectory : folder,
-                    "Runeweaver", "MN-12B-Runeweaver-RP-RU.Q4_K_M.gguf");
-                await LiteraryArtifactDownload.GetAsync(new Uri("https://huggingface.co/limloop/MN-12B-Runeweaver-RP-RU-GGUF/resolve/84fa96954eef3eec4e92433e133c5bb1c774fc22/MN-12B-Runeweaver-RP-RU.Q4_K_M.gguf"),
+                var path = LiteraryModelLocation.DownloadPath;
+                await LiteraryArtifactDownload.GetAsync(new Uri(LiteraryModelLocation.DownloadUrl),
                     path, LiteraryModelLocation.SizeBytes, LiteraryModelLocation.Sha256, "sha256",
                     new InlineProgress<double>(p => progress.Report(new("Runeweaver", p))), ct);
                 Directory.CreateDirectory(AppDataPaths.BaseDirectory);

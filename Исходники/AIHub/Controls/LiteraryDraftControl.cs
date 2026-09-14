@@ -25,6 +25,7 @@ public sealed class LiteraryDraftControl : UserControl
     private bool _restoring, _loadFailed, _busy, _discarded;
     public LiteraryChapterStore Store { get; }
     public string Text => _editor.Text;
+    public void EnableSpelling(string language) => LiterarySpellChecking.Enable(_editor,language);
     public string ChapterLabel => _loadFailed ? _l("Literary.Workspace.Chapter") : Path.GetFileNameWithoutExtension(Store.Active.FileName);
     public event Action? ChapterChanged;
     public Func<bool>? CanFixFiles { get; set; }

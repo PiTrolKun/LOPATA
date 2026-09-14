@@ -17,6 +17,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
     private readonly LiteraryChatControl _advisor;
     private readonly LiteraryChatRuntime _runtime;
     private readonly LiteraryDraftControl _draft;
+    private LiteraryProjectParametersControl? _parameters;
     public event Action? BackRequested;
     public event Action? HomeRequested;
     public event Action<LiteraryWorkspaceAction>? ActionRequested;
@@ -43,6 +44,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         _memoryPreparation = memoryPreparation;
         _runtime = preparedRuntime ?? new LiteraryChatRuntime(entry.ProjectPath);
         _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
+        PreviewKeyDown += ParagraphKey;
         _writer = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Writer, () => _draft.Text, project,
             () => _draft.Capture(project.Id, entry.ProjectPath), entry.ProjectPath);
         _advisor = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Advisor, () => _draft.Text, project,
@@ -147,12 +149,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         header.Children.Add(LiteraryUi.Button(_l("Literary.Export"), async () => await LiteraryExportDialog.ShowAsync(this, _l, _entry.ProjectPath, _project.WorkTitle, _draft)));
         header.Children.Add(LiteraryUi.Button(_l("Literary.Workspace.Finish"), async () => await _draft.FinishAsync()));
         DockPanel.SetDock(header, Dock.Top); panel.Children.Add(header);
-        var bottom = new WrapPanel();
-        foreach (var key in new[] { "Literary.Workspace.Style", "Literary.Workspace.Mode" })
-        {
-            var combo = new System.Windows.Controls.ComboBox { IsEnabled = false, MinWidth = 120, Margin = new Thickness(12, 4, 0, 0), ToolTip = _l("Literary.Pending") };
-            combo.Items.Add(_l(key)); combo.SelectedIndex = 0; bottom.Children.Add(combo);
-        }
+        var bottom = _parameters = new LiteraryProjectParametersControl(_entry.ProjectPath,_l);
         DockPanel.SetDock(bottom, Dock.Bottom); panel.Children.Add(bottom);
         panel.Children.Add(_draft);
         return LiteraryWorkspaceParts.Card(panel);

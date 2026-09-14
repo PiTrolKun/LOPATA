@@ -10,7 +10,7 @@ using AIHub.Models;
 
 namespace AIHub.Services;
 
-/// <summary>One workspace owns one model process. Two slots, one active generation.</summary>
+/// <summary>One text-only model and one slot; each logical role rebuilds its own messages.</summary>
 public sealed partial class LiteraryChatRuntime : IDisposable
 {
     private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
@@ -49,11 +49,11 @@ public sealed partial class LiteraryChatRuntime : IDisposable
         if (IsBusy || !string.Equals(Path.GetFullPath(root), _preparationRoot, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException();
         _layout = new LiteraryProjectLayout(root);
     }
-    public static string[] Arguments(string model, int port) =>
+    public static string[] Arguments(string model, int port, int fitMarginMiB = 1024) =>
     ["-m", model, "--host", IPAddress.Loopback.ToString(), "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
-        "-c", LiteraryModelPolicy.SharedContext.ToString(), "-np", "2", "-kvu", "--no-cache-idle-slots",
-        "-ngl", "99", "--device", "CUDA0", "--fit", "off", "--cache-ram", "0", "--no-context-shift",
-        "--offline", "--jinja", "--slots", "-cb", "-n", "-1",
+        "-c", "0", "-np", LiteraryModelPolicy.SlotCount.ToString(),
+        "-ngl", "99", "--device", "CUDA0", "--fit", "on", "--fit-target", fitMarginMiB.ToString(), "--fit-ctx", "1024", "--cache-ram", "0", "--no-context-shift",
+        "--offline", "--jinja", "--slots", "--reasoning-format", "deepseek", "-fa", "auto", "-n", "-1",
         "-t", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString(), "-tb", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString()];
     private Uri Server => new($"http://{IPAddress.Loopback}:{_port}/");
 
@@ -62,6 +62,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable
         Func<Task>? onRecovery = null, LiteraryEditorSnapshot? editor = null, Action<string>? activity = null)
     {
         if (!await _gate.WaitAsync(0, token)) throw new InvalidOperationException("Another literary role is active.");
+        BeginBudgetOperation();
         using var active = CancellationTokenSource.CreateLinkedTokenSource(token);
         _active = active;
         Interlocked.Exchange(ref _busy, 1); BusyChanged?.Invoke();
@@ -85,7 +86,6 @@ public sealed partial class LiteraryChatRuntime : IDisposable
             diagnostics.Write("process_ready", new { pid = _process!.Id, role, slot = LiteraryModelPolicy.Slot(role), arguments = _process.StartInfo.ArgumentList.ToArray() });
             diagnostics.Watch(_process);
             var draftTokens = await TokenCountAsync(draft, false, ct);
-            if (draftTokens > LiteraryModelPolicy.DraftTokens) throw new LiteraryDraftLimitException();
             LiteraryReadingSession? reading = null;
             if (editor is not null)
             {
@@ -115,8 +115,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable
             {
                 using var applied = await PostJsonAsync("apply-template", new { messages = input.Select(m => new { role = m.Role, content = m.Content }), add_generation_prompt = true }, cancellation);
                 var promptTokens = await TokenCountAsync(applied.RootElement.GetProperty("prompt").GetString()!, true, cancellation);
-                diagnostics.Write("budget", new { role, draftTokens, promptTokens, replyTokens = LiteraryModelPolicy.ReplyTokens(role), context = LiteraryModelPolicy.ContextTokens(role) });
-                return promptTokens + LiteraryModelPolicy.ReplyTokens(role) + LiteraryModelPolicy.SafetyTokens <= LiteraryModelPolicy.ContextTokens(role);
+                try { await AvailableReplyAsync(promptTokens, cancellation); return true; }
+                catch (ImageAnalysisContextExhaustedException) { return false; }
             }
 
             Task<string> InferAsync(IReadOnlyList<ImageAnalysisHiddenMessage> input, bool planning, JsonObject? format = null) => LiteraryLoopRecovery.RunAsync(async recovery =>
@@ -128,9 +128,16 @@ public sealed partial class LiteraryChatRuntime : IDisposable
                 if (planning)
                 {
                     var json = JsonNode.Parse(body)!.AsObject();
-                    json["max_tokens"] = 384; json["temperature"] = 0;
+                    json["temperature"] = 0;
+                    json["chat_template_kwargs"] = JsonSerializer.SerializeToNode(LiteraryModelPolicy.Thinking(false));
                     json["response_format"] = format ?? LiteraryReadingSession.ResponseFormat(); body = json.ToJsonString();
                 }
+                var requestBody = JsonNode.Parse(body)!.AsObject();
+                using var applied = await PostJsonAsync("apply-template", new { messages = input.Select(m => new { role = m.Role, content = m.Content }),
+                    add_generation_prompt = true, chat_template_kwargs = LiteraryModelPolicy.Thinking(!planning) }, ct);
+                var inputTokens = await TokenCountAsync(applied.RootElement.GetProperty("prompt").GetString()!, true, ct);
+                requestBody["max_tokens"] = await AvailableReplyAsync(inputTokens, ct);
+                body = requestBody.ToJsonString();
                 diagnostics.Write("attempt", new { attempt = recovery ? 2 : 1, recovery, planning });
                 diagnostics.Write("request", new { endpoint = Server, json = body });
                 using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(Server, "v1/chat/completions"))
@@ -145,7 +152,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable
                     line => diagnostics.Write("sse", line), ct).ConfigureAwait(false);
                 diagnostics.Write("attempt_complete", new { recovery });
                 diagnostics.Write("result", result);
-                return result;
+                return planning ? LiteraryStructuredReply.Json(result) : result;
             }, async evidence =>
             {
                 Log("Loop detected; one clean retry: " + evidence);
@@ -206,8 +213,10 @@ public sealed partial class LiteraryChatRuntime : IDisposable
     private async Task PrepareAsync(CancellationToken token)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_process is { HasExited: false }) await CheckLoadedMemoryAsync(token).ConfigureAwait(false);
         if (_process is { HasExited: false }) return;
         StopProcess();
+        await ComponentLicenseGate.EnsureAsync([ManagedModelCatalog.OmniGammaArtifactId, "backend.llama", "native.cuda"], token).ConfigureAwait(false);
         var model = await LiteraryModelLocation.ResolveAsync(token).ConfigureAwait(false);
         if (!File.Exists(LlamaBackendPaths.ServerExecutablePath)) throw new FileNotFoundException("Installed llama.cpp backend is required.");
         using var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -218,7 +227,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable
             RedirectStandardOutput = true, RedirectStandardError = true
         };
         foreach (var key in info.Environment.Keys.Where(k => k.StartsWith("LLAMA_ARG_", StringComparison.Ordinal)).ToArray()) info.Environment.Remove(key);
-        foreach (var arg in Arguments(model, _port)) info.ArgumentList.Add(arg);
+        var fitMargin = await LiteraryAutomaticBudget.FitMarginAsync(token).ConfigureAwait(false);
+        foreach (var arg in Arguments(model, _port, fitMargin)) info.ArgumentList.Add(arg);
         if (_layout is not null || _preparationRoot is not null)
         {
             ValidatePreparation();
@@ -235,7 +245,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable
         token.ThrowIfCancellationRequested();
         if (!OwnedProcessRegistry.Shared.Start(process, "LiteraryChatRuntime")) throw new InvalidOperationException("Literary runtime did not start.");
         process.BeginOutputReadLine(); process.BeginErrorReadLine();
-        Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process, "shared weights; unified KV=24576; Writer=8192 Advisor=16384; slots=2; sequential", model));
+        Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process, "Qwen text-only; automatic GPU context; slots=1; sequential", model));
         using var startup = CancellationTokenSource.CreateLinkedTokenSource(token);
         startup.CancelAfter(TimeSpan.FromSeconds(90));
         try
@@ -252,6 +262,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable
                 catch (HttpRequestException) { }
                 await Task.Delay(250, startup.Token).ConfigureAwait(false);
             }
+            await ReadCapacityAsync(startup.Token).ConfigureAwait(false);
+            _resourcesChecked = true;
             Log(RuntimeResourceDiagnostics.DescribeSnapshot("LiteraryShared", process, "loaded"));
         }
         catch { StopProcess(); throw; }

@@ -6,7 +6,7 @@ public sealed partial class LiteraryChatRuntime
     {
         CalibrationResult? result=null;
         await StructuredAnalysisAsync(LiteraryCalibrationAnalysis.Messages(request),_=>{},token,
-            LiteraryCalibrationAnalysis.Schema,"Calibration",3072,
+            LiteraryCalibrationAnalysis.Schema,"Calibration",
             new { request.Check, request.WholeProject, request.Hash, ids=request.Fields.Select(f=>f.Id).ToArray() },
             json => result=LiteraryCalibrationAnalysis.Parse(json,request.Fields));
         return result!;

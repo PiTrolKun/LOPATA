@@ -169,7 +169,8 @@ async Task<bool> Fits(IReadOnlyList<ImageAnalysisHiddenMessage> messages, Cancel
     using var applied = await Post("apply-template", new { messages = messages.Select(m => new { role = m.Role, content = m.Content }), add_generation_prompt = true }, ct);
     using var tokens = await Post("tokenize", new { content = applied.RootElement.GetProperty("prompt").GetString(), add_special = false }, ct);
     // Additional stage contract is bounded and reserved here too.
-    return tokens.RootElement.GetProperty("tokens").GetArrayLength() + LiteraryModelPolicy.ReplyTokens(activeRole) + 700 <= LiteraryModelPolicy.ContextTokens(activeRole);
+    // Frozen historical research profile; production now discovers its own slot capacity.
+    return tokens.RootElement.GetProperty("tokens").GetArrayLength() + (activeRole==LiteraryChatProfile.Writer?3000:2048) + 700 <= (activeRole==LiteraryChatProfile.Writer?8192:16384);
 }
 async Task<JsonDocument> Post(string path, object body, CancellationToken ct)
 {
@@ -184,6 +185,7 @@ async Task<string> Infer(IReadOnlyList<ImageAnalysisHiddenMessage> messages, boo
     if (novel) contract = activeVariant is "baseline" or "preflight" ? "" : ExtendedVariants.Contract(activeCase, activeVariant, planning, activeReads);
     if (contract.Length > 0) values[extended && activeVariant == "numeric_tail" ? values.Length - 1 : 0].Content += "\n" + contract;
     var body = JsonNode.Parse(LiteraryModelPolicy.Request(role, values))!.AsObject();
+    body["max_tokens"] = role==LiteraryChatProfile.Writer?3000:2048; // Preserve the historical experiment.
     if (externalEndpoint is not null) body["id_slot"] = 0;
     body["seed"] = (extended ? 901 : 701) + repeat; body["cache_prompt"] = false;
     if (planning) { body["temperature"] = 0; body["max_tokens"] = 256; body["response_format"] = LiteraryReadingSession.ResponseFormat(); }

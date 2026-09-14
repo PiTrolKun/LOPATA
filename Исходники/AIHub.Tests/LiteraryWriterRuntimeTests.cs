@@ -28,12 +28,11 @@ public sealed class LiteraryChatRuntimeTests
     [TestMethod]
     public void AdmissionReservesFullReplyAndDoesNotConfuseCharactersWithTokens()
     {
-        foreach (var role in Enum.GetValues<LiteraryChatProfile>())
+        foreach (var capacity in new[]{4096,16384,32768,262144})
         {
-            var maximum = LiteraryModelPolicy.ContextTokens(role) - LiteraryModelPolicy.ReplyTokens(role) - LiteraryModelPolicy.SafetyTokens;
-            LiteraryModelPolicy.ValidateBudget(role, maximum, 2500);
-            Assert.Throws<ImageAnalysisContextExhaustedException>(() => LiteraryModelPolicy.ValidateBudget(role, maximum + 1, 2500));
-            Assert.Throws<LiteraryDraftLimitException>(() => LiteraryModelPolicy.ValidateBudget(role, 3000, 2501));
+            var maximum = capacity - LiteraryAutomaticBudget.SafetyTokens - LiteraryAutomaticBudget.MinimumReply;
+            Assert.AreEqual(LiteraryAutomaticBudget.MinimumReply, LiteraryAutomaticBudget.Reply(capacity,maximum));
+            Assert.Throws<ImageAnalysisContextExhaustedException>(() => LiteraryAutomaticBudget.Reply(capacity,maximum+1));
         }
         Assert.Throws<LiteraryDraftLimitException>(() => LiteraryModelPolicy.Messages(LiteraryChatProfile.Writer, [], new string('я', 7501), new()));
     }
