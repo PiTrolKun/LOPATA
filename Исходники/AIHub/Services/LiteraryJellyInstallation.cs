@@ -31,7 +31,7 @@ public static class LiteraryJellyInstallation
         ? Path.Combine(root, "Тесты", "JellyModels", "deps", mode) : null;
     private static (string Hash, string Algorithm) Digest(JsonElement file) => file.TryGetProperty("sha256", out var hash)
         ? (hash.GetString()!, "sha256") : (file.GetProperty("git_blob_sha1").GetString()!, "gitsha1");
-    public static async Task<string?> FindModelAsync(string mode, CancellationToken ct)
+    public static async Task<string?> FindModelAsync(string mode, CancellationToken ct, bool forceVerification = false)
     {
         foreach (var folder in new[] { ModelDirectory(mode), StandModel(mode) }.Where(f => f is not null))
         {
@@ -40,7 +40,7 @@ public static class LiteraryJellyInstallation
             {
                 var (hash, algorithm) = Digest(file);
                 if (!await LiteraryArtifactDownload.ValidAsync(Path.Combine(folder!, file.GetProperty("filename").GetString()!),
-                    file.GetProperty("size").GetInt64(), hash, algorithm, ct)) { ready = false; break; }
+                    file.GetProperty("size").GetInt64(), hash, algorithm, ct, forceVerification)) { ready = false; break; }
             }
             if (ready) return folder;
         }

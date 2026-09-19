@@ -21,7 +21,11 @@ public sealed partial class LiteraryNavigationControl : UserControl
     public static readonly DependencyProperty IsCalibrationAvailableProperty = DependencyProperty.Register(
         nameof(IsCalibrationAvailable), typeof(bool), typeof(LiteraryNavigationControl), new PropertyMetadata(false));
     public bool IsCalibrationAvailable => (bool)GetValue(IsCalibrationAvailableProperty);
+    public static readonly DependencyProperty WorkspaceStatusProperty = DependencyProperty.Register(
+        nameof(WorkspaceStatus), typeof(object), typeof(LiteraryNavigationControl), new PropertyMetadata(null));
+    public object? WorkspaceStatus => GetValue(WorkspaceStatusProperty);
     public void OpenCalibration() => _workspace?.OpenCalibration();
+    public void OpenStudioLayer(string layer) => _workspace?.OpenStudioLayer(layer);
     public bool IsIndexing => _workspace?.IsIndexing == true || _interview?.IsIndexing == true;
     public event Action? BackRequested;
     public event Action? HomeRequested;
@@ -64,6 +68,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
 
     private void Render()
     {
+        SetValue(WorkspaceStatusProperty, _workspace?.StatusHost);
         SetValue(IsCalibrationAvailableProperty, _workspace is not null);
         if (_interview is not null) { Content = _interview; return; }
         if (_preparation is not null) { Content = _preparation; return; }
@@ -93,13 +98,11 @@ public sealed partial class LiteraryNavigationControl : UserControl
         }
         else
         {
-            body.Children.Add(LiteraryUi.Text(_l("Literary.Active") + " " + (_projects.ActiveProject?.Title ?? _l("Literary.None"))));
-            body.Children.Add(MenuButton("Literary.New", null, CreateProject));
-            body.Children.Add(MenuButton("Literary.Continue", null, _projects.ActiveProject is { } active ? () => OpenWorkspace(active) : null));
-            body.Children.Add(MenuButton("Literary.Select", null, () => OpenProjects(LiteraryProjectDialogMode.Select)));
-            body.Children.Add(MenuButton("Literary.SelectActive", null, () => OpenProjects(LiteraryProjectDialogMode.Active)));
-            body.Children.Add(MenuButton("Literary.Export", null, () => OpenProjects(LiteraryProjectDialogMode.Export)));
-            if (_notice.Length > 0) body.Children.Add(LiteraryUi.Text(_notice));
+            body.Children.Add(new LiteraryProjectStartControl(_projects.ActiveProject,_l,CreateProject,
+                _projects.ActiveProject is { } active ? () => OpenWorkspace(active) : null,
+                () => OpenProjects(LiteraryProjectDialogMode.Select),
+                () => OpenProjects(LiteraryProjectDialogMode.Active),
+                () => OpenProjects(LiteraryProjectDialogMode.Export),_notice));
         }
         var footer = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 20, 0, 0) };
         footer.Children.Add(LiteraryUi.Button(_l("Literary.Back"), GoBack));
@@ -210,7 +213,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
             var project = LiteraryProjectStore.ReadProject(entry.ProjectPath);
             _workspace = new LiteraryWorkspaceControl(entry, project, _l, preparedRuntime: preparedRuntime);
             _workspace.BackRequested += GoBack;
-            _workspace.HomeRequested += () => { _workspace = null; HomeRequested?.Invoke(); };
+            _workspace.HomeRequested += () => { _workspace = null; SetValue(WorkspaceStatusProperty,null); HomeRequested?.Invoke(); };
         }
         catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         { preparedRuntime?.Dispose(); _notice = _l("Literary.Create.LoadError") + " " + ex.Message; }

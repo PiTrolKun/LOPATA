@@ -49,11 +49,7 @@ public static class LiteraryJellyContract
     }
     public static void Validate(LiteraryJellyFact fact, string text)
     {
-        if (!fact.Accepted) return;
-        if (string.IsNullOrWhiteSpace(fact.Subject) || string.IsNullOrWhiteSpace(fact.Relation)
-            || fact.Subject.Length > 200 || fact.Relation.Length > 300 || fact.Value.Length > 600
-            || !Kinds.Contains(fact.Kind) || string.IsNullOrWhiteSpace(fact.Evidence)
-            || !text.Contains(fact.Evidence, StringComparison.Ordinal))
+        if (LiteraryJellyValidation.Check(fact, text).Count > 0)
             throw new InvalidDataException("Fact fields or exact source quote are invalid.");
     }
     public static IEnumerable<string> Chunks(string text)

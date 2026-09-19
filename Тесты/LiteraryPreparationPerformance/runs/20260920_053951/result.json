@@ -1,0 +1,146 @@
+[
+  {
+    "force": true,
+    "seconds": 22.1957384,
+    "states": [
+      {
+        "Key": "Runeweaver",
+        "Ready": true
+      },
+      {
+        "Key": "Llama",
+        "Ready": true
+      },
+      {
+        "Key": "Qdrant",
+        "Ready": true
+      },
+      {
+        "Key": "Giga",
+        "Ready": true
+      },
+      {
+        "Key": "Python",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.gliner",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.gliner.Runtime",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.nuextract",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.nuextract.Runtime",
+        "Ready": true
+      }
+    ],
+    "steps": [
+      {
+        "stage": "Checking / Qwen3.8-27B-Ridge 3.7 bpw",
+        "seconds": 6.4169937
+      },
+      {
+        "stage": "Checking / llama.cpp",
+        "seconds": 0.27109000000000005
+      },
+      {
+        "stage": "Checking / Qdrant",
+        "seconds": 0.1192656999999997
+      },
+      {
+        "stage": "Checking / Giga-Embeddings",
+        "seconds": 0.5293218
+      },
+      {
+        "stage": "Checking / Python / PyTorch",
+        "seconds": 3.2094971
+      },
+      {
+        "stage": "JellyModels / gliner",
+        "seconds": 3.7880775999999994
+      },
+      {
+        "stage": "JellyModels / nuextract",
+        "seconds": 7.859730399999998
+      }
+    ]
+  },
+  {
+    "force": false,
+    "seconds": 9.608404,
+    "states": [
+      {
+        "Key": "Runeweaver",
+        "Ready": true
+      },
+      {
+        "Key": "Llama",
+        "Ready": true
+      },
+      {
+        "Key": "Qdrant",
+        "Ready": true
+      },
+      {
+        "Key": "Giga",
+        "Ready": true
+      },
+      {
+        "Key": "Python",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.gliner",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.gliner.Runtime",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.nuextract",
+        "Ready": true
+      },
+      {
+        "Key": "Jelly.nuextract.Runtime",
+        "Ready": true
+      }
+    ],
+    "steps": [
+      {
+        "stage": "Checking / Qwen3.8-27B-Ridge 3.7 bpw",
+        "seconds": 0.0023471
+      },
+      {
+        "stage": "Checking / llama.cpp",
+        "seconds": 0.2790471
+      },
+      {
+        "stage": "Checking / Qdrant",
+        "seconds": 0.08396799999999999
+      },
+      {
+        "stage": "Checking / Giga-Embeddings",
+        "seconds": 0.0035996999999999835
+      },
+      {
+        "stage": "Checking / Python / PyTorch",
+        "seconds": 3.1591598
+      },
+      {
+        "stage": "JellyModels / gliner",
+        "seconds": 3.0706828
+      },
+      {
+        "stage": "JellyModels / nuextract",
+        "seconds": 3.0094411999999995
+      }
+    ]
+  }
+]

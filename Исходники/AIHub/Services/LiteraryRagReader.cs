@@ -17,6 +17,8 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
     private List<Section> References()
     {
         _layout.EnsurePresent();
+        if (File.Exists(Path.Combine(_layout.Rag,"Source","editing.json")))
+            throw new IOException("Interrupted reference edit; open the RAG editor to recover it.");
         var file = Path.Combine(_layout.Rag, "Source", "text.json");
         if (!File.Exists(file)) return [];
         var hashesPath = Path.Combine(_layout.Rag, "Source", "sources.json");

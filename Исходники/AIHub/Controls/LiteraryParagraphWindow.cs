@@ -142,7 +142,7 @@ public sealed partial class LiteraryParagraphWindow : Window
     }
     private void Availability()
     {
-        var busy=_operation is not null || _runtime.IsBusy || _blocked();
+        var busy=_operation is not null || _blocked();
         foreach(var button in _actions) button.IsEnabled=!busy;
         _send.IsEnabled=!busy && !string.IsNullOrWhiteSpace(_input.Text);
         _discuss.IsEnabled=!busy && !string.IsNullOrWhiteSpace(_input.Text);

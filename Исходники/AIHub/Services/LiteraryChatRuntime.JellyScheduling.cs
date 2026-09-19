@@ -132,6 +132,8 @@ public sealed partial class LiteraryChatRuntime
         LiteraryChapterFiles.Write(Path.Combine(folder, "checkpoint.json"), JsonSerializer.Serialize(new
         { version = 1, projectId = _layout.ProjectId, savedAt = DateTimeOffset.UtcNow, roles }));
         var saved = new List<string>();
+        // A temporary free conversation must never enter a persistent KV checkpoint.
+        if (_privateSlot) return [];
         for (var slot = 0; slot < LiteraryModelPolicy.SlotCount; slot++)
         {
             var filename = $"role-{slot}.kv";

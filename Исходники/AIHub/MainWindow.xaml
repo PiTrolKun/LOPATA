@@ -302,11 +302,16 @@
                             <StackPanel.Resources>
                                 <Style TargetType="Button" BasedOn="{StaticResource ScenarioButtonStyle}" />
                             </StackPanel.Resources>
+                            <Button x:Name="LiteraryPromptsButton" Content="✎" Tag="Prompts" Click="LiteraryLayer_Click" />
+                            <Button x:Name="LiteraryAnchorButton" Content="⚓" Tag="Anchor" Click="LiteraryLayer_Click" />
                             <Button x:Name="LiteraryScenarioPlaceholderButton"
                                     IsEnabled="{Binding IsCalibrationAvailable, ElementName=LiteraryPage}"
                                     Click="LiteraryCalibration_Click" ToolTipService.ShowOnDisabled="True">
                                 <Image Source="Assets/scenario-calibration.png" Margin="4" Stretch="Uniform" />
                             </Button>
+                            <Button x:Name="LiteraryRagButton" Content="⌕" Tag="Rag" Click="LiteraryLayer_Click" />
+                            <Button x:Name="LiteraryJellyButton" Content="◈" Tag="Jelly" Click="LiteraryLayer_Click" />
+                            <Button x:Name="LiteraryWorkingButton" Content="▤" Tag="Working" Click="LiteraryLayer_Click" />
                         </StackPanel>
                         <Border Width="1" Margin="16,0" Background="{DynamicResource TextSecondaryBrush}" />
                     </StackPanel>
@@ -3433,7 +3438,31 @@
                                Foreground="{DynamicResource TextSecondaryBrush}"
                                FontSize="{DynamicResource UiFont12}"
                                VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" />
+                               TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsVisible, ElementName=LiteraryPage}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <ContentControl x:Name="LiteraryStatusHost"
+                                    Content="{Binding WorkspaceStatus, ElementName=LiteraryPage}"
+                                    HorizontalContentAlignment="Stretch">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsVisible, ElementName=LiteraryPage}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                    </ContentControl>
 
                     <Button x:Name="AboutButton" Grid.Column="1" Content="?"
                             Width="22" Height="22" MinWidth="0" MinHeight="0"

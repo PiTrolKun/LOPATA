@@ -12,12 +12,17 @@ public static class LiteraryPreparation
     private static readonly SemaphoreSlim Gate = new(1, 1);
     public static readonly string[] Licenses = [ManagedModelCatalog.OmniGammaArtifactId, "backend.llama", "native.cuda", QdrantOptions.LicenseId,
         GigaEmbeddingInstallation.LicenseId, GigaEmbeddingInstallation.RuntimeLicenseId, .. LiteraryJellyInstallation.Licenses];
-    public static async Task<IReadOnlyList<LiteraryComponentState>> CheckAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
+    public static async Task<IReadOnlyList<LiteraryComponentState>> CheckAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct, bool forceVerification = false)
     {
         var result = new List<LiteraryComponentState>();
         progress.Report(new("Checking", -1, LiteraryModelLocation.DisplayName));
         var rune = false;
-        try { await LiteraryModelLocation.ResolveAsync(ct); rune = true; }
+        try
+        {
+            await LiteraryModelLocation.ResolveAsync(ct, forceVerification,
+                new InlineProgress<double>(p => progress.Report(new("Checking", p, LiteraryModelLocation.DisplayName))));
+            rune = true;
+        }
         catch (Exception ex) when (ex is IOException or JsonException or KeyNotFoundException) { }
         result.Add(new("Runeweaver", rune));
         progress.Report(new("Checking", -1, "llama.cpp"));
@@ -25,13 +30,13 @@ public static class LiteraryPreparation
         progress.Report(new("Checking", -1, "Qdrant"));
         result.Add(new("Qdrant", await QdrantInstaller.IsInstalledAsync(QdrantRuntime.Shared.Options, ct)));
         progress.Report(new("Checking", -1, "Giga-Embeddings"));
-        result.Add(new("Giga", await GigaEmbeddingInstallation.ModelReadyAsync(ct)));
+        result.Add(new("Giga", await GigaEmbeddingInstallation.ModelReadyAsync(ct, forceVerification)));
         progress.Report(new("Checking", -1, "Python / PyTorch"));
         result.Add(new("Python", await GigaEmbeddingInstallation.RuntimeReadyAsync(ct)));
         foreach (var mode in LiteraryJellyInstallation.Modes)
         {
             progress.Report(new("JellyModels", -1, mode));
-            result.Add(new("Jelly." + mode, await LiteraryJellyInstallation.FindModelAsync(mode, ct) is not null));
+            result.Add(new("Jelly." + mode, await LiteraryJellyInstallation.FindModelAsync(mode, ct, forceVerification) is not null));
             result.Add(new("Jelly." + mode + ".Runtime", await LiteraryJellyInstallation.FindDependenciesAsync(mode, ct) is not null));
         }
         return result;

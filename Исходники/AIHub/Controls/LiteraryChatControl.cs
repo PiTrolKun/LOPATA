@@ -122,7 +122,7 @@ public sealed class LiteraryChatControl : UserControl
         _send.Content = _cts is null ? "➤" : "■";
         _send.ToolTip = _l(_cts is null ? "Literary.Writer.Send" : "Literary.Writer.Stop");
         System.Windows.Automation.AutomationProperties.SetName(_send, (string)_send.ToolTip);
-        _send.IsEnabled = !ActionsBlocked && (_cts is not null || (!_runtime.IsBusy && !string.IsNullOrWhiteSpace(_input.Text)));
+        _send.IsEnabled = !ActionsBlocked && (_cts is not null || !string.IsNullOrWhiteSpace(_input.Text));
         _send.Opacity = _send.IsEnabled ? 1 : 0.45;
         _input.IsReadOnly = _cts is not null; _clear.IsEnabled = !ActionsBlocked && !_runtime.IsBusy && _cts is null && _display.Count > 0;
         _anchorButton.IsEnabled = !ActionsBlocked && !_runtime.IsBusy && _cts is null && _anchorStore is not null;
@@ -132,7 +132,7 @@ public sealed class LiteraryChatControl : UserControl
     private void BeginReply() => _transcript.BeginReply(_display, _l("Literary.Writer.You"), _l("Literary.Workspace.Writer"));
     private async Task SendAsync()
     {
-        var text = _input.Text; if (ActionsBlocked || string.IsNullOrWhiteSpace(text) || _cts is not null || _runtime.IsBusy) return;
+        var text = _input.Text; if (ActionsBlocked || string.IsNullOrWhiteSpace(text) || _cts is not null) return;
         var request = _history.Concat([new ImageAnalysisHiddenMessage { Role = "user", Content = text }]).ToArray();
         using var cts = new CancellationTokenSource(); _cts = cts;
         _display.Add((true, text)); _input.Clear();

@@ -36,7 +36,7 @@ public sealed class LiteraryPreparationControl : UserControl
         _status = LiteraryUi.Text(""); panel.Children.Add(_status); panel.Children.Add(_progress);
         var actions = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 16, 0, 0) };
         _install = LiteraryUi.Button(l("Literary.Prepare.Install"), () => _ = RunAsync(true), true);
-        _retry = LiteraryUi.Button(l("Literary.Prepare.Check"), () => _ = RunAsync(false));
+        _retry = LiteraryUi.Button(l("Literary.Prepare.Check"), () => _ = RunAsync(false, true));
         _next = LiteraryUi.Button(l("Literary.Prepare.Next"), () => _ = ContinueAsync(), true); _next.IsEnabled = false;
         _next.Opacity = 0.45;
         _next.IsEnabledChanged += (_, _) => _next.Opacity = _next.IsEnabled ? 1 : 0.45;
@@ -59,7 +59,7 @@ public sealed class LiteraryPreparationControl : UserControl
             + (value.Percent >= 0 ? $" · {value.Percent:0}%" : "");
         _progress.IsIndeterminate = value.Percent < 0; if (value.Percent >= 0) _progress.Value = value.Percent;
     }
-    private async Task RunAsync(bool install)
+    private async Task RunAsync(bool install, bool forceVerification = false)
     {
         if (_busy) return;
         _busy = true; _cancel = new(); _install.IsEnabled = _retry.IsEnabled = _next.IsEnabled = false;
@@ -68,7 +68,7 @@ public sealed class LiteraryPreparationControl : UserControl
         {
             var progress = new Progress<LiteraryPreparationProgress>(Report);
             if (install) await LiteraryPreparation.InstallAsync(progress, ct);
-            var states = await LiteraryPreparation.CheckAsync(progress, ct);
+            var states = await LiteraryPreparation.CheckAsync(progress, ct, forceVerification);
             ct.ThrowIfCancellationRequested();
             _rows.Children.Clear();
             foreach (var state in states) _rows.Children.Add(LiteraryUi.Text(

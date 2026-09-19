@@ -18,6 +18,8 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
     private readonly LiteraryChatRuntime _runtime;
     private readonly LiteraryDraftControl _draft;
     private LiteraryProjectParametersControl? _parameters;
+    private LiteraryStudioControl? _studio;
+    private bool _legacyLayout;
     public event Action? BackRequested;
     public event Action? HomeRequested;
     public event Action<LiteraryWorkspaceAction>? ActionRequested;
@@ -29,6 +31,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
     public bool CanLeave()
     {
         if (_jellyEditing) return false;
+        if (_studio is not null && !_studio.CanLeave()) return false;
         if (!(_writer.SaveDialogue() & _advisor.SaveDialogue())
             && System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Literary.Dialog.LeaveError"), _l("Literary.Work"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
@@ -44,7 +47,6 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         _memoryPreparation = memoryPreparation;
         _runtime = preparedRuntime ?? new LiteraryChatRuntime(entry.ProjectPath);
         _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
-        PreviewKeyDown += ParagraphKey;
         _writer = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Writer, () => _draft.Text, project,
             () => _draft.Capture(project.Id, entry.ProjectPath), entry.ProjectPath);
         _advisor = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Advisor, () => _draft.Text, project,
@@ -54,10 +56,10 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         IsVisibleChanged += (_, _) => { if (!IsVisible) { _draft.Save(); _runtime.Stop(); } };
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryScrollResources.xaml", UriKind.Relative) });
         _draft.CanFixFiles = () => !_runtime.IsBusy && !Indexing;
-        _draft.ChapterChanged += async () => { EditorHost.Content = BuildEditor(); await PrepareMemoryAsync(); };
+        _draft.ChapterChanged += async () => { EditorHost.Content = _legacyLayout || _paragraphWindow is not null ? BuildEditor() : BuildStudioEditor(); _studio?.RefreshSources(); await PrepareMemoryAsync(); };
         _memoryRetry.Click += async (_, _) => await PrepareMemoryAsync();
-        Loaded += async (_, _) => { AttachMemoryGuard(); if (!_memoryStarted) { _memoryStarted = true; await PrepareMemoryAsync(); } };
-        Unloaded += (_, _) => DetachMemoryGuard();
+        Loaded += async (_, _) => { AttachMemoryGuard(); AttachHotkeys(); if (!_memoryStarted) { _memoryStarted = true; await PrepareMemoryAsync(); } };
+        Unloaded += (_, _) => { DetachMemoryGuard(); DetachHotkeys(); };
         Render();
     }
 
@@ -79,6 +81,11 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
     }
 
     private void Render()
+    {
+        if (_legacyLayout) RenderLegacy();
+        else RenderStudio();
+    }
+    private void RenderLegacy()
     {
         foreach (var host in new[] { EditorHost, WriterHost, TreeHost, AdvisorHost })
             if (host.Parent is Panel parent) parent.Children.Remove(host);

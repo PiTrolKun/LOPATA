@@ -25,6 +25,7 @@ public sealed class LiteraryDraftControl : UserControl
     private bool _restoring, _loadFailed, _busy, _discarded;
     public LiteraryChapterStore Store { get; }
     public string Text => _editor.Text;
+    public string SelectedText => _editor.SelectedText;
     public void EnableSpelling(string language) => LiterarySpellChecking.Enable(_editor,language);
     public string ChapterLabel => _loadFailed ? _l("Literary.Workspace.Chapter") : Path.GetFileNameWithoutExtension(Store.Active.FileName);
     public event Action? ChapterChanged;
@@ -37,6 +38,7 @@ public sealed class LiteraryDraftControl : UserControl
         Dispatcher.VerifyAccess();
         if (_loadFailed || (_busy && _editor.IsReadOnly))
             throw new LiterarySourceException("The editor is not ready for a consistent snapshot.", new IOException());
+        RefreshExternalText();
         return LiteraryEditorSnapshot.Capture(projectId, directory, Store.Index, Text, Text != _saved);
     }
 
@@ -124,18 +126,26 @@ public sealed class LiteraryDraftControl : UserControl
     {
         if (_busy) return false;
         if (_loadFailed) return false;
-        if (_discarded || _accepted == _saved) return true;
-        try { Store.Save(_accepted); _saved = _accepted; _lastSaved = Store.LastSaved; _statusKey = "Literary.Draft.Saved"; Refresh(); return true; }
+        try { RefreshExternalText(); if (_discarded || _accepted == _saved) return true; Store.Save(_accepted); _saved = _accepted; _lastSaved = Store.LastSaved; _statusKey = "Literary.Draft.Saved"; Refresh(); return true; }
         catch (Exception ex) when (IsStorageError(ex)) { _statusKey = "Literary.Draft.SaveError"; Refresh(); return false; }
     }
     public async Task<bool> SaveAsync(bool lockEditor = true)
     {
         if (_busy || _loadFailed) return false;
+        try { RefreshExternalText(); }
+        catch(Exception ex) when(IsStorageError(ex)) { _statusKey="Literary.Draft.SaveError"; Refresh(); return false; }
         if (_discarded || _accepted == _saved) return true;
         var snapshot = _accepted;
         if (!await RunAsync(() => Store.Save(snapshot), lockEditor)) return false;
         _saved = snapshot; _lastSaved = Store.LastSaved;
         _statusKey = _accepted == _saved ? "Literary.Draft.Saved" : "Literary.Draft.Unsaved"; Refresh(); return true;
+    }
+    public void RefreshExternalText()
+    {
+        if (_loadFailed || _busy) return;
+        if (Store.Load()==_saved) return;
+        if (_accepted!=_saved) throw new IOException(_l("Studio.ExternalConflict"));
+        LoadCurrent(); Refresh();
     }
 
     public bool CanLeave()

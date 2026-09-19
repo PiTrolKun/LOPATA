@@ -8,9 +8,9 @@ namespace AIHub.Controls;
 
 public sealed partial class LiteraryWorkspaceControl
 {
-    private readonly ProgressBar _memoryProgress = new() { Minimum = 0, Maximum = 100, Height = 10, Margin = new Thickness(0, 12, 0, 6) };
+    private readonly ProgressBar _memoryProgress = new() { Minimum = 0, Maximum = 100, Height = 10, Margin = new Thickness(0, 12, 0, 6), Visibility = Visibility.Collapsed };
     private readonly TextBlock _memoryStatus = new() { TextWrapping = TextWrapping.Wrap };
-    private readonly System.Windows.Controls.Button _memoryRetry = new();
+    private readonly System.Windows.Controls.Button _memoryRetry = new() { Visibility = Visibility.Collapsed };
     private CancellationTokenSource? _memoryCancellation;
     private bool _memoryStarted;
     private Window? _memoryWindow;

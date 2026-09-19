@@ -20,7 +20,7 @@ public sealed class LiteraryChapterStore
     public LiteraryChapterStore(string directory)
     {
         _projectFile = Path.Combine(Path.GetFullPath(directory), "project.json");
-        _projectIdentity = File.Exists(_projectFile) ? File.ReadAllText(_projectFile) : null;
+        _projectIdentity = File.Exists(_projectFile) ? ProjectIdentity(File.ReadAllText(_projectFile)) : null;
         _root = Path.Combine(Path.GetFullPath(directory), "chapters");
         _indexPath = Path.Combine(_root, "index.json"); _journalPath = Path.Combine(_root, "pending.json");
     }
@@ -34,10 +34,20 @@ public sealed class LiteraryChapterStore
 
     private FileStream Enter()
     {
-        if (_projectIdentity is not null && (!File.Exists(_projectFile) || File.ReadAllText(_projectFile) != _projectIdentity))
+        if (_projectIdentity is not null && (!File.Exists(_projectFile) || ProjectIdentity(File.ReadAllText(_projectFile)) != _projectIdentity))
             throw new IOException("Project disappeared or changed identity.");
         Directory.CreateDirectory(_root);
         return new FileStream(Path.Combine(_root, ".lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+    }
+    private static string ProjectIdentity(string text)
+    {
+        try
+        {
+            using var json=JsonDocument.Parse(text);
+            if(json.RootElement.TryGetProperty("Id",out var id) && !string.IsNullOrWhiteSpace(id.GetString())) return "id:"+id.GetString();
+        }
+        catch(JsonException) { }
+        return "legacy:"+text;
     }
 
     public void Open()

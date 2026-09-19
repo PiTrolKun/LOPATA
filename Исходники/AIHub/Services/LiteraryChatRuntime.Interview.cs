@@ -16,13 +16,14 @@ public sealed partial class LiteraryChatRuntime
         object? snapshot = null, Action<string>? validate = null,
         Func<CancellationToken,Task<IReadOnlyList<ImageAnalysisHiddenMessage>>>? prepareMessages = null,
         LiteraryChatProfile profile = LiteraryChatProfile.Advisor, IProgress<ModelStreamChunk>? streamProgress = null, Action? attemptStarting = null,
-        string? grammar = null)
+        string? grammar = null, bool? reasoning = null)
     {
         var diagnosticsFolder = _layout?.EnsureFolder("Diagnostics/LiteraryDetailed")
             ?? System.IO.Path.Combine(_preparationRoot ?? AppDataPaths.BaseDirectory, "Diagnostics/LiteraryDetailed");
-        if (!await _gate.WaitAsync(0, token)) throw new InvalidOperationException("Another literary operation is active.");
+        using var queued = QueueRequest(token);
+        await _gate.WaitAsync(queued.Token);
         BeginBudgetOperation();
-        using var active = CancellationTokenSource.CreateLinkedTokenSource(token);
+        using var active = CancellationTokenSource.CreateLinkedTokenSource(queued.Token);
         _active = active; Interlocked.Exchange(ref _busy, 1); BusyChanged?.Invoke();
         using var diagnostics = new LiteraryRequestDiagnostics(role, Log, diagnosticsFolder);
         _diagnostics = diagnostics; var requested = false;
@@ -35,7 +36,7 @@ public sealed partial class LiteraryChatRuntime
             if (prepareMessages is not null) messages = await prepareMessages(ct).ConfigureAwait(false);
             await PrepareAsync(ct).ConfigureAwait(false);
             diagnostics.Watch(_process!);
-            var thinking = snapshot is ParagraphRequest && responseSchema is null;
+            var thinking = reasoning ?? (snapshot is ParagraphRequest && responseSchema is null);
             using var applied = await PostJsonAsync("apply-template", new { messages = messages.Select(m => new { role = m.Role, content = m.Content }), add_generation_prompt = true,
                 chat_template_kwargs = LiteraryModelPolicy.Thinking(thinking) }, ct);
             var count = await TokenCountAsync(applied.RootElement.GetProperty("prompt").GetString()!, true, ct);

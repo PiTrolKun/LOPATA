@@ -1,5 +1,4 @@
 using System.IO;
-using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace AIHub.Services;
@@ -23,7 +22,7 @@ public static class LiteraryModelLocation
     }
     public static string DownloadUrl => $"https://huggingface.co/{ManagedModelCatalog.OmniGammaRepository}/resolve/{ManagedModelCatalog.OmniGammaRevision}/{FileName}";
 
-    public static async Task<string> ResolveAsync(CancellationToken token)
+    public static async Task<string> ResolveAsync(CancellationToken token, bool forceVerification = false, IProgress<double>? progress = null)
     {
         var candidates = new List<string>();
         var installed = new ManagedModelLibraryStore().Load(ManagedModelCatalog.OmniGammaArtifactId);
@@ -43,9 +42,7 @@ public static class LiteraryModelLocation
         foreach (var path in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (!Path.IsPathFullyQualified(path) || !File.Exists(path) || new FileInfo(path).Length != SizeBytes) continue;
-            await using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 1048576, FileOptions.Asynchronous | FileOptions.SequentialScan);
-            var hash = await SHA256.HashDataAsync(file, token);
-            if (!Convert.ToHexString(hash).Equals(Sha256, StringComparison.OrdinalIgnoreCase))
+            if (!await LiteraryFileVerification.Shared.ValidAsync(path, SizeBytes, Sha256, "sha256", token, forceVerification, progress))
                 throw new InvalidDataException("Qwen literary GGUF SHA256 mismatch.");
             return path;
         }

@@ -2,8 +2,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
 using AIHub.Models;
 
 namespace AIHub.Services;
@@ -12,16 +10,8 @@ namespace AIHub.Services;
 public static class LiteraryArtifactDownload
 {
     private static readonly HttpClient Http = new() { Timeout = Timeout.InfiniteTimeSpan };
-    public static async Task<bool> ValidAsync(string path, long size, string hash, string algorithm, CancellationToken ct)
-    {
-        if (!File.Exists(path) || new FileInfo(path).Length != size) return false;
-        await using var stream = File.OpenRead(path);
-        using var digest = IncrementalHash.CreateHash(algorithm == "gitsha1" ? HashAlgorithmName.SHA1 : HashAlgorithmName.SHA256);
-        if (algorithm == "gitsha1") digest.AppendData(Encoding.UTF8.GetBytes($"blob {size}\0"));
-        var buffer = new byte[1048576]; int count;
-        while ((count = await stream.ReadAsync(buffer, ct)) > 0) digest.AppendData(buffer, 0, count);
-        return Convert.ToHexString(digest.GetHashAndReset()).Equals(hash, StringComparison.OrdinalIgnoreCase);
-    }
+    public static Task<bool> ValidAsync(string path, long size, string hash, string algorithm, CancellationToken ct, bool forceVerification = false) =>
+        LiteraryFileVerification.Shared.ValidAsync(path, size, hash, algorithm, ct, forceVerification);
 
     public static async Task GetAsync(Uri uri, string path, long size, string hash, string algorithm,
         IProgress<double>? progress, CancellationToken ct)
@@ -31,7 +21,7 @@ public static class LiteraryArtifactDownload
         var partial = path + ".part";
         if (File.Exists(partial) && new FileInfo(partial).Length >= size)
         {
-            if (await ValidAsync(partial, size, hash, algorithm, ct)) { File.Move(partial, path, true); return; }
+            if (await ValidAsync(partial, size, hash, algorithm, ct, true)) { File.Move(partial, path, true); return; }
             File.Delete(partial);
         }
         long offset = File.Exists(partial) ? new FileInfo(partial).Length : 0;
@@ -44,7 +34,7 @@ public static class LiteraryArtifactDownload
             await downloader.DownloadAsync(new ManagedModelArtifactCard { ModelArtifactId = "literary", DisplayName = Path.GetFileName(path) },
                 new ManagedModelArtifactFile { RelativePath = Path.GetFileName(path), SourceUrl = uri.AbsoluteUri, SizeBytes = size, Sha256 = hash },
                 path, 0, new InlineProgress<ManagedModelDownloadProgress>(p => progress?.Report(100d * p.DownloadedBytes / size)), ct);
-            if (!await ValidAsync(partial, size, hash, algorithm, ct))
+            if (!await ValidAsync(partial, size, hash, algorithm, ct, true))
             { File.Delete(partial); throw new InvalidDataException("Downloaded file checksum mismatch."); }
             File.Move(partial, path, true); return;
         }
@@ -75,7 +65,7 @@ public static class LiteraryArtifactDownload
                 progress?.Report(100.0 * offset / size);
             }
         }
-        if (!await ValidAsync(partial, size, hash, algorithm, ct))
+        if (!await ValidAsync(partial, size, hash, algorithm, ct, true))
         { File.Delete(partial); throw new InvalidDataException("Downloaded file checksum mismatch."); }
         File.Move(partial, path, true);
     }

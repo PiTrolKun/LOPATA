@@ -33,10 +33,10 @@ public static class GigaEmbeddingInstallation
         return doc.RootElement.GetProperty("files").EnumerateArray().Select(f => new Artifact(f.GetProperty("name").GetString()!,
             f.GetProperty("size").GetInt64(), f.GetProperty("hash").GetString()!, f.GetProperty("algorithm").GetString()!)).ToArray();
     }
-    public static async Task<bool> ModelReadyAsync(CancellationToken ct)
+    public static async Task<bool> ModelReadyAsync(CancellationToken ct, bool forceVerification = false)
     {
         foreach (var f in Files())
-            if (!await LiteraryArtifactDownload.ValidAsync(Path.Combine(ModelDirectory, f.Name), f.Size, f.Hash, f.Algorithm, ct)) return false;
+            if (!await LiteraryArtifactDownload.ValidAsync(Path.Combine(ModelDirectory, f.Name), f.Size, f.Hash, f.Algorithm, ct, forceVerification)) return false;
         return true;
     }
     public static async Task<bool> RuntimeReadyAsync(CancellationToken ct)

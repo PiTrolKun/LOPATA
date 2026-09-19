@@ -11,13 +11,26 @@ using AIHub.Models;
 namespace AIHub.Services;
 
 /// <summary>One text-only model and one slot; each logical role rebuilds its own messages.</summary>
-public sealed partial class LiteraryChatRuntime : IDisposable
+public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRequests
 {
     private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly object _queueLock = new();
+    private CancellationTokenSource _queueCancellation = new();
+    private CancellationTokenSource QueueRequest(CancellationToken token)
+    {
+        lock(_queueLock)
+        {
+            ObjectDisposedException.ThrowIf(_disposed,this);
+            return CancellationTokenSource.CreateLinkedTokenSource(token,_queueCancellation.Token);
+        }
+    }
     private Process? _process;
     private int _port, _busy;
     private volatile bool _disposed;
+    private volatile bool _suppressBackendLog;
+    private bool _privateSlot;
+    public bool IsFreeChatBusy { get; private set; }
     private CancellationTokenSource? _active;
     private readonly object _logGate = new();
     private readonly string _logPath;
@@ -61,9 +74,10 @@ public sealed partial class LiteraryChatRuntime : IDisposable
         string draft, LiteraryProject project, IProgress<ModelStreamChunk>? progress, CancellationToken token,
         Func<Task>? onRecovery = null, LiteraryEditorSnapshot? editor = null, Action<string>? activity = null)
     {
-        if (!await _gate.WaitAsync(0, token)) throw new InvalidOperationException("Another literary role is active.");
+        using var queued = QueueRequest(token);
+        await _gate.WaitAsync(queued.Token);
         BeginBudgetOperation();
-        using var active = CancellationTokenSource.CreateLinkedTokenSource(token);
+        using var active = CancellationTokenSource.CreateLinkedTokenSource(queued.Token);
         _active = active;
         Interlocked.Exchange(ref _busy, 1); BusyChanged?.Invoke();
         using var diagnostics = new LiteraryRequestDiagnostics("Literary" + role, Log, _layout?.EnsureFolder("Diagnostics/LiteraryDetailed"));
@@ -238,8 +252,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable
         }
         var process = new Process { StartInfo = info };
         _process = process;
-        process.OutputDataReceived += (_, e) => { if (e.Data is { } line) { Log(line); _diagnostics?.Write("stdout", line); } };
-        process.ErrorDataReceived += (_, e) => { if (e.Data is { } line) { Log(line); _diagnostics?.Write("stderr", line); } };
+        process.OutputDataReceived += (_, e) => { if (!_suppressBackendLog && e.Data is { } line) { Log(line); _diagnostics?.Write("stdout", line); } };
+        process.ErrorDataReceived += (_, e) => { if (!_suppressBackendLog && e.Data is { } line) { Log(line); _diagnostics?.Write("stderr", line); } };
         _diagnostics?.Write("launch", new { executable = info.FileName, arguments = info.ArgumentList.ToArray(), model, modelBytes = new FileInfo(model).Length,
             backend = FileVersionInfo.GetVersionInfo(info.FileName).FileVersion });
         token.ThrowIfCancellationRequested();
@@ -274,7 +288,14 @@ public sealed partial class LiteraryChatRuntime : IDisposable
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
     }
-    public void Stop() { _active?.Cancel(); StopProcess(); }
+    public void Stop()
+    {
+        lock(_queueLock)
+        {
+            var previous=_queueCancellation; _queueCancellation=new(); previous.Cancel(); previous.Dispose();
+        }
+        _active?.Cancel(); StopProcess();
+    }
     private void StopProcess()
     {
         var process = Interlocked.Exchange(ref _process, null);

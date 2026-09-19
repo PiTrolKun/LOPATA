@@ -40,7 +40,7 @@ public sealed partial class LiteraryWorkspaceControl
                 try { await Task.Run(() => store.Edit(entries, decisions)); }
                 catch (Exception ex) { log.Write("edit_failed", new { ex.Message }); throw; }
                 log.Write("edit_committed", new { count = decisions.Count });
-            }, (kind, data) => log.Write(kind, data));
+            }, (kind, data) => log.Write(kind, data), (source,text)=>_studio?.AttachQuote(source,text),_project.LanguageCode);
         }
         catch (Exception) { System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Literary.Jelly.LoadError"), _l("Literary.Jelly.Title")); }
         finally

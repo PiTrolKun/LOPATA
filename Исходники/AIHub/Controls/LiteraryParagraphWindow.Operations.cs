@@ -9,7 +9,7 @@ public sealed partial class LiteraryParagraphWindow
 {
     private async Task SendAsync(bool discuss=false)
     {
-        if(_operation is not null || _runtime.IsBusy || _blocked() || string.IsNullOrWhiteSpace(_input.Text) || State.Stage==ParagraphStage.Result) return;
+        if(_operation is not null || _blocked() || string.IsNullOrWhiteSpace(_input.Text) || State.Stage==ParagraphStage.Result) return;
         if(discuss && State.Stage!=ParagraphStage.Request) return;
         var role=State.Stage==ParagraphStage.Prepared?LiteraryChatProfile.Writer:LiteraryChatProfile.Advisor;
         var task=_input.Text; var editor=_draft.Capture(State.ProjectId,_directory);
@@ -84,7 +84,7 @@ public sealed partial class LiteraryParagraphWindow
             if(Save() && _draft.CanLeave()) { _allowClose=true; Close(); }
             return;
         }
-        if(_blocked() || _runtime.IsBusy) { e.Cancel=true; _status.Text=_l("Paragraph.Working"); return; }
+        if(_blocked() || (_runtime.IsBusy && !_runtime.IsFreeChatBusy)) { e.Cancel=true; _status.Text=_l("Paragraph.Working"); return; }
         if(!Save() || !_draft.CanLeave()) e.Cancel=true;
     }
 }
