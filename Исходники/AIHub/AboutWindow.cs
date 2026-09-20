@@ -38,6 +38,22 @@ public sealed class AboutWindow : Window
         AddButton("About.Repository", () => OpenLink("https://github.com/PiTrolKun/LOPATA"), "https://github.com/PiTrolKun/LOPATA");
         AddButton("Updates.Check", updates);
         foreach (var key in new[] { "Intro", "Choice", "Control" }) panel.Children.Add(Paragraph("About." + key));
+        var guideHeading = Paragraph("About.GuideTitle");
+        guideHeading.FontWeight = FontWeights.SemiBold;
+        panel.Children.Add(guideHeading);
+        foreach (var key in new[] { "Start", "Images", "Literary", "Sending", "Sources", "Memory", "Prompts", "Updates" })
+        {
+            var section = new Expander
+            {
+                Header = new TextBlock { Text = text("About.Guide." + key + "Title"), TextWrapping = TextWrapping.Wrap },
+                Content = Paragraph("About.Guide." + key),
+                IsExpanded = false,
+                Margin = new Thickness(0, 0, 0, 10),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch
+            };
+            section.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
+            panel.Children.Add(section);
+        }
         var details = new StackPanel { Margin = new Thickness(0, 12, 12, 0) };
         foreach (var key in new[] { "Why", "Tasks", "Hardware", "Local", "Trust", "Future", "Open" })
         {
