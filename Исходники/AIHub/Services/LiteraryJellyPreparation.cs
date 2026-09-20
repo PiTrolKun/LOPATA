@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using AIHub.Services.LiteraryImport;
 
 namespace AIHub.Services;
 
@@ -7,7 +8,7 @@ namespace AIHub.Services;
 public sealed class LiteraryJellyPreparation(LiteraryProjectLayout layout, Func<string, CancellationToken, Task<string>> extract, string executor = "runeweaver")
 {
     public async Task<bool> PrepareAsync(Func<LiteraryJellyBatch, Func<IReadOnlyList<LiteraryJellyFact>, Task>, Task<bool>> review,
-        IProgress<LiteraryPreparationProgress> progress, CancellationToken token)
+        IProgress<LiteraryPreparationProgress> progress, CancellationToken token, bool prepareAllPending = false)
     {
         using var log = new LiteraryRequestDiagnostics("JellyPreparation", _ => { }, layout.EnsureFolder("Diagnostics/LiteraryDetailed"));
         try
@@ -24,15 +25,20 @@ public sealed class LiteraryJellyPreparation(LiteraryProjectLayout layout, Func<
                 var source = sources[index];
                 var text = await Task.Run(() => LiteraryChapterFiles.Read(Path.Combine(layout.Root, "chapters", source.FileName)), token);
                 if (string.IsNullOrWhiteSpace(text)) continue;
+                // Memory facts are extracted after the whole imported part has been reviewed.
+                // This avoids a partial fact batch being mistaken for a complete, confirmed one.
+                if (ImportEligibility.Review(layout.Root, source.Id)?.Doubts.Length > 0) continue;
                 var revision = LiteraryWorkIndex.Revision(text);
                 var batch = await Task.Run(() => memory.Find(source.Id, revision), token);
                 if (batch?.Status == "confirmed") continue;
                 log.Write("source", new { source.Id, source.Number, revision, text });
                 if (batch is null)
                 {
-                    var chunks = LiteraryJellyContract.Chunks(text).ToArray(); var facts = new List<LiteraryJellyFact>();
+                    var chunks = ImportEligibility.Allowed(layout.Root, source.Id, text).SelectMany(LiteraryJellyContract.Chunks).ToArray();
+                    if (chunks.Length == 0) continue;
+                    var facts = new List<LiteraryJellyFact>();
                     var folder = layout.EnsureFolder(Path.Combine("Jelly", "Staging", Guid.Parse(source.Id).ToString("N"), revision,
-                        executor == "runeweaver" ? "" : executor + "-v1"));
+                        executor == "runeweaver" ? "" : executor + "-v1", ImportSession.Hash(ImportEligibility.Fingerprint(layout.Root, source.Id))));
                     for (var n = 0; n < chunks.Length; n++)
                     {
                         token.ThrowIfCancellationRequested();
@@ -63,6 +69,7 @@ public sealed class LiteraryJellyPreparation(LiteraryProjectLayout layout, Func<
                     batch = new(Guid.NewGuid().ToString("N"), source.Id, source.Number, revision, text, facts.ToArray());
                     await Task.Run(() => memory.Stage(batch), token);
                 }
+                if(batch.Facts.Length==0) { await Task.Run(()=>memory.ConfirmEmpty(batch),token); log.Write("empty_batch_completed",new {batch.Id}); continue; }
                 log.Write("proposals", batch);
                 progress.Report(new("JellyReview", -1, $"[{source.Number}]"));
                 var confirmed = await review(batch, async decisions =>
@@ -74,7 +81,7 @@ public sealed class LiteraryJellyPreparation(LiteraryProjectLayout layout, Func<
                     log.Write("committed", new { batch.Id, accepted = decisions.Count(f => f.Accepted), excluded = decisions.Count(f => !f.Accepted) });
                 });
                 token.ThrowIfCancellationRequested();
-                if (!confirmed) { log.Write("review_deferred", new { batch.Id }); return false; }
+                if (!confirmed) { log.Write("review_deferred", new { batch.Id }); if (!prepareAllPending) return false; }
             }
             return true;
         }

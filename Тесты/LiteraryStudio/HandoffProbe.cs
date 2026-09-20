@@ -85,7 +85,17 @@ internal static class HandoffProbe
         var activity=(LiteraryRequestIndicator)Program.Field(studio,"_activity")!;
         var input=(TextBox)Program.Field(studio,"_input")!;
         var messages=(StackPanel)Program.Field(studio,"_messages")!;
+        var receipts=(TextBlock)Program.Field(studio,"_receipts")!;
+        var status=(TextBlock)Program.Field(studio,"_status")!;
+        var tokens=(TextBlock)Program.Field(studio,"_tokens")!;
+        receipts.Text="OLD_SOURCE_ERROR"; status.Text="OLD_FAILURE"; tokens.Text="OLD_TOKENS";
+        studio.RefreshSources();
+        Program.Check(receipts.Text.Length==0 && status.Text.Length==0 && tokens.Text.Length==0,"source refresh invalidates previous request diagnostics");
+        receipts.Text="OLD_SOURCE_ERROR"; status.Text="OLD_FAILURE";
+        ((Button)Program.Field(studio,"_clear")!).RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+        Program.Check(receipts.Text.Length==0 && status.Text.Length==0,"clearing chat clears previous status and source diagnostics");
         Reset(); studio.State.Quotes.Add(new("SOURCE","QUOTED_TEXT"));
+        receipts.Text="OLD_SOURCE_ERROR"; receipts.ToolTip="OLD_DETAIL"; tokens.Text="OLD_TOKENS";
         var responseReady=new TaskCompletionSource();
         var queueReady=new TaskCompletionSource(); requests.Queue=queueReady.Task; requests.IsBusy=true;
         requests.Handler=async (r,progress,ct)=>
@@ -102,6 +112,7 @@ internal static class HandoffProbe
         Program.Check(accepted.Input.Length==0 && accepted.Interrupted && accepted.Messages.Last().Text=="USER_INSTRUCTION"
             && accepted.Messages.Last().Quotes.Single().Text=="QUOTED_TEXT","request and quotes persist before generation, including restart recovery");
         Program.Pump();
+        Program.Check(receipts.Text.Length==0 && receipts.ToolTip is null && tokens.Text.Length==0,"queued request clears old receipts before any new source callback");
         Program.Check(activity.IsActive && activity.StatusText==l("Studio.Activity.Queued"),"queued request has nearby busy feedback");
         Program.Check(Math.Abs(studio.ActualHeight-idleHeight)<1 && Math.Abs(input.TranslatePoint(new Point(0,input.ActualHeight),studio).Y-inputBottom)<1,"showing busy feedback does not move input or panels");
         var rotation=(RotateTransform)Program.Field(activity,"_rotation")!; var angle=rotation.Angle; Program.Pump();

@@ -29,7 +29,7 @@ public sealed partial class LiteraryParagraphWindow
             var progress=new InlineProgress<ModelStreamChunk>(chunk=>raw.Append(chunk.Text));
             var result=await _runtime.ParagraphAsync(request,_l,r=>Dispatcher.Invoke(()=>
             {
-                receipts.RemoveAll(x=>x.Id==r.Id); receipts.Add(r); _receipts.Text=string.Join("\n",receipts.Select(x=>x.Label+": "+_l("Paragraph.Receipt."+x.Status)));
+                receipts.RemoveAll(x=>x.Id==r.Id); receipts.Add(r); _receipts.Text=string.Join("\n",receipts.Select(x=>x.Label+": "+_l("Paragraph.Receipt."+x.Status) + (x.Status is "error" or "partial" ? " · " + x.Detail : "")));
                 _receipts.ToolTip=string.Join("\n",receipts.Where(x=>x.Status=="error").Select(x=>x.Detail));
             }),tokens=>Dispatcher.Invoke(()=>_tokens.Text=_l("Paragraph.Tokens")+" "+tokens+" / "+_runtime.ContextCapacity),progress,cancellation.Token,()=>raw.Clear());
             State.RawResult=raw.ToString();

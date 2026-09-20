@@ -1,13 +1,15 @@
 using System.IO;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
+using AIHub.Services.LiteraryImport;
 
 namespace AIHub.Services;
 
 /// <summary>Project-owned transactional memory. Approval never edits manuscript files.</summary>
-public sealed class LiteraryJellyStore(LiteraryProjectLayout layout)
+public sealed partial class LiteraryJellyStore(LiteraryProjectLayout layout)
 {
     public string FilePath => Path.Combine(layout.Root, "Jelly", "память.lopata");
+    public void Initialize() { using var db = Open(); }
     private SqliteConnection Open()
     {
         layout.EnsureFolder("Jelly");
@@ -73,7 +75,7 @@ public sealed class LiteraryJellyStore(LiteraryProjectLayout layout)
         VerifySource(original);
         if (decisions.Count != original.Facts.Length || !decisions.Select(f => f.Id).Order().SequenceEqual(original.Facts.Select(f => f.Id).Order()))
             throw new InvalidDataException("Every proposed fact must have one decision.");
-        foreach (var fact in decisions) LiteraryJellyContract.Validate(fact, original.SourceText);
+        foreach (var fact in decisions) ValidateEligible(original, fact);
         using var db = Open(); using var tx = db.BeginTransaction();
         var stored = Scalar(db, tx, "SELECT payload FROM batch WHERE id=$id AND status='pending'", ("$id", original.Id)) as string;
         if (stored != JsonSerializer.Serialize(original with { Status = "pending" })) throw new IOException("The proposal changed or was already confirmed.");
@@ -114,7 +116,7 @@ public sealed class LiteraryJellyStore(LiteraryProjectLayout layout)
             var batchJson = (string?)Scalar(db, tx, "SELECT payload FROM batch WHERE part_id=$p AND revision=$r", ("$p", entry.PartId), ("$r", entry.Revision));
             if (batchJson is null) throw new IOException("Source unavailable.");
             var batch = JsonSerializer.Deserialize<LiteraryJellyBatch>(batchJson)!; VerifySource(batch);
-            var fact = changed.Single(f => f.Id == entry.Id); LiteraryJellyContract.Validate(fact, batch.SourceText);
+            var fact = changed.Single(f => f.Id == entry.Id); ValidateEligible(batch, fact);
             if (JsonSerializer.Serialize(fact) == JsonSerializer.Serialize(entry.Fact)) continue;
             fact = fact with { Edited = true }; var data = JsonSerializer.Serialize(fact);
             using var update = Command(db, tx, "UPDATE fact SET payload=$data,active=$active,version=version+1 WHERE id=$id AND version=$v AND active=1",
@@ -123,5 +125,11 @@ public sealed class LiteraryJellyStore(LiteraryProjectLayout layout)
             LogChange(db, tx, entry.Id, fact.Accepted ? "user_edited" : "user_excluded", JsonSerializer.Serialize(entry.Fact), data);
         }
         tx.Commit();
+    }
+    private void ValidateEligible(LiteraryJellyBatch batch, LiteraryJellyFact fact)
+    {
+        LiteraryJellyContract.Validate(fact, batch.SourceText);
+        if (fact.Accepted && !ImportEligibility.Allowed(layout.Root, batch.PartId, batch.SourceText).Any(s => s.Contains(fact.Evidence, StringComparison.Ordinal)))
+            throw new InvalidDataException("Literary.Import.ReviewFirst");
     }
 }

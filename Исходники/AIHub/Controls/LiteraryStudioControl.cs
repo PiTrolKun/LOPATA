@@ -57,7 +57,7 @@ public sealed partial class LiteraryStudioControl : UserControl
         _send.Click += async (_,_) => await SendToAdvisorAsync();
         _sendWriter.Click += async (_,_) => await SendToWriterAsync();
         _stop.Click += (_,_) => _operation?.Cancel();
-        _clear.Click += (_,_) => { State.Clear(); _showArchive = false; Render(); Save(); };
+        _clear.Click += (_,_) => { State.Clear(); ClearRequestStatus(); _showArchive = false; Render(); Save(); };
         _archive.Click += (_,_) => { _showArchive = !_showArchive; RenderMessages(); };
         _route.SelectionChanged += (_,_) =>
         {
@@ -99,7 +99,7 @@ public sealed partial class LiteraryStudioControl : UserControl
         if (State.RouteId.Length > 0 && !_catalog.Routes.ContainsKey(State.RouteId))
             _route.Items.Add(new ComboBoxItem { Content = _l("Paragraph.RouteMissing"), Tag = State.RouteId });
         _route.SelectedItem = _route.Items.OfType<ComboBoxItem>().FirstOrDefault(i=>(string)i.Tag==State.RouteId) ?? _route.Items[0];
-        _loading = false; RouteDescription();
+        _loading = false; RouteDescription(); ClearRequestStatus();
     }
     private void RouteDescription() => _routeDescription.Text = State.RouteId.Length == 0 ? _l("Paragraph.NoRoute")
         : _catalog.Routes.TryGetValue(State.RouteId, out var route) ? _l("Paragraph.RouteBoundary") + " " + route.Description : _l("Paragraph.RouteMissing");

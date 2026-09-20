@@ -113,6 +113,26 @@ public sealed class LiteraryProjectStore(string indexPath)
         Save(index);
     }
 
+    public LiteraryProjectEntry RegisterRecoveredImport(string directory, string expectedProjectId, string sessionId)
+    {
+        LiteraryProjectLayout.CheckTreePath(directory);
+        var project = ReadProject(directory);
+        using var origin = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "Import", "origin.json")));
+        if (project.Id != expectedProjectId || origin.RootElement.GetProperty("Id").GetString() != sessionId)
+            throw new InvalidDataException("The directory is not owned by this import session.");
+        using var indexLock = AcquireLock(); var index = Load();
+        var entry = new LiteraryProjectEntry(project.Id, project.ProjectName, directory);
+        var existing = index.Projects.SingleOrDefault(p => p.Id == project.Id);
+        if (existing is not null)
+        {
+            if (!string.Equals(existing.ProjectPath, directory, StringComparison.OrdinalIgnoreCase)) throw new IOException("Project identity conflict.");
+            return existing;
+        }
+        if (index.Projects.Any(p => string.Equals(p.ProjectPath, directory, StringComparison.OrdinalIgnoreCase))) throw new IOException("Project path conflict.");
+        new LiteraryChapterStore(directory).Open(); new LiteraryProjectLayout(directory).EnsurePresent();
+        index.Projects.Add(entry); Save(index); return entry;
+    }
+
     public LiteraryProjectEntry CreateReserved(LiteraryProjectReservation reservation, LiteraryProject project,
         IReadOnlyList<string> materials, Action<string>? initialize, Action<string>? initializeProject = null)
     {

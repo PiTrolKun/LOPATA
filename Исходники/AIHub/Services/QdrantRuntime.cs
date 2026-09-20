@@ -154,8 +154,8 @@ public sealed partial class QdrantRuntime(QdrantOptions options, OwnedProcessReg
         log_level: INFO
         telemetry_disabled: true
         storage:
-          storage_path: {JsonSerializer.Serialize(Path.Combine(options.DataDirectory, "storage"))}
-          snapshots_path: {JsonSerializer.Serialize(Path.Combine(options.DataDirectory, "snapshots"))}
+          storage_path: {JsonSerializer.Serialize(NativeStoragePath(Path.Combine(options.DataDirectory, "storage")))}
+          snapshots_path: {JsonSerializer.Serialize(NativeStoragePath(Path.Combine(options.DataDirectory, "snapshots")))}
           performance:
             max_search_threads: 2
             optimizer_cpu_budget: 2
@@ -168,6 +168,14 @@ public sealed partial class QdrantRuntime(QdrantOptions options, OwnedProcessReg
         cluster:
           enabled: false
         """;
+
+    internal static string NativeStoragePath(string path)
+    {
+        var full = Path.GetFullPath(path);
+        // Qdrant gridstore uses Win32 file calls that otherwise fail past MAX_PATH.
+        if (!OperatingSystem.IsWindows() || full.StartsWith(@"\\?\", StringComparison.Ordinal)) return full;
+        return full.StartsWith(@"\\", StringComparison.Ordinal) ? @"\\?\UNC\" + full[2..] : @"\\?\" + full;
+    }
 
     public sealed record ProbeResult(bool SearchPassed, bool RestartReadPassed, bool GracefulRestart, long MemoryBytes);
     public async Task<ProbeResult> ProbeAsync(CancellationToken token)

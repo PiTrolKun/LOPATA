@@ -58,6 +58,30 @@ public sealed partial class LiteraryWorkspaceControl
     {
         if (_draft.Parent is System.Windows.Controls.Panel parent) parent.Children.Remove(_draft);
         var panel = new DockPanel();
+        if (File.Exists(Path.Combine(_entry.ProjectPath, "Import", "review.json")))
+        {
+            var review = LiteraryUi.Button(_l("Literary.Import.Review"), async () =>
+            {
+                if (Indexing || _runtime.IsBusy || _studio?.IsWorking == true || _jellyEditing) return;
+                _jellyEditing = true; _draft.BlockActions(true); var changed = false;
+                try
+                {
+                    var dialog = new LiteraryImportReviewWindow(Window.GetWindow(this), _entry.ProjectPath, _l);
+                    dialog.ShowDialog(); changed = dialog.Changed;
+                }
+                finally { _jellyEditing = false; _draft.BlockActions(_projectMissing); }
+                if (changed) { _studio?.RefreshSources(); await PrepareMemoryAsync(); }
+            });
+            var importActions=new WrapPanel { Margin=new Thickness(0,0,0,8) };
+            importActions.Children.Add(review);
+            importActions.Children.Add(LiteraryUi.Button(_l("Literary.Import.ExportCurrent"), async()=>
+            {
+                if(Indexing || _runtime.IsBusy || _studio?.IsWorking==true) return;
+                _jellyEditing=true;
+                try { await RefreshImportExportAsync(); } finally { _jellyEditing=false; }
+            }));
+            DockPanel.SetDock(importActions,Dock.Top); panel.Children.Add(importActions);
+        }
         var parameters = _parameters = new LiteraryProjectParametersControl(_entry.ProjectPath,_l);
         DockPanel.SetDock(parameters,Dock.Bottom); panel.Children.Add(parameters); panel.Children.Add(_draft);
         return LiteraryWorkspaceParts.Card(panel);

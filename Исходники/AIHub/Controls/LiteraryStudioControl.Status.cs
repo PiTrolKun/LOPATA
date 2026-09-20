@@ -5,6 +5,13 @@ namespace AIHub.Controls;
 
 public sealed partial class LiteraryStudioControl
 {
+    public void ClearRequestStatus()
+    {
+        if (IsWorking) return;
+        _status.Text = _tokens.Text = _receipts.Text = "";
+        _receipts.ToolTip = null;
+    }
+
     private FrameworkElement BuildStatus(UIElement memoryStatus)
     {
         // The main window hosts these live controls outside the route card.

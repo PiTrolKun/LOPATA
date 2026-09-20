@@ -1,0 +1,25 @@
+using System.IO;
+using AIHub.Services.LiteraryImport;
+
+namespace AIHub.Controls;
+
+public sealed partial class LiteraryWorkspaceControl
+{
+    private async Task RefreshImportExportAsync()
+    {
+        if(!File.Exists(Path.Combine(_entry.ProjectPath,"Import","origin.json"))) return;
+        // Rebuild the summary from disk instead of appending to a previous failure.
+        var summary = "";
+        try
+        {
+            summary = ImportProjectStatus.Read(_entry.ProjectPath).Describe(_l);
+            _memoryStatus.Text = summary;
+            await Task.Run(()=>ImportProjectStatus.ExportCurrent(_entry.ProjectPath,_project.LanguageCode,CancellationToken.None));
+            _memoryStatus.Text=summary+"\n"+_l("Literary.Import.ExportRefreshed");
+        }
+        catch(Exception ex)
+        {
+            _memoryStatus.Text=(summary.Length>0?summary+"\n":"")+_l("Literary.Import.ExportRetry")+" "+(ex.Message.StartsWith("Literary.")?_l(ex.Message):ex.Message);
+        }
+    }
+}

@@ -23,6 +23,7 @@ public sealed partial class LiteraryWorkspaceControl
     private async Task PrepareMemoryAsync()
     {
         if (Indexing || _runtime.IsBusy) return;
+        _studio?.ClearRequestStatus();
         using var cancellation = new CancellationTokenSource(); _memoryCancellation = cancellation;
         _writer.ActionsBlocked = _advisor.ActionsBlocked = true;
         _writer.RefreshAvailability(); _advisor.RefreshAvailability();
@@ -33,8 +34,10 @@ public sealed partial class LiteraryWorkspaceControl
         _memoryProgress.Visibility = Visibility.Visible; _memoryProgress.IsIndeterminate = true;
         _memoryRetry.Visibility = Visibility.Collapsed;
         _memoryStatus.Text = _l("Literary.Rag.ProjectWait");
+        var acceptingProgress = true;
         var progress = new Progress<LiteraryPreparationProgress>(p =>
         {
+            if (!acceptingProgress) return;
             // A sub-operation can finish while further project files still need indexing.
             if (p.Stage == "Ready") return;
             _memoryProgress.IsIndeterminate = p.Percent < 0;
@@ -51,18 +54,26 @@ public sealed partial class LiteraryWorkspaceControl
                 await new LiteraryWorkIndex(new LiteraryProjectLayout(_entry.ProjectPath)).PrepareAsync(progress, cancellation.Token);
             }
             var jellyReady = await PrepareJellyAsync(progress, cancellation.Token);
+            acceptingProgress = false;
             _memoryStatus.Text = _l(jellyReady ? "Literary.Rag.Ready" : "Literary.Jelly.Deferred");
             if (!jellyReady) _memoryRetry.Visibility = Visibility.Visible;
+            if (System.IO.File.Exists(System.IO.Path.Combine(_entry.ProjectPath,"Import","review.json")))
+            {
+                _memoryStatus.Text=AIHub.Services.LiteraryImport.ImportProjectStatus.Read(_entry.ProjectPath).Describe(_l);
+                await RefreshImportExportAsync();
+            }
         }
-        catch (OperationCanceledException) { _memoryStatus.Text = _l("Literary.Prepare.Cancelled"); }
+        catch (OperationCanceledException) { acceptingProgress = false; _memoryStatus.Text = _l("Literary.Prepare.Cancelled"); }
         catch (Exception failure) when (failure.GetBaseException() is LiteraryGpuMemoryException)
         {
+            acceptingProgress = false;
             var ex = (LiteraryGpuMemoryException)failure.GetBaseException();
             _memoryStatus.Text = string.Format(_l("Literary.Jelly.GpuMemory"), ex.RequiredBytes / 1073741824.0, ex.FreeBytes / 1073741824.0);
             _memoryRetry.Visibility = Visibility.Visible;
         }
         catch (Exception ex)
         {
+            acceptingProgress = false;
             _memoryStatus.Text = _l("Literary.Rag.NotReady") + " " + ex.Message;
             _memoryRetry.Visibility = Visibility.Visible;
         }

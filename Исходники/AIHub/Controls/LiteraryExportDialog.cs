@@ -38,7 +38,10 @@ internal static class LiteraryExportDialog
             {
                 var store = draft?.Store ?? new LiteraryChapterStore(directory);
                 if (draft is null) store.Open();
-                format.Write(store.Snapshot(), save.FileName);
+                if (File.Exists(Path.Combine(directory, "Import", "review.json")))
+                    Services.LiteraryImport.ImportBookExporter.Export(directory, save.FileName,
+                        LiteraryProjectStore.ReadProject(directory).LanguageCode == "ru", CancellationToken.None);
+                else format.Write(store.Snapshot(), save.FileName);
             });
             System.Windows.MessageBox.Show(Window.GetWindow(owner), l("Literary.Editor.Exported") + "\n" + save.FileName, l("Literary.Export"));
         }

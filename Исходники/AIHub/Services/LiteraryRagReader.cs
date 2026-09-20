@@ -2,6 +2,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using AIHub.Services.LiteraryImport;
 
 namespace AIHub.Services;
 
@@ -117,6 +118,7 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
     {
         if (string.IsNullOrWhiteSpace(query) || query.Length > queryLimit) throw new InvalidDataException("Search query is empty or exceeds its input budget.");
         var collections = new List<(string Id, LiterarySource? Source)>();
+        var excluded = new List<string>();
         var sections = reference ? References() : [];
         object? filter = null;
         if (reference && scope.Length > 0)
@@ -127,6 +129,10 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
             if(section) conditions.Add(new { key="section", match=new { value=selected[0].s.Name } });
             filter = new { must=conditions };
         }
+        if (reference && sections.Count == 0 && scope.Length == 0
+            && !File.Exists(Path.Combine(_layout.Rag, "Source", "manifest.json"))
+            && !File.Exists(Path.Combine(_layout.Rag, "Source", "sources.json")))
+            return new { kind = "reference_search", query, matches = Array.Empty<object>(), excluded, note = "No reference source is attached." };
         if (reference)
         {
             var path = Path.Combine(_layout.Rag, "Source", "manifest.json");
@@ -138,10 +144,15 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
         else foreach (var source in snapshot.Sources.Where(s => s.Id != snapshot.ActiveId && (scope.Length==0 || s.Id==scope)))
         {
             var text = LiteraryChapterFiles.Read(Path.Combine(_layout.Root, "chapters", source.FileName));
+            if (string.IsNullOrWhiteSpace(text)) continue;
+            var allowed = ImportEligibility.AllowedSpans(_layout.Root, source.Id, text);
+            if (ImportEligibility.Review(_layout.Root, source.Id)?.Doubts.Length > 0) excluded.Add(source.Number);
+            if (allowed.Count == 0) continue;
             if (LiteraryWorkIndex.Current(_layout, source, text) is { } manifest) collections.Add((manifest.Collection, source));
             else if(queryLimit!=120) throw new InvalidDataException("A selected project part has no current index: "+source.Number);
         }
-        if (collections.Count == 0) return new { error = "No current indexed parts. Use list/read/search for saved files." };
+        if (collections.Count == 0)
+            return new { kind = reference ? "reference_search" : "project_search", query, matches = Array.Empty<object>(), excluded };
         var cache = _layout.EnsureFolder(Path.Combine("Rag", "Queries", LiteraryWorkIndex.Revision(GigaEmbeddingInstallation.Revision + query)));
         var input = Path.Combine(cache, "query.json"); var output = Path.Combine(cache, "vector.jsonl");
         if (!File.Exists(output + ".ready"))
@@ -181,6 +192,9 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
                     }
                     var offset = CodePointOffset(whole, payload.GetProperty("offset").GetInt32());
                     if (offset + text.Length > whole.Length || whole.Substring(offset, text.Length) != text) throw new InvalidDataException("RAG fragment does not match its source.");
+                    if (!reference && !ImportEligibility.AllowedSpans(_layout.Root, collection.Source!.Id, whole)
+                        .Any(s => offset >= s.Start && (long)offset + text.Length <= (long)s.Start + s.Text.Length))
+                        throw new InvalidDataException("An unreviewed import passage cannot be used as a RAG fact.");
                     var excerpt = Compact(text, query);
                     offset += excerpt.Offset; text = excerpt.Text;
                     matches.Add((hit.GetProperty("score").GetDouble(), number, new { kind, number, source = sourceId, section = sectionId,
@@ -195,7 +209,7 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
         var diverse = ranked.DistinctBy(m => m.Number).Take(6).ToList();
         foreach (var hit in ranked)
             if (diverse.Count < 6 && !diverse.Contains(hit)) diverse.Add(hit);
-        return new { kind = reference ? "reference_search" : "project_search", query,
+        return new { kind = reference ? "reference_search" : "project_search", query, excluded,
             matches = diverse.OrderByDescending(m => m.Score).Select(m => new { score = m.Score, fragment = m.Data }) };
     }
     private static (int Offset, string Text) Compact(string text, string query)

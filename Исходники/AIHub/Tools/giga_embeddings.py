@@ -107,7 +107,7 @@ def main():
                     pending[0:0] = [(offset, part[:mid]), (offset + mid, part[mid:])]
                 elif part.strip():
                     chunks.append(dict(source=section["source"], section=section["section"],
-                                       offset=offset, text=part, kind=section.get("kind", "reference")))
+                                       offset=offset + section.get("offset", 0), text=part, kind=section.get("kind", "reference")))
     if not chunks:
         raise ValueError("No indexable text")
     signature = hashlib.sha256(json.dumps([args.model, args.query, chunks], ensure_ascii=False).encode()).hexdigest()

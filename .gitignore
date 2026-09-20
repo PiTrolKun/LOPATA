@@ -75,3 +75,11 @@ Desktop.ini
 _backups/
 __pycache__/
 *.py[cod]
+
+# Private user import results; never publish source chats or their derivatives
+/Тесты/1/
+/Тесты/2/
+**/import-*/
+**/Импорт DeepSeek*/
+**/Import/sources.json
+**/Exports/Import/

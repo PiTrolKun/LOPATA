@@ -15,11 +15,12 @@ public static class LiteraryJellyReviewDialog
 {
     public static bool Show(FrameworkElement owner, Func<string, string> l, IReadOnlyList<LiteraryJellyReviewItem> items,
         Func<IReadOnlyList<LiteraryJellyFact>, Task> save, Action<string, object>? diagnostic = null,
-        Action<string,string>? quote = null, string language = "ru")
+        Action<string,string>? quote = null, string language = "ru", string summary = "")
     {
         var root = new DockPanel();
         var header = new StackPanel(); DockPanel.SetDock(header, Dock.Top); root.Children.Add(header);
         header.Children.Add(LiteraryUi.Text(l("Literary.Jelly.ReviewHint")));
+        if(summary.Length>0) header.Children.Add(LiteraryUi.Text(summary));
         var status = LiteraryUi.Text(""); header.Children.Add(status);
         var cancel = LiteraryUi.Button(l("Literary.Editor.Cancel"), () => { }); header.Children.Add(cancel);
         var list = new StackPanel(); var scroll = new ScrollViewer { Content = list, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }; root.Children.Add(scroll);
@@ -34,7 +35,7 @@ public static class LiteraryJellyReviewDialog
         var readers = new List<Func<LiteraryJellyFact>>();
         var validation = new List<LiteraryJellyReviewValidation>();
         var invalidRows = new List<int>();
-        var validationShown = false;
+        var validationShown = true;
         Control? RefreshValidation()
         {
             if (!validationShown) return null;
@@ -80,7 +81,10 @@ public static class LiteraryJellyReviewDialog
             var source = LiteraryUi.Button(l("Literary.Jelly.Source"), () =>
             {
                 var input = LiteraryWorkspaceParts.TextArea(true); input.Text = item.SourceText;
-                var sourceWindow = LiteraryEditorDialogs.Create(window, $"[{item.Number}]", input);
+                var panel=new DockPanel();
+                var use=LiteraryUi.Button(l("Literary.Jelly.UseQuote"),()=> { if(input.SelectionLength>0) evidence.Text=input.SelectedText; });
+                DockPanel.SetDock(use,Dock.Bottom); panel.Children.Add(use); panel.Children.Add(input);
+                var sourceWindow = LiteraryEditorDialogs.Create(window, $"[{item.Number}]", panel);
                 sourceWindow.Width = Math.Min(780, sourceWindow.MaxWidth); sourceWindow.Height = Math.Min(650, sourceWindow.MaxHeight); sourceWindow.ShowDialog();
             }); card.Children.Add(source);
             if (quote is not null)
@@ -128,6 +132,7 @@ public static class LiteraryJellyReviewDialog
         }, true);
         // Confirmation follows every fact in the scroll; it is never a hidden tab's action.
         list.Children.Add(confirm);
+        RefreshValidation();
         return window.ShowDialog() == true;
     }
 }

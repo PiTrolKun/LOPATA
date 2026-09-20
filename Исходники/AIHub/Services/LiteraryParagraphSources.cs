@@ -10,7 +10,7 @@ public sealed record ParagraphMaterial(string Id, string Kind, string Revision, 
 public sealed record ParagraphReceipt(string Id, string Label, string Status, string Comment, string[] Materials, string Detail);
 public sealed record ParagraphEvidence(IReadOnlyList<ParagraphMaterial> Materials, IReadOnlyList<ParagraphReceipt> Receipts)
 {
-    public bool Complete => Receipts.All(r=>r.Status is "found" or "empty");
+    public bool Complete => Receipts.All(r=>r.Status is "found" or "empty" or "partial");
 }
 
 /// <summary>Program-controlled read capabilities, independent of model tool willingness.</summary>
@@ -38,9 +38,10 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
             try
             {
                 if(!nodes.TryGetValue(id,out var node)) throw new IOException("Selected scope is no longer in this project.");
+                _excludedParts.Clear();
                 var ids=await ReadNode(node,query+(comment.Length>0?"\n"+comment:""),ct);
-                receipt=new(id,node.Label,ids.Length>0?"found":"empty",comment,ids,
-                    "Bounded search is not a complete audit. Empty results do not prove absence.");
+                receipt=new(id,node.Label,_excludedParts.Count > 0 ? "partial" : ids.Length>0?"found":"empty",comment,ids,
+                    _excludedParts.Count > 0 ? string.Join(", ", _excludedParts.Order()) : "Bounded search is not a complete audit. Empty results do not prove absence.");
             }
             catch(OperationCanceledException) { throw; }
             catch(Exception ex) { receipt=new(id,nodes.GetValueOrDefault(id)?.Label??id,"error",comment,[],ex.Message); }
@@ -48,6 +49,7 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
         }
         return new(_materials.Values.ToArray(),receipts);
     }
+    private readonly HashSet<string> _excludedParts = [];
     private Task<string[]> ReadNode(ParagraphSource node,string query,CancellationToken ct)
     {
         var key=node.Id+"\n"+query;
@@ -108,9 +110,13 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
             var reference=node.Kind is "ragReference" or "ragSection";
             var json=JsonNode.Parse(await new LiteraryRagReader(editor).SearchScopedAsync(query,reference,node.Key,node.Kind=="ragSection",ct))!;
             if(json["error"] is not null) throw new IOException(json["error"]!.ToString());
+            var exclusions = json["excluded"]?.AsArray().Select(x => x!.GetValue<string>()).ToArray() ?? [];
+            foreach (var part in exclusions) _excludedParts.Add(part);
+            var notices = exclusions.Length == 0 ? Array.Empty<string>() : new[] { Add(node.Id+"/coverage", "source_coverage",
+                new { excludedParts = exclusions, note = "Unreviewed import passages excluded. The search does not cover the entire book." }) };
             var matches=json["matches"]?.AsArray() ?? throw new InvalidDataException("Invalid RAG result.");
             return matches.Select(m=>m!["fragment"]!).Select(f=>Add("rag/"+f["kind"]+"/"+f["number"]+"/"+f["offset"],
-                reference?"original_book_fragment":"completed_project_fragment",f.DeepClone())).ToArray();
+                reference?"original_book_fragment":"completed_project_fragment",f.DeepClone())).Concat(notices).ToArray();
         }
         if(node.Kind.StartsWith("jelly"))
         {

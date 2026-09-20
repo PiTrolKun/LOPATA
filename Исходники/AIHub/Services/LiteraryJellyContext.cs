@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using AIHub.Services.LiteraryImport;
 
 namespace AIHub.Services;
 
@@ -16,7 +17,8 @@ public sealed class LiteraryJellyContext
         _log = log;
         var entries = new LiteraryJellyStore(layout).Read();
         var revisions = new Dictionary<string, string>();
-        foreach (var part in editor.Sources.Where(s => s.Id != editor.ActiveId && entries.Any(e => e.PartId == s.Id)))
+        foreach (var part in editor.Sources.Where(s => s.Id != editor.ActiveId && entries.Any(e => e.PartId == s.Id)
+            && ImportEligibility.Review(layout.Root, s.Id)?.Doubts.Length is not > 0))
             revisions[part.Id] = LiteraryWorkIndex.Revision(LiteraryChapterFiles.Read(Path.Combine(layout.Root, "chapters", part.FileName)));
         var valid = entries.Where(e => revisions.TryGetValue(e.PartId, out var revision) && e.Revision == revision).ToArray();
         _stale = entries.Count - valid.Length;

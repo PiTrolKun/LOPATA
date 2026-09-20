@@ -17,6 +17,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
     private LiteraryProjectCreateControl? _creation;
     private LiteraryWorkspaceControl? _workspace;
     private LiteraryPreparationControl? _preparation;
+    private LiteraryImportControl? _import;
     public bool ShowingProjects { get; private set; }
     public static readonly DependencyProperty IsCalibrationAvailableProperty = DependencyProperty.Register(
         nameof(IsCalibrationAvailable), typeof(bool), typeof(LiteraryNavigationControl), new PropertyMetadata(false));
@@ -31,6 +32,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
     public event Action? HomeRequested;
     public bool CanLeave()
     {
+        if (_import is not null) { if (_import.IsBusy) return false; _import.Dispose(); _import = null; }
         if (_interview is not null)
         {
             if (!_interview.CanLeave()) return false;
@@ -56,6 +58,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
 
     public void GoBack()
     {
+        if (_import is not null) { if (_import.IsBusy) return; _import.Dispose(); _import = null; Render(); return; }
         if (IsIndexing) return;
         if (_interview is not null) { if (!_interview.CanLeave()) return; _interview=null; _choosingCreation=true; Render(); return; }
         if (_choosingCreation) { if (_creationPage!="choice") _creationPage="choice"; else _choosingCreation=false; Render(); return; }
@@ -72,6 +75,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
         SetValue(IsCalibrationAvailableProperty, _workspace is not null);
         if (_interview is not null) { Content = _interview; return; }
         if (_preparation is not null) { Content = _preparation; return; }
+        if (_import is not null) { Content = _import; return; }
         if (_workspace is not null) { Content = _workspace; return; }
         if (_creation is not null) { Content = _creation; return; }
         var root = new Grid { Margin = new Thickness(56, 36, 56, 28) };
@@ -89,7 +93,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
         root.Children.Add(scroll);
         if (!ShowingProjects)
         {
-            body.Children.Add(Card("Literary.Import", "Literary.ImportHint", "Literary.Pending", null));
+            body.Children.Add(Card("Literary.Import", "Literary.ImportHint", "Literary.Start", PrepareImport));
             body.Children.Add(Card("Literary.Work", "Literary.WorkHint", "Literary.Start", Prepare));
         }
         else if (_choosingCreation)
@@ -201,6 +205,25 @@ public sealed partial class LiteraryNavigationControl : UserControl
         var page = new LiteraryPreparationControl(_l);
         _preparation = page;
         page.Ready += () => { if (_preparation != page) return; _preparation = null; ShowingProjects = true; Render(); };
+        page.BackRequested += GoBack;
+        page.HomeRequested += () => { page.Cancel(); _preparation = null; HomeRequested?.Invoke(); };
+        Render();
+    }
+
+    private void PrepareImport()
+    {
+        var page = new LiteraryPreparationControl(_l); _preparation = page;
+        page.Ready += () =>
+        {
+            if (_preparation != page) return; _preparation = null;
+            _import = new LiteraryImportControl(_l, _language, _initialFolder, _store);
+            _import.BackRequested += GoBack;
+            _import.OpenRequested += entry =>
+            {
+                _import?.Dispose(); _import = null; _store.SetActive(entry.Id); LoadProjects(); OpenWorkspace(entry);
+            };
+            Render();
+        };
         page.BackRequested += GoBack;
         page.HomeRequested += () => { page.Cancel(); _preparation = null; HomeRequested?.Invoke(); };
         Render();

@@ -52,6 +52,8 @@ public sealed partial class LiteraryStudioControl
         var action = LiteraryStudioPrompts.Get(State.Action);
         var input = submission?.Text ?? ""; var quotes = submission?.Quotes ?? []; var raw = new StringBuilder();
         ShowRequestActivity(transfer);
+        _receipts.Text = _tokens.Text = "";
+        _receipts.ToolTip = null;
         _status.Text = _l(_requests.IsBusy ? "Studio.Queued" : transfer ? "Studio.PreparingTask" : "Paragraph.Working"); Availability();
         var receipts = new List<ParagraphReceipt>();
         try
@@ -74,7 +76,7 @@ public sealed partial class LiteraryStudioControl
             var result = await _requests.StudioAsync(request,_l,r=>Dispatcher.Invoke(()=>
             {
                 receipts.RemoveAll(x=>x.Id==r.Id); receipts.Add(r);
-                _receipts.Text = string.Join("\n",receipts.Select(x=>x.Label + ": " + _l("Paragraph.Receipt." + x.Status)));
+                _receipts.Text = string.Join("\n",receipts.Select(x=>x.Label + ": " + _l("Paragraph.Receipt." + x.Status) + (x.Status is "error" or "partial" ? " · " + x.Detail : "")));
             }),count=>Dispatcher.Invoke(()=>
             {
                 _tokens.Text = _l("Paragraph.Tokens") + " " + count + " / " + _requests.ContextCapacity;

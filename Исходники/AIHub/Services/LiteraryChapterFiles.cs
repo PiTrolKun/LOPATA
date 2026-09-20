@@ -72,6 +72,7 @@ public sealed class LiteraryChapterPart
     public string Title { get; set; } = "Без названия";
     public string FileName { get; set; } = "";
     public bool Finished { get; set; }
+    public bool ExactContinuation { get; set; }
 }
 
-public sealed record LiteraryExportChapter(int Number, string Title, IReadOnlyList<string> Parts);
+public sealed record LiteraryExportChapter(int Number, string Title, IReadOnlyList<string> Parts, bool ExactContinuation = false);

@@ -26,7 +26,7 @@ public static class LiteraryDocxExporter
                     foreach (var part in chapter.Parts)
                     {
                         if (part.Length == 0) continue;
-                        if (text.Length > 0 && !text.EndsWith('\n') && !part.StartsWith('\n') && !part.StartsWith('\r')) text += "\n";
+                        if (!chapter.ExactContinuation && text.Length > 0 && !text.EndsWith('\n') && !part.StartsWith('\n') && !part.StartsWith('\r')) text += "\n";
                         text += part;
                     }
                     foreach (var line in text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))

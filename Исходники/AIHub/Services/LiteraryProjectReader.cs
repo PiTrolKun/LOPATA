@@ -2,6 +2,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using AIHub.Services.LiteraryImport;
 
 namespace AIHub.Services;
 
@@ -119,6 +120,8 @@ public sealed class LiteraryProjectReader(LiteraryEditorSnapshot snapshot)
         // Even when the active part has been autosaved, the editor snapshot is authoritative.
         if (source.Id == Snapshot.ActiveId) return Snapshot.Text;
         CheckIndex();
+        if (ImportEligibility.Review(Snapshot.Directory, source.Id)?.Doubts.Length > 0)
+            throw new IOException("This imported part contains unreviewed passages. Use eligible semantic_project results or review the highlighted text first.");
         if (Path.GetFileName(source.FileName) != source.FileName || !source.FileName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Invalid registered source name.");
         return ReadBounded(Path.Combine(Snapshot.Directory, "chapters", source.FileName));

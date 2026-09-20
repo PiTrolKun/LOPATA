@@ -15,7 +15,8 @@ public sealed partial class LiteraryWorkspaceControl
             token.ThrowIfCancellationRequested();
             using var log = new LiteraryRequestDiagnostics("JellyReview", _ => { }, layout.EnsureFolder("Diagnostics/LiteraryDetailed"));
             var result = LiteraryJellyReviewDialog.Show(this, _l,
-                batch.Facts.Select(f => new LiteraryJellyReviewItem(f, batch.Number, batch.SourceText)).ToArray(), commit, (kind, data) => log.Write(kind, data));
+                batch.Facts.Select(f => new LiteraryJellyReviewItem(f, batch.Number, batch.SourceText)).ToArray(), commit, (kind, data) => log.Write(kind, data), language:_project.LanguageCode,
+                summary:AIHub.Services.LiteraryImport.ImportProjectStatus.Read(layout.Root).Describe(_l));
             return Task.FromResult(result);
         }, progress, token), token);
     }
@@ -41,6 +42,8 @@ public sealed partial class LiteraryWorkspaceControl
                 catch (Exception ex) { log.Write("edit_failed", new { ex.Message }); throw; }
                 log.Write("edit_committed", new { count = decisions.Count });
             }, (kind, data) => log.Write(kind, data), (source,text)=>_studio?.AttachQuote(source,text),_project.LanguageCode);
+            _studio?.ClearRequestStatus();
+            await RefreshImportExportAsync();
         }
         catch (Exception) { System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Literary.Jelly.LoadError"), _l("Literary.Jelly.Title")); }
         finally

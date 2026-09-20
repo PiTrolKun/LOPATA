@@ -103,6 +103,15 @@ public sealed class LiteraryChapterStore
         if (ReadIndex().Transaction != Index.Transaction) throw new IOException("Project changed in another editor. Reopen it before saving.");
     }
 
+    public void EditCompleted(string id, string before, string after)
+    {
+        using var lease=Enter(); CheckUnchanged();
+        var part=Index.Parts.Single(p=>p.Id==id && p.Finished && p.Id!=Index.ActiveId);
+        if(after.Length>LiteraryModelPolicy.DraftCharacters) throw new InvalidDataException("Literary.Import.EditTooLong");
+        var path=Resolve(part.FileName);
+        if(LiteraryChapterFiles.Read(path)!=before) throw new IOException("Literary.Import.Changed");
+        if(before!=after) LiteraryChapterFiles.Write(path,after);
+    }
     public void SetAutosave(int seconds)
     {
         if (!AutosaveIntervals.Contains(seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
@@ -156,7 +165,7 @@ public sealed class LiteraryChapterStore
     {
         using var lease = Enter(); CheckUnchanged();
         return Index.Parts.OrderBy(p => p.Chapter).ThenBy(p => p.Part).GroupBy(p => p.Chapter)
-            .Select(g => new LiteraryExportChapter(g.Key, g.First().Title, g.Select(p => LiteraryChapterFiles.Read(Resolve(p.FileName))).ToArray()))
+            .Select(g => new LiteraryExportChapter(g.Key, g.First().Title, g.Select(p => LiteraryChapterFiles.Read(Resolve(p.FileName))).ToArray(), g.All(p => p.ExactContinuation)))
             .Where(c => c.Parts.Any(t => !string.IsNullOrWhiteSpace(t))).ToArray();
     }
 
