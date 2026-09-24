@@ -22,6 +22,10 @@ public sealed partial class LiteraryNavigationControl : UserControl
     public static readonly DependencyProperty IsCalibrationAvailableProperty = DependencyProperty.Register(
         nameof(IsCalibrationAvailable), typeof(bool), typeof(LiteraryNavigationControl), new PropertyMetadata(false));
     public bool IsCalibrationAvailable => (bool)GetValue(IsCalibrationAvailableProperty);
+    public static readonly DependencyProperty IsImportFirstStepProperty = DependencyProperty.Register(
+        nameof(IsImportFirstStep), typeof(bool), typeof(LiteraryNavigationControl), new PropertyMetadata(false));
+    public bool IsImportFirstStep => (bool)GetValue(IsImportFirstStepProperty);
+    public void ResumeImportDraft() => _import?.ShowRecentDrafts();
     public static readonly DependencyProperty WorkspaceStatusProperty = DependencyProperty.Register(
         nameof(WorkspaceStatus), typeof(object), typeof(LiteraryNavigationControl), new PropertyMetadata(null));
     public object? WorkspaceStatus => GetValue(WorkspaceStatusProperty);
@@ -73,6 +77,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
     {
         SetValue(WorkspaceStatusProperty, _workspace?.StatusHost);
         SetValue(IsCalibrationAvailableProperty, _workspace is not null);
+        SetValue(IsImportFirstStepProperty, _import?.IsOnFirstStep == true);
         if (_interview is not null) { Content = _interview; return; }
         if (_preparation is not null) { Content = _preparation; return; }
         if (_import is not null) { Content = _import; return; }
@@ -217,7 +222,9 @@ public sealed partial class LiteraryNavigationControl : UserControl
         {
             if (_preparation != page) return; _preparation = null;
             _import = new LiteraryImportControl(_l, _language, _initialFolder, _store);
+            _import.FirstStepChanged += firstStep => SetValue(IsImportFirstStepProperty, firstStep);
             _import.BackRequested += GoBack;
+            _import.HomeRequested += () => { _import?.Dispose(); _import = null; HomeRequested?.Invoke(); };
             _import.OpenRequested += entry =>
             {
                 _import?.Dispose(); _import = null; _store.SetActive(entry.Id); LoadProjects(); OpenWorkspace(entry);

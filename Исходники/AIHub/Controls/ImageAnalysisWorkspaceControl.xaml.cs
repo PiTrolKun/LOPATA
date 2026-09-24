@@ -81,6 +81,7 @@ public partial class ImageAnalysisWorkspaceControl : UserControl
         _localize = localize;
         _format = format;
         _promptLanguage = promptLanguage ?? (() => "ru");
+        LiterarySpellChecking.Enable(RevisionTextBox, _promptLanguage());
         ApplyLocalization();
     }
 

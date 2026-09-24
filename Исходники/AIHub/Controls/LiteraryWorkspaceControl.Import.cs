@@ -14,6 +14,14 @@ public sealed partial class LiteraryWorkspaceControl
         {
             summary = ImportProjectStatus.Read(_entry.ProjectPath).Describe(_l);
             _memoryStatus.Text = summary;
+            // The staged importer retains its accepted book as an archive. Workspace exports
+            // use the editor's normal export action; the legacy importer must not reset its stage.
+            var handoff = Path.Combine(_entry.ProjectPath,"Import","workspace.json");
+            if (File.Exists(handoff))
+            {
+                using var state = System.Text.Json.JsonDocument.Parse(File.ReadAllText(handoff));
+                if (state.RootElement.GetProperty("Ready").GetBoolean()) return;
+            }
             await Task.Run(()=>ImportProjectStatus.ExportCurrent(_entry.ProjectPath,_project.LanguageCode,CancellationToken.None));
             _memoryStatus.Text=summary+"\n"+_l("Literary.Import.ExportRefreshed");
         }

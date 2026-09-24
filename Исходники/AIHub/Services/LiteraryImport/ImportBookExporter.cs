@@ -20,7 +20,10 @@ public static class ImportBookExporter
                 body.Append(new Paragraph(new Run(new Text(russian
                     ? "Импортированный черновик. Жёлтым отмечены фрагменты для проверки. Альтернативы и история обработки — в XLSX."
                     : "Imported draft. Yellow passages require review. Alternatives and processing history are in the XLSX."))));
-                foreach (var group in store.Index.Parts.Where(p => !string.IsNullOrWhiteSpace(
+                if (File.Exists(Path.Combine(root, "Import", "book-review.json"))
+                    || File.Exists(Path.Combine(root, "Import", "book-review.json.bak")))
+                    ImportReviewBookDocx.Append(body, new ImportReviewBookStore(root).Load(), ct);
+                else foreach (var group in store.Index.Parts.Where(p => !string.IsNullOrWhiteSpace(
                     LiteraryChapterFiles.Read(Path.Combine(root, "chapters", p.FileName)))).GroupBy(p => p.Chapter))
                 {
                     ct.ThrowIfCancellationRequested();

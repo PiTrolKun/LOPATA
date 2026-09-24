@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using AIHub.Models;
 using AIHub.Services;
 using AIHub.Services.LiteraryImport;
@@ -22,7 +23,6 @@ public sealed partial class LiteraryImportControl : UserControl, IDisposable
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap };
     private readonly TextBlock _sessionLabel = new() { TextWrapping = TextWrapping.Wrap };
     private readonly ProgressBar _progress = new() { Height = 5, Margin = new Thickness(0, 8, 0, 8) };
-    private readonly Button _cancel;
     private readonly TextBox _folder = new(), _name = new(), _genre = new();
     private readonly ComboBox _works = new();
     private readonly List<(CheckBox Box, string Id)> _conversations = [];
@@ -31,31 +31,121 @@ public sealed partial class LiteraryImportControl : UserControl, IDisposable
     private ImportDecision[]? _first;
     private LiteraryChatRuntime? _runtime;
     private CancellationTokenSource? _operation;
-    public bool IsBusy => _operation is not null;
+    private Action? _pendingNavigation;
+    private bool _showingLegacy;
+    public bool IsOnFirstStep { get; private set; }
+    public event Action<bool>? FirstStepChanged;
+    private void SetFirstStep(bool value)
+    {
+        if (IsOnFirstStep == value) return;
+        IsOnFirstStep = value;
+        FirstStepChanged?.Invoke(value);
+    }
+    public bool IsBusy => _operation is not null || _postReviewQuestions?.IsBusy == true;
     public event Action? BackRequested;
+    public event Action? HomeRequested;
     public event Action<LiteraryProjectEntry>? OpenRequested;
     public LiteraryImportControl(Func<string, string> l, string language, string folder, LiteraryProjectStore store)
     {
         _l = l; _language = language; _store = store;
+        Focusable = true;
+        Loaded += (_, _) => { if (!_showingLegacy) Focus(); };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key != Key.F1 || IsBusy || !IsOnFirstStep) return;
+            e.Handled = true;
+            if (_showingLegacy) return;
+            _showingLegacy = true;
+            ShowSource();
+        };
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryRagEditorTheme.xaml", UriKind.Relative) });
         _folder.Text = Directory.Exists(folder) ? folder : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         foreach (var box in new[] { _folder, _name, _genre })
         { box.Margin = new Thickness(0, 4, 0, 10); box.Padding = new Thickness(8); box.SetResourceReference(BackgroundProperty, "WindowBackgroundBrush"); box.SetResourceReference(ForegroundProperty, "TextPrimaryBrush"); }
-        var root = new DockPanel { Margin = new Thickness(36, 24, 36, 24), MaxWidth = 1200 };
-        var heading = LiteraryUi.Text(L("Title"), true); DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
+        var root = new Grid { Margin = new Thickness(56, 36, 56, 28) };
+        root.RowDefinitions.Add(new RowDefinition());
+        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var content = new DockPanel { MaxWidth = 1200, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch };
+        var heading = LiteraryUi.Text(L("Title"), true); DockPanel.SetDock(heading, Dock.Top); content.Children.Add(heading);
         var footer = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
-        _status.SetResourceReference(ForegroundProperty, "TextSecondaryBrush"); footer.Children.Add(_status); footer.Children.Add(_progress);
-        _sessionLabel.SetResourceReference(ForegroundProperty, "TextSecondaryBrush"); footer.Children.Add(_sessionLabel);
+        _status.SetResourceReference(ForegroundProperty, "TextSecondaryBrush"); _status.Visibility = Visibility.Collapsed;
+        _progress.Visibility = Visibility.Collapsed;
+        footer.Children.Add(_status); footer.Children.Add(_progress);
+        _sessionLabel.SetResourceReference(ForegroundProperty, "TextSecondaryBrush"); _sessionLabel.Visibility = Visibility.Collapsed;
+        footer.Children.Add(_sessionLabel);
         var row = new WrapPanel();
-        _cancel = LiteraryUi.Button(L("Stop"), () => _operation?.Cancel()); _cancel.IsEnabled = false; row.Children.Add(_cancel);
-        row.Children.Add(LiteraryUi.Button(l("Literary.Back"), () => { if (!IsBusy) BackRequested?.Invoke(); })); footer.Children.Add(row);
-        DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
-        root.Children.Add(new ScrollViewer { Content = _body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
-        Content = root; ShowSource();
+        row.Children.Add(LiteraryUi.Button(l("Literary.Back"), () => RequestNavigation(GoBack, back: true)));
+        row.Children.Add(LiteraryUi.Button(l("Literary.Home"), () => RequestNavigation(() => HomeRequested?.Invoke())));
+        footer.Children.Add(row);
+        Grid.SetRow(footer, 1); root.Children.Add(footer);
+        content.Children.Add(new ScrollViewer { Content = _body, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        root.Children.Add(content);
+        Content = root;
+        ShowLanding();
+    }
+    private async void RequestNavigation(Action navigate, bool back = false)
+    {
+        if (_postReviewQuestions?.IsRagBusy == true) await _postReviewQuestions.StopRagAsync();
+        if (_postReviewQuestions?.TrySaveDraft() == false) return;
+        if (!back) _postReviewQuestions?.Dispose();
+        if (_operation is null) { navigate(); return; }
+        _pendingNavigation = navigate;
+        _operation.Cancel();
     }
     private string L(string key) => _l("Literary.Import." + key);
+    private void GoBack()
+    {
+        if (_postReviewQuestions is not null && _postReviewEntry is { } reviewed)
+        {
+            if (_postReviewQuestions.TryGoBackStep()) return;
+            _postReviewQuestions.Dispose(); _postReviewQuestions = null; _postReviewEntry = null;
+            ShowBookReview(reviewed); SaveDraft("review"); return;
+        }
+        if (!_showingLegacy)
+        {
+            if (_showingWorkChoice)
+            {
+                ShowAnalysisScreen(); SaveDraft("analysis");
+                return;
+            }
+            if (_showingAnalysis || _showingBookReview)
+            {
+                _answersTimer.Stop(); SaveAnswers();
+                SaveDraft(_showingBookReview ? "review" : "analysis");
+                if (_showingBookReview && _first is not null) { ShowAnalyzedWorks(); return; }
+                if (_showingBookReview) { ShowAnalysisScreen(); return; }
+                _analysisStarted = false;
+                _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+                ShowDialogSelection(); SaveDraft("dialogs"); return;
+            }
+            if (_showingQuickPreview)
+            {
+                SaveDraft("preview");
+                _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+                ShowDialogSelection();
+                SaveDraft("dialogs");
+                return;
+            }
+            if (_showingDialogSelection)
+            {
+                SaveDraft("dialogs");
+                _showingDialogSelection = false;
+                _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+                ShowLanding();
+                return;
+            }
+            BackRequested?.Invoke(); return;
+        }
+        _showingLegacy = false;
+        _showingDialogSelection = false;
+        _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+        ShowLanding();
+        Focus();
+    }
     private void ShowSource()
     {
+        SetFirstStep(false);
+        _folder.Text = _draftFolder.Text;
         _body.Children.Clear();
         _body.Children.Add(LiteraryUi.Text(L("LocalOnly")));
         var sources = new ComboBox { Margin = new Thickness(0, 8, 0, 8), SelectedIndex = 0 };
@@ -124,7 +214,16 @@ public sealed partial class LiteraryImportControl : UserControl, IDisposable
     }
     public void Dispose()
     {
+        if (_postReviewQuestions?.IsRagBusy == true) { _ = DisposeAfterRagAsync(); return; }
+        _postReviewQuestions?.Dispose(); _postReviewQuestions = null;
+        _answersTimer.Stop(); SaveAnswers();
+        SaveDraft();
         if (IsBusy) { _operation!.Cancel(); return; }
         _runtime?.Dispose(); _runtime = null; _session?.Dispose(); _session = null;
+    }
+    private async Task DisposeAfterRagAsync()
+    {
+        if (_postReviewQuestions is { } questions) await questions.StopRagAsync();
+        Dispose();
     }
 }

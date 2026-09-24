@@ -6,7 +6,7 @@ namespace AIHub.Controls;
 public sealed partial class LiteraryWorkspaceControl
 {
     private bool _jellyEditing;
-    private async Task<bool> PrepareJellyAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken token)
+    private async Task<bool> PrepareJellyAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken token, string? preparationMode = null)
     {
         var layout = new LiteraryProjectLayout(_entry.ProjectPath);
         var mode = LiteraryProjectStore.ReadProject(layout.Root).JellyExecutor;
@@ -16,9 +16,14 @@ public sealed partial class LiteraryWorkspaceControl
             using var log = new LiteraryRequestDiagnostics("JellyReview", _ => { }, layout.EnsureFolder("Diagnostics/LiteraryDetailed"));
             var result = LiteraryJellyReviewDialog.Show(this, _l,
                 batch.Facts.Select(f => new LiteraryJellyReviewItem(f, batch.Number, batch.SourceText)).ToArray(), commit, (kind, data) => log.Write(kind, data), language:_project.LanguageCode,
-                summary:AIHub.Services.LiteraryImport.ImportProjectStatus.Read(layout.Root).Describe(_l));
+                summary:AIHub.Services.LiteraryImport.ImportProjectStatus.Read(layout.Root).Describe(_l),
+                acceptWarnings:preparationMode is null ? null : decisions=>Task.Run(()=>
+                {
+                    token.ThrowIfCancellationRequested();
+                    new LiteraryJellyStore(layout).ConfirmPrepared(batch,decisions,"manual",true);
+                },token));
             return Task.FromResult(result);
-        }, progress, token), token);
+        }, progress, token, mode:preparationMode, technicalAttempts:preparationMode is null ? 3 : 1), token);
     }
     private async Task OpenJellyAsync()
     {

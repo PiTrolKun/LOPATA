@@ -251,6 +251,28 @@ public sealed class LiteraryImportTests
         CollectionAssert.AreEqual(result, await resumed.AnalyzeAsync(input, ["c"], new Progress<ImportProgress>(), default));
     }
 
+    [TestMethod] public async Task FirstPassCacheNeverReusesAFilteredDialogForTheFullDialog()
+    {
+        using var session = ImportSession.Create(_root, Source(), default);
+        var units = Enumerable.Range(0, 3).Select(i => Unit("scope" + i, "text-" + i)).ToArray();
+        var full = new ImportInput([new("c", "synthetic", 3)], units.ToList(), [], []);
+        var partial = full with { Units = units.Take(2).ToList() };
+        var calls = 0;
+        var pipeline = new ImportPipeline(session, (messages, _, _, _) =>
+        {
+            calls++;
+            using var data = JsonDocument.Parse(messages.Last().Content);
+            var count = data.RootElement.GetProperty("units").GetArrayLength();
+            return Task.FromResult("{\"units\":[[0," + (count - 1) + ",\"KEEP\",\"work\",\"\",\"\"]]}");
+        });
+        var first = await pipeline.AnalyzeAsync(partial, ["c"], new Progress<ImportProgress>(), default);
+        var second = await pipeline.AnalyzeAsync(full, ["c"], new Progress<ImportProgress>(), default);
+        Assert.AreEqual(2, first.Length);
+        Assert.AreEqual(3, second.Length);
+        Assert.AreEqual(2, calls);
+        Assert.AreEqual(2, session.State.Artifacts.Count(a => a.Step.StartsWith("pass1/")));
+    }
+
     [TestMethod] public async Task ContextSplitKeepsFirstPassMappingAndResumeSkipsInference()
     {
         using var session = ImportSession.Create(_root, Source(), default);

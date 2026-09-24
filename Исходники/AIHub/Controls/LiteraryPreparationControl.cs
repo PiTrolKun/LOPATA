@@ -16,6 +16,8 @@ public sealed class LiteraryPreparationControl : UserControl
     private readonly Button _install, _next, _retry;
     private CancellationTokenSource? _cancel;
     private bool _busy;
+    private bool _needsDownload;
+    private bool _componentsReady;
     private long _lastUiUpdate;
     public event Action? Ready;
     public event Action? BackRequested;
@@ -29,23 +31,28 @@ public sealed class LiteraryPreparationControl : UserControl
         SetResourceReference(FontSizeProperty, "UiBodyFontSize");
         _progress.SetResourceReference(ProgressBar.ForegroundProperty, "AccentBrush");
         _progress.SetResourceReference(ProgressBar.BackgroundProperty, "PanelBrush");
-        var panel = new StackPanel { MaxWidth = 1000, Margin = new Thickness(40), HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch };
+        var root = new Grid { Margin = new Thickness(56, 36, 56, 28) };
+        root.RowDefinitions.Add(new RowDefinition());
+        root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var panel = new StackPanel { MaxWidth = 1000, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch };
         panel.Children.Add(LiteraryUi.Text(l("Literary.Prepare.Title"), true));
         panel.Children.Add(LiteraryUi.Text(l("Literary.Prepare.Hint")));
         panel.Children.Add(_rows);
         _status = LiteraryUi.Text(""); panel.Children.Add(_status); panel.Children.Add(_progress);
         var actions = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 16, 0, 0) };
         _install = LiteraryUi.Button(l("Literary.Prepare.Install"), () => _ = RunAsync(true), true);
+        _install.Visibility = Visibility.Collapsed;
         _retry = LiteraryUi.Button(l("Literary.Prepare.Check"), () => _ = RunAsync(false, true));
         _next = LiteraryUi.Button(l("Literary.Prepare.Next"), () => _ = ContinueAsync(), true); _next.IsEnabled = false;
         _next.Opacity = 0.45;
         _next.IsEnabledChanged += (_, _) => _next.Opacity = _next.IsEnabled ? 1 : 0.45;
         actions.Children.Add(_install); actions.Children.Add(_retry); actions.Children.Add(_next); panel.Children.Add(actions);
-        var navigation = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 24, 0, 0) };
-        navigation.Children.Add(LiteraryUi.Button(l("Literary.Prepare.Stop"), Cancel));
+        var navigation = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 20, 0, 0) };
         navigation.Children.Add(LiteraryUi.Button(l("Literary.Back"), () => { Cancel(); BackRequested?.Invoke(); }));
-        navigation.Children.Add(LiteraryUi.Button(l("Literary.Home"), () => { Cancel(); HomeRequested?.Invoke(); })); panel.Children.Add(navigation);
-        Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        navigation.Children.Add(LiteraryUi.Button(l("Literary.Home"), () => { Cancel(); HomeRequested?.Invoke(); }));
+        Grid.SetRow(navigation, 1); root.Children.Add(navigation);
+        root.Children.Add(new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        Content = root;
         Loaded += (_, _) => { if (_rows.Children.Count == 0 && !_busy) _ = RunAsync(false); };
         Unloaded += (_, _) => Cancel();
         IsVisibleChanged += (_, _) => { if (!IsVisible) Cancel(); };
@@ -62,7 +69,10 @@ public sealed class LiteraryPreparationControl : UserControl
     private async Task RunAsync(bool install, bool forceVerification = false)
     {
         if (_busy) return;
-        _busy = true; _cancel = new(); _install.IsEnabled = _retry.IsEnabled = _next.IsEnabled = false;
+        var downloadWasNeeded = install && _needsDownload;
+        _busy = true; _cancel = new(); _needsDownload = _componentsReady = false;
+        _install.Visibility = Visibility.Collapsed;
+        _install.IsEnabled = _retry.IsEnabled = _next.IsEnabled = false;
         var ct = _cancel.Token;
         try
         {
@@ -74,12 +84,25 @@ public sealed class LiteraryPreparationControl : UserControl
             foreach (var state in states) _rows.Children.Add(LiteraryUi.Text(
                 _l("Literary.Prepare." + state.Key) + " — " + _l(state.Ready ? "Literary.Prepare.Available" : "Literary.Prepare.Missing")));
             var ready = states.All(s => s.Ready);
+            _componentsReady = ready;
+            _needsDownload = !ready;
+            _install.Visibility = _needsDownload ? Visibility.Visible : Visibility.Collapsed;
             _next.IsEnabled = ready;
             _status.Text = _l(ready ? "Literary.Prepare.AllReady" : "Literary.Prepare.NeedsDownload");
         }
-        catch (OperationCanceledException) { _status.Text = _l("Literary.Prepare.Cancelled"); }
-        catch (Exception ex) { _status.Text = _l("Literary.Prepare.Error") + " " + ex.Message; }
-        finally { _progress.IsIndeterminate = false; _busy = false; _install.IsEnabled = _retry.IsEnabled = true; _cancel.Dispose(); _cancel = null; }
+        catch (OperationCanceledException)
+        {
+            _needsDownload = downloadWasNeeded;
+            _install.Visibility = _needsDownload ? Visibility.Visible : Visibility.Collapsed;
+            _status.Text = _l("Literary.Prepare.Cancelled");
+        }
+        catch (Exception ex)
+        {
+            _needsDownload = downloadWasNeeded;
+            _install.Visibility = _needsDownload ? Visibility.Visible : Visibility.Collapsed;
+            _status.Text = _l("Literary.Prepare.Error") + " " + ex.Message;
+        }
+        finally { _progress.IsIndeterminate = false; _busy = false; _install.IsEnabled = _needsDownload; _retry.IsEnabled = true; _cancel.Dispose(); _cancel = null; }
     }
     private async Task ContinueAsync()
     {
@@ -94,6 +117,6 @@ public sealed class LiteraryPreparationControl : UserControl
         }
         catch (OperationCanceledException) { _status.Text = _l("Literary.Prepare.Cancelled"); }
         catch (Exception ex) { _status.Text = _l("Literary.Prepare.Error") + " " + ex.Message; }
-        finally { _busy = false; _next.IsEnabled = _install.IsEnabled = _retry.IsEnabled = true; _cancel.Dispose(); _cancel = null; }
+        finally { _busy = false; _next.IsEnabled = _componentsReady; _install.IsEnabled = _needsDownload; _retry.IsEnabled = true; _cancel.Dispose(); _cancel = null; }
     }
 }

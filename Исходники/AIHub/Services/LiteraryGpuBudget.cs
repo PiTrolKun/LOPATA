@@ -14,7 +14,7 @@ internal static class LiteraryGpuBudget
 {
     // CUDA mem_get_info on WDDM may include reclaimable/shared memory. Prefer the
     // driver's physical free VRAM, and be conservative if inventory is unavailable.
-    public static async Task<long?> FreeBytesAsync(CancellationToken token)
+    public static async Task<long?> FreeBytesAsync(CancellationToken token, LiteraryStartupDiagnostics? diagnostics = null)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token); timeout.CancelAfter(TimeSpan.FromSeconds(5));
         try
@@ -22,13 +22,18 @@ internal static class LiteraryGpuBudget
             var info = new ProcessStartInfo("nvidia-smi.exe") { UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true };
             info.ArgumentList.Add("--query-gpu=memory.free"); info.ArgumentList.Add("--format=csv,noheader,nounits");
+            diagnostics?.Record("physical_inventory_start", new { executable = info.FileName, arguments = info.ArgumentList.ToArray() });
             using var process = OwnedProcessRegistry.Shared.Start(info, "Literary GPU inventory");
             try
             {
+                diagnostics?.Record("physical_inventory_started", new { pid = process.Id });
                 var output = process.StandardOutput.ReadToEndAsync(timeout.Token); var error = process.StandardError.ReadToEndAsync(timeout.Token);
-                await process.WaitForExitAsync(timeout.Token); await error;
+                await process.WaitForExitAsync(timeout.Token);
+                var stdout = await output; var stderr = await error;
+                diagnostics?.Record("physical_inventory_result", new { pid = process.Id, exitCode = process.ExitCode,
+                    stdout = LiteraryStartupDiagnostics.Limit(stdout), stderr = LiteraryStartupDiagnostics.Limit(stderr) });
                 if (process.ExitCode != 0) return null;
-                var rows = (await output).Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+                var rows = stdout.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
                 var values = new List<long>();
                 foreach (var row in rows)
                     if (long.TryParse(row.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var mib)) values.Add(mib * 1024 * 1024);
@@ -38,7 +43,9 @@ internal static class LiteraryGpuBudget
             }
             finally { if (!process.HasExited) process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); }
         }
-        catch (OperationCanceledException) when (!token.IsCancellationRequested) { return null; }
-        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception) { return null; }
+        catch (OperationCanceledException ex) when (!token.IsCancellationRequested)
+        { diagnostics?.Record("physical_inventory_failure", new { timedOut = true, exception = ex.ToString() }); return null; }
+        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception)
+        { diagnostics?.Record("physical_inventory_failure", new { timedOut = false, exception = ex.ToString() }); return null; }
     }
 }

@@ -16,7 +16,9 @@ public sealed record LiteraryJellyFact
 }
 
 public sealed record LiteraryJellyBatch(string Id, string PartId, string Number, string Revision,
-    string SourceText, LiteraryJellyFact[] Facts, string Status = "pending");
+    string SourceText, LiteraryJellyFact[] Facts, string Status = "pending",
+    [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    string? ImportGeneration = null);
 public sealed record LiteraryJellyEntry(string Id, string PartId, string Number, string Revision,
     int Version, LiteraryJellyFact Fact);
 

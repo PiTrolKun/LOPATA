@@ -47,6 +47,7 @@ public partial class DebugChatWindow : Window
         _debugSessionLog = JsonlSessionLog.CreateDebugModelTester(_storageSettings);
 
         InitializeComponent();
+        AIHub.Controls.LiterarySpellChecking.Enable(PromptTextBox, _localizationService.CurrentLanguageCode);
         ApplyTheme(isDarkTheme);
         ApplyLocalization();
         ChatListBox.ItemsSource = _chatItems;

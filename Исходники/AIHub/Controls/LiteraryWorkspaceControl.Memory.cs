@@ -47,23 +47,26 @@ public sealed partial class LiteraryWorkspaceControl
         });
         try
         {
-            if (_memoryPreparation is not null) await _memoryPreparation(progress, cancellation.Token);
+            bool jellyReady;
+            if (_memoryPreparation is not null)
+            {
+                await _memoryPreparation(progress, cancellation.Token);
+                jellyReady = await PrepareJellyAsync(progress, cancellation.Token);
+            }
             else
             {
-                await LiteraryStorageMigration.MigrateAsync(_entry.ProjectPath, progress, cancellation.Token);
-                await new LiteraryWorkIndex(new LiteraryProjectLayout(_entry.ProjectPath)).PrepareAsync(progress, cancellation.Token);
+                jellyReady = await PrepareMaterialsAsync(progress, cancellation.Token);
             }
-            var jellyReady = await PrepareJellyAsync(progress, cancellation.Token);
             acceptingProgress = false;
-            _memoryStatus.Text = _l(jellyReady ? "Literary.Rag.Ready" : "Literary.Jelly.Deferred");
+            _memoryStatus.Text = _l(jellyReady ? "Literary.Rag.Ready" : "Literary.Preparation.Deferred");
             if (!jellyReady) _memoryRetry.Visibility = Visibility.Visible;
-            if (System.IO.File.Exists(System.IO.Path.Combine(_entry.ProjectPath,"Import","review.json")))
+            if (jellyReady && System.IO.File.Exists(System.IO.Path.Combine(_entry.ProjectPath,"Import","review.json")))
             {
                 _memoryStatus.Text=AIHub.Services.LiteraryImport.ImportProjectStatus.Read(_entry.ProjectPath).Describe(_l);
                 await RefreshImportExportAsync();
             }
         }
-        catch (OperationCanceledException) { acceptingProgress = false; _memoryStatus.Text = _l("Literary.Prepare.Cancelled"); }
+        catch (OperationCanceledException) { acceptingProgress = false; _memoryStatus.Text = _l("Literary.Prepare.Cancelled"); _memoryRetry.Visibility = Visibility.Visible; }
         catch (Exception failure) when (failure.GetBaseException() is LiteraryGpuMemoryException)
         {
             acceptingProgress = false;
@@ -86,7 +89,7 @@ public sealed partial class LiteraryWorkspaceControl
             _writer.ActionsBlocked = _advisor.ActionsBlocked = _projectMissing;
             _writer.RefreshAvailability(); _advisor.RefreshAvailability();
             _draft.BlockActions(_projectMissing); EditorHost.IsEnabled = !_projectMissing;
-            if (!cancellation.IsCancellationRequested) ScheduleFirstCalibration();
+            if (!cancellation.IsCancellationRequested && _memoryRetry.Visibility != Visibility.Visible) ScheduleFirstCalibration();
         }
     }
     private void BlockButtons(DependencyObject root)

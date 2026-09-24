@@ -280,6 +280,28 @@
                     </StackPanel>
                 </StackPanel>
 
+                <Button x:Name="ResumeImportDraftButton"
+                        Grid.Column="1"
+                        Content="Продолжить начатое создание"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Click="ResumeImportDraft_Click">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsVisible, ElementName=LiteraryPage}" Value="True" />
+                                        <Condition Binding="{Binding IsImportFirstStep, ElementName=LiteraryPage}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <StackPanel Grid.Column="2"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
@@ -2656,6 +2678,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="ChoiceCustomInput"
+                                             SpellCheck.IsEnabled="True"
                                              Height="36"
                                              MaxLength="48"
                                              VerticalContentAlignment="Center" />
@@ -2967,6 +2990,7 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                          <TextBox x:Name="LegacyExecutorCustomInput"
+                                                 SpellCheck.IsEnabled="True"
                                                  Height="86"
                                                  MaxLength="4000"
                                                  AcceptsReturn="True"
@@ -3369,6 +3393,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="ExecutorCustomInput"
+                                         SpellCheck.IsEnabled="True"
                                          Height="74"
                                          MaxLength="4000"
                                          AcceptsReturn="True"

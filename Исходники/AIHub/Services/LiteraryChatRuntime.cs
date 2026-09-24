@@ -230,40 +230,70 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
         if (_process is { HasExited: false }) await CheckLoadedMemoryAsync(token).ConfigureAwait(false);
         if (_process is { HasExited: false }) return;
         StopProcess();
-        await ComponentLicenseGate.EnsureAsync([ManagedModelCatalog.OmniGammaArtifactId, "backend.llama", "native.cuda"], token).ConfigureAwait(false);
-        var model = await LiteraryModelLocation.ResolveAsync(token).ConfigureAwait(false);
-        if (!File.Exists(LlamaBackendPaths.ServerExecutablePath)) throw new FileNotFoundException("Installed llama.cpp backend is required.");
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start(); _port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
-        var info = new ProcessStartInfo(LlamaBackendPaths.ServerExecutablePath)
-        {
-            WorkingDirectory = LlamaBackendPaths.DirectoryPath, UseShellExecute = false, CreateNoWindow = true,
-            RedirectStandardOutput = true, RedirectStandardError = true
-        };
-        foreach (var key in info.Environment.Keys.Where(k => k.StartsWith("LLAMA_ARG_", StringComparison.Ordinal)).ToArray()) info.Environment.Remove(key);
-        var fitMargin = await LiteraryAutomaticBudget.FitMarginAsync(token).ConfigureAwait(false);
-        foreach (var arg in Arguments(model, _port, fitMargin)) info.ArgumentList.Add(arg);
-        if (_layout is not null || _preparationRoot is not null)
-        {
-            ValidatePreparation();
-            var cacheFolder = _layout?.EnsureFolder("Dialogs/RuntimeCache") ?? Path.Combine(_preparationRoot!, "Dialogs", "RuntimeCache");
-            LiteraryProjectLayout.CheckTreePath(cacheFolder); Directory.CreateDirectory(cacheFolder);
-            info.ArgumentList.Add("--slot-save-path"); info.ArgumentList.Add(cacheFolder);
-        }
-        var process = new Process { StartInfo = info };
-        _process = process;
-        process.OutputDataReceived += (_, e) => { if (!_suppressBackendLog && e.Data is { } line) { Log(line); _diagnostics?.Write("stdout", line); } };
-        process.ErrorDataReceived += (_, e) => { if (!_suppressBackendLog && e.Data is { } line) { Log(line); _diagnostics?.Write("stderr", line); } };
-        _diagnostics?.Write("launch", new { executable = info.FileName, arguments = info.ArgumentList.ToArray(), model, modelBytes = new FileInfo(model).Length,
-            backend = FileVersionInfo.GetVersionInfo(info.FileName).FileVersion });
-        token.ThrowIfCancellationRequested();
-        if (!OwnedProcessRegistry.Shared.Start(process, "LiteraryChatRuntime")) throw new InvalidOperationException("Literary runtime did not start.");
-        process.BeginOutputReadLine(); process.BeginErrorReadLine();
-        Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process, "Qwen text-only; automatic GPU context; slots=1; sequential", model));
+        var trace = new LiteraryStartupDiagnostics(Log, (kind, data) => _diagnostics?.Write(kind, data));
         using var startup = CancellationTokenSource.CreateLinkedTokenSource(token);
-        startup.CancelAfter(TimeSpan.FromSeconds(90));
+        Process? process = null;
+        var outputEnded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var errorEnded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         try
         {
+            trace.EnvironmentInfo();
+            trace.Stage("license_check");
+            await ComponentLicenseGate.EnsureAsync([ManagedModelCatalog.OmniGammaArtifactId, "backend.llama", "native.cuda"], token).ConfigureAwait(false);
+            trace.Stage("model_resolution");
+            var model = await LiteraryModelLocation.ResolveAsync(token).ConfigureAwait(false);
+            var modelInfo = new FileInfo(model);
+            trace.Record("model", new { path = model, bytes = modelInfo.Length, writtenUtc = modelInfo.LastWriteTimeUtc,
+                nonAsciiPath = model.Any(c => c > 127) });
+            trace.Stage("backend_check");
+            if (!File.Exists(LlamaBackendPaths.ServerExecutablePath)) throw new FileNotFoundException("Installed llama.cpp backend is required.");
+            using var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start(); _port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
+            var info = new ProcessStartInfo(LlamaBackendPaths.ServerExecutablePath)
+            {
+                WorkingDirectory = LlamaBackendPaths.DirectoryPath, UseShellExecute = false, CreateNoWindow = true,
+                RedirectStandardOutput = true, RedirectStandardError = true
+            };
+            foreach (var key in info.Environment.Keys.Where(k => k.StartsWith("LLAMA_ARG_", StringComparison.Ordinal)).ToArray()) info.Environment.Remove(key);
+            trace.Stage("gpu_inventory");
+            var fitMargin = await LiteraryAutomaticBudget.FitMarginAsync(token, trace).ConfigureAwait(false);
+            trace.Record("gpu_budget", new { fitMarginMiB = fitMargin });
+            foreach (var arg in Arguments(model, _port, fitMargin)) info.ArgumentList.Add(arg);
+            trace.Stage("cache_preparation");
+            if (_layout is not null || _preparationRoot is not null)
+            {
+                ValidatePreparation();
+                var cacheFolder = _layout?.EnsureFolder("Dialogs/RuntimeCache") ?? Path.Combine(_preparationRoot!, "Dialogs", "RuntimeCache");
+                LiteraryProjectLayout.CheckTreePath(cacheFolder); Directory.CreateDirectory(cacheFolder);
+                info.ArgumentList.Add("--slot-save-path"); info.ArgumentList.Add(cacheFolder);
+            }
+            process = new Process { StartInfo = info };
+            _process = process;
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (e.Data is not { } line) { outputEnded.TrySetResult(); return; }
+                trace.Capture("stdout", line);
+                if (!_suppressBackendLog) { Log(line); _diagnostics?.Write("stdout", line); }
+            };
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data is not { } line) { errorEnded.TrySetResult(); return; }
+                trace.Capture("stderr", line);
+                if (!_suppressBackendLog) { Log(line); _diagnostics?.Write("stderr", line); }
+            };
+            var launch = new { executable = info.FileName, workingDirectory = info.WorkingDirectory, arguments = info.ArgumentList.ToArray(),
+                model, modelBytes = modelInfo.Length, backend = FileVersionInfo.GetVersionInfo(info.FileName).FileVersion };
+            trace.Stage("process_start");
+            trace.Record("launch", launch);
+            _diagnostics?.Write("launch", launch);
+            token.ThrowIfCancellationRequested();
+            if (!OwnedProcessRegistry.Shared.Start(process, "LiteraryChatRuntime")) throw new InvalidOperationException("Literary runtime did not start.");
+            process.BeginOutputReadLine(); process.BeginErrorReadLine();
+            trace.Record("process_started", new { pid = process.Id });
+            Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process, "Qwen text-only; automatic GPU context; slots=1; sequential", model));
+            startup.CancelAfter(TimeSpan.FromSeconds(90));
+            trace.Stage("health_check");
+            int? lastHealthStatus = null;
             while (true)
             {
                 startup.Token.ThrowIfCancellationRequested();
@@ -271,16 +301,33 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
                 try
                 {
                     using var response = await _http.GetAsync(new Uri(Server, "health"), startup.Token).ConfigureAwait(false);
+                    var status = (int)response.StatusCode;
+                    if (status != lastHealthStatus) { trace.Record("health_status", new { status }); lastHealthStatus = status; }
                     if (response.IsSuccessStatusCode) break;
                 }
                 catch (HttpRequestException) { }
                 await Task.Delay(250, startup.Token).ConfigureAwait(false);
             }
+            trace.Stage("capacity_read");
             await ReadCapacityAsync(startup.Token).ConfigureAwait(false);
             _resourcesChecked = true;
             Log(RuntimeResourceDiagnostics.DescribeSnapshot("LiteraryShared", process, "loaded"));
+            trace.Ready(process, ContextCapacity);
         }
-        catch { StopProcess(); throw; }
+        catch (Exception ex)
+        {
+            // Drain asynchronous output after a native exit before capturing its last error lines.
+            if (process is not null)
+            {
+                try { if (process.HasExited) await Task.WhenAny(Task.WhenAll(outputEnded.Task, errorEnded.Task), Task.Delay(500)).ConfigureAwait(false); }
+                catch (Exception probe) when (probe is InvalidOperationException or System.ComponentModel.Win32Exception) { }
+            }
+            trace.Failure(ex, process, token.IsCancellationRequested, startup.IsCancellationRequested && !token.IsCancellationRequested);
+            try { StopProcess(); }
+            catch (Exception cleanup) when (cleanup is InvalidOperationException or System.ComponentModel.Win32Exception)
+            { trace.Record("cleanup_failure", new { exception = cleanup.ToString() }); }
+            throw;
+        }
     }
     private void Log(string line)
     {

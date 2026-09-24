@@ -492,6 +492,8 @@ public partial class MainWindow : Window
 
     private void ApplyLocalization()
     {
+        Language = System.Windows.Markup.XmlLanguage.GetLanguage(
+            _localizationService.CurrentLanguageCode.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "en-US" : "ru-RU");
         AboutButton.ToolTip = L("About.Title");
         System.Windows.Automation.AutomationProperties.SetName(AboutButton, L("About.Title"));
         ApplicationUpdatesButton.Content = L("Updates.Title");

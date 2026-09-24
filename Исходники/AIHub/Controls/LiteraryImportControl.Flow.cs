@@ -9,34 +9,59 @@ namespace AIHub.Controls;
 public sealed partial class LiteraryImportControl
 {
     private ImportDecision[]? _groupingOriginal;
-    private async Task RunAsync(Func<CancellationToken, Task> action)
+    private async Task RunAsync(Func<CancellationToken, Task> action, bool keepBodyEnabled = false)
     {
         if (IsBusy) return;
         using var cts = new CancellationTokenSource(); _operation = cts;
-        _body.IsEnabled = false; _cancel.IsEnabled = true; _progress.IsIndeterminate = true;
+        var cardOwnsProgress = keepBodyEnabled && _showingAnalysis && !_showingLegacy;
+        _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = cardOwnsProgress ? Visibility.Collapsed : Visibility.Visible;
+        _body.IsEnabled = keepBodyEnabled; _progress.IsIndeterminate = true;
         var clock = Stopwatch.StartNew();
         var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        timer.Tick += (_, _) => _sessionLabel.Text = (_session?.Root ?? "") + $"   {clock.Elapsed:hh\\:mm\\:ss}"; timer.Start();
+        timer.Tick += (_, _) =>
+        {
+            _sessionLabel.Text = (_session?.Root ?? "") + $"   {clock.Elapsed:hh\\:mm\\:ss}";
+            UpdateAnalysisClock(clock.Elapsed);
+        }; timer.Start();
         _status.Text = L("Working");
+        var failed = false;
         try { await action(cts.Token); if (_session?.State.Stage is not ("complete" or "partial-result")) _status.Text = L("StepReady"); }
         catch (OperationCanceledException)
         {
-            if (_session?.State.ProjectPath.Length > 0 && _first is not null) ShowWorks();
+            failed = true;
+            if (!_showingAnalysis && _session?.State.ProjectPath.Length > 0 && _first is not null) ShowWorks();
             _status.Text = L("Cancelled");
         }
         catch (Exception ex)
         {
-            if (_session?.State.ProjectPath.Length > 0 && _first is not null) ShowWorks();
+            failed = true;
+            if (!_showingAnalysis && _session?.State.ProjectPath.Length > 0 && _first is not null) ShowWorks();
             _status.Text = L("Failed") + " " + (ex.Message.StartsWith("Literary.Import.", StringComparison.Ordinal) ? _l(ex.Message) : ex.Message);
+            if (cardOwnsProgress) _analysisIssue = _status.Text;
             if (_session is not null) try { _session.State.LastError = ex.GetType().Name + ": " + ex.Message; _session.Save(); } catch (IOException) { }
         }
-        finally { timer.Stop(); _operation = null; _body.IsEnabled = true; _cancel.IsEnabled = false; _progress.IsIndeterminate = false; }
+        finally
+        {
+            timer.Stop(); _operation = null; _body.IsEnabled = true; _progress.IsIndeterminate = false;
+            var navigate = _pendingNavigation;
+            _pendingNavigation = null;
+            navigate?.Invoke();
+            if (failed && navigate is null && _showingAnalysis)
+            { _analysisStarted = false; ShowAnalysisScreen(); }
+            if (cardOwnsProgress || (!failed && !_showingLegacy && (_showingWorkChoice || _showingBookReview)))
+                _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+            if (_showingDialogSelection && !_showingLegacy && !failed)
+                _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+            else if (_showingDialogSelection && !_showingLegacy)
+                _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+        }
     }
     private IProgress<ImportProgress> Progress() => new Progress<ImportProgress>(p =>
     {
         _status.Text = L(p.Stage) + (p.Total > 0 ? $" · {p.Done}/{p.Total}" : "");
         _progress.IsIndeterminate = p.Total <= 0;
         if (p.Total > 0) _progress.Value = 100.0 * p.Done / p.Total;
+        UpdateAnalysisProgress(p);
     });
     private ImportPipeline Pipeline()
     {
@@ -52,10 +77,14 @@ public sealed partial class LiteraryImportControl
             _groupingOriginal = await Task.Run(() => pipeline.AnalyzeAsync(_input!, ids, progress, ct), ct);
             _first = ImportGrouping.Read(_session!, _groupingOriginal);
             ShowWorks();
+            SaveDraft("works");
         });
     }
     private void ShowWorks()
     {
+        var suggestedProjectName = _showingDialogSelection ? _draftProjectName.Text.Trim() : "";
+        _showingDialogSelection = false;
+        _draftStep = "works";
         _body.Children.Clear(); _works.Items.Clear();
         _body.Children.Add(LiteraryUi.Text(L("ChooseWork"), true));
         foreach (var name in _first!.Select(d => d.Project).Where(p => p.Length > 0).Distinct()) _works.Items.Add(name);
@@ -94,7 +123,7 @@ public sealed partial class LiteraryImportControl
                 }
                 catch (Exception ex) { _status.Text = L("Failed") + " " + ex.Message; }
             }));
-        _body.Children.Add(LiteraryUi.Text(L("ProjectName"))); _name.Text = "";
+        _body.Children.Add(LiteraryUi.Text(L("ProjectName"))); _name.Text = suggestedProjectName;
         if (_session.State.PlannedPath.Length > 0)
         { _name.Text = Path.GetFileName(_session.State.PlannedPath); _genre.Text = _session.State.Genre; _folder.Text = Path.GetDirectoryName(_session.State.PlannedPath)!; }
         if (_session.State.ProjectPath.Length > 0)
@@ -134,6 +163,7 @@ public sealed partial class LiteraryImportControl
             ct.ThrowIfCancellationRequested();
             var entry = await Task.Run(() => ImportProjectBuilder.Build(_session!, _input!, assembly, _store, folder, name, genre, _language), ct);
             await Task.Run(() => ImportCompletion.CompleteAsync(_session!, entry, _runtime!, _language, progress, ct), ct);
+            FinishDraft();
             ShowResult(entry);
         });
     }

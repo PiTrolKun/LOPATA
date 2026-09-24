@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace AIHub.Services;
 
 /// <summary>Plain text chapters with an atomic index commit and a recoverable creation journal.</summary>
-public sealed class LiteraryChapterStore
+public sealed partial class LiteraryChapterStore
 {
     public static IReadOnlyList<int> AutosaveIntervals { get; } = Array.AsReadOnly(new[] { 10, 20, 30, 40, 50, 60, 90, 120, 150, 180 });
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
@@ -205,13 +205,21 @@ public sealed class LiteraryChapterStore
         public string Transaction { get; set; } = "";
         public Dictionary<string, string> Writes { get; set; } = [];
         public List<string> Retired { get; set; } = [];
+        public Dictionary<string, string> Previous { get; set; } = [];
     }
 
-    private void Commit(LiteraryChapterIndex next, Dictionary<string, string> writes, List<string>? retired = null)
+    private void Commit(LiteraryChapterIndex next, Dictionary<string, string> writes, List<string>? retired = null,
+        string? activation = null)
     {
-        next.Transaction = Guid.NewGuid().ToString("N"); Validate(next);
-        foreach (var name in writes.Keys) if (File.Exists(Resolve(name))) throw new IOException("Chapter file already exists: " + name);
+        next.Transaction = activation ?? Guid.NewGuid().ToString("N"); Validate(next);
+        var previous = new Dictionary<string, string>();
+        foreach (var name in writes.Keys) if (File.Exists(Resolve(name)))
+        {
+            if (activation is null) throw new IOException("Chapter file already exists: " + name);
+            previous[name] = LiteraryChapterFiles.Read(Resolve(name));
+        }
         var journal = new Journal { Transaction = next.Transaction, Writes = writes, Retired = retired ?? [] };
+        journal.Previous = previous;
         LiteraryChapterFiles.Write(_journalPath, JsonSerializer.Serialize(journal, Json));
         try
         {
@@ -235,8 +243,17 @@ public sealed class LiteraryChapterStore
             {
                 var path = Resolve(name);
                 if (!File.Exists(path)) continue;
-                if (LiteraryChapterFiles.Read(path) != text) throw new IOException("Uncommitted chapter changed externally: " + name);
-                File.Delete(path);
+                var actual = LiteraryChapterFiles.Read(path);
+                if (journal.Previous.TryGetValue(name, out var before))
+                {
+                    if (actual != text && actual != before) throw new IOException("Uncommitted chapter changed externally: " + name);
+                    if (actual != before) LiteraryChapterFiles.Write(path, before);
+                }
+                else
+                {
+                    if (actual != text) throw new IOException("Uncommitted chapter changed externally: " + name);
+                    File.Delete(path);
+                }
             }
         }
         // Retain old names after rename as recovery copies, outside the reader-visible chapters.

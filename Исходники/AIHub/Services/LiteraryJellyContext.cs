@@ -20,7 +20,9 @@ public sealed class LiteraryJellyContext
         foreach (var part in editor.Sources.Where(s => s.Id != editor.ActiveId && entries.Any(e => e.PartId == s.Id)
             && ImportEligibility.Review(layout.Root, s.Id)?.Doubts.Length is not > 0))
             revisions[part.Id] = LiteraryWorkIndex.Revision(LiteraryChapterFiles.Read(Path.Combine(layout.Root, "chapters", part.FileName)));
-        var valid = entries.Where(e => revisions.TryGetValue(e.PartId, out var revision) && e.Revision == revision).ToArray();
+        var numbers = editor.Sources.ToDictionary(s => s.Id, s => s.Number);
+        var valid = entries.Where(e => revisions.TryGetValue(e.PartId, out var revision) && e.Revision == revision)
+            .Select(e => e with { Number = numbers[e.PartId] }).ToArray();
         _stale = entries.Count - valid.Length;
         var words = Regex.Matches(query.ToLowerInvariant(), @"[\p{L}\p{N}]{3,}").Select(m => m.Value.Length > 5 ? m.Value[..5] : m.Value).Distinct().ToArray();
         _ranked = valid.OrderByDescending(e => words.Count(w => (e.Fact.Subject + " " + e.Fact.Relation + " " + e.Fact.Value).Contains(w, StringComparison.OrdinalIgnoreCase))).ToArray();

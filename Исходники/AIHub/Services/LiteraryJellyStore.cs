@@ -63,6 +63,7 @@ public sealed partial class LiteraryJellyStore(LiteraryProjectLayout layout)
     }
     public void VerifySource(LiteraryJellyBatch batch)
     {
+        if (!string.IsNullOrEmpty(batch.ImportGeneration)) { ImportJellySource.Verify(layout, batch); return; }
         layout.EnsurePresent(); var chapters = new LiteraryChapterStore(layout.Root); chapters.Open();
         var part = chapters.Index.Parts.SingleOrDefault(p => p.Id == batch.PartId);
         if (part is null || part.Id == chapters.Index.ActiveId
@@ -71,11 +72,43 @@ public sealed partial class LiteraryJellyStore(LiteraryProjectLayout layout)
             throw new IOException("The source changed or is still the active draft. Reopen memory preparation.");
     }
     public void Confirm(LiteraryJellyBatch original, IReadOnlyList<LiteraryJellyFact> decisions)
+        => ConfirmCore(original, decisions, false, "user_approved");
+
+    public void ConfirmPrepared(LiteraryJellyBatch original, IReadOnlyList<LiteraryJellyFact> decisions, string mode, bool acceptWarnings = false)
+    {
+        if (mode is not ("auto" or "manual")) throw new ArgumentException("Invalid preparation mode.");
+        ConfirmCore(original, decisions, mode == "auto" || acceptWarnings,
+            mode == "auto" ? "auto_saved" : acceptWarnings ? "user_approved_warnings" : "user_approved");
+    }
+
+    public void ConfirmImported(LiteraryJellyBatch original, IReadOnlyList<LiteraryJellyFact> decisions, string mode, bool acceptWarnings = false)
+    {
+        if (string.IsNullOrEmpty(original.ImportGeneration) || mode is not ("auto" or "manual"))
+            throw new InvalidDataException("Imported memory requires an owned working source.");
+        ConfirmCore(original, decisions, mode == "auto" || acceptWarnings,
+            mode == "auto" ? "auto_saved" : acceptWarnings ? "user_approved_warnings" : "user_approved");
+    }
+
+    public LiteraryJellyBatch RebindImported(LiteraryJellyBatch batch, string generation, string number)
+    {
+        if (string.IsNullOrEmpty(batch.ImportGeneration)) throw new InvalidDataException("Not an imported source.");
+        var next = batch with { ImportGeneration = generation, Number = number };
+        VerifySource(next); // Same part ID, exact text and revision in the new published generation.
+        using var db = Open(); using var tx = db.BeginTransaction();
+        using var update = Command(db, tx, "UPDATE batch SET payload=$next WHERE id=$id AND payload=$previous AND status=$status",
+            ("$next", JsonSerializer.Serialize(next with { Status = "pending" })), ("$id", batch.Id),
+            ("$previous", JsonSerializer.Serialize(batch with { Status = "pending" })), ("$status", batch.Status));
+        if (update.ExecuteNonQuery() != 1) throw new IOException("Memory proposal changed.");
+        LogChange(db, tx, batch.Id, "source_generation_rebound", batch.ImportGeneration, generation);
+        tx.Commit(); return next;
+    }
+
+    private void ConfirmCore(LiteraryJellyBatch original, IReadOnlyList<LiteraryJellyFact> decisions, bool acceptWarnings, string operation)
     {
         VerifySource(original);
         if (decisions.Count != original.Facts.Length || !decisions.Select(f => f.Id).Order().SequenceEqual(original.Facts.Select(f => f.Id).Order()))
             throw new InvalidDataException("Every proposed fact must have one decision.");
-        foreach (var fact in decisions) ValidateEligible(original, fact);
+        if (!acceptWarnings) foreach (var fact in decisions) ValidateEligible(original, fact);
         using var db = Open(); using var tx = db.BeginTransaction();
         var stored = Scalar(db, tx, "SELECT payload FROM batch WHERE id=$id AND status='pending'", ("$id", original.Id)) as string;
         if (stored != JsonSerializer.Serialize(original with { Status = "pending" })) throw new IOException("The proposal changed or was already confirmed.");
@@ -86,7 +119,7 @@ public sealed partial class LiteraryJellyStore(LiteraryProjectLayout layout)
             var fact = decision with { Edited = JsonSerializer.Serialize(proposed) != JsonSerializer.Serialize(decision) };
             var data = JsonSerializer.Serialize(fact);
             Execute(db, tx, "INSERT INTO fact VALUES($id,$b,1,$data,$active)", ("$id", fact.Id), ("$b", original.Id), ("$data", data), ("$active", fact.Accepted ? 1 : 0));
-            LogChange(db, tx, fact.Id, fact.Accepted ? "user_approved" : "user_excluded", JsonSerializer.Serialize(proposed), data);
+            LogChange(db, tx, fact.Id, fact.Accepted ? operation : "user_excluded", JsonSerializer.Serialize(proposed), data);
         }
         Execute(db, tx, "UPDATE batch SET status='confirmed' WHERE id=$id", ("$id", original.Id));
         VerifySource(original); tx.Commit();
@@ -129,6 +162,7 @@ public sealed partial class LiteraryJellyStore(LiteraryProjectLayout layout)
     private void ValidateEligible(LiteraryJellyBatch batch, LiteraryJellyFact fact)
     {
         LiteraryJellyContract.Validate(fact, batch.SourceText);
+        if (!string.IsNullOrEmpty(batch.ImportGeneration)) return; // The entire corrected book was explicitly confirmed.
         if (fact.Accepted && !ImportEligibility.Allowed(layout.Root, batch.PartId, batch.SourceText).Any(s => s.Contains(fact.Evidence, StringComparison.Ordinal)))
             throw new InvalidDataException("Literary.Import.ReviewFirst");
     }

@@ -22,6 +22,18 @@ public static class ImportWorkNames
         }
         return true;
     }
+    public static bool MatchesDialogTitle(string workTitle, string dialogTitle)
+    {
+        if (string.IsNullOrWhiteSpace(workTitle) || string.IsNullOrWhiteSpace(dialogTitle)) return false;
+        if (Similar(workTitle, dialogTitle)) return true;
+        var workWords = Key(workTitle).Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(w => w.Length >= 4).ToArray();
+        var dialogWords = Key(dialogTitle).Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(w => w.Length >= 4).ToArray();
+        if (workWords.Length == 0 || dialogWords.Length == 0) return false;
+        var matches = workWords.Count(work => dialogWords.Any(dialog => work == dialog
+            || (work.Length >= 5 && dialog.Length >= 5 && Distance(work, dialog) <= 1)));
+        return workWords.Length == 1 ? workWords[0].Length >= 6 && matches == 1
+            : matches >= 2 && matches * 2 >= workWords.Length;
+    }
     private static int Distance(string a, string b)
     {
         if (Math.Abs(a.Length-b.Length)>2) return 3;

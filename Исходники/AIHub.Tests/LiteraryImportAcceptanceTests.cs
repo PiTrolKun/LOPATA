@@ -93,6 +93,31 @@ public sealed class LiteraryImportAcceptanceTests
         Assert.AreEqual("One",merged[1].Project); Assert.AreEqual("Other book",merged[2].Project);
         CollectionAssert.AreEqual(first,merged.Select((d,i)=>d with { Project=first[i].Project }).ToArray());
     }
+    [TestMethod] public void ReviewPackageStopsBeforeRagAndJellyAndDraftEditStillNeedsReview()
+    {
+        using var session=Session(); var (entry, chapters)=Project(session,("Original passage.","DOUBT"));
+        var part=chapters.Index.Parts.First();
+        ImportReviewEdits.SaveDraft(entry.ProjectPath,part.Id,"Original passage.","Corrected passage.");
+        Assert.IsTrue(ImportEligibility.Review(entry.ProjectPath,part.Id)!.Doubts.Length>0);
+        Assert.Throws<IOException>(()=>ImportReviewEdits.SaveDraft(entry.ProjectPath,part.Id,"Original passage.","Lost edit."));
+        var book=ImportBookReviewPackage.Export(session,entry,"ru",default);
+        Assert.IsTrue(File.Exists(book));
+        Assert.IsTrue(File.Exists(Path.Combine(entry.ProjectPath,"Exports","Import","import-history.xlsx")));
+        Assert.AreEqual("book-review",session.State.Stage);
+        Assert.AreEqual("pending",session.State.RagStatus);
+        Assert.AreEqual("pending",session.State.MemoryStatus);
+        Assert.IsFalse(session.State.Artifacts.Any(a=>a.Step.StartsWith("rag-result") || a.Step.StartsWith("memory-result")));
+        ImportEligibility.ConfirmPart(entry.ProjectPath,part.Id,"Corrected passage.");
+        Assert.HasCount(0,ImportEligibility.Review(entry.ProjectPath,part.Id)!.Doubts);
+    }
+    [TestMethod] public void WorkTitleCanSuggestPartiallyMatchingDialogueWithoutSelectingIt()
+    {
+        Assert.IsTrue(ImportWorkNames.MatchesDialogTitle("Сказка для Эллины", "Сказка для Эллины перед сном"));
+        Assert.IsTrue(ImportWorkNames.MatchesDialogTitle("Поиск понимания в собственных чувствах", "Поиск понимания в собственные чувствах"));
+        Assert.IsTrue(ImportWorkNames.MatchesDialogTitle("Легенда о Падшем Боге", "Беседа: легенда о Неприкасаемом и Падшем Боге"));
+        Assert.IsFalse(ImportWorkNames.MatchesDialogTitle("Сказка для Эллины", "Конспект по ЧС"));
+        Assert.IsFalse(ImportWorkNames.MatchesDialogTitle("Дом", "Домашние задания"));
+    }
     [TestMethod] public async Task ReassemblyReusesFirstPassAndLeavesOriginalProjectIdentityUntouched()
     {
         using var session=Session(); session.State.Conversations=["c"]; var(e,_)=Project(session,("Book.","MAIN"));

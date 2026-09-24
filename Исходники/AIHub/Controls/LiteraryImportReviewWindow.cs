@@ -70,6 +70,7 @@ public sealed class LiteraryImportReviewWindow : Window
             var error=LiteraryUi.Text(""); bottom.Children.Add(error); var buttons=new WrapPanel(); bottom.Children.Add(buttons);
             var text=new System.Windows.Controls.TextBox { Text=loadedText, AcceptsReturn=true, AcceptsTab=true,
                 TextWrapping=TextWrapping.Wrap, VerticalScrollBarVisibility=ScrollBarVisibility.Auto, FontSize=18, UndoLimit=100 };
+            LiterarySpellChecking.Enable(text, owner.Language.IetfLanguageTag);
             text.SetResourceReference(BackgroundProperty,"WindowBackgroundBrush"); text.SetResourceReference(ForegroundProperty,"TextPrimaryBrush"); panel.Children.Add(text);
             buttons.Children.Add(LiteraryUi.Button(l("Literary.Import.RemoveSelected"),()=> { if(text.SelectionLength>0) text.SelectedText=""; }));
             buttons.Children.Add(LiteraryUi.Button(l("Literary.Import.SaveReviewed"),()=>

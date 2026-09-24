@@ -38,6 +38,8 @@ public sealed partial class LiteraryChatRuntime
             // Messages and editor are authoritative; implicit slot history is disabled.
             StopProcess(); await PrepareAsync(ct).ConfigureAwait(false);
         }
+        if ((long)input + LiteraryAutomaticBudget.SafetyTokens + LiteraryAutomaticBudget.MinimumReply > ContextCapacity)
+            Log($"Context budget rejected: input={input}; context={ContextCapacity}; minimumReply={LiteraryAutomaticBudget.MinimumReply}; safety={LiteraryAutomaticBudget.SafetyTokens}.");
         var reply = LiteraryAutomaticBudget.Reply(ContextCapacity, input);
         _diagnostics?.Write("automatic_budget", new { input, reply, context = ContextCapacity, reserve = LiteraryAutomaticBudget.SafetyTokens });
         return reply;

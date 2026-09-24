@@ -8,8 +8,11 @@ namespace AIHub.Services;
 public sealed class LiteraryJellyPreparation(LiteraryProjectLayout layout, Func<string, CancellationToken, Task<string>> extract, string executor = "runeweaver")
 {
     public async Task<bool> PrepareAsync(Func<LiteraryJellyBatch, Func<IReadOnlyList<LiteraryJellyFact>, Task>, Task<bool>> review,
-        IProgress<LiteraryPreparationProgress> progress, CancellationToken token, bool prepareAllPending = false)
+        IProgress<LiteraryPreparationProgress> progress, CancellationToken token, bool prepareAllPending = false,
+        string? mode = null, int technicalAttempts = 3)
     {
+        if (mode is not (null or "auto" or "manual") || technicalAttempts < 1 || technicalAttempts > 4)
+            throw new ArgumentException("Invalid preparation options.");
         using var log = new LiteraryRequestDiagnostics("JellyPreparation", _ => { }, layout.EnsureFolder("Diagnostics/LiteraryDetailed"));
         try
         {
@@ -49,19 +52,19 @@ public sealed class LiteraryJellyPreparation(LiteraryProjectLayout layout, Func<
                         if (rows is null)
                         {
                             Exception? last = null;
-                            for (var attempt = 1; attempt <= 3; attempt++)
+                            for (var attempt = 1; attempt <= technicalAttempts; attempt++)
                             {
                                 token.ThrowIfCancellationRequested();
                                 try
                                 {
-                                    var raw = await extract(chunks[n], token);
+                                    var raw = mode is not null && ImportJellyResponse.IsSeparator(chunks[n]) ? "[]" : await extract(chunks[n], token);
                                     log.Write("extraction", new { chunk = n, attempt, raw });
-                                    rows = LiteraryJellyContract.Parse(raw); break;
+                                    rows = mode is null ? LiteraryJellyContract.Parse(raw) : ImportJellyResponse.Parse(raw); break;
                                 }
                                 catch (Exception ex) when (!token.IsCancellationRequested)
                                 { last = ex; log.Write("extraction_failure", new { chunk = n, attempt, type = ex.GetType().Name, ex.Message }); }
                             }
-                            if (rows is null) throw new IOException("Memory extraction failed after three attempts.", last);
+                            if (rows is null) throw new IOException("Memory extraction failed after technical attempts.", last);
                             LiteraryChapterFiles.Write(checkpoint, JsonSerializer.Serialize(rows));
                         }
                         facts.AddRange(rows);
@@ -70,6 +73,11 @@ public sealed class LiteraryJellyPreparation(LiteraryProjectLayout layout, Func<
                     await Task.Run(() => memory.Stage(batch), token);
                 }
                 if(batch.Facts.Length==0) { await Task.Run(()=>memory.ConfirmEmpty(batch),token); log.Write("empty_batch_completed",new {batch.Id}); continue; }
+                if(mode=="auto")
+                {
+                    await Task.Run(()=>memory.ConfirmPrepared(batch,batch.Facts,"auto"),token);
+                    log.Write("auto_saved",new {batch.Id, count=batch.Facts.Length}); continue;
+                }
                 log.Write("proposals", batch);
                 progress.Report(new("JellyReview", -1, $"[{source.Number}]"));
                 var confirmed = await review(batch, async decisions =>

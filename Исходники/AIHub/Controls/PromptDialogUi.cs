@@ -13,6 +13,8 @@ internal static class PromptDialogUi
     {
         window.Title = title;
         window.Owner = owner;
+        window.Language = owner?.Language ?? System.Windows.Markup.XmlLanguage.GetLanguage(
+            System.Globalization.CultureInfo.CurrentUICulture.Name);
         window.Width = 900;
         window.Height = 700;
         window.MinWidth = 540;
@@ -38,13 +40,18 @@ internal static class PromptDialogUi
         return button;
     }
 
-    public static TextBox TextArea(string text) => new()
+    public static TextBox TextArea(string text)
     {
-        Text = text, AcceptsReturn = true, AcceptsTab = true, IsUndoEnabled = true,
-        TextWrapping = TextWrapping.Wrap, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-        HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, Padding = new Thickness(9),
-        MinHeight = 70
-    };
+        var area = new TextBox
+        {
+            Text = text, AcceptsReturn = true, AcceptsTab = true, IsUndoEnabled = true,
+            TextWrapping = TextWrapping.Wrap, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, Padding = new Thickness(9),
+            MinHeight = 70
+        };
+        SpellCheck.SetIsEnabled(area, true);
+        return area;
+    }
 
     public static void Label(FrameworkElement element, string label)
     {

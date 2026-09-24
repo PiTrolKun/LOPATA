@@ -12,6 +12,7 @@ public static class LiteraryParagraphPacket
             .ToDictionary(x => x.Id, x => x.Ref);
         var covered = request.Selection.Where(x => x.Value.Selected && catalog.Nodes.ContainsKey(x.Key))
             .SelectMany(x => catalog.Nodes[x.Key].All()).Select(x => x.Id).ToHashSet();
+        var available = request.Role == LiteraryChatProfile.Advisor ? LiteraryAvailableSources.Build(catalog, covered) : null;
         return new
         {
             stage = request.Role.ToString(), task = request.Task,
@@ -34,9 +35,13 @@ public static class LiteraryParagraphPacket
                 request.Selection.Any(s => s.Value.Selected &&
                     (s.Key == x.Key || IsAncestor(catalog, s.Key, x.Key) || IsAncestor(catalog, x.Key, s.Key))))
                 .Select(x => new { id = x.Key, comment = x.Value.Comment }),
-            available = request.Role == LiteraryChatProfile.Advisor
-                ? catalog.Nodes.Values.Where(n => !covered.Contains(n.Id)).Select(n => new { id = n.Id, label = n.Label }).ToArray()
-                : null
+            available = available?.Entries,
+            available_scope = available is null ? null : new
+            {
+                listed = available.Entries.Length, total = available.Total,
+                grouped = available.Entries.Length < available.Total,
+                note = "This is a directory of unread sources, not evidence. Large branches are represented by their parent IDs. Recommend a listed source for the author to select; do not infer its contents."
+            }
         };
     }
 

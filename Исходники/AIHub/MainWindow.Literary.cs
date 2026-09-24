@@ -5,6 +5,7 @@ namespace AIHub;
 public partial class MainWindow
 {
     private void LiteraryCalibration_Click(object sender, RoutedEventArgs e) => LiteraryPage.OpenCalibration();
+    private void ResumeImportDraft_Click(object sender, RoutedEventArgs e) => LiteraryPage.ResumeImportDraft();
     private void LiteraryLayer_Click(object sender, RoutedEventArgs e)
     { if(sender is System.Windows.Controls.Button { Tag: string layer }) LiteraryPage.OpenStudioLayer(layer); }
     private void SelectLiteraryScenarioButton_Click(object sender, RoutedEventArgs e)
@@ -26,6 +27,8 @@ public partial class MainWindow
 
     private void RefreshLiteraryLocalization()
     {
+        ResumeImportDraftButton.Content = L("Literary.Import.RecentTitle");
+        System.Windows.Automation.AutomationProperties.SetName(ResumeImportDraftButton, L("Literary.Import.RecentTitle"));
         LiteraryScenarioPlaceholderButton.ToolTip = L("Literary.Calibration.Title");
         foreach(var button in new[]{LiteraryPromptsButton,LiteraryAnchorButton,LiteraryRagButton,LiteraryJellyButton,LiteraryWorkingButton})
         {

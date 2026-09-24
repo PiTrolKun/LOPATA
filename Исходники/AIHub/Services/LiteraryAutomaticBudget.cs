@@ -24,9 +24,9 @@ public static class LiteraryAutomaticBudget
         var reserve = Math.Max(1024 * MiB, usable / 10);
         return checked((int)((Math.Max(0, cudaFree - physicalFree) + reserve + MiB - 1) / MiB));
     }
-    public static async Task<int> FitMarginAsync(CancellationToken ct)
+    public static async Task<int> FitMarginAsync(CancellationToken ct, LiteraryStartupDiagnostics? diagnostics = null)
     {
-        var physical = await LiteraryGpuBudget.FreeBytesAsync(ct)
+        var physical = await LiteraryGpuBudget.FreeBytesAsync(ct, diagnostics)
             ?? throw new IOException("Physical GPU memory inventory is unavailable.");
         var info = new ProcessStartInfo(LlamaBackendPaths.ServerExecutablePath)
         {
@@ -36,16 +36,27 @@ public static class LiteraryAutomaticBudget
         info.ArgumentList.Add("--list-devices");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(TimeSpan.FromSeconds(10));
+        diagnostics?.Record("cuda_inventory_start", new { executable = info.FileName, arguments = info.ArgumentList.ToArray(), physicalFreeBytes = physical });
         using var process = OwnedProcessRegistry.Shared.Start(info, "Literary memory inventory");
         try
         {
+            diagnostics?.Record("cuda_inventory_started", new { pid = process.Id });
             var output = process.StandardOutput.ReadToEndAsync(timeout.Token);
             var error = process.StandardError.ReadToEndAsync(timeout.Token);
             await process.WaitForExitAsync(timeout.Token);
-            var text = await output + "\n" + await error;
+            var stdout = await output; var stderr = await error;
+            diagnostics?.Record("cuda_inventory_result", new { pid = process.Id, exitCode = process.ExitCode,
+                stdout = LiteraryStartupDiagnostics.Limit(stdout), stderr = LiteraryStartupDiagnostics.Limit(stderr) });
+            var text = stdout + "\n" + stderr;
             var match = Regex.Match(text, @"CUDA0\s*:.*\(\d+ MiB, (\d+) MiB free\)");
             if (process.ExitCode != 0 || !match.Success) throw new IOException("CUDA0 memory inventory is unavailable.");
             return FitMargin(long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) * MiB, physical);
+        }
+        catch (Exception ex)
+        {
+            diagnostics?.Record("cuda_inventory_failure", new { exception = ex.ToString(), cancelled = ct.IsCancellationRequested,
+                timedOut = timeout.IsCancellationRequested && !ct.IsCancellationRequested });
+            throw;
         }
         finally
         {

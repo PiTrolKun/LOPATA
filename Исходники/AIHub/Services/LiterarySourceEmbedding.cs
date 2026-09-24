@@ -22,11 +22,12 @@ public static class LiteraryEmbeddingRetry
     }
 }
 
-public sealed class GigaSourceEmbedding(string device = "auto", bool query = false) : ILiterarySourceEmbedding
+public sealed class GigaSourceEmbedding(string device = "auto", bool query = false, bool retry = true) : ILiterarySourceEmbedding
 {
     public async Task EmbedAsync(string inputPath, string outputPath, IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
     {
-        await LiteraryEmbeddingRetry.RunAsync(Run, progress, ct);
+        if (retry) await LiteraryEmbeddingRetry.RunAsync(Run, progress, ct);
+        else await Run();
         Task Run() => GigaEmbeddingInstallation.RunAsync(new[] { GigaEmbeddingInstallation.Script, "--model", GigaEmbeddingInstallation.ModelDirectory,
             "--input", inputPath, "--output", outputPath, "--device", device }.Concat(query ? new[] { "--query" } : []), line =>
         {

@@ -76,7 +76,12 @@ public sealed partial class LiteraryChatRuntime
                 validate?.Invoke(answer); return answer;
             }, async evidence => { diagnostics.Write("loop_recovery", evidence); await AwaitIdleAsync(); }, ct);
         }
-        catch (Exception ex) { diagnostics.Write("failure", ex.ToString()); throw; }
+        catch (Exception ex)
+        {
+            diagnostics.Write("failure", ex.ToString());
+            Log($"Structured request failed: role={role}; userCancelled={token.IsCancellationRequested}; {ex}");
+            throw;
+        }
         finally
         {
             try { if (requested) await AwaitIdleAsync().ConfigureAwait(false); }

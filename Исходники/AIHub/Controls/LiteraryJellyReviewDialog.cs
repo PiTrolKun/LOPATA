@@ -15,7 +15,9 @@ public static class LiteraryJellyReviewDialog
 {
     public static bool Show(FrameworkElement owner, Func<string, string> l, IReadOnlyList<LiteraryJellyReviewItem> items,
         Func<IReadOnlyList<LiteraryJellyFact>, Task> save, Action<string, object>? diagnostic = null,
-        Action<string,string>? quote = null, string language = "ru", string summary = "")
+        Action<string,string>? quote = null, string language = "ru", string summary = "",
+        Func<IReadOnlyList<LiteraryJellyFact>, Task>? acceptWarnings = null,
+        Action<IReadOnlyList<LiteraryJellyFact>>? saveDraft = null)
     {
         var root = new DockPanel();
         var header = new StackPanel(); DockPanel.SetDock(header, Dock.Top); root.Children.Add(header);
@@ -36,8 +38,20 @@ public static class LiteraryJellyReviewDialog
         var validation = new List<LiteraryJellyReviewValidation>();
         var invalidRows = new List<int>();
         var validationShown = true;
+        var draftTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
+        bool SaveDraft()
+        {
+            draftTimer.Stop();
+            if (saveDraft is null) return true;
+            try { saveDraft(readers.Select(read => read()).ToArray()); return true; }
+            catch (Exception) { status.Text = l("Literary.Jelly.SaveError"); return false; }
+        }
+        draftTimer.Tick += (_, _) => SaveDraft();
+        window.Closing += (_, e) => { if (!saving && !SaveDraft()) e.Cancel = true; };
+        window.Closed += (_, _) => draftTimer.Stop();
         Control? RefreshValidation()
         {
+            if (saveDraft is not null) { draftTimer.Stop(); draftTimer.Start(); }
             if (!validationShown) return null;
             invalidRows.Clear();
             Control? first = null;
@@ -75,6 +89,8 @@ public static class LiteraryJellyReviewDialog
             card.Children.Add(LiteraryUi.Text(l("Literary.Jelly.Kind")));
             var kind = new ComboBox { Margin = new Thickness(0, 0, 0, 7), MinHeight = 30 };
             foreach (var key in LiteraryJellyContract.Kinds) kind.Items.Add(new ComboBoxItem { Content = l("Literary.Jelly.Kind." + key), Tag = key });
+            if (acceptWarnings is not null && !LiteraryJellyContract.Kinds.Contains(fact.Kind))
+                kind.Items.Add(new ComboBoxItem { Content = fact.Kind, Tag = fact.Kind });
             kind.SelectedItem = kind.Items.Cast<ComboBoxItem>().FirstOrDefault(x => (string)x.Tag == fact.Kind); card.Children.Add(kind);
             fieldValidation.Add(card, LiteraryJellyField.Kind, kind);
             var evidence = Field(LiteraryJellyField.Evidence, "Literary.Jelly.Evidence", fact.Evidence, 2000, true);
@@ -105,7 +121,7 @@ public static class LiteraryJellyReviewDialog
             accepted.Unchecked += (_, _) => RefreshValidation();
         }
         if (items.Count == 0) list.Children.Add(LiteraryUi.Text(l("Literary.Jelly.EmptyReview")));
-        var confirm = LiteraryUi.Button(l("Literary.Jelly.Confirm"), async () =>
+        async Task Submit(bool ignoreWarnings)
         {
             if (saving) return;
             var decisions = readers.Select(read => read()).ToArray();
@@ -114,7 +130,7 @@ public static class LiteraryJellyReviewDialog
             {
                 validationShown = true;
                 var invalidInput = RefreshValidation();
-                if (invalidInput is not null)
+                if (invalidInput is not null && !ignoreWarnings)
                 {
                     diagnostic?.Invoke("review_validation_failed", new { number = invalidRows[0], numbers = invalidRows.ToArray() });
                     var firstValidation = validation[invalidRows[0] - 1];
@@ -124,14 +140,18 @@ public static class LiteraryJellyReviewDialog
                     return;
                 }
                 saving = true; list.IsEnabled = false; cancel.IsEnabled = false; status.Text = l("Literary.Editor.Saving");
-                await save(decisions);
+                if (!SaveDraft()) return;
+                await (ignoreWarnings ? acceptWarnings! : save)(decisions);
                 saving = false; window.DialogResult = true;
             }
             catch (Exception ex) { diagnostic?.Invoke("review_save_failed", new { type = ex.GetType().Name, ex.Message }); status.Text = l("Literary.Jelly.SaveError"); }
             finally { saving = false; list.IsEnabled = true; cancel.IsEnabled = true; }
-        }, true);
+        }
+        var confirm = LiteraryUi.Button(l("Literary.Jelly.Confirm"), async () => await Submit(false), true);
         // Confirmation follows every fact in the scroll; it is never a hidden tab's action.
         list.Children.Add(confirm);
+        if (acceptWarnings is not null)
+            list.Children.Add(LiteraryUi.Button(l("Literary.Import.Jelly.AcceptWarnings"), async () => await Submit(true)));
         RefreshValidation();
         return window.ShowDialog() == true;
     }

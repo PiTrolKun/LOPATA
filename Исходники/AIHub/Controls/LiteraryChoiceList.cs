@@ -12,6 +12,12 @@ public sealed class LiteraryChoiceList : UserControl
 {
     private readonly List<(string Id, string Label, CheckBox Box, ListBoxItem Item)> _items = [];
     public IReadOnlyList<string> SelectedIds => _items.Where(i => i.Box.IsChecked == true).Select(i => i.Id).ToArray();
+    public event Action? SelectionChanged;
+    public void SetSelectedIds(IEnumerable<string> ids)
+    {
+        var selected = ids.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in _items) item.Box.IsChecked = selected.Contains(item.Id);
+    }
     public LiteraryChoiceList(IEnumerable<(string Id, string Label)> choices, string? searchHint = null)
     {
         var panel = new DockPanel();
@@ -24,6 +30,8 @@ public sealed class LiteraryChoiceList : UserControl
         {
             var check = new CheckBox { Content = label, Padding = new Thickness(5), VerticalContentAlignment = VerticalAlignment.Center };
             check.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
+            check.Checked += (_, _) => SelectionChanged?.Invoke();
+            check.Unchecked += (_, _) => SelectionChanged?.Invoke();
             var item = new ListBoxItem { Content = check };
             _items.Add((id, label, check, item));
             list.Items.Add(item);
