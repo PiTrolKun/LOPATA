@@ -49,6 +49,7 @@ public sealed partial class LiteraryStudioControl : UserControl
     {
         _directory = directory; _draft = draft; _runtime = runtime; _requests = requests ?? runtime; _blocked = blocked; _l = l; _language = language;
         _store = new(new(directory)); State = _store.Load();
+        if (State.Pending is not null) { LiteraryStudioPending.Restore(State); _dirty = true; }
         BuildLayout(editor, memoryStatus, navigation); RefreshSources(); Render();
         ConfigureTransferSettings();
         if (State.Interrupted) { _status.Text = l("Paragraph.Interrupted"); State.Interrupted = false; _dirty = true; }

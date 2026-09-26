@@ -19,13 +19,17 @@ public sealed partial class LiteraryStudioControl
         using var cancellation = new CancellationTokenSource(); _operation = cancellation; State.Interrupted = true;
         var submission = AcceptSubmission(transfer);
         if (submission is null) { _operation = null; State.Interrupted = false; Availability(); return; }
+        ClearContextFailure();
+        _attentionNotified = false;
         try
         {
             ShowRequestActivity(transfer); Render();
             // Paint the accepted message and empty input before preparing sources or the backend.
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
             cancellation.Token.ThrowIfCancellationRequested();
-            if (await GenerateAsync(transfer, direct, cancellation.Token, submission) && direct)
+            var completed = await GenerateAsync(transfer, direct, cancellation.Token, submission);
+            if (completed) State.Pending = null;
+            if (completed && direct)
             {
                 // Keep one cancellation scope and persist the handoff before starting the writer.
                 if (!Save()) return;
@@ -37,6 +41,7 @@ public sealed partial class LiteraryStudioControl
         catch (OperationCanceledException) { _status.Text = _l("Paragraph.Cancelled"); }
         finally
         {
+            LiteraryStudioPending.Restore(State);
             State.Interrupted = false; _operation = null; _dirty = true; _activity.Stop();
             Render(); _tree.Refresh(); Save();
         }
@@ -51,6 +56,7 @@ public sealed partial class LiteraryStudioControl
         var role = transfer ? LiteraryChatProfile.Advisor : State.Role;
         var action = LiteraryStudioPrompts.Get(State.Action);
         var input = submission?.Text ?? ""; var quotes = submission?.Quotes ?? []; var raw = new StringBuilder();
+        ClearContextFailure();
         ShowRequestActivity(transfer);
         _receipts.Text = _tokens.Text = "";
         _receipts.ToolTip = null;
@@ -60,20 +66,29 @@ public sealed partial class LiteraryStudioControl
         {
             var editor = _draft.Capture(State.ProjectId,_directory);
             var selection = State.Selection.ToDictionary(x=>x.Key,x=>new ParagraphSelection { Selected=x.Value.Selected, Comment=x.Value.Comment });
-            var instruction = transfer ? _l("Studio.TransferRequest") + "\n" + input : role == LiteraryChatProfile.Writer ? State.Task + "\n" + input : input;
+            var instruction = transfer ? _l("Studio.TransferRequest") + "\n" + input : input;
             var basic = new ParagraphRequest(role,instruction,editor,[],selection,State.RouteId,State.Session,true);
             var requirements = State.Action == "Continue" ? Array.Empty<string>() : State.RevisionRequirements.ToArray();
             var prompts = transfer ? new LiteraryActionPrompt("", "") : LiteraryPromptSets.Resolve(State, State.Action);
             var request = new StudioRequest(basic,transfer ? "Transfer" : State.Action,
                 submission?.Conversation ?? State.Messages.Where(m=>m.InContext && m.Complete && m.Session==State.Session).ToArray(), quotes,State.Task,
                 State.Action=="Continue" && !State.ContinueFromChat && !transfer ? "" : State.Result,requirements,State.ContinueFromChat,
-                prompts.Action, prompts.Role);
+                prompts.Action, prompts.Role, MemoryProgress: update => Dispatcher.Invoke(() =>
+                {
+                    var key = update.Stage switch
+                    {
+                        "merge" => "Merging", "verify" => "Verifying", "complete" => "Complete", _ => update.Resumed > 0 ? "Resuming" : "Reading"
+                    };
+                    var percent = update.Total == 0 ? 100 : Math.Clamp((int)(100L * update.Completed / update.Total), 0, 100);
+                    _status.Text = string.Format(_l("Literary.MemorySearch." + key), percent, update.Resumed);
+                    _activity.ShowActivity(_status.Text);
+                }));
             var progress = new InlineProgress<ModelStreamChunk>(chunk =>
             {
                 raw.Append(chunk.Text);
                 if (!transfer) Dispatcher.Invoke(()=>ShowStream(raw.ToString(),role.ToString()));
             });
-            var result = await _requests.StudioAsync(request,_l,r=>Dispatcher.Invoke(()=>
+            var result = await RequestWithMemoryRecoveryAsync(request, attempt => _requests.StudioAsync(attempt,_l,r=>Dispatcher.Invoke(()=>
             {
                 receipts.RemoveAll(x=>x.Id==r.Id); receipts.Add(r);
                 _receipts.Text = string.Join("\n",receipts.Select(x=>x.Label + ": " + _l("Paragraph.Receipt." + x.Status) + (x.Status is "error" or "partial" ? " · " + x.Detail : "")));
@@ -81,11 +96,11 @@ public sealed partial class LiteraryStudioControl
             {
                 _tokens.Text = _l("Paragraph.Tokens") + " " + count + " / " + _requests.ContextCapacity;
                 _status.Text = _l(transfer ? "Studio.PreparingTask" : "Paragraph.Working");
-            }),progress,cancellation,()=> { raw.Clear(); },()=>Dispatcher.Invoke(()=>ShowRequestActivity(transfer,started:true)));
+            }),progress,cancellation,()=> { raw.Clear(); },()=>Dispatcher.Invoke(()=>ShowRequestActivity(transfer,started:true))), cancellation);
             cancellation.ThrowIfCancellationRequested();
             if (editor.Revision != _draft.Capture(State.ProjectId,_directory).Revision)
             {
-                State.Add(transfer ? "Task" : role.ToString(),result.Text,false); _status.Text = _l("Paragraph.Stale"); return false;
+                State.Add(transfer ? "Task" : role.ToString(),result.Text,false); _status.Text = _l("Paragraph.Stale"); NotifyRequestNeedsAttention(); return false;
             }
             if (transfer)
             {
@@ -113,9 +128,14 @@ public sealed partial class LiteraryStudioControl
             }
             return true;
         }
-        catch (OperationCanceledException) { PreservePartial(); _status.Text = _l("Paragraph.Cancelled"); }
-        catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); _status.Text = _l(ex.OutputTruncated ? "Paragraph.OutputLimit" : "Paragraph.ContextLimit"); }
+        catch (OperationCanceledException) { PreservePartial(); _status.Text = _l("Paragraph.Cancelled"); return false; }
+        catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); ShowContextFailure(ex); }
+        catch (LiteraryRamReserveException) { PreservePartial(); _status.Text = _l("Literary.MemoryRecovery.RamUnavailable"); }
+        catch (LiteraryGpuContextUnavailableException) { PreservePartial(); _status.Text = _l("Literary.MemoryRecovery.GpuUnavailable"); }
+        catch (LiteraryMemorySearchLimitException) { PreservePartial(); _status.Text = _l("Literary.MemorySearch.Limit"); }
+        catch (LiteraryMemorySearchFailedException) { PreservePartial(); _status.Text = _l("Literary.MemorySearch.Failed"); }
         catch (Exception ex) { PreservePartial(); _status.Text = _l("Paragraph.Failure") + " " + ex.Message; }
+        NotifyRequestNeedsAttention();
         return false;
         void PreservePartial() { if (raw.Length > 0 && !transfer) State.Add(role.ToString(),raw.ToString(),false); }
     }

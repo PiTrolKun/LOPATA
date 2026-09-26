@@ -6,13 +6,13 @@ namespace AIHub.Services;
 /// <summary>Model-facing view. Full revisions and read receipts remain in the runtime diagnostics.</summary>
 public static class LiteraryParagraphPacket
 {
-    public static object Build(ParagraphRequest request, ParagraphEvidence evidence, LiteraryParagraphCatalog catalog)
+    public static object Build(ParagraphRequest request, ParagraphEvidence evidence, LiteraryParagraphCatalog catalog, bool includeAvailable = true)
     {
         var references = evidence.Materials.Select((m, i) => (m.Id, Ref: "m" + (i + 1)))
             .ToDictionary(x => x.Id, x => x.Ref);
         var covered = request.Selection.Where(x => x.Value.Selected && catalog.Nodes.ContainsKey(x.Key))
             .SelectMany(x => catalog.Nodes[x.Key].All()).Select(x => x.Id).ToHashSet();
-        var available = request.Role == LiteraryChatProfile.Advisor ? LiteraryAvailableSources.Build(catalog, covered) : null;
+        var available = includeAvailable && request.Role == LiteraryChatProfile.Advisor ? LiteraryAvailableSources.Build(catalog, covered) : null;
         return new
         {
             stage = request.Role.ToString(), task = request.Task,
@@ -28,7 +28,7 @@ public static class LiteraryParagraphPacket
             }),
             receipts = evidence.Receipts.Select(r => new
             {
-                id = r.Id, label = r.Label, status = r.Status,
+                id = r.Id, label = r.Label, status = r.Status, detail = r.Status == "partial" ? r.Detail : null,
                 materials = r.Materials.Select(id => references[id])
             }),
             scopeComments = request.Selection.Where(x => x.Value.Comment.Length > 0 &&

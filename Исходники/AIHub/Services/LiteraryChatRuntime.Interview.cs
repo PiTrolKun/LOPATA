@@ -16,13 +16,13 @@ public sealed partial class LiteraryChatRuntime
         object? snapshot = null, Action<string>? validate = null,
         Func<CancellationToken,Task<IReadOnlyList<ImageAnalysisHiddenMessage>>>? prepareMessages = null,
         LiteraryChatProfile profile = LiteraryChatProfile.Advisor, IProgress<ModelStreamChunk>? streamProgress = null, Action? attemptStarting = null,
-        string? grammar = null, bool? reasoning = null)
+        string? grammar = null, bool? reasoning = null, LiteraryRuntimeOptions? options = null,
+        Func<IReadOnlyList<ImageAnalysisHiddenMessage>,CancellationToken,Task<IReadOnlyList<ImageAnalysisHiddenMessage>>>? fitMessages = null)
     {
         var diagnosticsFolder = _layout?.EnsureFolder("Diagnostics/LiteraryDetailed")
             ?? System.IO.Path.Combine(_preparationRoot ?? AppDataPaths.BaseDirectory, "Diagnostics/LiteraryDetailed");
         using var queued = QueueRequest(token);
         await _gate.WaitAsync(queued.Token);
-        BeginBudgetOperation();
         using var active = CancellationTokenSource.CreateLinkedTokenSource(queued.Token);
         _active = active; Interlocked.Exchange(ref _busy, 1); BusyChanged?.Invoke();
         using var diagnostics = new LiteraryRequestDiagnostics(role, Log, diagnosticsFolder);
@@ -30,10 +30,13 @@ public sealed partial class LiteraryChatRuntime
         try
         {
             var ct = active.Token;
+            BeginBudgetOperation(options);
             diagnostics.Write("analysis_snapshot", snapshot);
             ValidatePreparation();
             _layout?.EnsurePresent();
             if (prepareMessages is not null) messages = await prepareMessages(ct).ConfigureAwait(false);
+            await PrepareAsync(ct).ConfigureAwait(false);
+            if (fitMessages is not null) messages = await fitMessages(messages, ct).ConfigureAwait(false);
             await PrepareAsync(ct).ConfigureAwait(false);
             diagnostics.Watch(_process!);
             var thinking = reasoning ?? (snapshot is ParagraphRequest && responseSchema is null);
@@ -85,7 +88,7 @@ public sealed partial class LiteraryChatRuntime
         finally
         {
             try { if (requested) await AwaitIdleAsync().ConfigureAwait(false); }
-            finally { _diagnostics = null; _active = null; Interlocked.Exchange(ref _busy, 0); _gate.Release(); BusyChanged?.Invoke(); }
+            finally { EndBudgetOperation(); _diagnostics = null; _active = null; Interlocked.Exchange(ref _busy, 0); _gate.Release(); BusyChanged?.Invoke(); }
         }
     }
 }

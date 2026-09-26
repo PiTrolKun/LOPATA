@@ -1,13 +1,40 @@
 using System.Windows;
 using System.Windows.Controls;
+using AIHub.Services;
 
 namespace AIHub.Controls;
 
 public sealed partial class LiteraryStudioControl
 {
+    private string _contextFailureText = "";
+    private Border? _contextFailureCard;
+
+    private void ClearContextFailure()
+    {
+        _contextFailureText = "";
+        if (_contextFailureCard is not null) _contextFailureCard.Visibility = Visibility.Collapsed;
+    }
+
+    private void ShowContextFailure(ImageAnalysisContextExhaustedException error)
+    {
+        _contextFailureText = _status.Text = LiteraryContextBudgetMessage.Format(error, _l);
+    }
+
+    private void RenderContextFailure()
+    {
+        _contextFailureCard = null;
+        if (_contextFailureText.Length == 0) return;
+        // This is request feedback, never an assistant answer or part of model context.
+        _contextFailureCard = LiteraryWorkspaceParts.Card(LiteraryUi.Text(_contextFailureText));
+        _contextFailureCard.Margin = new Thickness(0, 8, 6, 8);
+        System.Windows.Automation.AutomationProperties.SetAutomationId(_contextFailureCard, "Studio.ContextFailure");
+        _messages.Children.Add(_contextFailureCard);
+    }
+
     public void ClearRequestStatus()
     {
         if (IsWorking) return;
+        ClearContextFailure();
         _status.Text = _tokens.Text = _receipts.Text = "";
         _receipts.ToolTip = null;
     }

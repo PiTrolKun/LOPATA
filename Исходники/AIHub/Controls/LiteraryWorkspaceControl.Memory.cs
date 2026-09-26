@@ -62,7 +62,8 @@ public sealed partial class LiteraryWorkspaceControl
             if (!jellyReady) _memoryRetry.Visibility = Visibility.Visible;
             if (jellyReady && System.IO.File.Exists(System.IO.Path.Combine(_entry.ProjectPath,"Import","review.json")))
             {
-                _memoryStatus.Text=AIHub.Services.LiteraryImport.ImportProjectStatus.Read(_entry.ProjectPath).Describe(_l);
+                var status = await Task.Run(() => AIHub.Services.LiteraryImport.ImportProjectStatus.Read(_entry.ProjectPath), cancellation.Token);
+                _memoryStatus.Text = status.Describe(_l);
                 await RefreshImportExportAsync();
             }
         }

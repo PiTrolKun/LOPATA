@@ -13,23 +13,55 @@ public sealed partial class LiteraryChatRuntime
         Action? attemptStarting = null, Action? preparationStarted = null)
     {
         ParagraphEvidence? evidence = null; LiteraryParagraphCatalog? catalog = null; string? stamp = null;
+        LiteraryProject? project = null;
         var transfer = request.Action == "Transfer";
         var raw = await StructuredAnalysisAsync([], budget, ct, transfer ? LiteraryParagraphPrompts.Schema : null,
-            "Studio" + request.Base.Role, request, prepareMessages: async token =>
+            "Studio" + request.Base.Role, request, prepareMessages: token => Task.Run(async () =>
             {
                 preparationStarted?.Invoke();
                 var editor = request.Base.Editor;
-                var project = LiteraryProjectStore.ReadProject(editor.Directory);
+                project = LiteraryProjectStore.ReadProject(editor.Directory);
                 stamp = LiteraryParagraphRevision.Capture(editor);
                 catalog = new(project, editor, l);
-                evidence = await new LiteraryParagraphSources(project, editor, catalog).ReadAsync(request.Base.Task,
+                var sourceQuery = request.Base.Role == LiteraryChatProfile.Writer ? request.PreviousTask + "\n" + request.Base.Task : request.Base.Task;
+                evidence = await new LiteraryParagraphSources(project, editor, catalog, l).ReadAsync(sourceQuery,
                     request.Base.Selection, receipt, token);
                 if (stamp != LiteraryParagraphRevision.Capture(editor)) throw new IOException("Project changed during source reading.");
                 return LiteraryStudioPrompts.Build(request, evidence, catalog, project, l);
-            }, profile: request.Base.Role, streamProgress: progress, attemptStarting: attemptStarting,
+            }, token), profile: request.Base.Role, streamProgress: progress, attemptStarting: attemptStarting,
             grammar: request.Base.Role == LiteraryChatProfile.Writer ? LiteraryParagraphPrompts.SingleParagraphGrammar : null,
-            reasoning: !transfer);
-        if (stamp != LiteraryParagraphRevision.Capture(request.Base.Editor)) throw new IOException("Project changed during generation.");
+            reasoning: !transfer, options: request.RuntimeOptions, fitMessages: async (messages, token) =>
+            {
+                var input = await MemoryInputTokensAsync(messages, token, thinking: !transfer).ConfigureAwait(false);
+                try { await AvailableReplyAsync(input, token).ConfigureAwait(false); return messages; }
+                catch (ImageAnalysisContextExhaustedException) { }
+                // The mandatory task and conversation are never silently shortened.
+                var plan = new LiteraryMemoryRequestPlan(evidence!);
+                var baseline = LiteraryStudioPrompts.Build(request, plan.Combine(new([], [])), catalog!, project!, l);
+                var minimum = await MemoryInputTokensAsync(baseline, token).ConfigureAwait(false);
+                var replyReserve = ContextCapacity >= 8192 ? 1024 : 512;
+                if ((long)minimum + LiteraryAutomaticBudget.SafetyTokens + replyReserve > ContextCapacity)
+                    throw CreateContextExhaustedException(minimum, replyReserve);
+                if (plan.SearchEvidence.Materials.Count == 0) throw CreateContextExhaustedException(input);
+                var query = ParagraphJson.Encode(baseline.Select(m => new { m.Role, m.Content }));
+                var fingerprint = LiteraryWorkIndex.Revision("studio-memory-v1\n" + LiteraryModelLocation.Sha256 + "\n" + stamp + "\n" + query);
+                var search = new LiteraryMemorySearch(MemoryMessagesFitAsync, ReadMemoryPassAsync);
+                try { evidence = plan.Combine(await search.RunAsync(new(request.Base.Editor.Directory, fingerprint, query, plan.SearchEvidence),
+                    result => LiteraryStudioPrompts.Build(request, plan.Combine(result), catalog!, project!, l), update =>
+                    {
+                        _diagnostics?.Write("memory_search_progress", update);
+                        request.MemoryProgress?.Invoke(update);
+                    }, token).ConfigureAwait(false)); }
+                catch (LiteraryMemorySearchMinimumBudgetException error)
+                {
+                    var required = await MemoryInputTokensAsync(error.Messages, token).ConfigureAwait(false);
+                    throw CreateContextExhaustedException(required, ContextCapacity >= 8192 ? 1024 : 512);
+                }
+                if (stamp != await Task.Run(() => LiteraryParagraphRevision.Capture(request.Base.Editor), token).ConfigureAwait(false))
+                    throw new IOException("Project changed during memory reading.");
+                return LiteraryStudioPrompts.Build(request, evidence, catalog!, project!, l);
+            });
+        if (stamp != await Task.Run(() => LiteraryParagraphRevision.Capture(request.Base.Editor), ct)) throw new IOException("Project changed during generation.");
         if (!transfer) return new(raw, [], evidence!);
         var parsed = LiteraryParagraphPrompts.ParseAdvisor(raw, catalog!);
         return new(parsed.Task, parsed.Recommendations, evidence!);

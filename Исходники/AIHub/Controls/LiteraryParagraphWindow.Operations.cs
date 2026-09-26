@@ -17,7 +17,7 @@ public sealed partial class LiteraryParagraphWindow
         string stamp;
         try { stamp=LiteraryParagraphRevision.Capture(editor); }
         catch(Exception ex) { _status.Text=_l("Paragraph.Failure")+" "+ex.Message; return; }
-        State.Interrupted=true; State.Failure="";
+        State.Interrupted=true; State.Failure=""; _contextFailure=null;
         if(!Save()) { State.Interrupted=false; return; }
         using var cancellation=new CancellationTokenSource(); _operation=cancellation;
         var raw=new StringBuilder(); var receipts=new List<ParagraphReceipt>();
@@ -61,6 +61,7 @@ public sealed partial class LiteraryParagraphWindow
         { State.Failure="Paragraph.DraftLimit"; _diagnostics.Write("draft_limit",ex.ToString()); }
         catch(ImageAnalysisContextExhaustedException ex)
         {
+            _contextFailure=ex;
             State.RawResult=raw.ToString(); State.Failure=ex.OutputTruncated?"Paragraph.OutputLimit":"Paragraph.ContextLimit";
             if(ex.OutputTruncated && role==LiteraryChatProfile.Writer && version==_editVersion)
             { State.Result=raw.ToString(); State.Stage=ParagraphStage.Result; }

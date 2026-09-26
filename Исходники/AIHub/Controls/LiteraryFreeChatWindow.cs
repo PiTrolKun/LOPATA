@@ -66,7 +66,7 @@ public sealed class LiteraryFreeChatWindow : Window
             _history.Text = prefix + result; _input.Clear(); _status.Text = "";
         }
         catch (OperationCanceledException) { _status.Text = _l("Paragraph.Cancelled"); }
-        catch (ImageAnalysisContextExhaustedException ex) { _status.Text = _l(ex.OutputTruncated ? "Paragraph.OutputLimit" : "Paragraph.ContextLimit"); }
+        catch (ImageAnalysisContextExhaustedException ex) { _status.Text = LiteraryContextBudgetMessage.Format(ex, _l); }
         catch (Exception) { _status.Text = _l("Paragraph.Failure"); }
         finally { _operation = null; Availability(); }
     }

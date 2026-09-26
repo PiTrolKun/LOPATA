@@ -62,10 +62,10 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
         if (IsBusy || !string.Equals(Path.GetFullPath(root), _preparationRoot, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException();
         _layout = new LiteraryProjectLayout(root);
     }
-    public static string[] Arguments(string model, int port, int fitMarginMiB = 1024) =>
+    public static string[] Arguments(string model, int port, int fitMarginMiB = 1024, int gpuLayers = 99) =>
     ["-m", model, "--host", IPAddress.Loopback.ToString(), "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
         "-c", "0", "-np", LiteraryModelPolicy.SlotCount.ToString(),
-        "-ngl", "99", "--device", "CUDA0", "--fit", "on", "--fit-target", fitMarginMiB.ToString(), "--fit-ctx", "1024", "--cache-ram", "0", "--no-context-shift",
+        "-ngl", gpuLayers.ToString(System.Globalization.CultureInfo.InvariantCulture), "--device", "CUDA0", "--fit", "on", "--fit-target", fitMarginMiB.ToString(), "--fit-ctx", "1024", "--cache-ram", "0", "--no-context-shift",
         "--offline", "--jinja", "--slots", "--reasoning-format", "deepseek", "-fa", "auto", "-n", "-1",
         "-t", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString(), "-tb", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString()];
     private Uri Server => new($"http://{IPAddress.Loopback}:{_port}/");
@@ -227,12 +227,16 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
     private async Task PrepareAsync(CancellationToken token)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_process is { HasExited: false } && _loadedUsesRamReserve != _runtimeOptions.UseRamReserve) StopProcess();
+        await AwaitProcessRetirementAsync(token).ConfigureAwait(false);
         if (_process is { HasExited: false }) await CheckLoadedMemoryAsync(token).ConfigureAwait(false);
         if (_process is { HasExited: false }) return;
         StopProcess();
+        await AwaitProcessRetirementAsync(token).ConfigureAwait(false);
         var trace = new LiteraryStartupDiagnostics(Log, (kind, data) => _diagnostics?.Write(kind, data));
         using var startup = CancellationTokenSource.CreateLinkedTokenSource(token);
         Process? process = null;
+        var gpuAllocationFailed = 0;
         var outputEnded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var errorEnded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         try
@@ -245,6 +249,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             var modelInfo = new FileInfo(model);
             trace.Record("model", new { path = model, bytes = modelInfo.Length, writtenUtc = modelInfo.LastWriteTimeUtc,
                 nonAsciiPath = model.Any(c => c > 127) });
+            trace.Stage("memory_placement");
+            var gpuLayers = await PreparePlacementAsync(model, trace, token).ConfigureAwait(false);
             trace.Stage("backend_check");
             if (!File.Exists(LlamaBackendPaths.ServerExecutablePath)) throw new FileNotFoundException("Installed llama.cpp backend is required.");
             using var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -258,7 +264,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             trace.Stage("gpu_inventory");
             var fitMargin = await LiteraryAutomaticBudget.FitMarginAsync(token, trace).ConfigureAwait(false);
             trace.Record("gpu_budget", new { fitMarginMiB = fitMargin });
-            foreach (var arg in Arguments(model, _port, fitMargin)) info.ArgumentList.Add(arg);
+            foreach (var arg in Arguments(model, _port, fitMargin, gpuLayers)) info.ArgumentList.Add(arg);
             trace.Stage("cache_preparation");
             if (_layout is not null || _preparationRoot is not null)
             {
@@ -269,15 +275,18 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             }
             process = new Process { StartInfo = info };
             _process = process;
+            _loadedUsesRamReserve = _runtimeOptions.UseRamReserve;
             process.OutputDataReceived += (_, e) =>
             {
                 if (e.Data is not { } line) { outputEnded.TrySetResult(); return; }
+                if (LiteraryRamReservePolicy.IsExplicitCudaOutOfMemory(line)) Interlocked.Exchange(ref gpuAllocationFailed, 1);
                 trace.Capture("stdout", line);
                 if (!_suppressBackendLog) { Log(line); _diagnostics?.Write("stdout", line); }
             };
             process.ErrorDataReceived += (_, e) =>
             {
                 if (e.Data is not { } line) { errorEnded.TrySetResult(); return; }
+                if (LiteraryRamReservePolicy.IsExplicitCudaOutOfMemory(line)) Interlocked.Exchange(ref gpuAllocationFailed, 1);
                 trace.Capture("stderr", line);
                 if (!_suppressBackendLog) { Log(line); _diagnostics?.Write("stderr", line); }
             };
@@ -290,7 +299,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             if (!OwnedProcessRegistry.Shared.Start(process, "LiteraryChatRuntime")) throw new InvalidOperationException("Literary runtime did not start.");
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
             trace.Record("process_started", new { pid = process.Id });
-            Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process, "Qwen text-only; automatic GPU context; slots=1; sequential", model));
+            Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process,
+                $"Qwen text-only; automatic context; gpuLayers={gpuLayers}; temporaryRamReserve={_runtimeOptions.UseRamReserve}; slots=1; sequential", model));
             startup.CancelAfter(TimeSpan.FromSeconds(90));
             trace.Stage("health_check");
             int? lastHealthStatus = null;
@@ -326,6 +336,9 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             try { StopProcess(); }
             catch (Exception cleanup) when (cleanup is InvalidOperationException or System.ComponentModel.Win32Exception)
             { trace.Record("cleanup_failure", new { exception = cleanup.ToString() }); }
+            if (Volatile.Read(ref gpuAllocationFailed) != 0 && !token.IsCancellationRequested && ex is not OperationCanceledException)
+                throw new LiteraryGpuContextUnavailableException(!_runtimeOptions.UseRamReserve
+                    && _modelMemoryMetadata?.SupportsRamReserve == true, ex);
             throw;
         }
     }
@@ -349,7 +362,13 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
         if (process is null) return;
         try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
         catch (InvalidOperationException) { }
-        finally { process.Dispose(); }
+        catch
+        {
+            Interlocked.CompareExchange(ref _process, process, null);
+            throw;
+        }
+        Volatile.Write(ref _contextCapacity, 0);
+        lock (_retirementGate) _processRetirement = Task.WhenAll(_processRetirement, RetireProcessAsync(process));
     }
     public void Dispose() { _disposed = true; Stop(); _http.Dispose(); }
     private sealed class DiagnosticProgress(IProgress<ModelStreamChunk>? target, LiteraryRequestDiagnostics diagnostics) : IProgress<ModelStreamChunk>

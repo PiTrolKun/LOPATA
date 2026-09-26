@@ -14,7 +14,8 @@ public static class LiteraryAutomaticBudget
     {
         var available = (long)context - input - SafetyTokens;
         if (input < 0 || available < MinimumReply)
-            throw new ImageAnalysisContextExhaustedException("The loaded context has insufficient space for a reply.");
+            throw new ImageAnalysisContextExhaustedException("The loaded context has insufficient space for a reply.",
+                budget: input >= 0 ? new(input, context, SafetyTokens, MinimumReply) : null);
         return checked((int)available);
     }
     public static int FitMargin(long cudaFree, long physicalFree)

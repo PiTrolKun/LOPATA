@@ -38,9 +38,11 @@ public sealed class LiteraryStudioTests
     {
         var request=Request(LiteraryChatProfile.Writer,"Continue");
         using var fromEditor=JsonDocument.Parse(Packet(request));
-        Assert.AreEqual("CURRENT_DRAFT",fromEditor.RootElement.GetProperty("continuation_basis").GetString());
+        Assert.AreEqual("working_draft",fromEditor.RootElement.GetProperty("continuation_origin").GetString());
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(Packet(request), "CURRENT_DRAFT").Count);
         using var fromChat=JsonDocument.Parse(Packet(request with {ContinueFromChat=true}));
-        Assert.AreEqual("TARGET_VARIANT",fromChat.RootElement.GetProperty("continuation_basis").GetString());
+        Assert.AreEqual("last_writer_proposal",fromChat.RootElement.GetProperty("continuation_origin").GetString());
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(Packet(request with {ContinueFromChat=true}), "TARGET_VARIANT").Count);
         StringAssert.Contains(fromChat.RootElement.GetProperty("packet").GetRawText(),"CURRENT_DRAFT");
     }
     [TestMethod] public void SuccessfulTransferClearsAdvisorButKeepsJournal()

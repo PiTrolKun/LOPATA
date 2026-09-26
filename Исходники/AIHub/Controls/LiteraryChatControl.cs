@@ -24,6 +24,7 @@ public sealed class LiteraryChatControl : UserControl
     private readonly LiteraryPlotAnchorStore? _anchorStore;
     private CancellationTokenSource? _cts;
     private string _statusKey = "Literary.Writer.Ready";
+    private ImageAnalysisContextExhaustedException? _contextFailure;
     private readonly List<(bool User, string Text)> _display = [];
     private readonly LiteraryDialogueStore? _dialogStore;
     private LiteraryDialogue? _dialog;
@@ -106,7 +107,7 @@ public sealed class LiteraryChatControl : UserControl
         DockPanel.SetDock(heading, Dock.Top); panel.Children.Add(heading);
         var notice = LiteraryUi.Text(_l("Literary.Writer.Temporary")); DockPanel.SetDock(notice, Dock.Top); panel.Children.Add(notice);
         _status.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
-        _status.Text = _l(_statusKey); _status.Margin = new Thickness(0, 6, 0, 6);
+        _status.Text = StatusText(); _status.Margin = new Thickness(0, 6, 0, 6);
         DockPanel.SetDock(_status, Dock.Bottom); panel.Children.Add(_status);
         var inputRow = new DockPanel { Margin = new Thickness(0, 8, 0, 0) };
         _send.SetResourceReference(StyleProperty, "PrimaryButtonStyle"); _send.MinWidth = 0; _send.Width = 38; _send.Padding = new Thickness(4); _send.Margin = new Thickness(8, 0, 0, 0);
@@ -126,9 +127,12 @@ public sealed class LiteraryChatControl : UserControl
         _send.Opacity = _send.IsEnabled ? 1 : 0.45;
         _input.IsReadOnly = _cts is not null; _clear.IsEnabled = !ActionsBlocked && !_runtime.IsBusy && _cts is null && _display.Count > 0;
         _anchorButton.IsEnabled = !ActionsBlocked && !_runtime.IsBusy && _cts is null && _anchorStore is not null;
-        _status.Text = _l(_runtime.IsBusy && _cts is null ? "Literary.Shared.Waiting" : _statusKey);
+        _status.Text = _runtime.IsBusy && _cts is null ? _l("Literary.Shared.Waiting") : StatusText();
     }
-    private void SetStatus(string key) { _statusKey = key; _status.Text = _l(key); }
+    private string StatusText() => _contextFailure is null ? _l(_statusKey)
+        : LiteraryContextBudgetMessage.Format(_contextFailure, _l, "Literary.Writer.Context", "Literary.Shared.OutputLimit");
+    private void SetStatus(string key, ImageAnalysisContextExhaustedException? failure = null)
+    { _statusKey = key; _contextFailure = failure; _status.Text = StatusText(); }
     private void BeginReply() => _transcript.BeginReply(_display, _l("Literary.Writer.You"), _l("Literary.Workspace.Writer"));
     private async Task SendAsync()
     {
@@ -177,7 +181,7 @@ public sealed class LiteraryChatControl : UserControl
         catch (LiteraryPlotAnchorException) { PreservePartial(); SetStatus("Literary.Anchor.LoadError"); _input.Text = text; }
         catch (LiteraryLoopException) { PreservePartial(); SetStatus("Literary.Loop.Stopped"); _input.Text = text; }
         catch (LiteraryDraftLimitException) { PreservePartial(); SetStatus("Literary.Draft.TokenLimit"); _input.Text = text; }
-        catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); SetStatus(ex.OutputTruncated ? "Literary.Shared.OutputLimit" : "Literary.Writer.Context"); _input.Text = text; }
+        catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); SetStatus(ex.OutputTruncated ? "Literary.Shared.OutputLimit" : "Literary.Writer.Context", ex); _input.Text = text; }
         catch (OperationCanceledException) { PreservePartial(); SetStatus(cts.IsCancellationRequested ? "Literary.Writer.Cancelled" : "Literary.Writer.Timeout"); _input.Text = text; }
         catch (System.IO.FileNotFoundException) { PreservePartial(); SetStatus("Literary.Writer.Missing"); _input.Text = text; }
         catch (Exception) { PreservePartial(); SetStatus("Literary.Writer.Error"); _input.Text = text; }

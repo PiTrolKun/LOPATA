@@ -12,7 +12,8 @@ public sealed partial class LiteraryWorkspaceControl
         var summary = "";
         try
         {
-            summary = ImportProjectStatus.Read(_entry.ProjectPath).Describe(_l);
+            var status = await Task.Run(() => ImportProjectStatus.Read(_entry.ProjectPath));
+            summary = status.Describe(_l);
             _memoryStatus.Text = summary;
             // The staged importer retains its accepted book as an archive. Workspace exports
             // use the editor's normal export action; the legacy importer must not reset its stage.

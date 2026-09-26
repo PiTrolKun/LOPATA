@@ -1,7 +1,6 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using AIHub.Models;
 
 namespace AIHub.Services;
@@ -14,16 +13,21 @@ public sealed record ParagraphEvidence(IReadOnlyList<ParagraphMaterial> Material
 }
 
 /// <summary>Program-controlled read capabilities, independent of model tool willingness.</summary>
-public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEditorSnapshot editor, LiteraryParagraphCatalog catalog)
+public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEditorSnapshot editor, LiteraryParagraphCatalog catalog,
+    Func<string,string>? localize = null)
 {
     private readonly LiteraryProjectLayout _layout = new(editor.Directory);
     private readonly Dictionary<string,ParagraphMaterial> _materials = [];
     private readonly Dictionary<string,Task<string[]>> _reads = [];
+    private IReadOnlyList<LiteraryJellyEntry>? _jellyRows;
+    private readonly Dictionary<(string Kind, string Key), List<LiteraryJellyEntry>> _jellyScopes = [];
+    private readonly Dictionary<string, string> _jellyPartRevisions = [];
     private IReadOnlyDictionary<string,ParagraphSelection> _selection = new Dictionary<string,ParagraphSelection>();
 
     public async Task<ParagraphEvidence> ReadAsync(string query, IReadOnlyDictionary<string,ParagraphSelection> selected,
         Action<ParagraphReceipt> progress, CancellationToken ct)
     {
+        _materials.Clear(); _reads.Clear(); _jellyScopes.Clear(); _jellyPartRevisions.Clear(); _jellyRows = null;
         _selection=selected;
         var nodes=catalog.Nodes; var receipts=new List<ParagraphReceipt>();
         foreach(var (id,choice) in selected.Where(x=>x.Value.Selected))
@@ -38,10 +42,15 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
             try
             {
                 if(!nodes.TryGetValue(id,out var node)) throw new IOException("Selected scope is no longer in this project.");
-                _excludedParts.Clear();
                 var ids=await ReadNode(node,query+(comment.Length>0?"\n"+comment:""),ct);
-                receipt=new(id,node.Label,_excludedParts.Count > 0 ? "partial" : ids.Length>0?"found":"empty",comment,ids,
-                    _excludedParts.Count > 0 ? string.Join(", ", _excludedParts.Order()) : "Bounded search is not a complete audit. Empty results do not prove absence.");
+                var excluded = ids.Select(key => _materials[key]).Where(m => m.Kind == "source_coverage")
+                    .SelectMany(m => JsonSerializer.SerializeToElement(m.Data).GetProperty("excludedParts").EnumerateArray().Select(x => x.GetString()!))
+                    .Distinct().Order().ToArray();
+                var searchOnly = node.All().Any(n => n.Kind.StartsWith("rag", StringComparison.Ordinal));
+                var detail = searchOnly ? localize?.Invoke("Paragraph.Receipt.SearchOnly") ?? "Search excerpts only; the selected sources were not read in full. Empty matches do not prove absence."
+                    : "All available records in the selected scope were read.";
+                if (excluded.Length > 0) detail += " " + string.Format(localize?.Invoke("Paragraph.Receipt.Excluded") ?? "Unreviewed parts excluded: {0}.", string.Join(", ", excluded));
+                receipt=new(id,node.Label,searchOnly || excluded.Length > 0 ? "partial" : ids.Length>0?"found":"empty",comment,ids,detail);
             }
             catch(OperationCanceledException) { throw; }
             catch(Exception ex) { receipt=new(id,nodes.GetValueOrDefault(id)?.Label??id,"error",comment,[],ex.Message); }
@@ -49,7 +58,6 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
         }
         return new(_materials.Values.ToArray(),receipts);
     }
-    private readonly HashSet<string> _excludedParts = [];
     private Task<string[]> ReadNode(ParagraphSource node,string query,CancellationToken ct)
     {
         var key=node.Id+"\n"+query;
@@ -111,7 +119,6 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
             var json=JsonNode.Parse(await new LiteraryRagReader(editor).SearchScopedAsync(query,reference,node.Key,node.Kind=="ragSection",ct))!;
             if(json["error"] is not null) throw new IOException(json["error"]!.ToString());
             var exclusions = json["excluded"]?.AsArray().Select(x => x!.GetValue<string>()).ToArray() ?? [];
-            foreach (var part in exclusions) _excludedParts.Add(part);
             var notices = exclusions.Length == 0 ? Array.Empty<string>() : new[] { Add(node.Id+"/coverage", "source_coverage",
                 new { excludedParts = exclusions, note = "Unreviewed import passages excluded. The search does not cover the entire book." }) };
             var matches=json["matches"]?.AsArray() ?? throw new InvalidDataException("Invalid RAG result.");
@@ -120,22 +127,55 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
         }
         if(node.Kind.StartsWith("jelly"))
         {
-            var rows=new LiteraryJellyStore(_layout).Read();
-            var keys=node.Kind=="jellyKind"?new[]{node.Key}:node.Kind=="jelly"?[]:JsonSerializer.Deserialize<string[]>(node.Key)!;
-            var scoped=rows.Where(e=>keys.Length==0 || (e.Fact.Kind==keys[0] && (keys.Length<2 || e.Fact.Subject==keys[1])
-                && (keys.Length<3 || e.Fact.Relation==keys[2]) && (keys.Length<4 || e.PartId==keys[3]))).ToArray();
+            var scoped=JellyScope(node,ct);
             foreach(var group in scoped.GroupBy(e=>e.PartId))
             {
-                var part=editor.Sources.SingleOrDefault(p=>p.Id==group.Key && p.Finished && p.Id!=editor.ActiveId)
-                    ?? throw new IOException("Memory references an unavailable completed part.");
-                var data=JsonNode.Parse(new LiteraryProjectReader(editor).Execute(new("read",part.Number),ct).Json)!;
-                if(data["error"] is not null || group.Any(e=>e.Revision!=data["revision"]?.ToString())) throw new IOException("Memory references an outdated part revision.");
+                ct.ThrowIfCancellationRequested();
+                if (!_jellyPartRevisions.TryGetValue(group.Key, out var revision))
+                {
+                    var part=editor.Sources.SingleOrDefault(p=>p.Id==group.Key && p.Finished && p.Id!=editor.ActiveId)
+                        ?? throw new IOException("Memory references an unavailable completed part.");
+                    var data=JsonNode.Parse(new LiteraryProjectReader(editor).Execute(new("read",part.Number),ct).Json)!;
+                    if(data["error"] is not null) throw new IOException("Memory references an unavailable or unreviewed part.");
+                    _jellyPartRevisions[group.Key] = revision = data["revision"]!.ToString();
+                }
+                if(group.Any(e=>e.Revision!=revision)) throw new IOException("Memory references an outdated part revision.");
             }
-            var words=Regex.Matches(query,@"[\p{L}\p{N}]{3,}").Select(m=>m.Value[..Math.Min(5,m.Length)]).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-            var ranked=scoped.OrderByDescending(e=>words.Count(w=>(e.Fact.Subject+" "+e.Fact.Relation+" "+e.Fact.Value).Contains(w,StringComparison.OrdinalIgnoreCase))).Take(12);
-            return ranked.Select(e=>Add("jelly/"+e.Id,"confirmed_project_memory",new { e.Id,e.Number,e.Revision,e.Version,e.Fact,
-                limit=12,note="Bounded confirmed project memory; draft may describe later events. Plans and beliefs are not completed events." })).ToArray();
+            var result = new List<string>();
+            foreach (var entry in scoped)
+            {
+                ct.ThrowIfCancellationRequested();
+                result.Add(Add("jelly/"+entry.Id,"confirmed_project_memory",new { entry.Id,entry.Number,entry.Revision,entry.Version,entry.Fact,
+                    note="Confirmed project memory in the selected scope; draft may describe later events. Plans and beliefs are not completed events." }));
+            }
+            return result.ToArray();
         }
         throw new InvalidDataException("Unsupported source scope.");
+    }
+
+    private IReadOnlyList<LiteraryJellyEntry> JellyScope(ParagraphSource node, CancellationToken ct)
+    {
+        if (_jellyRows is null)
+        {
+            // Build the selection index once per request. Overlapping selected ancestors and
+            // descendants share the same fact IDs, source validation and material entries.
+            var rows = new LiteraryJellyStore(_layout).Read();
+            foreach (var row in rows)
+            {
+                ct.ThrowIfCancellationRequested();
+                Index("jellyKind", row.Fact.Kind, row);
+                Index("jellySubject", ParagraphJson.Encode(new[] { row.Fact.Kind, row.Fact.Subject }), row);
+                Index("jellyRelation", ParagraphJson.Encode(new[] { row.Fact.Kind, row.Fact.Subject, row.Fact.Relation }), row);
+                Index("jellyPart", ParagraphJson.Encode(new[] { row.Fact.Kind, row.Fact.Subject, row.Fact.Relation, row.PartId }), row);
+            }
+            _jellyRows = rows;
+        }
+        return node.Kind == "jelly" ? _jellyRows : _jellyScopes.GetValueOrDefault((node.Kind, node.Key)) ?? [];
+
+        void Index(string kind, string key, LiteraryJellyEntry row)
+        {
+            if (!_jellyScopes.TryGetValue((kind, key), out var values)) _jellyScopes[(kind, key)] = values = [];
+            values.Add(row);
+        }
     }
 }

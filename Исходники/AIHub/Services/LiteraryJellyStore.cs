@@ -130,12 +130,17 @@ public sealed partial class LiteraryJellyStore(LiteraryProjectLayout layout)
     public IReadOnlyList<LiteraryJellyEntry> Read()
     {
         if (!File.Exists(FilePath)) return [];
-        using var db = Open(); using var cmd = Command(db, null, "SELECT f.id,b.part_id,b.revision,f.version,f.payload,b.payload FROM fact f JOIN batch b ON b.id=f.batch_id WHERE f.active=1 ORDER BY f.rowid DESC");
+        using var db = Open(); using var cmd = Command(db, null, "SELECT f.id,b.part_id,b.revision,f.version,f.payload,b.payload,b.id FROM fact f JOIN batch b ON b.id=f.batch_id WHERE f.active=1 ORDER BY f.rowid DESC");
         using var reader = cmd.ExecuteReader(); var rows = new List<LiteraryJellyEntry>();
+        // A batch contains the complete source and all its facts. Decode it once per read,
+        // rather than repeating that work for every joined fact; never cache across reads.
+        var numbers = new Dictionary<string, string>();
         while (reader.Read())
         {
-            var batch = JsonSerializer.Deserialize<LiteraryJellyBatch>(reader.GetString(5))!;
-            rows.Add(new(reader.GetString(0), reader.GetString(1), batch.Number, reader.GetString(2), reader.GetInt32(3), JsonSerializer.Deserialize<LiteraryJellyFact>(reader.GetString(4))!));
+            var batchId = reader.GetString(6);
+            if (!numbers.TryGetValue(batchId, out var number))
+                numbers[batchId] = number = JsonSerializer.Deserialize<LiteraryJellyBatch>(reader.GetString(5))!.Number;
+            rows.Add(new(reader.GetString(0), reader.GetString(1), number, reader.GetString(2), reader.GetInt32(3), JsonSerializer.Deserialize<LiteraryJellyFact>(reader.GetString(4))!));
         }
         return rows;
     }

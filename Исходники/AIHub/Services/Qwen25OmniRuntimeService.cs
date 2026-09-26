@@ -732,7 +732,16 @@ public sealed record OmniTextGenerationResult(
     int? LastTokenId = null,
     string RawProtocol = "");
 
-public sealed class ImageAnalysisContextExhaustedException(string message, bool outputTruncated = false) : Exception(message)
+public sealed record ModelContextBudgetSnapshot(int InputTokens, int ContextTokens, int SafetyTokens, int MinimumReplyTokens,
+    int? ModelContextTokens = null, bool CanUseRamReserve = false)
+{
+    public bool ExceedsModelContext => ModelContextTokens is { } maximum
+        && (long)InputTokens + SafetyTokens + MinimumReplyTokens > maximum;
+}
+
+public sealed class ImageAnalysisContextExhaustedException(string message, bool outputTruncated = false,
+    ModelContextBudgetSnapshot? budget = null) : Exception(message)
 {
     public bool OutputTruncated { get; } = outputTruncated;
+    public ModelContextBudgetSnapshot? Budget { get; } = budget;
 }

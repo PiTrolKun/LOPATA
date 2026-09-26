@@ -7,7 +7,6 @@ public sealed partial class LiteraryChatRuntime
     private int _contextCapacity;
     private bool _resourcesChecked, _resizeAttempted;
     public int ContextCapacity => Volatile.Read(ref _contextCapacity);
-    private void BeginBudgetOperation() { _resourcesChecked = false; _resizeAttempted = false; }
     private async Task CheckLoadedMemoryAsync(CancellationToken ct)
     {
         if (_resourcesChecked) return;
@@ -32,6 +31,9 @@ public sealed partial class LiteraryChatRuntime
     }
     private async Task<int> AvailableReplyAsync(int input, CancellationToken ct)
     {
+        if (ModelContextTokens is { } maximum
+            && (long)input + LiteraryAutomaticBudget.SafetyTokens + LiteraryAutomaticBudget.MinimumReply > maximum)
+            throw CreateContextExhaustedException(input);
         if ((long)input + LiteraryAutomaticBudget.SafetyTokens + LiteraryAutomaticBudget.MinimumReply > ContextCapacity && !_resizeAttempted)
         {
             _resizeAttempted = true;
@@ -39,7 +41,10 @@ public sealed partial class LiteraryChatRuntime
             StopProcess(); await PrepareAsync(ct).ConfigureAwait(false);
         }
         if ((long)input + LiteraryAutomaticBudget.SafetyTokens + LiteraryAutomaticBudget.MinimumReply > ContextCapacity)
+        {
             Log($"Context budget rejected: input={input}; context={ContextCapacity}; minimumReply={LiteraryAutomaticBudget.MinimumReply}; safety={LiteraryAutomaticBudget.SafetyTokens}.");
+            throw CreateContextExhaustedException(input);
+        }
         var reply = LiteraryAutomaticBudget.Reply(ContextCapacity, input);
         _diagnostics?.Write("automatic_budget", new { input, reply, context = ContextCapacity, reserve = LiteraryAutomaticBudget.SafetyTokens });
         return reply;

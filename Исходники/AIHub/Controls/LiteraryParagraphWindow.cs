@@ -29,6 +29,7 @@ public sealed partial class LiteraryParagraphWindow : Window
     private readonly List<Button> _actions=[];
     private LiteraryParagraphTree _tree=null!;
     private CancellationTokenSource? _operation;
+    private ImageAnalysisContextExhaustedException? _contextFailure;
     private bool _rendering, _dirty, _allowClose;
     private long _editVersion;
     public LiteraryParagraphState State { get; }
@@ -137,7 +138,9 @@ public sealed partial class LiteraryParagraphWindow : Window
         _send.Visibility=State.Stage==ParagraphStage.Result?Visibility.Collapsed:Visibility.Visible;
         _discuss.Visibility=State.Stage==ParagraphStage.Request?Visibility.Visible:Visibility.Collapsed;
         _next.Visibility=_retry.Visibility=State.Stage==ParagraphStage.Result?Visibility.Visible:Visibility.Collapsed;
-        _status.Text=State.Interrupted?_l("Paragraph.Interrupted"):State.Failure.Length>0?_l(State.Failure):_l("Paragraph.Manual");
+        var failure = State.Failure.Length == 0 ? "" : State.Failure == "Paragraph.ContextLimit" && _contextFailure is not null
+            ? LiteraryContextBudgetMessage.Format(_contextFailure, _l) : _l(State.Failure);
+        _status.Text=State.Interrupted?_l("Paragraph.Interrupted"):State.Failure.Length>0?failure:_l("Paragraph.Manual");
         _rendering=false; Availability();
     }
     private void Availability()

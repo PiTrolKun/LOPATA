@@ -35,6 +35,7 @@ public sealed class LiteraryStudioState
     public StudioSendKeyAction ControlEnterAction { get; set; } = StudioSendKeyAction.Writer;
     public bool WriterComment { get; set; }
     public bool Interrupted { get; set; }
+    public LiteraryStudioPending? Pending { get; set; }
     public List<StudioMessage> Messages { get; set; } = [];
     public List<StudioQuote> Quotes { get; set; } = [];
     public List<string> RevisionRequirements { get; set; } = [];
@@ -70,7 +71,7 @@ public sealed class LiteraryStudioState
     {
         foreach (var message in Messages) message.InContext = false;
         Session = Guid.NewGuid().ToString("N"); Role = LiteraryChatProfile.Advisor; Action = "Discuss"; WriterComment = false;
-        Input = Task = Result = ""; Quotes.Clear(); RevisionRequirements.Clear(); Recommendations.Clear(); Interrupted = false;
+        Input = Task = Result = ""; Quotes.Clear(); RevisionRequirements.Clear(); Recommendations.Clear(); Interrupted = false; Pending = null;
     }
 }
 
@@ -92,7 +93,8 @@ public sealed class LiteraryStudioStore(LiteraryProjectLayout layout)
             || state.SelectedPresets is null || state.Input is null || state.Task is null || state.Result is null || state.RouteId is null
             || string.IsNullOrWhiteSpace(state.Session) || !LiteraryStudioPrompts.Advisor.Concat(LiteraryStudioPrompts.Writer).Any(a=>a.Id==state.Action)
             || state.Messages.Any(m=>m is null || m.Text is null || m.Quotes is null)
-            || state.Selection.Any(s=>s.Value is null))
+            || state.Selection.Any(s=>s.Value is null)
+            || state.Pending is { } pending && (pending.Text is null || pending.Quotes is null || pending.MessageId is null))
             throw new InvalidDataException("Invalid studio session. Original file retained.");
         if (state.PromptSettings?.Selected is { } selected) LiteraryPromptSets.Validate([selected]);
         return state;

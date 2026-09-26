@@ -34,6 +34,7 @@ public sealed partial class LiteraryStudioControl
             if (buttons.Children.Count > 0) panel.Children.Add(buttons);
             _messages.Children.Add(panel);
         }
+        RenderContextFailure();
         _archive.Content = _l(_showArchive ? "Studio.CurrentSession" : "Studio.Archive"); _scroll.ScrollToEnd();
     }
     private TextBox MessageText(string value, string role)
