@@ -1,0 +1,25 @@
+[CustomMessages]
+russian.UpdateDirectionTitle=Как получать обновления?
+english.UpdateDirectionTitle=How should LOPATA receive updates?
+russian.UpdateDirectionDescription=Выберите направление будущих обновлений.
+english.UpdateDirectionDescription=Choose how to receive future updates.
+russian.UpdateDirectionHelp=Версия программы общая. Выбор определяет только поиск и скачивание обновлений; позже его можно изменить в настройках.
+english.UpdateDirectionHelp=Versions are shared. This choice only controls how updates are found and downloaded. You can change it later in Settings.
+russian.UpdateStable=Стабильная — обновления через полный установщик.
+english.UpdateStable=Stable — updates through a full installer.
+russian.UpdateBeta=Бета — частые быстрые патчи. Новые элементы могут быть ещё не отполированы; возможны ошибки и неудобства.
+english.UpdateBeta=Beta — frequent quick file updates. New features may be unpolished and contain errors or rough edges.
+russian.UpdateChoose=Выберите один из вариантов, чтобы продолжить.
+english.UpdateChoose=Select one of the options to continue.
+russian.CloseLopata=Закройте ЛОПАТУ и повторите запуск установщика.
+english.CloseLopata=Close LOPATA and run the installer again.
+russian.UpdateRecoveryFailed=Не удалось подготовить прежнюю установку. Закройте ЛОПАТУ и повторите попытку. Подробности сохранены в папке AI_HUB\Updates внутри LocalAppData.
+english.UpdateRecoveryFailed=Could not prepare the previous installation. Close LOPATA and retry. Details are saved in AI_HUB\Updates under LocalAppData.
+russian.UpdateRegisterFailed=Не удалось проверить состав новой установки. Повторите установку. Пользовательские проекты сохраняются.
+english.UpdateRegisterFailed=Could not verify the new installation. Run the installer again. Your projects are preserved.
+russian.UpdateUseFull=Для обновления прежней установки используйте полный установщик или обновление из программы. Сетевой установщик предназначен для первой установки.
+english.UpdateUseFull=Use the full installer or in-app update to upgrade an existing installation. The online installer is intended for first-time installation.
+russian.UpdateChannelFailed=Не удалось сохранить направление обновлений.
+english.UpdateChannelFailed=Could not save the update direction.
+russian.LaunchLopata=Запустить ЛОПАТА
+english.LaunchLopata=Launch LOPATA

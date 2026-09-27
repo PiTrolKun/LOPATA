@@ -1,0 +1,9 @@
+{
+  "UpdateHost.Starting": "Preparing to start LOPATA…",
+  "UpdateHost.Downloading": "Downloading and verifying application files…",
+  "UpdateHost.Cancel": "Cancel",
+  "UpdateHost.Verifying": "Verifying the prepared update…",
+  "UpdateHost.Applying": "Installing the update. Please wait…",
+  "UpdateHost.Recovering": "Restoring the previous installation after an interruption…",
+  "UpdateHost.Failed": "Could not complete the update or launch. Close other LOPATA instances and try again. Saved projects were not deleted. Details are in the report:"
+}

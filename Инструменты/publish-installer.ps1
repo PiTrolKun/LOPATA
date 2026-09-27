@@ -19,6 +19,7 @@ function Invoke-GitHub {
 $installer = (Resolve-Path -LiteralPath $InstallerPath).Path
 $notes = (Resolve-Path -LiteralPath $NotesPath).Path
 $receipt = Get-Content -LiteralPath "$installer.build.json" -Raw | ConvertFrom-Json
+if ($receipt.standBuild) { throw 'An isolated stand installer must never be published.' }
 if ($receipt.schemaVersion -ne 1 -or $receipt.version -notmatch '^\d+\.\d+\.\d+(-beta)?$') {
     throw 'Only stable or beta releases can be published; dev builds are internal.'
 }
@@ -33,6 +34,21 @@ if ($file.Name -ne "LOPATA_Setup_$($receipt.version).exe" -or $receipt.fileName 
     throw 'Installer does not match the build receipt, or exceeds the GitHub asset size limit.'
 }
 $tag = "v$($receipt.version)"
+$bundle = $null
+if ($receipt.fileManifest) {
+    if ((Get-FileHash -LiteralPath $receipt.fileManifest).Hash.ToLowerInvariant() -ne $receipt.fileManifestSha256) {
+        throw 'Signed file manifest changed after installer build.'
+    }
+    $bundle = & (Join-Path $PSScriptRoot 'get-update-bundle.ps1') -ManifestPath $receipt.fileManifest `
+        -Version $receipt.version -SourceCommit $receipt.sourceCommit
+    $releaseNote = @($bundle.Manifest.notes | Where-Object version -eq $receipt.version)
+    if ($releaseNote.Count -ne 1 -or $releaseNote[0].text.Trim() -ne [IO.File]::ReadAllText($notes).Trim()) {
+        throw 'Publication notes must match the notes shown by the signed update.'
+    }
+}
+elseif ([version]($receipt.version -replace '-beta$','') -ge [version]'0.2.42') {
+    throw 'This release requires a signed file update bundle.'
+}
 # Read the complete paginated list as one JSON array.
 $releases = @(Invoke-GitHub @('api', "repos/$repo/releases?per_page=100", '--paginate', '--slurp') |
     Out-String | ConvertFrom-Json | ForEach-Object { $_ })
@@ -52,6 +68,16 @@ if (-not $Publish) {
 # Ensure the exact source commit is available in the public repository before creating the release.
 $remoteCommit = Invoke-GitHub @('api', "repos/$repo/commits/$($receipt.sourceCommit)", '--jq', '.sha')
 if ($remoteCommit -ne $receipt.sourceCommit) { throw 'Source commit is not available on GitHub.' }
+if ($bundle) {
+    foreach ($package in $bundle.Reused) {
+        $oldTag = ([uri]$package.url).Segments[-2].TrimEnd('/')
+        $oldRelease = Invoke-GitHub @('api', "repos/$repo/releases/tags/$oldTag") | Out-String | ConvertFrom-Json
+        $oldAsset = @($oldRelease.assets | Where-Object name -eq $package.id)
+        if ($oldRelease.draft -or $oldAsset.Count -ne 1 -or $oldAsset[0].size -ne $package.size -or $oldAsset[0].digest -ne "sha256:$($package.sha256)") {
+            throw "Referenced package is unavailable or changed: $($package.id). No release published."
+        }
+    }
+}
 $manifestDirectory = Join-Path ([IO.Path]::GetDirectoryName($installer)) "release-$($receipt.version)"
 New-Item -ItemType Directory -Force -Path $manifestDirectory | Out-Null
 $manifest = Join-Path $manifestDirectory 'lopata-update.json'
@@ -67,7 +93,16 @@ if (-not $existing) { Invoke-GitHub $create }
 $releaseId = Invoke-GitHub @('release', 'view', $tag, '--repo', $repo, '--json', 'databaseId', '--jq', '.databaseId')
 if ($releaseId -notmatch '^\d+$') { throw 'Cannot identify draft release.' }
 $release = Invoke-GitHub @('api', "repos/$repo/releases/$releaseId") | Out-String | ConvertFrom-Json
-foreach ($upload in @($installer, $manifest)) {
+$uploads = @($installer, $manifest)
+if ($bundle) { $uploads += @($bundle.Assets) }
+if ($receipt.onlineInstaller) {
+    if ((Get-Item -LiteralPath $receipt.onlineInstaller).Name -ne "LOPATA_Online_Setup_$($receipt.version).exe" -or
+        (Get-FileHash -LiteralPath $receipt.onlineInstaller).Hash.ToLowerInvariant() -ne $receipt.onlineInstallerSha256) {
+        throw 'Online installer differs from its build receipt. Release remains a draft.'
+    }
+    $uploads += $receipt.onlineInstaller
+}
+foreach ($upload in $uploads) {
     $uploadName = [IO.Path]::GetFileName($upload)
     $remoteAsset = $release.assets | Where-Object name -eq $uploadName | Select-Object -First 1
     if ($remoteAsset) {
@@ -78,6 +113,14 @@ foreach ($upload in @($installer, $manifest)) {
     else { Invoke-GitHub @('release', 'upload', $tag, $upload, '--repo', $repo) }
 }
 $release = Invoke-GitHub @('api', "repos/$repo/releases/$releaseId") | Out-String | ConvertFrom-Json
+foreach ($upload in $uploads) {
+    $local = Get-Item -LiteralPath $upload
+    $remote = @($release.assets | Where-Object name -eq $local.Name)
+    if ($remote.Count -ne 1 -or ($null -ne $remote[0].size -and $remote[0].size -ne $local.Length) -or
+        $remote[0].digest -ne ('sha256:' + (Get-FileHash -LiteralPath $upload).Hash.ToLowerInvariant())) {
+        throw "Uploaded asset verification failed: $($local.Name). Release remains a draft."
+    }
+}
 $asset = @($release.assets | Where-Object { $_.name -eq $file.Name })
 if ($asset.Count -ne 1 -or $asset[0].size -ne $file.Length -or $asset[0].digest -ne "sha256:$($receipt.sha256)") {
     throw 'Uploaded installer verification failed. The release remains a draft.'

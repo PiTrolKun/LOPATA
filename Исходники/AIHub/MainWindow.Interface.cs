@@ -326,7 +326,7 @@ public partial class MainWindow
     protected override async void OnClosing(CancelEventArgs e)
     {
         if (_processShutdownPending) { e.Cancel = true; base.OnClosing(e); return; }
-        if (!LiteraryPage.CanLeave()) { e.Cancel = true; base.OnClosing(e); return; }
+        if (!LiteraryPage.CanLeave()) { _applicationUpdateStart = null; e.Cancel = true; base.OnClosing(e); return; }
         if (!_processShutdownComplete)
         {
             e.Cancel = true;

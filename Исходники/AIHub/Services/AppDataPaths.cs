@@ -6,9 +6,15 @@ public static class AppDataPaths
 {
     private const string AppFolderName = "AI_HUB";
 
-    public static string BaseDirectory { get; } = Path.Combine(
+    public static string BaseDirectory { get; } =
+#if UPDATE_STAND
+        Path.GetFullPath(Environment.GetEnvironmentVariable("LOPATA_UPDATE_STAND_ROOT")
+            ?? throw new InvalidOperationException("An isolated update stand root is required by this test build."));
+#else
+        Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         AppFolderName);
+#endif
 
     public static string StatePath { get; } = Path.Combine(BaseDirectory, "state.json");
 
@@ -34,7 +40,12 @@ public static class AppDataPaths
         ManagedModelLibraryDirectory,
         "events.jsonl");
 
-    public static string? ProjectRoot { get; } = FindProjectRoot();
+    public static string? ProjectRoot { get; } =
+#if UPDATE_STAND
+        null;
+#else
+        FindProjectRoot();
+#endif
 
     public static string RuntimeDirectory { get; } = ProjectRoot is null
         ? Path.Combine(BaseDirectory, "Runtime")

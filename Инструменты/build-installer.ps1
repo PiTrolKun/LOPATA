@@ -1,6 +1,10 @@
 param(
     [switch]$SkipPublish,
-    [switch]$PublicBeta
+    [switch]$PublicBeta,
+    [string]$NotesPath,
+    [string]$PreviousManifestPath,
+    [string]$HistoryPath,
+    [string]$StandDataRoot
 )
 
 $ErrorActionPreference = 'Stop'
@@ -88,9 +92,28 @@ if ($PublicBeta) {
 if ([string]::IsNullOrWhiteSpace($version)) {
     throw "Файл VERSION пустой."
 }
+if ([string]::IsNullOrWhiteSpace($NotesPath)) {
+    $NotesPath = Join-Path $repoRoot "Документы_проекта/Релизы/$version.md"
+}
+if (!(Test-Path -LiteralPath $NotesPath)) { throw "Release notes are required: $NotesPath" }
 
 New-Item -ItemType Directory -Path $publishDir -Force | Out-Null
 New-Item -ItemType Directory -Path $installerDir -Force | Out-Null
+$defineConstants = ''
+if ($StandDataRoot) {
+    $StandDataRoot = [IO.Path]::GetFullPath($StandDataRoot)
+    $allowedStandRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot 'Тесты/FileUpdates')) + [IO.Path]::DirectorySeparatorChar
+    if (!$StandDataRoot.StartsWith($allowedStandRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Installer stand root must be below Tests/FileUpdates.' }
+    $defineConstants = 'UPDATE_STAND'
+    $installerDir = Join-Path $StandDataRoot 'Installers'
+    New-Item -ItemType Directory -Path $installerDir -Force | Out-Null
+}
+if ($version -match '-dev$') { throw 'Use -PublicBeta for an installer with signed updates. Building a beta installer does not publish it.' }
+if (-not $SkipPublish) {
+    # Fresh staging prevents removed build outputs from becoming managed release files.
+    $publishDir = Join-Path $repoRoot ("Runtime\Publish\LOPATA-$version-" + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $publishDir -Force | Out-Null
+}
 
 Write-Host "LOPATA: build test installer."
 Write-Host "Version: $version"
@@ -105,7 +128,7 @@ if (-not $SkipPublish) {
         --output $publishDir `
         -p:PublishSingleFile=false `
         -p:PublishReadyToRun=false `
-        "-p:AIHubVersion=$version"
+        "-p:AIHubVersion=$version" "-p:DefineConstants=$defineConstants"
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet publish завершился с ошибкой: $LASTEXITCODE"
     }
@@ -113,6 +136,16 @@ if (-not $SkipPublish) {
 else {
     Write-Step "Publish skipped"
 }
+
+Write-Step 'Publishing the independent update launcher'
+$hostPublish = Join-Path $repoRoot ('Runtime/Publish/UpdateHost-' + [guid]::NewGuid().ToString('N'))
+dotnet publish (Join-Path $repoRoot 'Исходники/LOPATA.Updater/LOPATA.Updater.csproj') --configuration Release `
+    --runtime win-x64 --self-contained true --output $hostPublish -p:PublishSingleFile=true -p:PublishReadyToRun=false "-p:DefineConstants=$defineConstants"
+if ($LASTEXITCODE -ne 0) { throw 'Updater publish failed.' }
+$hostPayload = Join-Path $publishDir 'Updater'
+New-Item -ItemType Directory -Path $hostPayload -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $hostPublish 'LOPATA.Updater.exe') -Destination $hostPayload
+if ($StandDataRoot) { 'Isolated updater stand. Never publish.' | Set-Content -LiteralPath (Join-Path $publishDir 'lopata-stand-build.marker') -Encoding utf8 }
 
 $exePath = Join-Path $publishDir 'AIHub.exe'
 $payloadVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $publishDir 'AIHub.dll')).ProductVersion
@@ -152,6 +185,13 @@ if (-not $iscc) {
 Write-Step "Building installer with Inno Setup"
 Write-Host "ISCC: $iscc"
 
+$packageDirectory = Join-Path $repoRoot ("Runtime/UpdatePackages/$version-" + [guid]::NewGuid().ToString('N'))
+& (Join-Path $PSScriptRoot 'build-file-update.ps1') -Version $version -PublishDir $publishDir `
+    -BackendDir $backendDir -ChatLlmBackendDir $chatLlmBackendDir -NotesPath $NotesPath `
+    -OutputDirectory $packageDirectory -PreviousManifestPath $PreviousManifestPath -HistoryPath $HistoryPath -StandBuild:([bool]$StandDataRoot)
+$fileManifest = Join-Path $packageDirectory 'lopata-files.json'
+if (!(Test-Path -LiteralPath $fileManifest)) { throw 'Signed release manifest is missing.' }
+
 $arguments = @(
     "/DAppVersion=$version",
     "/DNumericVersion=$($version -replace '-.*$', '')",
@@ -160,8 +200,10 @@ $arguments = @(
     "/DChatLlmBackendDir=$(Escape-InnoDefineValue $chatLlmBackendDir)",
     "/DOutputDir=$(Escape-InnoDefineValue $installerDir)",
     "/DSetupIconFile=$(Escape-InnoDefineValue $iconPath)",
+    "/DFileManifest=$(Escape-InnoDefineValue $fileManifest)",
     $innoScriptPath
 )
+if ($StandDataRoot) { $arguments = @("/DStandDataRoot=$StandDataRoot") + $arguments }
 
 & $iscc @arguments
 if ($LASTEXITCODE -ne 0) {
@@ -172,6 +214,13 @@ $setupPath = Join-Path $installerDir "LOPATA_Setup_$version.exe"
 if (-not (Test-Path -LiteralPath $setupPath)) {
     throw "Сборка завершилась, но ожидаемый установщик не найден: $setupPath"
 }
+
+Write-Step 'Building the lightweight online installer'
+$onlineArguments = @('/DNetworkSetup=1') + $arguments
+& $iscc @onlineArguments
+if ($LASTEXITCODE -ne 0) { throw 'Online installer build failed.' }
+$onlineSetup = Join-Path $installerDir "LOPATA_Online_Setup_$version.exe"
+if (!(Test-Path -LiteralPath $onlineSetup)) { throw 'Online installer output is missing.' }
 
 Write-Host ""
 Write-Host "Готово: $setupPath" -ForegroundColor Green
@@ -191,6 +240,13 @@ $receipt = [ordered]@{
     sourceDirty = [bool]$sourceChanges
     payloadVersion = $payloadVersion
     builtAtUtc = [DateTime]::UtcNow.ToString('o')
+    fileManifest = $fileManifest
+    fileManifestSha256 = (Get-FileHash -LiteralPath $fileManifest).Hash.ToLowerInvariant()
+    packageDirectory = $packageDirectory
+    publishDirectory = $publishDir
+    onlineInstaller = $onlineSetup
+    onlineInstallerSha256 = (Get-FileHash -LiteralPath $onlineSetup).Hash.ToLowerInvariant()
+    standBuild = [bool]$StandDataRoot
 }
 $receipt | ConvertTo-Json | Set-Content -LiteralPath "$setupPath.build.json" -Encoding utf8
 Write-Host "Local build receipt: $setupPath.build.json"

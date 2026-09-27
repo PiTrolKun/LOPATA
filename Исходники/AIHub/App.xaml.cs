@@ -17,6 +17,17 @@ public partial class App : System.Windows.Application
             Shutdown(AIHub.Services.WindowsConsoleProcess.Signal(pid, ticks));
             return;
         }
+        try
+        {
+            if (Services.ApplicationUpdateStartup.RedirectInstalledLaunch(e.Args)) { Shutdown(); return; }
+        }
+        catch (Exception)
+        {
+            var localization = new Services.LocalizationService();
+            localization.Load(Services.LocalizationService.GetWindowsLanguageCode());
+            System.Windows.MessageBox.Show(localization.T("Updates.LaunchFailed"), localization.T("Updates.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1); return;
+        }
         StartupUri = new Uri("MainWindow.xaml", UriKind.Relative);
         base.OnStartup(e);
     }
