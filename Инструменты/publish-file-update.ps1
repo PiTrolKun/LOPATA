@@ -35,9 +35,13 @@ Write-Host "File update ${version}: $($bundle.Assets.Count) assets; source $($re
 if (!$Publish) { Write-Host 'Preview only. No GitHub changes.'; return }
 $commit = Invoke-UpdateGitHub @('api', "repos/$repo/commits/$($receipt.sourceCommit)", '--jq', '.sha')
 if ($commit -ne $receipt.sourceCommit) { throw 'The exact source commit must be available on GitHub.' }
+$verifiedReleases = @{}
 foreach ($package in $bundle.Reused) {
     $oldTag = ([uri]$package.url).Segments[-2].TrimEnd('/')
-    $release = Invoke-UpdateGitHub @('api', "repos/$repo/releases/tags/$oldTag") | Out-String | ConvertFrom-Json
+    if (!$verifiedReleases.ContainsKey($oldTag)) {
+        $verifiedReleases[$oldTag] = Invoke-UpdateGitHub @('api', "repos/$repo/releases/tags/$oldTag") | Out-String | ConvertFrom-Json
+    }
+    $release = $verifiedReleases[$oldTag]
     $asset = @($release.assets | Where-Object name -eq $package.id)
     if ($release.draft -or $asset.Count -ne 1 -or $asset[0].size -ne $package.size -or $asset[0].digest -ne "sha256:$($package.sha256)") {
         throw "Referenced package is unavailable: $($package.id)"
