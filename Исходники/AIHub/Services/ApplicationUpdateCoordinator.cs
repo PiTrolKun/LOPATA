@@ -81,10 +81,14 @@ public sealed class ApplicationUpdateCoordinator
             var completed = new Dictionary<string, long>(StringComparer.Ordinal);
             var transfer = new Progress<UpdateTransferProgress>(p =>
             {
-                completed[p.Package] = p.StoredBytes;
-                progress?.Report(new("application-update", p.Package, completed.Values.Sum(), plan.DownloadBytes, 0, p.Stage));
+                lock (completed)
+                {
+                    completed[p.Package] = Math.Max(completed.GetValueOrDefault(p.Package), p.StoredBytes);
+                    progress?.Report(new("application-update", p.Package, completed.Values.Sum(), plan.DownloadBytes, 0, p.Stage));
+                }
             });
             await Task.Run(() => new FileUpdatePreparation(_http, UpdateReleaseKeys.Trusted)
+                { MaximumParallelConnections = connections }
                 .StageAsync(Installation!, offer.SignedFiles!, transfer, token), token);
             prepared = new(offer.Version, offer.Delivery, null, null, offer.SignedFiles, false, offer.Notes, offer.NotesIncomplete);
         }

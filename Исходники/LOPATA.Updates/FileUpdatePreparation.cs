@@ -2,6 +2,7 @@ namespace Lopata.Updates;
 
 public sealed class FileUpdatePreparation(HttpClient http, IReadOnlyDictionary<string, string> keys)
 {
+    public int MaximumParallelConnections { get; set; }
     public async Task<UpdatePlan> StageAsync(InstalledUpdateState installation, SignedManifest signed,
         IProgress<UpdateTransferProgress>? progress = null, CancellationToken token = default)
     {
@@ -11,10 +12,12 @@ public sealed class FileUpdatePreparation(HttpClient http, IReadOnlyDictionary<s
             throw new InvalidDataException("A transition installer is required before file updates.");
         var previous = SignedManifest.Read(await File.ReadAllBytesAsync(transaction.InstalledManifestPath, token)).Verify(keys);
         var plan = await UpdatePlanner.CreateAsync(previous, target, installation.Roots(), token);
-        var downloader = new UpdatePackageDownloader(http, installation.CacheDirectory);
+        var downloader = new UpdatePackageDownloader(http, installation.CacheDirectory)
+            { MaximumParallelConnections = MaximumParallelConnections };
+        var archives = await downloader.DownloadManyAsync(target, plan.Packages, progress, token);
         foreach (var package in plan.Packages)
         {
-            var archive = await downloader.DownloadAsync(target, package, progress, token);
+            var archive = archives[package.Id];
             progress?.Report(new(package.Id, package.Size, package.Size, "extracting"));
             await UpdatePackageExtractor.ExtractAsync(archive, package, target, installation.StageDirectory(target.Version), token);
         }

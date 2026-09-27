@@ -3,6 +3,7 @@ namespace Lopata.Updates;
 /// <summary>Network installation uses the same signed packages and transaction as file updates.</summary>
 public sealed class FreshInstallation(HttpClient http, IReadOnlyDictionary<string, string> keys)
 {
+    public int MaximumParallelConnections { get; set; }
     public async Task InstallAsync(UpdateRoots roots, string stateDirectory, string cacheDirectory, string stageDirectory,
         SignedManifest signed, IProgress<UpdateTransferProgress>? progress = null, CancellationToken token = default)
     {
@@ -25,10 +26,12 @@ public sealed class FreshInstallation(HttpClient http, IReadOnlyDictionary<strin
             throw new InvalidOperationException("Use a full installer to upgrade an existing installation.");
         }
         var plan = await UpdatePlanner.CreateAsync(null, manifest, roots, token);
-        var downloader = new UpdatePackageDownloader(http, cacheDirectory);
+        var downloader = new UpdatePackageDownloader(http, cacheDirectory)
+            { MaximumParallelConnections = MaximumParallelConnections };
+        var archives = await downloader.DownloadManyAsync(manifest, plan.Packages, progress, token);
         foreach (var package in plan.Packages)
         {
-            var path = await downloader.DownloadAsync(manifest, package, progress, token);
+            var path = archives[package.Id];
             progress?.Report(new(package.Id, package.Size, package.Size, "extracting"));
             await UpdatePackageExtractor.ExtractAsync(path, package, manifest, stageDirectory, token);
         }

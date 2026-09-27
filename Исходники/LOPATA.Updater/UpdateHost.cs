@@ -22,9 +22,19 @@ internal sealed class UpdateHost(Action<string> status)
             {
                 EnsureNotRunning(installation);
                 using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
-                var progress = new Progress<UpdateTransferProgress>(p => status(HostText.Get("UpdateHost.Downloading")
-                    + " " + (p.StoredBytes / 1048576d).ToString("F1") + " / " + (p.TotalBytes / 1048576d).ToString("F1") + " MB"));
-                await new FreshInstallation(http, Keys).InstallAsync(installation.Roots(), installation.StateDirectory,
+                var total = signed.Verify(Keys).Packages.Sum(p => p.Size);
+                var completed = new Dictionary<string, long>(StringComparer.Ordinal);
+                var progress = new Progress<UpdateTransferProgress>(p =>
+                {
+                    lock (completed)
+                    {
+                        completed[p.Package] = Math.Max(completed.GetValueOrDefault(p.Package), p.StoredBytes);
+                        status(HostText.Get("UpdateHost.Downloading") + " " + (completed.Values.Sum() / 1048576d).ToString("F1")
+                            + " / " + (total / 1048576d).ToString("F1") + " MB");
+                    }
+                });
+                await new FreshInstallation(http, Keys) { MaximumParallelConnections = DownloadConnections() }
+                    .InstallAsync(installation.Roots(), installation.StateDirectory,
                     installation.CacheDirectory, installation.StageDirectory(signed.Verify(Keys).Version), signed, progress, token);
             }
             await new UpdateTransaction(installation.Roots(), Keys, installation.StateDirectory).RegisterInstalledAsync(signed, token);
@@ -80,7 +90,8 @@ internal sealed class UpdateHost(Action<string> status)
             }
             status(HostText.Get("UpdateHost.Verifying"));
             using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
-            await new FileUpdatePreparation(http, Keys).StageAsync(state, pending.Files!, token: token);
+            await new FileUpdatePreparation(http, Keys) { MaximumParallelConnections = DownloadConnections() }
+                .StageAsync(state, pending.Files!, token: token);
             var previous = SignedManifest.Read(await File.ReadAllBytesAsync(transaction.InstalledManifestPath));
             var id = await transaction.PrepareAsync(previous, pending.Files!, state.StageDirectory(pending.Version), token);
             try
@@ -102,6 +113,8 @@ internal sealed class UpdateHost(Action<string> status)
         if (mode == "--apply") throw new IOException("No prepared update is available.");
         StartApplication(state, null);
     }
+
+    private static int DownloadConnections() => UpdateDownloadSettings.Read(Path.Combine(InstalledUpdateState.UserDataDirectory, "settings.json"));
 
     private static async Task WaitForCallerAsync(string[] args)
     {
