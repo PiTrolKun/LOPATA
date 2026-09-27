@@ -28,6 +28,11 @@ internal static class LiteraryEditorDialogs
         int selected = -1;
         var panel = new StackPanel(); panel.Children.Add(LiteraryUi.Text(message));
         var window = Create(owner, l(title), panel);
+        window.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key != System.Windows.Input.Key.Escape) return;
+            window.DialogResult = false; e.Handled = true;
+        };
         for (int i = 0; i < choices.Length; i++)
         {
             var index = i;

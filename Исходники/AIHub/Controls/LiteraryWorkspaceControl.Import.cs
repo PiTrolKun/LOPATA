@@ -14,6 +14,7 @@ public sealed partial class LiteraryWorkspaceControl
         {
             var status = await Task.Run(() => ImportProjectStatus.Read(_entry.ProjectPath));
             summary = status.Describe(_l);
+            _memoryStatus.Tag = "summary";
             _memoryStatus.Text = summary;
             // The staged importer retains its accepted book as an archive. Workspace exports
             // use the editor's normal export action; the legacy importer must not reset its stage.
@@ -24,11 +25,16 @@ public sealed partial class LiteraryWorkspaceControl
                 if (state.RootElement.GetProperty("Ready").GetBoolean()) return;
             }
             await Task.Run(()=>ImportProjectStatus.ExportCurrent(_entry.ProjectPath,_project.LanguageCode,CancellationToken.None));
+            _memoryStatus.Tag = "summary";
             _memoryStatus.Text=summary+"\n"+_l("Literary.Import.ExportRefreshed");
+            _studio?.PublishStatus(_l("Literary.Import.ExportRefreshed"));
         }
         catch(Exception ex)
         {
-            _memoryStatus.Text=(summary.Length>0?summary+"\n":"")+_l("Literary.Import.ExportRetry")+" "+(ex.Message.StartsWith("Literary.")?_l(ex.Message):ex.Message);
+            var error = _l("Literary.Import.ExportRetry")+" "+(ex.Message.StartsWith("Literary.")?_l(ex.Message):ex.Message);
+            _memoryStatus.Tag = "summary";
+            _memoryStatus.Text=(summary.Length>0?summary+"\n":"")+error;
+            _studio?.PublishStatus(error);
         }
     }
 }

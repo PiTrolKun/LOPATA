@@ -15,8 +15,9 @@ public sealed record LiteraryEditorSnapshot(string ProjectId, string Directory, 
     public LiterarySource Active => Sources.Single(p => p.Id == ActiveId);
     public string Revision => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
         ProjectId + "\n" + Directory + "\n" + ActiveId + "\n" + Active.FileName + "\n" + Text)));
-    public static LiteraryEditorSnapshot Capture(string projectId, string directory, LiteraryChapterIndex index, string text, bool unsaved) =>
-        new(projectId, Path.GetFullPath(directory), index.Transaction, index.ActiveId, text, unsaved,
+    public static LiteraryEditorSnapshot Capture(string projectId, string directory, LiteraryChapterIndex index, string text, bool unsaved,
+        string? viewedId = null) =>
+        new(projectId, Path.GetFullPath(directory), index.Transaction, viewedId ?? index.ActiveId, text, unsaved,
             Array.AsReadOnly(index.Parts.OrderBy(p => p.Chapter).ThenBy(p => p.Part).Select(p =>
                 new LiterarySource(p.Id, $"{p.Chapter:000}" + (p.Part == 1 ? "" : "." + p.Part), p.Title, p.FileName, p.Finished)).ToArray()));
 }
@@ -131,8 +132,7 @@ public sealed class LiteraryProjectReader(LiteraryEditorSnapshot snapshot)
     {
         var path = Path.Combine(Snapshot.Directory, "chapters", "index.json");
         using var state = JsonDocument.Parse(ReadBounded(path));
-        if (state.RootElement.GetProperty("Transaction").GetString() != Snapshot.Transaction
-            || state.RootElement.GetProperty("ActiveId").GetString() != Snapshot.ActiveId)
+        if (state.RootElement.GetProperty("Transaction").GetString() != Snapshot.Transaction)
             throw new IOException("Project structure changed after the request. Send a new request.");
         var parts = state.RootElement.GetProperty("Parts").EnumerateArray().ToArray();
         if (parts.Length != Snapshot.Sources.Count || Snapshot.Sources.Any(source => !parts.Any(p =>

@@ -8,12 +8,29 @@ public sealed partial class LiteraryStudioControl
 {
     private async Task SendAsync(bool transfer = false)
     {
-        if (_operation is not null || _blocked()) return;
+        if (_operation is not null || _blocked() || _confirmingPart) return;
         if (State.PromptSettings is { Custom: true, Selected: null })
         { _status.Text = _l("PromptPairs.Empty"); return; }
         var action = LiteraryStudioPrompts.Get(State.Action);
         if (!transfer && (action.RequiresInput || State.WriterComment) && string.IsNullOrWhiteSpace(State.Input)) { StartHint(); return; }
         if (State.Role == LiteraryChatProfile.Writer && (State.Task.Length == 0 || State.Action != "Continue" && State.Result.Length == 0)) return;
+        _confirmingPart = true;
+        try
+        {
+            if (!_draft.IsLatestViewed)
+            {
+                var choice = LiteraryEditorDialogs.Choose(this, _l, "Studio.PartChoice.Title", _l("Studio.PartChoice.Question"),
+                    "Studio.PartChoice.Open", "Studio.PartChoice.Last");
+                if (choice < 0) return;
+                if (choice == 1 && !_draft.NavigateToLast()) return;
+            }
+            if (PrepareSubmissionAsync is not null && !await PrepareSubmissionAsync())
+            { _status.Text = _l("Studio.PartChoice.PrepareFailed"); return; }
+            if (_blocked()) return;
+        }
+        catch (Exception ex)
+        { _status.Text = _l("Paragraph.Failure") + " " + ex.Message; return; }
+        finally { _confirmingPart = false; }
         StopHint();
         var direct = transfer && State.DirectRequest;
         using var cancellation = new CancellationTokenSource(); _operation = cancellation; State.Interrupted = true;
@@ -65,7 +82,12 @@ public sealed partial class LiteraryStudioControl
         try
         {
             var editor = _draft.Capture(State.ProjectId,_directory);
-            var selection = State.Selection.ToDictionary(x=>x.Key,x=>new ParagraphSelection { Selected=x.Value.Selected, Comment=x.Value.Comment });
+            var currentId = editor.ActiveId;
+            var selection = State.Selection.Where(x => x.Key != "chapters/" + currentId
+                && x.Key != "rag/project/" + currentId
+                && !(x.Key.StartsWith("jelly/", StringComparison.Ordinal)
+                    && x.Key.EndsWith("/" + currentId, StringComparison.Ordinal)))
+                .ToDictionary(x=>x.Key,x=>new ParagraphSelection { Selected=x.Value.Selected, Comment=x.Value.Comment });
             var instruction = transfer ? _l("Studio.TransferRequest") + "\n" + input : input;
             var basic = new ParagraphRequest(role,instruction,editor,[],selection,State.RouteId,State.Session,true);
             var requirements = State.Action == "Continue" ? Array.Empty<string>() : State.RevisionRequirements.ToArray();
@@ -98,7 +120,7 @@ public sealed partial class LiteraryStudioControl
                 _status.Text = _l(transfer ? "Studio.PreparingTask" : "Paragraph.Working");
             }),progress,cancellation,()=> { raw.Clear(); },()=>Dispatcher.Invoke(()=>ShowRequestActivity(transfer,started:true))), cancellation);
             cancellation.ThrowIfCancellationRequested();
-            if (editor.Revision != _draft.Capture(State.ProjectId,_directory).Revision)
+            if (!_draft.IsSnapshotCurrent(editor))
             {
                 State.Add(transfer ? "Task" : role.ToString(),result.Text,false); _status.Text = _l("Paragraph.Stale"); NotifyRequestNeedsAttention(); return false;
             }

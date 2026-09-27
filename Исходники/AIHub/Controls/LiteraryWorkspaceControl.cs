@@ -19,6 +19,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
     private readonly LiteraryDraftControl _draft;
     private LiteraryProjectParametersControl? _parameters;
     private LiteraryStudioControl? _studio;
+    private bool _editedPartNeedsMemory;
     private bool _legacyLayout;
     public event Action? BackRequested;
     public event Action? HomeRequested;
@@ -56,7 +57,13 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         IsVisibleChanged += (_, _) => { if (!IsVisible) { _draft.Save(); _runtime.Stop(); } };
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryScrollResources.xaml", UriKind.Relative) });
         _draft.CanFixFiles = () => !_runtime.IsBusy && !Indexing;
-        _draft.ChapterChanged += async () => { EditorHost.Content = _legacyLayout || _paragraphWindow is not null ? BuildEditor() : BuildStudioEditor(); _studio?.RefreshSources(); await PrepareMemoryAsync(); };
+        _draft.ChapterChanged += async () =>
+        {
+            EditorHost.Content = _legacyLayout || _paragraphWindow is not null ? BuildEditor() : BuildStudioEditor();
+            _studio?.RefreshSources(); await PrepareMemoryAsync();
+            if (_memoryRetry.Visibility != Visibility.Visible) _editedPartNeedsMemory = false;
+        };
+        _draft.PartSaved += _ => _editedPartNeedsMemory = true;
         _memoryRetry.Click += async (_, _) => await PrepareMemoryAsync();
         Loaded += async (_, _) => { AttachMemoryGuard(); AttachHotkeys(); if (!_memoryStarted) { _memoryStarted = true; await PrepareMemoryAsync(); } };
         Unloaded += (_, _) => { DetachMemoryGuard(); DetachHotkeys(); };

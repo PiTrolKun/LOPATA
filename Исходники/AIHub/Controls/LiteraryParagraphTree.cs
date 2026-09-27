@@ -49,7 +49,9 @@ public sealed class LiteraryParagraphTree : UserControl
         }
         foreach(var root in catalog.Roots) panel.Children.Add(Node(root));
         // Retain deleted selected scopes visibly, so the user can resolve them instead of a hidden permanent failure.
-        foreach(var missing in state.Selection.Keys.Where(id=>!nodes.ContainsKey(id) && state.Selection[id].Selected).ToArray())
+        foreach(var missing in state.Selection.Keys.Where(id=>!nodes.ContainsKey(id) && state.Selection[id].Selected
+            && id != "chapters/"+catalog.CurrentPartId && id != "rag/project/"+catalog.CurrentPartId
+            && !(id.StartsWith("jelly/",StringComparison.Ordinal) && id.EndsWith("/"+catalog.CurrentPartId,StringComparison.Ordinal))).ToArray())
             panel.Children.Add(Node(new(missing,l("Paragraph.Missing")+" · "+missing,"missing")));
         Refresh();
     }

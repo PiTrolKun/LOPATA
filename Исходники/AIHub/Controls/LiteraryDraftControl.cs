@@ -13,7 +13,7 @@ using MenuItem = System.Windows.Controls.MenuItem;
 
 namespace AIHub.Controls;
 
-public sealed class LiteraryDraftControl : UserControl
+public sealed partial class LiteraryDraftControl : UserControl
 {
     private readonly TextBox _editor = LiteraryWorkspaceParts.TextArea(false);
     private readonly TextBlock _counts = new(), _status = new(), _hint = new();
@@ -27,11 +27,13 @@ public sealed class LiteraryDraftControl : UserControl
     public string Text => _editor.Text;
     public string SelectedText => _editor.SelectedText;
     public void EnableSpelling(string language) => LiterarySpellChecking.Enable(_editor,language);
-    public string ChapterLabel => _loadFailed ? _l("Literary.Workspace.Chapter") : Path.GetFileNameWithoutExtension(Store.Active.FileName);
+    public string ChapterLabel => _loadFailed ? _l("Literary.Workspace.Chapter") : Path.GetFileNameWithoutExtension(Store.Part(_viewedId).FileName);
     public event Action? ChapterChanged;
+    public event Action? ViewedChanged;
+    public event Action<string>? PartSaved;
     public Func<bool>? CanFixFiles { get; set; }
     private bool _externalBlocked;
-    public void BlockActions(bool blocked) { _externalBlocked = blocked; _editor.IsReadOnly = blocked || _loadFailed || _busy; }
+    public void BlockActions(bool blocked) { _externalBlocked = blocked; _editor.IsReadOnly = blocked || _loadFailed || _busy; RefreshNavigation(); }
 
     public LiteraryEditorSnapshot Capture(string projectId, string directory)
     {
@@ -39,7 +41,7 @@ public sealed class LiteraryDraftControl : UserControl
         if (_loadFailed || (_busy && _editor.IsReadOnly))
             throw new LiterarySourceException("The editor is not ready for a consistent snapshot.", new IOException());
         RefreshExternalText();
-        return LiteraryEditorSnapshot.Capture(projectId, directory, Store.Index, Text, Text != _saved);
+        return LiteraryEditorSnapshot.Capture(projectId, directory, Store.Index, Text, Text != _saved, _viewedId);
     }
 
     public LiteraryDraftControl(string projectDirectory, Func<string, string> localize)
@@ -71,7 +73,6 @@ public sealed class LiteraryDraftControl : UserControl
         Unloaded += (_, _) => _timer.Stop();
         var panel = new DockPanel();
         _status.TextWrapping = _hint.TextWrapping = TextWrapping.Wrap;
-        _hint.Margin = new Thickness(0, 0, 0, 6);
         foreach (var block in new[] { _status, _counts, _hint })
         { block.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush"); block.SetResourceReference(TextBlock.FontSizeProperty, "UiBodyFontSize"); }
         _status.ToolTip = _l("Literary.Editor.IntervalHint");
@@ -87,7 +88,8 @@ public sealed class LiteraryDraftControl : UserControl
             menu.Items.Add(item); _status.ContextMenu = menu; menu.IsOpen = true;
             await Task.CompletedTask;
         };
-        DockPanel.SetDock(_hint, Dock.Top); panel.Children.Add(_hint);
+        var navigation = BuildPartNavigation();
+        DockPanel.SetDock(navigation, Dock.Top); panel.Children.Add(navigation);
         DockPanel.SetDock(_status, Dock.Bottom); panel.Children.Add(_status);
         DockPanel.SetDock(_counts, Dock.Bottom); panel.Children.Add(_counts);
         panel.Children.Add(_editor); Content = panel; ApplyLocalization(localize);
@@ -98,13 +100,19 @@ public sealed class LiteraryDraftControl : UserControl
     private void SetTimer() { _timer.Interval = TimeSpan.FromSeconds(Store.Index.AutosaveSeconds); if (IsLoaded && !_loadFailed) _timer.Start(); }
     private void LoadCurrent()
     {
-        var text = Store.Load(); _restoring = true;
+        _viewedId = Store.Index.ActiveId;
+        LoadViewed(_viewedId);
+    }
+    private void LoadViewed(string id)
+    {
+        var text = Store.LoadPart(id); _restoring = true;
+        _viewedId = id;
         _editor.Text = _accepted = _saved = text; _editor.CaretIndex = text.Length;
-        _restoring = false; _lastSaved = Store.LastSaved; _statusKey = "Literary.Draft.Saved";
+        _restoring = false; _lastSaved = Store.PartLastSaved(id); _statusKey = "Literary.Draft.Saved";
         _discarded = false; _editor.IsUndoEnabled = false; _editor.IsUndoEnabled = true;
     }
     public void ApplyLocalization(Func<string, string> localize)
-    { _l = localize; _hint.Text = _l("Literary.Draft.Hint"); _status.ToolTip = _l("Literary.Editor.IntervalHint"); Refresh(); }
+    { _l = localize; _hint.Text = _l("Literary.Draft.Hint"); _status.ToolTip = _l("Literary.Editor.IntervalHint"); RefreshNavigation(); Refresh(); }
     private void Changed()
     {
         if (_restoring) return;
@@ -126,7 +134,9 @@ public sealed class LiteraryDraftControl : UserControl
     {
         if (_busy) return false;
         if (_loadFailed) return false;
-        try { RefreshExternalText(); if (_discarded || _accepted == _saved) return true; Store.Save(_accepted); _saved = _accepted; _lastSaved = Store.LastSaved; _statusKey = "Literary.Draft.Saved"; Refresh(); return true; }
+        try { RefreshExternalText(); if (_discarded || _accepted == _saved) return true;
+            Store.EditPart(_viewedId, _saved, _accepted);
+            _saved = _accepted; _lastSaved = Store.PartLastSaved(_viewedId); _statusKey = "Literary.Draft.Saved"; Refresh(); PartSaved?.Invoke(_viewedId); return true; }
         catch (Exception ex) when (IsStorageError(ex)) { _statusKey = "Literary.Draft.SaveError"; Refresh(); return false; }
     }
     public async Task<bool> SaveAsync(bool lockEditor = true)
@@ -135,17 +145,17 @@ public sealed class LiteraryDraftControl : UserControl
         try { RefreshExternalText(); }
         catch(Exception ex) when(IsStorageError(ex)) { _statusKey="Literary.Draft.SaveError"; Refresh(); return false; }
         if (_discarded || _accepted == _saved) return true;
-        var snapshot = _accepted;
-        if (!await RunAsync(() => Store.Save(snapshot), lockEditor)) return false;
-        _saved = snapshot; _lastSaved = Store.LastSaved;
+        var snapshot = _accepted; var before = _saved; var id = _viewedId;
+        if (!await RunAsync(() => Store.EditPart(id, before, snapshot), lockEditor)) return false;
+        _saved = snapshot; _lastSaved = Store.PartLastSaved(id); PartSaved?.Invoke(id);
         _statusKey = _accepted == _saved ? "Literary.Draft.Saved" : "Literary.Draft.Unsaved"; Refresh(); return true;
     }
     public void RefreshExternalText()
     {
         if (_loadFailed || _busy) return;
-        if (Store.Load()==_saved) return;
+        if (Store.LoadPart(_viewedId)==_saved) return;
         if (_accepted!=_saved) throw new IOException(_l("Studio.ExternalConflict"));
-        LoadCurrent(); Refresh();
+        LoadViewed(_viewedId); Refresh();
     }
 
     public bool CanLeave()
@@ -210,6 +220,7 @@ public sealed class LiteraryDraftControl : UserControl
 
     public async Task FinishAsync()
     {
+        if (!IsStoreActiveViewed) return;
         if (_externalBlocked || CanFixFiles?.Invoke() == false) { ShowMessage("Literary.Shared.Waiting"); return; }
         if (!await SaveAsync()) { ShowMessage("Literary.Draft.SaveError"); return; }
         if (await RunAsync(Store.Finish)) { LoadCurrent(); Refresh(); ChapterChanged?.Invoke(); }
@@ -217,6 +228,7 @@ public sealed class LiteraryDraftControl : UserControl
     public async Task RenameAsync()
     {
         if (_externalBlocked || _busy || _loadFailed) return;
+        if (!IsStoreActiveViewed) return;
         var name = LiteraryEditorDialogs.Edit(this, _l, "Literary.Workspace.Action.RenameChapter", Store.Active.Title, false);
         if (name is null || !await SaveAsync()) return;
         if (await RunAsync(() => Store.Rename(name))) { Refresh(); ChapterChanged?.Invoke(); }
@@ -228,7 +240,7 @@ public sealed class LiteraryDraftControl : UserControl
         _statusKey = "Literary.Editor.Saving"; Refresh();
         try { await Task.Run(action); _statusKey = _accepted == _saved ? "Literary.Draft.Saved" : "Literary.Draft.Unsaved"; return true; }
         catch (Exception ex) when (IsStorageError(ex)) { _statusKey = "Literary.Draft.SaveError"; return false; }
-        finally { _busy = false; _editor.IsReadOnly = _externalBlocked || _loadFailed; Refresh(); }
+        finally { _busy = false; _editor.IsReadOnly = _externalBlocked || _loadFailed; Refresh(); RefreshNavigation(); }
     }
     private void OfferRecovery()
     {
@@ -243,6 +255,6 @@ public sealed class LiteraryDraftControl : UserControl
         _counts.Text = string.Format(_l("Literary.Draft.Counts"), Text.Length, LiteraryModelPolicy.DraftCharacters);
         var saved = _lastSaved.HasValue ? string.Format(_l("Literary.Draft.Saved"), _lastSaved.Value.ToString("HH:mm:ss")) : "";
         _status.Text = _statusKey == "Literary.Draft.Saved" ? saved : _l(_statusKey) + (saved.Length > 0 ? " · " + saved : "");
-        if (!_loadFailed && Store.Index.Parts.Count > 0) _editor.ToolTip = Store.FilePath;
+        if (!_loadFailed && Store.Index.Parts.Count > 0) _editor.ToolTip = Store.PartPath(_viewedId);
     }
 }

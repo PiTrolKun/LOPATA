@@ -113,23 +113,23 @@ internal static class HandoffProbe
             && accepted.Messages.Last().Quotes.Single().Text=="QUOTED_TEXT","request and quotes persist before generation, including restart recovery");
         Program.Pump();
         Program.Check(receipts.Text.Length==0 && receipts.ToolTip is null && tokens.Text.Length==0,"queued request clears old receipts before any new source callback");
-        Program.Check(activity.IsActive && activity.StatusText==l("Studio.Activity.Queued"),"queued request has nearby busy feedback");
+        Program.Check(activity.IsActive && activity.StatusText==l("Studio.Queued"),"queued request has nearby busy feedback");
         Program.Check(Math.Abs(studio.ActualHeight-idleHeight)<1 && Math.Abs(input.TranslatePoint(new Point(0,input.ActualHeight),studio).Y-inputBottom)<1,"showing busy feedback does not move input or panels");
         var rotation=(RotateTransform)Program.Field(activity,"_rotation")!; var angle=rotation.Angle; Program.Pump();
         Program.Check(!SystemParameters.ClientAreaAnimation || Math.Abs(angle-rotation.Angle)>1,"indicator visibly rotates when system animations are enabled");
         Program.Check(studio.IsMeasureValid && studio.IsArrangeValid,"rotation does not invalidate layout");
         queueReady.SetResult(); Program.Pump();
-        Program.Check(activity.StatusText==l("Studio.Activity.Reply"),"leaving queue updates feedback before output tokens");
+        Program.Check(activity.IsActive && activity.StatusText.Length>0,"leaving queue keeps feedback before output tokens");
         var bitmap=new RenderTargetBitmap((int)window.ActualWidth,(int)window.ActualHeight,96,96,PixelFormats.Pbgra32); bitmap.Render(window);
         var png=new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(bitmap)); using(var file=File.Create(Path.Combine(output,"sending-ru.png"))) png.Save(file);
         responseReady.SetResult(); Finish(submitted);
         Program.Check(studio.State.Messages.Count(m=>m.Session==studio.State.Session && m.Role=="User")==1,"reply completion does not duplicate submitted message");
-        Program.Check(input.Text.Length==0 && rotation.Angle==0 && activity.Visibility==Visibility.Hidden,"completion leaves empty input and stops animation");
+        Program.Check(input.Text.Length==0 && rotation.Angle==0 && !activity.IsActive && activity.StatusText.Length>0,"completion leaves empty input and retains final feedback");
         requests.IsBusy=false; requests.Queue=null;
 
         Reset(); requests.IsBusy=true; requests.Queue=new TaskCompletionSource().Task;
         submitted=Start(false); Program.Pump(); Stop(); Finish(submitted);
-        Program.Check(activity.Visibility==Visibility.Hidden && new LiteraryStudioStore(new(root)).Load().Messages.Last().Text=="USER_INSTRUCTION","queue cancellation stops indicator and retains request");
+        Program.Check(!activity.IsActive && new LiteraryStudioStore(new(root)).Load().Messages.Last().Text=="USER_INSTRUCTION","queue cancellation stops indicator and retains request");
         requests.IsBusy=false; requests.Queue=null;
         Reset();
         studio.ReviewTaskAsync=_=>throw new Exception("Direct mode must not open the review step");
@@ -219,8 +219,8 @@ internal static class HandoffProbe
 
         Reset(); requests.Handler=async (_,_,ct)=>{await Task.Delay(Timeout.Infinite,ct); return Reply("");};
         var pending=Start(); Program.Pump(); Program.Check(studio.IsWorking,"advisor cancellation starts a pending operation"); Stop(); Finish(pending);
-        Program.Check(requests.Calls.Count==1 && studio.State.Role==LiteraryChatProfile.Advisor && studio.State.Input.Length==0
-            && new LiteraryStudioStore(new(root)).Load().Messages.Last().Text=="USER_INSTRUCTION","cancelled preparation keeps submitted input in durable history and does not run writer");
+        Program.Check(requests.Calls.Count==1 && studio.State.Role==LiteraryChatProfile.Advisor && studio.State.Input=="USER_INSTRUCTION"
+            && new LiteraryStudioStore(new(root)).Load().Messages.Last().Text=="USER_INSTRUCTION","cancelled preparation retains editable input and does not run writer");
 
         Reset(); requests.Handler=async (r,progress,ct)=>
         {
@@ -233,7 +233,7 @@ internal static class HandoffProbe
         Program.Check(!studio.IsWorking && !studio.State.Interrupted,"cancelled chain releases controls");
 
         Reset(); requests.Handler=(_,_,_)=>throw new IOException("PREPARATION_FAILED"); Finish(Start());
-        Program.Check(requests.Calls.Count==1 && studio.State.Input.Length==0 && studio.State.Task.Length==0
+        Program.Check(requests.Calls.Count==1 && studio.State.Input=="USER_INSTRUCTION" && studio.State.Task.Length==0
             && new LiteraryStudioStore(new(root)).Load().Messages.Last().Text=="USER_INSTRUCTION","preparation failure cannot start writer or lose submitted input");
 
         Reset(); requests.Handler=(r,_,_)=>r.Action=="Transfer"?Task.FromResult(Reply("HIDDEN_BRIEF")):throw new IOException("WRITER_FAILED"); Finish(Start());

@@ -37,11 +37,14 @@ public sealed partial class LiteraryStudioControl : UserControl
     private LiteraryFreeChatWindow? _freeChat;
     private CancellationTokenSource? _operation;
     private bool _dirty, _showArchive, _loading;
+    private bool _confirmingPart;
+    private string _sourceRevision = "";
     public LiteraryStudioState State { get; }
     public System.Windows.FrameworkElement StatusContent { get; private set; } = null!;
     public bool IsWorking => _operation is not null;
     // Future task-review surface plugs in here, without reinstating the old mandatory edit screen.
     public Func<string, Task<string?>>? ReviewTaskAsync { get; set; }
+    public Func<Task<bool>>? PrepareSubmissionAsync { get; set; }
 
     public LiteraryStudioControl(string directory, LiteraryDraftControl draft, ContentControl editor,
         LiteraryChatRuntime runtime, Func<bool> blocked, Func<string,string> l, string language, UIElement memoryStatus, UIElement navigation,
@@ -91,7 +94,9 @@ public sealed partial class LiteraryStudioControl : UserControl
     public void RefreshSources()
     {
         var project = LiteraryProjectStore.ReadProject(_directory);
-        _catalog = new(project, _draft.Capture(project.Id, _directory), _l);
+        var snapshot = _draft.Capture(project.Id, _directory);
+        _sourceRevision = snapshot.Revision;
+        _catalog = new(project, snapshot, _l);
         var selection = new LiteraryParagraphState { Selection = State.Selection, Recommendations = State.Recommendations };
         _tree = new(_catalog, selection, _l, _language); _tree.Changed += () => _dirty = true; _sources.Content = _tree;
         _loading = true; _route.Items.Clear(); _route.Items.Add(new ComboBoxItem { Content = _l("Paragraph.NoRoute"), Tag = "" });
@@ -101,6 +106,11 @@ public sealed partial class LiteraryStudioControl : UserControl
             _route.Items.Add(new ComboBoxItem { Content = _l("Paragraph.RouteMissing"), Tag = State.RouteId });
         _route.SelectedItem = _route.Items.OfType<ComboBoxItem>().FirstOrDefault(i=>(string)i.Tag==State.RouteId) ?? _route.Items[0];
         _loading = false; RouteDescription(); ClearRequestStatus();
+    }
+    public void RefreshSourcesIfChanged()
+    {
+        var project = LiteraryProjectStore.ReadProject(_directory);
+        if (_draft.Capture(project.Id, _directory).Revision != _sourceRevision) RefreshSources();
     }
     private void RouteDescription() => _routeDescription.Text = State.RouteId.Length == 0 ? _l("Paragraph.NoRoute")
         : _catalog.Routes.TryGetValue(State.RouteId, out var route) ? _l("Paragraph.RouteBoundary") + " " + route.Description : _l("Paragraph.RouteMissing");

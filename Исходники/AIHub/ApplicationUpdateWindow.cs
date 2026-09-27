@@ -23,6 +23,8 @@ public sealed class ApplicationUpdateWindow : Window
     private readonly string _version;
     private readonly ApplicationUpdateSettings _settings;
     private readonly Action _save;
+    private readonly Action _settingsChanged;
+    private readonly Action _checkCompleted;
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, Margin = new(0, 16, 0, 12) };
     private readonly TextBox _notes = new()
     {
@@ -36,13 +38,42 @@ public sealed class ApplicationUpdateWindow : Window
     private UpdateOffer? _update;
     private PreparedApplicationUpdate? _ready;
     private UpdateDelivery? _direction;
+    private bool _backgroundCheckBusy, _receivedBackgroundCheck;
+    public bool IsBusy => _operation is not null;
+
+    public void SetBackgroundCheckBusy(bool busy)
+    {
+        _backgroundCheckBusy = busy;
+        if (busy) _status.Text = _text("Updates.Checking");
+        RefreshButtons();
+    }
+
+    public void CompleteBackgroundCheck(UpdateOffer? offer, bool succeeded)
+    {
+        _backgroundCheckBusy = false;
+        _receivedBackgroundCheck = true;
+        if (_operation is null && _ready is null)
+        {
+            if (succeeded)
+            {
+                _update = offer;
+                ShowRelease();
+                if (offer is null) _status.Text = _text("Updates.CurrentLatest");
+                else _ = ShowDownloadSizeAsync();
+            }
+            else if (_update is null) _status.Text = _text("Updates.CheckFailed");
+        }
+        RefreshButtons();
+    }
 
     public ApplicationUpdateWindow(Window owner, ApplicationUpdateCoordinator service, ApplicationUpdateSettings settings,
-        string version, Func<string, string> text, Action save, Func<int> connections, Func<Task> install, UpdateOffer? knownUpdate)
+        string version, Func<string, string> text, Action save, Func<int> connections, Func<Task> install, UpdateOffer? knownUpdate,
+        Action? settingsChanged = null, Action? checkCompleted = null)
     {
         Owner = owner; Resources = owner.Resources;
         _service = service; _settings = settings; _version = version; _text = text;
-        _save = save; _connections = connections; _install = install;
+        _save = save; _settingsChanged = settingsChanged ?? save; _checkCompleted = checkCompleted ?? (() => { });
+        _connections = connections; _install = install;
         _direction = service.ReadDirection(); _ready = service.ReadPrepared();
         _update = _ready is null ? knownUpdate : ApplicationUpdateCoordinator.PreparedOffer(_ready);
         Title = text("Updates.Title"); Width = 740; Height = 710; MinWidth = 540; MinHeight = 470;
@@ -52,7 +83,7 @@ public sealed class ApplicationUpdateWindow : Window
         Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         panel.Children.Add(new TextBlock { Text = text("Updates.Current") + " " + version, FontSize = 20 });
         var automatic = new CheckBox { Content = text("Updates.Automatic"), IsChecked = settings.CheckOnStartup, Margin = new(0, 16, 0, 16) };
-        automatic.Click += (_, _) => { settings.CheckOnStartup = automatic.IsChecked == true; save(); };
+        automatic.Click += (_, _) => { settings.CheckOnStartup = automatic.IsChecked == true; _settingsChanged(); };
         automatic.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush"); panel.Children.Add(automatic);
         AddDirection(panel, _stable, UpdateDelivery.FullInstaller, "Updates.StableDirection");
         AddDirection(panel, _beta, UpdateDelivery.FilePatch, "Updates.BetaDirection");
@@ -86,6 +117,7 @@ public sealed class ApplicationUpdateWindow : Window
         ShowRelease(); RefreshButtons();
         Loaded += async (_, _) =>
         {
+            if (_backgroundCheckBusy || _receivedBackgroundCheck) return;
             if (_update is null && _direction is not null) await CheckAsync();
             else if (_update is not null && _ready is null) await ShowDownloadSizeAsync();
         };
@@ -103,7 +135,7 @@ public sealed class ApplicationUpdateWindow : Window
         {
             try
             {
-                _service.SaveDirection(delivery); _direction = delivery; _settings.LastCheckUtc = null; _save();
+                _service.SaveDirection(delivery); _direction = delivery; _settings.LastCheckUtc = null; _settingsChanged();
                 if (_ready is null) _update = null;
                 ShowRelease(); RefreshButtons();
             }
@@ -121,7 +153,7 @@ public sealed class ApplicationUpdateWindow : Window
 
     private async Task CheckAsync()
     {
-        if (_operation is not null || _direction is null || _ready is not null) return;
+        if (_backgroundCheckBusy || _operation is not null || _direction is null || _ready is not null) return;
         _operation = new(TimeSpan.FromSeconds(45)); RefreshButtons(); _status.Text = _text("Updates.Checking");
         try
         {
@@ -132,7 +164,7 @@ public sealed class ApplicationUpdateWindow : Window
             else _status.Text = _text("Updates.CurrentLatest");
         }
         catch (Exception) { _update = null; _status.Text = _text("Updates.CheckFailed"); }
-        finally { _operation.Dispose(); _operation = null; RefreshButtons(); }
+        finally { _operation.Dispose(); _operation = null; _checkCompleted(); RefreshButtons(); }
     }
 
     private void ShowRelease()
@@ -161,7 +193,7 @@ public sealed class ApplicationUpdateWindow : Window
 
     private async Task DownloadAsync()
     {
-        if (_update is null || _operation is not null || _ready is not null) return;
+        if (_backgroundCheckBusy || _update is null || _operation is not null || _ready is not null) return;
         _operation = new(); RefreshButtons(); _progress.Visibility = Visibility.Visible;
         var progress = new Progress<ManagedModelDownloadProgress>(p =>
         {
@@ -183,7 +215,7 @@ public sealed class ApplicationUpdateWindow : Window
 
     private void RefreshButtons()
     {
-        var idle = _operation is null;
+        var idle = _operation is null && !_backgroundCheckBusy;
         _stable.IsEnabled = _beta.IsEnabled = idle;
         _check.IsEnabled = idle && _direction is not null && _ready is null;
         _download.Visibility = _ready is null ? Visibility.Visible : Visibility.Collapsed;

@@ -19,11 +19,13 @@ public sealed class ParagraphSource(string id, string label, string kind, string
 /// <summary>Only IDs and labels from this catalog may reach an unchecked-source recommendation.</summary>
 public sealed class LiteraryParagraphCatalog
 {
+    public string CurrentPartId { get; }
     public List<ParagraphSource> Roots { get; } = [];
     public Dictionary<string,ParagraphRoute> Routes { get; } = [];
     public Dictionary<string, ParagraphSource> Nodes => Roots.SelectMany(r => r.All()).ToDictionary(n => n.Id);
     public LiteraryParagraphCatalog(LiteraryProject project, LiteraryEditorSnapshot editor, Func<string,string> l)
     {
+        CurrentPartId = editor.ActiveId;
         var labels = new LiteraryCalibrationLabels(l);
         var creation = new ParagraphSource("creation", l("Paragraph.Source.Creation"), "group"); Roots.Add(creation);
         var document = new LiteraryCalibrationDocument(project.CreationBrief);
@@ -63,7 +65,8 @@ public sealed class LiteraryParagraphCatalog
         var jelly = new ParagraphSource("jelly",l("Paragraph.Source.Jelly"),"jelly"); Roots.Add(jelly);
         try
         {
-            foreach(var kind in new LiteraryJellyStore(new(editor.Directory)).Read().GroupBy(e=>e.Fact.Kind))
+            foreach(var kind in new LiteraryJellyStore(new(editor.Directory)).Read()
+                .Where(e=>e.PartId!=editor.ActiveId).GroupBy(e=>e.Fact.Kind))
             {
                 var kn = new ParagraphSource("jelly/"+kind.Key,l("Literary.Jelly.Kind."+kind.Key),"jellyKind",kind.Key); jelly.Children.Add(kn);
                 foreach(var subject in kind.GroupBy(e=>e.Fact.Subject))

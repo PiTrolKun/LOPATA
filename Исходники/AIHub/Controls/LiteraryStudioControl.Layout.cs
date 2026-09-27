@@ -47,10 +47,11 @@ public sealed partial class LiteraryStudioControl
 
         var compose = new StackPanel { Margin = new Thickness(0,8,0,8) };
         compose.Children.Add(_quotes);
-        var inputHeading = new DockPanel();
-        _activity.Margin = new Thickness(0,0,5,0); DockPanel.SetDock(_activity,Dock.Right); inputHeading.Children.Add(_activity);
         _inputLabel.TextWrapping = TextWrapping.NoWrap; _inputLabel.TextTrimming = TextTrimming.CharacterEllipsis;
-        inputHeading.Children.Add(_inputLabel); compose.Children.Add(inputHeading);
+        compose.Children.Add(_inputLabel);
+        _activity.Margin = new Thickness(0,0,5,0);
+        compose.Children.Add(_activity);
+        compose.Children.Add(BuildStatusPopup(memoryStatus));
         var row = new DockPanel(); var sends = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Bottom };
         foreach (var button in new[] { _send, _sendWriter })
         {
@@ -82,7 +83,8 @@ public sealed partial class LiteraryStudioControl
         Grid.SetColumn(sourceCard,1); lower.Children.Add(sourceCard);
         var progressCard = BuildRouteCard();
         Grid.SetColumn(progressCard,2); lower.Children.Add(progressCard);
-        StatusContent = BuildStatus(memoryStatus);
+        // Detailed status is available from the line above the input. The shared footer stays compact.
+        StatusContent = new Border { Height = 0, Visibility = Visibility.Collapsed };
     }
     private void BuildActions()
     {

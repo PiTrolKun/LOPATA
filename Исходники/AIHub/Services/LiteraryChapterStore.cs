@@ -92,6 +92,18 @@ public sealed partial class LiteraryChapterStore
     }
 
     public string Load() => LiteraryChapterFiles.Read(FilePath);
+    public LiteraryChapterPart Part(string id) => Index.Parts.Single(p => p.Id == id);
+    public string PartPath(string id) => Resolve(Part(id).FileName);
+    public string LoadPart(string id) => LiteraryChapterFiles.Read(PartPath(id));
+    public DateTime PartLastSaved(string id) => File.GetLastWriteTime(PartPath(id));
+    public void EditPart(string id, string before, string after)
+    {
+        using var lease = Enter(); CheckUnchanged();
+        if (after.Length > LiteraryModelPolicy.DraftCharacters) throw new InvalidDataException("Chapter part is too long.");
+        var path = PartPath(id);
+        if (LiteraryChapterFiles.Read(path) != before) throw new IOException("Chapter part changed in another editor.");
+        if (before != after) LiteraryChapterFiles.Write(path, after);
+    }
     public void Save(string text)
     {
         using var lease = Enter(); CheckUnchanged(); LiteraryChapterFiles.Write(FilePath, text);

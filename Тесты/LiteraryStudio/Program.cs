@@ -74,6 +74,7 @@ internal static class Program
             var workspace=new LiteraryWorkspaceControl(new LiteraryProjectEntry(project.Id,"Studio probe",root),project,L,preparedRuntime:runtime);
             workspace.GetType().GetField("_memoryStarted",BindingFlags.NonPublic|BindingFlags.Instance)!.SetValue(workspace,true);
             var shell=Shell(workspace,xml,resources); win.Content=shell; win.Show(); Pump();
+            if(lang=="ru" && dark) NavigationProbe.Run(output,L);
             var studio=All<LiteraryStudioControl>(win).Single();
             studio.State.Clear(); studio.State.Add("User","Хочу начать со знакомства с героем у мастерской.");
             studio.State.Add("Advisor","Можно показать его через небольшое действие. Он прислушивается к звуку за дверью: так мы знакомимся с его любопытством, не пересказывая биографию.");
@@ -83,8 +84,9 @@ internal static class Program
             status.Text=L("Paragraph.Working"); tokens.Text=L("Paragraph.Tokens")+" 3538 / 55552";
             ((TextBlock)Field(workspace,"_memoryStatus")!).Text=L("Literary.Rag.Ready"); Pump();
             var statusHost=(ContentControl)shell.FindName("LiteraryStatusHost");
-            Check(statusHost.IsVisible && All<TextBlock>(statusHost).Contains(status) && All<TextBlock>(statusHost).Contains(tokens),"live status and context reach the main footer");
-            Check(!All<TextBlock>(studio).Contains(status) && !All<TextBlock>(studio).Contains(tokens),"route/workspace has no status copy");
+            Check(statusHost.IsVisible && statusHost.Content is ContentControl { Content: Border { Visibility: Visibility.Collapsed } },"literary footer has no expanding status details");
+            Check(((LiteraryRequestIndicator)Field(studio,"_activity")!).StatusText==L("Literary.Rag.Ready"),"latest status appears above the request input");
+            Check(status.Text.Length>0 && tokens.Text.Length>0,"full request details remain available");
             Check(!((TextBlock)shell.FindName("StatusText")).IsVisible,"generic footer text hidden in literary scenario");
             Check(!All<TextBlock>(workspace).Any(t=>t.Text==L("Studio.Shortcuts")),"artifact shortcuts have no visible label");
             var right=((Grid)studio.Content).Children.OfType<Grid>().Single(g=>Grid.GetColumn(g)==2);
@@ -203,7 +205,7 @@ internal static class Program
             navigation.Visibility=Visibility.Collapsed; Pump();
             Check(!statusHost.IsVisible && ((TextBlock)shell.FindName("StatusText")).IsVisible,"other scenarios recover the normal footer");
             navigation.Visibility=Visibility.Visible; Pump();
-            Check(statusHost.IsVisible && All<TextBlock>(statusHost).Contains((TextBlock)Field(studio,"_status")!),"footer reconnects after page and artifact switches");
+            Check(statusHost.IsVisible && statusHost.Content is ContentControl { Content: Border { Visibility: Visibility.Collapsed } },"compact footer reconnects after page and artifact switches");
             Check(workspace.CanLeave(),"safe leave"); navigation.GoBack(); Pump();
             Check(statusHost.Content is null,"leaving project clears its footer"); win.Close(); Pump();
         }

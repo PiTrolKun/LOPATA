@@ -33,6 +33,7 @@ public sealed partial class LiteraryWorkspaceControl
         _memoryProgress.SetResourceReference(ProgressBar.BackgroundProperty, "PanelBrush");
         _memoryProgress.Visibility = Visibility.Visible; _memoryProgress.IsIndeterminate = true;
         _memoryRetry.Visibility = Visibility.Collapsed;
+        _memoryStatus.Tag = null;
         _memoryStatus.Text = _l("Literary.Rag.ProjectWait");
         var acceptingProgress = true;
         var progress = new Progress<LiteraryPreparationProgress>(p =>
@@ -63,6 +64,7 @@ public sealed partial class LiteraryWorkspaceControl
             if (jellyReady && System.IO.File.Exists(System.IO.Path.Combine(_entry.ProjectPath,"Import","review.json")))
             {
                 var status = await Task.Run(() => AIHub.Services.LiteraryImport.ImportProjectStatus.Read(_entry.ProjectPath), cancellation.Token);
+                _memoryStatus.Tag = "summary";
                 _memoryStatus.Text = status.Describe(_l);
                 await RefreshImportExportAsync();
             }

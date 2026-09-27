@@ -159,7 +159,7 @@ public sealed class LiteraryParagraphSources(LiteraryProject project, LiteraryEd
         {
             // Build the selection index once per request. Overlapping selected ancestors and
             // descendants share the same fact IDs, source validation and material entries.
-            var rows = new LiteraryJellyStore(_layout).Read();
+            var rows = new LiteraryJellyStore(_layout).Read().Where(e=>e.PartId!=editor.ActiveId).ToArray();
             foreach (var row in rows)
             {
                 ct.ThrowIfCancellationRequested();

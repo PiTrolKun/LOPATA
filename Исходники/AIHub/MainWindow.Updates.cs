@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Windows;
+using System.Windows.Threading;
 using AIHub.Models;
 using AIHub.Services;
 using Lopata.Updates;
@@ -16,10 +17,19 @@ public partial class MainWindow
     private ApplicationUpdateWindow? _updateWindow;
     private UpdateOffer? _availableUpdate;
     private ProcessStartInfo? _applicationUpdateStart;
+    private readonly DispatcherTimer _betaUpdateTimer = new() { Interval = TimeSpan.FromMinutes(30) };
+    private bool _automaticUpdateCheckRunning, _checkAfterUpdateWindow;
+    private string? _lastOfferedUpdateVersion;
 
     private void InitializeApplicationUpdates()
     {
         _appSettings.Updates ??= new();
+        _betaUpdateTimer.Tick += async (_, _) =>
+        {
+            _betaUpdateTimer.Stop();
+            await CheckAutomaticUpdateAsync();
+        };
+        Closed += (_, _) => _betaUpdateTimer.Stop();
         Closed += (_, _) =>
         {
             if (_applicationUpdateStart is not { } start) return;
@@ -37,22 +47,69 @@ public partial class MainWindow
                     System.Windows.MessageBox.Show(this, L("Updates.HealthFailed"), L("Updates.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            if (_updateService is null) return;
+            await CheckAutomaticUpdateAsync();
+        };
+    }
+
+    private void ScheduleBetaUpdateCheck()
+    {
+        _betaUpdateTimer.Stop();
+        if (!_updateLifetime.IsCancellationRequested && _updateService is not null
+            && _appSettings.Updates.CheckOnStartup && _updateService.ReadDirection() == UpdateDelivery.FilePatch)
+            _betaUpdateTimer.Start();
+    }
+
+    private async Task CheckAutomaticUpdateAsync()
+    {
+        if (_updateService is null || _updateLifetime.IsCancellationRequested || _automaticUpdateCheckRunning) return;
+        if (_updateWindow is not null) { ScheduleBetaUpdateCheck(); return; }
+        _automaticUpdateCheckRunning = true;
+        var checkSucceeded = false;
+        UpdateOffer? checkedOffer = null;
+        try
+        {
+            if (_updateService.ReadPrepared() is not null)
+            {
+                ApplicationUpdateNotice.Visibility = Visibility.Visible;
+                return;
+            }
+            if (!_appSettings.Updates.CheckOnStartup || _updateService.ReadDirection() is not { } direction) return;
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_updateLifetime.Token);
             timeout.CancelAfter(TimeSpan.FromSeconds(45));
-            try
+            var offer = await _updateService.CheckAsync(GetAppVersion(), direction, timeout.Token);
+            if (_updateLifetime.IsCancellationRequested) return;
+            checkSucceeded = true;
+            checkedOffer = offer;
+            _availableUpdate = offer;
+            _appSettings.Updates.LastCheckUtc = offer is null ? DateTimeOffset.UtcNow : null;
+            _appSettingsStore.Save(_appSettings);
+            if (offer is null)
             {
-                if (_updateService.ReadPrepared() is not null) { ApplicationUpdateNotice.Visibility = Visibility.Visible; return; }
-                if (!_appSettings.Updates.CheckOnStartup || _updateService.ReadDirection() is not { } direction) return;
-                _availableUpdate = await _updateService.CheckAsync(GetAppVersion(),
-                    direction, timeout.Token);
-                if (_updateLifetime.IsCancellationRequested) return;
-                _appSettings.Updates.LastCheckUtc = _availableUpdate is null ? DateTimeOffset.UtcNow : null;
-                _appSettingsStore.Save(_appSettings);
-                ApplicationUpdateNotice.Visibility = _availableUpdate is null ? Visibility.Collapsed : Visibility.Visible;
+                ApplicationUpdateNotice.Visibility = Visibility.Collapsed;
+                return;
             }
-            catch (Exception) { /* Startup stays usable offline; manual checks explain errors. */ }
-        };
+            if (offer is not null && _lastOfferedUpdateVersion != offer.Version)
+            {
+                _lastOfferedUpdateVersion = offer.Version;
+                ApplicationUpdateNotice.Visibility = Visibility.Visible;
+            }
+        }
+        catch (Exception) { /* Background checks are silent offline; manual checks explain errors. */ }
+        finally
+        {
+            _automaticUpdateCheckRunning = false;
+            if (!_updateLifetime.IsCancellationRequested)
+                _updateWindow?.CompleteBackgroundCheck(checkedOffer, checkSucceeded);
+            ScheduleBetaUpdateCheck();
+        }
+    }
+
+    private void UpdateSettingsChanged()
+    {
+        _appSettingsStore.Save(_appSettings);
+        _betaUpdateTimer.Stop();
+        _checkAfterUpdateWindow = _appSettings.Updates.CheckOnStartup
+            && _updateService?.ReadDirection() == UpdateDelivery.FilePatch;
     }
 
     private void ApplicationUpdates_Click(object sender, RoutedEventArgs e)
@@ -68,7 +125,8 @@ public partial class MainWindow
         {
             _updateWindow = new(this, _updateService, _appSettings.Updates, GetAppVersion(), L,
                 () => _appSettingsStore.Save(_appSettings), () => _appSettings.ModelDownloads.MaximumParallelConnections,
-                InstallApplicationUpdateAsync, _availableUpdate);
+                InstallApplicationUpdateAsync, _availableUpdate, UpdateSettingsChanged,
+                () => _checkAfterUpdateWindow = false);
         }
         catch (Exception)
         {
@@ -76,7 +134,18 @@ public partial class MainWindow
             System.Windows.MessageBox.Show(this, L("Updates.StateFailed"), L("Updates.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-        _updateWindow.Closed += (_, _) => { _updateWindow = null; _availableUpdate = null; };
+        _updateWindow.SetBackgroundCheckBusy(_automaticUpdateCheckRunning);
+        _updateWindow.Closed += async (_, _) =>
+        {
+            var wasBusy = _updateWindow?.IsBusy == true;
+            _updateWindow = null; _availableUpdate = null;
+            if (_checkAfterUpdateWindow && !wasBusy)
+            {
+                _checkAfterUpdateWindow = false;
+                await CheckAutomaticUpdateAsync();
+            }
+            else { _checkAfterUpdateWindow = false; ScheduleBetaUpdateCheck(); }
+        };
         _updateWindow.Show();
     }
 
