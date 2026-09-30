@@ -939,6 +939,11 @@
               MaxWidth="{DynamicResource UiMainContentMaxWidth}"
               HorizontalAlignment="Center"
               Visibility="Collapsed">
+            <Grid.Resources>
+                <ResourceDictionary><ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="Controls/SettingsResources.xaml" />
+                </ResourceDictionary.MergedDictionaries></ResourceDictionary>
+            </Grid.Resources>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="22" />
@@ -953,10 +958,6 @@
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            FontSize="{DynamicResource UiPageTitleFontSize}"
                            FontWeight="SemiBold" />
-                <Button x:Name="OpenImagesFolderButton" Content="Открыть папку изображений" HorizontalAlignment="Left" Margin="0,8,0,8" Click="OpenImagesFolderButton_Click" />
-                <Button x:Name="ApplicationUpdatesButton" Content="Обновления программы" HorizontalAlignment="Left" Margin="0,8,0,8" Click="ApplicationUpdates_Click" />
-                <Button x:Name="ComponentLicensesButton" Content="Лицензии компонентов"
-                        HorizontalAlignment="Left" Margin="0,8,0,8" Click="ComponentLicensesButton_Click" />
                 <TextBlock x:Name="SettingsDescriptionText"
                            Text="Здесь будут общие настройки ЛОПАТА. Сейчас доступен выбор языка интерфейса."
                            Foreground="{DynamicResource TextSecondaryBrush}"
@@ -966,13 +967,17 @@
                            Margin="0,12,0,0" />
             </StackPanel>
 
-            <ScrollViewer Grid.Row="2"
+            <controls:SettingsWorkspace x:Name="SettingsNavigator" Grid.Row="2" />
+            <ScrollViewer x:Name="SettingsControlSource" Visibility="Collapsed" Grid.Row="2"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           HorizontalContentAlignment="Stretch">
                 <StackPanel MaxWidth="1320"
                             HorizontalAlignment="Stretch">
-                <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource LineBrush}"
+                <Button x:Name="OpenImagesFolderButton" Content="Открыть папку изображений" HorizontalAlignment="Left" Margin="0,8,0,8" Click="OpenImagesFolderButton_Click" />
+                <Button x:Name="ComponentLicensesButton" Content="Лицензии компонентов"
+                        HorizontalAlignment="Left" Margin="0,8,0,8" Click="ComponentLicensesButton_Click" />
+                <Border x:Name="SettingsDiagnosticsCard" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource LineBrush}"
                         BorderThickness="1" CornerRadius="8" Padding="{DynamicResource UiPanelPadding}" Margin="0,0,0,14">
                     <StackPanel>
                         <CheckBox x:Name="DetailedLiteraryDiagnosticsCheckBox" Margin="0,0,0,8"
@@ -984,7 +989,7 @@
                         <Button x:Name="OpenProcessesButton" HorizontalAlignment="Left" Margin="0,8,0,0" Click="OpenProcesses_Click" />
                     </StackPanel>
                 </Border>
-                <Border Background="{DynamicResource PanelBrush}"
+                <Border x:Name="SettingsLanguageCard" Background="{DynamicResource PanelBrush}"
                         BorderBrush="{DynamicResource LineBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
@@ -1009,7 +1014,7 @@
                                    FontSize="{DynamicResource UiSmallFontSize}"
                                    Margin="0,18,0,6" />
                         <ComboBox x:Name="LanguageComboBox"
-                                  Width="220"
+                                  MaxWidth="220"
                                   HorizontalAlignment="Left"
                                   SelectionChanged="LanguageComboBox_SelectionChanged" />
                         <TextBlock x:Name="SettingsLocalizationFolderText"
@@ -1020,7 +1025,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="{DynamicResource PanelBrush}"
+                <Border x:Name="SettingsInterfaceCard" Background="{DynamicResource PanelBrush}"
                         BorderBrush="{DynamicResource LineBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
@@ -1039,7 +1044,7 @@
                                    TextWrapping="Wrap"
                                    Margin="0,8,0,0" />
 
-                        <Grid Margin="0,18,0,0">
+                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True" Margin="0,18,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
@@ -1065,7 +1070,7 @@
                             <Button x:Name="ResetInterfaceTextScaleButton"
                                     Grid.Column="3"
                                     Content="Сбросить"
-                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Style="{StaticResource SettingsActionButtonStyle}"
                                     Margin="14,0,0,0"
                                     Click="ResetInterfaceTextScaleButton_Click" />
                         </Grid>
@@ -1074,14 +1079,13 @@
                                    Text="Пример текста: ЛОПАТА подстроит интерфейс под выбранный размер."
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap"
-                                   Margin="150,10,0,0" />
+                                   Margin="0,10,0,0" />
 
                         <TextBlock x:Name="SettingsWindowStartupText"
                                    Text="Открытие окна"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    Margin="0,18,0,6" />
                         <ComboBox x:Name="WindowStartupModeComboBox"
-                                  Width="360"
                                   MaxWidth="520"
                                   HorizontalAlignment="Left"
                                   DisplayMemberPath="DisplayName"
@@ -1094,7 +1098,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="{DynamicResource PanelBrush}"
+                <Border x:Name="SettingsVoiceCard" Background="{DynamicResource PanelBrush}"
                         BorderBrush="{DynamicResource LineBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
@@ -1118,7 +1122,7 @@
                                    FontSize="{DynamicResource UiFont12}"
                                    Margin="0,14,0,6" />
                         <ComboBox x:Name="CoreVoiceProviderComboBox"
-                                  Width="220"
+                                  MaxWidth="220"
                                   HorizontalAlignment="Left"
                                   SelectionChanged="CoreVoiceProviderComboBox_SelectionChanged" />
                         <CheckBox x:Name="CoreVoiceEnabledCheckBox"
@@ -1127,7 +1131,7 @@
                                   Margin="0,14,0,0"
                                   Checked="CoreVoiceSettingChanged"
                                   Unchecked="CoreVoiceSettingChanged" />
-                        <Grid Margin="0,14,0,0">
+                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True" Margin="0,14,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="90" />
                                 <ColumnDefinition Width="*" />
@@ -1150,7 +1154,7 @@
                                        HorizontalAlignment="Right"
                                        VerticalAlignment="Center" />
                         </Grid>
-                        <Grid Margin="0,10,0,0">
+                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True" Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="90" />
                                 <ColumnDefinition Width="*" />
@@ -1175,14 +1179,14 @@
                         </Grid>
                         <Button x:Name="CoreVoiceTestButton"
                                 Content="Проверить голос"
-                                Style="{StaticResource SecondaryButtonStyle}"
+                                Style="{StaticResource SettingsActionButtonStyle}"
                                 HorizontalAlignment="Left"
                                 Margin="0,16,0,0"
                                 Click="CoreVoiceTestButton_Click" />
                     </StackPanel>
                 </Border>
 
-                <Border Background="{DynamicResource PanelBrush}"
+                <Border x:Name="SettingsAutonomyCard" Background="{DynamicResource PanelBrush}"
                         BorderBrush="{DynamicResource LineBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
@@ -1200,7 +1204,7 @@
                                    FontSize="{DynamicResource UiFont13}"
                                    TextWrapping="Wrap"
                                    Margin="0,8,0,0" />
-                        <Grid Margin="0,16,0,0">
+                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True" Margin="0,16,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="190" />
                                 <ColumnDefinition Width="*" />
@@ -1227,7 +1231,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="{DynamicResource PanelBrush}"
+                <Border x:Name="SettingsDownloadsCard" Background="{DynamicResource PanelBrush}"
                         BorderBrush="{DynamicResource LineBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
@@ -1251,7 +1255,7 @@
                                    FontSize="{DynamicResource UiFont12}"
                                    Margin="0,14,0,6" />
                         <ComboBox x:Name="ModelDownloadConnectionsComboBox"
-                                  Width="300"
+                                  MaxWidth="300"
                                   HorizontalAlignment="Left"
                                   DisplayMemberPath="DisplayName"
                                   SelectionChanged="ModelDownloadConnectionsComboBox_SelectionChanged" />
@@ -1271,29 +1275,26 @@
                         <TextBlock x:Name="ManagedModelsHelpText"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap" />
-                        <Grid Margin="0,14,0,0">
+                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True" Margin="0,14,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBox x:Name="ManagedModelSearchBox"
-                                     MinWidth="260"
-                                     Height="34"
+                                     MinWidth="120"
                                      Padding="8,4"
                                      TextChanged="ManagedModelFilter_Changed" />
                             <ComboBox x:Name="ManagedModelFilterComboBox"
                                       Grid.Column="1"
-                                      MinWidth="180"
-                                      Height="34"
+                                      MinWidth="100"
                                       Margin="10,0,0,0"
                                       SelectionChanged="ManagedModelFilter_Changed" />
                             <Button x:Name="RefreshManagedModelsButton"
                                     Grid.Column="2"
-                                    Height="34"
                                     MinWidth="120"
                                     Margin="10,0,0,0"
-                                    Style="{DynamicResource SecondaryButtonStyle}"
+                                    Style="{DynamicResource SettingsActionButtonStyle}"
                                     Click="RefreshManagedModelsButton_Click" />
                         </Grid>
                         <TextBlock x:Name="ManagedModelOperationStatusText"
@@ -1304,9 +1305,8 @@
                         <Button x:Name="CancelManagedModelOperationButton"
                                 Content="Отмена"
                                 Width="130"
-                                Height="34"
                                 HorizontalAlignment="Left"
-                                Style="{DynamicResource SecondaryButtonStyle}"
+                                Style="{DynamicResource SettingsActionButtonStyle}"
                                 Margin="0,8,0,0"
                                 Visibility="Collapsed"
                                 Click="CancelManagedModelOperationButton_Click" />
@@ -1319,7 +1319,7 @@
                                             CornerRadius="7"
                                             Padding="14"
                                             Margin="0,0,0,10">
-                                        <Grid>
+                                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
@@ -1387,18 +1387,18 @@
                                                 <Button Content="{Binding DownloadActionText}"
                                                         Tag="{Binding}"
                                                         IsEnabled="{Binding CanAcquire}"
-                                                        Style="{DynamicResource SecondaryButtonStyle}"
+                                                        Style="{DynamicResource SettingsActionButtonStyle}"
                                                         Click="ManagedModelDownloadButton_Click" />
                                                 <Button Content="{Binding VerifyActionText}"
                                                         Tag="{Binding}"
                                                         IsEnabled="{Binding CanVerify}"
-                                                        Style="{DynamicResource SecondaryButtonStyle}"
+                                                        Style="{DynamicResource SettingsActionButtonStyle}"
                                                         Margin="0,7,0,0"
                                                         Click="ManagedModelVerifyButton_Click" />
                                                 <Button Content="{Binding RemoveActionText}"
                                                         Tag="{Binding}"
                                                         IsEnabled="{Binding CanRemove}"
-                                                        Style="{DynamicResource SecondaryButtonStyle}"
+                                                        Style="{DynamicResource SettingsActionButtonStyle}"
                                                         Margin="0,7,0,0"
                                                         Click="ManagedModelRemoveButton_Click" />
                                             </StackPanel>
@@ -1432,7 +1432,7 @@
                                             CornerRadius="6"
                                             Padding="14"
                                             Margin="0,0,0,10">
-                                        <Grid>
+                                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
@@ -1507,35 +1507,35 @@
                                                            FontSize="{DynamicResource UiFont11}"
                                                            HorizontalAlignment="Right"
                                                            Margin="0,3,0,8" />
-                                                <StackPanel Orientation="Horizontal"
+                                                <WrapPanel Orientation="Horizontal"
                                                             HorizontalAlignment="Right">
                                                     <Button Content="{Binding DownloadLabel}"
-                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Style="{StaticResource SettingsActionButtonStyle}"
                                                             Padding="10,5"
                                                             Tag="{Binding}"
                                                             IsEnabled="{Binding CanDownload}"
                                                             Click="ComponentDownloadButton_Click" />
                                                     <Button Content="{Binding VerifyLabel}"
-                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Style="{StaticResource SettingsActionButtonStyle}"
                                                             Padding="10,5"
                                                             Margin="6,0,0,0"
                                                             Tag="{Binding}"
                                                             Click="ComponentVerifyButton_Click" />
                                                     <Button Content="{Binding RemoveLabel}"
-                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Style="{StaticResource SettingsActionButtonStyle}"
                                                             Padding="10,5"
                                                             Margin="6,0,0,0"
                                                             Tag="{Binding}"
                                                             IsEnabled="{Binding CanRemove}"
                                                             Click="ComponentRemoveButton_Click" />
-                                                </StackPanel>
+                                                </WrapPanel>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <StackPanel Orientation="Horizontal"
+                        <WrapPanel Orientation="Horizontal"
                                     HorizontalAlignment="Left">
                             <Button x:Name="DownloadSelectedComponentsButton"
                                     Content="Скачать выбранные"
@@ -1543,15 +1543,15 @@
                                     Click="DownloadSelectedComponentsButton_Click" />
                             <Button x:Name="DownloadAllComponentsButton"
                                     Content="Скачать все доступные"
-                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Style="{StaticResource SettingsActionButtonStyle}"
                                     Margin="10,0,0,0"
                                     Click="DownloadAllComponentsButton_Click" />
                             <Button x:Name="VerifyInstalledComponentsButton"
                                     Content="Проверить установленные"
-                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Style="{StaticResource SettingsActionButtonStyle}"
                                     Margin="10,0,0,0"
                                     Click="VerifyInstalledComponentsButton_Click" />
-                        </StackPanel>
+                        </WrapPanel>
                         <TextBlock x:Name="ComponentOperationStatusText"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    TextWrapping="Wrap"
@@ -1587,7 +1587,7 @@
                                             CornerRadius="6"
                                             Padding="14"
                                             Margin="0,0,0,10">
-                                        <Grid>
+                                        <Grid controls:SettingsResponsiveLayout.StackWhenNarrow="True">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
@@ -1665,56 +1665,56 @@
                                                            FontSize="{DynamicResource UiFont11}"
                                                            HorizontalAlignment="Right"
                                                            Margin="0,3,0,8" />
-                                                <StackPanel Orientation="Horizontal">
+                                                <WrapPanel Orientation="Horizontal">
                                                     <Button Content="{Binding DownloadLabel}"
-                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Style="{StaticResource SettingsActionButtonStyle}"
                                                             Padding="10,5"
                                                             Tag="{Binding}"
                                                             IsEnabled="{Binding CanDownload}"
                                                             Click="ComponentDownloadButton_Click" />
                                                     <Button Content="{Binding RemoveLabel}"
-                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            Style="{StaticResource SettingsActionButtonStyle}"
                                                             Padding="10,5"
                                                             Margin="6,0,0,0"
                                                             Tag="{Binding}"
                                                             IsEnabled="{Binding CanRemove}"
                                                             Click="ComponentRemoveButton_Click" />
-                                                </StackPanel>
+                                                </WrapPanel>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <StackPanel Orientation="Horizontal">
+                        <WrapPanel Orientation="Horizontal">
                             <Button x:Name="DownloadSelectedViewersButton"
                                     Content="Скачать выбранные просмотрщики"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     Click="DownloadSelectedViewersButton_Click" />
                             <Button x:Name="DownloadAllViewersButton"
                                     Content="Скачать все просмотрщики"
-                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Style="{StaticResource SettingsActionButtonStyle}"
                                     Margin="10,0,0,0"
                                     Click="DownloadAllViewersButton_Click" />
                             <Button x:Name="VerifyInstalledViewersButton"
                                     Content="Проверить просмотрщики"
-                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Style="{StaticResource SettingsActionButtonStyle}"
                                     Margin="10,0,0,0"
                                     Click="VerifyInstalledViewersButton_Click" />
-                        </StackPanel>
+                        </WrapPanel>
                     </StackPanel>
                 </Expander>
             </StackPanel>
             </ScrollViewer>
 
-            <StackPanel Grid.Row="4"
+            <WrapPanel Grid.Row="4"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
                 <Button x:Name="BackFromSettingsButton"
                         Content="Назад"
-                        Style="{StaticResource SecondaryButtonStyle}"
+                        Style="{StaticResource SettingsActionButtonStyle}"
                         Click="BackFromSettingsButton_Click" />
-            </StackPanel>
+            </WrapPanel>
         </Grid>
 
         <Grid x:Name="ProfilePage"

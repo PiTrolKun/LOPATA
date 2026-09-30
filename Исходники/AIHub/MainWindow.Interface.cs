@@ -326,7 +326,9 @@ public partial class MainWindow
     protected override async void OnClosing(CancelEventArgs e)
     {
         if (_processShutdownPending) { e.Cancel = true; base.OnClosing(e); return; }
-        if (!LiteraryPage.CanLeave()) { _applicationUpdateStart = null; e.Cancel = true; base.OnClosing(e); return; }
+        if (!TryResolveCloseBehavior(out bool closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
+        if (TryHideToTray(closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
+        if (!LiteraryPage.CanLeave()) { _applicationUpdateStart = null; _fullExitRequested = false; _sessionEnding = false; e.Cancel = true; base.OnClosing(e); return; }
         if (!_processShutdownComplete)
         {
             e.Cancel = true;

@@ -122,7 +122,11 @@ public partial class MainWindow
             System.Windows.MessageBox.Show(this, L("Updates.StateFailed"), L("Updates.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-        if (_updateWindow is not null) { _updateWindow.Activate(); return; }
+        if (_updateWindow is not null)
+        {
+            if (_updateWindow.WindowState == WindowState.Minimized) _updateWindow.WindowState = WindowState.Normal;
+            _updateWindow.Activate(); return;
+        }
         ApplicationUpdateNotice.Visibility = Visibility.Collapsed;
         try
         {
@@ -138,6 +142,7 @@ public partial class MainWindow
             return;
         }
         _updateWindow.SetBackgroundCheckBusy(_automaticUpdateCheckRunning);
+        if (!IsVisible) KeepUpdatesIndependent();
         _updateWindow.Closed += async (_, _) =>
         {
             var wasBusy = _updateWindow?.IsBusy == true;

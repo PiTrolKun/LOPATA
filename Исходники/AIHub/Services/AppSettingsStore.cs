@@ -32,6 +32,7 @@ public sealed class AppSettingsStore
             settings.ModelDownloads ??= new ModelDownloadSettings();
             settings.FileViewer ??= new FileViewerSettings();
             settings.Interface ??= new InterfaceSettings();
+            settings.Behavior ??= new ApplicationBehaviorSettings();
             settings.Interface.LastWindowPlacement ??= new RememberedWindowPlacement();
             settings.ImageAnalysisSpeech ??= new ImageAnalysisSpeechSettings();
             return settings;

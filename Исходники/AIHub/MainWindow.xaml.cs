@@ -157,12 +157,15 @@ public partial class MainWindow : Window
         _ = RefreshModelCatalogOnStartupAsync();
         UpdatePrimaryActionButton();
         InitializeApplicationUpdates();
+        InitializeSettingsWorkspace();
+        InitializeApplicationTray();
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
     {
         _isDarkTheme = !_isDarkTheme;
         ApplyTheme();
+        ApplySettingsWorkspaceLocalization();
     }
 
     private async void PrimaryActionButton_Click(object sender, RoutedEventArgs e)
@@ -496,7 +499,6 @@ public partial class MainWindow : Window
             _localizationService.CurrentLanguageCode.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "en-US" : "ru-RU");
         AboutButton.ToolTip = L("About.Title");
         System.Windows.Automation.AutomationProperties.SetName(AboutButton, L("About.Title"));
-        ApplicationUpdatesButton.Content = L("Updates.Title");
         RefreshDetailedDiagnosticsSettings();
         ApplicationUpdateNotice.Content = L("Updates.Available");
         ComponentLicensesButton.Content = L("licenses.title");
@@ -557,6 +559,7 @@ public partial class MainWindow : Window
         SaveStorageSettingsButton.Content = L("Setup.Save");
 
         SettingsTitleText.Text = L("Settings.Title");
+        ApplySettingsWorkspaceLocalization();
         SettingsDescriptionText.Text = L("Settings.Description");
         SettingsLanguageTitleText.Text = L("Settings.LanguageTitle");
         SettingsLanguageHelpText.Text = L("Settings.LanguageHelp");
@@ -1035,6 +1038,7 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _updateLifetime.Cancel();
+        DisposeApplicationTray();
         _updateHttp.Dispose();
         try
         {
@@ -2436,6 +2440,7 @@ public partial class MainWindow : Window
         {
             _settingsReturnPage = FindVisiblePageBeforeSettings();
             _settingsReturnStatusText = StatusText.Text;
+            SettingsNavigator.RestoreSection(_appSettings.Behavior.LastSettingsSection);
         }
 
         if (!HideImageAnalysisPages()) return;

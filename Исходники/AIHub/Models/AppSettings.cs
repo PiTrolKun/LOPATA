@@ -18,6 +18,8 @@ public sealed class AppSettings
 
     public InterfaceSettings Interface { get; set; } = new();
 
+    public ApplicationBehaviorSettings Behavior { get; set; } = new();
+
     public ImageAnalysisSpeechSettings ImageAnalysisSpeech { get; set; } = new();
 
     public Dictionary<string, ImageAnalysisHeavySpeechSettings> ImageAnalysisHeavySpeechProfiles { get; set; } = [];
