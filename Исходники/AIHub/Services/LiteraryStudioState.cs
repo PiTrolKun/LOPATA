@@ -15,6 +15,8 @@ public sealed class StudioMessage
     public List<StudioQuote> Quotes { get; set; } = [];
     public bool InContext { get; set; }
     public bool Complete { get; set; } = true;
+    public int? ContextOrder { get; set; }
+    public StudioContextChange? ContextChange { get; set; }
 }
 
 /// <summary>The journal is durable; membership of the model's working context is explicit.</summary>
@@ -45,6 +47,7 @@ public sealed class LiteraryStudioState
     public Dictionary<string, string> RolePromptVariants { get; set; } = [];
     public Dictionary<string, string> SelectedPresets { get; set; } = [];
     public LiteraryPromptSettings? PromptSettings { get; set; }
+    public StudioWriterContext? WriterContext { get; set; }
 
     public StudioMessage Add(string role, string text, bool complete = true, List<StudioQuote>? quotes = null)
     {
@@ -54,6 +57,7 @@ public sealed class LiteraryStudioState
     }
     public void Transfer(string task)
     {
+        WriterContext = null;
         foreach (var message in Messages) message.InContext = false;
         Task = task; Result = ""; RevisionRequirements.Clear(); Role = LiteraryChatProfile.Writer; Action = "Continue"; WriterComment = false;
         Add("Task", task);
@@ -69,6 +73,7 @@ public sealed class LiteraryStudioState
     }
     public void Clear()
     {
+        WriterContext = null;
         foreach (var message in Messages) message.InContext = false;
         Session = Guid.NewGuid().ToString("N"); Role = LiteraryChatProfile.Advisor; Action = "Discuss"; WriterComment = false;
         Input = Task = Result = ""; Quotes.Clear(); RevisionRequirements.Clear(); Recommendations.Clear(); Interrupted = false; Pending = null;
@@ -96,6 +101,9 @@ public sealed class LiteraryStudioStore(LiteraryProjectLayout layout)
             || state.Selection.Any(s=>s.Value is null)
             || state.Pending is { } pending && (pending.Text is null || pending.Quotes is null || pending.MessageId is null))
             throw new InvalidDataException("Invalid studio session. Original file retained.");
+        if (state.WriterContext is { } context && (context.Source is null || context.Task is null
+            || context.Target is null || context.Requirements is null || context.Requirements.Any(r => r is null)))
+            throw new InvalidDataException("Invalid writer context. Original file retained.");
         if (state.PromptSettings?.Selected is { } selected) LiteraryPromptSets.Validate([selected]);
         return state;
     }

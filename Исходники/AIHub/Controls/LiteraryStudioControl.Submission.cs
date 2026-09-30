@@ -11,7 +11,7 @@ public sealed partial class LiteraryStudioControl
     {
         var input = State.Input; var quotes = State.Quotes.ToList();
         // The new user message is passed as the current instruction, not a duplicate history entry.
-        var conversation = State.Messages.Where(m=>m.InContext && m.Complete && m.Session==State.Session).ToArray();
+        var conversation = StudioContextPlan.Conversation(State);
         var message = !transfer || input.Length > 0 || quotes.Count > 0
             ? State.Add("User",input.Length > 0 ? input : _l(transfer ? "Studio.TransferRequest" : "Studio.Action." + State.Action),quotes:quotes) : null;
         var comment = State.WriterComment;

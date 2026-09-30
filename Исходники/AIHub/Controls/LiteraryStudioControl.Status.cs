@@ -21,7 +21,13 @@ public sealed partial class LiteraryStudioControl
 
     private void ShowContextFailure(ImageAnalysisContextExhaustedException error)
     {
+        if (!error.OutputTruncated)
+        {
+            _contextRejected = true;
+            if (error.Budget is { } budget) SetContextMeter(new(budget.InputTokens, budget.ContextTokens));
+        }
         _contextFailureText = _status.Text = LiteraryContextBudgetMessage.Format(error, _l);
+        if (!error.OutputTruncated) _contextFailureText = _status.Text = _contextFailureText + "\n" + _l("Studio.Context.OpenHint");
     }
 
     private void RenderContextFailure()

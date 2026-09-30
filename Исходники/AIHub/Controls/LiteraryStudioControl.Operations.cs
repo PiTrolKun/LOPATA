@@ -8,7 +8,7 @@ public sealed partial class LiteraryStudioControl
 {
     private async Task SendAsync(bool transfer = false)
     {
-        if (_operation is not null || _blocked() || _confirmingPart) return;
+        if (IsWorking || _blocked() || _confirmingPart) return;
         if (State.PromptSettings is { Custom: true, Selected: null })
         { _status.Text = _l("PromptPairs.Empty"); return; }
         var action = LiteraryStudioPrompts.Get(State.Action);
@@ -90,11 +90,11 @@ public sealed partial class LiteraryStudioControl
                 .ToDictionary(x=>x.Key,x=>new ParagraphSelection { Selected=x.Value.Selected, Comment=x.Value.Comment });
             var instruction = transfer ? _l("Studio.TransferRequest") + "\n" + input : input;
             var basic = new ParagraphRequest(role,instruction,editor,[],selection,State.RouteId,State.Session,true);
-            var requirements = State.Action == "Continue" ? Array.Empty<string>() : State.RevisionRequirements.ToArray();
             var prompts = transfer ? new LiteraryActionPrompt("", "") : LiteraryPromptSets.Resolve(State, State.Action);
             var request = new StudioRequest(basic,transfer ? "Transfer" : State.Action,
-                submission?.Conversation ?? State.Messages.Where(m=>m.InContext && m.Complete && m.Session==State.Session).ToArray(), quotes,State.Task,
-                State.Action=="Continue" && !State.ContinueFromChat && !transfer ? "" : State.Result,requirements,State.ContinueFromChat,
+                submission?.Conversation ?? StudioContextPlan.Conversation(State), quotes, StudioContextPlan.Writer(State).Task,
+                State.Action=="Continue" && !State.ContinueFromChat && !transfer ? "" : StudioContextPlan.Writer(State).Target,
+                State.Action=="Continue" ? Array.Empty<string>() : StudioContextPlan.Writer(State).Requirements, State.ContinueFromChat,
                 prompts.Action, prompts.Role, MemoryProgress: update => Dispatcher.Invoke(() =>
                 {
                     var key = update.Stage switch
@@ -136,6 +136,7 @@ public sealed partial class LiteraryStudioControl
             {
                 if (role == LiteraryChatProfile.Writer)
                 {
+                    var compacted = State.WriterContext is not null ? StudioContextPlan.Writer(State) : null;
                     foreach (var m in State.Messages) m.InContext = false;
                     var task = State.Messages.LastOrDefault(m=>m.Session==State.Session && m.Role=="Task");
                     if (task is not null) task.InContext = true;
@@ -144,10 +145,19 @@ public sealed partial class LiteraryStudioControl
                     if (input.Length > 0 || State.Action is "Shorter" or "Detail" or "Tone" or "Rewrite")
                         State.RevisionRequirements.Add(action.Prompt + "\n" + input);
                     State.Result = result.Text;
+                    if (compacted is not null)
+                    {
+                        if (State.Action == "Continue") compacted.Requirements.Clear();
+                        if (input.Length > 0 || State.Action is "Shorter" or "Detail" or "Tone" or "Rewrite")
+                            compacted.Requirements.Add(action.Prompt + "\n" + input);
+                        compacted.Target = result.Text; compacted.Source = StudioContextPlan.WriterSource(State);
+                        State.WriterContext = compacted;
+                    }
                 }
                 State.Add(role.ToString(),result.Text);
                 _status.Text = _l(role==LiteraryChatProfile.Writer && !LiteraryParagraphPrompts.IsSingleParagraph(result.Text) ? "Paragraph.Multiple" : "Paragraph.Manual");
             }
+            _contextRejected = false;
             return true;
         }
         catch (OperationCanceledException) { PreservePartial(); _status.Text = _l("Paragraph.Cancelled"); return false; }

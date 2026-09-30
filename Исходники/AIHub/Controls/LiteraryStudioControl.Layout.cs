@@ -41,6 +41,7 @@ public sealed partial class LiteraryStudioControl
         _role.FontWeight = FontWeights.SemiBold; _role.TextWrapping = TextWrapping.NoWrap;
         _role.Background = System.Windows.Media.Brushes.Transparent; heading.Children.Add(_role);
         foreach (var button in new[] { _archive, _clear, _stop }) { Compact(button); heading.Children.Add(button); }
+        heading.Children.Add(_contextButton);
         _archive.Content = _l("Studio.Archive"); _clear.Content = _l("Paragraph.Clear"); _stop.Content = _l("Paragraph.Stop");
         DockPanel.SetDock(heading, Dock.Top); conversation.Children.Add(heading);
         _scroll.Content = _messages; conversation.Children.Add(_scroll); right.Children.Add(LiteraryWorkspaceParts.Card(conversation));

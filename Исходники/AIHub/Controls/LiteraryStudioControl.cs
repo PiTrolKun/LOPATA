@@ -41,27 +41,28 @@ public sealed partial class LiteraryStudioControl : UserControl
     private string _sourceRevision = "";
     public LiteraryStudioState State { get; }
     public System.Windows.FrameworkElement StatusContent { get; private set; } = null!;
-    public bool IsWorking => _operation is not null;
+    public bool IsWorking => _operation is not null || _contextWindow is not null;
     // Future task-review surface plugs in here, without reinstating the old mandatory edit screen.
     public Func<string, Task<string?>>? ReviewTaskAsync { get; set; }
     public Func<Task<bool>>? PrepareSubmissionAsync { get; set; }
 
     public LiteraryStudioControl(string directory, LiteraryDraftControl draft, ContentControl editor,
         LiteraryChatRuntime runtime, Func<bool> blocked, Func<string,string> l, string language, UIElement memoryStatus, UIElement navigation,
-        ILiteraryStudioRequests? requests = null)
+        ILiteraryStudioRequests? requests = null, ILiteraryContextTools? contextTools = null)
     {
         _directory = directory; _draft = draft; _runtime = runtime; _requests = requests ?? runtime; _blocked = blocked; _l = l; _language = language;
         _store = new(new(directory)); State = _store.Load();
         if (State.Pending is not null) { LiteraryStudioPending.Restore(State); _dirty = true; }
         BuildLayout(editor, memoryStatus, navigation); RefreshSources(); Render();
         ConfigureTransferSettings();
+        ConfigureContextManagement(contextTools);
         if (State.Interrupted) { _status.Text = l("Paragraph.Interrupted"); State.Interrupted = false; _dirty = true; }
         _input.TextChanged += (_,_) => { if (_loading) return; State.Input = _input.Text; _dirty = true; StopHint(); Availability(); };
         _input.PreviewKeyDown += InputKeyDown;
         _send.Click += async (_,_) => await SendToAdvisorAsync();
         _sendWriter.Click += async (_,_) => await SendToWriterAsync();
         _stop.Click += (_,_) => _operation?.Cancel();
-        _clear.Click += (_,_) => { State.Clear(); ClearRequestStatus(); _showArchive = false; Render(); Save(); };
+        _clear.Click += (_,_) => { State.Clear(); _contextRejected = false; SetContextMeter(null); _contextStamp = ""; ClearRequestStatus(); _showArchive = false; Render(); Save(); };
         _archive.Click += (_,_) => { _showArchive = !_showArchive; RenderMessages(); };
         _route.SelectionChanged += (_,_) =>
         {
@@ -78,7 +79,7 @@ public sealed partial class LiteraryStudioControl : UserControl
     }
     public bool CanLeave()
     {
-        if (_operation is not null || _freeChat?.IsWorking == true) { _status.Text = _l("Studio.StopFirst"); return false; }
+        if (IsWorking || _freeChat?.IsWorking == true) { _status.Text = _l("Studio.StopFirst"); return false; }
         if (!Save()) return false;
         _freeChat?.Close(); return true;
     }
@@ -128,7 +129,8 @@ public sealed partial class LiteraryStudioControl : UserControl
     }
     private void Availability()
     {
-        var ready = _operation is null && !_blocked();
+        var ready = !IsWorking && !_blocked();
+        _contextButton.IsEnabled = ready && !_requests.IsBusy;
         foreach (var button in _buttons) button.IsEnabled = ready;
         _stop.IsEnabled = _operation is not null; _input.IsReadOnly = !ready;
         _sources.IsEnabled = _route.IsEnabled = ready;

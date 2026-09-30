@@ -17,7 +17,7 @@ public sealed partial class LiteraryStudioControl
     {
         _messages.Children.Clear(); _streamBox = null;
         foreach (var message in State.Messages.Where(m=>(_showArchive || m.Session==State.Session)
-            && (!State.DirectRequest || m.Role!="Task")))
+            && (_showArchive || m.Role != "ContextEvent" && (!State.DirectRequest || m.Role!="Task"))))
         {
             var panel = new StackPanel { Margin = new Thickness(0,4,6,14) };
             var header = new DockPanel();

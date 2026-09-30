@@ -33,6 +33,7 @@ public sealed partial class LiteraryChatRuntime
             reasoning: !transfer, options: request.RuntimeOptions, fitMessages: async (messages, token) =>
             {
                 var input = await MemoryInputTokensAsync(messages, token, thinking: !transfer).ConfigureAwait(false);
+                ObserveStudioContext(request, evidence!, stamp!, input);
                 try { await AvailableReplyAsync(input, token).ConfigureAwait(false); return messages; }
                 catch (ImageAnalysisContextExhaustedException) { }
                 // The mandatory task and conversation are never silently shortened.
@@ -59,7 +60,9 @@ public sealed partial class LiteraryChatRuntime
                 }
                 if (stamp != await Task.Run(() => LiteraryParagraphRevision.Capture(request.Base.Editor), token).ConfigureAwait(false))
                     throw new IOException("Project changed during memory reading.");
-                return LiteraryStudioPrompts.Build(request, evidence, catalog!, project!, l);
+                var finalMessages = LiteraryStudioPrompts.Build(request, evidence, catalog!, project!, l);
+                ObserveStudioContext(request, evidence!, stamp!, await MemoryInputTokensAsync(finalMessages, token, thinking: !transfer).ConfigureAwait(false));
+                return finalMessages;
             });
         if (stamp != await Task.Run(() => LiteraryParagraphRevision.Capture(request.Base.Editor), ct)) throw new IOException("Project changed during generation.");
         if (!transfer) return new(raw, [], evidence!);

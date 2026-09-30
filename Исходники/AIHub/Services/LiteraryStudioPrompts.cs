@@ -43,6 +43,8 @@ public static class LiteraryStudioPrompts
         instruction += "\n" + LiteraryPrompts.Pacing + "\n" + LiteraryParagraphPrompts.Sources + """
 
             conversation — доступная текущая беседа, proposals — предложения, не принятая рукопись.
+            Role Summary — принятая автором рабочая выжимка прежней беседы, а не новый факт книги.
+            Она может содержать неточности: при сомнении опирайся на явные последние указания автора.
             quotations — явно выбранные автором цитаты; source обозначает происхождение снимка текста.
             previous_task — переданное задание. target — вариант для правки, не новый факт истории.
             Для Писателя previous_task содержит полное переданное задание, packet.task — новое уточнение автора к нему.
