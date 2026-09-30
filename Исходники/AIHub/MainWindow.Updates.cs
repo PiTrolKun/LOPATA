@@ -20,9 +20,12 @@ public partial class MainWindow
     private readonly DispatcherTimer _betaUpdateTimer = new() { Interval = TimeSpan.FromMinutes(30) };
     private bool _automaticUpdateCheckRunning, _checkAfterUpdateWindow;
     private string? _lastOfferedUpdateVersion;
+    private Controls.ApplicationUpdateAttention? _updateNoticeAttention;
 
     private void InitializeApplicationUpdates()
     {
+        _updateNoticeAttention = new(ApplicationUpdateNotice);
+        Closed += (_, _) => _updateNoticeAttention.Dispose();
         _appSettings.Updates ??= new();
         _betaUpdateTimer.Tick += async (_, _) =>
         {

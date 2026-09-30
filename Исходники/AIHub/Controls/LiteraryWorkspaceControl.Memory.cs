@@ -35,6 +35,7 @@ public sealed partial class LiteraryWorkspaceControl
         _memoryRetry.Visibility = Visibility.Collapsed;
         _memoryStatus.Tag = null;
         _memoryStatus.Text = _l("Literary.Rag.ProjectWait");
+        _readinessWindow?.SetPreparationStatus(_memoryStatus.Text);
         var acceptingProgress = true;
         var progress = new Progress<LiteraryPreparationProgress>(p =>
         {
@@ -45,6 +46,7 @@ public sealed partial class LiteraryWorkspaceControl
             // Ready is the only stage allowed to display complete readiness.
             if (p.Percent >= 0) _memoryProgress.Value = p.Stage == "Ready" ? 100 : Math.Min(99, p.Percent);
             _memoryStatus.Text = _l("Literary.Rag." + p.Stage) + (p.Detail.Length > 0 ? " · " + p.Detail : "");
+            _readinessWindow?.SetPreparationStatus(_memoryStatus.Text);
         });
         try
         {
@@ -87,12 +89,13 @@ public sealed partial class LiteraryWorkspaceControl
         {
             _memoryProgress.IsIndeterminate = false; _memoryProgress.Visibility = Visibility.Collapsed;
             _memoryCancellation = null;
+            _readinessWindow?.SetPreparationStatus(_l(_memoryRetry.Visibility == Visibility.Visible ? "Literary.Rag.NotReady" : "Literary.Rag.Ready"));
             foreach (var (button, enabled) in _blockedButtons) button.IsEnabled = enabled;
             _blockedButtons.Clear();
             _writer.ActionsBlocked = _advisor.ActionsBlocked = _projectMissing;
             _writer.RefreshAvailability(); _advisor.RefreshAvailability();
             _draft.BlockActions(_projectMissing); EditorHost.IsEnabled = !_projectMissing;
-            if (!cancellation.IsCancellationRequested && _memoryRetry.Visibility != Visibility.Visible) ScheduleFirstCalibration();
+            if (!cancellation.IsCancellationRequested && _memoryRetry.Visibility != Visibility.Visible) ScheduleReadinessAndCalibration();
         }
     }
     private void BlockButtons(DependencyObject root)

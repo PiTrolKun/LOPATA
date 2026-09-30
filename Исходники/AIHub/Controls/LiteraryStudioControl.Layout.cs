@@ -52,6 +52,7 @@ public sealed partial class LiteraryStudioControl
         _activity.Margin = new Thickness(0,0,5,0);
         compose.Children.Add(_activity);
         compose.Children.Add(BuildStatusPopup(memoryStatus));
+        compose.Children.Add(new LiteraryOverwriteNotice(_input, _l));
         var row = new DockPanel(); var sends = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Bottom };
         foreach (var button in new[] { _send, _sendWriter })
         {

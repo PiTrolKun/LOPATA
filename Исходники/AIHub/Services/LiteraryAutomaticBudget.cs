@@ -21,11 +21,15 @@ public static class LiteraryAutomaticBudget
     public static int FitMargin(long cudaFree, long physicalFree)
     {
         if (cudaFree <= 0 || physicalFree <= 0) throw new IOException("GPU memory inventory is unavailable.");
-        var usable = Math.Min(cudaFree, physicalFree);
-        var reserve = Math.Max(1024 * MiB, usable / 10);
+        var reserve = SpareBytes(cudaFree, physicalFree);
         return checked((int)((Math.Max(0, cudaFree - physicalFree) + reserve + MiB - 1) / MiB));
     }
-    public static async Task<int> FitMarginAsync(CancellationToken ct, LiteraryStartupDiagnostics? diagnostics = null)
+    public static long SpareBytes(long cudaFree, long physicalFree)
+    {
+        if (cudaFree <= 0 || physicalFree <= 0) throw new IOException("GPU memory inventory is unavailable.");
+        return Math.Max(1024 * MiB, Math.Min(cudaFree, physicalFree) / 10);
+    }
+    public static async Task<int> FitMarginAsync(CancellationToken ct, LiteraryStartupDiagnostics? diagnostics = null, Action<long>? measuredSpare = null)
     {
         var physical = await LiteraryGpuBudget.FreeBytesAsync(ct, diagnostics)
             ?? throw new IOException("Physical GPU memory inventory is unavailable.");
@@ -51,7 +55,9 @@ public static class LiteraryAutomaticBudget
             var text = stdout + "\n" + stderr;
             var match = Regex.Match(text, @"CUDA0\s*:.*\(\d+ MiB, (\d+) MiB free\)");
             if (process.ExitCode != 0 || !match.Success) throw new IOException("CUDA0 memory inventory is unavailable.");
-            return FitMargin(long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) * MiB, physical);
+            var cudaFree = long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) * MiB;
+            measuredSpare?.Invoke(SpareBytes(cudaFree, physical));
+            return FitMargin(cudaFree, physical);
         }
         catch (Exception ex)
         {

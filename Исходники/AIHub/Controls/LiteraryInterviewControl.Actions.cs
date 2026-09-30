@@ -114,6 +114,8 @@ public sealed partial class LiteraryInterviewControl
     }
     private async Task CreateAsync()
     {
+        if (_compressionWindow?.IsWorking == true) return;
+        if (_compressionWindow is { } compression) await compression.CloseWhenStoppedAsync();
         if (!_session.Complete || _session.Reservation is null || !Save()) return;
         if (S.Materials.Count > 0 && _sourceIndex?.Ready != true) await PrepareMaterialsAsync();
         var project = LiteraryInterviewPrompts.Project(S,_l("Literary.Create.Untitled"));

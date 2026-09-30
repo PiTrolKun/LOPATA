@@ -12,6 +12,7 @@ public sealed partial class LiteraryWorkspaceControl
         var mode = LiteraryProjectStore.ReadProject(layout.Root).JellyExecutor;
         return await _runtime.WithJellyExecutorAsync(mode, extract => new LiteraryJellyPreparation(layout, extract, mode).PrepareAsync(async (batch, commit) =>
         {
+            await WaitForReadinessAsync(token);
             token.ThrowIfCancellationRequested();
             using var log = new LiteraryRequestDiagnostics("JellyReview", _ => { }, layout.EnsureFolder("Diagnostics/LiteraryDetailed"));
             var summary = await Task.Run(() => AIHub.Services.LiteraryImport.ImportProjectStatus.Read(layout.Root), token);

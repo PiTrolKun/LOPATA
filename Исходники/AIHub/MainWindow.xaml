@@ -343,7 +343,52 @@
                             ToolTip="Профиль пользователя"
                             Margin="0,0,10,0"
                             Click="ProfileButton_Click" />
-                    <Button x:Name="ApplicationUpdateNotice" Content="Доступно обновление" Visibility="Collapsed" Click="ApplicationUpdates_Click" Margin="0,0,8,0" />
+                    <Button x:Name="ApplicationUpdateNotice" Content="Доступно обновление" Visibility="Collapsed" Click="ApplicationUpdates_Click" Margin="0,0,8,0"
+                            Width="48" Height="48" VerticalAlignment="Center" Cursor="Hand"
+                            ToolTip="{Binding Content, RelativeSource={RelativeSource Self}}"
+                            AutomationProperties.Name="{Binding Content, RelativeSource={RelativeSource Self}}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid Background="Transparent">
+                                                <Canvas Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Ellipse x:Name="PART_UpdateGlow" Width="32" Height="32" Opacity="0.85" IsHitTestVisible="False">
+                                                        <Ellipse.Fill>
+                                                            <RadialGradientBrush>
+                                                                <GradientStop Color="#DF54F4CA" Offset="0" />
+                                                                <GradientStop Color="#9054F4CA" Offset="0.45" />
+                                                                <GradientStop Color="#0054E4C0" Offset="1" />
+                                                            </RadialGradientBrush>
+                                                        </Ellipse.Fill>
+                                                    </Ellipse>
+                                                    <Path x:Name="Orbit" Data="M5,12 A12,12 0 1 0 20,5" Stroke="#54BBA2" StrokeThickness="1" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                                    <Ellipse Width="8" Height="8" Canvas.Left="12" Canvas.Top="12">
+                                                        <Ellipse.Fill>
+                                                            <RadialGradientBrush>
+                                                                <GradientStop Color="#F2FFFA" Offset="0" />
+                                                                <GradientStop Color="#85F6D8" Offset="0.5" />
+                                                                <GradientStop Color="#25A98B" Offset="1" />
+                                                            </RadialGradientBrush>
+                                                        </Ellipse.Fill>
+                                                    </Ellipse>
+                                                    <Ellipse Width="3" Height="3" Canvas.Left="23" Canvas.Top="6" Fill="#93F7DD" />
+                                                    <Ellipse x:Name="FocusRing" Width="32" Height="32" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1" StrokeDashArray="2,2" Visibility="Collapsed" />
+                                                </Canvas>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Orbit" Property="StrokeThickness" Value="1.5" /></Trigger>
+                                                <Trigger Property="IsPressed" Value="True"><Setter TargetName="Orbit" Property="StrokeThickness" Value="2" /></Trigger>
+                                                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="FocusRing" Property="Visibility" Value="Visible" /></Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                     <Button x:Name="SettingsButton"
                             Content="⚙"
                             Style="{StaticResource ThemeButtonStyle}"

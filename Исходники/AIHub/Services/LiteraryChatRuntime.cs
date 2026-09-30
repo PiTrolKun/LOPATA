@@ -262,7 +262,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             };
             foreach (var key in info.Environment.Keys.Where(k => k.StartsWith("LLAMA_ARG_", StringComparison.Ordinal)).ToArray()) info.Environment.Remove(key);
             trace.Stage("gpu_inventory");
-            var fitMargin = await LiteraryAutomaticBudget.FitMarginAsync(token, trace).ConfigureAwait(false);
+            var fitMargin = await LiteraryAutomaticBudget.FitMarginAsync(token, trace,
+                spare => Volatile.Write(ref _recommendedGpuSpare, spare)).ConfigureAwait(false);
             trace.Record("gpu_budget", new { fitMarginMiB = fitMargin });
             foreach (var arg in Arguments(model, _port, fitMargin, gpuLayers)) info.ArgumentList.Add(arg);
             trace.Stage("cache_preparation");
@@ -368,6 +369,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             throw;
         }
         Volatile.Write(ref _contextCapacity, 0);
+        Volatile.Write(ref _recommendedGpuSpare, 0);
         lock (_retirementGate) _processRetirement = Task.WhenAll(_processRetirement, RetireProcessAsync(process));
     }
     public void Dispose() { _disposed = true; Stop(); _http.Dispose(); }

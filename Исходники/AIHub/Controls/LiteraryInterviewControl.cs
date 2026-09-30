@@ -56,12 +56,13 @@ public sealed partial class LiteraryInterviewControl : UserControl
     }
     public bool CanLeave()
     {
-        if (IsIndexing) return false;
+        if (IsIndexing || _compressionWindow?.IsWorking == true) return false;
         if (!Save()) return false;
         _closing = true; Cancel(); _ = CleanupAsync(); return true;
     }
     private async Task CleanupAsync()
     {
+        if (_compressionWindow is { } compression) await compression.CloseWhenStoppedAsync();
         try { await _operation; }
         catch (Exception) { /* The operation displays and journals its own error. */ }
         if (_transferred) return;
@@ -116,7 +117,7 @@ public sealed partial class LiteraryInterviewControl : UserControl
     {
         foreach (var element in new FrameworkElement[] { _status, _budget, _progress, _contextFill })
             if (element.Parent is System.Windows.Controls.Panel parent) parent.Children.Remove(element);
-        _next=null;
+        _next=null; _reviewCreate=null;
         var root = new Grid { Margin = new Thickness(24), MaxWidth = 1260, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch };
         root.RowDefinitions.Add(new() { Height = GridLength.Auto }); root.RowDefinitions.Add(new()); root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         root.Children.Add(LiteraryUi.Text(T("Title") + $" · {S.Step}/37", true));

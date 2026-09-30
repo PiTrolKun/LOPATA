@@ -9,7 +9,8 @@ public sealed partial class LiteraryWorkspaceControl
         LiteraryPendingPart[] pending=[];
         var scan=await LiteraryPreparationRetry.RunAsync(_entry.ProjectPath,"Preparation",async ()=>
         { pending=await Task.Run(()=>LiteraryPreparationPlan.Read(_entry.ProjectPath),ct);return true; },ct);
-        if(scan.Report is { } scanReport) return Failed(scanReport);
+        if(scan.Report is { } scanReport) { await WaitForReadinessAsync(ct); return Failed(scanReport); }
+        if(pending.Length>0) await WaitForReadinessAsync(ct);
         var modes=pending.Length==0?new LiteraryPreparationModes("auto","auto")
             : LiteraryPreparationDialog.Choose(this,_l,pending);
         if(modes is null) return false;
@@ -20,10 +21,10 @@ public sealed partial class LiteraryWorkspaceControl
             await LiteraryStorageMigration.MigrateAsync(_entry.ProjectPath,progress,ct);
             await new LiteraryWorkIndex(new(_entry.ProjectPath)).PrepareAsync(progress,ct);return true;
         },ct);
-        if(rag.Report is { } ragReport) return Failed(ragReport);
+        if(rag.Report is { } ragReport) { await WaitForReadinessAsync(ct); return Failed(ragReport); }
         var jelly=await LiteraryPreparationRetry.RunAsync(_entry.ProjectPath,"Jelly",
             ()=>PrepareJellyAsync(progress,ct,modes.Jelly),ct);
-        if(jelly.Report is { } jellyReport) return Failed(jellyReport);
+        if(jelly.Report is { } jellyReport) { await WaitForReadinessAsync(ct); return Failed(jellyReport); }
         return jelly.Completed;
     }
     private bool Failed(string report)

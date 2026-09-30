@@ -65,7 +65,7 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         };
         _draft.PartSaved += _ => _editedPartNeedsMemory = true;
         _memoryRetry.Click += async (_, _) => await PrepareMemoryAsync();
-        Loaded += async (_, _) => { AttachMemoryGuard(); AttachHotkeys(); if (!_memoryStarted) { _memoryStarted = true; await PrepareMemoryAsync(); } };
+        Loaded += (_, _) => { AttachMemoryGuard(); AttachHotkeys(); if (!_memoryStarted) { _memoryStarted = true; ScheduleWorkspaceStart(); } };
         Unloaded += (_, _) => { DetachMemoryGuard(); DetachHotkeys(); };
         Render();
     }

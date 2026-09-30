@@ -170,18 +170,4 @@ public sealed partial class LiteraryInterviewControl
         }
         _body.Children.Add(LiteraryUi.Button(T("EndTopic"), () => { _session.EndTopic(); Save(); Render(); }));
     }
-    private void BuildReview()
-    {
-        _body.Children.Add(LiteraryUi.Text(T("Review"),true));
-        if (!_session.Complete) _body.Children.Add(LiteraryUi.Text(T("MissingSteps")));
-        S.InitialPositive ??= string.Join("\n",S.Records.Where(r => r.Step is 31 or 33 or 34).Select(r => r.Text));
-        S.InitialNegative ??= string.Join("\n",S.Records.Where(r => r.Step == 32).Select(r => r.Text));
-        _body.Children.Add(LiteraryUi.Text(_l("Literary.Anchor.Positive")));
-        _body.Children.Add(Input(S.InitialPositive,text => S.InitialPositive=text));
-        _body.Children.Add(LiteraryUi.Text(_l("Literary.Anchor.Negative")));
-        _body.Children.Add(Input(S.InitialNegative,text => S.InitialNegative=text));
-        _body.Children.Add(LiteraryUi.Text(_l("Literary.MemorySetup.AnchorsHint")));
-        foreach (var r in S.Records) _body.Children.Add(LiteraryUi.Text(r.Question + "\n" + r.Text));
-        _body.Children.Add(LiteraryUi.Button(_l("Literary.Create.Save"), _session.Complete ? () => Execute(CreateAsync) : null,true));
-    }
 }
