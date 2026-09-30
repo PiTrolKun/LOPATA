@@ -18,7 +18,7 @@ public static class LiteraryJellyReviewDialog
         Func<IReadOnlyList<LiteraryJellyFact>, Task> save, Action<string, object>? diagnostic = null,
         Action<string,string>? quote = null, string language = "ru", string summary = "",
         Func<IReadOnlyList<LiteraryJellyFact>, Task>? acceptWarnings = null,
-        Action<IReadOnlyList<LiteraryJellyFact>>? saveDraft = null)
+        Action<IReadOnlyList<LiteraryJellyFact>>? saveDraft = null, CancellationToken token = default)
     {
         var root = new DockPanel();
         var header = new StackPanel(); DockPanel.SetDock(header, Dock.Top); root.Children.Add(header);
@@ -200,6 +200,6 @@ public static class LiteraryJellyReviewDialog
         if (acceptWarnings is not null)
             actions.Children.Add(LiteraryUi.Button(l("Literary.Import.Jelly.AcceptWarnings"), async () => await Submit(true)));
         RenderPage(0);
-        return window.ShowDialog() == true;
+        return BackgroundUserDecision.ShowDialog(window,owner,token) == true;
     }
 }

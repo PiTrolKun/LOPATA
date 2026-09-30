@@ -6,6 +6,7 @@ namespace AIHub.Services;
 public sealed class SessionAudioPlayer : IDisposable
 {
     private readonly MediaPlayer _player = new();
+    private bool _deleteOnClear = true;
     public string AudioPath { get; private set; } = string.Empty;
     public bool IsPlaying { get; private set; }
     public bool HasAudio => File.Exists(AudioPath);
@@ -24,9 +25,10 @@ public sealed class SessionAudioPlayer : IDisposable
         _player.MediaFailed += (_, e) => { IsPlaying = false; Failed?.Invoke(e.ErrorException.Message); Changed?.Invoke(); };
     }
 
-    public void Open(string path)
+    public void Open(string path, bool deleteOnClear = true)
     {
         Clear();
+        _deleteOnClear = deleteOnClear;
         AudioPath = path;
         _player.Open(new Uri(path, UriKind.Absolute));
         _player.Volume = 1;
@@ -56,7 +58,7 @@ public sealed class SessionAudioPlayer : IDisposable
     {
         _player.Close();
         IsPlaying = false;
-        if (File.Exists(AudioPath)) File.Delete(AudioPath);
+        if (_deleteOnClear && File.Exists(AudioPath)) File.Delete(AudioPath);
         AudioPath = string.Empty;
         Changed?.Invoke();
     }

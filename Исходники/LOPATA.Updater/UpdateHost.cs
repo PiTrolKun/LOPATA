@@ -43,6 +43,11 @@ internal sealed class UpdateHost(Action<string> status)
             return;
         }
         var state = InstalledUpdateState.Read() ?? throw new IOException("The transition installer has not registered this installation.");
+        if (mode == "--configure-autostart")
+        {
+            if (args.Length != 2 || args[1] is not ("0" or "1")) throw new ArgumentException("Expected startup choice 0 or 1.");
+            StartupInstallation.Configure(args[1] == "1"); return;
+        }
         var transaction = new UpdateTransaction(state.Roots(), Keys, state.StateDirectory);
         if (!worker && mode != "--confirm" && await WorkerDispatch.TryStartAsync(state, transaction, args,
                 waitForExit: mode is "--unregister" or "--recover")) return;
@@ -68,6 +73,8 @@ internal sealed class UpdateHost(Action<string> status)
         }
         if (mode == "--unregister")
         {
+            var startup = new StartupRegistration(InstalledUpdateState.LauncherPath);
+            if (startup.IsRegistered) startup.SetEnabled(false);
             await RemoveManagedFilesAsync(state, transaction);
             return;
         }
@@ -107,11 +114,11 @@ internal sealed class UpdateHost(Action<string> status)
                 throw;
             }
             pendingStore.Save(pending with { ApplyOnNextLaunch = false });
-            StartApplication(state, id);
+            StartApplication(state, id, args.Contains("--background", StringComparer.Ordinal));
             return;
         }
         if (mode == "--apply") throw new IOException("No prepared update is available.");
-        StartApplication(state, null);
+        StartApplication(state, null, args.Contains("--background", StringComparer.Ordinal));
     }
 
     private static int DownloadConnections() => UpdateDownloadSettings.Read(Path.Combine(InstalledUpdateState.UserDataDirectory, "settings.json"));
@@ -149,11 +156,12 @@ internal sealed class UpdateHost(Action<string> status)
         }
     }
 
-    private static void StartApplication(InstalledUpdateState state, string? transactionId)
+    private static void StartApplication(InstalledUpdateState state, string? transactionId, bool background)
     {
         var path = SafeUpdatePath.Resolve(state.AppDirectory, "AIHub.exe");
         var start = new ProcessStartInfo(path) { UseShellExecute = true, WorkingDirectory = state.AppDirectory };
         start.ArgumentList.Add("--launched-by-updater");
+        if (background) start.ArgumentList.Add("--background");
         if (transactionId is not null) { start.ArgumentList.Add("--update-health"); start.ArgumentList.Add(transactionId); }
         _ = Process.Start(start) ?? throw new IOException("Could not launch LOPATA.");
     }

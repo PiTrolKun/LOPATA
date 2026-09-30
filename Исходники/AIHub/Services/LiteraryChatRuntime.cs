@@ -43,6 +43,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
     public event Action? BusyChanged;
     public LiteraryChatRuntime(string? projectDirectory = null, bool preparing = false)
     {
+        ApplicationBackgroundOperations.RegisterModel(this, async runtime =>
+        { runtime.Stop(); await runtime.AwaitProcessRetirementAsync(CancellationToken.None); });
         _preparationRoot = preparing ? projectDirectory ?? throw new ArgumentNullException(nameof(projectDirectory)) : null;
         _layout = projectDirectory is null || preparing ? null : new LiteraryProjectLayout(projectDirectory);
         var folder = _layout?.EnsureFolder("Diagnostics/LiteraryShared") ?? Path.Combine(_preparationRoot ?? AppDataPaths.BaseDirectory, "Diagnostics", "LiteraryShared");

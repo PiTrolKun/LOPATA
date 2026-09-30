@@ -13,7 +13,9 @@ public partial class MainWindow
     private ImageBatchControl? _batchView;
     private CancellationTokenSource? _batchCts;
     private bool _batchImporting;
-    private ImageBatchStore BatchStore => new(Path.Combine(Path.GetDirectoryName(_imageAnalysisSessionStore.GetProjectsDirectory(_storageSettings))!, "Batches"));
+    private StorageSettings? _batchStorage;
+    private ImageBatchStore BatchStore => BatchStoreFor(_batchStorage ?? _storageSettings);
+    private ImageBatchStore BatchStoreFor(StorageSettings storage) => new(Path.Combine(Path.GetDirectoryName(_imageAnalysisSessionStore.GetProjectsDirectory(storage))!, "Batches"));
 
     private void InitializeImageBatch()
     {
@@ -45,6 +47,7 @@ public partial class MainWindow
             if (action == "back") { ShowBatchSelector(); return; }
             if (action == "new")
             {
+                _batchStorage = null;
                 _batchJob = ImageBatchProfiles.Create(_selectedImageAnalysisBundle?.Id ?? ImageAnalysisBundleCatalog.MediumId, _appSettings.LanguageCode);
                 BatchStore.Save(_batchJob); _batchView!.Files(_batchJob); ImageAnalysisWorkspacePage.ShowBatchContent(_batchView); return;
             }
@@ -147,17 +150,18 @@ public partial class MainWindow
         }
     }
 
-    private async Task RunImageBatchAsync()
+    private async Task RunImageBatchAsync(BackgroundOperationState? restored = null, CancellationToken lifetime = default)
     {
         var job = _batchJob; if (job is null || _batchCts is not null || job.Items.Count == 0) return;
         if (!ImageBatchProfiles.CanContinue(job)) { StatusText.Text = L("Batch.ModelChanged"); return; }
         OmniPromptPairAdapter.Validate(job.Settings);
-        using var owner = new CancellationTokenSource(); _batchCts = owner;
+        using var owner = CancellationTokenSource.CreateLinkedTokenSource(lifetime); _batchCts = owner;
         CancelImageAnalysisSpeech(); _sessionAudioPlayer?.Clear();
         _imageAnalysisLiterarySession = BatchSpeechSession(job);
         _batchView!.Running(job); ImageAnalysisWorkspacePage.ShowBatchContent(_batchView);
         ImageAnalysisWorkspacePage.SetBusy(ManagedModelRoles.Vision, L("Batch.Stage.analyze"));
         StartImageAnalysisMatrix(ManagedModelRoles.Vision);
+        var speech = restored?.Input.Deserialize<ImageBatchBackgroundInput>()?.Speech ?? CaptureBackgroundSpeechOptions();
         var busyElsewhere = false;
         try
         {
@@ -174,7 +178,16 @@ public partial class MainWindow
                 _batchView.Progress(p); ImageAnalysisWorkspacePage.ReportBatchProgress(p); StatusText.Text = L("Batch.Stage." + p.Stage);
                 if (p.Stage is "analyze" or "format") StartImageAnalysisMatrix(p.Stage == "analyze" ? ManagedModelRoles.Vision : ManagedModelRoles.Core);
             });
-            await new ImageBatchProcessor(BatchStore, model).RunAsync(job, progress, owner.Token);
+            await PreserveBackgroundBatchInputsAsync(job, owner.Token);
+            await ApplicationBackgroundOperations.RunAsync(ImageBatchBackgroundKind, L("Batch.Title"), job.Id,
+                new ImageBatchBackgroundInput(job.Id, _batchStorage ?? _storageSettings, speech), async attempt =>
+                {
+                    if (job.Status != "completed" || !ImageBatchExporter.IsPresent(BatchStore.Results(job), job))
+                        await new ImageBatchProcessor(BatchStore, model).RunAsync(job, progress, attempt);
+                    ShowBatchResults();
+                    await SpeakCurrentImageAnalysisSummaryAsync(automatic: true, operationToken: attempt, options: speech);
+                    return true;
+                }, owner.Token, restored);
         }
         catch (ImageBatchBusyException) { busyElsewhere = true; }
         catch (OperationCanceledException) { job.Status = "paused"; try { BatchStore.Save(job); } catch { } }
@@ -189,7 +202,6 @@ public partial class MainWindow
                 else
                 {
                     ShowBatchResults();
-                    if (job.Status == "completed") _ = SpeakCurrentImageAnalysisSummaryAsync(automatic: true);
                 }
             }
         }
@@ -215,8 +227,29 @@ public partial class MainWindow
     }
     private void CleanupBatchInputs()
     {
+        if (ApplicationBackgroundOperations.Current?.HasPending == true
+            && ApplicationBackgroundOperations.Current.State?.Kind == ImageBatchBackgroundKind) return;
         if (_batchJob is null) return;
         foreach (var item in _batchJob.Items.Where(i => i.File.StorageKind == ImageAssetKinds.Temporary)) _imageAssets?.DeleteTemporary(item.File.SourcePath);
+    }
+
+    private async Task PreserveBackgroundBatchInputsAsync(ImageBatchJob job, CancellationToken token)
+    {
+        foreach (var item in job.Items.Where(i => i.File.StorageKind == ImageAssetKinds.Temporary))
+        {
+            if (!Guid.TryParseExact(item.Id, "N", out _) || item.File.Extension.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '.')
+                || item.File.Extension.Length > 12) throw new InvalidDataException("Invalid batch input name.");
+            await ImageBackgroundWork.ValidateSourceAsync(item.File, token);
+            var directory = Path.Combine(BatchStore.DirectoryFor(job), "Input");
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, item.Id + item.File.Extension);
+            await using (var source = File.OpenRead(item.File.SourcePath))
+            await using (var output = new FileStream(path + ".tmp", FileMode.Create, FileAccess.Write, FileShare.None))
+            { await source.CopyToAsync(output, token); output.Flush(true); }
+            File.Move(path + ".tmp", path, true);
+            item.File.SourcePath = path; item.File.StorageKind = ImageAssetKinds.Saved;
+        }
+        BatchStore.Save(job);
     }
     private void CloseImageBatch()
     {

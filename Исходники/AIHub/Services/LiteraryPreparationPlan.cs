@@ -38,6 +38,7 @@ public static class LiteraryPreparationRetry
             ct.ThrowIfCancellationRequested();
             try { return new(await action()); }
             catch(OperationCanceledException) { throw; }
+            catch(AIHub.Models.BackgroundOperationWaitingException) { throw; }
             catch(Exception ex) when(ex is not OutOfMemoryException)
             { errors.Add(new { attempt, type=ex.GetType().Name, ex.HResult, time=DateTimeOffset.UtcNow }); }
         }

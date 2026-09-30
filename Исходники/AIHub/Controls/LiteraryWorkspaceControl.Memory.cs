@@ -20,11 +20,11 @@ public sealed partial class LiteraryWorkspaceControl
     private readonly Func<IProgress<LiteraryPreparationProgress>, CancellationToken, Task>? _memoryPreparation;
     private bool Indexing => _memoryCancellation is not null || _jellyEditing;
     public bool IsIndexing => Indexing;
-    private async Task PrepareMemoryAsync()
+    private async Task PrepareMemoryAsync(AIHub.Models.BackgroundOperationState? restored = null, CancellationToken exit = default)
     {
         if (Indexing || _runtime.IsBusy) return;
         _studio?.ClearRequestStatus();
-        using var cancellation = new CancellationTokenSource(); _memoryCancellation = cancellation;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(exit); _memoryCancellation = cancellation;
         _writer.ActionsBlocked = _advisor.ActionsBlocked = true;
         _writer.RefreshAvailability(); _advisor.RefreshAvailability();
         _draft.BlockActions(true); EditorHost.IsEnabled = false;
@@ -50,16 +50,7 @@ public sealed partial class LiteraryWorkspaceControl
         });
         try
         {
-            bool jellyReady;
-            if (_memoryPreparation is not null)
-            {
-                await _memoryPreparation(progress, cancellation.Token);
-                jellyReady = await PrepareJellyAsync(progress, cancellation.Token);
-            }
-            else
-            {
-                jellyReady = await PrepareMaterialsAsync(progress, cancellation.Token);
-            }
+            var jellyReady = await RunMemoryPreparationAsync(progress, cancellation.Token, restored);
             acceptingProgress = false;
             _memoryStatus.Text = _l(jellyReady ? "Literary.Rag.Ready" : "Literary.Preparation.Deferred");
             if (!jellyReady) _memoryRetry.Visibility = Visibility.Visible;
@@ -72,6 +63,8 @@ public sealed partial class LiteraryWorkspaceControl
             }
         }
         catch (OperationCanceledException) { acceptingProgress = false; _memoryStatus.Text = _l("Literary.Prepare.Cancelled"); _memoryRetry.Visibility = Visibility.Visible; }
+        catch (AIHub.Models.BackgroundOperationWaitingException decision)
+        { acceptingProgress = false; _memoryStatus.Text = _l(decision.Message); _memoryRetry.Visibility = Visibility.Visible; }
         catch (Exception failure) when (failure.GetBaseException() is LiteraryGpuMemoryException)
         {
             acceptingProgress = false;
@@ -118,7 +111,7 @@ public sealed partial class LiteraryWorkspaceControl
     }
     private void DetachMemoryGuard()
     {
-        _memoryCancellation?.Cancel();
+        if (!ApplicationBackgroundOperations.PreserveHiddenWork) _memoryCancellation?.Cancel();
         _presenceTimer.Stop(); _presenceTimer.Tick -= CheckPresence;
         if (_memoryWindow is null) return;
         _memoryWindow.PreviewMouseDown -= GuardMouse;

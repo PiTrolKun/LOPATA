@@ -45,9 +45,10 @@ public sealed partial class LiteraryImportControl : UserControl, IDisposable
     public event Action? BackRequested;
     public event Action? HomeRequested;
     public event Action<LiteraryProjectEntry>? OpenRequested;
-    public LiteraryImportControl(Func<string, string> l, string language, string folder, LiteraryProjectStore store)
+    public LiteraryImportControl(Func<string, string> l, string language, string folder, LiteraryProjectStore store, LiteraryImportDraftStore? drafts = null)
     {
         _l = l; _language = language; _store = store;
+        _draftStore = drafts ?? LiteraryImportDraftStore.Default();
         Focusable = true;
         Loaded += (_, _) => { if (!_showingLegacy) Focus(); };
         PreviewKeyDown += (_, e) =>
@@ -218,9 +219,10 @@ public sealed partial class LiteraryImportControl : UserControl, IDisposable
         _postReviewQuestions?.Dispose(); _postReviewQuestions = null;
         _answersTimer.Stop(); SaveAnswers();
         SaveDraft();
-        if (IsBusy) { _operation!.Cancel(); return; }
+        if (IsBusy) { _disposeAfterOperation = true; _operation!.Cancel(); return; }
         _runtime?.Dispose(); _runtime = null; _session?.Dispose(); _session = null;
     }
+    private bool _disposeAfterOperation;
     private async Task DisposeAfterRagAsync()
     {
         if (_postReviewQuestions is { } questions) await questions.StopRagAsync();

@@ -11,6 +11,7 @@ public partial class MainWindow
     private readonly ComboBox _closeBehavior = new() { MaxWidth = 440, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch, Margin = new(0, 0, 0, 12) };
     private System.Windows.Controls.Button? _settingsThemeButton;
     private bool _refreshingSettingsWorkspace;
+    private System.Windows.Controls.CheckBox? _autostartSwitch, _autoResumeSwitch;
 
     private void InitializeSettingsWorkspace()
     {
@@ -33,8 +34,15 @@ public partial class MainWindow
         System.Windows.Automation.AutomationProperties.SetAutomationId(_closeBehavior, "Settings.CloseBehavior");
         var general = _settingsCards.Card(_settingsCards.Label("Settings.Behavior.Close", true), _closeBehavior,
             _settingsCards.Label("Settings.Behavior.CloseHelp"));
-        var autostart = _settingsCards.FutureSwitch("Settings.Behavior.Autostart");
-        var startup = _settingsCards.Card(autostart, _settingsCards.Label("Settings.Behavior.AutostartHelp"));
+        _autostartSwitch = _settingsCards.Switch("Settings.Behavior.Autostart", "Settings.Autostart", SetAutostart);
+        _autoResumeSwitch = _settingsCards.Switch("Settings.Behavior.AutoResume", "Settings.AutoResume", enabled =>
+        {
+            if (_refreshingSettingsWorkspace) return;
+            _appSettings.Behavior.AutoResumeBackgroundOperation = enabled; _appSettingsStore.Save(_appSettings);
+            RefreshBackgroundResumeSchedule();
+        });
+        var startup = _settingsCards.Card(_autostartSwitch, _settingsCards.Label("Settings.Behavior.AutostartHelp"),
+            _autoResumeSwitch, _settingsCards.Label("Settings.Behavior.AutoResumeHelp"));
         var folders = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Folders", true), OpenImagesFolderButton);
         _settingsThemeButton = _settingsCards.Action("Settings.Theme", "Settings.Navigation.Theme", ThemeToggleButton_Click);
         var theme = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Theme", true), _settingsThemeButton);
@@ -58,7 +66,8 @@ public partial class MainWindow
             SettingsNavigator.AddTarget(new(id, section, title, help, "Settings.Keywords." + section), element);
         Target("updates", "updates", "Updates.Title", "Settings.Navigation.UpdatesHelp");
         Target("close", "general", "Settings.Behavior.Close", "Settings.Behavior.CloseHelp", _closeBehavior);
-        Target("autostart", "general", "Settings.Behavior.Autostart", "Settings.Behavior.AutostartHelp", autostart);
+        Target("autostart", "general", "Settings.Behavior.Autostart", "Settings.Behavior.AutostartHelp", _autostartSwitch);
+        Target("autoresume", "general", "Settings.Behavior.AutoResume", "Settings.Behavior.AutoResumeHelp", _autoResumeSwitch);
         Target("folders", "general", "ImageInput.Folder", "Settings.Navigation.Folders", OpenImagesFolderButton);
         Target("theme", "interface", "Settings.Navigation.Theme", "Settings.Navigation.interface.Help", _settingsThemeButton);
         Target("language", "interface", "Settings.LanguageTitle", "Settings.LanguageHelp", LanguageComboBox);
@@ -110,6 +119,8 @@ public partial class MainWindow
         try
         {
             _settingsCards.RefreshLocalization();
+            RefreshAutostartSetting();
+            if (_autoResumeSwitch is not null) _autoResumeSwitch.IsChecked = _appSettings.Behavior.AutoResumeBackgroundOperation;
             _closeBehavior.ItemsSource = new[] { L("Settings.Behavior.Ask"), L("Settings.Behavior.Exit"), L("Settings.Behavior.Tray") };
             _closeBehavior.SelectedIndex = _appSettings.Behavior.AskBeforeClosing ? 0 : _appSettings.Behavior.CloseToTray ? 2 : 1;
             System.Windows.Automation.AutomationProperties.SetName(_closeBehavior, L("Settings.Behavior.Close"));

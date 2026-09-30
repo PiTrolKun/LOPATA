@@ -31,6 +31,7 @@ public sealed class Qwen25OmniRuntimeService : IOmniTextRuntime
     public Qwen25OmniRuntimeService(ManagedModelLibraryStore libraryStore)
     {
         _libraryStore = libraryStore;
+        ApplicationBackgroundOperations.RegisterModel(this, runtime => ModelProcessRetirement.StopAsync(runtime._process, runtime.Stop));
     }
 
     public ImageAnalysisHeavyResourcePlan? CurrentPlan { get; private set; }

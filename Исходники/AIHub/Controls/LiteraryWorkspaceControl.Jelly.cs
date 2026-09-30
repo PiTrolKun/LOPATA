@@ -14,17 +14,19 @@ public sealed partial class LiteraryWorkspaceControl
         {
             await WaitForReadinessAsync(token);
             token.ThrowIfCancellationRequested();
+            BackgroundUserDecision.RequireVisible(this);
+            var draft = new LiteraryJellyReviewDraft(layout,batch);
             using var log = new LiteraryRequestDiagnostics("JellyReview", _ => { }, layout.EnsureFolder("Diagnostics/LiteraryDetailed"));
             var summary = await Task.Run(() => AIHub.Services.LiteraryImport.ImportProjectStatus.Read(layout.Root), token);
             token.ThrowIfCancellationRequested();
             var result = LiteraryJellyReviewDialog.Show(this, _l,
-                batch.Facts.Select(f => new LiteraryJellyReviewItem(f, batch.Number, batch.SourceText)).ToArray(), commit, (kind, data) => log.Write(kind, data), language:_project.LanguageCode,
+                draft.Read().Select(f => new LiteraryJellyReviewItem(f, batch.Number, batch.SourceText)).ToArray(), commit, (kind, data) => log.Write(kind, data), language:_project.LanguageCode,
                 summary:summary.Describe(_l),
                 acceptWarnings:preparationMode is null ? null : decisions=>Task.Run(()=>
                 {
                     token.ThrowIfCancellationRequested();
                     new LiteraryJellyStore(layout).ConfirmPrepared(batch,decisions,"manual",true);
-                },token));
+                },token), saveDraft:draft.Save, token:token);
             return result;
         }, progress, token, mode:preparationMode, technicalAttempts:preparationMode is null ? 3 : 1), token);
     }

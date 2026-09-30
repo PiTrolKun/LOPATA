@@ -9,10 +9,10 @@ namespace AIHub.Controls;
 public sealed partial class LiteraryImportControl
 {
     private ImportDecision[]? _groupingOriginal;
-    private async Task RunAsync(Func<CancellationToken, Task> action, bool keepBodyEnabled = false)
+    private async Task RunAsync(Func<CancellationToken, Task> action, bool keepBodyEnabled = false, CancellationToken lifetime = default)
     {
         if (IsBusy) return;
-        using var cts = new CancellationTokenSource(); _operation = cts;
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(lifetime, ApplicationBackgroundOperations.ExitToken); _operation = cts;
         var cardOwnsProgress = keepBodyEnabled && _showingAnalysis && !_showingLegacy;
         _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = cardOwnsProgress ? Visibility.Collapsed : Visibility.Visible;
         _body.IsEnabled = keepBodyEnabled; _progress.IsIndeterminate = true;
@@ -54,31 +54,26 @@ public sealed partial class LiteraryImportControl
                 _status.Visibility = _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
             else if (_showingDialogSelection && !_showingLegacy)
                 _progress.Visibility = _sessionLabel.Visibility = Visibility.Collapsed;
+            if (_disposeAfterOperation) { _disposeAfterOperation = false; Dispose(); }
         }
     }
-    private IProgress<ImportProgress> Progress() => new Progress<ImportProgress>(p =>
+    private IProgress<ImportProgress> Progress() => new InlineProgress<ImportProgress>(p => Dispatcher.BeginInvoke(() =>
     {
         _status.Text = L(p.Stage) + (p.Total > 0 ? $" · {p.Done}/{p.Total}" : "");
         _progress.IsIndeterminate = p.Total <= 0;
         if (p.Total > 0) _progress.Value = 100.0 * p.Done / p.Total;
         UpdateAnalysisProgress(p);
-    });
+    }));
     private ImportPipeline Pipeline()
     {
+        if (BackgroundInference is { } inference) return new ImportPipeline(_session!, inference);
         _runtime ??= new LiteraryChatRuntime();
         return new ImportPipeline(_session!, (messages, step, tokens, ct) => _runtime.ImportAnalyzeAsync(messages, _session!, step, tokens, ct));
     }
     private void Analyze()
     {
         var ids = _conversations.Where(c => c.Box.IsChecked == true).Select(c => c.Id).ToArray();
-        _ = RunAsync(async ct =>
-        {
-            var pipeline = Pipeline(); var progress = Progress();
-            _groupingOriginal = await Task.Run(() => pipeline.AnalyzeAsync(_input!, ids, progress, ct), ct);
-            _first = ImportGrouping.Read(_session!, _groupingOriginal);
-            ShowWorks();
-            SaveDraft("works");
-        });
+        StartBackgroundImport(() => CaptureImportOperation("analysis", ids));
     }
     private void ShowWorks()
     {
@@ -156,15 +151,6 @@ public sealed partial class LiteraryImportControl
         { _status.Text = L("ChooseFolder"); return; }
         if (Directory.Exists(Path.Combine(folder, name)) && _session!.State.PlannedPath.Length == 0)
         { _status.Text = L("DestinationExists"); return; }
-        _ = RunAsync(async ct =>
-        {
-            var progress = Progress(); var pipeline = Pipeline();
-            var assembly = await Task.Run(() => pipeline.AssembleAsync(_input!, _first!, work, progress, ct), ct);
-            ct.ThrowIfCancellationRequested();
-            var entry = await Task.Run(() => ImportProjectBuilder.Build(_session!, _input!, assembly, _store, folder, name, genre, _language), ct);
-            await Task.Run(() => ImportCompletion.CompleteAsync(_session!, entry, _runtime!, _language, progress, ct), ct);
-            FinishDraft();
-            ShowResult(entry);
-        });
+        StartBackgroundImport(() => CaptureImportOperation("assembly", work: work, parent: folder, name: name, genre: genre));
     }
 }

@@ -16,6 +16,7 @@ public sealed partial class LiteraryStudioControl
             catch (Exception error) when (CanOfferMemoryRecovery(error))
             {
                 NotifyRequestNeedsAttention();
+                BackgroundUserDecision.RequireVisible(this);
                 var choice = MemoryRecoveryAsync is not null ? await MemoryRecoveryAsync(token)
                     : LiteraryMemoryRecoveryDialog.Show(this, _l, token);
                 token.ThrowIfCancellationRequested();

@@ -7,7 +7,7 @@ namespace AIHub.Controls;
 
 public sealed partial class LiteraryImportControl
 {
-    private readonly LiteraryImportDraftStore _draftStore = LiteraryImportDraftStore.Default();
+    private readonly LiteraryImportDraftStore _draftStore;
     private readonly DispatcherTimer _draftSaveTimer = new() { Interval = TimeSpan.FromMilliseconds(650) };
     private string _draftId = Guid.NewGuid().ToString("N");
     private bool _draftTouched, _restoringDraft, _draftFinished;
@@ -27,10 +27,10 @@ public sealed partial class LiteraryImportControl
         _draftSaveTimer.Stop(); _draftSaveTimer.Start();
     }
 
-    private void SaveDraft(string? step = null)
+    private bool SaveDraft(string? step = null)
     {
         _draftSaveTimer.Stop();
-        if (!_draftTouched || _draftFinished) return;
+        if (!_draftTouched || _draftFinished) return true;
         if (step is not null) _draftStep = step;
         try
         {
@@ -50,12 +50,20 @@ public sealed partial class LiteraryImportControl
                 WorkSelectionKey = _workSelectionKey,
                 SelectedWorkUnitIds = _selectedWorkUnits.Order(StringComparer.Ordinal).ToArray()
             });
+            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _status.Text = L("RecentSaveFailed") + " " + ex.Message;
             _status.Visibility = Visibility.Visible;
+            return false;
         }
+    }
+
+    public bool CheckpointBackgroundState()
+    {
+        _session?.Save();
+        return (_postReviewQuestions?.TrySaveDraft() ?? true) & SaveAnswers() & SaveDraft();
     }
 
     public void ShowRecentDrafts()
@@ -82,7 +90,7 @@ public sealed partial class LiteraryImportControl
         }
     }
 
-    private void RestoreDraft(LiteraryImportDraft draft)
+    private async void RestoreDraft(LiteraryImportDraft draft)
     {
         _postReviewQuestions?.Dispose(); _postReviewQuestions = null; _postReviewEntry = null;
         _answersTimer.Stop(); SaveAnswers(); _answerInputs.Clear(); _preparationAnswers = null;
@@ -108,7 +116,8 @@ public sealed partial class LiteraryImportControl
         {
             ShowLanding(); SaveDraft("source"); return;
         }
-        _ = RunAsync(async ct =>
+        var continueAnalysis = false;
+        await RunAsync(async ct =>
         {
             _session = await Task.Run(() => ImportSession.Open(draft.SessionRoot), ct);
             _input = await Task.Run(() => DeepSeekImportReader.ReadAsync(_session, ct), ct);
@@ -126,10 +135,7 @@ public sealed partial class LiteraryImportControl
                 _analysisTime = TimeSpan.Zero;
                 if (draft.Step == "works" || _session.State.Stage == "project-choice")
                 {
-                    _groupingOriginal = await Task.Run(() => Pipeline().AnalyzeAsync(_input, draft.DialogIds,
-                        Progress(), ct), ct);
-                    _first = ImportGrouping.Read(_session, _groupingOriginal);
-                    ShowAnalyzedWorks(); SaveDraft("works"); return;
+                    ShowAnalysisScreen(); continueAnalysis = true; return;
                 }
                 ShowAnalysisScreen(); SaveDraft("analysis"); return;
             }
@@ -138,6 +144,7 @@ public sealed partial class LiteraryImportControl
                 box.IsChecked = draft.DialogIds.Contains(id) || _session.State.Conversations.Contains(id);
             SaveDraft("dialogs");
         });
+        if (continueAnalysis) StartBackgroundImport(() => CaptureImportOperation("analysis", draft.DialogIds));
     }
 
     private void FinishDraft()

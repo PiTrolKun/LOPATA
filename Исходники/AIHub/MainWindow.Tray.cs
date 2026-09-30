@@ -21,10 +21,29 @@ public partial class MainWindow
             () => OnUi(RestoreFromTray),
             () => OnUi(() => { RestoreFromTray(); ShowSettingsPage(); }),
             () => OnUi(OpenApplicationUpdates),
-            () => OnUi(() => { RestoreFromTray(); _fullExitRequested = true; Close(); }));
+            () => OnUi(() => { RestoreFromTray(); _fullExitRequested = true; Close(); }),
+            () => OnUi(() => _ = ChangeBackgroundOperationAsync()),
+            () => OnUi(ViewBackgroundResult));
+        DesktopAttentionNotification.Notify = (title, message) => _applicationTray?.Notify(title, message, warning: true) == true;
     }
 
-    private void ApplicationSessionEnding(object sender, SessionEndingCancelEventArgs e) => _sessionEnding = true;
+    private void ApplicationSessionEnding(object sender, SessionEndingCancelEventArgs e)
+    {
+        _sessionEnding = true;
+        try
+        {
+            if (!LiteraryPage.CheckpointBackgroundState()) throw new System.IO.IOException("Literary checkpoint was not confirmed.");
+            _backgroundOperations?.CheckpointForExit();
+            SaveActiveSessionCheckpoint(strict: true); SaveCurrentWindowPlacement();
+            _backgroundLifetime.Cancel();
+        }
+        catch (Exception error)
+        {
+            OwnedProcessRegistry.Log("session_end_checkpoint_failed", "Application", detail: error.GetType().Name);
+            // Ask Windows to keep us alive if a durable checkpoint could not be confirmed.
+            e.Cancel = true; _sessionEnding = false; StatusText.Text = L("Tray.ExitFailed");
+        }
+    }
 
     private bool TryResolveCloseBehavior(out bool closeToTray)
     {
@@ -56,14 +75,17 @@ public partial class MainWindow
             _fullExitRequested, _sessionEnding, _applicationUpdateStart is not null, _processShutdownComplete || _processShutdownPending)) return false;
         SaveCurrentWindowPlacement();
         _stateBeforeTray = WindowState == WindowState.Minimized ? _lastNonMinimizedWindowState : WindowState;
-        KeepUpdatesIndependent(); Hide(); return true;
+        ApplicationBackgroundOperations.PreserveHiddenWork = true;
+        KeepUpdatesIndependent(); Hide(); ScheduleBetaUpdateCheck(); return true;
     }
 
     private void RestoreFromTray()
     {
+        ApplicationBackgroundOperations.PreserveHiddenWork = SettingsPage.Visibility == Visibility.Visible;
         if (!IsVisible) { Show(); WindowState = _stateBeforeTray; }
         if (WindowState == WindowState.Minimized) WindowState = _lastNonMinimizedWindowState;
         Activate();
+        ScheduleBetaUpdateCheck();
     }
 
     private void KeepUpdatesIndependent()
@@ -76,6 +98,7 @@ public partial class MainWindow
     {
         System.Windows.Application.Current.SessionEnding -= ApplicationSessionEnding;
         _applicationTray?.Dispose(); _applicationTray = null;
+        DesktopAttentionNotification.Notify = null;
         _updateWindow?.Close();
     }
 }

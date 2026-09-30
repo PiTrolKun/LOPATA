@@ -54,8 +54,8 @@ public sealed class LiteraryPreparationControl : UserControl
         root.Children.Add(new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         Content = root;
         Loaded += (_, _) => { if (_rows.Children.Count == 0 && !_busy) _ = RunAsync(false); };
-        Unloaded += (_, _) => Cancel();
-        IsVisibleChanged += (_, _) => { if (!IsVisible) Cancel(); };
+        Unloaded += (_, _) => { if (!ApplicationBackgroundOperations.PreserveHiddenWork) Cancel(); };
+        IsVisibleChanged += (_, _) => { if (!IsVisible && !ApplicationBackgroundOperations.PreserveHiddenWork) Cancel(); };
     }
     private void Report(LiteraryPreparationProgress value)
     {

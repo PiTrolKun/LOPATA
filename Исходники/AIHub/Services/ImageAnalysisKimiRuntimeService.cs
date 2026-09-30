@@ -25,6 +25,7 @@ public sealed class ImageAnalysisKimiRuntimeService : IDisposable
     public ImageAnalysisKimiRuntimeService(ManagedModelLibraryStore libraryStore)
     {
         _libraryStore = libraryStore;
+        ApplicationBackgroundOperations.RegisterModel(this, runtime => ModelProcessRetirement.StopAsync(runtime._process, runtime.Stop));
     }
 
     public async Task PrepareAsync(

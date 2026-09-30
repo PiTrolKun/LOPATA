@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Windows;
 using System.IO;
 using System.Media;
@@ -297,7 +298,7 @@ public partial class MainWindow
 
     private async Task WarmImageAnalysisSpeechAsync(
         bool forceMemoryAttempt,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, BackgroundOperationState? restored = null)
     {
         if (!GetImageAnalysisKokoroSpeechService().IsModelInstalled(_appSettings.LanguageCode))
         {
@@ -315,11 +316,15 @@ public partial class MainWindow
                 isBusy: true);
         }
 
-        var result = await GetImageAnalysisKokoroSpeechService().WarmAsync(
-            _appSettings.LanguageCode,
-            forceMemoryAttempt,
-            pendingAllocationBytes: 0,
-            cancellationToken);
+        var preparation = new ImagePreparationBackgroundInput(_imageAnalysisLiterarySession?.BundleId
+            ?? _selectedImageAnalysisBundle?.Id ?? ImageAnalysisBundleCatalog.MediumId,
+            _imageAnalysisLiterarySession?.SessionId, true, forceMemoryAttempt, ActiveImageStorage,
+            _imageAnalysisLiterarySession, CaptureBackgroundSpeechOptions());
+        var language = restored?.Input.Deserialize<ImagePreparationBackgroundInput>()?.Speech?.Language ?? preparation.Speech!.Language;
+        var result = await ApplicationBackgroundOperations.RunAsync(ImagePreparationBackgroundKind,
+            L("ImageAnalysis.Workspace.Voice.Preparing"), preparation.SessionId, preparation,
+            attempt => GetImageAnalysisKokoroSpeechService().WarmAsync(language,
+                forceMemoryAttempt, pendingAllocationBytes: 0, attempt), cancellationToken, restored);
         var memory = result.Memory;
         var status = result.Code switch
         {
@@ -372,9 +377,19 @@ public partial class MainWindow
         }
     }
 
+    private ImageBackgroundSpeechOptions CaptureBackgroundSpeechOptions()
+    {
+        var settings = _appSettings.ImageAnalysisSpeech ?? new ImageAnalysisSpeechSettings();
+        var heavy = IsHeavyImageAnalysis ? GetHeavyImageAnalysisSpeechSettings() : null;
+        var input = new ImageBackgroundSpeechOptions(_appSettings.LanguageCode, heavy?.Mode ?? settings.Mode,
+            settings, heavy, _appSettings.CoreVoice ?? new CoreVoiceSettings());
+        return JsonSerializer.Deserialize<ImageBackgroundSpeechOptions>(JsonSerializer.Serialize(input))!;
+    }
+
     private async Task SpeakCurrentImageAnalysisSummaryAsync(
         bool automatic,
-        Action? playbackStarted = null)
+        Action? playbackStarted = null, CancellationToken operationToken = default,
+        BackgroundOperationState? restored = null, ImageBackgroundSpeechOptions? options = null)
     {
         var playbackSignal = 0;
         void SignalPlaybackStarted()
@@ -397,9 +412,8 @@ public partial class MainWindow
             SignalPlaybackStarted();
             return;
         }
-        var mode = IsHeavyImageAnalysis
-            ? GetHeavyImageAnalysisSpeechSettings().Mode
-            : _appSettings.ImageAnalysisSpeech?.Mode ?? ImageAnalysisSpeechModes.Off;
+        options ??= restored?.Input.Deserialize<ImageSpeechBackgroundInput>()?.Options ?? CaptureBackgroundSpeechOptions();
+        var mode = options.Mode;
         if (mode == ImageAnalysisSpeechModes.Off)
         {
             SignalPlaybackStarted();
@@ -417,7 +431,7 @@ public partial class MainWindow
 
         CancelImageAnalysisSpeech();
         if (mode == ImageAnalysisSpeechModes.Kokoro) _sessionAudioPlayer?.Clear();
-        var owner = new CancellationTokenSource();
+        var owner = CancellationTokenSource.CreateLinkedTokenSource(operationToken);
         _imageAnalysisSpeechCts = owner;
         var cancellationToken = owner.Token;
         RefreshImageAnalysisSpeechUi(
@@ -432,16 +446,17 @@ public partial class MainWindow
             // Retired routing, preserved for restoration:
             // mode == ImageAnalysisSpeechModes.Omni
             //     ? await SpeakImageAnalysisWithOmniAsync(segments, SignalPlaybackStarted, cancellationToken)
-            var completed = mode == ImageAnalysisSpeechModes.Kokoro
-                ? await SpeakImageAnalysisWithKokoroAsync(
-                    segments,
-                    SignalPlaybackStarted,
-                    cancellationToken)
-                : await SpeakImageAnalysisProgrammaticallyAsync(
-                    segments,
-                    SignalPlaybackStarted,
-                    cancellationToken,
-                    fallbackFromKokoro: false);
+            var completed = await ApplicationBackgroundOperations.RunAsync(ImageSpeechBackgroundKind,
+                L("ImageAnalysis.Workspace.Voice.Synthesizing"), session.SessionId,
+                new ImageSpeechBackgroundInput(session, _batchStorage ?? ActiveImageStorage, options), async attempt =>
+                {
+                    var success = mode == ImageAnalysisSpeechModes.Kokoro
+                        ? await SpeakImageAnalysisWithKokoroAsync(segments, SignalPlaybackStarted, attempt, options)
+                        : await SpeakImageAnalysisProgrammaticallyAsync(segments, SignalPlaybackStarted, attempt, false, options);
+                    attempt.ThrowIfCancellationRequested();
+                    if (!success) throw new BackgroundOperationWaitingException("Tray.NeedsInput");
+                    return true;
+                }, cancellationToken, restored);
             if (completed)
             {
                 _lastAutoSpokenImageAnalysisFingerprint = fingerprint;
@@ -450,6 +465,7 @@ public partial class MainWindow
         }
         catch (OperationCanceledException)
         {
+            if (operationToken.IsCancellationRequested) throw;
             if (IsHeavyImageAnalysis && _imageAnalysisLiterarySession is { } cancelledSession)
             {
                 var heavySettings = GetHeavyImageAnalysisSpeechSettings();
@@ -458,12 +474,13 @@ public partial class MainWindow
                     heavySettings,
                     error: string.Empty,
                     cancelled: true);
-                _imageAnalysisSessionStore.Save(cancelledSession, _storageSettings);
+                _imageAnalysisSessionStore.Save(cancelledSession, ActiveImageStorage);
             }
             RefreshImageAnalysisSpeechUi();
         }
         catch (Exception ex)
         {
+            if (operationToken.CanBeCanceled) throw;
             LogImageAnalysisRuntime(
                 $"Heavy voice error: requested={mode}; fallback=false; " +
                 $"type={ex.GetType().Name}; error={DiagnosticValue(ex.Message)}.");
@@ -475,7 +492,7 @@ public partial class MainWindow
                     heavySettings,
                     ex.Message,
                     cancelled: false);
-                _imageAnalysisSessionStore.Save(failedSession, _storageSettings);
+                _imageAnalysisSessionStore.Save(failedSession, ActiveImageStorage);
                 ShowHeavySpeechError(string.IsNullOrWhiteSpace(ex.Message)
                     ? L("ImageAnalysis.Workspace.HeavyVoice.Error")
                     : ex.Message);
@@ -526,9 +543,10 @@ public partial class MainWindow
     private async Task<bool> SpeakImageAnalysisWithKokoroAsync(
         IReadOnlyList<CoreSpeechSegment> segments,
         Action playbackStarted,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, ImageBackgroundSpeechOptions? options = null)
     {
-        if (!GetImageAnalysisKokoroSpeechService().IsModelInstalled(_appSettings.LanguageCode))
+        options ??= CaptureBackgroundSpeechOptions();
+        if (!GetImageAnalysisKokoroSpeechService().IsModelInstalled(options.Language))
         {
             var message = L("ImageAnalysis.Workspace.Voice.ModelMissing");
             if (IsHeavyImageAnalysis)
@@ -540,7 +558,7 @@ public partial class MainWindow
                         GetHeavyImageAnalysisSpeechSettings(),
                         message,
                         cancelled: false);
-                    _imageAnalysisSessionStore.Save(session, _storageSettings);
+                    _imageAnalysisSessionStore.Save(session, ActiveImageStorage);
                 }
                 ShowHeavySpeechError(message);
             }
@@ -566,22 +584,32 @@ public partial class MainWindow
             };
             RefreshImageAnalysisSpeechUi(status, isBusy: true);
         });
-        var heavySettings = IsHeavyImageAnalysis ? GetHeavyImageAnalysisSpeechSettings() : null;
+        var heavySettings = options.Heavy;
+        var cachePath = BackgroundSpeechCache.PathFor(string.Join(Environment.NewLine, segments.Select(s => s.Text)),
+            options.Language, heavySettings?.KokoroVolume ?? options.Settings.KokoroVolume,
+            heavySettings?.KokoroRatePercent ?? options.Settings.KokoroRatePercent);
+        if (cachePath is not null && File.Exists(cachePath))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            GetSessionAudioPlayer().Open(cachePath, deleteOnClear: false); playbackStarted(); return true;
+        }
         var result = await GetImageAnalysisKokoroSpeechService().SpeakAsync(
-            _appSettings.LanguageCode,
+            options.Language,
             string.Join(Environment.NewLine, segments.Select(segment => segment.Text)),
-            heavySettings?.KokoroVolume ?? _appSettings.ImageAnalysisSpeech?.KokoroVolume ?? 100,
-            heavySettings?.KokoroRatePercent ?? _appSettings.ImageAnalysisSpeech?.KokoroRatePercent ?? 100,
+            heavySettings?.KokoroVolume ?? options.Settings.KokoroVolume,
+            heavySettings?.KokoroRatePercent ?? options.Settings.KokoroRatePercent,
             progress,
             cancellationToken, generateOnly: true);
         if (result.Completed && !string.IsNullOrWhiteSpace(result.AudioPath))
         {
+            if (cachePath is not null) BackgroundSpeechCache.Save(result.AudioPath, cachePath);
             if (cancellationToken.IsCancellationRequested) { System.IO.File.Delete(result.AudioPath); return false; }
-            GetSessionAudioPlayer().Open(result.AudioPath);
+            if (cachePath is not null) File.Delete(result.AudioPath);
+            GetSessionAudioPlayer().Open(cachePath ?? result.AudioPath, deleteOnClear: cachePath is null);
             playbackStarted();
         }
         LogImageAnalysisRuntime(
-            $"Kokoro speech: {result.Code}; language={NormalizeSpeechLanguage(_appSettings.LanguageCode)}; " +
+            $"Kokoro speech: {result.Code}; language={NormalizeSpeechLanguage(options.Language)}; " +
             $"requestedEngine=kokoro; generation={result.GenerationMilliseconds} ms; " +
             $"firstAudio={result.TimeToFirstAudioMilliseconds} ms; peak={result.PeakWorkingSetBytes} bytes; " +
             $"cpu={result.CpuMilliseconds:F0} ms; cpuAvg={result.AverageCpuPercent:F1}%; " +
@@ -589,7 +617,7 @@ public partial class MainWindow
             $"errorType={DiagnosticValue(result.ErrorType)}; error={DiagnosticValue(result.Error)}; " +
             $"stderr={DiagnosticValue(result.StandardErrorTail)}.");
         LogImageAnalysisRuntime(GetImageAnalysisKokoroSpeechService().DescribeCurrentRuntime(
-            _appSettings.LanguageCode,
+            options.Language,
             result.Completed ? "after_speech" : "speech_failed"));
         if (IsHeavyImageAnalysis && _imageAnalysisLiterarySession is { } measuredSession)
         {
@@ -612,15 +640,15 @@ public partial class MainWindow
                     Completed = true,
                     AutomaticFallbackUsed = false
                 };
-                _imageAnalysisSessionStore.Save(heavySession, _storageSettings);
+                _imageAnalysisSessionStore.Save(heavySession, ActiveImageStorage);
             }
-            var actualVoice = NormalizeSpeechLanguage(_appSettings.LanguageCode) == "en"
+            var actualVoice = NormalizeSpeechLanguage(options.Language) == "en"
                 ? "af_heart"
                 : "sveta";
             LogImageAnalysisRuntime(
                 $"Voice playback completed: requested=kokoro; actual=kokoro; " +
                 $"voice={actualVoice}; device=CPU; " +
-                $"language={NormalizeSpeechLanguage(_appSettings.LanguageCode)}.");
+                $"language={NormalizeSpeechLanguage(options.Language)}.");
             return true;
         }
         if (result.Code == KokoroWarmupCodes.Cancelled)
@@ -642,7 +670,7 @@ public partial class MainWindow
                     AutomaticFallbackUsed = false,
                     Error = result.Error
                 };
-                _imageAnalysisSessionStore.Save(heavySession, _storageSettings);
+                _imageAnalysisSessionStore.Save(heavySession, ActiveImageStorage);
             }
             ShowHeavySpeechError(string.IsNullOrWhiteSpace(result.Error)
                 ? L("ImageAnalysis.Workspace.HeavyVoice.Error")
@@ -655,13 +683,13 @@ public partial class MainWindow
             isBusy: true);
         LogImageAnalysisRuntime(
             $"Voice fallback: requested=kokoro; actual=programmatic; " +
-            $"language={NormalizeSpeechLanguage(_appSettings.LanguageCode)}; " +
+            $"language={NormalizeSpeechLanguage(options.Language)}; " +
             $"reason={DiagnosticValue(result.Error)}.");
         return await SpeakImageAnalysisProgrammaticallyAsync(
             segments,
             playbackStarted,
             cancellationToken,
-            fallbackFromKokoro: true);
+            fallbackFromKokoro: true, options);
     }
 
 #if false // Built-in speech retired from this scenario; working implementation kept for restoration.
@@ -708,7 +736,7 @@ public partial class MainWindow
             AutomaticFallbackUsed = false,
             Error = result.Error
         };
-        _imageAnalysisSessionStore.Save(session, _storageSettings);
+        _imageAnalysisSessionStore.Save(session, ActiveImageStorage);
         if (!result.Completed || string.IsNullOrWhiteSpace(result.AudioPath))
         {
             ShowHeavySpeechError(string.IsNullOrWhiteSpace(result.Error)
@@ -755,11 +783,12 @@ public partial class MainWindow
         IReadOnlyList<CoreSpeechSegment> segments,
         Action playbackStarted,
         CancellationToken cancellationToken,
-        bool fallbackFromKokoro)
+        bool fallbackFromKokoro, ImageBackgroundSpeechOptions? options = null)
     {
-        var configured = _appSettings.CoreVoice ?? new CoreVoiceSettings();
-        var speechSettings = _appSettings.ImageAnalysisSpeech ?? new ImageAnalysisSpeechSettings();
-        var heavySettings = IsHeavyImageAnalysis ? GetHeavyImageAnalysisSpeechSettings() : null;
+        options ??= CaptureBackgroundSpeechOptions();
+        var configured = options.Core;
+        var speechSettings = options.Settings;
+        var heavySettings = options.Heavy;
         var programmaticVolume = heavySettings?.ProgrammaticVolume ?? speechSettings.ProgrammaticVolume;
         var programmaticRate = heavySettings?.ProgrammaticRatePercent ?? speechSettings.ProgrammaticRatePercent;
         var settings = new CoreVoiceSettings
@@ -774,7 +803,7 @@ public partial class MainWindow
             RussianVoice = configured.RussianVoice,
             EnglishVoice = configured.EnglishVoice
         };
-        var language = NormalizeSpeechLanguage(_appSettings.LanguageCode);
+        var language = NormalizeSpeechLanguage(options.Language);
         var usesRhVoice = string.Equals(
                 configured.Provider,
                 CoreVoiceSettings.RhVoiceProvider,
@@ -792,7 +821,7 @@ public partial class MainWindow
         var result = await _imageAnalysisProgrammaticSpeechCoordinator.PresentAsync(
             new CoreSpeechRequest(
                 segments,
-                _appSettings.LanguageCode,
+                options.Language,
                 settings,
                 "image_analysis_review_summary",
                 SpeechRoles.UncertaintyExecutor),
@@ -823,7 +852,7 @@ public partial class MainWindow
                 AutomaticFallbackUsed = false,
                 Error = result.Completed ? string.Empty : result.ErrorCode ?? string.Empty
             };
-            _imageAnalysisSessionStore.Save(heavySession, _storageSettings);
+            _imageAnalysisSessionStore.Save(heavySession, ActiveImageStorage);
         }
         LogImageAnalysisRuntime(
             $"Voice playback finished: actual=programmatic; provider={actualProvider}; " +

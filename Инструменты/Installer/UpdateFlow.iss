@@ -1,5 +1,7 @@
 var
   UpdateDirectionPage: TInputOptionWizardPage;
+  AutostartPage: TInputOptionWizardPage;
+  FirstInstallation: Boolean;
 
 function HasExplicitStandDirection(): Boolean;
 var
@@ -11,6 +13,7 @@ end;
 
 procedure InitializeWizard();
 begin
+  FirstInstallation := not FileExists(ExpandConstant('{#UserDataRoot}\Updates\installation.json'));
   UpdateDirectionPage := CreateInputOptionPage(wpLicense,
     CustomMessage('UpdateDirectionTitle'), CustomMessage('UpdateDirectionDescription'),
     CustomMessage('UpdateDirectionHelp'), True, False);
@@ -23,6 +26,16 @@ begin
     if ExpandConstant('{param:UPDATECHANNEL|}') = 'stable' then UpdateDirectionPage.SelectedValueIndex := 0
     else UpdateDirectionPage.SelectedValueIndex := 1;
   end;
+  AutostartPage := CreateInputOptionPage(UpdateDirectionPage.ID,
+    CustomMessage('AutostartTitle'), CustomMessage('AutostartDescription'),
+    CustomMessage('AutostartHelp'), False, False);
+  AutostartPage.Add(CustomMessage('AutostartChoice'));
+  AutostartPage.Values[0] := False;
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PageID = AutostartPage.ID) and ((not FirstInstallation) or WizardSilent);
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -81,6 +94,14 @@ begin
   Target := Folder + '\channel.json';
   if (not SaveStringToFile(Target + '.tmp', AnsiString('{"schemaVersion":1,"channel":"' + Choice + '"}'), False)) or
       (not MoveFileEx(Target + '.tmp', Target, 9)) then RaiseException(CustomMessage('UpdateChannelFailed'));
+#ifndef StandDataRoot
+  if FirstInstallation then
+  begin
+    if AutostartPage.Values[0] then Choice := '1' else Choice := '0';
+    if (not Exec(ExpandConstant('{#UpdateHost}'), '--configure-autostart ' + Choice, '', SW_HIDE, ewWaitUntilTerminated, ExitCode)) or (ExitCode <> 0) then
+      RaiseException(CustomMessage('AutostartFailed'));
+  end;
+#endif
 end;
 
 function InitializeUninstall(): Boolean;

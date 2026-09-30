@@ -17,6 +17,7 @@ public sealed class StudioMessage
     public bool Complete { get; set; } = true;
     public int? ContextOrder { get; set; }
     public StudioContextChange? ContextChange { get; set; }
+    public string? BackgroundOperationId { get; set; }
 }
 
 /// <summary>The journal is durable; membership of the model's working context is explicit.</summary>
@@ -38,6 +39,8 @@ public sealed class LiteraryStudioState
     public bool WriterComment { get; set; }
     public bool Interrupted { get; set; }
     public LiteraryStudioPending? Pending { get; set; }
+    public string? BackgroundOperationId { get; set; }
+    public int BackgroundOperationStep { get; set; }
     public List<StudioMessage> Messages { get; set; } = [];
     public List<StudioQuote> Quotes { get; set; } = [];
     public List<string> RevisionRequirements { get; set; } = [];

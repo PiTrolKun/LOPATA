@@ -42,7 +42,7 @@ public sealed partial class LiteraryInterviewControl : UserControl
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryScrollResources.xaml", UriKind.Relative) });
         _autosave.Tick += (_, _) => { if (_dirty && !Save()) Render(); };
         Loaded += (_, _) => { _autosave.Start(); Focus(); ShowLimitNotice(); };
-        Unloaded += (_, _) => { _autosave.Stop(); if (!_transferred) { Save(); Cancel(); _ = CleanupAsync(); } };
+        Unloaded += (_, _) => { _autosave.Stop(); if (!_transferred) { Save(); if (!ApplicationBackgroundOperations.PreserveHiddenWork) { Cancel(); _ = CleanupAsync(); } } };
         PreviewKeyDown += NavigateForTest;
         Render();
     }
@@ -54,6 +54,7 @@ public sealed partial class LiteraryInterviewControl : UserControl
         try { _session.Save(); _dirty = false; _saveFailed=false; _error = ""; UpdateStatus(); return true; }
         catch (Exception ex) { _saveFailed=true; _error = _l("Literary.Create.SaveError") + " " + ex.Message; _status.Text = _error; return false; }
     }
+    public bool CheckpointBackgroundState() => Save();
     public bool CanLeave()
     {
         if (IsIndexing || _compressionWindow?.IsWorking == true) return false;

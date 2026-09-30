@@ -44,6 +44,7 @@ public sealed class ApplicationUpdateWindow : Window
     private bool _backgroundCheckBusy, _receivedBackgroundCheck;
     private bool _checkFailed, _downloading, _choosing, _installing, _closed;
     public bool IsBusy => _operation is not null || _choosing || _installing;
+    public UpdateOffer? AvailableUpdate => _update;
 
     public void SetBackgroundCheckBusy(bool busy)
     {

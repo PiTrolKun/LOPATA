@@ -2,7 +2,7 @@ using AIHub.Models;
 
 namespace AIHub.Services;
 
-public sealed class ExecutorWorkflowService : IDisposable
+public sealed partial class ExecutorWorkflowService : IDisposable
 {
     private readonly ExecutorModelArtifactResolver _resolver = new(new HuggingFaceExecutorArtifactSource());
     private readonly ExecutorModelInstaller _installer = new();
@@ -110,7 +110,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         }
     }
 
-    public async Task<ExecutorTurnResult> ExecuteAsync(
+    private async Task<ExecutorTurnResult> ExecuteAsyncCore(
         ExecutorModelArtifact artifact,
         ExecutorHandoffPackage handoff,
         SessionFileManifest sessionFileManifest,
@@ -119,12 +119,16 @@ public sealed class ExecutorWorkflowService : IDisposable
         CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        _backgroundStorage = storageSettings;
         Stop("replaced");
         _sessionLog = ScenarioSessionLog.CreateUncertaintyExecutor(
             storageSettings,
             handoff.ParentCoreSessionId,
             handoff.ParentRunId);
         _session = new ExecutorSessionService(_userContextService, _autonomySeconds);
+        _session.BackgroundCheckpoint = SaveExecutorBackgroundCheckpoint;
+        _session.BackgroundGeneration = BackgroundGeneration;
+        _session.BackgroundTool = BackgroundTool;
         _session.KnowledgeTree.Changed += SessionKnowledgeTree_Changed;
         var turn = await _session.ExecuteAsync(
             artifact,
@@ -146,12 +150,16 @@ public sealed class ExecutorWorkflowService : IDisposable
         SessionRestorationContext restoration)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        _backgroundStorage = storageSettings;
         Stop("replaced_by_restored_session");
         _sessionLog = ScenarioSessionLog.CreateUncertaintyExecutor(
             storageSettings,
             restoration.SessionId,
             restoration.RunId);
         _session = new ExecutorSessionService(_userContextService, _autonomySeconds);
+        _session.BackgroundCheckpoint = SaveExecutorBackgroundCheckpoint;
+        _session.BackgroundGeneration = BackgroundGeneration;
+        _session.BackgroundTool = BackgroundTool;
         _session.KnowledgeTree.Changed += SessionKnowledgeTree_Changed;
         var turn = _session.Restore(
             checkpoint,
@@ -164,7 +172,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorTurnResult> ContinueAsync(
+    private async Task<ExecutorTurnResult> ContinueAsyncCore(
         string userResponse,
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken)
@@ -176,7 +184,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorTurnResult> ContinueAndRunAsync(
+    private async Task<ExecutorTurnResult> ContinueAndRunAsyncCore(
         string userResponse,
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken)
@@ -189,7 +197,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorTurnResult> ContinueApprovedActionAndRunAsync(
+    private async Task<ExecutorTurnResult> ContinueApprovedActionAndRunAsyncCore(
         ExecutorTurnOption approvedOption,
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken)
@@ -205,7 +213,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorTurnResult> UpdateFileManifestAsync(
+    private async Task<ExecutorTurnResult> UpdateFileManifestAsyncCore(
         SessionFileManifest fileManifest,
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken)
@@ -221,7 +229,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorTurnResult> ConfirmBriefAndRunAsync(
+    private async Task<ExecutorTurnResult> ConfirmBriefAndRunAsyncCore(
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken)
     {
@@ -233,7 +241,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorResultSnapshot> CreateResultSnapshotAsync(
+    private async Task<ExecutorResultSnapshot> CreateResultSnapshotAsyncCore(
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken)
     {
@@ -244,7 +252,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return snapshot;
     }
 
-    public async Task<ExecutorTurnResult> ContinueAfterCapabilityRequestAsync(
+    private async Task<ExecutorTurnResult> ContinueAfterCapabilityRequestAsyncCore(
         string capability,
         string resultCode,
         string details,
@@ -264,7 +272,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorTurnResult> ContinueAfterCapabilityRequestAsync(
+    private async Task<ExecutorTurnResult> ContinueAfterCapabilityRequestAsyncCore(
         IReadOnlyCollection<ExecutorCapabilityRequest> capabilities,
         string resultCode,
         string details,
@@ -284,7 +292,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorTurnResult> ContinueAfterCapabilityRequestAsync(
+    private async Task<ExecutorTurnResult> ContinueAfterCapabilityRequestAsyncCore(
         IReadOnlyCollection<ExecutorCapabilityRequest> capabilities,
         IReadOnlyCollection<CapabilityAdapterBinding> bindings,
         string resultCode,
@@ -306,7 +314,7 @@ public sealed class ExecutorWorkflowService : IDisposable
         return turn;
     }
 
-    public async Task<ExecutorResultSnapshot> CreateFinalResultAsync(
+    private async Task<ExecutorResultSnapshot> CreateFinalResultAsyncCore(
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken)
     {

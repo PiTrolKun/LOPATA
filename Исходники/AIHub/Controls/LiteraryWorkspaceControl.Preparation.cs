@@ -11,11 +11,9 @@ public sealed partial class LiteraryWorkspaceControl
         { pending=await Task.Run(()=>LiteraryPreparationPlan.Read(_entry.ProjectPath),ct);return true; },ct);
         if(scan.Report is { } scanReport) { await WaitForReadinessAsync(ct); return Failed(scanReport); }
         if(pending.Length>0) await WaitForReadinessAsync(ct);
-        var modes=pending.Length==0?new LiteraryPreparationModes("auto","auto")
-            : LiteraryPreparationDialog.Choose(this,_l,pending);
+        var modes=ChooseMemoryModes(pending,ct);
         if(modes is null) return false;
         ct.ThrowIfCancellationRequested();
-        if(modes.Rag=="manual" && pending.Any(p=>p.Rag) && !LiteraryPreparationDialog.ReviewRag(this,_l,pending)) return false;
         var rag=await LiteraryPreparationRetry.RunAsync(_entry.ProjectPath,"RAG",async ()=>
         {
             await LiteraryStorageMigration.MigrateAsync(_entry.ProjectPath,progress,ct);

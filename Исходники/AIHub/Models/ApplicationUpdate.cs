@@ -7,6 +7,7 @@ public sealed class ApplicationUpdateSettings
     public bool CheckOnStartup { get; set; } = true;
     public bool? IncludeBeta { get; set; }
     public DateTimeOffset? LastCheckUtc { get; set; }
+    public string? LastNotifiedVersion { get; set; }
 }
 
 public sealed record ApplicationReleaseVersion(int Major, int Minor, int Patch, string Channel)

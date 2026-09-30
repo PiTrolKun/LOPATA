@@ -47,6 +47,16 @@ public sealed class AppSettingsStore
     {
         AppDataPaths.EnsureBaseDirectory();
         var json = JsonSerializer.Serialize(settings, JsonOptions);
-        File.WriteAllText(AppDataPaths.SettingsPath, json);
+        var temporary = AppDataPaths.SettingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                4096, FileOptions.WriteThrough))
+            {
+                var bytes = System.Text.Encoding.UTF8.GetBytes(json); stream.Write(bytes); stream.Flush(true);
+            }
+            File.Move(temporary, AppDataPaths.SettingsPath, true);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 }

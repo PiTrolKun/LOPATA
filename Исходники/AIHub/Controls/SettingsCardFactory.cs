@@ -38,10 +38,14 @@ public sealed class SettingsCardFactory(Func<string, string> text)
         _localize.Add(() => { button.Content = text(key); AutomationProperties.SetName(button, text(key)); }); return button;
     }
 
-    public CheckBox FutureSwitch(string key)
+    public CheckBox Switch(string key, string id, Action<bool> changed)
     {
-        var checkbox = new CheckBox { IsEnabled = false, IsChecked = false, Margin = new(0, 0, 0, 10) };
-        _localize.Add(() => checkbox.Content = new TextBlock { Text = text(key), TextWrapping = TextWrapping.Wrap }); return checkbox;
+        var checkbox = new CheckBox { Margin = new(0, 0, 0, 10) };
+        AutomationProperties.SetAutomationId(checkbox, id);
+        checkbox.Checked += (_, _) => changed(true);
+        checkbox.Unchecked += (_, _) => changed(false);
+        _localize.Add(() => { checkbox.Content = new TextBlock { Text = text(key), TextWrapping = TextWrapping.Wrap }; AutomationProperties.SetName(checkbox, text(key)); });
+        return checkbox;
     }
 
     public void RefreshLocalization() { foreach (var action in _localize) action(); }

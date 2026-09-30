@@ -38,6 +38,7 @@ public sealed class LlamaServerRuntimeService : IDisposable
     public LlamaServerRuntimeService(UserContextService userContextService)
     {
         _coreIdentityService = new CoreIdentityService(userContextService);
+        ApplicationBackgroundOperations.RegisterModel(this, runtime => ModelProcessRetirement.StopAsync(runtime._process, runtime.Stop));
     }
 
     public Task PrepareAsync(

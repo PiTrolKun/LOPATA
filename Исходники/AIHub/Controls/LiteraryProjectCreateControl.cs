@@ -83,7 +83,7 @@ public sealed partial class LiteraryProjectCreateControl : UserControl
         _sections.Children.Add(buttons);
         Content = root;
         Unloaded += async (_, _) => { if (!_saving) { CancelIndexing(); try { await _indexTask; } finally { _reservation?.Dispose(); _reservation = null; } } };
-        IsVisibleChanged += (_, _) => { if (!IsVisible && !_saving) CancelIndexing(); };
+        IsVisibleChanged += (_, _) => { if (!IsVisible && !_saving && !ApplicationBackgroundOperations.PreserveHiddenWork) CancelIndexing(); };
     }
 
     private StackPanel Section(string key)

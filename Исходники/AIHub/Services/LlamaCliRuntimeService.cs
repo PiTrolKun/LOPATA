@@ -73,38 +73,31 @@ public sealed class LlamaCliRuntimeService
             log($"Starting llama-cli: {Path.GetFileName(model.Path)}");
             OwnedProcessRegistry.Shared.Start(process, "LlamaCliRuntimeService");
 
-            using var registration = cancellationToken.Register(() =>
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+            try
             {
-                try
+                await process.WaitForExitAsync(cancellationToken);
+
+                var output = await outputTask;
+                var error = await errorTask;
+                if (!string.IsNullOrWhiteSpace(error))
                 {
-                    if (!process.HasExited)
-                    {
-                        process.Kill(entireProcessTree: true);
-                    }
+                    log(error.Trim());
                 }
-                catch
+
+                if (process.ExitCode != 0 && string.IsNullOrWhiteSpace(output))
                 {
-                    // Best-effort cancellation for debug tooling.
+                    throw new InvalidOperationException($"llama-cli exited with code {process.ExitCode}.");
                 }
-            });
 
-            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-            var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
-
-            var output = await outputTask;
-            var error = await errorTask;
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                log(error.Trim());
+                return CleanOutput(output);
             }
-
-            if (process.ExitCode != 0 && string.IsNullOrWhiteSpace(output))
+            finally
             {
-                throw new InvalidOperationException($"llama-cli exited with code {process.ExitCode}.");
+                await ModelProcessRetirement.StopAsync(process, () => { if (!process.HasExited) process.Kill(entireProcessTree: true); });
+                await Task.WhenAll(outputTask, errorTask);
             }
-
-            return CleanOutput(output);
         }
         finally
         {

@@ -22,7 +22,7 @@ public static class LiteraryPreparationDialog
         window.Resources.MergedDictionaries.Add(new ResourceDictionary { Source=new Uri("/AIHub;component/Controls/LiteraryBookScrollResources.xaml",UriKind.Relative) });
         return window;
     }
-    public static LiteraryPreparationModes? Choose(FrameworkElement owner,Func<string,string> l, IReadOnlyList<LiteraryPendingPart> pending)
+    public static LiteraryPreparationModes? Choose(FrameworkElement owner,Func<string,string> l, IReadOnlyList<LiteraryPendingPart> pending, CancellationToken token = default)
     {
         string T(string key)=>l("Literary.Preparation."+key);
         var body=new StackPanel { Margin=new Thickness(24) };body.Children.Add(LiteraryUi.Text(T("Hint")));
@@ -38,9 +38,9 @@ public static class LiteraryPreparationDialog
         var window=Window(owner,l,new ScrollViewer {Content=body,VerticalScrollBarVisibility=ScrollBarVisibility.Auto});
         var next=LiteraryUi.Button(T("Continue"),()=>window.DialogResult=true,true);next.Margin=new Thickness(0,12,0,12);body.Children.Add(next);
         body.Children.Add(LiteraryUi.Button(T("Later"),()=>window.DialogResult=false));
-        return window.ShowDialog()==true?new(rag?.IsChecked==true?"auto":"manual",jelly?.IsChecked==true?"auto":"manual"):null;
+        return BackgroundUserDecision.ShowDialog(window,owner,token)==true?new(rag?.IsChecked==true?"auto":"manual",jelly?.IsChecked==true?"auto":"manual"):null;
     }
-    public static bool ReviewRag(FrameworkElement owner,Func<string,string> l,IReadOnlyList<LiteraryPendingPart> pending)
+    public static bool ReviewRag(FrameworkElement owner,Func<string,string> l,IReadOnlyList<LiteraryPendingPart> pending, CancellationToken token = default)
     {
         var body=new DockPanel { Margin=new Thickness(20) };
         var hint=LiteraryUi.Text(l("Literary.Preparation.RagHint"));DockPanel.SetDock(hint,Dock.Top);body.Children.Add(hint);
@@ -56,10 +56,11 @@ public static class LiteraryPreparationDialog
         var window=Window(owner,l,body);window.Width=980;
         actions.Children.Add(LiteraryUi.Button(l("Literary.Preparation.Index"),()=>window.DialogResult=true,true));
         var cancel=LiteraryUi.Button(l("Literary.Preparation.Later"),()=>window.DialogResult=false);cancel.Margin=new Thickness(12,0,0,0);actions.Children.Add(cancel);
-        parts.SelectedIndex=0;return window.ShowDialog()==true;
+        parts.SelectedIndex=0;return BackgroundUserDecision.ShowDialog(window,owner,token)==true;
     }
     public static void Report(FrameworkElement owner,Func<string,string> l,string report)
     {
+        BackgroundUserDecision.RequireVisible(owner);
         void Open(string target) { try { Process.Start(new ProcessStartInfo(target){UseShellExecute=true}); } catch(Exception) { } }
         var body=new StackPanel { Margin=new Thickness(24) };body.Children.Add(LiteraryUi.Text(l("Literary.Preparation.Failed")));
         var folder=System.IO.Path.GetDirectoryName(report)!;

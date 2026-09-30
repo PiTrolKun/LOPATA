@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
@@ -53,7 +54,7 @@ public partial class MainWindow
             }
         };
         OmniLlamaProfile.ForBundle(bundleId)?.ApplyToNewSession(_imageAnalysisLiterarySession);
-        _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings);
+        _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, ActiveImageStorage);
         ImageAnalysisWorkspacePage.ShowImageStep(_imageAnalysisLiterarySession);
         StatusText.Text = L("Status.ImageAnalysisChooseFile");
     }
@@ -75,7 +76,7 @@ public partial class MainWindow
     {
         if (_batchJob is not null) return;
         if (_imageAnalysisLiterarySession is null) return;
-        try { _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings); }
+        try { _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, ActiveImageStorage); }
         catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
         { StatusText.Text = L("PromptPairs.StorageError"); }
     }
@@ -83,6 +84,10 @@ public partial class MainWindow
     private async void ImageAnalysisWorkspacePage_GenerateRequested(
         object? sender,
         ImageAnalysisSettingsRequestedEventArgs e)
+        => await GenerateBackgroundImageAsync(e);
+
+    private async Task GenerateBackgroundImageAsync(ImageAnalysisSettingsRequestedEventArgs e,
+        BackgroundOperationState? restored = null, CancellationToken lifetime = default)
     {
         if (_batchJob is not null)
         {
@@ -94,6 +99,7 @@ public partial class MainWindow
         if (_imageAnalysisLiterarySession?.File is null || _imageAnalysisLiterarySession.ContextBlocked
             || OmniSessionCompatibility.IsRetiredModelSession(_imageAnalysisLiterarySession))
         {
+            if (restored is not null) throw new BackgroundOperationWaitingException("Tray.NeedsInput");
             return;
         }
 
@@ -111,12 +117,15 @@ public partial class MainWindow
         }
 
         CancelImageAnalysisLiteraryOperation();
-        var owner = new CancellationTokenSource();
+        var owner = CancellationTokenSource.CreateLinkedTokenSource(lifetime);
         _imageAnalysisLiteraryCts = owner;
         var acceptProgress = true;
         var session = _imageAnalysisLiterarySession;
+        var input = restored?.Input.Deserialize<ImageBackgroundInput>();
+        var storage = input?.Storage ?? _storageSettings;
+        var speech = input?.Speech ?? CaptureBackgroundSpeechOptions();
         session.Settings = e.Settings;
-        session.Settings.LanguageCode = _appSettings.LanguageCode;
+        if (restored is null) session.Settings.LanguageCode = _appSettings.LanguageCode;
         session.CurrentStep = ImageAnalysisLiterarySteps.Result;
         session.Status = ImageAnalysisLiteraryStatuses.AnalysingVision;
         session.LastError = string.Empty;
@@ -126,7 +135,7 @@ public partial class MainWindow
             ManagedModelRoles.Vision,
             ImageAnalysisEventStatuses.Active,
             session.File.DisplayName);
-        _imageAnalysisSessionStore.Save(session, _storageSettings);
+        _imageAnalysisSessionStore.Save(session, storage);
         ImageAnalysisWorkspacePage.ShowSession(session);
         ImageAnalysisWorkspacePage.SetBusy(
             ManagedModelRoles.Vision,
@@ -187,51 +196,15 @@ public partial class MainWindow
 
         try
         {
-            var result = await GetImageAnalysisLiteraryPipeline(session).CreateAsync(
-                session.File,
-                session.Settings,
-                _storageSettings,
-                session,
-                LogImageAnalysisRuntime,
-                progress,
-                stream,
-                checkpoint =>
+            if (_imageAnalysisRuntimePreparationTask is not null)
+                await _imageAnalysisRuntimePreparationTask.WaitAsync(owner.Token);
+            await new ImageBackgroundWork(_imageAnalysisSessionStore).RunAsync(session, storage, "",
+                () => GetImageAnalysisLiteraryPipeline(session), LogImageAnalysisRuntime, progress, stream,
+                owner.Token, restored, async attempt =>
                 {
-                    void ApplyCheckpoint()
-                    {
-                        session.VisualReport = checkpoint.VisualReport;
-                        session.HiddenConversation = checkpoint.HiddenConversation.ToList();
-                        session.Observations.Clear();
-                        session.Status = ImageAnalysisLiteraryStatuses.Writing;
-                        AddImageAnalysisEvent(
-                            session,
-                            ImageAnalysisEventCodes.VisionCompleted,
-                            ManagedModelRoles.Vision,
-                            ImageAnalysisEventStatuses.Completed,
-                            L("ImageAnalysis.Workspace.Activity.VisionReportReady"));
-                        _imageAnalysisSessionStore.Save(session, _storageSettings);
-                        ImageAnalysisWorkspacePage.RefreshActivity(session);
-                    }
-
-                    if (Dispatcher.CheckAccess())
-                    {
-                        ApplyCheckpoint();
-                    }
-                    else
-                    {
-                        Dispatcher.Invoke(ApplyCheckpoint);
-                    }
-                },
-                owner.Token);
-            session.VisualReport = result.VisualReport;
-            if (result.HiddenConversation is not null)
-            {
-                session.HiddenConversation = result.HiddenConversation.ToList();
-            }
-            session.RuntimeMetrics.VisualPassMilliseconds = result.VisualPassMilliseconds;
-            session.RuntimeMetrics.ComposePassMilliseconds = result.ComposePassMilliseconds;
-            session.ReviewSummary = result.ReviewSummary;
-            AddImageAnalysisVersion(session, result.Description, string.Empty, "initial");
+                    ImageAnalysisWorkspacePage.ShowSession(session);
+                    await SpeakCurrentImageAnalysisSummaryAsync(automatic: true, operationToken: attempt, options: speech);
+                }, speech);
             session.Status = ImageAnalysisLiteraryStatuses.ResultReady;
             session.CurrentStep = ImageAnalysisLiterarySteps.Result;
             session.LastError = string.Empty;
@@ -241,7 +214,7 @@ public partial class MainWindow
                 ManagedModelRoles.Core,
                 ImageAnalysisEventStatuses.Completed,
                 LF("ImageAnalysis.Workspace.Result.VersionName", session.Versions.Count, DateTime.Now.ToString("g")));
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, storage);
             var delaySummaryReveal = !ImageAnalysisModeCapabilities.UsesOmniConversation(session.BundleId)
                 && ImageAnalysisSpeechTextService.ShouldDelaySummaryReveal(
                 ImageAnalysisModeCapabilities.UsesOmniConversation(session.BundleId)
@@ -252,11 +225,7 @@ public partial class MainWindow
                 session,
                 showReviewSummary: !delaySummaryReveal);
             StatusText.Text = session.ContextBlocked ? L("ImageAnalysis.Context.RestartSession") : L("Status.ImageAnalysisResultReady");
-            _ = SpeakCurrentImageAnalysisSummaryAsync(
-                automatic: true,
-                playbackStarted: delaySummaryReveal
-                    ? () => ImageAnalysisWorkspacePage.RevealReviewSummary(session)
-                    : null);
+            if (delaySummaryReveal) ImageAnalysisWorkspacePage.RevealReviewSummary(session);
         }
         catch (OperationCanceledException)
         {
@@ -265,7 +234,7 @@ public partial class MainWindow
                 ? ImageAnalysisLiteraryStatuses.ResultReady
                 : ImageAnalysisLiteraryStatuses.FileReady;
             session.LastError = string.Empty;
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, storage);
             ImageAnalysisWorkspacePage.ShowSession(session);
             StatusText.Text = L("Status.ImageAnalysisCancelled");
         }
@@ -289,7 +258,7 @@ public partial class MainWindow
                 string.Empty,
                 ImageAnalysisEventStatuses.Failed,
                 errorMessage);
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, storage);
             if (session.Versions.Count == 0)
             {
                 ImageAnalysisWorkspacePage.ShowSettings(session);
@@ -314,17 +283,25 @@ public partial class MainWindow
     private async void ImageAnalysisWorkspacePage_ReviseRequested(
         object? sender,
         ImageAnalysisRevisionRequestedEventArgs e)
+        => await ReviseBackgroundImageAsync(e);
+
+    private async Task ReviseBackgroundImageAsync(ImageAnalysisRevisionRequestedEventArgs e,
+        BackgroundOperationState? restored = null, CancellationToken lifetime = default)
     {
         if (_imageAnalysisLiterarySession?.GetSelectedVersion() is null || _imageAnalysisLiterarySession.ContextBlocked
             || OmniSessionCompatibility.IsRetiredModelSession(_imageAnalysisLiterarySession))
         {
+            if (restored is not null) throw new BackgroundOperationWaitingException("Tray.NeedsInput");
             return;
         }
         CancelImageAnalysisLiteraryOperation();
-        var owner = new CancellationTokenSource();
+        var owner = CancellationTokenSource.CreateLinkedTokenSource(lifetime);
         _imageAnalysisLiteraryCts = owner;
         var acceptProgress = true;
         var session = _imageAnalysisLiterarySession;
+        var input = restored?.Input.Deserialize<ImageBackgroundInput>();
+        var storage = input?.Storage ?? _storageSettings;
+        var speech = input?.Speech ?? CaptureBackgroundSpeechOptions();
         session.Status = ImageAnalysisLiteraryStatuses.Revising;
         AddImageAnalysisEvent(
             session,
@@ -332,7 +309,7 @@ public partial class MainWindow
             ManagedModelRoles.Core,
             ImageAnalysisEventStatuses.Active,
             e.Request);
-        _imageAnalysisSessionStore.Save(session, _storageSettings);
+        _imageAnalysisSessionStore.Save(session, storage);
         ImageAnalysisWorkspacePage.SetBusy(
             ManagedModelRoles.Core,
             L("ImageAnalysis.Workspace.Activity.RevisionActive"));
@@ -373,15 +350,9 @@ public partial class MainWindow
         });
         try
         {
-            var revised = await GetImageAnalysisLiteraryPipeline(session).ReviseAsync(
-                session,
-                e.Request,
-                _storageSettings,
-                LogImageAnalysisRuntime,
-                progress,
-                stream,
-                owner.Token);
-            AddImageAnalysisVersion(session, revised, e.Request, "revision");
+            await new ImageBackgroundWork(_imageAnalysisSessionStore).RunAsync(session, storage, e.Request,
+                () => GetImageAnalysisLiteraryPipeline(session), LogImageAnalysisRuntime, progress, stream,
+                owner.Token, restored, speech: speech);
             session.Status = ImageAnalysisLiteraryStatuses.ResultReady;
             session.LastError = string.Empty;
             AddImageAnalysisEvent(
@@ -390,7 +361,7 @@ public partial class MainWindow
                 ManagedModelRoles.Core,
                 ImageAnalysisEventStatuses.Completed,
                 LF("ImageAnalysis.Workspace.Result.VersionName", session.Versions.Count, DateTime.Now.ToString("g")));
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, storage);
             ImageAnalysisWorkspacePage.ShowSession(session);
             StatusText.Text = session.ContextBlocked ? L("ImageAnalysis.Context.RestartSession") : L("Status.ImageAnalysisRevisionReady");
         }
@@ -398,7 +369,7 @@ public partial class MainWindow
         {
             CompleteActiveImageAnalysisEvents(session);
             session.Status = ImageAnalysisLiteraryStatuses.ResultReady;
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, storage);
             ImageAnalysisWorkspacePage.ShowSession(session);
             StatusText.Text = L("Status.ImageAnalysisCancelled");
         }
@@ -419,7 +390,7 @@ public partial class MainWindow
                 string.Empty,
                 ImageAnalysisEventStatuses.Failed,
                 errorMessage);
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, storage);
             ImageAnalysisWorkspacePage.SetOperationError(errorMessage);
             StatusText.Text = LF("Status.ImageAnalysisFailed", errorMessage);
         }
@@ -452,7 +423,7 @@ public partial class MainWindow
         session.VisualReport = string.Empty;
         session.HiddenConversation.Clear();
         session.AnalysisLanguageCode = string.Empty;
-        _imageAnalysisSessionStore.Save(session, _storageSettings);
+        _imageAnalysisSessionStore.Save(session, ActiveImageStorage);
         _ = Dispatcher.BeginInvoke(() => ImageAnalysisWorkspacePage_GenerateRequested(
             ImageAnalysisWorkspacePage,
             new ImageAnalysisSettingsRequestedEventArgs(session.Settings)));
@@ -515,7 +486,7 @@ public partial class MainWindow
                 string.Empty,
                 ImageAnalysisEventStatuses.Completed,
                 Path.GetFileName(dialog.FileName));
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, ActiveImageStorage);
             ImageAnalysisWorkspacePage.RefreshActivity(session);
             StatusText.Text = LF("Status.ImageAnalysisExported", dialog.FileName);
         }
@@ -565,7 +536,7 @@ public partial class MainWindow
                 choice == MessageBoxResult.Yes
                     ? L("Status.ImageAnalysisCompletedWithBackup")
                     : L("Status.ImageAnalysisCompleted"));
-            _imageAnalysisSessionStore.Save(session, _storageSettings);
+            _imageAnalysisSessionStore.Save(session, ActiveImageStorage);
             ImageAnalysisWorkspacePage.ShowSession(session);
             CancelImageAnalysisRuntimePreparation(stopModels: true);
             StatusText.Text = choice == MessageBoxResult.Yes
@@ -653,7 +624,7 @@ public partial class MainWindow
             return;
         }
         session.SelectedVersionId = e.VersionId;
-        _imageAnalysisSessionStore.Save(session, _storageSettings);
+        _imageAnalysisSessionStore.Save(session, ActiveImageStorage);
         ImageAnalysisWorkspacePage.ShowSession(session);
     }
 
@@ -776,16 +747,14 @@ public partial class MainWindow
     {
         CancelImageAnalysisRuntimePreparation(stopModels: false);
         if (OmniSessionCompatibility.IsRetiredModelSession(_imageAnalysisLiterarySession)) return;
-        // Shared CPU speech warmup precedes model memory measurements.
-        var speechWarmupTask = BeginImageAnalysisSpeechWarmup();
         var owner = new CancellationTokenSource();
         _imageAnalysisRuntimePreparationCts = owner;
-        _imageAnalysisRuntimePreparationTask = PrepareImageAnalysisRuntimeAsync(owner, speechWarmupTask);
+        _imageAnalysisRuntimePreparationTask = PrepareImageAnalysisRuntimeAsync(owner);
     }
 
     private async Task PrepareImageAnalysisRuntimeAsync(
         CancellationTokenSource owner,
-        Task speechWarmupTask)
+        BackgroundOperationState? restored = null)
     {
         var cancellationToken = owner.Token;
         var prepareCoreConcurrently = ImageAnalysisRuntimePreparationPolicy
@@ -794,11 +763,19 @@ public partial class MainWindow
             || ImageAnalysisModeCapabilities.UsesOmniConversation(_imageAnalysisLiterarySession?.BundleId);
         try
         {
+            var input = new ImagePreparationBackgroundInput(_imageAnalysisLiterarySession?.BundleId
+                ?? _selectedImageAnalysisBundle?.Id ?? ImageAnalysisBundleCatalog.MediumId,
+                _imageAnalysisLiterarySession?.SessionId, false, false, ActiveImageStorage,
+                _imageAnalysisLiterarySession, CaptureBackgroundSpeechOptions());
+            await ApplicationBackgroundOperations.RunAsync(ImagePreparationBackgroundKind, L("Status.ImageAnalysisModelsPreparing"),
+                input.SessionId, input, async attempt =>
+            {
+            var speechWarmupTask = WarmImageAnalysisSpeechAsync(forceMemoryAttempt: false, cancellationToken: attempt);
             if (isHeavy)
             {
                 LogImageAnalysisRuntime("Waiting for the existing Kokoro CPU warmup before measuring Heavy memory.");
                 await speechWarmupTask;
-                cancellationToken.ThrowIfCancellationRequested();
+                attempt.ThrowIfCancellationRequested();
                 LogImageAnalysisRuntime(
                     "Starting the Heavy smart resource measurement and fixed-placement Omni warmup.");
             }
@@ -807,11 +784,11 @@ public partial class MainWindow
                 LogImageAnalysisRuntime(
                     "Waiting for the Kokoro warmup stage before preparing image-analysis runtimes.");
                 await speechWarmupTask;
-                cancellationToken.ThrowIfCancellationRequested();
+                attempt.ThrowIfCancellationRequested();
                 LogImageAnalysisRuntime(
                     $"Kokoro warmup stage finished; delaying image-analysis runtimes by " +
                     $"{ImageAnalysisRuntimePreparationPolicy.ModelStartDelay.TotalMilliseconds:F0} ms.");
-                await Task.Delay(ImageAnalysisRuntimePreparationPolicy.ModelStartDelay, cancellationToken);
+                await Task.Delay(ImageAnalysisRuntimePreparationPolicy.ModelStartDelay, attempt);
                 LogImageAnalysisRuntime(prepareCoreConcurrently
                     ? "Preparing Kimi and core concurrently."
                     : "Preparing Kimi first; the core remains on-demand for the safe-memory profile.");
@@ -825,7 +802,7 @@ public partial class MainWindow
                 prepareCoreConcurrently,
                 LogImageAnalysisRuntime,
                 progress: null,
-                cancellationToken);
+                attempt);
             if (isHeavy
                 && GetImageAnalysisLiteraryPipeline(_imageAnalysisLiterarySession)
                     is IHeavyResourceMonitoringPipeline heavyMonitor)
@@ -841,6 +818,8 @@ public partial class MainWindow
             {
                 StatusText.Text = L("Status.ImageAnalysisModelsReady");
             }
+            return true;
+            }, cancellationToken, restored);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -972,7 +951,7 @@ public partial class MainWindow
         {
             if (_imageAnalysisLiterarySession is not null)
             {
-                _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, _storageSettings);
+                _imageAnalysisSessionStore.Save(_imageAnalysisLiterarySession, ActiveImageStorage);
             }
         }
         catch

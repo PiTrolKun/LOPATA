@@ -97,6 +97,7 @@ public sealed class WebSearchRerankerService
                 Message = "Search results were reranked by BAAI bge-reranker-v2-m3."
             };
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex)
         {
             ApplyLexicalFallback(query, results);
@@ -145,22 +146,27 @@ public sealed class WebSearchRerankerService
         };
 
         OwnedProcessRegistry.Shared.Start(process, "WebSearchRerankerService");
-        await process.StandardInput.WriteAsync(payloadJson.AsMemory(), cancellationToken);
-        process.StandardInput.Close();
-
-        var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
-        var output = await outputTask;
-        var error = await errorTask;
-
-        if (process.ExitCode != 0)
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+        try
         {
-            throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"Python exited with code {process.ExitCode}." : error.Trim());
+            await process.StandardInput.WriteAsync(payloadJson.AsMemory(), cancellationToken);
+            process.StandardInput.Close();
+            await process.WaitForExitAsync(cancellationToken);
+            var output = await outputTask;
+            var error = await errorTask;
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"Python exited with code {process.ExitCode}." : error.Trim());
+            return JsonSerializer.Deserialize<PythonRerankResult>(output, JsonOptions)
+                ?? throw new InvalidOperationException("Python reranker returned empty result.");
         }
-
-        return JsonSerializer.Deserialize<PythonRerankResult>(output, JsonOptions)
-            ?? throw new InvalidOperationException("Python reranker returned empty result.");
+        finally
+        {
+            // Canceling the wait does not terminate Python. Confirm this owned worker's
+            // exit before allowing the parent operation to report that it is paused.
+            await ModelProcessRetirement.StopAsync(process, () => { if (!process.HasExited) process.Kill(entireProcessTree: true); });
+            await Task.WhenAll(outputTask, errorTask);
+        }
     }
 
     private static void ApplyModelScores(List<WebSearchResult> results, IReadOnlyList<PythonRerankScore> scores)

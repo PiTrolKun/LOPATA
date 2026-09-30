@@ -5,7 +5,7 @@ using AIHub.Models;
 
 namespace AIHub.Services;
 
-public sealed class ExecutorSessionService : IDisposable
+public sealed partial class ExecutorSessionService : IDisposable
 {
     private readonly LlamaServerRuntimeService _runtime;
     private readonly ExecutorToolGateway _toolGateway = new();
@@ -75,7 +75,7 @@ public sealed class ExecutorSessionService : IDisposable
             Artifact = Clone(_artifact!),
             Handoff = Clone(_handoff!),
             Messages = Clone(_messages),
-            LastTurn = Clone(_lastTurn),
+            LastTurn = _lastTurn is null ? null : Clone(_lastTurn),
             CurrentStageId = _currentStageId,
             ConfirmedBriefCheckpoint = _confirmedBriefCheckpoint,
             BriefConfirmed = _briefConfirmed,
@@ -88,7 +88,15 @@ public sealed class ExecutorSessionService : IDisposable
                 .ToList(),
             SuccessfulToolCalls = [.. _successfulToolCalls],
             ActionGraph = Clone(_actionGraph),
-            EvidenceReceipts = Clone(_evidenceReceipts)
+            EvidenceReceipts = Clone(_evidenceReceipts),
+            BackgroundLoopPending = _backgroundLoopPending,
+            PendingRequiredTool = _pendingRequiredTool,
+            PendingRequiredTarget = _pendingRequiredTarget,
+            PendingRequiredToolSatisfied = _pendingRequiredToolSatisfied,
+            PendingToolCalls = Clone(_pendingToolCalls),
+            InFlightToolCallId = _inFlightToolCallId,
+            PendingSnapshotMarkdown = _pendingSnapshotMarkdown,
+            PendingSnapshotId = _pendingSnapshotId
         };
     }
 
@@ -231,7 +239,15 @@ public sealed class ExecutorSessionService : IDisposable
         _successfulToolSequence = 0;
         _successfulToolCalls.Clear();
         _successfulToolCalls.UnionWith(checkpoint.SuccessfulToolCalls ?? []);
-        _lastTurn = Clone(checkpoint.LastTurn);
+        _lastTurn = checkpoint.LastTurn is null ? null : Clone(checkpoint.LastTurn);
+        _backgroundLoopPending = checkpoint.BackgroundLoopPending;
+        _pendingRequiredTool = checkpoint.PendingRequiredTool;
+        _pendingRequiredTarget = checkpoint.PendingRequiredTarget;
+        _pendingRequiredToolSatisfied = checkpoint.PendingRequiredToolSatisfied;
+        _pendingToolCalls.Clear(); _pendingToolCalls.AddRange(Clone(checkpoint.PendingToolCalls));
+        _inFlightToolCallId = checkpoint.InFlightToolCallId;
+        _pendingSnapshotMarkdown = checkpoint.PendingSnapshotMarkdown;
+        _pendingSnapshotId = checkpoint.PendingSnapshotId;
         _messages.Clear();
         _messages.AddRange(Clone(checkpoint.Messages));
         _snapshots.Clear();
@@ -259,7 +275,7 @@ public sealed class ExecutorSessionService : IDisposable
             Model = installedArtifact.RepoId
         });
 
-        return _lastTurn
+        return _lastTurn ?? (_backgroundLoopPending ? new ExecutorTurnResult() : null)
             ?? throw new InvalidOperationException("The saved executor session has no stable turn.");
     }
 
@@ -302,6 +318,11 @@ public sealed class ExecutorSessionService : IDisposable
                 streamProgress,
                 cancellationToken,
                 GetRequiredFileEvidenceTool());
+        }
+        catch (OperationCanceledException) when (ApplicationBackgroundOperations.IsSuspending(cancellationToken))
+        {
+            PersistBackgroundCheckpoint();
+            throw;
         }
         catch
         {
@@ -366,7 +387,7 @@ public sealed class ExecutorSessionService : IDisposable
             var turn = await RunLoopAsync(
                 streamProgress,
                 cancellationToken,
-                approvedOption.Action);
+                approvedOption.Action, approvedOption.TargetId);
             if (_successfulToolSequence <= successfulToolSequenceBefore
                 || !_successfulToolCalls.Contains(
                 CreateToolEvidenceKey(approvedOption.Action, approvedOption.TargetId)))
@@ -375,6 +396,11 @@ public sealed class ExecutorSessionService : IDisposable
             }
 
             return turn;
+        }
+        catch (OperationCanceledException) when (ApplicationBackgroundOperations.IsSuspending(cancellationToken))
+        {
+            PersistBackgroundCheckpoint();
+            throw;
         }
         catch
         {
@@ -428,6 +454,11 @@ public sealed class ExecutorSessionService : IDisposable
                 cancellationToken,
                 GetRequiredFileEvidenceTool());
         }
+        catch (OperationCanceledException) when (ApplicationBackgroundOperations.IsSuspending(cancellationToken))
+        {
+            PersistBackgroundCheckpoint();
+            throw;
+        }
         catch
         {
             _sessionFileManifest = previousSessionManifest;
@@ -476,6 +507,11 @@ public sealed class ExecutorSessionService : IDisposable
                 checkpoint,
                 streamProgress,
                 cancellationToken);
+        }
+        catch (OperationCanceledException) when (ApplicationBackgroundOperations.IsSuspending(cancellationToken))
+        {
+            PersistBackgroundCheckpoint();
+            throw;
         }
         catch
         {
@@ -542,6 +578,11 @@ public sealed class ExecutorSessionService : IDisposable
         try
         {
             return await RunLoopAsync(streamProgress, cancellationToken);
+        }
+        catch (OperationCanceledException) when (ApplicationBackgroundOperations.IsSuspending(cancellationToken))
+        {
+            PersistBackgroundCheckpoint();
+            throw;
         }
         catch
         {
@@ -687,6 +728,11 @@ public sealed class ExecutorSessionService : IDisposable
         {
             return await RunLoopAsync(streamProgress, cancellationToken);
         }
+        catch (OperationCanceledException) when (ApplicationBackgroundOperations.IsSuspending(cancellationToken))
+        {
+            PersistBackgroundCheckpoint();
+            throw;
+        }
         catch
         {
             if (_messages.Count > messageIndex)
@@ -747,6 +793,11 @@ public sealed class ExecutorSessionService : IDisposable
                 cancellationToken,
                 GetRequiredFileEvidenceTool());
         }
+        catch (OperationCanceledException) when (ApplicationBackgroundOperations.IsSuspending(cancellationToken))
+        {
+            PersistBackgroundCheckpoint();
+            throw;
+        }
         catch
         {
             if (_messages.Count > transitionMessageIndex)
@@ -766,13 +817,19 @@ public sealed class ExecutorSessionService : IDisposable
 
     public Task<ExecutorResultSnapshot> CreateResultSnapshotAsync(
         IProgress<ModelStreamChunk> streamProgress,
-        CancellationToken cancellationToken) =>
-        CreateResultDocumentAsync(isFinal: false, streamProgress, cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        if (ApplicationBackgroundOperations.Current?.IsInOperationScope != true) BeginBackgroundSnapshot();
+        return CreateResultDocumentAsync(isFinal: false, streamProgress, cancellationToken);
+    }
 
     public Task<ExecutorResultSnapshot> CreateFinalResultAsync(
         IProgress<ModelStreamChunk> streamProgress,
-        CancellationToken cancellationToken) =>
-        CreateResultDocumentAsync(isFinal: true, streamProgress, cancellationToken);
+        CancellationToken cancellationToken)
+    {
+        if (ApplicationBackgroundOperations.Current?.IsInOperationScope != true) BeginBackgroundSnapshot();
+        return CreateResultDocumentAsync(isFinal: true, streamProgress, cancellationToken);
+    }
 
     private async Task<ExecutorResultSnapshot> CreateResultDocumentAsync(
         bool isFinal,
@@ -780,6 +837,8 @@ public sealed class ExecutorSessionService : IDisposable
         CancellationToken cancellationToken)
     {
         EnsureActive();
+        var savedSnapshot = _snapshots.FirstOrDefault(s => s.Id == _pendingSnapshotId);
+        if (savedSnapshot is not null) return savedSnapshot;
         if (!_briefConfirmed)
         {
             throw new InvalidOperationException("The executor brief has not been confirmed.");
@@ -863,12 +922,12 @@ public sealed class ExecutorSessionService : IDisposable
             evidenceValidation,
             GetWorkingResultFragments(),
             _lastTurn?.CurrentResultSummary);
-        var markdown = string.Empty;
-        for (var attempt = 1; attempt <= 2; attempt++)
+        var markdown = _pendingSnapshotMarkdown;
+        for (var attempt = 1; string.IsNullOrWhiteSpace(_pendingSnapshotMarkdown) && attempt <= 2; attempt++)
         {
             try
             {
-                var response = await _runtime.GenerateExternalWithToolsAsync(
+                var response = await GenerateBackgroundExternalAsync(
                     model,
                     string.Join(
                         Environment.NewLine,
@@ -946,9 +1005,14 @@ public sealed class ExecutorSessionService : IDisposable
         }
 
         var version = ++_snapshotVersion;
+        _pendingSnapshotMarkdown = markdown;
+        _pendingSnapshotId = string.IsNullOrWhiteSpace(_pendingSnapshotId) ? $"snapshot_{version}_{Guid.NewGuid():N}" : _pendingSnapshotId;
+        _snapshotVersion--; // The pending result has not been committed yet.
+        PersistBackgroundCheckpoint();
+        _snapshotVersion++;
         var snapshot = new ExecutorResultSnapshot
         {
-            Id = $"snapshot_{version}_{Guid.NewGuid():N}",
+            Id = _pendingSnapshotId,
             Version = version,
             CreatedAt = DateTimeOffset.Now,
             StageId = _currentStageId,
@@ -1021,6 +1085,8 @@ public sealed class ExecutorSessionService : IDisposable
                 : "executor_snapshot_saved",
             snapshot);
         _knowledgeTree.RecordSnapshot(snapshot);
+        // Keep the receipt until the root has committed; a crash here must not create a second snapshot.
+        PersistBackgroundCheckpoint();
         return snapshot;
     }
 
@@ -1068,7 +1134,9 @@ public sealed class ExecutorSessionService : IDisposable
             Warnings = [reason]
         };
         _lastTurn = turn;
+        _backgroundLoopPending = false;
         _knowledgeTree.RecordTurn(turn);
+        PersistBackgroundCheckpoint();
         _sessionLog?.Write("executor_safety_pause", new
         {
             Stage = _currentStageId,
@@ -1122,12 +1190,23 @@ public sealed class ExecutorSessionService : IDisposable
     private async Task<ExecutorTurnResult> RunLoopAsync(
         IProgress<ModelStreamChunk> streamProgress,
         CancellationToken cancellationToken,
-        string? requiredToolName = null)
+        string? requiredToolName = null, string? requiredTargetId = null)
     {
         var model = _model ?? throw new InvalidOperationException("Executor model is unavailable.");
         var storageSettings = _storageSettings ?? throw new InvalidOperationException("Executor storage is unavailable.");
         var sessionLog = _sessionLog ?? throw new InvalidOperationException("Executor log is unavailable.");
-        var requiredToolSatisfied = string.IsNullOrWhiteSpace(requiredToolName);
+        if (!_backgroundLoopPending)
+        {
+            _backgroundLoopPending = true;
+            _pendingRequiredTool = requiredToolName;
+            _pendingRequiredTarget = requiredTargetId;
+            _pendingRequiredToolSatisfied = string.IsNullOrWhiteSpace(requiredToolName);
+        }
+        requiredToolName = _pendingRequiredTool;
+        var requiredToolSatisfied = _pendingRequiredToolSatisfied;
+        PersistBackgroundCheckpoint();
+        await ExecutePendingBackgroundToolsAsync(cancellationToken);
+        requiredToolSatisfied = _pendingRequiredToolSatisfied;
         var budget = new AutonomyExecutionBudget(_autonomySeconds);
         if (!requiredToolSatisfied)
         {
@@ -1139,7 +1218,7 @@ public sealed class ExecutorSessionService : IDisposable
             round++;
             cancellationToken.ThrowIfCancellationRequested();
             await CompactIfNeededAsync(model, _systemPrompt, sessionLog, streamProgress, cancellationToken);
-            var response = await _runtime.GenerateExternalWithToolsAsync(
+            var response = await GenerateBackgroundExternalAsync(
                 model,
                 _systemPrompt,
                 _messages,
@@ -1206,7 +1285,7 @@ public sealed class ExecutorSessionService : IDisposable
                             _currentStageId,
                             rejectionReason)
                     });
-                    var repaired = await _runtime.GenerateExternalWithToolsAsync(
+                    var repaired = await GenerateBackgroundExternalAsync(
                         model,
                         _systemPrompt,
                         _messages,
@@ -1284,77 +1363,25 @@ public sealed class ExecutorSessionService : IDisposable
                 return CreateToolSafetyPause("repeated_tool_call_without_progress");
             }
 
+            // Backends may reuse call IDs on a new generation. Receipts must still identify one execution.
+            var knownCallIds = _messages.SelectMany(m => m.ToolCalls ?? []).Select(c => c.Id)
+                .Concat(_messages.Where(m => m.Role == "tool").Select(m => m.ToolCallId)).ToHashSet(StringComparer.Ordinal);
+            foreach (var call in response.ToolCalls)
+            {
+                if (string.IsNullOrWhiteSpace(call.Id) || !knownCallIds.Add(call.Id))
+                    call.Id = "call_" + Guid.NewGuid().ToString("N");
+                knownCallIds.Add(call.Id);
+            }
             _messages.Add(new StructuredChatMessage
             {
                 Role = "assistant",
                 Content = response.Content,
                 ToolCalls = response.ToolCalls
             });
-            foreach (var toolCall in response.ToolCalls)
-            {
-                var execution = await _toolGateway.ExecuteAsync(
-                    toolCall,
-                    storageSettings,
-                    _sessionFileManifest,
-                    _languageCode,
-                    sessionLog,
-                    cancellationToken);
-                var receipt = _evidenceService.CreateReceipt(
-                    toolCall,
-                    execution,
-                    _actionGraph,
-                    _sessionFileManifest,
-                    storageSettings);
-                _evidenceReceipts.Add(receipt);
-                _actionGraphService.Reconcile(_actionGraph, _evidenceReceipts);
-                sessionLog.Write("executor_tool_receipt", new
-                {
-                    receipt.Id,
-                    receipt.ActionId,
-                    receipt.ToolCallId,
-                    receipt.ToolName,
-                    receipt.ComponentIds,
-                    receipt.Success,
-                    receipt.EvidenceType,
-                    receipt.ConfirmedClaimScopes,
-                    receipt.Limitations,
-                    receipt.DiagnosticMessage,
-                    receipt.InputFileId,
-                    receipt.InputSha256,
-                    receipt.OutputArtifactPath,
-                    receipt.OutputSha256,
-                    receipt.ResultHash,
-                    receipt.Capabilities
-                });
-                if (execution.Success)
-                {
-                    _successfulToolSequence++;
-                    _successfulToolCalls.Add(toolCall.Function.Name);
-                    if (string.Equals(
-                        toolCall.Function.Name,
-                        requiredToolName,
-                        StringComparison.Ordinal))
-                    {
-                        requiredToolSatisfied = true;
-                    }
-                    var targetId = TryReadToolTargetId(toolCall.Function.Arguments);
-                    if (!string.IsNullOrWhiteSpace(targetId))
-                    {
-                        _successfulToolCalls.Add(
-                            CreateToolEvidenceKey(toolCall.Function.Name, targetId));
-                    }
-                }
-                _messages.Add(new StructuredChatMessage
-                {
-                    Role = "tool",
-                    ToolCallId = toolCall.Id,
-                    Name = toolCall.Function.Name,
-                    Content = ToolMessageFormatter.WrapToolResult(
-                        toolCall.Function.Name,
-                        execution.Command,
-                        execution.Content)
-                });
-            }
+            _pendingToolCalls.AddRange(Clone(response.ToolCalls));
+            PersistBackgroundCheckpoint();
+            await ExecutePendingBackgroundToolsAsync(cancellationToken);
+            requiredToolSatisfied = _pendingRequiredToolSatisfied;
 
             if (!_evidenceProgressGuard.Observe(_actionGraph))
             {
@@ -1458,7 +1485,9 @@ public sealed class ExecutorSessionService : IDisposable
         }
 
         _lastTurn = turn;
+        _backgroundLoopPending = false;
         _knowledgeTree.RecordTurn(turn);
+        PersistBackgroundCheckpoint();
         sessionLog.Write(eventType, turn);
         if (turn.CanFinalize)
         {

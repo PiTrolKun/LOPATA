@@ -19,6 +19,7 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library, Om
     private int _port;
     private bool _ready;
     private bool _disposed;
+    private bool _backgroundRegistered;
     private OmniWarmupResult? _warmup;
     public string BundleId => _profile.BundleId;
     public string PipelineId => _profile.PipelineId;
@@ -42,6 +43,11 @@ public sealed class OmniLlamaRuntimeService(ManagedModelLibraryStore library, Om
         IProgress<ImageAnalysisLiteraryProgress>? progress, CancellationToken cancellationToken, bool reuseCurrentPlan = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_backgroundRegistered)
+        {
+            ApplicationBackgroundOperations.RegisterModel(this, runtime => ModelProcessRetirement.StopAsync(runtime._process, runtime.Stop));
+            _backgroundRegistered = true;
+        }
         await ComponentLicenseGate.EnsureAsync(_profile.ArtifactId, cancellationToken);
         await ComponentLicenseGate.EnsureAsync("basic", cancellationToken);
         await _gate.WaitAsync(cancellationToken);

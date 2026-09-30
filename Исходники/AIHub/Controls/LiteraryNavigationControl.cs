@@ -221,14 +221,7 @@ public sealed partial class LiteraryNavigationControl : UserControl
         page.Ready += () =>
         {
             if (_preparation != page) return; _preparation = null;
-            _import = new LiteraryImportControl(_l, _language, _initialFolder, _store);
-            _import.FirstStepChanged += firstStep => SetValue(IsImportFirstStepProperty, firstStep);
-            _import.BackRequested += GoBack;
-            _import.HomeRequested += () => { _import?.Dispose(); _import = null; HomeRequested?.Invoke(); };
-            _import.OpenRequested += entry =>
-            {
-                _import?.Dispose(); _import = null; _store.SetActive(entry.Id); LoadProjects(); OpenWorkspace(entry);
-            };
+            CreateBackgroundImportPage();
             Render();
         };
         page.BackRequested += GoBack;

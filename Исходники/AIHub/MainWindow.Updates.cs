@@ -41,39 +41,51 @@ public partial class MainWindow
         };
         try { _updateService = new(_updateHttp, Path.Combine(AppDataPaths.BaseDirectory, "Updates")); }
         catch (Exception) { /* Manual opening explains damaged update state; startup remains available. */ }
-        ContentRendered += async (_, _) =>
-        {
+    }
+
+    private async Task CompleteUpdateStartupAsync()
+    {
             try { await ApplicationUpdateStartup.ConfirmHealthyAsync(_updateLifetime.Token); }
             catch (Exception)
             {
                 if (!_updateLifetime.IsCancellationRequested)
-                    System.Windows.MessageBox.Show(this, L("Updates.HealthFailed"), L("Updates.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                {
+                    StatusText.Text = L("Updates.HealthFailed");
+                    if (IsVisible) System.Windows.MessageBox.Show(this, L("Updates.HealthFailed"), L("Updates.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                    else _applicationTray?.Notify(L("Updates.Title"), StatusText.Text, warning: true);
+                }
                 return;
             }
             await CheckAutomaticUpdateAsync();
-        };
     }
 
     private void ScheduleBetaUpdateCheck()
     {
         _betaUpdateTimer.Stop();
-        if (!_updateLifetime.IsCancellationRequested && _updateService is not null
-            && _appSettings.Updates.CheckOnStartup && _updateService.ReadDirection() == UpdateDelivery.FilePatch)
-            _betaUpdateTimer.Start();
+        if (_updateLifetime.IsCancellationRequested || _updateService is null) return;
+        try
+        {
+            var interval = AutomaticUpdateSchedule.Interval(_appSettings.Updates.CheckOnStartup,
+                !IsVisible && _applicationTray?.IsAvailable == true, _updateService.ReadDirection());
+            if (interval.HasValue) { _betaUpdateTimer.Interval = interval.Value; _betaUpdateTimer.Start(); }
+        }
+        catch (Exception) { /* Damaged channel state is explained by the updates window. */ }
     }
 
     private async Task CheckAutomaticUpdateAsync()
     {
         if (_updateService is null || _updateLifetime.IsCancellationRequested || _automaticUpdateCheckRunning) return;
-        if (_updateWindow is not null) { ScheduleBetaUpdateCheck(); return; }
+        if (_updateWindow?.IsBusy == true) { ScheduleBetaUpdateCheck(); return; }
         _automaticUpdateCheckRunning = true;
+        _updateWindow?.SetBackgroundCheckBusy(true);
         var checkSucceeded = false;
         UpdateOffer? checkedOffer = null;
         try
         {
-            if (_updateService.ReadPrepared() is not null)
+            if (_updateService.ReadPrepared() is { } prepared)
             {
                 ApplicationUpdateNotice.Visibility = Visibility.Visible;
+                NotifyUpdateFound(prepared.Version);
                 return;
             }
             if (!_appSettings.Updates.CheckOnStartup || _updateService.ReadDirection() is not { } direction) return;
@@ -91,11 +103,12 @@ public partial class MainWindow
                 ApplicationUpdateNotice.Visibility = Visibility.Collapsed;
                 return;
             }
-            if (offer is not null && _lastOfferedUpdateVersion != offer.Version)
+            if (_lastOfferedUpdateVersion != offer.Version)
             {
                 _lastOfferedUpdateVersion = offer.Version;
                 ApplicationUpdateNotice.Visibility = Visibility.Visible;
             }
+            NotifyUpdateFound(offer.Version);
         }
         catch (Exception) { /* Background checks are silent offline; manual checks explain errors. */ }
         finally
@@ -104,6 +117,7 @@ public partial class MainWindow
             if (!_updateLifetime.IsCancellationRequested)
                 _updateWindow?.CompleteBackgroundCheck(checkedOffer, checkSucceeded);
             ScheduleBetaUpdateCheck();
+            RefreshBackgroundTray();
         }
     }
 
@@ -112,7 +126,7 @@ public partial class MainWindow
         _appSettingsStore.Save(_appSettings);
         _betaUpdateTimer.Stop();
         _checkAfterUpdateWindow = _appSettings.Updates.CheckOnStartup
-            && _updateService?.ReadDirection() == UpdateDelivery.FilePatch;
+            && (!IsVisible || _updateService?.ReadDirection() == UpdateDelivery.FilePatch);
     }
 
     private void ApplicationUpdates_Click(object sender, RoutedEventArgs e)
@@ -146,7 +160,16 @@ public partial class MainWindow
         _updateWindow.Closed += async (_, _) =>
         {
             var wasBusy = _updateWindow?.IsBusy == true;
-            _updateWindow = null; _availableUpdate = null;
+            _availableUpdate = _updateWindow?.AvailableUpdate;
+            _updateWindow = null;
+            try
+            {
+                var prepared = _updateService.ReadPrepared();
+                ApplicationUpdateNotice.Visibility = prepared is not null || _availableUpdate is not null ? Visibility.Visible : Visibility.Collapsed;
+                if ((prepared?.Version ?? _availableUpdate?.Version) is { } version) NotifyUpdateFound(version);
+            }
+            catch (Exception) { StatusText.Text = L("Updates.StateFailed"); }
+            RefreshBackgroundTray();
             if (_checkAfterUpdateWindow && !wasBusy)
             {
                 _checkAfterUpdateWindow = false;
@@ -155,6 +178,15 @@ public partial class MainWindow
             else { _checkAfterUpdateWindow = false; ScheduleBetaUpdateCheck(); }
         };
         _updateWindow.Show();
+    }
+
+    private void NotifyUpdateFound(string version)
+    {
+        if (_appSettings.Updates.LastNotifiedVersion == version) return;
+        _appSettings.Updates.LastNotifiedVersion = version;
+        _appSettingsStore.Save(_appSettings); // Persist before sound so a restart cannot repeat it.
+        System.Media.SystemSounds.Asterisk.Play();
+        _applicationTray?.Notify(L("Updates.Title"), L("Updates.Available") + " " + version, onOpen: OpenApplicationUpdates);
     }
 
     private async Task InstallApplicationUpdateAsync()

@@ -45,6 +45,14 @@ public sealed class ChoiceScenarioStateCheckpoint
 
 public sealed class ExecutorSessionCheckpoint
 {
+    public bool BackgroundLoopPending { get; set; }
+    public string? PendingRequiredTool { get; set; }
+    public string? PendingRequiredTarget { get; set; }
+    public bool PendingRequiredToolSatisfied { get; set; }
+    public List<StructuredToolCall> PendingToolCalls { get; set; } = [];
+    public string InFlightToolCallId { get; set; } = string.Empty;
+    public string PendingSnapshotMarkdown { get; set; } = string.Empty;
+    public string PendingSnapshotId { get; set; } = string.Empty;
     public ExecutorModelArtifact Artifact { get; set; } = new();
 
     public ExecutorHandoffPackage Handoff { get; set; } = new();

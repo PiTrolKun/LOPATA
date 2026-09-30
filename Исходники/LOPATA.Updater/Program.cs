@@ -8,7 +8,7 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        if (args.FirstOrDefault() == "--confirm")
+        if (args.FirstOrDefault() is "--confirm" or "--configure-autostart")
         {
             try { new UpdateHost(_ => { }).RunAsync(args).GetAwaiter().GetResult(); Environment.ExitCode = 0; }
             catch (Exception) { Environment.ExitCode = 1; }
@@ -17,12 +17,20 @@ internal static class Program
         ApplicationConfiguration.Initialize();
         using var cancellation = new CancellationTokenSource();
         using var window = new UpdateProgressWindow(HostText.Get("UpdateHost.Starting"), HostText.Get("UpdateHost.Cancel"));
+        var startHidden = args.Contains("--background", StringComparer.Ordinal) && args.Contains("--launch", StringComparer.Ordinal);
+        using var hiddenContext = startHidden ? new ApplicationContext() : null;
         window.CancelRequested += (_, _) => cancellation.Cancel();
-        window.Shown += async (_, _) =>
+        async Task RunAsync()
         {
             try
             {
-                var host = new UpdateHost(window.SetStatus);
+                var host = new UpdateHost(status =>
+                {
+                    window.SetStatus(status);
+                    // Ordinary autostart has no progress window. Recovery or an explicitly
+                    // prepared update can still expose its existing installation progress.
+                    if (startHidden && !window.Visible) { hiddenContext!.MainForm = window; window.Show(); }
+                });
                 await host.RunAsync(args, cancellation.Token);
                 Environment.ExitCode = 0;
             }
@@ -44,9 +52,21 @@ internal static class Program
                 MessageBox.Show(window, HostText.Get("UpdateHost.Failed") + Environment.NewLine + report,
                     "ЛОПАТА / LOPATA", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally { window.Close(); }
-        };
-        Application.Run(window);
+            finally { window.Close(); hiddenContext?.ExitThread(); }
+        }
+        if (startHidden)
+        {
+            _ = window.Handle;
+            EventHandler? begin = null;
+            begin = async (_, _) => { Application.Idle -= begin; await RunAsync(); };
+            Application.Idle += begin;
+            Application.Run(hiddenContext!);
+        }
+        else
+        {
+            window.Shown += async (_, _) => await RunAsync();
+            Application.Run(window);
+        }
     }
 }
 

@@ -86,9 +86,10 @@ public sealed partial class LiteraryChatRuntime
                 try { if (worker is not null) await worker.DisposeAsync(); }
                 finally
                 {
-                    if (swapped && !_disposed)
+                    if (swapped && !_disposed && !active.IsCancellationRequested)
                     {
-                        // Cancellation ends extraction; restoration gets its own bounded lifetime.
+                        // Restore after completed extraction only. On pause/exit, reloading the
+                        // large model here would delay retirement and allocate VRAM again.
                         using var restore = new CancellationTokenSource(TimeSpan.FromSeconds(100));
                         try
                         {

@@ -159,6 +159,7 @@ public partial class MainWindow : Window
         InitializeApplicationUpdates();
         InitializeSettingsWorkspace();
         InitializeApplicationTray();
+        InitializeBackgroundOperations();
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -1254,11 +1255,10 @@ public partial class MainWindow : Window
     {
         var returnPage = _settingsReturnPage;
         var returnStatusText = _settingsReturnStatusText;
+        SettingsPage.Visibility = Visibility.Collapsed;
+        ApplicationBackgroundOperations.PreserveHiddenWork = !IsVisible;
         _settingsReturnPage = null;
         _settingsReturnStatusText = null;
-
-        if (!HideImageAnalysisPages()) return;
-        if (!HideStandardPages()) return;
 
         if (returnPage is null)
         {
@@ -1526,6 +1526,7 @@ public partial class MainWindow : Window
 
     private void CancelChoiceScenarioButton_Click(object sender, RoutedEventArgs e)
     {
+        _sandboxCoreLifetime?.Cancel();
         _choiceScenarioCts?.Cancel();
         PauseActiveSession("cancelled");
         CancelExecutorSession("scenario_cancelled");
@@ -2443,8 +2444,11 @@ public partial class MainWindow : Window
             SettingsNavigator.RestoreSection(_appSettings.Behavior.LastSettingsSection);
         }
 
-        if (!HideImageAnalysisPages()) return;
-        CancelCoreSpeech(revealFullText: false, "open_settings");
+        ApplicationBackgroundOperations.PreserveHiddenWork = true;
+        LiteraryPage.Visibility = Visibility.Collapsed;
+        ImageAnalysisWorkspacePage.Visibility = Visibility.Collapsed;
+        ImageAnalysisBundleConfirmationPage.Visibility = Visibility.Collapsed;
+        ImageAnalysisBundleSelectorPage.Visibility = Visibility.Collapsed;
         WelcomePage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
         ProfilePage.Visibility = Visibility.Collapsed;
@@ -2549,7 +2553,7 @@ public partial class MainWindow : Window
                 _activeResumableSession.SessionId,
                 _activeResumableSession.CurrentRunId);
             _activeResumableSession.CoreLogPath = _choiceScenarioLog.FilePath;
-            _sessionArchiveService.Save(_storageSettings, _activeResumableSession);
+            _sessionArchiveService.Save(ActiveSandboxStorage, _activeResumableSession);
             RefreshSessionFileCards();
         }
         catch (Exception ex)
@@ -2584,7 +2588,7 @@ public partial class MainWindow : Window
         bool? pendingCoreRequest = null,
         bool? pendingCoreRequestFinal = null,
         bool? pendingCoreRequestConsumesAnswer = null,
-        string? pendingCoreRequestTrigger = null)
+        string? pendingCoreRequestTrigger = null, bool strict = false)
     {
         if (_activeResumableSession is null)
         {
@@ -2624,7 +2628,7 @@ public partial class MainWindow : Window
                 _activeResumableSession.ExecutorLogPath = _executorWorkflowService.ActiveLogPath;
             }
 
-            _sessionArchiveService.Save(_storageSettings, _activeResumableSession);
+            _sessionArchiveService.Save(ActiveSandboxStorage, _activeResumableSession);
         }
         catch (Exception ex)
         {
@@ -2634,6 +2638,7 @@ public partial class MainWindow : Window
                 ErrorType = ex.GetType().FullName
             });
             StatusText.Text = LF("Status.SessionCheckpointFailed", ex.Message);
+            if (strict || ApplicationBackgroundOperations.Current?.IsInOperationScope == true) throw;
         }
     }
 
@@ -2738,10 +2743,13 @@ public partial class MainWindow : Window
                 ? "The interrupted unfinished request did not complete. Recreate only that next step from the stable checkpoint."
                 : "All restored scenario steps in the checkpoint were fully committed by AI HUB.");
 
-    private async Task RequestNextChoiceScenarioStepAsync(
+    private Task RequestNextChoiceScenarioStepAsync(bool requestFinal, bool consumesAnswer = true, string requestTrigger = "user_choice")
+        => RunBackgroundCoreAsync(requestFinal, consumesAnswer, requestTrigger);
+
+    private async Task RequestChoiceScenarioAttemptAsync(
         bool requestFinal,
         bool consumesAnswer = true,
-        string requestTrigger = "user_choice")
+        string requestTrigger = "user_choice", CancellationToken attemptToken = default)
     {
         if (_choiceScenarioRequestInProgress || _choiceScenarioCts is not null)
         {
@@ -2751,6 +2759,7 @@ public partial class MainWindow : Window
         var stepBudget = _choiceScenarioState.StepBudget;
         if (stepBudget is null)
         {
+            if (_sandboxCoreRunning) throw new System.IO.InvalidDataException("Saved sandbox step budget is missing.");
             return;
         }
 
@@ -2758,7 +2767,9 @@ public partial class MainWindow : Window
         var effectiveRequestFinal = requestFinal || mustReturnFinal;
         var answerCommitted = consumesAnswer && !requestFinal;
         _choiceScenarioRequestInProgress = true;
-        _choiceScenarioCts = new CancellationTokenSource();
+        _choiceScenarioCts = CancellationTokenSource.CreateLinkedTokenSource(attemptToken);
+        using var userCancellation = _choiceScenarioCts.Token.Register(() =>
+        { if (!attemptToken.IsCancellationRequested) _sandboxCoreLifetime?.Cancel(); });
         SetChoiceScenarioInteractionEnabled(false);
         StartChoiceAiActivity();
         var streamProgress = CreateMatrixStreamProgress();
@@ -2852,7 +2863,7 @@ public partial class MainWindow : Window
                 UserPrompt = userPrompt
             });
 
-            var generation = await _choiceScenarioOrchestrator.GenerateAsync(
+            var generation = await CacheBackgroundCoreGenerationAsync("initial", () => _choiceScenarioOrchestrator.GenerateAsync(
                 _choiceScenarioRuntimeService,
                 model,
                 systemPrompt,
@@ -2866,7 +2877,7 @@ public partial class MainWindow : Window
                 _choiceScenarioState.CapabilityProfile,
                 streamProgress,
                 _appSettings.CoreAutonomy.MaximumIndependentSearchSeconds,
-                filePromptManifest);
+                filePromptManifest));
             _choiceScenarioLog?.Write("scenario_core_raw_response", new
             {
                 Model = model.Name,
@@ -2898,7 +2909,7 @@ public partial class MainWindow : Window
                         + (subjectMatterOverreach
                             ? "Предыдущий вопрос отклонён как повторное предметное углубление. Не уточняй содержание темы. Выбери другое неизвестное измерение профиля исполнителя: операцию, данные, контекст, инструменты, точность, скорость или приватность. Если профиль уже достаточен, сформируй final_task_card."
                             : "Запрещено повторять уже заданный вопрос, измерение или тот же набор вариантов. Выбери другое неизвестное измерение профиля исполнителя. Если данных достаточно, сформируй final_task_card.");
-                    generation = await _choiceScenarioOrchestrator.GenerateAsync(
+                    generation = await CacheBackgroundCoreGenerationAsync("correction", () => _choiceScenarioOrchestrator.GenerateAsync(
                         _choiceScenarioRuntimeService,
                         model,
                         systemPrompt,
@@ -2912,7 +2923,7 @@ public partial class MainWindow : Window
                         _choiceScenarioState.CapabilityProfile,
                         streamProgress,
                         _appSettings.CoreAutonomy.MaximumIndependentSearchSeconds,
-                        filePromptManifest);
+                        filePromptManifest));
                     step = generation.Step ?? step;
                     repeatedStep = !step.IsFinal
                         && (_choiceScenarioState.GetFingerprintCount(step) > 0
@@ -2929,7 +2940,7 @@ public partial class MainWindow : Window
                         });
                         var forcedFinalPrompt = userPrompt + Environment.NewLine + Environment.NewLine
                             + "Два последовательных вопроса отклонены как непродуктивные. Новый question_step запрещён. Сформируй final_task_card по текущему capability profile, честно обозначь пробелы и поручай рабочей модели задать недостающие предметные вопросы.";
-                        generation = await _choiceScenarioOrchestrator.GenerateAsync(
+                        generation = await CacheBackgroundCoreGenerationAsync("final", () => _choiceScenarioOrchestrator.GenerateAsync(
                             _choiceScenarioRuntimeService,
                             model,
                             systemPrompt,
@@ -2944,7 +2955,7 @@ public partial class MainWindow : Window
                             streamProgress: streamProgress,
                             autonomySeconds:
                                 _appSettings.CoreAutonomy.MaximumIndependentSearchSeconds,
-                            fileManifest: filePromptManifest);
+                            fileManifest: filePromptManifest));
                         step = generation.Step ?? step;
                         if (!step.IsFinal)
                         {
@@ -3005,9 +3016,18 @@ public partial class MainWindow : Window
                 pendingCoreRequest: false,
                 pendingCoreRequestFinal: false);
         }
+        catch (OperationCanceledException) when (attemptToken.IsCancellationRequested)
+        {
+            SaveActiveSessionCheckpoint(strict: true);
+            throw;
+        }
         catch (OperationCanceledException)
         {
             _choiceScenarioLog?.Write("scenario_request_cancelled");
+        }
+        catch (Exception) when (ApplicationBackgroundOperations.Current?.IsInOperationScope == true)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -3049,7 +3069,7 @@ public partial class MainWindow : Window
             _choiceScenarioCts = null;
             _choiceScenarioRequestInProgress = false;
             StopChoiceAiActivity();
-            SetChoiceScenarioInteractionEnabled(true);
+            SetChoiceScenarioInteractionEnabled(!_sandboxCoreRunning);
         }
     }
 
@@ -4032,6 +4052,7 @@ public partial class MainWindow : Window
         StatusText.Text = L("Status.ExecutorRunning");
         var streamProgress = CreateMatrixStreamProgress();
         var handoff = BuildExecutorHandoff(artifact, card);
+        _executorWorkflowService.BackgroundSessionId = _activeResumableSession?.SessionId ?? handoff.ParentCoreSessionId;
         try
         {
             if (_activeResumableSession is not null)

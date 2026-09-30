@@ -63,15 +63,7 @@ public sealed partial class LiteraryImportControl
         _showingQuickPreview = false; _showingAnalysis = true;
         _analysisStarted = true;
         ShowAnalysisScreen(); SaveDraft("analysis");
-        _ = RunAsync(async ct =>
-        {
-            var progress = Progress(); var pipeline = Pipeline();
-            _groupingOriginal = await Task.Run(() => pipeline.AnalyzeAsync(_input!, ids, progress, ct), ct);
-            _first = ImportGrouping.Read(_session!, _groupingOriginal);
-            _analysisStarted = false;
-            ShowAnalyzedWorks();
-            SaveDraft("works");
-        }, keepBodyEnabled: true);
+        StartBackgroundImport(() => CaptureImportOperation("analysis", ids));
     }
 
     private void ShowAnalysisScreen()
@@ -163,14 +155,15 @@ public sealed partial class LiteraryImportControl
     }
 
     private void AnswersTimerTick(object? sender, EventArgs e) { _answersTimer.Stop(); SaveAnswers(); }
-    private void SaveAnswers()
+    private bool SaveAnswers()
     {
-        if (_preparationAnswers is null) return;
+        if (_preparationAnswers is null) return true;
         try
         {
             foreach (var (key, box) in _answerInputs) _preparationAnswers.Set(key, box.Text);
             if (_answerInputs.ContainsKey("6.custom")) SaveGenreAnswer();
             if (_answerInputs.ContainsKey("14.custom")) SaveCultureAnswer();
+            return true;
         }
         catch (Exception ex)
         {
@@ -181,6 +174,7 @@ public sealed partial class LiteraryImportControl
                 _analysisIssueLabel.Visibility = Visibility.Visible;
             }
             else { _status.Text = message; _status.Visibility = Visibility.Visible; }
+            return false;
         }
     }
 

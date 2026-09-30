@@ -6,8 +6,9 @@ public sealed class ApplicationBehaviorSettings
 
     public bool CloseToTray { get; set; }
 
-    // Reserved for a later implementation; the current UI cannot enable it.
     public bool LaunchWithWindows { get; set; }
+
+    public bool AutoResumeBackgroundOperation { get; set; } = true;
 
     public string LastSettingsSection { get; set; } = "general";
 }

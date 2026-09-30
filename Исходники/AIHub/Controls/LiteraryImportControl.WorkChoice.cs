@@ -98,21 +98,7 @@ public sealed partial class LiteraryImportControl
         _lastAnalysisProgress = null;
         _analysisTime = TimeSpan.Zero;
         ShowAnalysisScreen(); SaveDraft("analysis");
-        _ = RunAsync(async ct =>
-        {
-            var progress = Progress();
-            var assembly = await Task.Run(() => Pipeline().AssembleAsync(_input!, _first!, work, progress, ct, selectedUnits), ct);
-            ct.ThrowIfCancellationRequested();
-            progress.Report(new ImportProgress("Export", 0, 0));
-            SaveAnswers();
-            var genre = _preparationAnswers!.Values.GetValueOrDefault("6", "").Trim();
-            if (genre.Length == 0) genre = I("Не указано", "Not specified");
-            var entry = await Task.Run(() => ImportProjectBuilder.Build(_session!, _input!, assembly,
-                _store, parent, name, genre, _language), ct);
-            await Task.Run(() => ImportBookReviewPackage.Export(_session!, entry, _language, ct), ct);
-            _analysisStarted = false;
-            ShowBookReview(entry);
-            SaveDraft("review");
-        }, keepBodyEnabled: true);
+        StartBackgroundImport(() => CaptureImportOperation("assembly", work: work,
+            units: selectedUnits.ToArray(), parent: parent, name: name));
     }
 }

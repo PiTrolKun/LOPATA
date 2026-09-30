@@ -328,15 +328,26 @@ public partial class MainWindow
         if (_processShutdownPending) { e.Cancel = true; base.OnClosing(e); return; }
         if (!TryResolveCloseBehavior(out bool closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
         if (TryHideToTray(closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
-        if (!LiteraryPage.CanLeave()) { _applicationUpdateStart = null; _fullExitRequested = false; _sessionEnding = false; e.Cancel = true; base.OnClosing(e); return; }
         if (!_processShutdownComplete)
         {
             e.Cancel = true;
             base.OnClosing(e);
             _processShutdownPending = true;
-            try { await AIHub.Services.QdrantRuntime.Shared.ShutdownAsync(); }
-            catch (Exception ex) { AIHub.Services.OwnedProcessRegistry.Log("shutdown_failed", "Qdrant", detail: ex.GetType().Name); }
-            finally { _processShutdownPending = false; _processShutdownComplete = true; }
+            try
+            {
+                await StopBackgroundForExitAsync();
+                if (!LiteraryPage.CanLeave()) { StatusText.Text = L("Tray.ExitBlocked"); return; }
+                await AIHub.Services.QdrantRuntime.Shared.ShutdownAsync();
+                _processShutdownComplete = true;
+            }
+            catch (Exception ex)
+            {
+                AIHub.Services.OwnedProcessRegistry.Log("shutdown_failed", "Application", detail: ex.GetType().Name);
+                StatusText.Text = L("Tray.ExitFailed");
+                _applicationTray?.Notify(L("Tray.Exit"), StatusText.Text, warning: true);
+                return;
+            }
+            finally { _processShutdownPending = false; }
             _ = Dispatcher.BeginInvoke(new Action(Close));
             return;
         }

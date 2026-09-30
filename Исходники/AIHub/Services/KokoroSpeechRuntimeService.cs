@@ -35,6 +35,7 @@ public sealed class KokoroSpeechRuntimeService : IDisposable
         ImageAnalysisSpeechMemoryPolicy? memoryPolicy = null)
     {
         _store = store;
+        ApplicationBackgroundOperations.RegisterModel(this, runtime => ModelProcessRetirement.StopAsync(runtime._process, runtime.Stop));
         _memoryPolicy = memoryPolicy ?? new ImageAnalysisSpeechMemoryPolicy();
     }
 

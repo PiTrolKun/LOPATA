@@ -58,6 +58,9 @@
     <Content Include="..\..\Runtime\Voice\eSpeakNG\1.52.0\extracted\eSpeak NG\libespeak-ng.dll" Link="VoiceRuntime\eSpeakNG\libespeak-ng.dll" Condition="Exists('..\..\Runtime\Voice\eSpeakNG\1.52.0\extracted\eSpeak NG\libespeak-ng.dll')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\Runtime\Voice\eSpeakNG\1.52.0\extracted\eSpeak NG\espeak-ng.exe" Link="VoiceRuntime\eSpeakNG\espeak-ng.exe" Condition="Exists('..\..\Runtime\Voice\eSpeakNG\1.52.0\extracted\eSpeak NG\espeak-ng.exe')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\..\Runtime\Voice\eSpeakNG\1.52.0\extracted\eSpeak NG\espeak-ng-data\**\*" Link="VoiceRuntime\eSpeakNG\espeak-ng-data\%(RecursiveDir)%(Filename)%(Extension)" Condition="Exists('..\..\Runtime\Voice\eSpeakNG\1.52.0\extracted\eSpeak NG\espeak-ng-data')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

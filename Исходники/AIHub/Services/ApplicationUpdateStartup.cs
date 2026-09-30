@@ -23,6 +23,7 @@ internal static class ApplicationUpdateStartup
         if (!Path.GetFullPath(registration.AppDirectory).TrimEnd(Path.DirectorySeparatorChar)
             .Equals(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)) return false;
         var start = Launcher("--launch");
+        if (args.Contains("--background", StringComparer.Ordinal)) start.ArgumentList.Add("--background");
         AddWaitForThisProcess(start);
         _ = Process.Start(start) ?? throw new IOException("Could not start the update launcher.");
         return true;

@@ -44,18 +44,11 @@ public sealed partial class LiteraryStudioControl
             // Paint the accepted message and empty input before preparing sources or the backend.
             await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
             cancellation.Token.ThrowIfCancellationRequested();
-            var completed = await GenerateAsync(transfer, direct, cancellation.Token, submission);
-            if (completed) State.Pending = null;
-            if (completed && direct)
-            {
-                // Keep one cancellation scope and persist the handoff before starting the writer.
-                if (!Save()) return;
-                cancellation.Token.ThrowIfCancellationRequested();
-                Render();
-                await GenerateAsync(false, false, cancellation.Token);
-            }
+            await RunBackgroundRequestAsync(transfer, direct, submission, cancellation.Token);
         }
         catch (OperationCanceledException) { _status.Text = _l("Paragraph.Cancelled"); }
+        catch (AIHub.Models.BackgroundOperationWaitingException) { NotifyRequestNeedsAttention(); }
+        catch (Exception ex) { _status.Text = _l("Paragraph.Failure") + " " + ex.Message; }
         finally
         {
             LiteraryStudioPending.Restore(State);
@@ -161,6 +154,7 @@ public sealed partial class LiteraryStudioControl
             return true;
         }
         catch (OperationCanceledException) { PreservePartial(); _status.Text = _l("Paragraph.Cancelled"); return false; }
+        catch (AIHub.Models.BackgroundOperationWaitingException) { PreservePartial(); throw; }
         catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); ShowContextFailure(ex); }
         catch (LiteraryRamReserveException) { PreservePartial(); _status.Text = _l("Literary.MemoryRecovery.RamUnavailable"); }
         catch (LiteraryGpuContextUnavailableException) { PreservePartial(); _status.Text = _l("Literary.MemoryRecovery.GpuUnavailable"); }

@@ -42,9 +42,10 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
 
     public LiteraryWorkspaceControl(LiteraryProjectEntry entry, LiteraryProject project, Func<string, string> localize,
         Func<IProgress<LiteraryPreparationProgress>, CancellationToken, Task>? memoryPreparation = null,
-        LiteraryChatRuntime? preparedRuntime = null)
+        LiteraryChatRuntime? preparedRuntime = null, bool restoringBackground = false)
     {
         _entry = entry; _project = project; _l = localize;
+        if (restoringBackground) { _readinessShown = true; _memoryStarted = true; }
         _memoryPreparation = memoryPreparation;
         _runtime = preparedRuntime ?? new LiteraryChatRuntime(entry.ProjectPath);
         _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
@@ -52,9 +53,9 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
             () => _draft.Capture(project.Id, entry.ProjectPath), entry.ProjectPath);
         _advisor = new LiteraryChatControl(localize, _runtime, LiteraryChatProfile.Advisor, () => _draft.Text, project,
             () => _draft.Capture(project.Id, entry.ProjectPath), entry.ProjectPath);
-        Unloaded += (_, _) => { _runtime.Stop(); if (System.Windows.Application.Current is { } app) app.Exit -= OnAppExit; };
+        Unloaded += (_, _) => { if (!ApplicationBackgroundOperations.PreserveHiddenWork) { _runtime.Stop(); if (System.Windows.Application.Current is { } app) app.Exit -= OnAppExit; } };
         Loaded += (_, _) => { if (System.Windows.Application.Current is { } app) { app.Exit -= OnAppExit; app.Exit += OnAppExit; } };
-        IsVisibleChanged += (_, _) => { if (!IsVisible) { _draft.Save(); _runtime.Stop(); } };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) { _draft.Save(); if (!ApplicationBackgroundOperations.PreserveHiddenWork) _runtime.Stop(); } };
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/LiteraryScrollResources.xaml", UriKind.Relative) });
         _draft.CanFixFiles = () => !_runtime.IsBusy && !Indexing;
         _draft.ChapterChanged += async () =>
