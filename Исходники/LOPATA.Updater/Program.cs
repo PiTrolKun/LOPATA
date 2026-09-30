@@ -16,23 +16,13 @@ internal static class Program
         }
         ApplicationConfiguration.Initialize();
         using var cancellation = new CancellationTokenSource();
-        using var window = new Form
-        {
-            Text = "ЛОПАТА / LOPATA", Width = 540, Height = 190, StartPosition = FormStartPosition.CenterScreen,
-            FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, ControlBox = false,
-            BackColor = Color.FromArgb(17, 24, 39), ForeColor = Color.FromArgb(235, 240, 249)
-        };
-        var status = new Label { Dock = DockStyle.Top, Height = 85, Padding = new(20), Text = HostText.Get("UpdateHost.Starting"), AutoEllipsis = true };
-        var progress = new ProgressBar { Dock = DockStyle.Bottom, Height = 12, Style = ProgressBarStyle.Marquee };
-        var cancel = new Button { Text = HostText.Get("UpdateHost.Cancel"), Dock = DockStyle.Bottom, Height = 32 };
-        cancel.Click += (_, _) => { cancel.Enabled = false; cancellation.Cancel(); };
-        window.Controls.Add(cancel);
-        window.Controls.Add(status); window.Controls.Add(progress);
+        using var window = new UpdateProgressWindow(HostText.Get("UpdateHost.Starting"), HostText.Get("UpdateHost.Cancel"));
+        window.CancelRequested += (_, _) => cancellation.Cancel();
         window.Shown += async (_, _) =>
         {
             try
             {
-                var host = new UpdateHost(text => status.Text = text);
+                var host = new UpdateHost(window.SetStatus);
                 await host.RunAsync(args, cancellation.Token);
                 Environment.ExitCode = 0;
             }
