@@ -110,7 +110,7 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
                     if (finished)
                     {
                         var seconds = Elapsed;
-                        if (seconds > 30) notice = new(_state!.Id, _state.Kind, _state.Title, _state.Project);
+                        if (seconds > 30) notice = new(_state!.Id, _state.Kind, _state.Title, _state.Project, _state.Private);
                         var notices = notice is null ? _state!.Notices : _state!.Notices.Where(n => n.Id != notice.Id).Append(notice).ToArray();
                         Persist(_state! with { Phase = BackgroundOperationPhase.Completed, NeedsAttention = notice is not null || _state!.NeedsAttention,
                             Notice = notice ?? _state!.Notice, Notices = notices,

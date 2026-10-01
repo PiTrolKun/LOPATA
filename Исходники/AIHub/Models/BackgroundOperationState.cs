@@ -18,6 +18,8 @@ public sealed record BackgroundOperationState
     public bool UserPaused { get; init; }
     public bool RequiresDecision { get; init; }
     public bool NeedsAttention { get; init; }
+    // A private scenario persists only its active checkpoint, never a completed run record.
+    public bool Private { get; init; }
     public BackgroundOperationNotice? Notice { get; init; }
     public IReadOnlyList<BackgroundOperationNotice> Notices { get; init; } = [];
     public double ElapsedSeconds { get; init; }
@@ -25,6 +27,6 @@ public sealed record BackgroundOperationState
     public DateTimeOffset UpdatedUtc { get; init; } = DateTimeOffset.UtcNow;
 }
 
-public sealed record BackgroundOperationNotice(string Id, string Kind, string Title, string? Project);
+public sealed record BackgroundOperationNotice(string Id, string Kind, string Title, string? Project, bool Private = false);
 
 public sealed class BackgroundOperationWaitingException(string reason) : Exception(reason);

@@ -27,6 +27,25 @@ public sealed class BackgroundOperationStore(string path)
     public void Save(BackgroundOperationState state)
     {
         Validate(state);
+        // Private notifications survive in memory; inheritance by a later public task must not archive them.
+        var publicNotices = state.Notices.Where(n => !n.Private).ToArray();
+        state = state with { Notices = publicNotices,
+            Notice = state.Notice?.Private == true ? publicNotices.LastOrDefault() : state.Notice,
+            NeedsAttention = publicNotices.Length > 0 || state.NeedsAttention && state.Notice?.Private != true };
+        if (state.Private && state.Phase is BackgroundOperationPhase.Completed or BackgroundOperationPhase.Canceled)
+        {
+            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
+            // Keep unread PUBLIC results across restart without persisting the private run's fact or path.
+            foreach (var notice in publicNotices.Reverse())
+            {
+                var previous = LoadResult(notice.Id);
+                if (previous is null || previous.Private) continue;
+                SaveAtomic(path, previous with { Notices = publicNotices, Notice = notice, NeedsAttention = true });
+                return;
+            }
+            if (File.Exists(path)) File.Delete(path);
+            return;
+        }
         if (state.Phase == BackgroundOperationPhase.Completed)
             SaveAtomic(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "Results", state.Id + ".json"), state);
         SaveAtomic(path, state);

@@ -90,12 +90,16 @@ public sealed class ScenarioTagCloudTests
             var buttons = LogicalDescendants(nav).OfType<Button>().ToArray();
             Assert.AreEqual(ScenarioNavigationCatalog.CloudTags.Count,
                 buttons.Count(b => AutomationProperties.GetAutomationId(b).StartsWith("Cloud.Tag.")));
-            var card = buttons.Single(b => b.Tag is string tag && ScenarioNavigationCatalog.Nodes.Any(n =>
-                n.Id == tag && n.Kind == ScenarioNavigationKind.Scenario));
-            Assert.IsTrue(card.ActualHeight < 220 * scale);
-            Assert.IsTrue(card.Content is Grid);
-            foreach (var text in LogicalDescendants(card).OfType<TextBlock>())
-                Assert.IsTrue(text.ActualWidth <= card.ActualWidth);
+            var cards = buttons.Where(b => AutomationProperties.GetAutomationId(b).StartsWith("Navigation.") && b.Tag is string tag && ScenarioNavigationCatalog.Nodes.Any(n =>
+                n.Id == tag && n.Kind == ScenarioNavigationKind.Scenario)).ToArray();
+            Assert.IsTrue(cards.Length > 0);
+            foreach (var card in cards)
+            {
+                Assert.IsTrue(card.ActualHeight < 220 * scale);
+                Assert.IsTrue(card.Content is Grid);
+                foreach (var text in LogicalDescendants(card).OfType<TextBlock>())
+                    Assert.IsTrue(text.ActualWidth <= card.ActualWidth);
+            }
         }
         nav.OpenScenario(ScenarioNavigationCatalog.Sandbox);
         Assert.IsFalse(LogicalDescendants(nav).Contains(nav.TagCloud));

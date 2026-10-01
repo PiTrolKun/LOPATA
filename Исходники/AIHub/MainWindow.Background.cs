@@ -28,6 +28,7 @@ public partial class MainWindow
             (state, token) => LiteraryPage.ResumeBackgroundImportAsync(state, token));
         RegisterImageBackgroundOperations();
         RegisterSandboxBackgroundOperations();
+        RegisterFinancialBackgroundOperation();
         _backgroundOperations.Changed += () =>
         { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -115,6 +116,11 @@ public partial class MainWindow
             if (state is { RequiresDecision: true, Project: not null }
                 && state.Kind is Controls.LiteraryStudioControl.BackgroundKind or Controls.LiteraryWorkspaceControl.MemoryBackgroundKind)
                 RevealLiteraryBackgroundWorkspace(state.Project);
+            if (state is { RequiresDecision: true, Project: not null, Kind: FinancialAnalysisPlan.BackgroundKind })
+            {
+                ViewFinancialBackgroundResult(new(state.Id, state.Kind, state.Title, state.Project, true));
+                return; // Let the user choose a model or review the private files before retrying.
+            }
             await _backgroundOperations.ResumeAsync(_backgroundLifetime.Token);
         }
         catch (OperationCanceledException) when (_backgroundLifetime.IsCancellationRequested) { }
@@ -134,6 +140,11 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind == FinancialAnalysisPlan.BackgroundKind)
+            {
+                if (ViewFinancialBackgroundResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
             if (notice.Kind is ImageBackgroundWork.Kind or ImageBatchBackgroundKind or ImageSpeechBackgroundKind or ImagePreparationBackgroundKind)
             {
                 if (ViewBackgroundImageResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);

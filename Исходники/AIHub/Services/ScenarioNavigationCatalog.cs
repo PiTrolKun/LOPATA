@@ -20,6 +20,7 @@ public static class ScenarioNavigationCatalog
     public const string Literary = "literary";
     public const string Images = "image_analysis";
     public const string Sandbox = "uncertainty";
+    public const string Finance = "finance";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -30,6 +31,9 @@ public static class ScenarioNavigationCatalog
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
         Node("analysis_images", ScenarioNavigationKind.Group, Analysis, "Navigation.Images", "", "analyze"),
         Node("experiment_tests", ScenarioNavigationKind.Group, Experiments, "Navigation.Tests", "", "experiment"),
+        Node("experiment_finance", ScenarioNavigationKind.Group, Experiments, "Finance.Group", "", "finance"),
+        Node(Finance, ScenarioNavigationKind.Scenario, "experiment_finance", "Finance.Title", "Finance.Description", "finance",
+            tags: ["finance", "budget", "expenses", "income", "external_coverage", "financial_behavior", "savings_discussion"], related: []),
         Node(Literary, ScenarioNavigationKind.Scenario, "creation_literature", "Literary.Title", "Literary.Description", "create",
             tags: ["advisor", "writer", "retelling", "rag", "jelly", "export"], related: [Images]),
         Node(Images, ScenarioNavigationKind.Scenario, "analysis_images", "ImageAnalysis.Scenario.Title", "ImageAnalysis.Scenario.Description", "analyze",
@@ -50,7 +54,8 @@ public static class ScenarioNavigationCatalog
         Tag("image_description", Images), Tag("batch_description", Images), Tag("speech", Images),
         Tag("research", Sandbox), Tag("tools", Sandbox), Tag("executor", Sandbox),
         Tag("literature", "creation_literature"), Tag("images", "analysis_images"),
-        Tag("experiments", Experiments)
+        Tag("experiments", Experiments), Tag("finance", Finance), Tag("budget", Finance),
+        Tag("expenses", Finance), Tag("income", Finance), Tag("external_coverage", Finance), Tag("financial_behavior", Finance), Tag("savings_discussion", Finance)
     ]);
 
     public static ScenarioNavigationTag GetTag(string id) => CloudTags.First(tag => tag.Id == id);

@@ -299,6 +299,16 @@ PDF.js, EPUB.js, LibVLC, OpenSeadragon, Babylon.js, AvalonEdit). Они не в�
 Документы_проекта/Лицензии/2026-09-05_подготовка.md.
 Kokoro RU: точный OpenRAIL-текст пока отсутствует; код Apache-2.0, accentuator
 декларирует MIT отдельно. Нативный OpenSSL 1.1.1k — OpenSSL AND SSLeay.
+## Financial currency names (0.3.6-dev)
+
+The offline currency-name catalog derives Russian and English names from Unicode
+CLDR JSON (https://github.com/unicode-org/cldr-json), retrieved 2026-10-01.
+Copyright © 2015-2024 Unicode, Inc. Distributed under Unicode License V3;
+the original notice is retained in Licenses/texts/data.cldr_UNICODE_LICENSE.txt.
+Five missing accounting-unit names are translated separately from the SIX ISO
+4217 List One, published 2026-09-17. Codes follow that list, excluding test code
+XTS and no-currency code XXX. No exchange rates or conversion data are included.
+
 # Literary source indexing (0.1.88-dev)
 
 Giga-Embeddings-instruct-480M-0826 is separately downloaded from ai-sage, revision 0c94f705aa35719324fb46f7e75b0a5c275da6e4. Its card declares MIT; no separate LICENSE/copyright notice is present in that snapshot. Runeweaver GGUF is separately downloaded from limloop, whose card declares Apache-2.0; complete merge provenance has not been independently audited. Acknowledgement does not replace missing terms or grant additional rights.

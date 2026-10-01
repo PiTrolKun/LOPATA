@@ -634,6 +634,7 @@ public partial class MainWindow : Window
         FillProfileFromReminderButton.Content = L("Profile.FillProfile");
 
         ScenarioNavigationPage.Configure(L);
+        FinancialPage.Localize(L, _appSettings.LanguageCode);
         PreviousWorkHeaderText.Text = L("WorkStart.PreviousWork");
         PreviousWorkEmptyText.Text = L("WorkStart.Empty");
         ClearPreviousWorkSelectionButton.Content = L("WorkStart.ClearSelection");
@@ -1320,6 +1321,15 @@ public partial class MainWindow : Window
 
     private void BackFromWorkStartButton_Click(object sender, RoutedEventArgs e)
     {
+        if (FinancialPage.Visibility == Visibility.Visible)
+        {
+            if (FinancialPage.GoBack()) return;
+            FinancialPage.Visibility = Visibility.Collapsed;
+            ScenarioNavigationPage.Visibility = Visibility.Visible;
+            ScenarioNavigationPage.ReturnFromScenario();
+            RefreshScenarioNavigationState();
+            return;
+        }
         if (ScenarioNavigationPage.GoBack()) return;
         if (!HideImageAnalysisPages()) return;
         WorkStartPage.Visibility = Visibility.Collapsed;
