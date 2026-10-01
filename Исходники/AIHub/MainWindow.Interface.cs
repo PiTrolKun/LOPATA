@@ -265,9 +265,8 @@ public partial class MainWindow
         Resources["UiCardPadding"] = cardPadding;
         Resources["UiMainContentMaxWidth"] = contentWidth;
         Resources["UiBundleContentMaxWidth"] = bundleWidth;
-        WorkStartContentRow.Height = sizeClass == InterfaceSizeClass.Wide || height >= 850
-            ? GridLength.Auto
-            : new GridLength(1, GridUnitType.Star);
+        WorkStartContentRow.Height = new GridLength(1, GridUnitType.Star);
+        ScenarioNavigationPage?.UpdateResponsiveLayout();
         ImageAnalysisBundleSelectorPage?.UpdateResponsiveLayout(width);
     }
 

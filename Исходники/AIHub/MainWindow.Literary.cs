@@ -37,9 +37,6 @@ public partial class MainWindow
         }
         System.Windows.Automation.AutomationProperties.SetName(
             LiteraryScenarioPlaceholderButton, L("Literary.Calibration.Title"));
-        LiteraryScenarioTitleText.Text = L("Literary.Title");
-        LiteraryScenarioDescriptionText.Text = L("Literary.Description");
-        SelectLiteraryScenarioButton.Content = L("ImageAnalysis.Scenario.Select");
         LiteraryPage.Configure(L, LiteraryPage.ShowingProjects, _appSettings.LanguageCode, _storageSettings.Results.Locations.FirstOrDefault()?.Path ?? "");
     }
 }

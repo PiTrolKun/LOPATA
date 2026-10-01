@@ -1,4 +1,4 @@
-﻿<Window x:Class="AIHub.MainWindow"
+<Window x:Class="AIHub.MainWindow"
         x:Name="RootWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -2044,163 +2044,15 @@
               Grid.Row="1"
               Margin="{DynamicResource UiPageMargin}"
               MaxWidth="{DynamicResource UiMainContentMaxWidth}"
-              HorizontalAlignment="Center"
+              HorizontalAlignment="Stretch"
               Visibility="Collapsed">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="22" />
                 <RowDefinition x:Name="WorkStartContentRow" Height="*" />
-                <RowDefinition Height="0" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="18" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-
-            <StackPanel>
-                <TextBlock x:Name="WorkStartTitleText"
-                           Text="Начало работы"
-                           Foreground="{DynamicResource TextPrimaryBrush}"
-                           FontSize="{DynamicResource UiPageTitleFontSize}"
-                           FontWeight="SemiBold" />
-                <TextBlock x:Name="WorkStartDescriptionText"
-                           Text="Выберите новый режим работы"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           FontSize="{DynamicResource UiBodyFontSize}"
-                           LineHeight="{DynamicResource UiLineHeight24}"
-                           TextWrapping="Wrap"
-                           Margin="0,12,0,0" />
-            </StackPanel>
-
-            <ScrollViewer Grid.Row="2"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          PanningMode="VerticalOnly">
-              <StackPanel x:Name="WorkStartNewProjectPanel"
-                          MaxWidth="900"
-                          HorizontalAlignment="Left">
-                <TextBlock x:Name="NewProjectTitleText"
-                           Text="Новый проект"
-                           Foreground="{DynamicResource TextPrimaryBrush}"
-                           FontSize="{DynamicResource UiSectionFontSize}"
-                           FontWeight="SemiBold"
-                           Margin="0,0,0,12" />
-
-                <Border Background="{DynamicResource PanelBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="{DynamicResource UiCardPadding}"
-                        HorizontalAlignment="Stretch">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel>
-                            <TextBlock x:Name="ImageAnalysisScenarioTitleText"
-                                       Text="Анализ изображений"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                       FontSize="{DynamicResource UiCardTitleFontSize}"
-                                       FontWeight="SemiBold" />
-                            <TextBlock x:Name="ImageAnalysisScenarioDescriptionText"
-                                       Text="Профильный сценарий для исследования изображений с комплектом моделей, подобранным под мощность компьютера."
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       FontSize="{DynamicResource UiBodyFontSize}"
-                                       LineHeight="{DynamicResource UiLineHeight22}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,8,20,0" />
-                        </StackPanel>
-
-                        <Button x:Name="SelectImageAnalysisButton"
-                                Grid.Column="1"
-                                Content="Выбрать сценарий"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                MinWidth="148"
-                                VerticalAlignment="Bottom"
-                                Click="SelectImageAnalysisButton_Click" />
-                    </Grid>
-                </Border>
-
-                <Border Background="{DynamicResource PanelBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="{DynamicResource UiCardPadding}"
-                        HorizontalAlignment="Stretch" Margin="0,14,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel>
-                            <TextBlock x:Name="LiteraryScenarioTitleText"
-                                       Text="Литературная работа"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                       FontSize="{DynamicResource UiCardTitleFontSize}"
-                                       FontWeight="SemiBold" />
-                            <TextBlock x:Name="LiteraryScenarioDescriptionText"
-                                       Text="Создавайте и развивайте произведения с помощью ИИ: от первых идей до больших историй."
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       FontSize="{DynamicResource UiBodyFontSize}"
-                                       LineHeight="{DynamicResource UiLineHeight22}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,8,20,0" />
-                        </StackPanel>
-
-                        <Button x:Name="SelectLiteraryScenarioButton"
-                                Grid.Column="1"
-                                Content="Выбрать сценарий"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                MinWidth="148"
-                                VerticalAlignment="Bottom"
-                                Click="SelectLiteraryScenarioButton_Click" />
-                    </Grid>
-                </Border>
-
-                <Border Background="{DynamicResource PanelBrush}"
-                        BorderBrush="{DynamicResource LineBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="{DynamicResource UiCardPadding}"
-                        Margin="0,14,0,0"
-                        HorizontalAlignment="Stretch">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel>
-                            <TextBlock x:Name="ReasoningModeTitleText"
-                                       Text="Песочница"
-                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                       FontSize="{DynamicResource UiCardTitleFontSize}"
-                                       FontWeight="SemiBold" />
-                            <TextBlock x:Name="ReasoningModeDescriptionText"
-                                       Text="Экспериментально проверить возможности ЛОПАТА: собрать вводные, подобрать координатора и доступные инструменты."
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       FontSize="{DynamicResource UiBodyFontSize}"
-                                       LineHeight="{DynamicResource UiLineHeight22}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,8,20,0" />
-                        </StackPanel>
-
-                        <Button x:Name="SelectReasoningModeButton"
-                                Grid.Column="1"
-                                Content="Выбрать режим"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                MinWidth="132"
-                                VerticalAlignment="Bottom"
-                                Click="SelectReasoningModeButton_Click" />
-                    </Grid>
-                </Border>
-              </StackPanel>
-            </ScrollViewer>
-
+            <controls:ScenarioNavigationControl x:Name="ScenarioNavigationPage" Grid.Row="0" />
             <Expander x:Name="PreviousWorkExpander"
-                      Grid.Row="4"
+                      Grid.Row="0"
                       IsExpanded="False"
                       VerticalAlignment="Stretch"
                       Expanded="PreviousWorkExpander_Expanded"
@@ -2392,7 +2244,7 @@
                 </Grid>
             </Expander>
 
-            <StackPanel Grid.Row="6"
+            <StackPanel Grid.Row="1"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
                 <Button x:Name="BackFromWorkStartButton"

@@ -112,9 +112,6 @@ public partial class MainWindow
             _restartHeavyAnalysisAfterLanguageChange = true;
             _imageAnalysisLiteraryCts.Cancel();
         }
-        ImageAnalysisScenarioTitleText.Text = L("ImageAnalysis.Scenario.Title");
-        ImageAnalysisScenarioDescriptionText.Text = L("ImageAnalysis.Scenario.Description");
-        SelectImageAnalysisButton.Content = L("ImageAnalysis.Scenario.Select");
 
         if (_imageAnalysisRecommendation is not null)
         {

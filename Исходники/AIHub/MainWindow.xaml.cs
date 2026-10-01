@@ -137,6 +137,7 @@ public partial class MainWindow : Window
         _executorSpeechCoordinator = new CoreSpeechPresentationCoordinator(
             new CoreVoiceEngineRouter(new EspeakCoreVoiceEngine(), new RhVoiceCoreVoiceEngine()));
         ApplyTheme();
+        InitializeScenarioNavigation();
         ApplyLocalization();
         ChoiceOptionsItemsControl.ItemsSource = _choiceScenarioOptions;
         ExecutorClarificationOptionsItemsControl.ItemsSource = _executorClarificationOptions;
@@ -632,12 +633,7 @@ public partial class MainWindow : Window
         ContinueWithoutProfileButton.Content = L("Profile.ContinueWithoutProfile");
         FillProfileFromReminderButton.Content = L("Profile.FillProfile");
 
-        WorkStartTitleText.Text = L("WorkStart.Title");
-        WorkStartDescriptionText.Text = L("WorkStart.Description");
-        NewProjectTitleText.Text = L("WorkStart.NewProject");
-        ReasoningModeTitleText.Text = L("WorkStart.ReasoningTitle");
-        ReasoningModeDescriptionText.Text = L("WorkStart.ReasoningDescription");
-        SelectReasoningModeButton.Content = L("WorkStart.SelectMode");
+        ScenarioNavigationPage.Configure(L);
         PreviousWorkHeaderText.Text = L("WorkStart.PreviousWork");
         PreviousWorkEmptyText.Text = L("WorkStart.Empty");
         ClearPreviousWorkSelectionButton.Content = L("WorkStart.ClearSelection");
@@ -1324,6 +1320,7 @@ public partial class MainWindow : Window
 
     private void BackFromWorkStartButton_Click(object sender, RoutedEventArgs e)
     {
+        if (ScenarioNavigationPage.GoBack()) return;
         if (!HideImageAnalysisPages()) return;
         WorkStartPage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
@@ -1555,7 +1552,7 @@ public partial class MainWindow : Window
 
     private void PreviousWorkExpander_Collapsed(object sender, RoutedEventArgs e)
     {
-        StatusText.Text = L("Status.WorkStartOpened");
+        RefreshScenarioNavigationState();
     }
 
     private void RefreshPreviousSessions()
@@ -2512,8 +2509,8 @@ public partial class MainWindow : Window
     private void ShowWorkStartPage()
     {
         if (!HideImageAnalysisPages()) return;
+        ScenarioNavigationPage.ReturnFromScenario();
         CancelCoreSpeech(revealFullText: false, "open_work_start");
-        PreviousWorkExpander.IsExpanded = false;
         WelcomePage.Visibility = Visibility.Collapsed;
         SetupPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
@@ -2521,7 +2518,7 @@ public partial class MainWindow : Window
         ProfileReminderPage.Visibility = Visibility.Collapsed;
         ChoiceScenarioPage.Visibility = Visibility.Collapsed;
         WorkStartPage.Visibility = Visibility.Visible;
-        RefreshPreviousSessions();
+        RefreshScenarioNavigationState();
     }
 
     private void StartChoiceScenario()
