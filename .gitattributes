@@ -17,3 +17,5 @@
 
 LICENSE text eol=lf
 VERSION text eol=lf
+
+Инструменты/CaptureRuntime/*.sh text eol=lf

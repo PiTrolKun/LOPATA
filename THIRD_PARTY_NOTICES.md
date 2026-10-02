@@ -1,22 +1,20 @@
 # THIRD PARTY NOTICES — AI_HUB
 
-## Screen capture video — development bundle, 2026-10-03
+## Screen capture video — minimal bundle, 2026-10-03
 
 NAudio.Core / NAudio.Wasapi 2.3.0: Copyright (c) 2020 Mark Heath, MIT.
 Original license: `Исходники/AIHub/Licenses/texts/NAudio-2.3.0-LICENSE.txt`.
 Source: https://github.com/naudio/NAudio/tree/v2.3.0.
 
-FFmpeg n8.1.3-14-g330caae0c1-20261001, BtbN x64 LGPL shared:
-separate executable and replaceable shared FFmpeg DLLs, GNU LGPL version 3
-and dependency-specific terms. Original license and notice travel beside
-the runtime; GPL version 3 text incorporated by LGPL3 is also in the catalog.
-Pinned binary/source/build recipe links and composition limitation:
-`Документы_проекта/Лицензии/Захват_видео_FFmpeg_NOTICE.md`.
-The complete transitive corresponding-source and NOTICE audit has not been
-completed; it is required before publishing an installer/update containing
-this exact broad binary composition. This task does not publish that package.
+FFmpeg 8.1.3-lopata-minimal-1: separate executable and replaceable DLLs,
+LGPL-2.1-or-later. Minimal source-built codec set, no GPL/nonfree mode.
+Original LGPL/GPL2, libvpx/Opus/OpenH264/NVIDIA-header and compiler runtime
+notices accompany the binary. Exact upstream archives, complete recipe,
+configuration and tool versions are supplied on the same GitHub release.
+See `Документы_проекта/Лицензии/Захват_видео_FFmpeg_NOTICE.md` and
+`Инструменты/CaptureRuntime/sources.json` for the pinned composition.
+The broad BtbN development bundle is no longer shipped.
 The bundled `capture.ffmpeg` is distinct from optional downloaded `runtime.ffmpeg`.
-
 ## Qdrant 1.19.1 — optional downloaded runtime (2026-09-10)
 
 Qdrant contributors; Apache License 2.0. Official source and Windows binary:

@@ -1,3 +1,27 @@
+## 03.10.2026 — Узкая поставка FFmpeg, 0.3.20-dev
+
+Широкая BtbN development-сборка заменена собственным кандидатом из точных
+исходников FFmpeg 330caae0c1acccd2222edc52a05940c574561ce5.
+LGPL-2.1-or-later, DLL остаются заменяемыми. Встроены только необходимые
+кодеки и фильтры: MF/NVENC/OpenH264 H.264, VP9, AAC, Opus; MP4/MKV/WebM.
+Автоматическое подключение библиотек, сеть, GPL/nonfree отключены.
+
+Внешние исходники: libvpx 1.15.2, Opus 1.5.2, OpenH264 2.6.0 и
+nv-codec-headers n13.0.19.0. Полные коммиты/хеши:
+`Инструменты/CaptureRuntime/sources.json`; оригинальные LICENSE/PATENTS,
+MinGW-w64/winpthreads и GCC Runtime Exception включены в поставку.
+[NOTICE](Лицензии/Захват_видео_FFmpeg_NOTICE.md). Инструменты сборки изолированы
+в Runtime/BuildTools/Capture; в пользовательскую поставку не входят.
+
+Архив точных исходников и рецепт доступны рядом с бинарным обновлением:
+[0.3.20-beta](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.3.20-beta).
+Контроль бинарного комплекта: `Инструменты/CaptureRuntime/runtime.json` и
+`Инструменты/prepare-capture-runtime.ps1`. Runtime/Capture/FFmpeg-8.1/bundle
+по-прежнему копируется в CaptureRuntime при publish. Прежний комплект
+сохранён в backup. NAudio/WASAPI/GDI/WGC и ИИ-модели не изменялись.
+
+Ниже сохранена история прежней development-сборки; её ограничения не являются
+описанием новой узкой поставки.
 ## 03.10.2026 — Video capture, 0.3.16-dev
 
 Встроенные managed runtime-библиотеки: **NAudio.Core / NAudio.Wasapi 2.3.0**,

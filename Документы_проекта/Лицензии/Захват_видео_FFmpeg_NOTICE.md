@@ -1,47 +1,46 @@
-# FFmpeg video capture runtime
+# FFmpeg minimal capture runtime — 2026-10-03
 
-Bundled helper: FFmpeg n8.1.3-14-g330caae0c1-20261001, x86_64 Windows,
-BtbN LGPL shared build. Copyright (c) 2000–2026 the FFmpeg developers.
-FFmpeg is a separate executable communicating through pipes; its shared libraries
-remain separately replaceable. LOPATA does not statically link them into its executable.
+LOPATA supplies FFmpeg 8.1.3-lopata-minimal-1 for Windows x64 as a separate
+process and separately replaceable shared DLLs. Copyright (c) 2000–2026
+FFmpeg developers. License: GNU LGPL version 2.1 or later. Original LGPL 2.1
+and GPL 2 texts accompany the runtime and the component license catalogue.
+FFmpeg legal/build guidance: https://ffmpeg.org/legal.html
 
-The unmodified original GNU LGPL version 3 text is included as LICENSE.txt.
-GNU GPL version 3, incorporated by LGPL version 3, is included in LOPATA's license texts.
-FFmpeg licensing: https://ffmpeg.org/legal.html
+Exact source commit: 330caae0c1acccd2222edc52a05940c574561ce5.
+Complete corresponding source archives, recipe, configuration, compiler/package
+versions and notices are available with the same release as the binary update:
+https://github.com/PiTrolKun/LOPATA/releases/download/v0.3.20-beta/LOPATA-Capture-Sources-0.3.20-beta.zip
+The archive SHA-256 and delivered EXE/DLL hashes are in provenance.json.
+Sources are unmodified; configuration/version headers are generated products.
+Build recipe: https://github.com/PiTrolKun/LOPATA/tree/main/Инструменты/CaptureRuntime
 
-Pinned binary archive:
-https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-01-13-06/ffmpeg-n8.1.3-14-g330caae0c1-win64-lgpl-shared-8.1.zip
+The recipe disables automatic external-library discovery, network support,
+GPL/nonfree mode, and unused codecs. There is no x264, x265 or fdk-aac.
+Only required Windows Media Foundation/NVENC/OpenH264, VP9, AAC and Opus paths,
+raw inputs, MP4/MKV/WebM containers and audio/video filters are built.
+Windows UCRT/codecs and the NVIDIA driver remain OS/device components; they are
+not redistributed. NVENC requires a compatible installed NVIDIA driver.
 
-Archive SHA256: BF545D8FEE9BB6957C1F3DEA0F384BF64EDEAD407D763326DBBD2DE1B04768A4.
-The archive differs in root-directory naming from the latest alias; all nine delivered
-EXE/DLL files were verified byte-for-byte identical. Individual hashes are in provenance.json.
-ffplay, headers, import libraries and unused development documentation are not delivered.
+Compiled external sources and their original notices:
+- libvpx 1.15.2: BSD-3-Clause, WebM authors; LICENSE, PATENTS, included libyuv
+  and x86inc notices. Source d168454ecd099805c675d4a98c66f4891373302a.
+- Opus 1.5.2: BSD-3-Clause and notices in COPYING / LICENSE_PLEASE_READ.txt.
+  Source ddbe48383984d56acd9e1ab6a090c54ca6b735a6.
+- OpenH264 2.6.0: BSD-2-Clause, Cisco. Source
+  652bdb7719f30b52b08e506645a7322ff1b2cc6f. This own build is not Cisco's
+  prebuilt binary royalty programme; no blanket patent clearance is claimed.
+- nv-codec headers n13.0.19.0: NVIDIA permissive header notices; source
+  e844e5b26f46bb77479f063029595293aa8f812d. No NVIDIA SDK binary is included.
+- MinGW-w64 CRT/headers and winpthreads: original copyright/permission notices
+  in Capture-MinGW-* / Capture-winpthreads-COPYING.txt.
+- GCC support runtime: GPL v3 with GCC Runtime Library Exception 3.1, originals
+  in Capture-GCC-GPL3.txt / Capture-GCC-Exception.txt. Compilation uses GCC and
+  compatible open-source build tools without proprietary IR optimizers.
 
-FFmpeg source matching the encoded commit identifier:
-https://github.com/FFmpeg/FFmpeg/tree/330caae0c1
-https://github.com/FFmpeg/FFmpeg/archive/330caae0c1.tar.gz
+All original notices listed above are in the adjacent licenses directory and
+LOPATA's Licenses/texts. sources.json pins every upstream commit/archive hash.
+Do not replace those notices with this summary when redistributing.
 
-Builder source, dependency recipes and patches at the build date:
-https://github.com/BtbN/FFmpeg-Builds/tree/e88e49f624457c455700b058f0a84ca87d499cc2
-https://github.com/BtbN/FFmpeg-Builds/archive/e88e49f624457c455700b058f0a84ca87d499cc2.tar.gz
-
-The upstream build enables version 3 and shared libraries, disables static FFmpeg
-libraries, libx264, libx265 and libfdk-aac, and does not enable GPL or nonfree mode.
-The configuration printed by `ffmpeg -version` is retained in the implementation report.
-LOPATA uses Windows Media Foundation H.264 / NVIDIA NVENC / OpenH264 fallback,
-FFmpeg AAC, libvpx VP9 and libopus. Windows codecs are supplied by Windows;
-NVIDIA encoding requires the user's existing compatible driver and device.
-WebM uses software VP9 even when GPU capture is preferred.
-
-The shared FFmpeg DLLs also contain the build provider's wider set of dependencies.
-Their upstream licenses remain applicable. This notice does not claim that unused
-compiled dependencies disappear when LOPATA does not call them. The provider's
-LGPL variant is documented at https://github.com/BtbN/FFmpeg-Builds#targets-variants-and-addins.
-Source availability and notices for that complete transitive binary composition must be
-rechecked when preparing a public installer/update; this development task does not
-publish a binary package or grant a new redistribution permission.
-
-NAudio.Core and NAudio.Wasapi 2.3.0 are separate managed MIT packages.
-Copyright (c) 2020 Mark Heath. Original upstream license is bundled with LOPATA:
-https://github.com/naudio/NAudio/blob/v2.3.0/license.txt
+NAudio.Core / NAudio.Wasapi 2.3.0 are separate managed MIT components,
+Copyright (c) 2020 Mark Heath. Original license is included in LOPATA.
 Source: https://github.com/naudio/NAudio/tree/v2.3.0.

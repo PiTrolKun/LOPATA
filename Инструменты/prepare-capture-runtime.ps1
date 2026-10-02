@@ -1,26 +1,30 @@
-param()
+param([string]$ArchivePath)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
+$pin = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'CaptureRuntime/runtime.json') -Raw | ConvertFrom-Json
 $runtime = Join-Path $root 'Runtime/Capture/FFmpeg-8.1'
 $bundle = Join-Path $runtime 'bundle'
-$release = 'autobuild-2026-10-01-13-06'
-$name = 'ffmpeg-n8.1.3-14-g330caae0c1-win64-lgpl-shared-8.1'
-$url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/$release/$name.zip"
-$expected = 'BF545D8FEE9BB6957C1F3DEA0F384BF64EDEAD407D763326DBBD2DE1B04768A4'
-$archive = Join-Path $runtime 'pinned-package.zip'
 New-Item -ItemType Directory -Force $runtime | Out-Null
-if (!(Test-Path -LiteralPath $archive)) { Invoke-WebRequest $url -OutFile $archive }
-if ((Get-FileHash -LiteralPath $archive).Hash -ne $expected) { throw 'The pinned capture runtime archive checksum does not match. No binaries were copied.' }
-$extracted = Join-Path $runtime 'pinned'
-if (!(Test-Path -LiteralPath (Join-Path $extracted "$name/bin/ffmpeg.exe"))) { Expand-Archive -LiteralPath $archive -DestinationPath $extracted }
-$source = Join-Path $extracted $name
+if (!$ArchivePath) {
+    $ArchivePath = Join-Path $runtime ('minimal-'+$pin.SHA256.Substring(0,12)+'.zip')
+    if (!(Test-Path -LiteralPath $ArchivePath)) { Invoke-WebRequest $pin.Url -OutFile $ArchivePath }
+}
+$archive = (Resolve-Path -LiteralPath $ArchivePath).Path
+if ((Get-FileHash -LiteralPath $archive).Hash -ne $pin.SHA256) { throw 'Pinned capture archive checksum mismatch. No files were copied.' }
+$extracted = Join-Path $runtime ('verified-'+$pin.SHA256.Substring(0,12))
+if (!(Test-Path -LiteralPath $extracted)) { Expand-Archive -LiteralPath $archive -DestinationPath $extracted }
+$record = Get-Content -LiteralPath (Join-Path $extracted 'provenance.json') -Raw | ConvertFrom-Json
+if ($record.Version -ne $pin.Version -or $record.SourceArchiveSha256 -ne $pin.SourceSHA256 -or $record.SourceArchive -ne $pin.SourceUrl) { throw 'Runtime provenance does not match the pinned source package.' }
+foreach ($file in $record.Files) {
+    if ([IO.Path]::IsPathRooted($file.Name) -or $file.Name -match '(^|[/\\])\.\.([/\\]|$)') { throw 'Invalid runtime file path.' }
+    if ((Get-FileHash -LiteralPath (Join-Path $extracted $file.Name)).Hash -ne $file.Sha256) { throw "Runtime file checksum mismatch: $($file.Name)" }
+}
+# Validate the complete archive before touching the working bundle.
 New-Item -ItemType Directory -Force $bundle | Out-Null
-$files = @('ffmpeg.exe','ffprobe.exe','avcodec-62.dll','avdevice-62.dll','avfilter-11.dll','avformat-62.dll','avutil-60.dll','swresample-6.dll','swscale-9.dll')
-foreach ($file in $files) { Copy-Item -LiteralPath (Join-Path $source "bin/$file") -Destination (Join-Path $bundle $file) -Force }
-Copy-Item -LiteralPath (Join-Path $source 'LICENSE.txt') -Destination (Join-Path $bundle 'LICENSE.txt') -Force
-$notice = Join-Path $root 'Документы_проекта/Лицензии/Захват_видео_FFmpeg_NOTICE.md'
-if (!(Test-Path -LiteralPath $notice)) { throw 'The capture runtime redistribution notice is missing.' }
-Copy-Item -LiteralPath $notice -Destination (Join-Path $bundle 'NOTICE.md') -Force
-$manifest = [ordered]@{Version='n8.1.3-14-g330caae0c1-20261001';Source=$url;ArchiveSha256=$expected;Builder='https://github.com/BtbN/FFmpeg-Builds/tree/e88e49f624457c455700b058f0a84ca87d499cc2';Files=@($files | ForEach-Object { [ordered]@{Name=$_;Sha256=(Get-FileHash -LiteralPath (Join-Path $bundle $_)).Hash} })}
-$manifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $bundle 'provenance.json') -Encoding utf8
-Write-Host "Prepared pinned capture runtime: $bundle"
+foreach ($file in $record.Files) {
+    $target = Join-Path $bundle $file.Name
+    New-Item -ItemType Directory -Force (Split-Path $target -Parent) | Out-Null
+    Copy-Item -LiteralPath (Join-Path $extracted $file.Name) -Destination $target -Force
+}
+Copy-Item -LiteralPath (Join-Path $extracted 'provenance.json') -Destination $bundle -Force
+Write-Host "Prepared pinned minimal capture runtime: $bundle"

@@ -1,0 +1,47 @@
+[
+  {
+    "Name": "ffmpeg",
+    "Repository": "FFmpeg/FFmpeg",
+    "Ref": "330caae0c1",
+    "Commit": "330caae0c1acccd2222edc52a05940c574561ce5",
+    "Url": "https://github.com/FFmpeg/FFmpeg/archive/330caae0c1acccd2222edc52a05940c574561ce5.tar.gz",
+    "Archive": "ffmpeg.tar.gz",
+    "SHA256": "67B5876EE973A26F267280B2C1EB851A0AC7A502382D20E41B7A819111886AF9"
+  },
+  {
+    "Name": "vpx",
+    "Repository": "webmproject/libvpx",
+    "Ref": "v1.15.2",
+    "Commit": "d168454ecd099805c675d4a98c66f4891373302a",
+    "Url": "https://github.com/webmproject/libvpx/archive/d168454ecd099805c675d4a98c66f4891373302a.tar.gz",
+    "Archive": "vpx.tar.gz",
+    "SHA256": "5F6519823DB1CC67FBA023DC5DCF33ABCD3FBAB65D7E3C6F1D8FF00917A8C1C6"
+  },
+  {
+    "Name": "opus",
+    "Repository": "xiph/opus",
+    "Ref": "v1.5.2",
+    "Commit": "ddbe48383984d56acd9e1ab6a090c54ca6b735a6",
+    "Url": "https://github.com/xiph/opus/archive/ddbe48383984d56acd9e1ab6a090c54ca6b735a6.tar.gz",
+    "Archive": "opus.tar.gz",
+    "SHA256": "18E9D9E26565E279753AAFB6823A482EF85EA9FDDBFDCDBFF8FD095B12DD96B6"
+  },
+  {
+    "Name": "openh264",
+    "Repository": "cisco/openh264",
+    "Ref": "v2.6.0",
+    "Commit": "652bdb7719f30b52b08e506645a7322ff1b2cc6f",
+    "Url": "https://github.com/cisco/openh264/archive/652bdb7719f30b52b08e506645a7322ff1b2cc6f.tar.gz",
+    "Archive": "openh264.tar.gz",
+    "SHA256": "7A060916A9FCB63BA51D83A4F2388660C0B58797BE547C4FA5C52E8D65660A85"
+  },
+  {
+    "Name": "nvcodec",
+    "Repository": "FFmpeg/nv-codec-headers",
+    "Ref": "n13.0.19.0",
+    "Commit": "e844e5b26f46bb77479f063029595293aa8f812d",
+    "Url": "https://github.com/FFmpeg/nv-codec-headers/archive/e844e5b26f46bb77479f063029595293aa8f812d.tar.gz",
+    "Archive": "nvcodec.tar.gz",
+    "SHA256": "42D72FBCCA46E05A1C05A79F1CDA1FEDD68BA686B21ADF917E05D908153645D9"
+  }
+]
