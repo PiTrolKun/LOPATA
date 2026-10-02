@@ -16,7 +16,10 @@ public sealed class ScenarioNavigationTests
         var nodes = ScenarioNavigationCatalog.Nodes;
         Assert.AreEqual(nodes.Count, nodes.Select(n => n.Id).Distinct().Count());
         Assert.AreEqual(4, ScenarioNavigationCatalog.Children(null).Count());
-        Assert.IsFalse(ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.Utilities).IsAvailable);
+        Assert.IsTrue(ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.Utilities).IsAvailable);
+        var capture = ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.Capture);
+        Assert.IsTrue(capture.IsAvailable);
+        Assert.AreEqual(ScenarioNavigationCatalog.Utilities, ScenarioNavigationCatalog.Get(capture.ParentId!).ParentId);
         Assert.AreEqual("uncertainty", ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.Sandbox).Id);
         foreach (var node in nodes)
         {
@@ -58,7 +61,12 @@ public sealed class ScenarioNavigationTests
         Assert.AreEqual(ScenarioNavigationCatalog.Experiments, control.SelectedDirectionId);
         Assert.IsTrue(control.GoBack()); Assert.IsTrue(control.IsHome);
         Assert.IsFalse(control.GoBack());
-        control.SelectDirection(ScenarioNavigationCatalog.Utilities); Assert.IsTrue(control.IsHome);
+        control.SelectDirection(ScenarioNavigationCatalog.Utilities);
+        Assert.IsFalse(control.IsHome);
+        Assert.AreEqual(ScenarioNavigationCatalog.Utilities, control.SelectedDirectionId);
+        control.OpenScenario(ScenarioNavigationCatalog.Capture);
+        Assert.AreEqual(ScenarioNavigationCatalog.Capture, requests[^1]);
+        Assert.IsTrue(control.GoBack()); Assert.IsTrue(control.IsHome);
         control.SelectDirection(ScenarioNavigationCatalog.Creation);
         control.OpenScenario(ScenarioNavigationCatalog.Literary);
         Assert.AreEqual(ScenarioNavigationCatalog.Literary, requests[^1]);

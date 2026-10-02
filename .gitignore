@@ -86,3 +86,6 @@ __pycache__/
 
 # Private literary acceptance project
 /Тесты/3/
+
+# Local capture fixtures may contain microphone/system audio; source probes remain tracked.
+/Тесты/VideoCapture/runs/

@@ -1,5 +1,22 @@
 # THIRD PARTY NOTICES — AI_HUB
 
+## Screen capture video — development bundle, 2026-10-03
+
+NAudio.Core / NAudio.Wasapi 2.3.0: Copyright (c) 2020 Mark Heath, MIT.
+Original license: `Исходники/AIHub/Licenses/texts/NAudio-2.3.0-LICENSE.txt`.
+Source: https://github.com/naudio/NAudio/tree/v2.3.0.
+
+FFmpeg n8.1.3-14-g330caae0c1-20261001, BtbN x64 LGPL shared:
+separate executable and replaceable shared FFmpeg DLLs, GNU LGPL version 3
+and dependency-specific terms. Original license and notice travel beside
+the runtime; GPL version 3 text incorporated by LGPL3 is also in the catalog.
+Pinned binary/source/build recipe links and composition limitation:
+`Документы_проекта/Лицензии/Захват_видео_FFmpeg_NOTICE.md`.
+The complete transitive corresponding-source and NOTICE audit has not been
+completed; it is required before publishing an installer/update containing
+this exact broad binary composition. This task does not publish that package.
+The bundled `capture.ffmpeg` is distinct from optional downloaded `runtime.ffmpeg`.
+
 ## Qdrant 1.19.1 — optional downloaded runtime (2026-09-10)
 
 Qdrant contributors; Apache License 2.0. Official source and Windows binary:
@@ -314,3 +331,18 @@ XTS and no-currency code XXX. No exchange rates or conversion data are included.
 Giga-Embeddings-instruct-480M-0826 is separately downloaded from ai-sage, revision 0c94f705aa35719324fb46f7e75b0a5c275da6e4. Its card declares MIT; no separate LICENSE/copyright notice is present in that snapshot. Runeweaver GGUF is separately downloaded from limloop, whose card declares Apache-2.0; complete merge provenance has not been independently audited. Acknowledgement does not replace missing terms or grant additional rights.
 
 The isolated indexing runtime downloads Python 3.12.10, pip 25.3, PyTorch 2.10.0 with CUDA 12.8, and Transformers 5.3.0. Original primary licenses are retained under `Исходники/AIHub/Licenses/texts`; installed packages retain their own notices. NVIDIA terms: https://docs.nvidia.com/cuda/archive/12.8.0/eula/index.html. Transitive versions are recorded in installation reports, with their respective licenses. Models and this runtime are not bundled by this change. Full source URLs and review notes are in the component license catalog.
+
+## Screenshot utility (0.3.11-dev)
+
+SkiaSharp and SkiaSharp.NativeAssets.Win32 3.119.4 are bundled for CPU WebP
+encoding and ordinary image scaling. MIT license and original copyright
+notices are retained in `Исходники/AIHub/Licenses/texts/SkiaSharp_3.119.4_LICENSE.txt`
+and `SkiaSharp.NativeAssets.Win32_3.119.4_LICENSE.txt`. The complete native
+third-party notice file is `SkiaSharp.NativeAssets.Win32_3.119.4_THIRD-PARTY-NOTICES.txt`
+in the same directory. These include upstream Skia/libwebp and other applicable
+notices; the application license catalog and installer texts contain them.
+Package source: https://github.com/mono/SkiaSharp (version 3.119.4).
+
+The capture module calls Windows-provided WGC and Direct3D11 interfaces.
+Microsoft.Windows.SDK.NET and WinRT.Runtime assemblies are not bundled by this
+feature. PNG/JPEG use Windows/WPF codecs. No GIF/video encoder is bundled yet.

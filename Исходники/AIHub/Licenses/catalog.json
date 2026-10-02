@@ -977,6 +977,41 @@
     ]
   },
   {
+    "Id": "nuget.SkiaSharp",
+    "Name": "SkiaSharp",
+    "Version": "3.119.4",
+    "Author": "Microsoft, Xamarin and contributors",
+    "License": "MIT; third-party notices apply",
+    "Source": "https://github.com/mono/SkiaSharp/tree/v3.119.4",
+    "Checked": "2026-10-02",
+    "Ru": "Встроенная библиотека для WebP и увеличения области на CPU. Оригинальный MIT LICENSE поставляется вместе с приложением; нативный Skia имеет отдельные уведомления о вложенных компонентах.",
+    "En": "Bundled library for WebP and CPU area enlargement. The original MIT LICENSE ships with the application; native Skia has separate notices for included components.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "5B9DC3F50095E7710463EC951F5B169611076CA775A7094F9FF0AFEC21F287C6",
+    "Texts": [
+      "texts/SkiaSharp_3.119.4_LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "nuget.SkiaSharp.NativeAssets.Win32",
+    "Name": "SkiaSharp native Windows assets",
+    "Version": "3.119.4",
+    "Author": "Microsoft, Xamarin, Skia and dependency authors",
+    "License": "MIT; BSD and other licenses in THIRD-PARTY-NOTICES",
+    "Source": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.Win32/3.119.4",
+    "Checked": "2026-10-02",
+    "Ru": "Нативная Windows-библиотека встроена в поставку. Сохраняются оригинальные LICENSE и THIRD-PARTY-NOTICES из пакета, включая условия Skia и WebP. Отдельное скачивание пользователем не требуется.",
+    "En": "The native Windows library is bundled. Original package LICENSE and THIRD-PARTY-NOTICES, including Skia and WebP terms, are retained. No separate user download is required.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "24F19E466B977C6404F6C21D314A49E8E69BB89217E9E5E437E9B241C266DAF1",
+    "Texts": [
+      "texts/SkiaSharp.NativeAssets.Win32_3.119.4_LICENSE.txt",
+      "texts/SkiaSharp.NativeAssets.Win32_3.119.4_THIRD-PARTY-NOTICES.txt"
+    ]
+  },
+  {
     "Id": "backend.chatllm",
     "Name": "chatllm.cpp",
     "Version": "v24",
@@ -991,6 +1026,59 @@
     "Terms": "0372FB9F790966397705EF3A215D126E4C836B2836EB9C5A76BA21C0C94B3241",
     "Texts": [
       "texts/backend.chatllm_LICENSE-chatllm.txt"
+    ]
+  },
+  {
+    "Id": "nuget.NAudio.Core",
+    "Name": "NAudio.Core",
+    "Version": "2.3.0",
+    "Author": "Mark Heath",
+    "License": "MIT",
+    "Source": "https://github.com/naudio/NAudio/tree/v2.3.0",
+    "Checked": "2026-10-03",
+    "Ru": "Встроенная библиотека для выбора устройств и WASAPI-записи звука Windows. Микрофон используется только при выбранном режиме звука. Оригинальный MIT LICENSE включён в поставку.",
+    "En": "Bundled library for Windows audio-device selection and WASAPI capture. The microphone is used only in the selected audio mode. The original MIT license is included.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "80321808B55EB40F22D98D054ADDA7EB4B1FA4AB123FF34D9F0DC787FDD7BB4F",
+    "Texts": [
+      "texts/NAudio-2.3.0-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "nuget.NAudio.Wasapi",
+    "Name": "NAudio.Wasapi",
+    "Version": "2.3.0",
+    "Author": "Mark Heath",
+    "License": "MIT",
+    "Source": "https://github.com/naudio/NAudio/tree/v2.3.0",
+    "Checked": "2026-10-03",
+    "Ru": "Встроенная библиотека для выбора устройств и WASAPI-записи звука Windows. Микрофон используется только при выбранном режиме звука. Оригинальный MIT LICENSE включён в поставку.",
+    "En": "Bundled library for Windows audio-device selection and WASAPI capture. The microphone is used only in the selected audio mode. The original MIT license is included.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "80321808B55EB40F22D98D054ADDA7EB4B1FA4AB123FF34D9F0DC787FDD7BB4F",
+    "Texts": [
+      "texts/NAudio-2.3.0-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "capture.ffmpeg",
+    "Name": "FFmpeg video capture helper (LGPL shared)",
+    "Version": "n8.1.3-14-g330caae0c1-20261001",
+    "Author": "FFmpeg developers; BtbN; dependency authors",
+    "License": "LGPL-3.0-or-later; dependency licenses apply",
+    "Source": "https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-10-01-13-06",
+    "Checked": "2026-10-03",
+    "Ru": "Встроенный отдельный кодировщик видео. LGPL shared сборка без GPL/nonfree-режима, libx264, libx265 и libfdk-aac. Оригинальная LGPL и сведения об исходниках поставляются вместе с программой; вложенные зависимости сохраняют собственные условия. Перед публичной поставкой требуется повторная сверка полного состава бинарных зависимостей и соответствующих исходников.",
+    "En": "Bundled separate video encoder. LGPL shared build without GPL/nonfree mode, libx264, libx265 or libfdk-aac. The original LGPL and source information are included; dependencies retain their own terms. The complete binary dependency composition and corresponding sources must be rechecked before public distribution.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "F9FD4909DFB98771277C6A20D5D664294437C19DBE11324B001C1C41DC098D07",
+    "Texts": [
+      "texts/FFmpeg-8.1-LGPL.txt",
+      "texts/GPL-3.0-or-later.txt",
+      "texts/FFmpeg-8.1-NOTICE.md"
     ]
   },
   {

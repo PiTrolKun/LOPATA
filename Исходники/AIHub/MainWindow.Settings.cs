@@ -46,7 +46,14 @@ public partial class MainWindow
         var folders = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Folders", true), OpenImagesFolderButton);
         _settingsThemeButton = _settingsCards.Action("Settings.Theme", "Settings.Navigation.Theme", ThemeToggleButton_Click);
         var theme = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Theme", true), _settingsThemeButton);
-        var utilities = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.UtilitiesFuture", true), _settingsCards.Label("Settings.Navigation.UtilitiesHelp"));
+        var captureTitle = _settingsCards.Label("Capture.Title", true);
+        captureTitle.Margin = new(0);
+        var utilities = new Expander
+        {
+            Header = captureTitle, Content = _captureSettings, IsExpanded = false,
+            HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch, Margin = new(0, 0, 0, 14)
+        };
+        System.Windows.Automation.AutomationProperties.SetAutomationId(utilities, "Capture.Settings.Expander");
         var aboutButton = _settingsCards.Action("Settings.About", "About.Title", AboutButton_Click);
         var about = _settingsCards.Card(new TextBlock { Text = Title, FontWeight = FontWeights.SemiBold }, aboutButton);
 
@@ -92,7 +99,7 @@ public partial class MainWindow
         Target("verify-viewers", "components", "Components.VerifyViewers", "Components.ViewersHelp", VerifyInstalledViewersButton);
         Target("licenses", "components", "licenses.title", "Settings.Navigation.components.Help", ComponentLicensesButton);
         Target("connections", "downloads", "Settings.ModelDownloadConnections", "Settings.ModelDownloadsHelp", ModelDownloadConnectionsComboBox);
-        Target("utilities", "utilities", "Settings.Navigation.UtilitiesFuture", "Settings.Navigation.UtilitiesHelp", utilities);
+        Target("utilities", "utilities", "Capture.Title", "Capture.Description", utilities);
         Target("logging", "diagnostics", "Diagnostics.Literary.Enabled", "Diagnostics.Literary.Hint", DetailedLiteraryDiagnosticsCheckBox);
         Target("logs", "diagnostics", "Diagnostics.Literary.Open", "Diagnostics.Literary.Hint", OpenLiteraryDiagnosticsButton);
         Target("processes", "diagnostics", "Processes.Title", "Settings.Navigation.diagnostics.Help", OpenProcessesButton);
@@ -127,6 +134,7 @@ public partial class MainWindow
             if (_settingsThemeButton is not null) _settingsThemeButton.Content = L(_isDarkTheme ? "Theme.SwitchToLight" : "Theme.SwitchToDark");
             SettingsNavigator.RefreshLocalization();
             _applicationTray?.RefreshLocalization();
+            RefreshCaptureLocalization();
         }
         finally { _refreshingSettingsWorkspace = false; }
     }

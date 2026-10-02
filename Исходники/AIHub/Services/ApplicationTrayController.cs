@@ -13,6 +13,7 @@ public sealed class ApplicationTrayController : IDisposable
     private readonly ToolStripMenuItem _open = new(), _settings = new(), _updates = new(), _exit = new();
     private readonly ToolStripMenuItem _operation = new();
     private readonly ToolStripMenuItem _result = new();
+    private ToolStripMenuItem? _captureFolder, _captureMonitor, _captureStop;
     private readonly ToolStripSeparator _operationSeparator = new();
     private Icon? _markedImage;
     private BackgroundOperationPhase? _phase;
@@ -61,6 +62,9 @@ public sealed class ApplicationTrayController : IDisposable
         _open.Text = _text("Tray.Open"); _settings.Text = _text("Settings.Title");
         _updates.Text = _text("Updates.Title"); _exit.Text = _text("Tray.Exit");
         _result.Text = _text("Tray.ViewResult");
+        if (_captureFolder is not null) _captureFolder.Text = _text("Capture.OpenFolder");
+        if (_captureMonitor is not null) _captureMonitor.Text = _text("Capture.TrayScreenshot");
+        if (_captureStop is not null) _captureStop.Text = _text("Capture.Stop");
         _operation.Visible = _operationSeparator.Visible = _phase.HasValue;
         _operation.Enabled = _phase != BackgroundOperationPhase.Pausing;
         _operation.Text = _countdown is int seconds ? string.Format(_text("Tray.Countdown"), TimeSpan.FromSeconds(seconds).ToString(@"mm\:ss"))
@@ -69,6 +73,17 @@ public sealed class ApplicationTrayController : IDisposable
 
     public void SetOperation(BackgroundOperationPhase? phase, int? countdown = null)
     { _phase = phase; _countdown = countdown; RefreshLocalization(); }
+
+    public void AddCaptureCommands(Action folder, Action screenshot, Action? stop = null)
+    {
+        if (_disposed || _captureFolder is not null) return;
+        _captureFolder = new(); _captureMonitor = new();
+        _captureFolder.Click += (_, _) => folder(); _captureMonitor.Click += (_, _) => screenshot();
+        _menu.Items.Insert(3, _captureMonitor); _menu.Items.Insert(4, _captureFolder); RefreshLocalization();
+        if (stop is not null)
+        { _captureStop = new() { Visible = false, Text = _text("Capture.Stop") }; _captureStop.Click += (_, _) => stop(); _menu.Items.Insert(5, _captureStop); }
+    }
+    public void SetCaptureRecording(bool recording) { if (_captureStop is not null) _captureStop.Visible = recording; }
 
     public void SetAttention(bool result, bool update)
     {

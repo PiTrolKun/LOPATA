@@ -12,6 +12,7 @@ public partial class MainWindow
         ScenarioNavigationPage.StateChanged += RefreshScenarioNavigationState;
         ScenarioNavigationPage.ScenarioRequested += id =>
         {
+            CapturePage.Visibility = Visibility.Collapsed;
             if (id != ScenarioNavigationCatalog.Finance)
             {
                 FinancialPage.Visibility = Visibility.Collapsed;
@@ -19,6 +20,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.Capture:
+                    OpenCaptureScenario();
+                    break;
                 case ScenarioNavigationCatalog.Finance:
                     OpenFinancialScenario();
                     break;
@@ -38,7 +42,7 @@ public partial class MainWindow
     private void RefreshScenarioNavigationState()
     {
         if (WorkStartPage.Visibility != Visibility.Visible) return;
-        if (FinancialPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
+        if (FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.IsSandboxLanding) RefreshPreviousSessions();
         StatusText.Text = L(ScenarioNavigationPage.IsSandboxLanding
             ? "Navigation.SandboxStatus" : "Status.WorkStartOpened");

@@ -24,12 +24,19 @@ public partial class MainWindow
             () => OnUi(() => { RestoreFromTray(); _fullExitRequested = true; Close(); }),
             () => OnUi(() => _ = ChangeBackgroundOperationAsync()),
             () => OnUi(ViewBackgroundResult));
+        _applicationTray?.AddCaptureCommands(() => OnUi(OpenCaptureFolder),
+            () => OnUi(() => _ = TakeScreenshotAsync(AIHub.Models.CaptureSource.Monitor)), () => OnUi(StopCaptureRecording));
         DesktopAttentionNotification.Notify = (title, message) => _applicationTray?.Notify(title, message, warning: true) == true;
     }
 
     private void ApplicationSessionEnding(object sender, SessionEndingCancelEventArgs e)
     {
         _sessionEnding = true;
+        if (_gifTask is not null || _videoTask is not null)
+        {
+            StopCaptureRecording(); e.Cancel = true; _sessionEnding = false;
+            StatusText.Text = L("Capture.GifExitWait"); return;
+        }
         try
         {
             if (!LiteraryPage.CheckpointBackgroundState()) throw new System.IO.IOException("Literary checkpoint was not confirmed.");

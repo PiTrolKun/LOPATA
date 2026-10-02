@@ -334,6 +334,8 @@ public partial class MainWindow
             _processShutdownPending = true;
             try
             {
+                if (_gifTask is { } gifTask) { StopGif(); await gifTask; }
+                if (_videoTask is { } videoTask) { StopCaptureRecording(); await videoTask; }
                 await StopBackgroundForExitAsync();
                 if (!LiteraryPage.CanLeave()) { StatusText.Text = L("Tray.ExitBlocked"); return; }
                 await AIHub.Services.QdrantRuntime.Shared.ShutdownAsync();

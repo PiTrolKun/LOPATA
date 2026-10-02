@@ -159,6 +159,7 @@ public partial class MainWindow : Window
         UpdatePrimaryActionButton();
         InitializeApplicationUpdates();
         InitializeSettingsWorkspace();
+        InitializeScreenCapture();
         InitializeApplicationTray();
         InitializeBackgroundOperations();
     }
@@ -635,6 +636,7 @@ public partial class MainWindow : Window
 
         ScenarioNavigationPage.Configure(L);
         FinancialPage.Localize(L, _appSettings.LanguageCode);
+        RefreshCaptureLocalization();
         PreviousWorkHeaderText.Text = L("WorkStart.PreviousWork");
         PreviousWorkEmptyText.Text = L("WorkStart.Empty");
         ClearPreviousWorkSelectionButton.Content = L("WorkStart.ClearSelection");
@@ -1321,6 +1323,14 @@ public partial class MainWindow : Window
 
     private void BackFromWorkStartButton_Click(object sender, RoutedEventArgs e)
     {
+        if (CapturePage.Visibility == Visibility.Visible)
+        {
+            CapturePage.Visibility = Visibility.Collapsed;
+            ScenarioNavigationPage.Visibility = Visibility.Visible;
+            ScenarioNavigationPage.ReturnFromScenario();
+            RefreshScenarioNavigationState();
+            return;
+        }
         if (FinancialPage.Visibility == Visibility.Visible)
         {
             if (FinancialPage.GoBack()) return;

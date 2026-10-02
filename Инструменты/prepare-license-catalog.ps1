@@ -33,7 +33,16 @@ foreach($n in (Import-Csv (Join-Path $root 'Документы_проекта/Л
  Add-Entry "nuget.$($n.Id)" $n.Id $n.Version $n.License $n.ProjectUrl $n.Authors $true 'bundled' $ru $en
 }
 Add-Entry 'backend.llama' 'llama.cpp' 'b9442' 'MIT' 'https://github.com/ggml-org/llama.cpp/tree/b9442' 'ggml-org contributors' $true 'bundled' $ru $en
+Add-Entry 'nuget.SkiaSharp' 'SkiaSharp' '3.119.4' 'MIT; third-party notices apply' 'https://github.com/mono/SkiaSharp/tree/v3.119.4' 'Microsoft, Xamarin and contributors' $true 'bundled' 'Встроенная библиотека для WebP и увеличения области на CPU. Оригинальный MIT LICENSE поставляется вместе с приложением; нативный Skia имеет отдельные уведомления о вложенных компонентах.' 'Bundled library for WebP and CPU area enlargement. The original MIT LICENSE ships with the application; native Skia has separate notices for included components.'
+Add-Entry 'nuget.SkiaSharp.NativeAssets.Win32' 'SkiaSharp native Windows assets' '3.119.4' 'MIT; BSD and other licenses in THIRD-PARTY-NOTICES' 'https://www.nuget.org/packages/SkiaSharp.NativeAssets.Win32/3.119.4' 'Microsoft, Xamarin, Skia and dependency authors' $true 'bundled' 'Нативная Windows-библиотека встроена в поставку. Сохраняются оригинальные LICENSE и THIRD-PARTY-NOTICES из пакета, включая условия Skia и WebP. Отдельное скачивание пользователем не требуется.' 'The native Windows library is bundled. Original package LICENSE and THIRD-PARTY-NOTICES, including Skia and WebP terms, are retained. No separate user download is required.'
+foreach($id in @('nuget.SkiaSharp','nuget.SkiaSharp.NativeAssets.Win32')) { ($entries | Where-Object Id -eq $id).Checked='2026-10-02' }
 Add-Entry 'backend.chatllm' 'chatllm.cpp' 'v24' 'MIT' 'https://github.com/foldl/chatllm.cpp' 'foldl' $true 'bundled' $ru $en
+foreach($id in @('NAudio.Core','NAudio.Wasapi')) {
+ Add-Entry "nuget.$id" $id '2.3.0' 'MIT' 'https://github.com/naudio/NAudio/tree/v2.3.0' 'Mark Heath' $true 'bundled' 'Встроенная библиотека для выбора устройств и WASAPI-записи звука Windows. Микрофон используется только при выбранном режиме звука. Оригинальный MIT LICENSE включён в поставку.' 'Bundled library for Windows audio-device selection and WASAPI capture. The microphone is used only in the selected audio mode. The original MIT license is included.'
+ $entry=$entries | Where-Object Id -eq "nuget.$id"; $entry.Checked='2026-10-03'; $entry.Texts=@('texts/NAudio-2.3.0-LICENSE.txt')
+}
+Add-Entry 'capture.ffmpeg' 'FFmpeg video capture helper (LGPL shared)' 'n8.1.3-14-g330caae0c1-20261001' 'LGPL-3.0-or-later; dependency licenses apply' 'https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2026-10-01-13-06' 'FFmpeg developers; BtbN; dependency authors' $true 'bundled' 'Встроенный отдельный кодировщик видео. LGPL shared сборка без GPL/nonfree-режима, libx264, libx265 и libfdk-aac. Оригинальная LGPL и сведения об исходниках поставляются вместе с программой; вложенные зависимости сохраняют собственные условия. Перед публичной поставкой требуется повторная сверка полного состава бинарных зависимостей и соответствующих исходников.' 'Bundled separate video encoder. LGPL shared build without GPL/nonfree mode, libx264, libx265 or libfdk-aac. The original LGPL and source information are included; dependencies retain their own terms. The complete binary dependency composition and corresponding sources must be rechecked before public distribution.'
+$entry=$entries | Where-Object Id -eq 'capture.ffmpeg'; $entry.Checked='2026-10-03'; $entry.Texts=@('texts/FFmpeg-8.1-LGPL.txt','texts/GPL-3.0-or-later.txt','texts/FFmpeg-8.1-NOTICE.md')
 Add-Entry 'runtime.espeak' 'eSpeak NG' '1.52.0' 'GPL-3.0-or-later' 'https://github.com/espeak-ng/espeak-ng/tree/1.52.0' 'eSpeak NG contributors' $true 'bundled' $ru $en
 Add-Entry 'native.cuda' 'NVIDIA CUDA runtime / cuBLAS' '12.4' 'NVIDIA CUDA EULA' 'https://docs.nvidia.com/cuda/archive/12.4.0/eula/index.html' 'NVIDIA' $true 'bundled' $ru $en
 Add-Entry 'native.openssl' 'OpenSSL' '1.1.1k' 'OpenSSL AND SSLeay' 'https://github.com/openssl/openssl/tree/OpenSSL_1_1_1k' 'OpenSSL Project, Eric Young, Tim Hudson' $true 'bundled' $ru $en
@@ -106,7 +115,7 @@ foreach($folder in $assets.packageFolders.PSObject.Properties.Name){
   $e=$entries | Where-Object Id -eq ('nuget.'+$lib.Name.Split('/')[0]);if(!$e){continue}
   $package=Join-Path $folder $lib.Value.path
   if(!(Test-Path $package)){continue}
-  foreach($f in (Get-ChildItem $package -File -Recurse | Where-Object {$_.Name -match '^(LICENSE|NOTICE|COPYING)(\.|$)' -and $_.Length -lt 200000})){
+  foreach($f in (Get-ChildItem $package -File -Recurse | Where-Object {($_.Name -match '^(LICENSE|NOTICE|COPYING)(\.|$)' -or ($lib.Name -like 'SkiaSharp*' -and $_.Name -match '^THIRD-PARTY-NOTICES(\.|$)')) -and $_.Length -lt 200000})){
    $name=($lib.Name -replace '/','_')+'_'+$f.Name
    Copy-Item $f.FullName "$dest/texts/$name" -Force
    $e.Texts=@($e.Texts)+"texts/$name"
@@ -139,5 +148,5 @@ $text="ЛОПАТА / LOPATA — лицензии компонентов`r`nПо
 foreach($e in $basic){$delivery=if($e.Delivery -eq 'bundled'){'Входит в установку'}else{'Скачивается отдельно'};$text+="$($e.Name) — $($e.License)`r`n$delivery`r`n$($e.Author)`r`n$($e.Ru)`r`nПроверено: $($e.Checked)`r`n$($e.Source)`r`n`r`n"}
 foreach($f in @($basic.Texts | Select-Object -Unique)){$text+="`r`n$f`r`n"+[IO.File]::ReadAllText((Join-Path $dest $f))}
 [IO.File]::WriteAllText("$dest/installer.txt",$text,[Text.UTF8Encoding]::new($true))
-@($basic | ForEach-Object {@{Id=$_.Id;Terms=$_.Terms;AcceptedAt='__ACCEPTED_AT__';Source='installer';AppVersion='__APP_VERSION__'}}) | ConvertTo-Json -Depth 5 | Set-Content "$dest/installer-receipt.json" -Encoding ascii
+@($basic | ForEach-Object {[ordered]@{Id=$_.Id;AcceptedAt='__ACCEPTED_AT__';Terms=$_.Terms;AppVersion='__APP_VERSION__';Source='installer'}}) | ConvertTo-Json -Depth 5 | Set-Content "$dest/installer-receipt.json" -Encoding ascii
 Write-Host "Prepared $($entries.Count) license entries. Review catalog and installer text before shipping."

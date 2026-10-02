@@ -399,9 +399,44 @@
     "Source": "installer"
   },
   {
+    "Id": "nuget.SkiaSharp",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "5B9DC3F50095E7710463EC951F5B169611076CA775A7094F9FF0AFEC21F287C6",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
+    "Id": "nuget.SkiaSharp.NativeAssets.Win32",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "24F19E466B977C6404F6C21D314A49E8E69BB89217E9E5E437E9B241C266DAF1",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
     "Id": "backend.chatllm",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "0372FB9F790966397705EF3A215D126E4C836B2836EB9C5A76BA21C0C94B3241",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
+    "Id": "nuget.NAudio.Core",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "80321808B55EB40F22D98D054ADDA7EB4B1FA4AB123FF34D9F0DC787FDD7BB4F",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
+    "Id": "nuget.NAudio.Wasapi",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "80321808B55EB40F22D98D054ADDA7EB4B1FA4AB123FF34D9F0DC787FDD7BB4F",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
+    "Id": "capture.ffmpeg",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "F9FD4909DFB98771277C6A20D5D664294437C19DBE11324B001C1C41DC098D07",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
   },

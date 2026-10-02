@@ -2052,6 +2052,7 @@
             </Grid.RowDefinitions>
             <controls:ScenarioNavigationControl x:Name="ScenarioNavigationPage" Grid.Row="0" />
                 <controls:FinancialScenarioControl x:Name="FinancialPage" Grid.Row="0" Visibility="Collapsed" />
+            <controls:ScreenCaptureControl x:Name="CapturePage" Grid.Row="0" Visibility="Collapsed" />
             <Expander x:Name="PreviousWorkExpander"
                       Grid.Row="0"
                       IsExpanded="False"
