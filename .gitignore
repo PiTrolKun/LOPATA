@@ -87,5 +87,8 @@ __pycache__/
 # Private literary acceptance project
 /Тесты/3/
 
+# Large research archives are published as release attachments.
+/Тесты/Публикация/LOPATA-image-generation-tests-*.zip
+
 # Local capture fixtures may contain microphone/system audio; source probes remain tracked.
 /Тесты/VideoCapture/runs/

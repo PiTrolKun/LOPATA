@@ -44,6 +44,9 @@ public partial class MainWindow
         var startup = _settingsCards.Card(_autostartSwitch, _settingsCards.Label("Settings.Behavior.AutostartHelp"),
             _autoResumeSwitch, _settingsCards.Label("Settings.Behavior.AutoResumeHelp"));
         var folders = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Folders", true), OpenImagesFolderButton);
+        _generationSettings.Configure(_appSettings.ImageGeneration, L);
+        _generationSettings.Changed += () => _appSettingsStore.Save(_appSettings);
+        var generationFolder = _settingsCards.Card(_settingsCards.Label("Generation.Title", true), _generationSettings);
         _settingsThemeButton = _settingsCards.Action("Settings.Theme", "Settings.Navigation.Theme", ThemeToggleButton_Click);
         var theme = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Theme", true), _settingsThemeButton);
         var captureTitle = _settingsCards.Label("Capture.Title", true);
@@ -59,7 +62,7 @@ public partial class MainWindow
 
         void Section(string id, string icon, params FrameworkElement[] cards) => SettingsNavigator.AddSection(id, icon,
             "Settings.Navigation." + id + ".Title", "Settings.Navigation." + id + ".Help", cards);
-        Section("general", "\uE713", general, startup, folders);
+        Section("general", "\uE713", general, startup, folders, generationFolder);
         Section("interface", "\uE771", theme, SettingsLanguageCard, SettingsInterfaceCard);
         Section("voice", "\uE767", SettingsVoiceCard);
         Section("models", "\uE8F1", SettingsAutonomyCard, ManagedModelsExpander);
@@ -76,6 +79,7 @@ public partial class MainWindow
         Target("autostart", "general", "Settings.Behavior.Autostart", "Settings.Behavior.AutostartHelp", _autostartSwitch);
         Target("autoresume", "general", "Settings.Behavior.AutoResume", "Settings.Behavior.AutoResumeHelp", _autoResumeSwitch);
         Target("folders", "general", "ImageInput.Folder", "Settings.Navigation.Folders", OpenImagesFolderButton);
+        Target("generation-folder", "general", "Generation.OutputFolder", "Generation.ChooseFolder", _generationSettings);
         Target("theme", "interface", "Settings.Navigation.Theme", "Settings.Navigation.interface.Help", _settingsThemeButton);
         Target("language", "interface", "Settings.LanguageTitle", "Settings.LanguageHelp", LanguageComboBox);
         Target("translations", "interface", "Settings.Navigation.Translations", "Settings.LanguageHelp", SettingsLocalizationFolderText);
@@ -135,6 +139,7 @@ public partial class MainWindow
             SettingsNavigator.RefreshLocalization();
             _applicationTray?.RefreshLocalization();
             RefreshCaptureLocalization();
+            RefreshGenerationSettings();
         }
         finally { _refreshingSettingsWorkspace = false; }
     }

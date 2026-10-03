@@ -27,6 +27,7 @@ public sealed class AppSettingsStore
         {
             var json = File.ReadAllText(AppDataPaths.SettingsPath);
             var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
+            settings.ImageGeneration ??= new();
             settings.ScreenCapture ??= new();
             settings.ScreenCapture.Normalize();
             settings.CoreVoice ??= new CoreVoiceSettings();

@@ -136,6 +136,10 @@ foreach($pair in @(@('builtin.dotnet','microsoft.netcore.app.runtime.win-x64'),@
   }
  }
 }
+$generationEntries=Join-Path $dest 'image-generation-entries.json'
+if(Test-Path $generationEntries){
+ foreach($e in @(Get-Content $generationEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
+}
 foreach($e in $entries){
  $e.Texts=@($e.Texts | Select-Object -Unique)
  $terms=$e.License+$e.Ru+$e.En

@@ -29,6 +29,7 @@ public partial class MainWindow
         RegisterImageBackgroundOperations();
         RegisterSandboxBackgroundOperations();
         RegisterFinancialBackgroundOperation();
+        RegisterImageGenerationBackgroundOperation();
         _backgroundOperations.Changed += () =>
         { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -143,6 +144,13 @@ public partial class MainWindow
             if (notice.Kind == FinancialAnalysisPlan.BackgroundKind)
             {
                 if (ViewFinancialBackgroundResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind == ImageGenerationCatalog.BackgroundKind && notice.Project is not null)
+            {
+                RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage);
+                OpenImageGenerationScenario(); GenerationPage.Restore(notice.Project);
+                _backgroundOperations!.Acknowledge(notice.Id);
                 return;
             }
             if (notice.Kind is ImageBackgroundWork.Kind or ImageBatchBackgroundKind or ImageSpeechBackgroundKind or ImagePreparationBackgroundKind)

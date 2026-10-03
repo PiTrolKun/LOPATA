@@ -20,6 +20,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Tools\image-generation-manifest.json" LogicalName="AIHub.ImageGenerationManifest" />
+    <EmbeddedResource Include="Content\ImageGenerationExamples.json" LogicalName="AIHub.ImageGenerationExamples" />
+    <Resource Include="Assets\GenerationExamples\*.png" />
     <ProjectReference Include="..\LOPATA.Updates\LOPATA.Updates.csproj" />
     <ProjectReference Include="..\LOPATA.Capture\LOPATA.Capture.csproj" />
     <PackageReference Include="AngleSharp" Version="1.5.2" />

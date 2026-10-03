@@ -1,0 +1,602 @@
+{
+  "checkedAt": "2026-10-03T04:18:46.9023595+07:00",
+  "scope": "Public metadata and documentation only. No weights downloaded.",
+  "officialRepositories": [
+    {
+      "repo": "Tongyi-MAI/Z-Image-Turbo",
+      "revision": "f332072aa78be7aecdf3ee76d5c247082da564a6",
+      "licenseMetadata": "apache-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/Tongyi-MAI/Z-Image-Turbo?blobs=true",
+      "files": [
+        {
+          "name": "README.md",
+          "size": 13684,
+          "lfs": null
+        },
+        {
+          "name": "text_encoder/model-00001-of-00003.safetensors",
+          "size": 3957900840,
+          "lfs": {
+            "sha256": "328a91d3122359d5547f9d79521205bc0a46e1f79a792dfe650e99fc2d651223",
+            "size": 3957900840,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "text_encoder/model-00002-of-00003.safetensors",
+          "size": 3987450520,
+          "lfs": {
+            "sha256": "6cd087b316306a68c562436b5492edbcf6e16c6dba3a1308279caa5a58e21ca5",
+            "size": 3987450520,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "text_encoder/model-00003-of-00003.safetensors",
+          "size": 99630640,
+          "lfs": {
+            "sha256": "7ca841ee75b9c61267c0c6148fd8d096d3d21b6d3e161256a9b878154f91fc52",
+            "size": 99630640,
+            "pointerSize": 133
+          }
+        },
+        {
+          "name": "transformer/diffusion_pytorch_model-00001-of-00003.safetensors",
+          "size": 9973693184,
+          "lfs": {
+            "sha256": "95facd593e2549e8252acb571c653d57f7ddb7f1060d4e81712f152555a88804",
+            "size": 9973693184,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "transformer/diffusion_pytorch_model-00002-of-00003.safetensors",
+          "size": 9973714824,
+          "lfs": {
+            "sha256": "a4bbe43ee184a1fb5af4b412d27555f532893bdc3165b1149e304ed82b5d7015",
+            "size": 9973714824,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "transformer/diffusion_pytorch_model-00003-of-00003.safetensors",
+          "size": 4672282880,
+          "lfs": {
+            "sha256": "aba4e37a590e63210878160a718d916d80398f4e1f78ab6c9b2b2a00d92769fa",
+            "size": 4672282880,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "vae/diffusion_pytorch_model.safetensors",
+          "size": 167666902,
+          "lfs": {
+            "sha256": "f5b59a26851551b67ae1fe58d32e76486e1e812def4696a4bea97f16604d40a3",
+            "size": 167666902,
+            "pointerSize": 134
+          }
+        }
+      ]
+    },
+    {
+      "repo": "black-forest-labs/FLUX.2-klein-4B",
+      "revision": "e7b7dc27f91deacad38e78976d1f2b499d76a294",
+      "licenseMetadata": "apache-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/black-forest-labs/FLUX.2-klein-4B?blobs=true",
+      "files": [
+        {
+          "name": "LICENSE.md",
+          "size": 9584,
+          "lfs": null
+        },
+        {
+          "name": "README.md",
+          "size": 9991,
+          "lfs": null
+        },
+        {
+          "name": "flux-2-klein-4b.safetensors",
+          "size": 7751105712,
+          "lfs": {
+            "sha256": "ec3d4e733a771f61c052fb4856c48b336c55eaf2c65487c2a1faeb9bbda7a343",
+            "size": 7751105712,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "text_encoder/model-00001-of-00002.safetensors",
+          "size": 4967215360,
+          "lfs": {
+            "sha256": "8c0506e7f4936fa7e26183a4fd8da4e2bdbc5990ba64ae441f965d51228f36ea",
+            "size": 4967215360,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "text_encoder/model-00002-of-00002.safetensors",
+          "size": 3077766632,
+          "lfs": {
+            "sha256": "82f2bd839378541b0557bfabaf37c7d3d637071fdcb73302dedd7cf61162ce07",
+            "size": 3077766632,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "transformer/diffusion_pytorch_model.safetensors",
+          "size": 7751109744,
+          "lfs": {
+            "sha256": "9f29f9edcfdae452a653ffb51a534ca4decd389952c225724ff3b94042612a6e",
+            "size": 7751109744,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "vae/diffusion_pytorch_model.safetensors",
+          "size": 168120878,
+          "lfs": {
+            "sha256": "ca70d2202afe6415bdbcb8793ba8cd99fd159cfe6192381504d6c4d3036e0f04",
+            "size": 168120878,
+            "pointerSize": 134
+          }
+        }
+      ]
+    },
+    {
+      "repo": "Laxhar/noobai-XL-1.1",
+      "revision": "814a274af2b8097c0828819d561ec74c7d0c6cea",
+      "licenseMetadata": "other",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/Laxhar/noobai-XL-1.1?blobs=true",
+      "files": [
+        {
+          "name": "NoobAI-XL-v1.1.safetensors",
+          "size": 7105349958,
+          "lfs": {
+            "sha256": "6681e8e4b134c81f16533acedb0d406d7e5e366e1624b4105178c64d00b05d51",
+            "size": 7105349958,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "README.md",
+          "size": 6702,
+          "lfs": null
+        },
+        {
+          "name": "text_encoder/model.safetensors",
+          "size": 246144152,
+          "lfs": {
+            "sha256": "0580de479d979c217e6bc07399e9311e8d681b3a7dc6548b6a41e2ee673bbe40",
+            "size": 246144152,
+            "pointerSize": 134
+          }
+        },
+        {
+          "name": "vae/diffusion_pytorch_model.safetensors",
+          "size": 167335342,
+          "lfs": {
+            "sha256": "9d3aca1a278ed7262b9c5d13fa232c088b039a05abbce27c45b5d2c8cc60df1d",
+            "size": 167335342,
+            "pointerSize": 134
+          }
+        }
+      ]
+    },
+    {
+      "repo": "LyliaEngine/Pony_Diffusion_V6_XL",
+      "revision": "14885f1c01d7723bcbf676773def286c1fd733bc",
+      "licenseMetadata": "cdla-permissive-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/LyliaEngine/Pony_Diffusion_V6_XL?blobs=true",
+      "files": [
+        {
+          "name": "README.md",
+          "size": 5408,
+          "lfs": null
+        },
+        {
+          "name": "ponyDiffusionV6XL_v6StartWithThisOne.safetensors",
+          "size": 6938041050,
+          "lfs": {
+            "sha256": "67ab2fd8ec439a89b3fedb15cc65f54336af163c7eb5e4f2acc98f090a29b0b3",
+            "size": 6938041050,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "sdxl_vae.safetensors",
+          "size": 334641162,
+          "lfs": {
+            "sha256": "235745af8d86bf4a4c1b5b4f529868b37019a10f7c0b2e79ad0abca3a22bc6e1",
+            "size": 334641162,
+            "pointerSize": 134
+          }
+        }
+      ]
+    },
+    {
+      "repo": "krea/Krea-2-Turbo",
+      "revision": "98e0fe118d17c9e3547fbb2e25acdbae2cadf7c7",
+      "licenseMetadata": "other",
+      "gated": "auto",
+      "api": "https://huggingface.co/api/models/krea/Krea-2-Turbo?blobs=true",
+      "files": [
+        {
+          "name": "LICENSE.pdf",
+          "size": 137711,
+          "lfs": {
+            "sha256": "b82a2805162bde714a4eb27b9063c4fc3345d08a30be055134a6160e5430ba74",
+            "size": 137711,
+            "pointerSize": 131
+          }
+        },
+        {
+          "name": "README.md",
+          "size": 24848,
+          "lfs": null
+        },
+        {
+          "name": "text_encoder/model.safetensors",
+          "size": 8875715136,
+          "lfs": {
+            "sha256": "8434db05292f95e0041589a7c82abeb39385be59c85b54ae11caa7b45e9f4f13",
+            "size": 8875715136,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "transformer/diffusion_pytorch_model-00001-of-00003.safetensors",
+          "size": 9970652128,
+          "lfs": {
+            "sha256": "9ca6a4951e447d8465cf64e0d7324b65da1a44d373d7d1b7d610fc395b164861",
+            "size": 9970652128,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "transformer/diffusion_pytorch_model-00002-of-00003.safetensors",
+          "size": 9829444456,
+          "lfs": {
+            "sha256": "d092b7b22d2febe37354a54f2cfa4891b4fda397e27a3a465ee64f7597ecaad3",
+            "size": 9829444456,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "transformer/diffusion_pytorch_model-00003-of-00003.safetensors",
+          "size": 6483240784,
+          "lfs": {
+            "sha256": "df51a0e537a56ba2ebf06c0d190d3f8571f967ae1f8e7b8acf05c33b5821cdce",
+            "size": 6483240784,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "turbo.safetensors",
+          "size": 26283332608,
+          "lfs": {
+            "sha256": "78bbf8f4165eda19cea3cb06c78089221932a39e2eed8af9da741f942c47ffb3",
+            "size": 26283332608,
+            "pointerSize": 136
+          }
+        },
+        {
+          "name": "vae/diffusion_pytorch_model.safetensors",
+          "size": 507591892,
+          "lfs": {
+            "sha256": "ab1b61103959913d6c7e628cf793dbb2ca4726a40a3b3ae206c52b8e75bf6f08",
+            "size": 507591892,
+            "pointerSize": 134
+          }
+        }
+      ]
+    }
+  ],
+  "secondaryCandidates": [
+    {
+      "repo": "leejet/Z-Image-Turbo-GGUF",
+      "revision": "c61c0e422dc8b541b7548cf33a4ef8302b0f8085",
+      "licenseMetadata": "apache-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/leejet/Z-Image-Turbo-GGUF?blobs=true",
+      "files": [
+        {
+          "name": "README.md",
+          "size": 1962,
+          "lfs": null
+        },
+        {
+          "name": "z_image_turbo-Q4_0.gguf",
+          "size": 3683370944,
+          "lfs": {
+            "sha256": "2bc57986874c84f7ec6d02d9d7070a53b0029954a0e38a6e1342eb91095572f5",
+            "size": 3683370944,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "z_image_turbo-Q6_K.gguf",
+          "size": 5263239104,
+          "lfs": {
+            "sha256": "319f627beac8059b7546f36a7b4d5097b7f4ee6a1fc37585d0f75ca1d12d01af",
+            "size": 5263239104,
+            "pointerSize": 135
+          }
+        }
+      ]
+    },
+    {
+      "repo": "leejet/FLUX.2-klein-4B-GGUF",
+      "revision": "3b1f5a9dc3abb32238b053aeb3d823c30afdacbd",
+      "licenseMetadata": "apache-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/leejet/FLUX.2-klein-4B-GGUF?blobs=true",
+      "files": [
+        {
+          "name": "README.md",
+          "size": 470,
+          "lfs": null
+        },
+        {
+          "name": "flux-2-klein-4b-Q4_0.gguf",
+          "size": 2460378560,
+          "lfs": {
+            "sha256": "d1023499ef3f2f82ff7c50e6778495195c1b6cc34835741778868428111f9ff4",
+            "size": 2460378560,
+            "pointerSize": 135
+          }
+        }
+      ]
+    },
+    {
+      "repo": "realrebelai/KREA-2_GGUFs",
+      "revision": "9721c3ec932c43dff6dbb5793a816d9ad105277f",
+      "licenseMetadata": "other",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/realrebelai/KREA-2_GGUFs?blobs=true",
+      "files": [
+        {
+          "name": "LICENSE",
+          "size": 0,
+          "lfs": null
+        },
+        {
+          "name": "README.md",
+          "size": 3886,
+          "lfs": null
+        },
+        {
+          "name": "TURBO/Krea-2-Turbo-Q4_K_M.gguf",
+          "size": 7216993376,
+          "lfs": {
+            "sha256": "273a98be1afe317bc7228403b6434647eaf866cebe6aff1980c401b950473807",
+            "size": 7216993376,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "TURBO/Krea-2-Turbo-Q6_K.gguf",
+          "size": 10521682016,
+          "lfs": {
+            "sha256": "d95c232c7835d5fc2b35b8f0ddef0606cc59e0162754ef7e4047327f64ca67a9",
+            "size": 10521682016,
+            "pointerSize": 136
+          }
+        }
+      ]
+    },
+    {
+      "repo": "black-forest-labs/FLUX.2-klein-4b-fp8",
+      "revision": "5b4408e59397a4a37ccb46afe426d8ed86379441",
+      "licenseMetadata": "apache-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/black-forest-labs/FLUX.2-klein-4b-fp8?blobs=true",
+      "files": [
+        {
+          "name": "LICENSE.md",
+          "size": 9584,
+          "lfs": null
+        },
+        {
+          "name": "README.md",
+          "size": 7778,
+          "lfs": null
+        },
+        {
+          "name": "flux-2-klein-4b-fp8.safetensors",
+          "size": 4070624520,
+          "lfs": {
+            "sha256": "97ed34fe0567e436200f2faee3939b88f2b5d99f8af2a4dc16532c4245c0ccb6",
+            "size": 4070624520,
+            "pointerSize": 135
+          }
+        }
+      ]
+    },
+    {
+      "repo": "Comfy-Org/Krea-2",
+      "revision": "eb1eddd3983a54678545a9b2c178c5853b30f7be",
+      "licenseMetadata": "other",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/Comfy-Org/Krea-2?blobs=true",
+      "files": [
+        {
+          "name": "LICENSE.pdf",
+          "size": 137711,
+          "lfs": {
+            "sha256": "b82a2805162bde714a4eb27b9063c4fc3345d08a30be055134a6160e5430ba74",
+            "size": 137711,
+            "pointerSize": 131
+          }
+        },
+        {
+          "name": "README.md",
+          "size": 5441,
+          "lfs": null
+        },
+        {
+          "name": "vae/qwen_image_vae.safetensors",
+          "size": 253806246,
+          "lfs": {
+            "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f",
+            "size": 253806246,
+            "pointerSize": 134
+          }
+        }
+      ]
+    },
+    {
+      "repo": "Comfy-Org/flux2-klein-4B",
+      "revision": "5f526678002e43af5551dadb73ce2e8c91b43afe",
+      "licenseMetadata": "apache-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/Comfy-Org/flux2-klein-4B?blobs=true",
+      "files": [
+        {
+          "name": "README.md",
+          "size": 800,
+          "lfs": null
+        },
+        {
+          "name": "split_files/text_encoders/qwen_3_4b.safetensors",
+          "size": 8044982048,
+          "lfs": {
+            "sha256": "6c671498573ac2f7a5501502ccce8d2b08ea6ca2f661c458e708f36b36edfc5a",
+            "size": 8044982048,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "split_files/text_encoders/qwen_3_4b_fp4_flux2.safetensors",
+          "size": 3848213998,
+          "lfs": {
+            "sha256": "3eab03a77adb0ee5304a4e677d5c10ac22f9049c1d7c894adca4f8bb39206ca8",
+            "size": 3848213998,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "split_files/vae/flux2-vae.safetensors",
+          "size": 336211292,
+          "lfs": {
+            "sha256": "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3",
+            "size": 336211292,
+            "pointerSize": 134
+          }
+        }
+      ]
+    },
+    {
+      "repo": "Comfy-Org/z_image_turbo",
+      "revision": "6fc90a3b1b653e935a0d175e260736de25b84df5",
+      "licenseMetadata": "apache-2.0",
+      "gated": false,
+      "api": "https://huggingface.co/api/models/Comfy-Org/z_image_turbo?blobs=true",
+      "files": [
+        {
+          "name": "README.md",
+          "size": 4785,
+          "lfs": null
+        },
+        {
+          "name": "split_files/text_encoders/qwen_3_4b.safetensors",
+          "size": 8044982048,
+          "lfs": {
+            "sha256": "6c671498573ac2f7a5501502ccce8d2b08ea6ca2f661c458e708f36b36edfc5a",
+            "size": 8044982048,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "split_files/text_encoders/qwen_3_4b_fp4_mixed.safetensors",
+          "size": 3479416193,
+          "lfs": {
+            "sha256": "7ca32dcf07dfe7692945d80fff86e3a74cb83c6206b9b223ac6836b939bb85d6",
+            "size": 3479416193,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "split_files/text_encoders/qwen_3_4b_fp8_mixed.safetensors",
+          "size": 5631994051,
+          "lfs": {
+            "sha256": "72450b19758172c5a7273cf7de729d1c17e7f434a104a00167624cba94f68f15",
+            "size": 5631994051,
+            "pointerSize": 135
+          }
+        },
+        {
+          "name": "split_files/vae/ae.safetensors",
+          "size": 335304388,
+          "lfs": {
+            "sha256": "afc8e28272cd15db3919bacdb6918ce9c1ed22e96cb12c4d5ed0fba823529e38",
+            "size": 335304388,
+            "pointerSize": 134
+          }
+        }
+      ]
+    }
+  ],
+  "githubRevisions": [
+    {
+      "repo": "leejet/stable-diffusion.cpp",
+      "sha": "3f8527a46c54ecf4cb4ed6003da8e8982283c73c",
+      "date": "2026-09-27T15:24:07Z"
+    },
+    {
+      "repo": "krea-ai/krea-2",
+      "sha": "db3984fbc6e13b34c0064990fc2d95ac64d00058",
+      "date": "2026-07-24T15:31:15Z"
+    },
+    {
+      "repo": "Tongyi-MAI/Z-Image",
+      "sha": "26f23eda626ffadda020b04ff79488e1d72004cd",
+      "date": "2026-02-09T12:49:08Z"
+    },
+    {
+      "repo": "black-forest-labs/flux2",
+      "sha": "50fe5162777813d869182b139e83b10743caef15",
+      "date": "2026-03-12T15:00:27Z"
+    }
+  ],
+  "ponyPrimary": {
+    "api": "https://civitai.com/api/v1/models/257749",
+    "creator": "PurpleSmartAI",
+    "model": "Pony Diffusion V6 XL",
+    "versionId": 290640,
+    "allowCommercialUse": [
+      "Image",
+      "RentCivit"
+    ],
+    "allowNoCredit": false,
+    "allowDifferentLicense": false,
+    "comparison": [
+      {
+        "file": "ponyDiffusionV6XL_v6StartWithThisOne.safetensors",
+        "hfBytes": 6938041050,
+        "civitaiBytes": 6938041050.0,
+        "sha256": "67ab2fd8ec439a89b3fedb15cc65f54336af163c7eb5e4f2acc98f090a29b0b3",
+        "publishedHashesMatch": true,
+        "weightsDownloaded": false
+      },
+      {
+        "file": "sdxl_vae.safetensors",
+        "hfBytes": 334641162,
+        "civitaiBytes": 334641162.0,
+        "sha256": "235745af8d86bf4a4c1b5b4f529868b37019a10f7c0b2e79ad0abca3a22bc6e1",
+        "publishedHashesMatch": true,
+        "weightsDownloaded": false
+      }
+    ],
+    "license": "Modified Fair AI Public License 1.0-SD; author description takes precedence over mirror metadata."
+  },
+  "kreaLicense": {
+    "license": "Krea 2 Community License",
+    "url": "https://www.krea.ai/krea-2-licensing",
+    "aup": "https://www.krea.ai/krea-2-use-policy",
+    "gatedPdfRead": false,
+    "publicAgreementRead": true
+  }
+}

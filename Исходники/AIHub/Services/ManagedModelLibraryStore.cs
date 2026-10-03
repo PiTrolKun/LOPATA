@@ -102,10 +102,20 @@ public sealed class ManagedModelLibraryStore
         }
         if (existing is not null)
         {
+            var sameDirectory = string.Equals(existing.InstallDirectory, candidate.InstallDirectory, StringComparison.OrdinalIgnoreCase);
             candidate.FirstDiscoveredAt = existing.FirstDiscoveredAt;
             candidate.FirstInstalledAt ??= existing.FirstInstalledAt;
-            candidate.LastVerifiedAt ??= existing.LastVerifiedAt;
-            candidate.RuntimeVerifiedAt ??= existing.RuntimeVerifiedAt;
+            if (sameDirectory)
+            {
+                candidate.LastVerifiedAt ??= existing.LastVerifiedAt;
+                candidate.RuntimeVerifiedAt ??= existing.RuntimeVerifiedAt;
+            }
+            else
+            {
+                candidate.LastVerifiedAt = null; candidate.RuntimeVerifiedAt = null;
+                if (candidate.Status == ManagedModelStatuses.Installed) candidate.Status = ManagedModelStatuses.NeedsVerification;
+                foreach (var file in candidate.Files) { file.VerifiedSizeBytes = 0; file.VerifiedLastWriteTimeUtc = null; }
+            }
             if (candidate.SemanticPassport.Status == ModelSemanticPassportStatuses.Missing)
             {
                 candidate.SemanticPassport = existing.SemanticPassport;
@@ -122,7 +132,7 @@ public sealed class ManagedModelLibraryStore
                     item.RelativePath,
                     file.RelativePath,
                     StringComparison.OrdinalIgnoreCase));
-                if (previousFile is not null && file.VerifiedLastWriteTimeUtc is null)
+                if (sameDirectory && previousFile is not null && file.VerifiedLastWriteTimeUtc is null)
                 {
                     file.VerifiedSizeBytes = previousFile.VerifiedSizeBytes;
                     file.VerifiedLastWriteTimeUtc = previousFile.VerifiedLastWriteTimeUtc;

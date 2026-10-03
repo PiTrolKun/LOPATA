@@ -637,6 +637,7 @@ public partial class MainWindow : Window
         ScenarioNavigationPage.Configure(L);
         FinancialPage.Localize(L, _appSettings.LanguageCode);
         RefreshCaptureLocalization();
+        GenerationPage.Localize(L, _localizationService.CurrentLanguageCode);
         PreviousWorkHeaderText.Text = L("WorkStart.PreviousWork");
         PreviousWorkEmptyText.Text = L("WorkStart.Empty");
         ClearPreviousWorkSelectionButton.Content = L("WorkStart.ClearSelection");
@@ -1323,6 +1324,15 @@ public partial class MainWindow : Window
 
     private void BackFromWorkStartButton_Click(object sender, RoutedEventArgs e)
     {
+        if (GenerationPage.Visibility == Visibility.Visible)
+        {
+            if (GenerationPage.GoBack()) return;
+            GenerationPage.Visibility = Visibility.Collapsed;
+            ScenarioNavigationPage.Visibility = Visibility.Visible;
+            ScenarioNavigationPage.ReturnFromScenario();
+            RefreshScenarioNavigationState();
+            return;
+        }
         if (CapturePage.Visibility == Visibility.Visible)
         {
             CapturePage.Visibility = Visibility.Collapsed;

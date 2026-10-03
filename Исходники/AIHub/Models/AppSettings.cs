@@ -2,6 +2,7 @@ namespace AIHub.Models;
 
 public sealed class AppSettings
 {
+    public ImageGenerationSettings ImageGeneration { get; set; } = new();
     public ScreenCaptureSettings ScreenCapture { get; set; } = new();
     public bool DetailedLiteraryDiagnostics { get; set; } = true;
     public ApplicationUpdateSettings Updates { get; set; } = new();

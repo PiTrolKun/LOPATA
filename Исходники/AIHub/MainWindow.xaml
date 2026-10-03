@@ -337,6 +337,24 @@
                         </StackPanel>
                         <Border Width="1" Margin="16,0" Background="{DynamicResource TextSecondaryBrush}" />
                     </StackPanel>
+                    <Button x:Name="GenerationModelButton" Content="ИИ±" Visibility="Collapsed"
+                            Width="48" Height="48" Margin="0,0,10,0" FontSize="16"
+                            Click="GenerationModelButton_Click" AutomationProperties.AutomationId="Generation.Header.Model">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="Frame" CornerRadius="24" Background="{DynamicResource SecondaryButtonBackgroundBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentBrush}" /></Trigger>
+                                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45" /></Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button x:Name="GenerationClearButton" Content="⌫" Visibility="Collapsed"
+                            Style="{StaticResource ThemeButtonStyle}" Margin="0,0,10,0"
+                            Click="GenerationClearButton_Click" AutomationProperties.AutomationId="Generation.Header.Clear" />
                     <Button x:Name="ProfileButton"
                             Content="👤"
                             Style="{StaticResource ThemeButtonStyle}"
@@ -2052,6 +2070,7 @@
             </Grid.RowDefinitions>
             <controls:ScenarioNavigationControl x:Name="ScenarioNavigationPage" Grid.Row="0" />
                 <controls:FinancialScenarioControl x:Name="FinancialPage" Grid.Row="0" Visibility="Collapsed" />
+                <controls:ImageGenerationControl x:Name="GenerationPage" Grid.Row="0" Visibility="Collapsed" />
             <controls:ScreenCaptureControl x:Name="CapturePage" Grid.Row="0" Visibility="Collapsed" />
             <Expander x:Name="PreviousWorkExpander"
                       Grid.Row="0"

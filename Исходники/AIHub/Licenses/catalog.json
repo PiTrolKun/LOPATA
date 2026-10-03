@@ -1412,5 +1412,127 @@
     "Texts": [
       "texts/transformers-LICENSE.txt"
     ]
+  },
+  {
+    "Texts": [
+      "texts/generation-z-LICENSE.txt"
+    ],
+    "Terms": "CC8F3832EAD9C5CE44BC5B6F44EACD7D3E11C1C252C5FBAAAFD07341B1752722",
+    "Version": "c61c0e422dc8b541b7548cf33a4ef8302b0f8085",
+    "License": "Apache-2.0",
+    "Ru": "Отдельно загружаемый компонент генерации изображений. Соблюдайте оригинальные условия и сохраняйте уведомления. Квантование не отменяет лицензию исходной модели.",
+    "Id": "generation-z-image",
+    "Basic": false,
+    "En": "Separately downloaded image generation component. Follow the original terms and retain notices. Quantization does not remove the upstream model license.",
+    "Delivery": "download",
+    "Name": "Z-Image Turbo Q6_K",
+    "Author": "leejet",
+    "Checked": "2026-10-03",
+    "Source": "https://huggingface.co/leejet/Z-Image-Turbo-GGUF"
+  },
+  {
+    "Texts": [
+      "texts/generation-krea-LICENSE.txt",
+      "texts/generation-krea-AUP.txt"
+    ],
+    "Terms": "D347491EAC2FF67BE2DAA42302C740CF7F2AC95DFD1419177DAF788EFE5661E9",
+    "Version": "9721c3ec932c43dff6dbb5793a816d9ad105277f",
+    "License": "Krea 2 Community + AUP",
+    "Ru": "Krea 2 Community v1 и политика допустимого использования. Для компании с выручкой группы от 1 млн USD за 12 месяцев требуется Enterprise-лицензия. Требуются проверка контента, уведомления и соблюдение политики. Результаты автоматически сохраняются локально. Перед сохранением копии, копированием или открытием пользователь проверяет конкретное изображение; соответствующее действие фиксирует подтверждение проверки. Полные исходные тексты приложены.",
+    "Id": "generation-krea",
+    "Basic": false,
+    "En": "Krea 2 Community v1 and Acceptable Use Policy. Enterprise terms apply at USD 1 million group revenue over 12 months. Content review, notices and policy compliance are required. Results are automatically saved locally. The user reviews each image before saving a copy, copying or opening; the chosen action records review confirmation. Full original texts are included.",
+    "Delivery": "download",
+    "Name": "Krea 2 Turbo Q6_K",
+    "Author": "realrebelai",
+    "Checked": "2026-10-03",
+    "Source": "https://www.krea.ai/krea-2-licensing"
+  },
+  {
+    "Texts": [
+      "texts/generation-z-LICENSE.txt"
+    ],
+    "Terms": "CC8F3832EAD9C5CE44BC5B6F44EACD7D3E11C1C252C5FBAAAFD07341B1752722",
+    "Version": "a06e946bb6b655725eafa393f4a9745d460374c9",
+    "License": "Apache-2.0",
+    "Ru": "Отдельно загружаемый компонент генерации изображений. Соблюдайте оригинальные условия и сохраняйте уведомления. Квантование не отменяет лицензию исходной модели.",
+    "Id": "generation-qwen-instruct",
+    "Basic": false,
+    "En": "Separately downloaded image generation component. Follow the original terms and retain notices. Quantization does not remove the upstream model license.",
+    "Delivery": "download",
+    "Name": "Qwen3 4B Instruct 2507 encoder Q4_K_M",
+    "Author": "unsloth",
+    "Checked": "2026-10-03",
+    "Source": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF"
+  },
+  {
+    "Texts": [
+      "texts/generation-z-LICENSE.txt"
+    ],
+    "Terms": "CC8F3832EAD9C5CE44BC5B6F44EACD7D3E11C1C252C5FBAAAFD07341B1752722",
+    "Version": "1cd86afb9a95c410a6038ab3b40d8b578c892266",
+    "License": "Apache-2.0",
+    "Ru": "Отдельно загружаемый компонент генерации изображений. Соблюдайте оригинальные условия и сохраняйте уведомления. Квантование не отменяет лицензию исходной модели.",
+    "Id": "generation-qwen-vl",
+    "Basic": false,
+    "En": "Separately downloaded image generation component. Follow the original terms and retain notices. Quantization does not remove the upstream model license.",
+    "Delivery": "download",
+    "Name": "Qwen3 VL 4B encoder Q4_K_M",
+    "Author": "Qwen",
+    "Checked": "2026-10-03",
+    "Source": "https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct-GGUF"
+  },
+  {
+    "Texts": [
+      "texts/generation-z-LICENSE.txt"
+    ],
+    "Terms": "CC8F3832EAD9C5CE44BC5B6F44EACD7D3E11C1C252C5FBAAAFD07341B1752722",
+    "Version": "6fc90a3b1b653e935a0d175e260736de25b84df5",
+    "License": "Apache-2.0",
+    "Ru": "Отдельно загружаемый компонент генерации изображений. Соблюдайте оригинальные условия и сохраняйте уведомления. Квантование не отменяет лицензию исходной модели.",
+    "Id": "generation-vae-flux1",
+    "Basic": false,
+    "En": "Separately downloaded image generation component. Follow the original terms and retain notices. Quantization does not remove the upstream model license.",
+    "Delivery": "download",
+    "Name": "FLUX.1 VAE",
+    "Author": "Comfy-Org",
+    "Checked": "2026-10-03",
+    "Source": "https://huggingface.co/Comfy-Org/z_image_turbo"
+  },
+  {
+    "Texts": [
+      "texts/generation-z-LICENSE.txt"
+    ],
+    "Terms": "CC8F3832EAD9C5CE44BC5B6F44EACD7D3E11C1C252C5FBAAAFD07341B1752722",
+    "Version": "123acf1cc74bccbb9bfff8ac1ee72edc08c2341d",
+    "License": "Apache-2.0",
+    "Ru": "Отдельно загружаемый компонент генерации изображений. Соблюдайте оригинальные условия и сохраняйте уведомления. Квантование не отменяет лицензию исходной модели.",
+    "Id": "generation-vae-wan",
+    "Basic": false,
+    "En": "Separately downloaded image generation component. Follow the original terms and retain notices. Quantization does not remove the upstream model license.",
+    "Delivery": "download",
+    "Name": "Wan 2.1 VAE",
+    "Author": "Comfy-Org",
+    "Checked": "2026-10-03",
+    "Source": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged"
+  },
+  {
+    "Texts": [
+      "texts/generation-sd-LICENSE.txt",
+      "texts/generation-CUDA-EULA.txt",
+      "texts/generation-ggml-LICENSE.txt"
+    ],
+    "Terms": "20E090D55E7FC01E80DEBF13BF0A6CDEF6798D7BF5B39A64BAD25BAC0F468F57",
+    "Version": "master-929-3f8527a",
+    "License": "MIT; NVIDIA CUDA terms",
+    "Ru": "Закреплённый stable-diffusion.cpp, MIT, и CUDA 12.8.1. Скачиваются отдельно по команде пользователя; в установщик не входят. Полные лицензии движка и CUDA приложены. GGML и вложенные уведомления сохраняются при распаковке. Полный аудит транзитивных частей бинарной сборки не завершён.",
+    "Id": "generation-runtime",
+    "Basic": false,
+    "En": "Pinned stable-diffusion.cpp (MIT) and CUDA 12.8.1. Downloaded separately at the user request, not bundled in the installer. Full engine and CUDA terms are included. GGML and nested notices are retained during extraction. Complete transitive binary dependency review is pending.",
+    "Delivery": "download",
+    "Name": "stable-diffusion.cpp CUDA 12",
+    "Author": "leejet",
+    "Checked": "2026-10-03",
+    "Source": "https://github.com/leejet/stable-diffusion.cpp/releases/tag/master-929-3f8527a"
   }
 ]

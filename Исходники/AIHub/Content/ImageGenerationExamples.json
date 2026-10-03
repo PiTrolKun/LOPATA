@@ -1,0 +1,68 @@
+[
+  {
+    "Id": "krea-portrait",
+    "ModelId": "krea",
+    "TitleKey": "Portrait",
+    "Resource": "krea-portrait.png",
+    "SourceLanguage": "ru",
+    "PromptRu": "Фотореалистичный студийное фото женщины с длинными тёмными волосами и яркими голубыми глазами. Девушку стоит во весь рост, стоит боком. Стройная фигура, уверенный спокойный взгляд в камеру. Она стоит перед тёмным фактурным фоном, её нагота частично прикрыта расстёгнутая ярко-синяя рубашка. Мягкий студийный свет, естественные тени, реалистичная кожа, фотографическая детализация, чувственная эстетика. Легкая эротика. Частичная нагота.",
+    "PromptEn": "A photorealistic studio photograph of a woman with long dark hair and vivid blue eyes. The woman is shown full-body, standing sideways. She has a slim figure and a calm, confident gaze directed at the camera. She stands in front of a dark textured backdrop, with her nudity partially covered by an unbuttoned bright blue shirt. Soft studio lighting, natural shadows, realistic skin, photographic detail, sensual aesthetics. Mild eroticism. Partial nudity.",
+    "Seed": 2056857476,
+    "RequestId": "b5b043d8fbeb46b6bb6a5d0e9926b1ee",
+    "Sha256": "348D7D36B709E00CE8BFFA38A4F0486626E88957FA5FF784F3ABBFFFBD6D4012",
+    "BlurRegions": [
+      {
+        "X": 0.37,
+        "Y": 0.375,
+        "Width": 0.22,
+        "Height": 0.125
+      }
+    ]
+  },
+  {
+    "Id": "krea-fantasy",
+    "ModelId": "krea",
+    "TitleKey": "Fantasy",
+    "Resource": "krea-fantasy.png",
+    "SourceLanguage": "ru",
+    "PromptRu": "dark fantasy, cinematic, highly detailed, realistic fantasy art, 4K, 16:9.\nЛунная ночь, холодный серебристый свет луны, мрачная атмосфера. На фоне возвышается большой готический замок с башнями, арками и тускло освещёнными окнами, лёгкий туман у земли, глубокие тени, тёмная палитра с акцентами лунного света.\nНа переднем плане стоит взрослая ведьма — уверенная, опасная, красивая, в духе чародеек из мрачного славянского фэнтези. Внешность вдохновлена образом рыжеволосой чародейки: длинные волнистые медно-рыжие волосы, стройная женственная фигура, бледная кожа, выразительное лицо, пронзительный взгляд. В руке магический посох с мягким мистическим свечением.\nОдежда вызывающая, но логичная и реалистичная: минимум одежды без откровенной наготы, без абсурдной “бронелифчик”-эстетики. Наряд выглядит как практичное тёмное ритуальное одеяние / ведьмовской боевой костюм из кожи, ткани и ремней: открытые плечи, глубокое декольте, частично открытая спина, высокий разрез на юбке или асимметричный подол, подчёркнутая талия, длинные сапоги, изящные детали, слегка готический стиль. Одежда должна выглядеть соблазнительно, но оставаться правдоподобной и функциональной.\nРядом с ведьмой находится чёрная кошка, спокойная и загадочная, как её спутник. Композиция цельная и атмосферная: ведьма — главный акцент кадра, замок читается на фоне, кошка хорошо заметна рядом.\nБез хэллоуинской стилистики, без остроконечной шляпы, без комичного образа, без поп-культурной “мультяшной ведьмы”. Нужен серьёзный, взрослый, мрачный, чувственный образ. Mood: seductive but elegant, mysterious, dark, magical, gothic.",
+    "PromptEn": "dark fantasy, cinematic, highly detailed, realistic fantasy art, 4K, 16:9.\nA moonlit night, cold silver moonlight, a dark and gloomy atmosphere. In the background rises a large Gothic castle with towers, arches, and dimly lit windows, with light mist near the ground, deep shadows, and a dark color palette accented by moonlight.\nIn the foreground stands an adult witch — confident, dangerous, and beautiful, in the spirit of sorceresses from dark Slavic fantasy. Her appearance is inspired by a red-haired sorceress: long, wavy copper-red hair, a slim feminine figure, pale skin, an expressive face, and a piercing gaze. She holds a magical staff with a soft mystical glow.\nHer clothing is revealing but logical and realistic: minimal clothing without explicit nudity and without an absurd “bikini armor” aesthetic. The outfit looks like practical dark ritual clothing / a witch's combat outfit made of leather, fabric, and straps: bare shoulders, a deep neckline, a partially exposed back, a high slit in the skirt or an asymmetrical hem, an accentuated waist, tall boots, elegant details, and a slightly Gothic style. The clothing should look seductive while remaining believable and functional.\nBeside the witch is a black cat, calm and mysterious, acting as her companion. The composition is cohesive and atmospheric: the witch is the main focus of the image, the castle is clearly visible in the background, and the cat is clearly noticeable beside her.\nNo Halloween styling, no pointed witch hat, no comedic appearance, no pop-culture “cartoon witch.” The image should feel serious, adult, dark, and sensual. Mood: seductive but elegant, mysterious, dark, magical, gothic.",
+    "Seed": 412427423,
+    "RequestId": "26ccc1fa81364e3ab26405d8a429fc90",
+    "Sha256": "09F7702C36B744FE2C7F99E32E36A576C7CA5DEA2D8AB1511D5EDEB90321CB3D",
+    "BlurRegions": []
+  },
+  {
+    "Id": "z-image-fantasy",
+    "ModelId": "z-image",
+    "TitleKey": "Fantasy",
+    "Resource": "z-image-fantasy.png",
+    "SourceLanguage": "en",
+    "PromptRu": "Обои для рабочего стола в стиле dark fantasy, cinematic, highly detailed, realistic fantasy art, 4K, 16:9.\nЛунная ночь, холодный серебристый свет луны, мрачная атмосфера. На фоне возвышается большой готический замок с башнями, арками и тускло освещёнными окнами, лёгкий туман у земли, глубокие тени, тёмная палитра с акцентами лунного света.\nНа переднем плане стоит взрослая ведьма — уверенная, опасная, красивая, в духе чародеек из мрачного славянского фэнтези. Внешность вдохновлена образом рыжеволосой чародейки: длинные волнистые медно-рыжие волосы, стройная женственная фигура, бледная кожа, выразительное лицо, пронзительный взгляд. В руке магический посох с мягким мистическим свечением.\nОдежда вызывающая, но логичная и реалистичная: минимум одежды без откровенной наготы, без абсурдной “бронелифчик”-эстетики. Наряд выглядит как практичное тёмное ритуальное одеяние / ведьмовской боевой костюм из кожи, ткани и ремней: открытые плечи, глубокое декольте, частично открытая спина, высокий разрез на юбке или асимметричный подол, подчёркнутая талия, длинные сапоги, изящные детали, слегка готический стиль. Одежда должна выглядеть соблазнительно, но оставаться правдоподобной и функциональной.\nРядом с ведьмой находится чёрная кошка, спокойная и загадочная, как её спутник. Композиция цельная и атмосферная: ведьма — главный акцент кадра, замок читается на фоне, кошка хорошо заметна рядом.\nБез хэллоуинской стилистики, без остроконечной шляпы, без комичного образа, без поп-культурной “мультяшной ведьмы”. Нужен серьёзный, взрослый, мрачный, чувственный образ. Mood: seductive but elegant, mysterious, dark, magical, gothic.",
+    "PromptEn": "Desktop wallpaper in a dark fantasy style, cinematic, highly detailed, realistic fantasy art, 4K, 16:9.\nA moonlit night, cold silver moonlight, a dark and gloomy atmosphere. In the background rises a large Gothic castle with towers, arches, and dimly lit windows, with light mist near the ground, deep shadows, and a dark color palette accented by moonlight.\nIn the foreground stands an adult witch — confident, dangerous, and beautiful, in the spirit of sorceresses from dark Slavic fantasy. Her appearance is inspired by a red-haired sorceress: long, wavy copper-red hair, a slim feminine figure, pale skin, an expressive face, and a piercing gaze. She holds a magical staff with a soft mystical glow.\nHer clothing is revealing but logical and realistic: minimal clothing without explicit nudity and without an absurd “bikini armor” aesthetic. The outfit looks like practical dark ritual clothing / a witch's combat outfit made of leather, fabric, and straps: bare shoulders, a deep neckline, a partially exposed back, a high slit in the skirt or an asymmetrical hem, an accentuated waist, tall boots, elegant details, and a slightly Gothic style. The clothing should look seductive while remaining believable and functional.\nBeside the witch is a black cat, calm and mysterious, acting as her companion. The composition is cohesive and atmospheric: the witch is the main focus of the image, the castle is clearly visible in the background, and the cat is clearly noticeable beside her.\nNo Halloween styling, no pointed witch hat, no comedic appearance, no pop-culture “cartoon witch.” The image should feel serious, adult, dark, and sensual. Mood: seductive but elegant, mysterious, dark, magical, gothic.",
+    "Seed": 1432105936,
+    "RequestId": "adbf28c7ed1443028214cec0e6fcce88",
+    "Sha256": "787D41E769424D9E9060FCCC4548AF13757F88E513EBCC9E52449285C9E03799",
+    "BlurRegions": []
+  },
+  {
+    "Id": "z-image-portrait",
+    "ModelId": "z-image",
+    "TitleKey": "Portrait",
+    "Resource": "z-image-portrait.png",
+    "SourceLanguage": "en",
+    "PromptRu": "Фотореалистичный студийное фото женщины с длинными тёмными волосами и яркими голубыми глазами. Девушку стоит во весь рост, стоит боком. Стройная фигура, уверенный спокойный взгляд в камеру. Она стоит перед тёмным фактурным фоном, её нагота частично прикрыта расстёгнутая ярко-синяя рубашка. Мягкий студийный свет, естественные тени, реалистичная кожа, фотографическая детализация, чувственная эстетика. Легкая эротика. Частичная нагота.",
+    "PromptEn": "A photorealistic studio photograph of a woman with long dark hair and vivid blue eyes. The woman is shown full-body, standing sideways. She has a slim figure and a calm, confident gaze directed at the camera. She stands in front of a dark textured backdrop, with her nudity partially covered by an unbuttoned bright blue shirt. Soft studio lighting, natural shadows, realistic skin, photographic detail, sensual aesthetics. Mild eroticism. Partial nudity.",
+    "Seed": 813149561,
+    "RequestId": "202d8365c85d456c872fdef144f66975",
+    "Sha256": "62FE92D5637B9259C3DAAF02A6E3C0938B9AFB1D83E9B87E4F8B4A0297E8C1A2",
+    "BlurRegions": [
+      {
+        "X": 0.265,
+        "Y": 0.35,
+        "Width": 0.18,
+        "Height": 0.1
+      }
+    ]
+  }
+]

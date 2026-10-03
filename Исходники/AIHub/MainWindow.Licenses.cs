@@ -26,7 +26,14 @@ public partial class MainWindow
             try
             {
                 await _componentLicenses.EnsureAsync(selected, async entries =>
-                    await Dispatcher.InvokeAsync(() => ShowComponentLicenses(entries, true)), token);
+                {
+                    var separate = entries.Where(e => e.Id == "generation-krea").ToArray();
+                    var common = entries.Except(separate).ToArray();
+                    if (common.Length > 0 && !await Dispatcher.InvokeAsync(() => ShowComponentLicenses(common, true))) return false;
+                    foreach (var entry in separate)
+                        if (!await Dispatcher.InvokeAsync(() => ShowComponentLicenses([entry], true))) return false;
+                    return true;
+                }, token);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

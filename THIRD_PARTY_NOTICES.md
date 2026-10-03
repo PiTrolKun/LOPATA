@@ -1,5 +1,27 @@
 # THIRD PARTY NOTICES — AI_HUB
 
+## Optional image generation — 2026-10-03
+
+The application can download a separate stable-diffusion.cpp/CUDA runtime and
+model weights at the user's request. No image-model weights are bundled here.
+Pinned artifact revisions, sizes, SHA-256 and upstream URLs are recorded in
+`Исходники/AIHub/Tools/image-generation-manifest.json`. Component terms are registered
+in `Исходники/AIHub/Licenses/image-generation-entries.json` and the shared catalog.
+
+- stable-diffusion.cpp commit 3f8527a46c54ecf4cb4ed6003da8e8982283c73c: MIT;
+  vendored GGML commit 89c4413f5da6fb20cc796f16033d37f129be81fd: MIT.
+  Original notices: `generation-sd-LICENSE.txt`, `generation-ggml-LICENSE.txt`.
+- NVIDIA CUDA runtime 12.8.1: NVIDIA CUDA EULA, `generation-CUDA-EULA.txt`.
+- Z-Image Turbo: Apache-2.0; auxiliary encoder/VAE terms are individually
+  recorded in the component catalog.
+- Krea 2 Turbo: Krea Community License v1 and AUP, including the enterprise revenue
+  condition and output-review requirements. Export/copy/open follows manual review.
+
+
+Original texts are under `Исходники/AIHub/Licenses/texts/generation-*`.
+The technical/license research and remaining public-distribution checks are recorded in
+`Документы_проекта/Исследования/2026-10-03_Простая_генерация_реализация_и_проверки.md`.
+
 ## Screen capture video — minimal bundle, 2026-10-03
 
 NAudio.Core / NAudio.Wasapi 2.3.0: Copyright (c) 2020 Mark Heath, MIT.

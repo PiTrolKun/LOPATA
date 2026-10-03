@@ -1,0 +1,71 @@
+Krea Acceptable Use Policy
+
+
+
+ Krea is committed to the safe and responsible use of its AI models and platform. This
+				Acceptable Use Policy applies to all use of Krea 2 Raw model weights and Krea 2 Turbo model
+				weights obtained through download, including any Derivatives and any Outputs generated from
+				such weights. Use of Krea 2 models through the hosted platform or API is governed by the
+				Krea Terms of Use. By using or accessing Krea 2 Raw or Krea 2 Turbo model weights, you agree
+				to this Acceptable Use Policy.
+
+ Prohibited Uses:
+
+ You shall not use or allow others to use the Krea 2 Raw Model or Krea 2 Turbo Model, any
+					Derivative, or any Output for any of the following purposes:
+
+ (1) Generation, distribution, or facilitation of child sexual abuse material (CSAM) or any
+							content depicting the sexual exploitation of minors;
+
+
+
+ (2) Generation, distribution, or facilitation of non-consensual intimate imagery (NCII),
+							including deepfakes or synthetic media depicting real individuals in intimate or
+							sexual contexts without their consent;
+
+
+
+ (3) Unlawful impersonation, or election interference, including the creation of synthetic
+							media or deepfakes intended to deceive others about a real person's words or actions,
+							to mislead the public, or to undermine election integrity;
+
+
+
+ (4) Violation of any third-party rights, including intellectual property rights, rights of
+							publicity, personality rights, or digital replica rights;
+
+
+
+ (5) Military applications, including weapons development, military surveillance, targeting
+							systems, or autonomous weapons systems;
+
+
+
+ (6) Mass surveillance, including tracking, monitoring, or profiling individuals without
+							their knowledge or consent;
+
+
+
+ (7) Fraudulent, defamatory, harassing, abusive, threatening, discriminatory, or otherwise
+							tortious activity, or generation of content that incites violence, is unlawful,
+							obscene, or otherwise objectionable under applicable law;
+
+
+
+ (8) Circumventing or removing any safety measures, usage restrictions, content filters,
+							content provenance, or watermarking mechanisms implemented by Krea or any deployer;
+
+
+
+ (9) Generating or distributing spam, fake reviews, or other false online engagement, or
+							representing that Outputs are human-created in a manner intended to deceive; and
+
+
+
+ (10) Any use that violates applicable law, including privacy and data protection laws
+							governing the processing of personal data, biometric information, or AI-generated
+							content.
+
+
+
+ To report violations of the Acceptable Use Policy or unlicensed uses of Krea 2 contact: [email protected].

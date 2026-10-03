@@ -42,7 +42,8 @@ public static partial class ManagedModelCatalog
             CreateOmniBeta(modelsRoot),
         CreateOmniGamma(modelsRoot),
             CreateKokoroEnglish(modelsRoot),
-            CreateKokoroRussian(modelsRoot)
+            CreateKokoroRussian(modelsRoot),
+            .. ImageGenerationCatalog.CreateCards(modelsRoot)
         ];
     }
 
