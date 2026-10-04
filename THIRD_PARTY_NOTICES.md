@@ -1,5 +1,28 @@
 # THIRD PARTY NOTICES — AI_HUB
 
+## Image processing utility — 2026-10-04
+
+ImageMagick 7.1.2-30 is also bundled for the image utility. Its existing
+`native.imagemagick` catalog entry and original LICENSE/NOTICE cover this use.
+The executable, configuration and color profiles are packaged together.
+
+Optional AI components are downloaded from upstream only after user action:
+
+- Real-ESRGAN ncnn Vulkan 20220424: BSD-3-Clause model project, MIT implementation.
+- Real-CUGAN ncnn Vulkan 20220728: MIT model project and implementation.
+- SwinIR v0.0 DF2K classical SR: Apache-2.0; Swin-Transformer and KAIR MIT notices.
+  Network source at commit 6545850fbf8df298df73d81f3e8cba638787c8bd is bundled;
+  modified inference helper imports are marked in that file. Weights are optional.
+- Pillow 11.3.0: HPND, private optional wheel with its bundled notices.
+- Native bundles include ncnn BSD-3-Clause, libwebp, stb and dirent notices.
+
+Pinned URLs, sizes and SHA-256: `Исходники/AIHub/Tools/image-utility-ai-manifest.json`.
+Full original texts: `Исходники/AIHub/Licenses/texts/image-utility-*`.
+Catalog entries describe the distribution method and licensing evidence, including
+the absence of a separate upstream license declaration for every weight file.
+Microsoft runtime DLLs remain in the original optional upstream archives; these
+AI archives and model weights are not redistributed inside the application.
+
 ## Optional image generation — 2026-10-03
 
 The application can download a separate stable-diffusion.cpp/CUDA runtime and

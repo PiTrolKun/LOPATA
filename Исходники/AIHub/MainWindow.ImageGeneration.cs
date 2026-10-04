@@ -38,6 +38,7 @@ public partial class MainWindow
     private void GenerationClearButton_Click(object sender, RoutedEventArgs e) => GenerationPage.ClearWorkspace();
     private void OpenImageGenerationScenario()
     {
+        ImageUtilityPage.Visibility = Visibility.Collapsed;
         ConfigureImageGeneration();
         if (ScenarioNavigationPage.IsHome) ScenarioNavigationPage.SelectDirection(ScenarioNavigationCatalog.Creation);
         ScenarioNavigationPage.Visibility = Visibility.Collapsed;

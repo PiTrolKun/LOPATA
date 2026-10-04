@@ -43,6 +43,9 @@ public partial class MainWindow
         });
         var startup = _settingsCards.Card(_autostartSwitch, _settingsCards.Label("Settings.Behavior.AutostartHelp"),
             _autoResumeSwitch, _settingsCards.Label("Settings.Behavior.AutoResumeHelp"));
+        _imageShellIntegrationSwitch = _settingsCards.Switch("WindowsIntegration.Enabled", "Settings.ImageShellIntegration", SetImageShellIntegration);
+        var windowsIntegration = _settingsCards.Card(_settingsCards.Label("WindowsIntegration.Title", true),
+            _imageShellIntegrationSwitch, _settingsCards.Label("WindowsIntegration.Help"));
         var folders = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Folders", true), OpenImagesFolderButton);
         _generationSettings.Configure(_appSettings.ImageGeneration, L);
         _generationSettings.Changed += () => _appSettingsStore.Save(_appSettings);
@@ -62,7 +65,7 @@ public partial class MainWindow
 
         void Section(string id, string icon, params FrameworkElement[] cards) => SettingsNavigator.AddSection(id, icon,
             "Settings.Navigation." + id + ".Title", "Settings.Navigation." + id + ".Help", cards);
-        Section("general", "\uE713", general, startup, folders, generationFolder);
+        Section("general", "\uE713", general, startup, windowsIntegration, folders, generationFolder);
         Section("interface", "\uE771", theme, SettingsLanguageCard, SettingsInterfaceCard);
         Section("voice", "\uE767", SettingsVoiceCard);
         Section("models", "\uE8F1", SettingsAutonomyCard, ManagedModelsExpander);
@@ -78,6 +81,7 @@ public partial class MainWindow
         Target("close", "general", "Settings.Behavior.Close", "Settings.Behavior.CloseHelp", _closeBehavior);
         Target("autostart", "general", "Settings.Behavior.Autostart", "Settings.Behavior.AutostartHelp", _autostartSwitch);
         Target("autoresume", "general", "Settings.Behavior.AutoResume", "Settings.Behavior.AutoResumeHelp", _autoResumeSwitch);
+        Target("windows-integration", "general", "WindowsIntegration.Title", "WindowsIntegration.Help", _imageShellIntegrationSwitch);
         Target("folders", "general", "ImageInput.Folder", "Settings.Navigation.Folders", OpenImagesFolderButton);
         Target("generation-folder", "general", "Generation.OutputFolder", "Generation.ChooseFolder", _generationSettings);
         Target("theme", "interface", "Settings.Navigation.Theme", "Settings.Navigation.interface.Help", _settingsThemeButton);
@@ -131,6 +135,7 @@ public partial class MainWindow
         {
             _settingsCards.RefreshLocalization();
             RefreshAutostartSetting();
+            RefreshImageShellIntegrationSetting();
             if (_autoResumeSwitch is not null) _autoResumeSwitch.IsChecked = _appSettings.Behavior.AutoResumeBackgroundOperation;
             _closeBehavior.ItemsSource = new[] { L("Settings.Behavior.Ask"), L("Settings.Behavior.Exit"), L("Settings.Behavior.Tray") };
             _closeBehavior.SelectedIndex = _appSettings.Behavior.AskBeforeClosing ? 0 : _appSettings.Behavior.CloseToTray ? 2 : 1;

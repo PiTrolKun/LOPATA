@@ -23,6 +23,7 @@ public static class ScenarioNavigationCatalog
     public const string Finance = "finance";
     public const string Capture = "screen_capture";
     public const string ImageGeneration = "image_generation";
+    public const string ImageUtility = "image_utility";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -33,6 +34,9 @@ public static class ScenarioNavigationCatalog
         Node("utilities_capture", ScenarioNavigationKind.Group, Utilities, "Capture.Group", "", "tools"),
         Node(Capture, ScenarioNavigationKind.Scenario, "utilities_capture", "Capture.Title", "Capture.Description", "analyze",
             tags: ["screenshot", "screen_capture", "gif_capture", "video_capture"], related: []),
+        Node("utilities_images", ScenarioNavigationKind.Group, Utilities, "Navigation.Images", "", "tools"),
+        Node(ImageUtility, ScenarioNavigationKind.Scenario, "utilities_images", "ImageUtility.Title", "ImageUtility.Description", "tools",
+            tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
         Node("creation_images", ScenarioNavigationKind.Group, Creation, "Navigation.Images", "", "create"),
         Node(ImageGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Generation.Title", "Generation.Description", "create",
@@ -66,7 +70,8 @@ public static class ScenarioNavigationCatalog
         Tag("expenses", Finance), Tag("income", Finance), Tag("external_coverage", Finance), Tag("financial_behavior", Finance), Tag("savings_discussion", Finance),
         Tag("screenshot", Capture), Tag("screen_capture", Capture), Tag("gif_capture", Capture), Tag("video_capture", Capture),
         Tag("image_generation", ImageGeneration), Tag("image_variation", ImageGeneration),
-        Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", ImageGeneration)
+        Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", "utilities_images"),
+        Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility)
     ]);
 
     public static ScenarioNavigationTag GetTag(string id) => CloudTags.First(tag => tag.Id == id);

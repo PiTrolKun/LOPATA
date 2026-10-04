@@ -47,7 +47,7 @@ Add-Entry 'runtime.espeak' 'eSpeak NG' '1.52.0' 'GPL-3.0-or-later' 'https://gith
 Add-Entry 'native.cuda' 'NVIDIA CUDA runtime / cuBLAS' '12.4' 'NVIDIA CUDA EULA' 'https://docs.nvidia.com/cuda/archive/12.4.0/eula/index.html' 'NVIDIA' $true 'bundled' $ru $en
 Add-Entry 'native.openssl' 'OpenSSL' '1.1.1k' 'OpenSSL AND SSLeay' 'https://github.com/openssl/openssl/tree/OpenSSL_1_1_1k' 'OpenSSL Project, Eric Young, Tim Hudson' $true 'bundled' $ru $en
 Add-Entry 'native.vulkan' 'Vulkan Loader' '1.4.304.0' 'Apache-2.0 and permissive exceptions' 'https://github.com/KhronosGroup/Vulkan-Loader/tree/v1.4.304' 'Khronos Group contributors' $true 'bundled' $ru $en
-Add-Entry 'native.imagemagick' 'ImageMagick (chatllm)' '7.1.2-30' 'ImageMagick License; delegate licenses apply' 'https://imagemagick.org/license/' 'ImageMagick Studio LLC' $true 'bundled' $ru $en
+Add-Entry 'native.imagemagick' 'ImageMagick (image utilities / chatllm)' '7.1.2-30' 'ImageMagick License; delegate licenses apply' 'https://imagemagick.org/license/' 'ImageMagick Studio LLC' $true 'bundled' $ru $en
 Add-Entry 'native.libomp' 'OpenMP runtime (libomp140)' 'bundled DLL' 'Not fully identified / не уточнена' 'https://github.com/ggml-org/llama.cpp/releases/tag/b9442' 'See distribution source' $true 'bundled' 'Точное происхождение и комплект лицензий этой DLL на дату проверки не установлены. Это не означает отсутствия ограничений.' 'The exact provenance and license bundle of this DLL have not been established as of the check date. This does not mean there are no restrictions.'
 Add-Entry 'bge-reranker-v2-m3-tool' 'BAAI/bge-reranker-v2-m3' 'catalog revision' 'Apache-2.0' 'https://huggingface.co/BAAI/bge-reranker-v2-m3' 'BAAI' $true 'download' $ru $en
 Add-Entry 'Qwen/Qwen3-0.6B-GGUF' 'Qwen3-0.6B GGUF' 'catalog revision' 'Apache-2.0' 'https://huggingface.co/Qwen/Qwen3-0.6B-GGUF' 'Qwen' $true 'download' $ru $en
@@ -136,9 +136,11 @@ foreach($pair in @(@('builtin.dotnet','microsoft.netcore.app.runtime.win-x64'),@
   }
  }
 }
-$generationEntries=Join-Path $dest 'image-generation-entries.json'
-if(Test-Path $generationEntries){
- foreach($e in @(Get-Content $generationEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
+foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json')){
+ $scenarioEntries=Join-Path $dest $entryFile
+ if(Test-Path $scenarioEntries){
+  foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
+ }
 }
 foreach($e in $entries){
  $e.Texts=@($e.Texts | Select-Object -Unique)

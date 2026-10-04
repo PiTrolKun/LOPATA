@@ -1,0 +1,81 @@
+[
+  {
+    "Id": "image-utility-realesrgan",
+    "MethodId": "real-esrgan",
+    "Files": [
+      {
+        "SourceUrl": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip",
+        "RelativePath": "realesrgan-ncnn-vulkan-20220424-windows.zip",
+        "Purpose": "runtime",
+        "SizeBytes": 45474481,
+        "Sha256": "abc02804e17982a3be33675e4d471e91ea374e65b70167abc09e31acb412802d"
+      }
+    ],
+    "Revision": "20220424",
+    "Name": "Real-ESRGAN ncnn Vulkan",
+    "License": "BSD-3-Clause / MIT",
+    "Repository": "xinntao/Real-ESRGAN"
+  },
+  {
+    "Id": "image-utility-realcugan",
+    "MethodId": "real-cugan",
+    "Files": [
+      {
+        "SourceUrl": "https://github.com/nihui/realcugan-ncnn-vulkan/releases/download/20220728/realcugan-ncnn-vulkan-20220728-windows.zip",
+        "RelativePath": "realcugan-ncnn-vulkan-20220728-windows.zip",
+        "Purpose": "runtime",
+        "SizeBytes": 45977449,
+        "Sha256": "c6e08d46c11704b1e3a1ada9ddd591cb5005f52f132136c8633ba25def400e01"
+      }
+    ],
+    "Revision": "20220728",
+    "Name": "Real-CUGAN ncnn Vulkan",
+    "License": "MIT",
+    "Repository": "nihui/realcugan-ncnn-vulkan"
+  },
+  {
+    "Id": "image-utility-swinir",
+    "MethodId": "swinir",
+    "Files": [
+      {
+        "SourceUrl": "https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x2.pth",
+        "RelativePath": "001_classicalSR_DF2K_s64w8_SwinIR-M_x2.pth",
+        "Purpose": "scale-2",
+        "SizeBytes": 67277475,
+        "Sha256": "2032ebf8f401dd3ce2fae5f3852117cb72101ec6ed8358faa64c2a3fa09ed4ac"
+      },
+      {
+        "SourceUrl": "https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x3.pth",
+        "RelativePath": "001_classicalSR_DF2K_s64w8_SwinIR-M_x3.pth",
+        "Purpose": "scale-3",
+        "SizeBytes": 68016035,
+        "Sha256": "6eca3aee41f53322cd2f5a13650e212b80be8f3c0439d6fe19aef13ab1f509c7"
+      },
+      {
+        "SourceUrl": "https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x4.pth",
+        "RelativePath": "001_classicalSR_DF2K_s64w8_SwinIR-M_x4.pth",
+        "Purpose": "scale-4",
+        "SizeBytes": 67869037,
+        "Sha256": "4e78e33f22c1aa8a773db0cf4a7381bae97c2362c717f155439ebc690cbd9215"
+      },
+      {
+        "SourceUrl": "https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x8.pth",
+        "RelativePath": "001_classicalSR_DF2K_s64w8_SwinIR-M_x8.pth",
+        "Purpose": "scale-8",
+        "SizeBytes": 68460535,
+        "Sha256": "6b522c1ea5c21006ce3398797eb20b131ca0024cc6e7b8f3d5d29fad1310a49c"
+      },
+      {
+        "SourceUrl": "https://files.pythonhosted.org/packages/8c/ce/e7dfc873bdd9828f3b6e5c2bbb74e47a98ec23cc5c74fc4e54462f0d9204/pillow-11.3.0-cp312-cp312-win_amd64.whl",
+        "RelativePath": "pillow-11.3.0-cp312-cp312-win_amd64.whl",
+        "Purpose": "pillow",
+        "SizeBytes": 6986324,
+        "Sha256": "a6444696fce635783440b7f7a9fc24b3ad10a9ea3f0ab66c5905be1c19ccf17d"
+      }
+    ],
+    "Revision": "v0.0-df2k",
+    "Name": "SwinIR classical SR (DF2K x2/x3/x4/x8)",
+    "License": "Apache-2.0 / MIT / HPND",
+    "Repository": "JingyunLiang/SwinIR"
+  }
+]

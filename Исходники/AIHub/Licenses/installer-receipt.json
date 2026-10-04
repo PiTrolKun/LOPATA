@@ -495,5 +495,12 @@
     "Terms": "CCC1939606CE837F40D218CF2E5A4A599B0642DEDCE66A9E9BC6034F1C05D717",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
+  },
+  {
+    "Id": "builtin.image-utility-swinir-network",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "2F946E213850B2774DBCE5F26A6308EBB83F5ADD13DF687164ABF2F10099B947",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
   }
 ]

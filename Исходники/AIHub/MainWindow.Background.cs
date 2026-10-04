@@ -30,6 +30,8 @@ public partial class MainWindow
         RegisterSandboxBackgroundOperations();
         RegisterFinancialBackgroundOperation();
         RegisterImageGenerationBackgroundOperation();
+        RegisterImageUtilityBackgroundOperation();
+        RegisterImageShellBackgroundOperation();
         _backgroundOperations.Changed += () =>
         { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -65,8 +67,10 @@ public partial class MainWindow
     {
         _stateBeforeTray = WindowState == System.Windows.WindowState.Minimized ? _lastNonMinimizedWindowState : WindowState;
         _applicationReady = true;
+        ApplyImageShellIntegration();
         RefreshBackgroundResumeSchedule(); RefreshBackgroundTray();
         await CompleteUpdateStartupAsync();
+        await PumpImageShellAsync();
     }
 
     private void RefreshBackgroundResumeSchedule()
@@ -150,6 +154,19 @@ public partial class MainWindow
             {
                 RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage);
                 OpenImageGenerationScenario(); GenerationPage.Restore(notice.Project);
+                _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind == ImageShellQueueRunner.BackgroundKind && notice.Project is not null)
+            {
+                ViewImageShellResult(notice.Project);
+                _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind == ImageUtilityQueue.BackgroundKind && notice.Project is not null)
+            {
+                RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage);
+                OpenImageUtilityScenario(); ImageUtilityPage.Restore(notice.Project);
                 _backgroundOperations!.Acknowledge(notice.Id);
                 return;
             }

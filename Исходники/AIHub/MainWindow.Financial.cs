@@ -9,6 +9,7 @@ public partial class MainWindow
     private void ConfigureFinancialScenario() => FinancialPage.Configure(L, _appSettings.LanguageCode, _storageSettings, _userProfile, _userContextService);
     private void OpenFinancialScenario()
     {
+        ImageUtilityPage.Visibility = Visibility.Collapsed;
         CancelCoreSpeech(revealFullText: false, "open_financial_scenario");
         ConfigureFinancialScenario();
         if (ScenarioNavigationPage.IsHome) ScenarioNavigationPage.SelectDirection(ScenarioNavigationCatalog.Experiments);

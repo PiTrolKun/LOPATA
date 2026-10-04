@@ -10,5 +10,7 @@ public sealed class ApplicationBehaviorSettings
 
     public bool AutoResumeBackgroundOperation { get; set; } = true;
 
+    public bool ImageShellIntegrationEnabled { get; set; } = true;
+
     public string LastSettingsSection { get; set; } = "general";
 }

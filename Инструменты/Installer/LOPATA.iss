@@ -170,3 +170,24 @@ begin
     CompleteUpdateRegistration();
   end;
 end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+#ifndef StandDataRoot
+var
+  Marker, Executable: String;
+  MenuKey: String;
+#endif
+begin
+#ifndef StandDataRoot
+  if CurUninstallStep = usPostUninstall then
+  begin
+    MenuKey := 'Software\Classes\SystemFileAssociations\image\shell\LOPATA';
+    { Only remove the image menu owned by this installation, never another copy or association. }
+    if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and
+        (Marker = 'AIHub.ImageShellIntegration.v1') and
+        RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Executable', Executable) and
+        (CompareText(Executable, ExpandConstant('{app}\{#AppExeName}')) = 0) then
+      RegDeleteKeyIncludingSubkeys(HKCU, MenuKey);
+  end;
+#endif
+end;

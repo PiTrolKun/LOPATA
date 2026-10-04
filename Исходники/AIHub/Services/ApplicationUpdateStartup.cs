@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using Lopata.Updates;
+using AIHub.Models;
 
 namespace AIHub.Services;
 
@@ -22,12 +23,18 @@ internal static class ApplicationUpdateStartup
         if (registration is null) return false; // Legacy installations use their existing launch path until migration.
         if (!Path.GetFullPath(registration.AppDirectory).TrimEnd(Path.DirectorySeparatorChar)
             .Equals(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)) return false;
+        // Older installed launchers do not forward file arguments, and a prepared full installer
+        // cannot preserve this request. The verified installed application accepts it directly.
+        // Ordinary launches retain the complete update/recovery route.
+        if (IsImageShellLaunch(args)) return false;
         var start = Launcher("--launch");
         if (args.Contains("--background", StringComparer.Ordinal)) start.ArgumentList.Add("--background");
         AddWaitForThisProcess(start);
         _ = Process.Start(start) ?? throw new IOException("Could not start the update launcher.");
         return true;
     }
+
+    internal static bool IsImageShellLaunch(string[] args) => ImageShellRequest.ParseArguments(args) is not null;
 
     public static ProcessStartInfo Launcher(string command)
     {

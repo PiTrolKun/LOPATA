@@ -1161,7 +1161,7 @@
   },
   {
     "Id": "native.imagemagick",
-    "Name": "ImageMagick (chatllm)",
+    "Name": "ImageMagick (image utilities / chatllm)",
     "Version": "7.1.2-30",
     "Author": "ImageMagick Studio LLC",
     "License": "ImageMagick License; delegate licenses apply",
@@ -1534,5 +1534,88 @@
     "Author": "leejet",
     "Checked": "2026-10-03",
     "Source": "https://github.com/leejet/stable-diffusion.cpp/releases/tag/master-929-3f8527a"
+  },
+  {
+    "Ru": "Официальные веса и исполняемые файлы загружаются по выбору пользователя. Проверены источник и SHA-256 точного пакета. Действуют оригинальные лицензии кода и вложенных библиотек; отдельной лицензии для каждого файла весов авторы не опубликовали. Результат ИИ может менять мелкие детали.",
+    "Texts": [
+      "texts/image-utility-realesrgan_LICENSE",
+      "texts/image-utility-esrgan-ncnn_LICENSE",
+      "texts/image-utility-ncnn_LICENSE",
+      "texts/image-utility-libwebp_COPYING",
+      "texts/image-utility-dirent_LICENSE",
+      "texts/image-utility-stb_LICENSE"
+    ],
+    "Version": "20220424",
+    "Id": "image-utility-realesrgan",
+    "Checked": "2026-10-04",
+    "En": "Official weights and executables are downloaded when selected. Exact package origin and SHA-256 verified. Original code and bundled-library licenses apply; the authors did not publish a separate license for every weight file. AI output may alter small details.",
+    "Name": "Real-ESRGAN ncnn Vulkan",
+    "Delivery": "download",
+    "Author": "xinntao/Real-ESRGAN",
+    "License": "BSD-3-Clause / MIT",
+    "Terms": "C40F5E62DED19F614A7E0666D88B466614BE36A1BA9F4C87E6FA6900A348328B",
+    "Basic": false,
+    "Source": "https://github.com/xinntao/Real-ESRGAN"
+  },
+  {
+    "Ru": "Официальные веса и исполняемые файлы загружаются по выбору пользователя. Проверены источник и SHA-256 точного пакета. Действуют оригинальные лицензии кода и вложенных библиотек; отдельной лицензии для каждого файла весов авторы не опубликовали. Результат ИИ может менять мелкие детали.",
+    "Texts": [
+      "texts/image-utility-cugan_LICENSE",
+      "texts/image-utility-cugan-ncnn_LICENSE",
+      "texts/image-utility-ncnn_LICENSE",
+      "texts/image-utility-libwebp_COPYING",
+      "texts/image-utility-dirent_LICENSE",
+      "texts/image-utility-stb_LICENSE"
+    ],
+    "Version": "20220728",
+    "Id": "image-utility-realcugan",
+    "Checked": "2026-10-04",
+    "En": "Official weights and executables are downloaded when selected. Exact package origin and SHA-256 verified. Original code and bundled-library licenses apply; the authors did not publish a separate license for every weight file. AI output may alter small details.",
+    "Name": "Real-CUGAN ncnn Vulkan",
+    "Delivery": "download",
+    "Author": "nihui/realcugan-ncnn-vulkan",
+    "License": "MIT",
+    "Terms": "BE3C1F2B425CFE96D19292FA0AA683D55268A665B73D08535C38B0283961340E",
+    "Basic": false,
+    "Source": "https://github.com/nihui/realcugan-ncnn-vulkan"
+  },
+  {
+    "Ru": "Официальные веса и исполняемые файлы загружаются по выбору пользователя. Проверены источник и SHA-256 точного пакета. Действуют оригинальные лицензии кода и вложенных библиотек; отдельной лицензии для каждого файла весов авторы не опубликовали. Результат ИИ может менять мелкие детали.",
+    "Texts": [
+      "texts/image-utility-swinir_LICENSE",
+      "texts/image-utility-swin-transformer_LICENSE",
+      "texts/image-utility-kair_LICENSE",
+      "texts/image-utility-pillow_LICENSE"
+    ],
+    "Version": "v0.0-df2k",
+    "Id": "image-utility-swinir",
+    "Checked": "2026-10-04",
+    "En": "Official weights and executables are downloaded when selected. Exact package origin and SHA-256 verified. Original code and bundled-library licenses apply; the authors did not publish a separate license for every weight file. AI output may alter small details.",
+    "Name": "SwinIR classical SR (DF2K x2/x3/x4/x8)",
+    "Delivery": "download",
+    "Author": "JingyunLiang/SwinIR",
+    "License": "Apache-2.0 / MIT / HPND",
+    "Terms": "5C4F1E594FF09539BA1CCE056FA3D6FD0AE17241F488940A1780C1AC61F3C6A5",
+    "Basic": false,
+    "Source": "https://github.com/JingyunLiang/SwinIR"
+  },
+  {
+    "Id": "builtin.image-utility-swinir-network",
+    "Name": "SwinIR network architecture",
+    "Version": "6545850fbf8df298df73d81f3e8cba638787c8bd",
+    "Author": "Jingyun Liang; Ze Liu; Microsoft",
+    "License": "Apache-2.0 / MIT",
+    "Source": "https://github.com/JingyunLiang/SwinIR",
+    "Checked": "2026-10-04",
+    "Ru": "Архитектура SwinIR включена в приложение. Сохранены оригинальные лицензии; в коде отмечена замена вспомогательного импорта timm на эквивалентные функции для выполнения модели.",
+    "En": "The SwinIR architecture is included in the application. Original licenses are retained; source notes the replacement of timm helper imports with equivalent inference helpers.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "2F946E213850B2774DBCE5F26A6308EBB83F5ADD13DF687164ABF2F10099B947",
+    "Texts": [
+      "texts/image-utility-swinir_LICENSE",
+      "texts/image-utility-swin-transformer_LICENSE",
+      "texts/image-utility-kair_LICENSE"
+    ]
   }
 ]
