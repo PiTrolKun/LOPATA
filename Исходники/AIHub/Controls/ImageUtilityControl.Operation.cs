@@ -20,7 +20,7 @@ public sealed partial class ImageUtilityControl
         var pending = HasPendingOperation();
         if (_walker is not null) _walker.Running = _busy && !paused;
         if (_start is not null) _start.IsEnabled = !IsBusy && !pending && _job.Items.Any(x => x.Status == ImageUtilityItemStatus.Pending);
-        if (_pause is not null) { _pause.IsEnabled = pending; _pause.Content = L(paused ? "Continue" : "Pause"); }
+        if (_pause is not null) { _pause.IsEnabled = pending; _pause.Content = paused ? "▶" : "⏸"; _pause.ToolTip = L(paused ? "Continue" : "Pause"); System.Windows.Automation.AutomationProperties.SetName(_pause, L(paused ? "Continue" : "Pause")); }
         if (_stop is not null) _stop.IsEnabled = IsBusy || pending;
         if (_retry is not null) _retry.IsEnabled = !IsBusy && !pending && _job.Items.Any(x => x.Status is ImageUtilityItemStatus.Failed or ImageUtilityItemStatus.Cancelled);
         if (_primaryPanel is not null) _primaryPanel.IsEnabled = !IsBusy && !pending;

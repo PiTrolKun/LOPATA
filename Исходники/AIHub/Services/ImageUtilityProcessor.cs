@@ -170,11 +170,10 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
                 || (resultInfo.Frames != info.Frames && format.Id is not ("psd" or "psb" or "fits")))
                 throw new ImageUtilityException("ImageUtility.Error.ResultDimensions", retryable: true);
             token.ThrowIfCancellationRequested();
-            var desiredName = SafeFileName(string.IsNullOrWhiteSpace(options.CustomName)
-                ? Path.GetFileNameWithoutExtension(item.DisplayName) : options.CustomName);
+            var desiredName = SafeFileName(ImageUtilityNaming.CreateStem(item, options));
             await using (var resultStream = File.OpenRead(temporaryOutput))
                 item.PreparedOutputSha256 = Convert.ToHexString(await SHA256.HashDataAsync(resultStream, token));
-            var output = CommitWithoutOverwrite(temporaryOutput, folder, desiredName, format.Extension, item, checkpoint);
+            var output = CommitWithoutOverwrite(temporaryOutput, folder, desiredName, format.Extension, item, checkpoint, options.NamingMode is "series" or "date");
             item.OutputPath = output;
             return output;
         }
@@ -249,11 +248,12 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
     }
 
     private static string CommitWithoutOverwrite(string temporary, string folder, string name, string extension,
-        ImageUtilityItem item, Action? checkpoint)
+        ImageUtilityItem item, Action? checkpoint, bool numbered = false)
     {
         for (var index = 0; ; index++)
         {
-            var suffix = index == 0 ? "" : "_" + index.ToString("D4", CultureInfo.InvariantCulture);
+            var suffix = numbered ? "_" + (index + 1).ToString("D4", CultureInfo.InvariantCulture)
+                : index == 0 ? "" : "_" + index.ToString("D4", CultureInfo.InvariantCulture);
             var destination = Path.Combine(folder, name + suffix + "." + extension);
             if (File.Exists(destination)) continue;
             item.PlannedOutputPath = destination;

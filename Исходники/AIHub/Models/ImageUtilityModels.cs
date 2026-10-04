@@ -14,6 +14,7 @@ public sealed class ImageUtilityOptions
     public bool PreserveTransparency { get; set; } = true;
     public double Sharpen { get; set; }
     public string CustomName { get; set; } = "";
+    public string NamingMode { get; set; } = "legacy";
     public string ExportFolder { get; set; } = "";
     public bool IncludeSubfolders { get; set; }
     public Dictionary<string, string> Parameters { get; set; } = new(StringComparer.OrdinalIgnoreCase);
@@ -56,6 +57,8 @@ public sealed class ImageUtilityPreferences
     public string FavoriteMethodId { get; set; } = "lanczos3";
     public ImageUtilityOptions Options { get; set; } = new();
     public long LastProcessNumber { get; set; }
+    public double SettingsHeight { get; set; } = 300;
+    public double InformationWidth { get; set; } = 310;
 }
 
 public sealed record ImageUtilityMethod(string Id, string NameKey, string DescriptionKey, bool IsAi);

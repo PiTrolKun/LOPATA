@@ -17,30 +17,51 @@ public sealed partial class ImageUtilityControl
     private void RenderPrimarySettings(StackPanel panel)
     {
         panel.Children.Clear(); panel.Children.Add(ImageUtilityUi.Text(L("Title"), true));
+        ResetSettingsFlow(panel);
         var method = ActionButton("ChooseMethod", ChooseMethodAsync);
         method.Content = L(ImageUtilityCatalog.GetMethod(Options.MethodId).NameKey) + "  ▾";
-        method.IsEnabled = !Options.FormatOnly && !IsBusy && !HasPendingOperation(); panel.Children.Add(method);
+        var longest = ImageUtilityCatalog.Methods.Max(x => new System.Windows.Media.FormattedText(L(x.NameKey) + "  ▾", CultureInfo.CurrentCulture,
+            System.Windows.FlowDirection.LeftToRight, new System.Windows.Media.Typeface(method.FontFamily, method.FontStyle, method.FontWeight, method.FontStretch),
+            method.FontSize, System.Windows.Media.Brushes.Black, System.Windows.Media.VisualTreeHelper.GetDpi(this).PixelsPerDip).Width);
+        method.Width = longest + 32; method.Margin = new(0, 0, 0, 4); method.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+        method.IsEnabled = !Options.FormatOnly && !IsBusy && !HasPendingOperation(); var methodGroup = SettingGroup(panel); methodGroup.MinWidth = method.Width; methodGroup.Children.Add(method);
         Check(panel, "FormatOnly", Options.FormatOnly, value => { Options.FormatOnly = value; SavePreferences(); RenderPrimarySettings(panel); RenderMethodSettings(); RefreshRows(); });
+        EndSettingsFlow(panel);
         Choice(panel, "Resolution", Options.Preset.ToString(CultureInfo.InvariantCulture),
             [new("360", "360"), new("720", "720"), new("1080", "1080"), new("2160", "4K"), new("4320", "8K")],
             value => { Options.Preset = int.Parse(value, CultureInfo.InvariantCulture); SavePreferences(); RefreshRows(); }, !Options.FormatOnly);
-        panel.Children.Add(ImageUtilityUi.Text(L("ResolutionHint")));
+        SettingHint(panel, "ResolutionHint");
         var available = _formats;
         Choice(panel, "Format", Options.Format, available.Select(x => new ImageUtilityUi.Choice(x.Id, x.Id.ToUpperInvariant())).ToArray(),
             value => { Options.Format = value; SavePreferences(); RenderMethodSettings(); }, available.Count > 0);
-        if (available.Count == 0) panel.Children.Add(ImageUtilityUi.Text(L("CheckingFormats")));
+        if (available.Count == 0) SettingHint(panel, "CheckingFormats");
+        EndSettingsFlow(panel);
         var folder = ImageUtilityUi.Input(Options.ExportFolder, "ExportFolder");
-        panel.Children.Add(ImageUtilityUi.Text(L("ExportFolder"))); panel.Children.Add(folder);
+        panel.Children.Add(ImageUtilityUi.Text(L("ExportFolder"))); var folderRow = new DockPanel();
         folder.LostKeyboardFocus += (_, _) => { Options.ExportFolder = folder.Text.Trim(); SavePreferences(); };
-        panel.Children.Add(ActionButton("ChooseOutputFolder", () =>
+        var pickFolder = ActionButton("ChooseOutputFolder", () =>
         {
             var picker = new Microsoft.Win32.OpenFolderDialog { Title = L("ChooseOutputFolder"), InitialDirectory = Directory.Exists(Options.ExportFolder) ? Options.ExportFolder : "" };
             if (picker.ShowDialog(Window.GetWindow(this)) == true) { Options.ExportFolder = picker.FolderName; folder.Text = picker.FolderName; SavePreferences(); }
-        }));
-        panel.Children.Add(ImageUtilityUi.Text(L("CustomName")));
-        var name = ImageUtilityUi.Input(Options.CustomName, "CustomName"); panel.Children.Add(name);
-        name.LostKeyboardFocus += (_, _) => { Options.CustomName = name.Text.Trim(); SavePreferences(); };
-        panel.Children.Add(ImageUtilityUi.Text(L("CustomNameHint")));
+        });
+        pickFolder.ToolTip = L("ChooseOutputFolder"); AutomationProperties.SetName(pickFolder, L("ChooseOutputFolder"));
+        pickFolder.Content = "📁"; pickFolder.Width = 42; DockPanel.SetDock(pickFolder, Dock.Right); folderRow.Children.Add(pickFolder); folderRow.Children.Add(folder); panel.Children.Add(folderRow);
+        if (Options.NamingMode == "legacy" && _job.Items.Count == 0 && _job.OutputFolder is null)
+            Options.NamingMode = string.IsNullOrWhiteSpace(Options.CustomName) ? "original" : "series";
+        var namingModes = new List<string> { "original", "method", "series", "date" };
+        if (Options.NamingMode == "legacy") namingModes.Add("legacy");
+        Choice(panel, "Naming", Options.NamingMode, namingModes.Select(x => new ImageUtilityUi.Choice(x, L("Naming." + x))).ToArray(),
+            value => { Options.NamingMode = value; SavePreferences(); RenderPrimarySettings(panel); });
+        if (Options.NamingMode == "series" || Options.NamingMode == "legacy" && !string.IsNullOrWhiteSpace(Options.CustomName))
+        {
+            var group = SettingGroup(panel); group.Children.Add(ImageUtilityUi.Text(L("SeriesName")));
+            var name = ImageUtilityUi.Input(Options.CustomName, "CustomName"); group.Children.Add(name);
+            name.LostKeyboardFocus += (_, _) => { Options.CustomName = name.Text.Trim(); SavePreferences(); RenderPrimarySettings(panel); };
+        }
+        EndSettingsFlow(panel);
+        var example = ImageUtilityNaming.CreateStem(new() { DisplayName = "image.png" }, Options);
+        if (Options.NamingMode is "series" or "date") example += "_0001";
+        panel.Children.Add(ImageUtilityUi.Text(L("NameExample") + " " + ImageUtilityProcessor.SafeFileName(example) + "." + ImageUtilityFormats.Get(Options.Format).Extension));
         Check(panel, "Recursive", Options.IncludeSubfolders, value => { Options.IncludeSubfolders = value; SavePreferences(); });
         panel.IsEnabled = !IsBusy && !HasPendingOperation();
     }
@@ -49,6 +70,7 @@ public sealed partial class ImageUtilityControl
         if (_settingsPanel is null) return;
         _selectedAiReady = !ImageUtilityCatalog.GetMethod(Options.MethodId).IsAi || _ai.IsReady(Options.MethodId);
         var panel = _settingsPanel; panel.Children.Clear();
+        ResetSettingsFlow(panel);
         panel.Children.Add(ImageUtilityUi.Text(L("Settings"), true));
         if (!Options.FormatOnly)
         {
@@ -69,10 +91,10 @@ public sealed partial class ImageUtilityControl
                     Choice(panel, "IntegerScale", Parameter("integerScale", "0"),
                         new[] { new ImageUtilityUi.Choice("0", L("MatchResolution")) }.Concat(Enumerable.Range(2, 15).Select(x => new ImageUtilityUi.Choice(x.ToString(CultureInfo.InvariantCulture), "×" + x))).ToArray(),
                         value => { SetParameter("integerScale", value); RefreshRows(); });
-                    panel.Children.Add(ImageUtilityUi.Text(L("IntegerScaleHint"))); break;
+                    SettingHint(panel, "IntegerScaleHint"); break;
                 case "hq2x":
                     Choice(panel, "Passes", Parameter("passes", "1"), [new("1", "1 × HQ2x"), new("2", "2 × HQ2x")], value => SetParameter("passes", value));
-                    panel.Children.Add(ImageUtilityUi.Text(L("PassesHint"))); break;
+                    SettingHint(panel, "PassesHint"); break;
             }
             Number(panel, "Sharpen", Options.Sharpen.ToString(CultureInfo.InvariantCulture), "SharpenHint", 0, 3,
                 value => { Options.Sharpen = double.Parse(value, CultureInfo.InvariantCulture); SavePreferences(); });
@@ -82,7 +104,7 @@ public sealed partial class ImageUtilityControl
         if (Options.Format is "webp" or "jxl" or "avif")
         {
             Check(panel, "Lossless", Parameter("lossless", "false") == "true", value => { SetParameter("lossless", value ? "true" : "false"); RenderMethodSettings(); });
-            panel.Children.Add(ImageUtilityUi.Text(L("LosslessHint")));
+            SettingHint(panel, "LosslessHint");
         }
         if (Options.Format == "png")
             Number(panel, "PngCompression", Parameter("pngCompression", "6"), "PngCompressionHint", 0, 9,
@@ -92,7 +114,7 @@ public sealed partial class ImageUtilityControl
             Choice(panel, "TiffCompression", Parameter("tiffCompression", "lzw"),
                 new[] { "none", "lzw", "zip", "jpeg", "zstd", "webp" }.Select(value => new ImageUtilityUi.Choice(value, L("Compression." + value))).ToArray(),
                 value => SetParameter("tiffCompression", value));
-            panel.Children.Add(ImageUtilityUi.Text(L("TiffCompressionHint")));
+            SettingHint(panel, "TiffCompressionHint");
         }
         if (format?.HasQuality == true && !(Options.Format is "webp" or "jxl" or "avif" && Parameter("lossless", "false") == "true"))
             Number(panel, "Quality", Options.Quality.ToString(CultureInfo.InvariantCulture), "QualityHint", 1, 100,
@@ -101,67 +123,46 @@ public sealed partial class ImageUtilityControl
             Check(panel, "Transparency", Options.PreserveTransparency, value => { Options.PreserveTransparency = value; SavePreferences(); RenderMethodSettings(); });
         if (format?.SupportsAlpha != true || !Options.PreserveTransparency)
         {
-            panel.Children.Add(ImageUtilityUi.Text(L("Background")));
-            var background = ImageUtilityUi.Input(Options.BackgroundColor, "Background"); panel.Children.Add(background);
-            panel.Children.Add(ImageUtilityUi.Text(L("BackgroundHint")));
-            background.LostKeyboardFocus += (_, _) =>
-            {
-                if (System.Text.RegularExpressions.Regex.IsMatch(background.Text, "^#[0-9a-fA-F]{6}$")) { Options.BackgroundColor = background.Text; SavePreferences(); }
-                else { background.Text = Options.BackgroundColor; Error(new ImageUtilityException("ImageUtility.InvalidColor")); }
-            };
+            var group = SettingGroup(panel); group.Children.Add(ImageUtilityUi.Text(L("Background")));
+            var color = ActionButton("Background", () => { using var dialog = new System.Windows.Forms.ColorDialog { FullOpen = true, Color = System.Drawing.ColorTranslator.FromHtml(Options.BackgroundColor) };
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) { Options.BackgroundColor = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}"; SavePreferences(); RenderMethodSettings(); } });
+            color.Content = "■  " + Options.BackgroundColor; group.Children.Add(color); SettingHint(panel, "BackgroundHint");
         }
+        EndSettingsFlow(panel);
         panel.Children.Add(ActionButton("Recommended", () =>
         { Options.Parameters = ImageUtilityCatalog.RecommendedParameters(Options.MethodId); Options.Sharpen = 0; SavePreferences(); RenderMethodSettings(); RefreshRows(); }));
         panel.IsEnabled = !IsBusy && !HasPendingOperation();
     }
     private void Number(StackPanel panel, string label, string value, string description, double min, double max, Action<string> changed, bool integer = false)
     {
-        panel.Children.Add(ImageUtilityUi.Text(L(label)));
-        var input = ImageUtilityUi.Input(value, label); input.MaxWidth = 160; input.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-        panel.Children.Add(input); panel.Children.Add(ImageUtilityUi.Text(L(description)));
-        input.LostKeyboardFocus += (_, _) =>
-        {
-            if (double.TryParse(input.Text.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out var number)
-                && double.IsFinite(number) && number >= min && number <= max && (!integer || number == Math.Truncate(number)))
-            { value = number.ToString(CultureInfo.InvariantCulture); input.Text = value; changed(value); }
-            else { input.Text = value; Error(new ImageUtilityException("ImageUtility.InvalidNumber", $"{min}–{max}")); }
-        };
+        var group = SettingGroup(panel); group.Children.Add(ImageUtilityUi.Text(L(label)));
+        var row = new DockPanel(); var display = ImageUtilityUi.Text(""); display.MinWidth = 52; DockPanel.SetDock(display, Dock.Right); row.Children.Add(display);
+        var slider = new Slider { Minimum = min, Maximum = max, Value = double.Parse(value, CultureInfo.InvariantCulture),
+            TickFrequency = label == "Ai.SwinirTile" ? 8 : integer ? 1 : 0.01, IsSnapToTickEnabled = true, MinWidth = 120, Margin = new(0, 6, 8, 6) };
+        AutomationProperties.SetAutomationId(slider, "ImageUtility." + label); AutomationProperties.SetName(slider, L(label));
+        display.Text = slider.Value.ToString(integer ? "0" : "0.##", CultureInfo.CurrentCulture);
+        slider.ValueChanged += (_, _) => { display.Text = slider.Value.ToString(integer ? "0" : "0.##", CultureInfo.CurrentCulture); changed(slider.Value.ToString(CultureInfo.InvariantCulture)); };
+        row.Children.Add(slider); group.Children.Add(row); SettingHint(panel, description);
     }
     private void Check(StackPanel panel, string key, bool selected, Action<bool> changed)
     {
         var check = new CheckBox { Content = L(key), IsChecked = selected, Margin = new(0, 6, 0, 8) };
         AutomationProperties.SetAutomationId(check, "ImageUtility." + key);
-        check.Checked += (_, _) => changed(true); check.Unchecked += (_, _) => changed(false); panel.Children.Add(check);
+        check.Checked += (_, _) => changed(true); check.Unchecked += (_, _) => changed(false); SettingGroup(panel).Children.Add(check);
     }
     private void Choice(StackPanel panel, string key, string selected, ImageUtilityUi.Choice[] choices, Action<string> changed, bool enabled = true)
     {
-        panel.Children.Add(ImageUtilityUi.Text(L(key)));
+        var group = SettingGroup(panel); group.Children.Add(ImageUtilityUi.Text(L(key)));
         var combo = new ComboBox { ItemsSource = choices, SelectedItem = choices.FirstOrDefault(x => x.Id == selected), MinHeight = 32, Margin = new(0, 0, 0, 5), IsEnabled = enabled };
         AutomationProperties.SetAutomationId(combo, "ImageUtility." + key);
         combo.SelectionChanged += (_, _) => { if (combo.SelectedItem is ImageUtilityUi.Choice option) changed(option.Id); };
-        panel.Children.Add(combo);
+        combo.HorizontalAlignment = System.Windows.HorizontalAlignment.Left; combo.MinWidth = 96; combo.MaxWidth = 250;
+        group.Children.Add(combo);
     }
     private string Parameter(string key, string fallback) => Options.Parameters.GetValueOrDefault(key, fallback);
     private void RenderAiSettings(StackPanel panel)
     {
-        foreach (var setting in ImageUtilityAiCatalog.Settings(Options.MethodId))
-        {
-            var title = L(setting.NameKey); if (setting.Experimental) title += " · " + L("Advanced");
-            if (setting.Choices is { } choices)
-            {
-                var options = choices.Select(value => new ImageUtilityUi.Choice(value,
-                    double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out _) ? value : L("Ai.Value." + value))).ToArray();
-                Choice(panel, setting.NameKey, Parameter(setting.Key, setting.DefaultValue), options, value => SetParameter(setting.Key, value));
-                if (setting.Experimental) panel.Children.Add(ImageUtilityUi.Text(L("Advanced")));
-            }
-            else
-            {
-                panel.Children.Add(ImageUtilityUi.Text(title));
-                var input = ImageUtilityUi.Input(Parameter(setting.Key, setting.DefaultValue), "Ai." + setting.Key); panel.Children.Add(input);
-                input.LostKeyboardFocus += (_, _) => SetParameter(setting.Key, input.Text.Trim());
-            }
-            panel.Children.Add(ImageUtilityUi.Text(L(setting.DescriptionKey)));
-        }
+        RenderCompactAiSettings(panel);
     }
     private void SetParameter(string key, string value) { Options.Parameters[key] = value; SavePreferences(); }
     private async Task ChooseMethodAsync()

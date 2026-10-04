@@ -58,7 +58,7 @@ public sealed class ImageUtilityIntegrationTests
         {
             control.Configure(l.T, new StorageSettings(), 4, _root);
             await WaitFor(() => Element<ComboBox>(control, "Format").Items.Count > 0);
-            Assert.AreEqual("5", Element<TextBox>(control, "DetailRange").Text);
+            Assert.AreEqual(5d, Element<Slider>(control, "DetailRange").Value);
             var tree = Element<TreeView>(control, "Sources");
             if (tree.Items.Count > 0) ((TreeViewItem)tree.Items[0]).IsSelected = true;
             Assert.AreEqual(0, Element<ListBox>(control, "Queue").Items.Count, "Navigation must not enqueue a source.");
@@ -67,9 +67,9 @@ public sealed class ImageUtilityIntegrationTests
             Assert.IsFalse(Element<Button>(control, "ChooseMethod").IsEnabled);
             Assert.IsFalse(Elements(control).Any(e => AutomationProperties.GetAutomationId(e) == "ImageUtility.Sharpen"));
             Element<CheckBox>(control, "FormatOnly").IsChecked = false;
-            Assert.AreEqual("5", Element<TextBox>(control, "DetailRange").Text);
+            Assert.AreEqual(5d, Element<Slider>(control, "DetailRange").Value);
             control.Localize(l.T);
-            Assert.AreEqual("5", Element<TextBox>(control, "DetailRange").Text);
+            Assert.AreEqual(5d, Element<Slider>(control, "DetailRange").Value);
             Assert.AreEqual("5", store.LoadPreferences().Options.Parameters["lobes"]);
             Assert.IsTrue(Element<RichTextBox>(control, "Events").IsReadOnly);
             control.Measure(new Size(width, height)); control.Arrange(new Rect(0, 0, width, height)); control.UpdateLayout();
@@ -128,6 +128,123 @@ public sealed class ImageUtilityIntegrationTests
             Assert.IsTrue(File.Exists(job.Items[0].OutputPath));
         }
         finally { ApplicationBackgroundOperations.Current = previousController; control.DisposeRuntime(); }
+    });
+
+    [TestMethod]
+    public Task CompactSettingsRenderAllMethodsAndRestrictAiCombinations() => OnUi(async () =>
+    {
+        var l = new LocalizationService(); l.Load("ru");
+        foreach (var method in ImageUtilityCatalog.Methods)
+        {
+            var store = new ImageUtilityStore(Path.Combine(_root, method.Id));
+            store.SavePreferences(new() { FavoriteMethodId = method.Id, Options = new() { MethodId = method.Id, Parameters = ImageUtilityCatalog.RecommendedParameters(method.Id) } });
+            using var ai = new ImageUtilityAiService(new ManagedModelLibraryStore(Path.Combine(_root, "models")));
+            var control = new ImageUtilityControl(store, ai); Theme(control, true);
+            try
+            {
+                control.Configure(l.T, new StorageSettings(), 4, _root);
+                await WaitFor(() => Element<ComboBox>(control, "Format").Items.Count > 0);
+                control.Measure(new Size(1500, 900)); control.Arrange(new Rect(0, 0, 1500, 900)); control.UpdateLayout();
+                Assert.IsTrue(Element<Button>(control, "Start").ToolTip is string);
+                Assert.IsTrue(Elements(control).OfType<System.Windows.Controls.Primitives.Thumb>().Any(x => x.Cursor == System.Windows.Input.Cursors.SizeAll));
+                if (method.Id == "real-cugan")
+                {
+                    var model = Element<ComboBox>(control, "ImageUtility.Ai.CuganModel");
+                    model.SelectedIndex = 2;
+                    Assert.AreEqual("2", Job(control).Options.Parameters["scale"]);
+                    Assert.AreEqual("0", Job(control).Options.Parameters["noise"]);
+                    Assert.AreEqual("0", Job(control).Options.Parameters["syncgap"]);
+                }
+                if (method.Id == "lanczos3")
+                {
+                    Element<Slider>(control, "DetailRange").Value = 6;
+                    Assert.AreEqual("6", store.LoadPreferences().Options.Parameters["lobes"]);
+                    var grip = Elements(control).OfType<System.Windows.Controls.Primitives.Thumb>().Single(x => x.Cursor == System.Windows.Input.Cursors.SizeAll);
+                    grip.RaiseEvent(new System.Windows.Controls.Primitives.DragDeltaEventArgs(20, 20) { RoutedEvent = System.Windows.Controls.Primitives.Thumb.DragDeltaEvent });
+                    control.UpdateLayout();
+                    grip.RaiseEvent(new System.Windows.Controls.Primitives.DragCompletedEventArgs(20, 20, false) { RoutedEvent = System.Windows.Controls.Primitives.Thumb.DragCompletedEvent });
+                    Assert.IsTrue(store.LoadPreferences().SettingsHeight > 300);
+                    Assert.IsTrue(store.LoadPreferences().InformationWidth < 310);
+                }
+                control.UpdateLayout(); Preview(control, "method-" + method.Id, 1500, 900, true);
+            }
+            finally { control.DisposeRuntime(); }
+        }
+    });
+
+    [TestMethod]
+    public Task SettingsWrappingRemainsStableAcrossScrollbarThresholds() => OnUi(async () =>
+    {
+        var store = new ImageUtilityStore(Path.Combine(_root, "resize-stability"));
+        store.SavePreferences(new() { Options = new() { MethodId = "lanczos3", Format = "webp", Parameters = new() { ["lossless"] = "true" } } });
+        var l = new LocalizationService(); l.Load("ru");
+        using var ai = new ImageUtilityAiService(new ManagedModelLibraryStore(Path.Combine(_root, "models")));
+        var control = new ImageUtilityControl(store, ai); Theme(control, true);
+        try
+        {
+            control.Configure(l.T, new StorageSettings(), 4, _root);
+            await WaitFor(() => Element<ComboBox>(control, "Format").Items.Count > 0);
+            var root = (Grid)control.Content;
+            foreach (var width in Enumerable.Range(0, 17).Select(x => 1700 + x * 25))
+                foreach (var height in new[] { 250d, 290d, 330d, 370d })
+                {
+                    root.RowDefinitions[0].Height = new GridLength(height);
+                    control.Measure(new Size(width, 900)); control.Arrange(new Rect(0, 0, width, 900)); control.UpdateLayout();
+                    await Dispatcher.CurrentDispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle);
+                    var flows = Elements(control).OfType<WrapPanel>().ToArray();
+                    var sizes = flows.Select(x => x.RenderSize).ToArray();
+                    for (var cycle = 0; cycle < 3; cycle++)
+                    {
+                        control.UpdateLayout();
+                        await Dispatcher.CurrentDispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle);
+                        for (var index = 0; index < flows.Length; index++)
+                            Assert.AreEqual(sizes[index], flows[index].RenderSize, $"Wrapping oscillated at width {width}, settings height {height}.");
+                    }
+                }
+        }
+        finally { control.DisposeRuntime(); }
+    });
+
+    [TestMethod]
+    public Task DeviceButtonOpensAndSavesSingleAndMultipleSelection() => OnUi(async () =>
+    {
+        var l = new LocalizationService(); l.Load("ru");
+        foreach (var method in new[] { "swinir", "real-esrgan", "real-cugan" })
+        {
+            var store = new ImageUtilityStore(Path.Combine(_root, "device-dialog-" + method));
+            store.SavePreferences(new() { FavoriteMethodId = method, Options = new() { MethodId = method, Parameters = ImageUtilityCatalog.RecommendedParameters(method) } });
+            using var ai = new ImageUtilityAiService(new ManagedModelLibraryStore(Path.Combine(_root, "models")));
+            var control = new ImageUtilityControl(store, ai); Theme(control, true);
+            try
+            {
+                control.Configure(l.T, new StorageSettings(), 4, _root);
+                await WaitFor(() => Element<ComboBox>(control, "Format").Items.Count > 0);
+                foreach (var expected in method == "swinir" ? new[] { "cpu", "cpu" } : new[] { "auto" })
+                {
+                    var result = new TaskCompletionSource<SelectionMode>();
+                    Dispatcher.CurrentDispatcher.BeginInvoke(() =>
+                    {
+                        Window? dialog = null;
+                        try
+                        {
+                            dialog = PresentationSource.CurrentSources.Cast<PresentationSource>().Select(x => x.RootVisual).OfType<Window>()
+                                .Single(x => x.IsVisible && x.Title == l.T("ImageUtility.SelectDevices"));
+                            var list = Elements(dialog).OfType<ListBox>().Single();
+                            if (list.SelectedItem is null) throw new InvalidOperationException("Current device was not selected.");
+                            if (method == "swinir") list.SelectedItem = list.Items.Cast<object>()
+                                .Single(x => x.GetType().GetProperty("Id")!.GetValue(x)?.ToString() == expected);
+                            Element<Button>(dialog, "ApplyDevices").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                            result.SetResult(list.SelectionMode);
+                        }
+                        catch (Exception error) { dialog?.Close(); result.SetException(error); }
+                    }, DispatcherPriority.Background);
+                    Element<Button>(control, "SelectDevices").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.AreEqual(method == "swinir" ? SelectionMode.Single : SelectionMode.Multiple, await result.Task);
+                    Assert.AreEqual(expected, store.LoadPreferences().Options.Parameters["device"]);
+                }
+            }
+            finally { control.DisposeRuntime(); }
+        }
     });
 
     private static Task Invoke(object control, string name, params object[] arguments) => (Task)control.GetType()
