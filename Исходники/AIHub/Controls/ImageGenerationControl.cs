@@ -22,7 +22,7 @@ public sealed partial class ImageGenerationControl : UserControl
     private string _modelsRoot = "", _resultsRoot = "", _modelId = "z-image", _prompt = "", _statusText = "";
     private string? _sessionDirectory;
     private string? _statusKey;
-    private static readonly string[] StatusKeys = ["Ready", "Generating", "Paused", "Canceled", "Verifying", "FolderRequired", "Preparation.Ready", "Preparation.NeedsDownload"];
+    private static readonly string[] StatusKeys = ["Ready", "Generating", "Paused", "Canceled", "Verifying", "FolderRequired", "Preparation.Ready", "Preparation.NeedsDownload", "PromptWorking", "PromptReady", "PromptCoreMissing", "ReferenceWorking", "ReferenceReady", "ReferenceRetry", "ReferenceNotReady"];
     private int _page, _width = 2048, _height = 2048, _count = 1;
     private bool _busy;
     private CancellationTokenSource? _cancel;
@@ -30,10 +30,12 @@ public sealed partial class ImageGenerationControl : UserControl
     private TextBox? _promptBox;
     private ImageGenerationSettings _settings = new();
     private Action? _saveSettings;
+    private Func<string?> _metadataAuthor = () => null;
     public event Action? WorkspaceChanged;
     public bool IsChat => _page == 2;
     public bool CanChangeModel => !_busy && !HasPendingGeneration();
     public void ConfigureOutput(ImageGenerationSettings settings, Action save) { _settings = settings; _saveSettings = save; }
+    public void ConfigureMetadata(Func<string?> author) => _metadataAuthor = author;
     public ImageGenerationControl() : this(new(), new()) { }
     public ImageGenerationControl(ImageGenerationInstallation installation, ImageGenerationRuntime runtime)
     {
@@ -60,13 +62,13 @@ public sealed partial class ImageGenerationControl : UserControl
     }
     public void Localize(Func<string, string> localize, string language = "ru") { _l = localize; _languageCode = language; if (_statusKey is not null) _statusText = L(_statusKey); Render(); }
     public void DownloadConnections(int value) => _installation.MaximumParallelConnections = value;
-    public bool UsesArtifact(string id) => _busy && ImageGenerationCatalog.Get(_modelId).Components.Contains(id);
+    public bool UsesArtifact(string id) => _busy && (ImageGenerationCatalog.Get(_modelId).Components.Contains(id) || id == ManagedModelCatalog.OmniBetaArtifactId);
     public void RefreshBackgroundStatus()
     {
-        if (ApplicationBackgroundOperations.Current?.State is { Kind: ImageGenerationCatalog.BackgroundKind } state && _busy)
+        if (ApplicationBackgroundOperations.Current?.State is { } state && IsGenerationOperation(state.Kind) && _busy)
         {
             if (state.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting) Status(L("Paused"));
-            else if (state.Phase == BackgroundOperationPhase.Running) Status(L("Generating"));
+            else if (state.Phase == BackgroundOperationPhase.Running) Status(L(IsReferenceOperation ? "ReferenceWorking" : IsPromptOperation ? "PromptWorking" : "Generating"));
         }
         if (_page == 2)
         {
@@ -96,7 +98,6 @@ public sealed partial class ImageGenerationControl : UserControl
     private void Render()
     {
         if (_promptBox is not null) _prompt = _promptBox.Text;
-        _promptBox = null;
         WorkspaceChanged?.Invoke();
         var panel = new StackPanel { Margin = new Thickness(12) };
         panel.Children.Add(Text(L("Title"), true));
@@ -127,7 +128,7 @@ public sealed partial class ImageGenerationControl : UserControl
     private Task CancelAsync()
     {
         _cancel?.Cancel();
-        if (ApplicationBackgroundOperations.Current is { IsRunning: false, State.Kind: ImageGenerationCatalog.BackgroundKind } controller)
+        if (ApplicationBackgroundOperations.Current is { IsRunning: false, State: { } state } controller && IsGenerationOperation(state.Kind))
             controller.DiscardPending();
         return Task.CompletedTask;
     }

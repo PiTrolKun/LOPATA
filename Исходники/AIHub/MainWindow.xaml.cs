@@ -216,6 +216,7 @@ public partial class MainWindow : Window
         SetBrush("TextSecondaryBrush", _isDarkTheme ? "#AAB4C4" : "#5D6470");
         SetBrush("StepBadgeBrush", _isDarkTheme ? "#1E3A5F" : "#EAF1FF");
         SetBrush("SecondaryButtonBackgroundBrush", _isDarkTheme ? "#111827" : "#F8F8F8");
+        Controls.LiterarySpellChecking.ApplyMenuTheme(Resources);
 
         RootWindow.Background = (Media.Brush)Resources["WindowBackgroundBrush"];
         ProfileButton.Foreground = (Media.Brush)Resources["TextPrimaryBrush"];

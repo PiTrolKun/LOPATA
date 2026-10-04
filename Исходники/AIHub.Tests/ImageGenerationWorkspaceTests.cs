@@ -75,6 +75,7 @@ public sealed class ImageGenerationWorkspaceTests
         var localizer = new LocalizationService(); localizer.Load("ru");
         var control = new ImageGenerationControl(installer, new()); control.Configure(localizer.T, new StorageSettings { Models = new() { Locations = [new() { Path = request.ModelsRoot }] } }, 4);
         control.ConfigureOutput(new() { Folder = request.OutputFolder }, () => { }); control.Restore(request.SessionDirectory);
+        var profileName = "  Автор из профиля  "; control.ConfigureMetadata(() => profileName);
         var gateEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var oldGate = ComponentLicenseGate.ConfirmAsync;
         ComponentLicenseGate.ConfirmAsync = async (_, token) => { gateEntered.TrySetResult(); await Task.Delay(Timeout.Infinite, token); };
@@ -88,6 +89,9 @@ public sealed class ImageGenerationWorkspaceTests
             input.RaiseEvent(enter); Assert.IsTrue(enter.Handled);
             await gateEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
             var turns = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns; Assert.HasCount(1, turns); Assert.AreEqual(request.Prompt, turns[0].Request.Prompt);
+            Assert.AreEqual("Автор из профиля", turns[0].Request.Metadata!.Author);
+            profileName = "Другое имя";
+            Assert.AreEqual("Автор из профиля", ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Single().Request.Metadata!.Author);
             var sent = Element<TextBox>(control, "Generation.SentPrompt." + turns[0].Request.Id); Assert.IsTrue(sent.IsReadOnly); Assert.AreEqual(request.Prompt, sent.Text);
             Assert.IsFalse(SpellCheck.GetIsEnabled(sent));
             Assert.AreEqual("", Element<TextBox>(control, "Generation.Prompt").Text);

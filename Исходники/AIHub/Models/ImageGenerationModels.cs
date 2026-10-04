@@ -13,12 +13,18 @@ public sealed record ImageGenerationRequest(string Id, string ModelId, string Pr
     public string OutputFolder { get; init; } = "";
     public DateTimeOffset? SubmittedAt { get; init; }
     public int FirstGenerationNumber { get; init; } = 1;
+    // Null for pre-metadata sessions: their existing PNG files remain untouched.
+    public ImageGenerationMetadataOptions? Metadata { get; init; }
+    // Zero preserves legacy delivery; the preset is fixed at submission time.
+    public int OutputLongestSide { get; init; }
 }
+public sealed record ImageGenerationMetadataOptions(string Author);
 public sealed record ImageGenerationResult(int Index, string FileName, long Seed, bool Reviewed = false)
 {
     public string? ExportPath { get; init; }
     public bool Exported { get; init; }
     public string? ExportError { get; init; }
+    public string? ProcessingError { get; init; }
 }
 public sealed record ImageGenerationTurn(ImageGenerationRequest Request, ImageGenerationResult[] Results);
 public sealed record ImageGenerationSession(string Id, ImageGenerationTurn[] Turns);

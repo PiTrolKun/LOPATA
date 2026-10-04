@@ -23,20 +23,29 @@ public sealed partial class ImageGenerationControl
             Height = _inputHeight, Margin = new Thickness(0, 12, 0, 6), Padding = new Thickness(12, 12, 8, 8) };
         frame.SetResourceReference(Border.BorderBrushProperty, "LineBrush"); frame.SetResourceReference(Border.BackgroundProperty, "PanelBrush");
         var grid = new Grid(); grid.ColumnDefinitions.Add(new()); grid.ColumnDefinitions.Add(new() { Width = new GridLength(40) });
-        _promptBox = new TextBox { Text = _prompt, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto, BorderThickness = new Thickness(0),
-            Background = Brushes.Transparent, Padding = new Thickness(0), IsEnabled = !_busy };
+        if (_promptBox is null)
+        {
+            _promptBox = new TextBox { Text = _prompt, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto, BorderThickness = new Thickness(0),
+                Background = Brushes.Transparent, Padding = new Thickness(0) };
+            _promptBox.TextChanged += (_, _) =>
+            {
+                _prompt = _promptBox.Text;
+                if (_promptPlaceholder is not null) _promptPlaceholder.Visibility = _prompt.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+            };
+            _promptBox.PreviewKeyDown += async (_, e) =>
+            {
+                if (e.Key != Key.Enter || (Keyboard.Modifiers & ModifierKeys.Shift) != 0) return;
+                e.Handled = true; await TryAction(SendAsync);
+            };
+        }
+        if (_promptBox.Parent is System.Windows.Controls.Panel previous) previous.Children.Remove(_promptBox);
+        _promptBox.IsEnabled = !_busy && !HasPendingGeneration();
         _promptBox.SetResourceReference(TextBox.ForegroundProperty, "TextPrimaryBrush");
         LiterarySpellChecking.Enable(_promptBox, _languageCode);
         AutomationProperties.SetAutomationId(_promptBox, "Generation.Prompt");
-        var placeholder = Text(L("PromptHint")); placeholder.IsHitTestVisible = false; placeholder.Margin = new Thickness(0); placeholder.Opacity = .55;
+        var placeholder = _promptPlaceholder = Text(L("PromptHint")); placeholder.IsHitTestVisible = false; placeholder.Margin = new Thickness(0); placeholder.Opacity = .55;
         placeholder.Visibility = _prompt.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-        _promptBox.TextChanged += (_, _) => placeholder.Visibility = _promptBox?.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
-        _promptBox.PreviewKeyDown += async (_, e) =>
-        {
-            if (e.Key != Key.Enter || (Keyboard.Modifiers & ModifierKeys.Shift) != 0) return;
-            e.Handled = true; await TryAction(SendAsync);
-        };
         grid.Children.Add(_promptBox); grid.Children.Add(placeholder);
         var send = Icon("Send", "➤", SendAsync, "Send", !_busy && !HasPendingGeneration());
         send.Padding = new Thickness(4); send.Margin = new Thickness(0); send.VerticalAlignment = VerticalAlignment.Bottom;
@@ -59,7 +68,7 @@ public sealed partial class ImageGenerationControl
     private FrameworkElement ComposerToolbar()
     {
         var toolbar = new WrapPanel(); var enabled = !_busy && !HasPendingGeneration();
-        toolbar.Children.Add(Icon("AttachLater", "📎", () => Task.CompletedTask, "Attach", false));
+        toolbar.Children.Add(Icon("ReferenceTitle", "📎", AttachReferenceAsync, "Attach", enabled && _referenceAnalyzer is not null));
         var ratio = Icon("AspectRatio", ImageGenerationDimensions.Ratio(_width, _height), () => Task.CompletedTask, "AspectRatio", enabled);
         ratio.Click += (_, _) =>
         {
@@ -85,7 +94,7 @@ public sealed partial class ImageGenerationControl
             }
             var custom = new MenuItem { Header = L("CustomSize") }; custom.Click += (_, _) => CustomSize(); menu.Items.Add(custom); ShowMenu(size, menu);
         }; toolbar.Children.Add(size);
-        toolbar.Children.Add(Icon("EnhanceLater", "✧", () => Task.CompletedTask, "Enhance", false));
+        toolbar.Children.Add(Icon("PromptAssistant", "✨", AssistPromptAsync, "Enhance", enabled && _promptAssistant is not null));
         toolbar.Children.Add(Icon("Another", "↻", RepeatSelectedAsync, "Another.0", enabled && SelectedRequest() is { } request && ImageGenerationCatalog.IsAvailable(request.ModelId)));
         var variants = Icon("Variants", "×" + _count, () => Task.CompletedTask, "Variants", enabled);
         variants.Click += (_, _) =>
@@ -93,7 +102,8 @@ public sealed partial class ImageGenerationControl
             var menu = new ContextMenu();
             foreach (var n in new[] { 1, 2, 3, 4 }) { var option = new MenuItem { Header = "×" + n }; option.Click += (_, _) => { _count = n; Render(); }; menu.Items.Add(option); }
             ShowMenu(variants, menu);
-        }; toolbar.Children.Add(variants); return toolbar;
+        }; toolbar.Children.Add(variants);
+        toolbar.Children.Add(OutputSizeButton(enabled)); return toolbar;
     }
 
     private void CustomSize()

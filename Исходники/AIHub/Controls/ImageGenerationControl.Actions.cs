@@ -27,7 +27,9 @@ public sealed partial class ImageGenerationControl
         var menu = new ContextMenu();
         foreach (var key in new[] { "Open", "Copy", "Save", "ShowInFolder", "CopyPrompt", "Another" })
         {
-            var item = new MenuItem { Header = L(key), IsEnabled = key != "Another" || (!_busy && !HasPendingGeneration() && ImageGenerationCatalog.IsAvailable(turn.Request.ModelId)) };
+            var enabled = key == "Another" ? !_busy && !HasPendingGeneration() && ImageGenerationCatalog.IsAvailable(turn.Request.ModelId)
+                : key == "CopyPrompt" || (result.ProcessingError is null && File.Exists(ImageGenerationOutput.PathFor(turn.Request, result.Index)));
+            var item = new MenuItem { Header = L(key), IsEnabled = enabled };
             System.Windows.Automation.AutomationProperties.SetAutomationId(item, "Generation.ImageAction." + key);
             item.Click += async (_, _) => await TryAction(() => ImageAction(key, turn, result)); menu.Items.Add(item);
         }
@@ -37,7 +39,7 @@ public sealed partial class ImageGenerationControl
     {
         if (key == "Another") return NewVariantAsync(turn.Request);
         if (key == "CopyPrompt") { Clipboard.SetText(turn.Request.Prompt); return Task.CompletedTask; }
-        var path = ImageGenerationSessionStore.ResultPath(turn.Request, result.Index);
+        var path = ImageGenerationOutput.PathFor(turn.Request, result.Index);
         if (!File.Exists(path)) throw new FileNotFoundException("Generation.MissingImage");
         if (key == "Save")
         {
@@ -62,8 +64,18 @@ public sealed partial class ImageGenerationControl
     }
     private async Task RetrySaveAsync(ImageGenerationTurn turn, ImageGenerationResult result)
     {
+        if (_busy || HasPendingGeneration()) return;
         if (!EnsureOutputFolder()) return;
-        await Task.Run(() => ImageGenerationExport.Save(turn.Request, result, _settings.Folder)); Render();
+        _busy = true; Render();
+        try
+        {
+            await Task.Run(() =>
+            {
+                var prepared = ImageGenerationOutput.Prepare(turn.Request, result, CancellationToken.None);
+                if (prepared.ProcessingError is null) ImageGenerationExport.Save(turn.Request, prepared, _settings.Folder);
+            });
+        }
+        finally { _busy = false; Render(); }
     }
     public void ClearWorkspace()
     {

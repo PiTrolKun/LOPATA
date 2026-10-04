@@ -75,6 +75,7 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
         IReadOnlyList<ManagedModelArtifactCard> cards, Action? changed, CancellationToken token)
     {
         ImageGenerationCatalog.Validate(request);
+        if (!ImageOutputDimensions.IsSupported(request.OutputLongestSide)) throw new ArgumentException("Generation.InvalidOutputSize");
         ImageGenerationSessionStore.AddTurn(request);
         var promptFile = Path.Combine(request.SessionDirectory, request.Id + ".input.txt");
         await File.WriteAllTextAsync(promptFile, request.Prompt, new UTF8Encoding(false), token);
@@ -84,8 +85,6 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
             var target = ImageGenerationSessionStore.ResultPath(request, i);
             var existing = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Single(t => t.Request.Id == request.Id);
             var previous = existing.Results.SingleOrDefault(r => r.Index == i);
-            if (previous is not null && IsValidImage(target, request))
-            { await Task.Run(() => ImageGenerationExport.Save(request, previous), token); continue; }
             // A pause may arrive after a valid PNG was published but before the checkpoint.
             if (!IsValidImage(target, request))
             {
@@ -94,11 +93,19 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
                 await _worker.GenerateAsync(request, i, cards, promptFile, partial, token);
                 token.ThrowIfCancellationRequested();
                 if (!IsValidImage(partial, request)) throw new InvalidDataException("Generation.InvalidImage");
+                if (request.Metadata is not null)
+                {
+                    var metadata = ImageGenerationMetadata.Create(request, i, DateTimeOffset.Now);
+                    await Task.Run(() => PngMetadataWriter.Write(partial, metadata, token), token);
+                }
+                token.ThrowIfCancellationRequested();
                 File.Move(partial, target, true);
             }
             var result = previous ?? new(i, Path.GetFileName(target), request.Seeds[i]);
-            ImageGenerationSessionStore.PutResult(request, result);
-            await Task.Run(() => ImageGenerationExport.Save(request, result), token);
+            if (previous is null) ImageGenerationSessionStore.PutResult(request, result);
+            result = await Task.Run(() => ImageGenerationOutput.Prepare(request, result, token), token);
+            if (result.ProcessingError is null)
+                await Task.Run(() => ImageGenerationExport.Save(request, result), token);
             ApplicationBackgroundOperations.Current?.SaveCheckpoint(new { request.Id, Completed = i + 1 });
             changed?.Invoke();
         }

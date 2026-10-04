@@ -16,11 +16,12 @@ public static class ImageGenerationExport
         {
             result = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Single(t => t.Request.Id == request.Id).Results.Single(r => r.Index == result.Index);
             var folder = retryFolder ?? request.OutputFolder;
-            if (string.IsNullOrWhiteSpace(folder) || (result.Exported && retryFolder is null)) return result;
-            var source = ImageGenerationSessionStore.ResultPath(request, result.Index);
+            if (result.ProcessingError is not null || string.IsNullOrWhiteSpace(folder) || (result.Exported && retryFolder is null)) return result;
+            var source = ImageGenerationOutput.PathFor(request, result.Index);
             string? temporary = null;
             try
             {
+                if (!ImageGenerationOutput.IsReady(request, result.Index)) throw new IOException("Generation.OutputNotReady");
                 if (!Path.IsPathFullyQualified(folder)) throw new IOException("Generation.FolderRequired");
                 Directory.CreateDirectory(folder);
                 var target = result.ExportPath;

@@ -16,6 +16,9 @@ public partial class ImageAnalysisBundleConfirmationControl : UserControl
     private ManagedModelDownloadProgress? _activeProgress;
     private bool _isBusy;
     private bool _hasHistory;
+    private bool _preparationWindow;
+
+    public void SetPreparationWindowMode() { _preparationWindow = true; ApplyLocalization(); }
 
     public ImageAnalysisBundleConfirmationControl()
     {
@@ -144,6 +147,11 @@ public partial class ImageAnalysisBundleConfirmationControl : UserControl
         CancelOperationButton.Content = _localize("Common.Cancel");
         BackToBundlesButton.Content = _localize("ImageAnalysis.Confirmation.BackToBundles");
         BackToWorkStartButton.Content = _localize("ImageAnalysis.Confirmation.BackToStart");
+        if (_preparationWindow)
+        {
+            BackToBundlesButton.Visibility = RemoveVisionButton.Visibility = ViewHistoryButton.Visibility = Visibility.Collapsed;
+            BackToWorkStartButton.Content = _localize("Common.Close");
+        }
         if (_activeProgress is not null)
         {
             UpdateProgress(_activeProgress);

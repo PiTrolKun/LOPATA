@@ -96,7 +96,7 @@ public sealed partial class ImageGenerationControl
         foreach (var old in turn.Results.Reverse())
         {
             if (turn == selected && old.Index == result?.Index) continue;
-            var path = ImageGenerationSessionStore.ResultPath(turn.Request, old.Index);
+            var path = ImageGenerationOutput.PathFor(turn.Request, old.Index);
             var thumb = new System.Windows.Controls.Button { Padding = new Thickness(3), Margin = new Thickness(0, 0, 0, 10),
                 HorizontalContentAlignment = HorizontalAlignment.Stretch, ToolTip = ImageGenerationCatalog.DisplayName(turn.Request.ModelId) + " · " + turn.Request.Prompt };
             thumb.Content = File.Exists(path) ? new Image { Source = ReadImage(path, 180), Stretch = Stretch.Uniform, MaxHeight = 155 } : Text(L("MissingImage"));
@@ -110,14 +110,28 @@ public sealed partial class ImageGenerationControl
 
     private void RenderCurrentImage(Grid panel, ImageGenerationTurn turn, ImageGenerationResult result)
     {
-        var path = ImageGenerationSessionStore.ResultPath(turn.Request, result.Index);
-        if (!File.Exists(path)) { panel.Children.Add(Text(L("MissingImage"))); return; }
+        var path = ImageGenerationOutput.PathFor(turn.Request, result.Index);
+        if (!File.Exists(path) || result.ProcessingError is not null)
+        {
+            var failure = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            failure.Children.Add(Text(L(result.ProcessingError is null ? "OutputNotReady" : "ProcessingFailed")));
+            if (result.ProcessingError is not null)
+            {
+                var detail = Text(result.ProcessingError.StartsWith("Generation.", StringComparison.Ordinal) ? _l(result.ProcessingError) : result.ProcessingError);
+                detail.FontSize = 12; failure.Children.Add(detail);
+            }
+            failure.Children.Add(Button("RetryProcessing", () => RetrySaveAsync(turn, result), "RetryProcessing." + result.Index, !_busy && !HasPendingGeneration()));
+            panel.Children.Add(failure); return;
+        }
         var image = new Image { Source = ReadImage(path), Stretch = Stretch.Uniform, ContextMenu = ImageMenu(turn, result) };
         AutomationProperties.SetAutomationId(image, "Generation.CurrentImage"); panel.Children.Add(image);
         image.MouseLeftButtonDown += async (_, e) => { if (e.ClickCount == 2) await TryAction(() => ImageAction("Open", turn, result)); };
         var footer = new StackPanel(); var actions = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center };
         foreach (var (key, symbol) in new[] { ("Open", "↗"), ("Copy", "▣"), ("Save", "⇩") }) actions.Children.Add(Icon(key, symbol, () => ImageAction(key, turn, result), key + "." + result.Index));
         footer.Children.Add(actions);
+        var size = ImageOutputDimensions.Fit(turn.Request.Width, turn.Request.Height, turn.Request.OutputLongestSide);
+        var dimensions = Text(L("OutputSize") + " · " + size.Width + "×" + size.Height);
+        dimensions.FontSize = 12; footer.Children.Add(dimensions);
         if (result.Exported)
         { var saved = Text(L("AutoSaved")); saved.FontSize = 12; saved.ToolTip = result.ExportPath; footer.Children.Add(saved); }
         else if (result.ExportError is not null)

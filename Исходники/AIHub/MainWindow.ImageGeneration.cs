@@ -7,9 +7,18 @@ namespace AIHub;
 public partial class MainWindow
 {
     private readonly ImageGenerationSettingsControl _generationSettings = new();
+    private ImagePromptAssistant? _imagePromptAssistant;
     private void ConfigureImageGeneration()
     {
+        ConfigureGenerationReferences();
+        _imagePromptAssistant ??= new(_userContextService);
+        GenerationPage.ConfigurePromptAssistant(_imagePromptAssistant, () =>
+        {
+            var check = _coreModelManager.Check(_storageSettings);
+            return check.Availability == AIHub.Models.CoreModelAvailability.Installed ? check.ModelPath : null;
+        });
         GenerationPage.ConfigureOutput(_appSettings.ImageGeneration, () => { _appSettingsStore.Save(_appSettings); RefreshGenerationSettings(); });
+        GenerationPage.ConfigureMetadata(() => _userProfile.DisplayName);
         GenerationPage.Configure(L, _storageSettings, _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0, _localizationService.CurrentLanguageCode);
     }
     private void RefreshGenerationSettings()
@@ -42,7 +51,11 @@ public partial class MainWindow
         ConfigureImageGeneration(); RefreshGenerationSettings();
         _backgroundOperations!.Register(ImageGenerationCatalog.BackgroundKind, async (state, token) =>
         { ConfigureImageGeneration(); await GenerationPage.ResumeAsync(state, token); });
+        _backgroundOperations.Register(ImagePromptAssistant.BackgroundKind, async (state, token) =>
+        { ConfigureImageGeneration(); await GenerationPage.ResumePromptAsync(state, token); });
+        _backgroundOperations.Register(ImageReferenceAnalyzer.BackgroundKind, async (state, token) =>
+        { ConfigureImageGeneration(); await GenerationPage.ResumeReferenceAsync(state, token); });
         _backgroundOperations.Changed += () => Dispatcher.BeginInvoke(GenerationPage.RefreshBackgroundStatus);
-        Closed += (_, _) => GenerationPage.DisposeRuntime();
+        Closed += (_, _) => { GenerationPage.DisposeRuntime(); _imagePromptAssistant?.Dispose(); _imageReferenceAnalyzer?.Dispose(); };
     }
 }

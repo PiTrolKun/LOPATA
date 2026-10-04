@@ -27,7 +27,7 @@ public sealed partial class ImageGenerationControl
             description.Children.Add(Text(L("Card." + model.Id + ".Cons")));
             description.Children.Add(Text(L("Card." + model.Id + ".Vram")));
             var card = new Button { Content = description, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                VerticalContentAlignment = VerticalAlignment.Top, Padding = new Thickness(20), Margin = new Thickness(0, 0, 18, 0), IsEnabled = !_busy };
+                VerticalContentAlignment = VerticalAlignment.Top, Padding = new Thickness(20), Margin = new Thickness(0, 0, 18, 0), IsEnabled = !_busy && !HasPendingGeneration() };
             AutomationProperties.SetAutomationId(card, "Generation.Model." + model.Id);
             card.Click += async (_, _) =>
             {

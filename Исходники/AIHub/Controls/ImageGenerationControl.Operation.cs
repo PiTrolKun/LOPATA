@@ -7,11 +7,12 @@ namespace AIHub.Controls;
 
 public sealed partial class ImageGenerationControl
 {
-    private bool HasPendingGeneration() => ApplicationBackgroundOperations.Current is { HasPending: true, State.Kind: ImageGenerationCatalog.BackgroundKind };
+    private static bool IsGenerationOperation(string kind) => kind is ImageGenerationCatalog.BackgroundKind or ImagePromptAssistant.BackgroundKind or ImageReferenceAnalyzer.BackgroundKind;
+    private bool HasPendingGeneration() => ApplicationBackgroundOperations.Current is { HasPending: true, State: { } state } && IsGenerationOperation(state.Kind);
     private async Task PauseResumeAsync()
     {
         var controller = ApplicationBackgroundOperations.Current;
-        if (controller?.State?.Kind != ImageGenerationCatalog.BackgroundKind) return;
+        if (controller?.State is not { } state || !IsGenerationOperation(state.Kind)) return;
         if (controller.State.Phase is BackgroundOperationPhase.Running or BackgroundOperationPhase.Pausing) await controller.PauseAsync();
         else await controller.ResumeAsync(ApplicationBackgroundOperations.ExitToken);
         RefreshBackgroundStatus();
@@ -31,7 +32,9 @@ public sealed partial class ImageGenerationControl
     private ImageGenerationRequest WithDelivery(ImageGenerationRequest request) => request with
     {
         OutputFolder = _settings.Folder, SubmittedAt = DateTimeOffset.Now,
-        FirstGenerationNumber = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Sum(t => t.Request.Seeds.Length) + 1
+        FirstGenerationNumber = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Sum(t => t.Request.Seeds.Length) + 1,
+        Metadata = new(ImageGenerationMetadata.Author(_metadataAuthor())),
+        OutputLongestSide = ImageOutputDimensions.Normalize(_settings.OutputLongestSide)
     };
     private async Task NewVariantAsync(ImageGenerationRequest previous)
     {

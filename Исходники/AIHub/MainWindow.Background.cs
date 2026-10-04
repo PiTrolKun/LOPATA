@@ -153,6 +153,15 @@ public partial class MainWindow
                 _backgroundOperations!.Acknowledge(notice.Id);
                 return;
             }
+            if (notice.Kind is ImagePromptAssistant.BackgroundKind or ImageReferenceAnalyzer.BackgroundKind)
+            {
+                RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage);
+                OpenImageGenerationScenario();
+                if (notice.Kind == ImageReferenceAnalyzer.BackgroundKind) GenerationPage.RestoreReferenceResult(notice);
+                else GenerationPage.RestorePromptResult(notice);
+                _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
             if (notice.Kind is ImageBackgroundWork.Kind or ImageBatchBackgroundKind or ImageSpeechBackgroundKind or ImagePreparationBackgroundKind)
             {
                 if (ViewBackgroundImageResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);
