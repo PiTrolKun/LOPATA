@@ -518,6 +518,13 @@
     "Source": "installer"
   },
   {
+    "Id": "runtime.music-yue2-vulkan",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "BD3D273A8D64B9AD66EC657363B7FC6A5F4ECFA0B645A843847CACAA2C9C84F4",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
     "Id": "builtin.music-genres",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "3789CDEE27E2C2A233B4D3F53C30E433352F8395987B7B93EBD9CA271B2B82C0",

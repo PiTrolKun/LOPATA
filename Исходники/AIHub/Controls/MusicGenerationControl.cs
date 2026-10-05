@@ -22,6 +22,7 @@ public sealed class MusicGenerationControl : UserControl
     private readonly TextBlock _heading = MusicAudioUi.Text(15), _titleLabel = MusicAudioUi.Text(12),
         _countLabel = MusicAudioUi.Text(12), _durationLabel = MusicAudioUi.Text(12), _readiness = MusicAudioUi.Text(11);
     private readonly Grid _settings = new();
+    private readonly TextBlock _hardware = MusicAudioUi.Text(11);
     private Func<string, string> _l = key => key;
     private bool _busy, _paused, _runtimeReady;
     public Func<Task>? StartPause { get; set; }
@@ -45,6 +46,8 @@ public sealed class MusicGenerationControl : UserControl
         var counts = new StackPanel { Margin = new(0, 4, 12, 0) }; counts.Children.Add(_countLabel); counts.Children.Add(_count);
         var durations = new StackPanel { Margin = new(0, 4, 0, 0) }; durations.Children.Add(_durationLabel); durations.Children.Add(_duration);
         choices.Children.Add(counts); choices.Children.Add(durations); Add(choices, 0, 3, 2);
+        _hardware.TextWrapping = TextWrapping.Wrap; Add(_hardware, 0, 4, 2);
+        AutomationProperties.SetAutomationId(_hardware, "Music.Generation.Hardware");
         _readiness.TextWrapping = TextWrapping.Wrap; _readiness.Margin = new(0, 8, 0, 0);
         Add(_readiness, 0, 5, 2); top.Children.Add(_settings);
         foreach (var value in Enumerable.Range(1, 8)) _count.Items.Add(value); _count.SelectedIndex = 0;
@@ -75,6 +78,7 @@ public sealed class MusicGenerationControl : UserControl
         _duration.SelectionChanged += (_, _) => OptionsChanged?.Invoke();
         Content = root; UpdateState(false, false, false, false);
     }
+    public void SetHardware(string text) => _hardware.Text = text;
 
     public void Localize(Func<string, string> localize)
     {

@@ -1,9 +1,14 @@
+## 0.4.1-dev — аппаратная поддержка музыки
+
+GPU-комплект YuE2 расширен: CUDA SM86/SM89/SM120 (RTX30/40/50) и Vulkan для совместимых видеокарт, включая AMD; отдельный CPU AVX2 остаётся запасным. При входе в сценарий и перед этапами проверяется свободная память с учётом весов этапа, KV, длительности и контекста. Короткие запросы не выделяют полный KV. При объективном сбое GPU допускается один повтор этапа на CPU с сохранением входов и seed; причина видна пользователю. Нехватка RAM и GPU памяти запрещает запуск. Intel Vulkan допускается по возможностям, физически не проверен. Подробности и границы проверок: [аппаратная поддержка YuE2](YuE2_аппаратная_поддержка.md).
+
 ## Восстановление музыкального комплекта для разработчика
 
 Исполнитель собирается из закреплённого yue2.cpp и GGML (ревизии ниже), MSVC x64,
 CMake/Ninja, Release. CPU: GGML_CUDA=OFF, GGML_NATIVE=OFF, GGML_AVX2=ON;
-CUDA: GGML_CUDA=ON, CMAKE_CUDA_ARCHITECTURES=89, CUDA Toolkit 12.8.1.
-Две программы yue-plan/yue-synth и DLL GGML размещаются в Runtime/Backends/yue2.cpp/
+GPU: GGML_CUDA=ON, GGML_VULKAN=ON, GGML_BACKEND_DL=ON, CMAKE_CUDA_ARCHITECTURES=86-real;89-real;120-real, CUDA Toolkit 12.8.1 и Vulkan SDK 1.4.363.0.
+Воспроизводимая команда: Инструменты/build-music-native.ps1 с явными путями средств сборки. Native probe хранится в Инструменты/MusicNative/yue-probe.cpp.
+Три программы yue-plan/yue-synth/yue-probe и DLL GGML размещаются в Runtime/Backends/yue2.cpp/
 11c1ecb084329200e22fcb286e252b847442ea5c/win-x64 и win-cuda128-x64.
 Windows manifest содержит activeCodePage=UTF-8. manifest.json содержит точные
 SHA-256 бинарников, SourceRevision, GgmlRevision, Architecture и Backend.

@@ -4037,7 +4037,7 @@
   "Cloud.Tag.music_status": "Music status",
   "Cloud.Description.music_status": "Actual YuE2 stages, elapsed time, violinist and log. Unknown overall progress is not replaced with a made-up percentage.",
   "About.Guide.MusicTitle": "Music · YuE2",
-  "About.Guide.Music": "Prepare components, enter lyrics or select instrumental mode, then choose your preferences. Stress accents and markers remain editable text; their accuracy requires practical testing. Title, variants and desired duration are on the right. The red button starts or pauses generation; the cross cancels it. Completed WAV files are saved separately in the selected folder and appear in the player. Repeat uses the saved request. Pausing unfinished synthesis restarts that stage; completed plans and tracks are retained. Poetry chat and rhyme improvement are not available yet.",
+  "About.Guide.Music": "Prepare components, enter lyrics or select instrumental mode, then choose your preferences. Stress accents and markers remain editable text; their accuracy requires practical testing. Title, variants and desired duration are on the right. The red button starts or pauses generation; the cross cancels it. Completed WAV files are saved separately in the selected folder and appear in the player. Repeat uses the saved request. Pausing unfinished synthesis restarts that stage; completed plans and tracks are retained. Poetry chat and rhyme improvement are not available yet. Available memory is checked on entry and before stages. Main settings show graphics card or processor and the CPU fallback reason. GPU paths include CUDA SM86/89/120 and compatible Vulkan devices; only RTX4090 has been physically tested. A GPU initialization or allocation failure retries the unfinished stage once on CPU with the same inputs.",
   "Music.Generation.Heading": "Main settings",
   "Music.Generation.Title": "Composition title",
   "Music.Generation.TitleHint": "Leave blank for an automatic title.",
@@ -4057,5 +4057,12 @@
   "Music.Generation.Failed": "Generation could not be completed.",
   "Music.Status.Paused": "Generation paused.",
   "Cloud.Tag.music_generation": "Music controls",
-  "Cloud.Description.music_generation": "Title, variants and duration; start, pause and cancel YuE2. Completed WAV files are saved separately."
+  "Cloud.Description.music_generation": "Title, variants and duration; start, pause and cancel YuE2. Completed WAV files are saved separately.",
+  "Music.Hardware.Gpu": "Graphics card",
+  "Music.Hardware.Cpu": "Processor",
+  "Music.Hardware.GpuMemory": "insufficient available graphics memory",
+  "Music.Hardware.Driver": "graphics driver needs updating",
+  "Music.Hardware.NoGpu": "compatible graphics card unavailable",
+  "Music.Hardware.GpuFailed": "graphics card could not execute the stage",
+  "Music.Hardware.MemoryLow": "Insufficient available memory for the current estimate. Try a shorter duration."
 }

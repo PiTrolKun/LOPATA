@@ -40,13 +40,13 @@ public interface IMusicYueWorker
 public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
 {
     public event Action<string>? Log;
+    public event Action<MusicHardwareChoice>? HardwareChanged;
     public async Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token)
     {
         request.Validate();
         await PrepareAsync(model, request, token);
         await WriteRequestAsync(requestPath, request, token);
-        await RunAsync("yue-plan.exe", ["--model", model, "--request", requestPath, "--out", planPath,
-            "--max-seq", MusicTextBudget.ContextSize.ToString(System.Globalization.CultureInfo.InvariantCulture)], token);
+        await RunStageAsync("yue-plan.exe", model, DecoderBesideModel(model), request, requestPath, planPath, false, token);
         var plan = await File.ReadAllTextAsync(planPath, Encoding.UTF8, token);
         if (string.IsNullOrWhiteSpace(plan) || new FileInfo(planPath).Length > 1_048_576)
             throw new InvalidDataException("YuE2 produced no usable musical plan.");
@@ -59,20 +59,45 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
         await PrepareAsync(model, request, token);
         await VerifyModelAsync(decoder, MusicComponentCatalog.DecoderId, token);
         await WriteRequestAsync(requestPath, request, token);
-        await RunAsync("yue-synth.exe", ["--model", model, "--vae", decoder, "--request", requestPath,
-            "--out", outputPath, "--max-seq", MusicTextBudget.ContextSize.ToString(System.Globalization.CultureInfo.InvariantCulture)], token);
+        await RunStageAsync("yue-synth.exe", model, decoder, request, requestPath, outputPath, true, token);
         _ = MusicWaveFile.ReadDuration(outputPath);
     }
     private async Task PrepareAsync(string model, MusicYueRequest request, CancellationToken token)
     {
         string[] components = MusicYueRuntime.IsCuda(runtimeDirectory)
-            ? [MusicYueRuntime.ComponentId, MusicYueRuntime.CudaComponentId, MusicComponentCatalog.ModelId, MusicComponentCatalog.DecoderId]
+            ? [MusicYueRuntime.ComponentId, MusicYueRuntime.CudaComponentId, MusicYueRuntime.VulkanComponentId, MusicComponentCatalog.ModelId, MusicComponentCatalog.DecoderId]
             : [MusicYueRuntime.ComponentId, MusicComponentCatalog.ModelId, MusicComponentCatalog.DecoderId];
         await ComponentLicenseGate.EnsureAsync(components, token);
         await MusicYueRuntime.VerifyAsync(runtimeDirectory, token);
         await VerifyModelAsync(model, MusicComponentCatalog.ModelId, token);
         if (!System.Runtime.Intrinsics.X86.Avx2.IsSupported) throw new PlatformNotSupportedException("This YuE2 CPU build requires AVX2.");
         await Task.Run(() => request.CheckContext(new MusicTokenizer(MusicTokenizerMetadata.Read(model, token)), token), token);
+    }
+    private static string DecoderBesideModel(string model)
+    {
+        // Cards retain their canonical installation layout; never guess a sibling file name.
+        var modelsRoot = Directory.GetParent(Path.GetDirectoryName(model)!)!.Parent!.Parent!.FullName;
+        var card = MusicComponentCatalog.CreateCards(modelsRoot).Single(c => c.ModelArtifactId == MusicComponentCatalog.DecoderId);
+        return Path.Combine(card.InstallDirectory, card.Files.Single().RelativePath);
+    }
+    private async Task RunStageAsync(string executable, string model, string decoder, MusicYueRequest request,
+        string requestPath, string outputPath, bool synthesis, CancellationToken token)
+    {
+        if (File.Exists(outputPath)) throw new IOException("Music stage output already exists.");
+        var choice = await MusicHardwareProbe.CheckAsync(runtimeDirectory, model, decoder, request, synthesis, token, line => Log?.Invoke(line));
+        await MusicGpuFallback.ExecuteAsync(choice, async selected =>
+        {
+            HardwareChanged?.Invoke(selected);
+            var directory = selected.Device.Backend == "CPU" ? MusicYueRuntime.DirectoryForPack(MusicYueRuntime.CpuPack) : runtimeDirectory;
+            await MusicYueRuntime.VerifyAsync(directory, token);
+            var temporary = outputPath + "." + Guid.NewGuid().ToString("N") + ".part";
+            var args = new List<string> { "--model", model, "--request", requestPath, "--out", temporary,
+                "--max-seq", selected.Demand.ContextTokens.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+            if (synthesis) { args.Add("--vae"); args.Add(decoder); }
+            try { await RunAsync(directory, selected.Device.Name, executable, args, token); File.Move(temporary, outputPath, false); }
+            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        }, async () => await MusicHardwareProbe.CheckAsync(runtimeDirectory, model, decoder, request, synthesis, token,
+            line => Log?.Invoke(line), "GpuFailed"), line => Log?.Invoke(line), token);
     }
     private static async Task VerifyModelAsync(string path, string id, CancellationToken token)
     {
@@ -90,13 +115,14 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
         await stream.FlushAsync(token);
         stream.Flush(flushToDisk: true);
     }
-    private async Task RunAsync(string executable, IReadOnlyList<string> arguments, CancellationToken token)
+    private async Task RunAsync(string directory, string backend, string executable, IReadOnlyList<string> arguments, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
-        var info = new ProcessStartInfo(Path.Combine(runtimeDirectory, executable))
-        { WorkingDirectory = runtimeDirectory, UseShellExecute = false, RedirectStandardError = true,
+        var info = new ProcessStartInfo(Path.Combine(directory, executable))
+        { WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true,
             RedirectStandardOutput = true, StandardErrorEncoding = Encoding.UTF8, StandardOutputEncoding = Encoding.UTF8 };
         foreach (var argument in arguments) info.ArgumentList.Add(argument);
+        MusicHardwareProbe.CleanEnvironment(info); info.Environment["GGML_BACKEND"] = backend;
         using var process = OwnedProcessRegistry.Shared.Start(info, "Music.YuE2");
         var tail = new StringBuilder();
         var output = DrainAsync(process.StandardOutput, false);
@@ -106,7 +132,12 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
             await process.WaitForExitAsync(token);
             await Task.WhenAll(output, errors);
             token.ThrowIfCancellationRequested();
-            if (process.ExitCode != 0) throw new InvalidOperationException($"YuE2 {executable} exited with {process.ExitCode}: {tail}");
+            if (process.ExitCode != 0)
+            {
+                var diagnostic = $"YuE2 {executable} exited with {process.ExitCode}: {tail}";
+                if (backend != "CPU" && MusicHardwarePolicy.IsRecoverableGpuFailure(diagnostic)) throw new MusicGpuException(diagnostic);
+                throw new InvalidOperationException(diagnostic);
+            }
         }
         finally
         {

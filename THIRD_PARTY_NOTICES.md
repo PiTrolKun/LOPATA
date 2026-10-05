@@ -1,3 +1,18 @@
+## 0.4.1-beta — CUDA и Vulkan для YuE2
+
+Музыкальный GPU-комплект содержит CUDA SM86/SM89/SM120a, Vulkan и CPU через
+GGML_BACKEND_DL. Отдельный CPU AVX2 комплект сохраняется. Pins yue2.cpp/GGML
+и условия CUDA/MSVC прежние; оригинальные MIT уведомления не менялись.
+Vulkan-Headers v1.4.363: MIT или Apache-2.0; Vulkan-Hpp v1.4.363: Apache-2.0.
+Полные оригинальные тексты находятся в `MusicRuntime/win-cuda128-x64/LICENSE-Vulkan.txt`
+и `Licenses/texts/music-Vulkan-LICENSE.txt`, каталог ID `runtime.music-yue2-vulkan`.
+Источники: https://github.com/KhronosGroup/Vulkan-Headers/tree/v1.4.363/LICENSES
+и https://github.com/KhronosGroup/Vulkan-Hpp/blob/v1.4.363/LICENSE.txt.
+LunarG SDK используется только для сборки, не поставляется и не устанавливается.
+Системные NVIDIA/Vulkan драйверы в комплект не входят и не изменяются.
+Наш probe и рецепт сборки доступны в `Инструменты/MusicNative` и
+`Инструменты/build-music-native.ps1` под GPL-3.0-or-later.
+
 ## 0.4.0-beta — поставка музыкального runtime
 
 YuE2 (pin 11c1ecb084329200e22fcb286e252b847442ea5c), GGML

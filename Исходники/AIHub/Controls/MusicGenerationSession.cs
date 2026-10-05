@@ -26,19 +26,39 @@ public sealed class MusicGenerationSession : IDisposable
         _view.Editor.ValidityChanged += ValidityChanged;
         if (_controller is not null) _controller.Changed += ControllerChanged;
         _worker.Log += NativeLog;
+        _worker.HardwareChanged += HardwareChanged;
         _view.Player.ConfigureRepeat(track => _ready && !_working && !_starting && _controller?.HasPending != true && track.JobId is not null,
             track => { _ = RepeatAsync(track); });
     }
     public void Configure(string modelsRoot, Func<string, string> localize)
     {
         _modelsRoot = modelsRoot; _l = localize; RefreshBudget();
-        if (!_ready && !_checking && File.Exists(Path.Combine(MusicYueRuntime.DirectoryPath, "manifest.json"))) _ = CheckRuntimeAsync();
+        if (!_checking && !_working && File.Exists(Path.Combine(MusicYueRuntime.DirectoryPath, "manifest.json"))) _ = CheckRuntimeAsync();
         RefreshButtons();
     }
     private async Task CheckRuntimeAsync()
     {
-        _checking = true;
-        try { await MusicYueRuntime.VerifyAsync(MusicYueRuntime.DirectoryPath, ApplicationBackgroundOperations.ExitToken); _ready = true; }
+        _checking = true; _ready = false;
+        try
+        {
+            var token = ApplicationBackgroundOperations.ExitToken;
+            var directory = MusicYueRuntime.DirectoryPath;
+            await ComponentLicenseGate.EnsureAsync(MusicYueRuntime.IsCuda(directory)
+                ? [MusicYueRuntime.ComponentId, MusicYueRuntime.CudaComponentId, MusicYueRuntime.VulkanComponentId, .. MusicComponentCatalog.ComponentIds]
+                : [MusicYueRuntime.ComponentId, .. MusicComponentCatalog.ComponentIds], token);
+            await MusicYueRuntime.VerifyAsync(directory, token);
+            var cards = MusicComponentCatalog.CreateCards(_modelsRoot);
+            string Artifact(string id) { var card = cards.Single(c => c.ModelArtifactId == id); return Path.Combine(card.InstallDirectory, card.Files.Single().RelativePath); }
+            var request = new MusicYueRequest(_view.Wishes.RequestStyle, _view.Editor.Lyrics, 1, 1, _view.Generation.Options.DurationSeconds ?? 360);
+            var choice = await MusicHardwareProbe.CheckAsync(directory, Artifact(MusicComponentCatalog.ModelId),
+                Artifact(MusicComponentCatalog.DecoderId), request, true, token, NativeLog);
+            if (!_disposed) { HardwareChanged(choice); _ready = true; }
+        }
+        catch (InsufficientMemoryException error)
+        {
+            // Entry is an estimate for the current duration; a shorter request may fit. Execution checks again.
+            if (!_disposed) { _ready = true; _view.Generation.SetHardware(_l("Music.Hardware.MemoryLow")); NativeLog("[Hardware] " + error.Message); }
+        }
         catch (Exception error) { if (!_disposed) _view.Status.AppendLog(_l("Music.Generation.RuntimeMissing") + " " + error.Message); }
         finally { _checking = false; if (!_disposed) RefreshButtons(); }
     }
@@ -102,7 +122,9 @@ public sealed class MusicGenerationSession : IDisposable
     {
         if (_working) throw new InvalidOperationException("Music generation is already active.");
         var job = _jobs.Load(id); _working = true;
-        _worker.Log -= NativeLog; _worker = new(MusicYueRuntime.DirectoryForPack(job.RuntimePack)); _worker.Log += NativeLog;
+        _worker.Log -= NativeLog; _worker.HardwareChanged -= HardwareChanged;
+        // Re-evaluate hardware on resume, even for a job originally created on CPU.
+        _worker = new(MusicYueRuntime.DirectoryPath); _worker.Log += NativeLog; _worker.HardwareChanged += HardwareChanged;
         _cancel = CancellationTokenSource.CreateLinkedTokenSource(token); RefreshButtons();
         var runner = new MusicGenerationRunner(_jobs, _worker);
         runner.Stage += stage => _view.Status.Telemetry.Report(_telemetry, stage);
@@ -168,6 +190,17 @@ public sealed class MusicGenerationSession : IDisposable
             : message.StartsWith("[NAR]", StringComparison.Ordinal) || message.StartsWith("[VAE]", StringComparison.Ordinal) ? MusicGenerationStage.Sound : null;
         if (stage is { } value) _view.Status.Telemetry.Report(operation, value);
     }
+    private void HardwareChanged(MusicHardwareChoice choice)
+    {
+        if (_disposed || _view.Dispatcher.HasShutdownStarted) return;
+        _view.Dispatcher.Invoke(() =>
+        {
+            if (_disposed) return;
+            var name = _l(choice.Device.Backend == "CPU" ? "Music.Hardware.Cpu" : "Music.Hardware.Gpu");
+            var reason = choice.Device.Backend == "CPU" ? " — " + _l("Music.Hardware." + choice.Reason) : "";
+            _view.Generation.SetHardware(name + reason);
+        });
+    }
     private void ReportFailure(Exception error)
     {
         if (error is OperationCanceledException) return;
@@ -181,5 +214,6 @@ public sealed class MusicGenerationSession : IDisposable
         _view.Editor.ValidityChanged -= ValidityChanged; _view.Wishes.Changed -= WishesChanged;
         _view.Generation.OptionsChanged -= RefreshBudget; if (_controller is not null) _controller.Changed -= ControllerChanged;
         _worker.Log -= NativeLog;
+        _worker.HardwareChanged -= HardwareChanged;
     }
 }

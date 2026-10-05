@@ -6,26 +6,32 @@ namespace AIHub.Tests;
 public sealed class YuENativeSmokeTests
 {
     [TestMethod]
-    public async Task ExplicitlyAuthorizedShortCpuGenerationProducesValidatedAudio()
+    [DataRow(MusicYueRuntime.CpuPack)]
+    [DataRow(MusicYueRuntime.CudaPack)]
+    public async Task ExplicitlyAuthorizedShortGenerationProducesValidatedAudio(string pack)
     {
         if (Environment.GetEnvironmentVariable("LOPATA_YUE_AUTHORIZED_SMOKE") != "1") Assert.Inconclusive("Requires explicit model launch and runtime license acknowledgement.");
         var root = Environment.GetEnvironmentVariable("LOPATA_YUE_MODELS_ROOT") ?? throw new InvalidOperationException("Models root required.");
         var folder = Environment.GetEnvironmentVariable("LOPATA_YUE_SMOKE_OUTPUT") ?? throw new InvalidOperationException("Isolated output required.");
-        Directory.CreateDirectory(folder);
+        folder = Path.Combine(folder, pack); Directory.CreateDirectory(folder);
+        var receipts = Path.Combine(folder, "test-license-receipts.json");
+        File.Copy(Path.Combine(AppDataPaths.BaseDirectory, "Licenses", "receipts.json"), receipts, false);
         var licenses = new ComponentLicenseService(Path.Combine(AppContext.BaseDirectory, "Licenses"),
-            Path.Combine(AppDataPaths.BaseDirectory, "Licenses", "receipts.json"));
+            receipts);
         var previous = ComponentLicenseGate.ConfirmAsync;
         ComponentLicenseGate.ConfirmAsync = (ids, token) => licenses.EnsureAsync(ids, entries =>
         {
-            // The human explicitly acknowledged these MIT terms in the task. Weight terms must already have a receipt.
-            if (entries.Any(e => e.Id != MusicYueRuntime.ComponentId && e.Id != MusicYueRuntime.CudaComponentId))
+            // Isolated test consent only. Never write a new component acknowledgement to the user's profile.
+            // Weight terms must retain their existing human-issued receipt.
+            if (entries.Any(e => e.Id != MusicYueRuntime.ComponentId && e.Id != MusicYueRuntime.CudaComponentId && e.Id != MusicYueRuntime.VulkanComponentId))
                 throw new InvalidOperationException("Model weight licence acknowledgement is missing.");
             return Task.FromResult(true);
         }, token);
         try
         {
             using var cancel = new CancellationTokenSource(TimeSpan.FromMinutes(15));
-            var worker = new MusicYueWorker(MusicYueRuntime.DirectoryPath);
+            var directory = MusicYueRuntime.DirectoryForPack(pack);
+            var worker = new MusicYueWorker(directory);
             var log = Path.Combine(folder, "native.log");
             worker.Log += line => File.AppendAllText(log, line + Environment.NewLine);
             var cards = MusicComponentCatalog.CreateCards(root);
@@ -39,12 +45,28 @@ public sealed class YuENativeSmokeTests
                 Path.Combine(folder, "задание-аудио.json"), audio, cancel.Token);
             Assert.IsTrue(MusicWaveFile.ReadDuration(audio) > TimeSpan.Zero);
             Assert.IsTrue(new FileInfo(audio).Length > 44);
-            if (MusicYueRuntime.IsCuda(MusicYueRuntime.DirectoryPath))
+            if (MusicYueRuntime.IsCuda(directory))
             {
                 var transcript = await File.ReadAllTextAsync(log, cancel.Token);
                 StringAssert.Contains(transcript, "[Load] LM backend: CUDA0");
                 StringAssert.Contains(transcript, "[Load] NAR backend: CUDA0");
                 StringAssert.Contains(transcript, "[Load] VAE backend: CUDA0");
+                // Physical Vulkan coverage on this NVIDIA card; this is not a physical AMD/Intel test.
+                var vulkanAudio = Path.Combine(folder, "Vulkan.wav");
+                var info = new System.Diagnostics.ProcessStartInfo(Path.Combine(directory, "yue-synth.exe"))
+                { WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+                MusicHardwareProbe.CleanEnvironment(info); info.Environment["GGML_BACKEND"] = "Vulkan0";
+                foreach (var argument in new[] { "--model", Artifact(MusicComponentCatalog.ModelId), "--vae", Artifact(MusicComponentCatalog.DecoderId),
+                    "--request", Path.Combine(folder, "задание-аудио.json"), "--out", vulkanAudio, "--max-seq", "512" }) info.ArgumentList.Add(argument);
+                using var vk = OwnedProcessRegistry.Shared.Start(info, "Music.VulkanSmoke");
+                var vkOut = vk.StandardOutput.ReadToEndAsync(); var vkErr = vk.StandardError.ReadToEndAsync();
+                try { await vk.WaitForExitAsync(cancel.Token); }
+                finally { if (!vk.HasExited) { vk.Kill(entireProcessTree: true); await vk.WaitForExitAsync(); } }
+                var vkLog = await vkOut + await vkErr; await File.WriteAllTextAsync(Path.Combine(folder, "vulkan.log"), vkLog);
+                Assert.AreEqual(0, vk.ExitCode, vkLog); Assert.IsTrue(MusicWaveFile.ReadDuration(vulkanAudio) > TimeSpan.Zero);
+                StringAssert.Contains(vkLog, "[Load] LM backend: Vulkan0");
+                StringAssert.Contains(vkLog, "[Load] NAR backend: Vulkan0");
+                StringAssert.Contains(vkLog, "[Load] VAE backend: Vulkan0");
             }
             using var stop = new CancellationTokenSource(TimeSpan.FromMinutes(1));
             worker.Log += line => { if (line.StartsWith("[AR] Score 0/", StringComparison.Ordinal)) stop.Cancel(); };

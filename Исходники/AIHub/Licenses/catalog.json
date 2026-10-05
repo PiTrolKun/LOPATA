@@ -1723,6 +1723,23 @@
     "En": "Unmodified msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll from Visual Studio 2022 VC/Redist/MSVC/x64. Shipped only beside YuE2; no system installation. Original Microsoft terms retained. These are separate proprietary libraries; the project GPL does not apply to them."
   },
   {
+    "Id": "runtime.music-yue2-vulkan",
+    "Name": "YuE2 · Vulkan headers/backend",
+    "Version": "GGML 40e16e4; Vulkan-Headers/Hpp 1.4.363",
+    "Author": "GGML authors; The Khronos Group",
+    "License": "MIT; Apache-2.0",
+    "Source": "https://github.com/KhronosGroup/Vulkan-Hpp/tree/v1.4.363",
+    "Checked": "2026-10-05",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/music-Vulkan-LICENSE.txt"
+    ],
+    "Terms": "BD3D273A8D64B9AD66EC657363B7FC6A5F4ECFA0B645A843847CACAA2C9C84F4",
+    "Ru": "Встроенное ускорение YuE2 через Vulkan в GGML. Оригинальные MIT/Apache-2.0 уведомления заголовков Vulkan сохранены. Используется установленный драйвер; SDK и компилятор шейдеров в приложение не входят. Физический запуск AMD/Intel пока не проверен.",
+    "En": "Bundled YuE2 acceleration through GGML Vulkan. Original MIT/Apache-2.0 Vulkan header notices retained. Uses the installed driver; SDK and shader compiler are not application payload. Physical AMD/Intel execution is not yet verified."
+  },
+  {
     "Id": "builtin.music-genres",
     "Name": "MusicBrainz genre names · offline snapshot",
     "Version": "2026-10-05:2208:A9B4518FC449F876CF4F4142EB10199227DFBD5509C5EF8AB2CA0148BE994308",

@@ -90,6 +90,10 @@ public sealed class MusicGenerationTests
                 var poetry = buttons.Single(b => AutomationProperties.GetAutomationId(b) == "Music.Audio.PoetryChat");
                 control.UpdateState(true, false, false, false); Assert.IsFalse(start.IsEnabled); Assert.IsFalse(cancel.IsEnabled);
                 control.UpdateState(true, false, false, true); Assert.IsTrue(start.IsEnabled); Assert.AreEqual(l.T("Music.Generation.Start"), start.ToolTip);
+                control.SetHardware(l.T("Music.Hardware.Cpu") + " — " + l.T("Music.Hardware.GpuMemory"));
+                var hardware = ScenarioNavigationTests.LogicalDescendants(control).OfType<TextBlock>()
+                    .Single(t => AutomationProperties.GetAutomationId(t) == "Music.Generation.Hardware");
+                StringAssert.Contains(hardware.Text, l.T("Music.Hardware.GpuMemory"));
                 control.UpdateState(false, true, false, true); Assert.AreEqual(l.T("Music.Generation.Pause"), start.ToolTip); Assert.IsTrue(cancel.IsEnabled);
                 control.UpdateState(false, false, true, true); Assert.AreEqual(l.T("Music.Generation.Resume"), start.ToolTip);
                 control.UpdateState(true, false, false, false); Assert.IsFalse(poetry.IsEnabled); Assert.AreEqual(l.T("Music.Generation.Poetry"), poetry.ToolTip);
