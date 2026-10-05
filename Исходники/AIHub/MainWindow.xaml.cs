@@ -138,6 +138,7 @@ public partial class MainWindow : Window
             new CoreVoiceEngineRouter(new EspeakCoreVoiceEngine(), new RhVoiceCoreVoiceEngine()));
         ApplyTheme();
         InitializeScenarioNavigation();
+        InitializeMusicPreparation();
         ApplyLocalization();
         ChoiceOptionsItemsControl.ItemsSource = _choiceScenarioOptions;
         ExecutorClarificationOptionsItemsControl.ItemsSource = _executorClarificationOptions;
@@ -619,6 +620,7 @@ public partial class MainWindow : Window
         RefreshCaptureLocalization();
         GenerationPage.Localize(L, _localizationService.CurrentLanguageCode);
         ImageUtilityPage.Localize(L);
+        MusicPage.Localize(L);
         PreviousWorkHeaderText.Text = L("WorkStart.PreviousWork");
         PreviousWorkEmptyText.Text = L("WorkStart.Empty");
         ClearPreviousWorkSelectionButton.Content = L("WorkStart.ClearSelection");
@@ -1305,6 +1307,15 @@ public partial class MainWindow : Window
 
     private void BackFromWorkStartButton_Click(object sender, RoutedEventArgs e)
     {
+        if (MusicPage.Visibility == Visibility.Visible)
+        {
+            if (MusicPage.GoBack()) return;
+            MusicPage.Visibility = Visibility.Collapsed;
+            ScenarioNavigationPage.Visibility = Visibility.Visible;
+            ScenarioNavigationPage.ReturnFromScenario();
+            RefreshScenarioNavigationState();
+            return;
+        }
         if (ImageUtilityPage.Visibility == Visibility.Visible)
         {
             ImageUtilityPage.Visibility = Visibility.Collapsed;

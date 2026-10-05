@@ -1,0 +1,762 @@
+{
+  "mood": [
+    {
+      "Id": "calm",
+      "Prompt": "calm",
+      "NameKey": "Music.Option.mood.calm"
+    },
+    {
+      "Id": "tender",
+      "Prompt": "tender",
+      "NameKey": "Music.Option.mood.tender"
+    },
+    {
+      "Id": "romantic",
+      "Prompt": "romantic",
+      "NameKey": "Music.Option.mood.romantic"
+    },
+    {
+      "Id": "melancholic",
+      "Prompt": "melancholic",
+      "NameKey": "Music.Option.mood.melancholic"
+    },
+    {
+      "Id": "dark",
+      "Prompt": "dark",
+      "NameKey": "Music.Option.mood.dark"
+    },
+    {
+      "Id": "joyful",
+      "Prompt": "joyful",
+      "NameKey": "Music.Option.mood.joyful"
+    },
+    {
+      "Id": "energetic",
+      "Prompt": "energetic",
+      "NameKey": "Music.Option.mood.energetic"
+    },
+    {
+      "Id": "solemn",
+      "Prompt": "solemn",
+      "NameKey": "Music.Option.mood.solemn"
+    },
+    {
+      "Id": "epic",
+      "Prompt": "epic",
+      "NameKey": "Music.Option.mood.epic"
+    },
+    {
+      "Id": "ironic",
+      "Prompt": "ironic",
+      "NameKey": "Music.Option.mood.ironic"
+    },
+    {
+      "Id": "angry",
+      "Prompt": "angry",
+      "NameKey": "Music.Option.mood.angry"
+    },
+    {
+      "Id": "mysterious",
+      "Prompt": "mysterious",
+      "NameKey": "Music.Option.mood.mysterious"
+    },
+    {
+      "Id": "hopeful",
+      "Prompt": "hopeful",
+      "NameKey": "Music.Option.mood.hopeful"
+    },
+    {
+      "Id": "nostalgic",
+      "Prompt": "nostalgic",
+      "NameKey": "Music.Option.mood.nostalgic"
+    },
+    {
+      "Id": "playful",
+      "Prompt": "playful",
+      "NameKey": "Music.Option.mood.playful"
+    },
+    {
+      "Id": "tense",
+      "Prompt": "tense",
+      "NameKey": "Music.Option.mood.tense"
+    }
+  ],
+  "delivery": [
+    {
+      "Id": "soft",
+      "Prompt": "soft singing",
+      "NameKey": "Music.Option.delivery.soft"
+    },
+    {
+      "Id": "airy",
+      "Prompt": "airy singing",
+      "NameKey": "Music.Option.delivery.airy"
+    },
+    {
+      "Id": "powerful",
+      "Prompt": "powerful singing",
+      "NameKey": "Music.Option.delivery.powerful"
+    },
+    {
+      "Id": "restrained",
+      "Prompt": "restrained singing",
+      "NameKey": "Music.Option.delivery.restrained"
+    },
+    {
+      "Id": "spoken",
+      "Prompt": "spoken delivery",
+      "NameKey": "Music.Option.delivery.spoken"
+    },
+    {
+      "Id": "whisper",
+      "Prompt": "whispered vocals",
+      "NameKey": "Music.Option.delivery.whisper"
+    },
+    {
+      "Id": "rap",
+      "Prompt": "rap delivery",
+      "NameKey": "Music.Option.delivery.rap"
+    },
+    {
+      "Id": "operatic",
+      "Prompt": "operatic singing",
+      "NameKey": "Music.Option.delivery.operatic"
+    },
+    {
+      "Id": "belting",
+      "Prompt": "belting",
+      "NameKey": "Music.Option.delivery.belting"
+    },
+    {
+      "Id": "falsetto",
+      "Prompt": "falsetto",
+      "NameKey": "Music.Option.delivery.falsetto"
+    },
+    {
+      "Id": "growl",
+      "Prompt": "growled vocals",
+      "NameKey": "Music.Option.delivery.growl"
+    },
+    {
+      "Id": "scream",
+      "Prompt": "screamed vocals",
+      "NameKey": "Music.Option.delivery.scream"
+    },
+    {
+      "Id": "chant",
+      "Prompt": "chanting",
+      "NameKey": "Music.Option.delivery.chant"
+    },
+    {
+      "Id": "robotic",
+      "Prompt": "robotic vocal delivery",
+      "NameKey": "Music.Option.delivery.robotic"
+    }
+  ],
+  "instruments": [
+    {
+      "Id": "acoustic-guitar",
+      "Prompt": "acoustic guitar",
+      "NameKey": "Music.Option.instruments.acoustic-guitar"
+    },
+    {
+      "Id": "electric-guitar",
+      "Prompt": "electric guitar",
+      "NameKey": "Music.Option.instruments.electric-guitar"
+    },
+    {
+      "Id": "slide-guitar",
+      "Prompt": "slide guitar",
+      "NameKey": "Music.Option.instruments.slide-guitar"
+    },
+    {
+      "Id": "bass",
+      "Prompt": "bass guitar",
+      "NameKey": "Music.Option.instruments.bass"
+    },
+    {
+      "Id": "double-bass",
+      "Prompt": "double bass",
+      "NameKey": "Music.Option.instruments.double-bass"
+    },
+    {
+      "Id": "piano",
+      "Prompt": "acoustic piano",
+      "NameKey": "Music.Option.instruments.piano"
+    },
+    {
+      "Id": "electric-piano",
+      "Prompt": "electric piano",
+      "NameKey": "Music.Option.instruments.electric-piano"
+    },
+    {
+      "Id": "organ",
+      "Prompt": "Hammond organ",
+      "NameKey": "Music.Option.instruments.organ"
+    },
+    {
+      "Id": "harpsichord",
+      "Prompt": "harpsichord",
+      "NameKey": "Music.Option.instruments.harpsichord"
+    },
+    {
+      "Id": "drums",
+      "Prompt": "drum kit",
+      "NameKey": "Music.Option.instruments.drums"
+    },
+    {
+      "Id": "percussion",
+      "Prompt": "percussion",
+      "NameKey": "Music.Option.instruments.percussion"
+    },
+    {
+      "Id": "drum-machine",
+      "Prompt": "drum machine",
+      "NameKey": "Music.Option.instruments.drum-machine"
+    },
+    {
+      "Id": "electronic-bass",
+      "Prompt": "electronic bass",
+      "NameKey": "Music.Option.instruments.electronic-bass"
+    },
+    {
+      "Id": "synthesizer",
+      "Prompt": "synthesizer",
+      "NameKey": "Music.Option.instruments.synthesizer"
+    },
+    {
+      "Id": "pads",
+      "Prompt": "atmospheric synth pads",
+      "NameKey": "Music.Option.instruments.pads"
+    },
+    {
+      "Id": "sampler",
+      "Prompt": "sampler",
+      "NameKey": "Music.Option.instruments.sampler"
+    },
+    {
+      "Id": "strings",
+      "Prompt": "string section",
+      "NameKey": "Music.Option.instruments.strings"
+    },
+    {
+      "Id": "violin",
+      "Prompt": "violin",
+      "NameKey": "Music.Option.instruments.violin"
+    },
+    {
+      "Id": "viola",
+      "Prompt": "viola",
+      "NameKey": "Music.Option.instruments.viola"
+    },
+    {
+      "Id": "cello",
+      "Prompt": "cello",
+      "NameKey": "Music.Option.instruments.cello"
+    },
+    {
+      "Id": "harp",
+      "Prompt": "harp",
+      "NameKey": "Music.Option.instruments.harp"
+    },
+    {
+      "Id": "flute",
+      "Prompt": "flute",
+      "NameKey": "Music.Option.instruments.flute"
+    },
+    {
+      "Id": "clarinet",
+      "Prompt": "clarinet",
+      "NameKey": "Music.Option.instruments.clarinet"
+    },
+    {
+      "Id": "oboe",
+      "Prompt": "oboe",
+      "NameKey": "Music.Option.instruments.oboe"
+    },
+    {
+      "Id": "bassoon",
+      "Prompt": "bassoon",
+      "NameKey": "Music.Option.instruments.bassoon"
+    },
+    {
+      "Id": "saxophone",
+      "Prompt": "saxophone",
+      "NameKey": "Music.Option.instruments.saxophone"
+    },
+    {
+      "Id": "trumpet",
+      "Prompt": "trumpet",
+      "NameKey": "Music.Option.instruments.trumpet"
+    },
+    {
+      "Id": "trombone",
+      "Prompt": "trombone",
+      "NameKey": "Music.Option.instruments.trombone"
+    },
+    {
+      "Id": "horn",
+      "Prompt": "French horn",
+      "NameKey": "Music.Option.instruments.horn"
+    },
+    {
+      "Id": "brass",
+      "Prompt": "brass section",
+      "NameKey": "Music.Option.instruments.brass"
+    },
+    {
+      "Id": "harmonica",
+      "Prompt": "harmonica",
+      "NameKey": "Music.Option.instruments.harmonica"
+    },
+    {
+      "Id": "accordion",
+      "Prompt": "accordion",
+      "NameKey": "Music.Option.instruments.accordion"
+    },
+    {
+      "Id": "banjo",
+      "Prompt": "banjo",
+      "NameKey": "Music.Option.instruments.banjo"
+    },
+    {
+      "Id": "mandolin",
+      "Prompt": "mandolin",
+      "NameKey": "Music.Option.instruments.mandolin"
+    },
+    {
+      "Id": "ukulele",
+      "Prompt": "ukulele",
+      "NameKey": "Music.Option.instruments.ukulele"
+    },
+    {
+      "Id": "balalaika",
+      "Prompt": "balalaika",
+      "NameKey": "Music.Option.instruments.balalaika"
+    },
+    {
+      "Id": "domra",
+      "Prompt": "domra",
+      "NameKey": "Music.Option.instruments.domra"
+    },
+    {
+      "Id": "gusli",
+      "Prompt": "gusli",
+      "NameKey": "Music.Option.instruments.gusli"
+    },
+    {
+      "Id": "sitar",
+      "Prompt": "sitar",
+      "NameKey": "Music.Option.instruments.sitar"
+    },
+    {
+      "Id": "tabla",
+      "Prompt": "tabla",
+      "NameKey": "Music.Option.instruments.tabla"
+    },
+    {
+      "Id": "oud",
+      "Prompt": "oud",
+      "NameKey": "Music.Option.instruments.oud"
+    },
+    {
+      "Id": "duduk",
+      "Prompt": "duduk",
+      "NameKey": "Music.Option.instruments.duduk"
+    },
+    {
+      "Id": "koto",
+      "Prompt": "koto",
+      "NameKey": "Music.Option.instruments.koto"
+    },
+    {
+      "Id": "shamisen",
+      "Prompt": "shamisen",
+      "NameKey": "Music.Option.instruments.shamisen"
+    },
+    {
+      "Id": "erhu",
+      "Prompt": "erhu",
+      "NameKey": "Music.Option.instruments.erhu"
+    },
+    {
+      "Id": "bagpipes",
+      "Prompt": "bagpipes",
+      "NameKey": "Music.Option.instruments.bagpipes"
+    },
+    {
+      "Id": "marimba",
+      "Prompt": "marimba",
+      "NameKey": "Music.Option.instruments.marimba"
+    },
+    {
+      "Id": "vibraphone",
+      "Prompt": "vibraphone",
+      "NameKey": "Music.Option.instruments.vibraphone"
+    },
+    {
+      "Id": "bells",
+      "Prompt": "bells",
+      "NameKey": "Music.Option.instruments.bells"
+    },
+    {
+      "Id": "glockenspiel",
+      "Prompt": "glockenspiel",
+      "NameKey": "Music.Option.instruments.glockenspiel"
+    },
+    {
+      "Id": "timpani",
+      "Prompt": "timpani",
+      "NameKey": "Music.Option.instruments.timpani"
+    }
+  ],
+  "rhythm": [
+    {
+      "Id": "slow",
+      "Prompt": "slow tempo",
+      "NameKey": "Music.Option.rhythm.slow"
+    },
+    {
+      "Id": "moderate",
+      "Prompt": "moderate tempo",
+      "NameKey": "Music.Option.rhythm.moderate"
+    },
+    {
+      "Id": "fast",
+      "Prompt": "fast tempo",
+      "NameKey": "Music.Option.rhythm.fast"
+    },
+    {
+      "Id": "steady",
+      "Prompt": "steady rhythm",
+      "NameKey": "Music.Option.rhythm.steady"
+    },
+    {
+      "Id": "waltz",
+      "Prompt": "waltz rhythm in 3/4",
+      "NameKey": "Music.Option.rhythm.waltz"
+    },
+    {
+      "Id": "swing",
+      "Prompt": "swing rhythm",
+      "NameKey": "Music.Option.rhythm.swing"
+    },
+    {
+      "Id": "shuffle",
+      "Prompt": "shuffle rhythm",
+      "NameKey": "Music.Option.rhythm.shuffle"
+    },
+    {
+      "Id": "six-eight",
+      "Prompt": "6/8 meter",
+      "NameKey": "Music.Option.rhythm.six-eight"
+    },
+    {
+      "Id": "four-four",
+      "Prompt": "4/4 meter",
+      "NameKey": "Music.Option.rhythm.four-four"
+    },
+    {
+      "Id": "twelve-eight",
+      "Prompt": "12/8 meter",
+      "NameKey": "Music.Option.rhythm.twelve-eight"
+    },
+    {
+      "Id": "syncopated",
+      "Prompt": "syncopated rhythm",
+      "NameKey": "Music.Option.rhythm.syncopated"
+    },
+    {
+      "Id": "free",
+      "Prompt": "free rhythm",
+      "NameKey": "Music.Option.rhythm.free"
+    }
+  ],
+  "development": [
+    {
+      "Id": "build",
+      "Prompt": "gradual musical build",
+      "NameKey": "Music.Option.development.build"
+    },
+    {
+      "Id": "contrast",
+      "Prompt": "contrasting verses and choruses",
+      "NameKey": "Music.Option.development.contrast"
+    },
+    {
+      "Id": "interludes",
+      "Prompt": "instrumental transitions",
+      "NameKey": "Music.Option.development.interludes"
+    },
+    {
+      "Id": "solo",
+      "Prompt": "instrumental solo",
+      "NameKey": "Music.Option.development.solo"
+    },
+    {
+      "Id": "quiet-ending",
+      "Prompt": "quiet ending",
+      "NameKey": "Music.Option.development.quiet-ending"
+    },
+    {
+      "Id": "climax",
+      "Prompt": "strong climax",
+      "NameKey": "Music.Option.development.climax"
+    },
+    {
+      "Id": "continuous",
+      "Prompt": "continuous musical development",
+      "NameKey": "Music.Option.development.continuous"
+    },
+    {
+      "Id": "breaks",
+      "Prompt": "musical pauses and breaks",
+      "NameKey": "Music.Option.development.breaks"
+    },
+    {
+      "Id": "call-response",
+      "Prompt": "call and response between singers",
+      "NameKey": "Music.Option.development.call-response"
+    }
+  ],
+  "avoid": [
+    {
+      "Id": "choir",
+      "Prompt": "choir",
+      "NameKey": "Music.Option.avoid.choir"
+    },
+    {
+      "Id": "backing",
+      "Prompt": "backing vocals",
+      "NameKey": "Music.Option.avoid.backing"
+    },
+    {
+      "Id": "overlap",
+      "Prompt": "overlapping lead singers",
+      "NameKey": "Music.Option.avoid.overlap"
+    },
+    {
+      "Id": "unison",
+      "Prompt": "unison singing",
+      "NameKey": "Music.Option.avoid.unison"
+    },
+    {
+      "Id": "falsetto",
+      "Prompt": "falsetto",
+      "NameKey": "Music.Option.avoid.falsetto"
+    },
+    {
+      "Id": "growl",
+      "Prompt": "growled vocals",
+      "NameKey": "Music.Option.avoid.growl"
+    },
+    {
+      "Id": "scream",
+      "Prompt": "screamed vocals",
+      "NameKey": "Music.Option.avoid.scream"
+    },
+    {
+      "Id": "rap",
+      "Prompt": "rap",
+      "NameKey": "Music.Option.avoid.rap"
+    },
+    {
+      "Id": "operatic",
+      "Prompt": "operatic singing",
+      "NameKey": "Music.Option.avoid.operatic"
+    },
+    {
+      "Id": "distortion",
+      "Prompt": "heavy distortion",
+      "NameKey": "Music.Option.avoid.distortion"
+    },
+    {
+      "Id": "autotune",
+      "Prompt": "obvious autotune",
+      "NameKey": "Music.Option.avoid.autotune"
+    },
+    {
+      "Id": "edm",
+      "Prompt": "EDM sound",
+      "NameKey": "Music.Option.avoid.edm"
+    }
+  ],
+  "voice": [
+    {
+      "Id": "male",
+      "Prompt": "male voice",
+      "NameKey": "Music.Option.voice.male"
+    },
+    {
+      "Id": "female",
+      "Prompt": "female voice",
+      "NameKey": "Music.Option.voice.female"
+    },
+    {
+      "Id": "neutral",
+      "Prompt": "androgynous voice",
+      "NameKey": "Music.Option.voice.neutral"
+    }
+  ],
+  "range": [
+    {
+      "Id": "low",
+      "Prompt": "low vocal register",
+      "NameKey": "Music.Option.range.low"
+    },
+    {
+      "Id": "middle",
+      "Prompt": "middle vocal register",
+      "NameKey": "Music.Option.range.middle"
+    },
+    {
+      "Id": "high",
+      "Prompt": "high vocal register",
+      "NameKey": "Music.Option.range.high"
+    },
+    {
+      "Id": "bass",
+      "Prompt": "bass voice",
+      "NameKey": "Music.Option.range.bass"
+    },
+    {
+      "Id": "baritone",
+      "Prompt": "baritone",
+      "NameKey": "Music.Option.range.baritone"
+    },
+    {
+      "Id": "tenor",
+      "Prompt": "tenor",
+      "NameKey": "Music.Option.range.tenor"
+    },
+    {
+      "Id": "contralto",
+      "Prompt": "contralto",
+      "NameKey": "Music.Option.range.contralto"
+    },
+    {
+      "Id": "mezzo",
+      "Prompt": "mezzo-soprano",
+      "NameKey": "Music.Option.range.mezzo"
+    },
+    {
+      "Id": "soprano",
+      "Prompt": "soprano",
+      "NameKey": "Music.Option.range.soprano"
+    }
+  ],
+  "timbre": [
+    {
+      "Id": "warm",
+      "Prompt": "warm vocal timbre",
+      "NameKey": "Music.Option.timbre.warm"
+    },
+    {
+      "Id": "bright",
+      "Prompt": "bright vocal timbre",
+      "NameKey": "Music.Option.timbre.bright"
+    },
+    {
+      "Id": "dark",
+      "Prompt": "dark vocal timbre",
+      "NameKey": "Music.Option.timbre.dark"
+    },
+    {
+      "Id": "smoky",
+      "Prompt": "smoky vocal timbre",
+      "NameKey": "Music.Option.timbre.smoky"
+    },
+    {
+      "Id": "raspy",
+      "Prompt": "raspy voice",
+      "NameKey": "Music.Option.timbre.raspy"
+    },
+    {
+      "Id": "breathy",
+      "Prompt": "breathy voice",
+      "NameKey": "Music.Option.timbre.breathy"
+    },
+    {
+      "Id": "clear",
+      "Prompt": "clear voice",
+      "NameKey": "Music.Option.timbre.clear"
+    },
+    {
+      "Id": "nasal",
+      "Prompt": "nasal voice",
+      "NameKey": "Music.Option.timbre.nasal"
+    },
+    {
+      "Id": "metallic",
+      "Prompt": "metallic vocal timbre",
+      "NameKey": "Music.Option.timbre.metallic"
+    },
+    {
+      "Id": "vocoder",
+      "Prompt": "vocoder voice",
+      "NameKey": "Music.Option.timbre.vocoder"
+    }
+  ],
+  "language": [
+    {
+      "Id": "russian",
+      "Prompt": "Russian language",
+      "NameKey": "Music.Option.language.russian"
+    },
+    {
+      "Id": "english",
+      "Prompt": "English language",
+      "NameKey": "Music.Option.language.english"
+    },
+    {
+      "Id": "chinese",
+      "Prompt": "Chinese language",
+      "NameKey": "Music.Option.language.chinese"
+    },
+    {
+      "Id": "japanese",
+      "Prompt": "Japanese language",
+      "NameKey": "Music.Option.language.japanese"
+    },
+    {
+      "Id": "korean",
+      "Prompt": "Korean language",
+      "NameKey": "Music.Option.language.korean"
+    },
+    {
+      "Id": "french",
+      "Prompt": "French language",
+      "NameKey": "Music.Option.language.french"
+    },
+    {
+      "Id": "german",
+      "Prompt": "German language",
+      "NameKey": "Music.Option.language.german"
+    },
+    {
+      "Id": "spanish",
+      "Prompt": "Spanish language",
+      "NameKey": "Music.Option.language.spanish"
+    },
+    {
+      "Id": "italian",
+      "Prompt": "Italian language",
+      "NameKey": "Music.Option.language.italian"
+    },
+    {
+      "Id": "portuguese",
+      "Prompt": "Portuguese language",
+      "NameKey": "Music.Option.language.portuguese"
+    },
+    {
+      "Id": "arabic",
+      "Prompt": "Arabic language",
+      "NameKey": "Music.Option.language.arabic"
+    },
+    {
+      "Id": "hindi",
+      "Prompt": "Hindi language",
+      "NameKey": "Music.Option.language.hindi"
+    }
+  ]
+}

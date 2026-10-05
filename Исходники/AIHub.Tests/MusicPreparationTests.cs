@@ -1,0 +1,161 @@
+using System.Windows.Controls;
+using AIHub.Controls;
+using AIHub.Models;
+using AIHub.Services;
+
+namespace AIHub.Tests;
+
+[TestClass, DoNotParallelize]
+public sealed class MusicPreparationTests
+{
+    [TestMethod]
+    public void ComponentsHavePinnedDownloadsLicensesAndCanonicalNavigation()
+    {
+        var cards = MusicComponentCatalog.CreateCards(Path.Combine(Path.GetTempPath(), "music-manifest"));
+        Assert.HasCount(2, cards);
+        Assert.AreEqual(4_340_729_408L, cards.Sum(c => c.TotalBytes));
+        var licenses = new ComponentLicenseService(Path.Combine(AppContext.BaseDirectory, "Licenses"), "unused.json");
+        foreach (var card in cards)
+        {
+            var file = card.Files.Single();
+            Assert.AreEqual(64, file.Sha256.Length); Assert.IsTrue(file.Sha256.All(Uri.IsHexDigit));
+            Assert.IsTrue(file.SourceUrl.Contains(MusicComponentCatalog.Revision, StringComparison.Ordinal));
+            var entry = licenses.Entries.Single(e => e.Id == card.ModelArtifactId);
+            Assert.IsFalse(entry.Basic);
+            Assert.IsTrue(licenses.ReadText(entry.Texts.Single()).Contains("Individual creator permission", StringComparison.Ordinal));
+        }
+        Assert.IsFalse(MusicComponentCatalog.IsComplete([]));
+        var node = ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.Music);
+        Assert.AreEqual(ScenarioNavigationCatalog.Creation, ScenarioNavigationCatalog.Get(node.ParentId!).ParentId);
+        Assert.AreEqual(node.Id, ScenarioNavigationCatalog.GetTag("music_preparation").TargetId);
+        foreach (var lang in new[] { "ru", "en" })
+        {
+            var l = new LocalizationService(); l.Load(lang);
+            foreach (var key in new[] { node.TitleKey, node.DescriptionKey, "Music.Preparation.Title", "Cloud.Tag.music_preparation" })
+                Assert.AreNotEqual(key, l.T(key));
+        }
+    }
+
+    [TestMethod]
+    public async Task VerificationDoesNotDownloadOrAskConsentAndRefusalStopsPreparation()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lopata-music-test-" + Guid.NewGuid().ToString("N"));
+        var previous = ComponentLicenseGate.ConfirmAsync;
+        var confirmations = 0;
+        ComponentLicenseGate.ConfirmAsync = (_, _) => { confirmations++; throw new OperationCanceledException(); };
+        try
+        {
+            using var service = new MusicPreparationService(new ManagedModelLibraryStore(Path.Combine(root, "library")));
+            var models = Path.Combine(root, "models");
+            var cards = await service.CheckAsync(models, null, CancellationToken.None);
+            Assert.IsFalse(MusicComponentCatalog.IsComplete(cards));
+            Assert.AreEqual(0, confirmations); Assert.IsFalse(Directory.Exists(models));
+            await Assert.ThrowsAsync<OperationCanceledException>(() => service.PrepareAsync(models, true, null, CancellationToken.None));
+            Assert.AreEqual(1, confirmations); Assert.IsFalse(Directory.Exists(models));
+        }
+        finally
+        {
+            ComponentLicenseGate.ConfirmAsync = previous;
+            Assert.StartsWith(Path.GetFullPath(Path.GetTempPath()), Path.GetFullPath(root));
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [TestMethod]
+    public Task MissingComponentsAndAbsentStorageCannotOpenWorkspace() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation { Complete = false };
+        using var control = Create(fake);
+        control.CheckAsync().GetAwaiter().GetResult();
+        control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.IsFalse(control.IsWorkspace); Assert.AreEqual(0, fake.Preparations);
+        control.Configure(k => k, new StorageSettings(), 1);
+        control.DownloadAsync().GetAwaiter().GetResult();
+        Assert.AreEqual(0, fake.Preparations);
+    });
+
+    [TestMethod]
+    public Task TransitionRechecksComponentsAndStopsOnCorruption() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation(); using var control = Create(fake);
+        control.CheckAsync().GetAwaiter().GetResult(); Assert.IsTrue(control.CanContinue);
+        fake.Complete = false;
+        control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.AreEqual(1, fake.Preparations); Assert.IsFalse(control.IsWorkspace); Assert.IsFalse(control.CanContinue);
+    });
+
+    [TestMethod]
+    public Task CanceledConsentKeepsWorkspaceClosedAndAllowsRetry() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation { Decline = true }; using var control = Create(fake);
+        control.CheckAsync().GetAwaiter().GetResult(); control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.IsFalse(control.IsWorkspace); Assert.IsFalse(control.IsBusy);
+        fake.Decline = false; control.CheckAsync().GetAwaiter().GetResult(); control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.IsTrue(control.IsWorkspace);
+    });
+
+    [TestMethod]
+    public Task PreparedWorkspaceHasPersistentEditorAndStorageChangeInvalidatesIt() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation(); using var control = Create(fake);
+        control.CheckAsync().GetAwaiter().GetResult(); control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.IsTrue(control.IsWorkspace);
+        var workspace = (MusicWorkspaceControl)control.Content;
+        workspace.Editor.Lyrics = "Текст песни";
+        control.Localize(k => k);
+        Assert.AreSame(workspace, control.Content);
+        Assert.AreEqual("Текст песни", workspace.Editor.Lyrics);
+        Assert.IsFalse(workspace.Editor.CanGenerate); // Fake preparation has no actual tokenizer file.
+        Assert.IsTrue(control.GoBack()); Assert.IsFalse(control.IsWorkspace); Assert.IsFalse(control.GoBack());
+        control.Configure(k => k, Storage("second-root"), 2);
+        Assert.IsFalse(control.CanContinue);
+        Assert.AreEqual("Текст песни", workspace.Editor.Lyrics);
+        control.ContinueAsync().GetAwaiter().GetResult(); Assert.IsFalse(control.IsWorkspace);
+    });
+
+    [TestMethod]
+    public Task CanceledOperationCannotUseItsCompletedResult() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation(); using var control = Create(fake);
+        control.CheckAsync().GetAwaiter().GetResult();
+        fake.OnPrepare = () =>
+        {
+            Assert.IsTrue(control.IsBusy);
+            Assert.IsTrue(control.UsesArtifact(MusicComponentCatalog.ModelId));
+            Assert.IsTrue(control.GoBack());
+        };
+        control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.IsFalse(control.IsWorkspace); Assert.IsFalse(control.CanContinue);
+        Assert.IsFalse(control.IsBusy); Assert.IsFalse(control.UsesArtifact(MusicComponentCatalog.ModelId));
+    });
+
+    private static MusicPreparationControl Create(Preparation preparation)
+    {
+        var control = new MusicPreparationControl(preparation);
+        control.Configure(k => k, Storage("first-root"), 1); return control;
+    }
+    private static StorageSettings Storage(string name)
+    {
+        var result = new StorageSettings(); result.Models.Locations.Add(new() { Path = Path.Combine(Path.GetTempPath(), name) }); return result;
+    }
+    private sealed class Preparation : IMusicPreparation
+    {
+        public int MaximumParallelConnections { get; set; }
+        public bool Complete { get; set; } = true;
+        public bool Decline { get; set; }
+        public Action? OnPrepare { get; set; }
+        public int Preparations { get; private set; }
+        public Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
+        {
+            var cards = MusicComponentCatalog.CreateCards(root);
+            foreach (var c in cards) c.Status = Complete ? ManagedModelStatuses.Installed : ManagedModelStatuses.Corrupted;
+            return Task.FromResult(cards);
+        }
+        public Task<IReadOnlyList<ManagedModelArtifactCard>> PrepareAsync(string root, bool download, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
+        {
+            Preparations++; OnPrepare?.Invoke();
+            return Decline ? Task.FromException<IReadOnlyList<ManagedModelArtifactCard>>(new OperationCanceledException()) : CheckAsync(root, progress, token);
+        }
+        public void Dispose() { }
+    }
+}

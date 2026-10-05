@@ -43,7 +43,8 @@ public static partial class ManagedModelCatalog
         CreateOmniGamma(modelsRoot),
             CreateKokoroEnglish(modelsRoot),
             CreateKokoroRussian(modelsRoot),
-            .. ImageGenerationCatalog.CreateCards(modelsRoot)
+            .. ImageGenerationCatalog.CreateCards(modelsRoot),
+            .. MusicComponentCatalog.CreateCards(modelsRoot)
         ];
     }
 

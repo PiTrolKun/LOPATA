@@ -1,4 +1,59 @@
+## 0.4.0-beta — поставка музыкального runtime
+
+YuE2 (pin 11c1ecb084329200e22fcb286e252b847442ea5c), GGML
+(40e16e4a814f7fe851a0c486fb9e8c722e957830) и yyjson: оригинальные MIT LICENSE
+сохранены рядом с бинарниками. CPU AVX2 и CUDA 12.8 SM89 размещаются
+в MusicRuntime/win-x64 и MusicRuntime/win-cuda128-x64 каталога приложения;
+это же содержимое включено в подписанное файловое обновление.
+CUDA: только cudart 12.8.90 и cuBLAS 12.8.4.1 из проверенных официальных архивов,
+полный NVIDIA LICENSE; nvcc/CCCL/SDK не распространяются.
+Microsoft CRT 14.44.35112: неизменённые msvcp140.dll, vcruntime140.dll,
+vcruntime140_1.dll из Visual Studio 2022 VC/Redist/MSVC/x64/Microsoft.VC143.CRT;
+app-local поставка, без системной установки. Полный текст условий в
+Licenses/texts/music-MSVC-RUNTIME.txt. Источники:
+https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution и
+https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/.
+Все компоненты учтены в штатном каталоге лицензий. Веса скачиваются отдельно.
+Проектная GPL не заменяет условия отдельных библиотек или моделей.
+Записи о локальной подготовке ниже сохранены как история.
+
+## YuE2 native runtime — 2026-10-05
+
+Local development runtime: yue2.cpp revision
+11c1ecb084329200e22fcb286e252b847442ea5c (ServeurpersoCom/yue2.cpp),
+GGML revision 40e16e4a814f7fe851a0c486fb9e8c722e957830 and yyjson, under MIT.
+Original copyright and permission texts are preserved in the native packs
+and Исходники/AIHub/Licenses/texts/music-*.txt; catalog ID runtime.music-yue2.
+The CUDA 12.8 SM89 pack additionally uses NVIDIA cudart 12.8.90 and
+cuBLAS 12.8.4.1. Catalog ID runtime.music-yue2-cuda128; complete NVIDIA archive
+license and third-party notices: Исходники/AIHub/Licenses/texts/music-CUDA-EULA.txt.
+Official archive manifest: https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.8.1.json.
+Build-only nvcc 12.8.93/CCCL 12.8.90 are kept outside the application.
+These are local developer packs, tested on RTX 4090; no installer/update
+containing these packs has been published. Model license entries are unchanged.
+
+## Music genre vocabulary — 2026-10-05
+
+Content/MusicGenres.json contains 2208 genre names and MBIDs extracted from
+https://musicbrainz.org/genres on 2026-10-05. MusicBrainz identifies genre names
+and MBIDs as CC0 core data: https://musicbrainz.org/doc/MusicBrainz_Database.
+No user tags, artist/recording genre associations or other supplementary data
+are included. Snapshot SHA-256:
+A9B4518FC449F876CF4F4142EB10199227DFBD5509C5EF8AB2CA0148BE994308.
+Catalog ID: builtin.music-genres. Full CC0 legal text:
+Исходники/AIHub/Licenses/texts/music-genres-CC0.txt (official Creative Commons text).
+Russian search hints and instrument recommendations are original project data.
+
 # THIRD PARTY NOTICES — AI_HUB
+
+## Music editor tokenizer — 2026-10-05
+
+The C# NFC/pre-tokenization/byte-BPE implementation follows the YuE2 tokenizer
+protocol in yue2.cpp, commit `11c1ecb084329200e22fcb286e252b847442ea5c` (MIT).
+Original copyright and permission text: `Исходники/AIHub/Licenses/texts/music-tokenizer-MIT.txt`.
+Catalog ID: `builtin.music-tokenizer`. This component does not include a native
+inference engine or any model weights. Token tables are read from the separately
+installed GGUF, subject to its existing model license entry.
 
 ## Image processing utility — 2026-10-04
 

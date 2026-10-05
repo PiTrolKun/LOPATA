@@ -20,6 +20,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\*.exe;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\*.dll;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\manifest.json;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\LICENSE-*.txt" Link="MusicRuntime\win-x64\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\*.exe;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\*.dll;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\manifest.json;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\LICENSE-*.txt" Link="MusicRuntime\win-cuda128-x64\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="Tools\image-generation-manifest.json" LogicalName="AIHub.ImageGenerationManifest" />
     <EmbeddedResource Include="Content\ImageGenerationExamples.json" LogicalName="AIHub.ImageGenerationExamples" />
     <Resource Include="Assets\GenerationExamples\*.png" />
@@ -53,6 +59,7 @@
     <Resource Include="Assets\AppIcon.ico" />
     <EmbeddedResource Include="Content\LiteraryTips.*.json" WithCulture="false" />
     <EmbeddedResource Include="Content\FinancialCurrencies.json" WithCulture="false" />
+    <EmbeddedResource Include="Content\Music*.json" WithCulture="false" />
     <Resource Include="Assets\lopata_brand.png" />
     <Resource Include="Assets\scenario-calibration.png" />
     <Content Include="Licenses\**\*"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
@@ -88,6 +95,9 @@
     </Content>
   </ItemGroup>
 
+  <Target Name="CheckMusicRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\manifest.json') Or !Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\manifest.json')" Text="Pinned YuE2 CPU/CUDA runtimes are missing. Restore the bundles documented in REESTR.md before building LOPATA." />
+  </Target>
   <Target Name="CheckCaptureRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\Capture\FFmpeg-8.1\bundle\ffmpeg.exe') Or !Exists('..\..\Runtime\Capture\FFmpeg-8.1\bundle\provenance.json')"
            Text="Bundled capture runtime is missing. Run Инструменты/prepare-capture-runtime.ps1 before building LOPATA." />

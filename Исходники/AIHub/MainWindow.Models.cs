@@ -41,6 +41,7 @@ public partial class MainWindow
         }
         _imageAnalysisBundleInstallationService.MaximumParallelConnections = connectionCount;
         GenerationPage.DownloadConnections(connectionCount);
+        MusicPage.DownloadConnections(connectionCount);
         ImageUtilityPage.DownloadConnections(connectionCount);
     }
 
@@ -112,6 +113,7 @@ public partial class MainWindow
 
     private bool IsManagedModelActive(string modelArtifactId)
     {
+        if (MusicPage.UsesArtifact(modelArtifactId)) return true;
         if (GenerationPage.UsesArtifact(modelArtifactId)) return true;
         if (ImageUtilityPage.UsesArtifact(modelArtifactId)) return true;
         if (modelArtifactId == ManagedModelCatalog.CoreArtifactId)

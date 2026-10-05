@@ -1,0 +1,106 @@
+[
+  {
+    "Id": "builtin.music-tokenizer",
+    "Name": "YuE2 tokenizer protocol · C# adaptation",
+    "Version": "11c1ecb084329200e22fcb286e252b847442ea5c",
+    "Author": "The yue2.cpp authors; C# adaptation: LOPATA contributors",
+    "License": "MIT",
+    "Source": "https://github.com/ServeurpersoCom/yue2.cpp/tree/11c1ecb084329200e22fcb286e252b847442ea5c",
+    "Checked": "2026-10-05",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/music-tokenizer-MIT.txt"
+    ],
+    "Terms": "",
+    "Ru": "Встроенная C#-адаптация протокола токенизации YuE2: NFC, разбиение текста и байтовый BPE. Словарь читается из отдельно установленного GGUF; веса и исполнительный движок не входят в этот компонент. Оригинальный MIT LICENSE сохранён. При распространении сохраняйте уведомление об авторстве и полный текст лицензии.",
+    "En": "Bundled C# adaptation of the YuE2 tokenization protocol: NFC, text splitting and byte BPE. Vocabulary is read from a separately installed GGUF; weights and inference runtime are not included in this component. Original MIT LICENSE retained. Preserve the copyright notice and full license text when redistributing."
+  },
+  {
+    "Id": "music-yue2-q8",
+    "Name": "YuE2-3B Q8_0 GGUF",
+    "Version": "64b030e3deb6e8150d2b7c0db641ef5a17eca8a3",
+    "Author": "MAP / YuE2 authors; GGUF conversion: Serveurperso",
+    "License": "CC BY-NC 4.0 + individual creator permission (2026-09-16)",
+    "Source": "https://huggingface.co/Serveurperso/YuE2-GGUF",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/music-yue2-MODEL_LICENSE.txt"
+    ],
+    "Terms": "",
+    "Ru": "Отдельная докачка музыкальных весов. Квантование и перевод в GGUF сохраняют условия исходных весов YuE2. Дополнительное разрешение позволяет отдельным авторам и музыкантам публиковать и продавать результаты при соблюдении условий полного текста. Оно не разрешает коммерческое применение весов компаниями или их коммерческую перепродажу. Исполнительный движок в этом этапе не устанавливается.",
+    "En": "Separately downloaded music weights. Quantization and GGUF conversion retain the YuE2 weight terms. The additional permission allows individual creators and musicians to publish and monetize outputs subject to the full terms. It does not authorize commercial weight use by companies or commercial redistribution of weights. No inference runtime is installed in this stage."
+  },
+  {
+    "Id": "music-yue2-vae",
+    "Name": "YuE2-Vae F32 GGUF",
+    "Version": "64b030e3deb6e8150d2b7c0db641ef5a17eca8a3",
+    "Author": "MAP / YuE2 authors; GGUF conversion: Serveurperso",
+    "License": "CC BY-NC 4.0 + individual creator permission (2026-09-16)",
+    "Source": "https://huggingface.co/Serveurperso/YuE2-GGUF",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/music-yue2-MODEL_LICENSE.txt"
+    ],
+    "Terms": "",
+    "Ru": "Отдельная докачка музыкальных весов. Квантование и перевод в GGUF сохраняют условия исходных весов YuE2. Дополнительное разрешение позволяет отдельным авторам и музыкантам публиковать и продавать результаты при соблюдении условий полного текста. Оно не разрешает коммерческое применение весов компаниями или их коммерческую перепродажу. Исполнительный движок в этом этапе не устанавливается.",
+    "En": "Separately downloaded music weights. Quantization and GGUF conversion retain the YuE2 weight terms. The additional permission allows individual creators and musicians to publish and monetize outputs subject to the full terms. It does not authorize commercial weight use by companies or commercial redistribution of weights. No inference runtime is installed in this stage."
+  },
+  {
+    "Id": "runtime.music-yue2",
+    "Name": "yue2.cpp + GGML + yyjson · CPU",
+    "Version": "11c1ecb084329200e22fcb286e252b847442ea5c",
+    "Author": "yue2.cpp authors; GGML authors; YaoYuan (yyjson)",
+    "License": "MIT",
+    "Source": "https://github.com/ServeurpersoCom/yue2.cpp/tree/11c1ecb084329200e22fcb286e252b847442ea5c",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/music-runtime-yue2-MIT.txt",
+      "texts/music-runtime-ggml-MIT.txt",
+      "texts/music-runtime-yyjson-MIT.txt"
+    ],
+    "Terms": "",
+    "Ru": "Локально собранный исполнитель YuE2 для Windows x64 с процессорным GGML и yyjson. Исходники и зависимость GGML закреплены по версиям; исходные уведомления MIT сохранены. Веса устанавливаются отдельно и имеют собственные условия. Неизменённые библиотеки Microsoft Visual C++ поставляются рядом с исполнителем как отдельный лицензионный компонент.",
+    "En": "Locally built YuE2 inference runtime for Windows x64 using CPU GGML and yyjson. Source and GGML revisions are pinned; original MIT notices are retained. Model weights are separate and have their own terms. Unmodified Microsoft Visual C++ libraries are shipped beside the runtime as a separate licensed component."
+  },
+  {
+    "Id": "runtime.music-yue2-cuda128",
+    "Name": "YuE2 · NVIDIA CUDA 12.8.1 acceleration",
+    "Version": "12.8.1; nvcc 12.8.93; cuBLAS 12.8.4.1",
+    "Author": "NVIDIA Corporation",
+    "License": "NVIDIA CUDA EULA; included third-party notices",
+    "Source": "https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.8.1.json",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/music-CUDA-EULA.txt"
+    ],
+    "Terms": "",
+    "Ru": "Отдельное ускорение локально собранного YuE2 через CUDA 12.8.1. Используются cudart 12.8.90 и cuBLAS 12.8.4.1 из официальных архивов NVIDIA, проверенных SHA-256. Полный LICENSE из архивов и вложенные уведомления сохранены. Компилятор nvcc и заголовки CCCL — только средства разработки, не часть поставки приложения. Драйвер не устанавливается и не изменяется. Веса и исходники исполнителя имеют отдельные условия.",
+    "En": "Separate CUDA 12.8.1 acceleration for locally built YuE2. Uses cudart 12.8.90 and cuBLAS 12.8.4.1 from official NVIDIA archives verified with SHA-256. Full archive LICENSE and included notices are retained. The nvcc compiler and CCCL headers are developer tooling, not application payload. No driver is installed or changed. Model weights and inference runtime sources have separate terms."
+  },
+  {
+    "Id": "runtime.music-msvc",
+    "Name": "Microsoft Visual C++ 2015–2022 Runtime",
+    "Version": "14.44.35112",
+    "Author": "Microsoft Corporation",
+    "License": "Microsoft Visual C++ Runtime license",
+    "Source": "https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/",
+    "Checked": "2026-10-05",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/music-MSVC-RUNTIME.txt"
+    ],
+    "Terms": "",
+    "Ru": "Неизменённые msvcp140.dll, vcruntime140.dll и vcruntime140_1.dll из Visual Studio 2022 VC/Redist/MSVC/x64. Поставляются только рядом с исполнителем YuE2; системная установка не выполняется. Оригинальные условия Microsoft сохранены. Это отдельные проприетарные библиотеки, лицензия проекта GPL не распространяется на них.",
+    "En": "Unmodified msvcp140.dll, vcruntime140.dll and vcruntime140_1.dll from Visual Studio 2022 VC/Redist/MSVC/x64. Shipped only beside YuE2; no system installation. Original Microsoft terms retained. These are separate proprietary libraries; the project GPL does not apply to them."
+  }
+]

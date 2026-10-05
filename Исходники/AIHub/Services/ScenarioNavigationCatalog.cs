@@ -24,6 +24,7 @@ public static class ScenarioNavigationCatalog
     public const string Capture = "screen_capture";
     public const string ImageGeneration = "image_generation";
     public const string ImageUtility = "image_utility";
+    public const string Music = "music";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -39,6 +40,9 @@ public static class ScenarioNavigationCatalog
             tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
         Node("creation_images", ScenarioNavigationKind.Group, Creation, "Navigation.Images", "", "create"),
+        Node("creation_music", ScenarioNavigationKind.Group, Creation, "Music.Group", "", "create"),
+        Node(Music, ScenarioNavigationKind.Scenario, "creation_music", "Music.Title", "Music.Description", "create",
+            tags: ["music_preparation", "music_wishes", "music_performers", "music_text_tools", "music_player", "music_status", "music_generation"], related: []),
         Node(ImageGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Generation.Title", "Generation.Description", "create",
             tags: ["image_generation", "image_variation", "generation_history", "image_autosave", "generation_model_switch", "prompt_spelling", "prompt_assistant", "image_reference", "image_metadata", "image_resize"], related: [Images]),
         Node("analysis_images", ScenarioNavigationKind.Group, Analysis, "Navigation.Images", "", "analyze"),
@@ -59,6 +63,9 @@ public static class ScenarioNavigationCatalog
     // Mechanic labels and canonical entrances share this catalog; no per-page tag lists.
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
+        Tag("music_preparation", Music),
+        Tag("music_generation", Music),
+        Tag("music_wishes", Music), Tag("music_performers", Music), Tag("music_text_tools", Music), Tag("music_player", Music), Tag("music_status", Music),
         Tag("advisor", Literary), Tag("writer", Literary), Tag("retelling", Literary),
         Tag("rag", Literary), Tag("jelly", Literary), Tag("anchors", Literary),
         Tag("route", Literary), Tag("idea", Literary), Tag("import", Literary),

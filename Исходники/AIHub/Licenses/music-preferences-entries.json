@@ -1,0 +1,17 @@
+[
+  {
+    "Id": "builtin.music-genres",
+    "Name": "MusicBrainz genre names · offline snapshot",
+    "Version": "2026-10-05:2208:A9B4518FC449F876CF4F4142EB10199227DFBD5509C5EF8AB2CA0148BE994308",
+    "Author": "MetaBrainz Foundation and MusicBrainz contributors",
+    "License": "CC0-1.0",
+    "Source": "https://musicbrainz.org/genres",
+    "Checked": "2026-10-05",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Texts": ["texts/music-genres-CC0.txt"],
+    "Terms": "",
+    "Ru": "Встроенный справочник 2208 названий и ID жанров MusicBrainz. В документации MusicBrainz_Database жанровые сущности Name/aliases/comment/MBID перечислены в Core data под CC0. Пользовательские теги, жанровые связи с исполнителями, оценки, описания документации и обложки не включены. Снимок работает без сети; русские поисковые синонимы и рекомендации инструментов созданы ЛОПАТОЙ. Источник условий: https://musicbrainz.org/doc/MusicBrainz_Database. Полный текст CC0 сохранён. Каталог не является перечнем гарантированно поддерживаемых моделью стилей.",
+    "En": "Bundled snapshot of 2208 MusicBrainz genre names and IDs. MusicBrainz_Database lists genre entity Name/aliases/comment/MBID as CC0 core data. User tags, artist-to-genre associations, ratings, documentation descriptions and cover art are not included. Works offline; Russian search aliases and instrument suggestions are original LOPATA additions. License source: https://musicbrainz.org/doc/MusicBrainz_Database. Full CC0 text retained. This is not a list of styles the model is guaranteed to perform."
+  }
+]

@@ -32,6 +32,8 @@ public partial class MainWindow
         RegisterImageGenerationBackgroundOperation();
         RegisterImageUtilityBackgroundOperation();
         RegisterImageShellBackgroundOperation();
+        _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
+        { ConfigureMusic(); return MusicPage.ResumeGenerationAsync(state, token); });
         _backgroundOperations.Changed += () =>
         { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -145,6 +147,11 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind == MusicGenerationRunner.BackgroundKind && notice.Project is not null)
+            {
+                RestoreFromTray(); OpenMusicScenario(false); MusicPage.ViewGenerationResult(notice.Project);
+                _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
             if (notice.Kind == FinancialAnalysisPlan.BackgroundKind)
             {
                 if (ViewFinancialBackgroundResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);

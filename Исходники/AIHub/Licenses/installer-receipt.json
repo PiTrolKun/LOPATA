@@ -502,5 +502,26 @@
     "Terms": "2F946E213850B2774DBCE5F26A6308EBB83F5ADD13DF687164ABF2F10099B947",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
+  },
+  {
+    "Id": "builtin.music-tokenizer",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "48DCEB02116B73DB96AFC73FA364E00F510A27BD940FE6DFDCF6E34D460987D1",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
+    "Id": "runtime.music-msvc",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "F09C57A445F2B698073A92A51BFAB3AD4689D0DD4392AC63D3FD3B90D8626B1D",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
+  },
+  {
+    "Id": "builtin.music-genres",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "3789CDEE27E2C2A233B4D3F53C30E433352F8395987B7B93EBD9CA271B2B82C0",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
   }
 ]

@@ -15,6 +15,7 @@ public partial class MainWindow
             CapturePage.Visibility = Visibility.Collapsed;
             GenerationPage.Visibility = Visibility.Collapsed;
             ImageUtilityPage.Visibility = Visibility.Collapsed;
+            MusicPage.Visibility = Visibility.Collapsed;
             if (id != ScenarioNavigationCatalog.Finance)
             {
                 FinancialPage.Visibility = Visibility.Collapsed;
@@ -22,6 +23,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.Music:
+                    OpenMusicScenario();
+                    break;
                 case ScenarioNavigationCatalog.ImageUtility:
                     OpenImageUtilityScenario();
                     break;
@@ -50,7 +54,7 @@ public partial class MainWindow
     private void RefreshScenarioNavigationState()
     {
         if (WorkStartPage.Visibility != Visibility.Visible) return;
-        if (FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible || GenerationPage.Visibility == Visibility.Visible || ImageUtilityPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
+        if (MusicPage.Visibility == Visibility.Visible || FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible || GenerationPage.Visibility == Visibility.Visible || ImageUtilityPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.IsSandboxLanding) RefreshPreviousSessions();
         StatusText.Text = L(ScenarioNavigationPage.IsSandboxLanding
             ? "Navigation.SandboxStatus" : "Status.WorkStartOpened");
