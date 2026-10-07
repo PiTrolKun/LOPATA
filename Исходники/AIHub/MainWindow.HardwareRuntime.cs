@@ -9,30 +9,61 @@ public partial class MainWindow
 {
     private ComponentAcquisitionPlan? _hardwareRuntimePlan;
     private readonly SemaphoreSlim _hardwareRuntimeCheck = new(1, 1);
+    private (long Length, DateTime Written)? _verifiedHardwareState;
 
-    private async Task<bool> CheckHardwareRuntimePromptAsync()
+    private (long Length, DateTime Written) ReadHardwareStateStamp()
+    {
+        var file = new FileInfo(AppDataPaths.ComponentStatePath);
+        return file.Exists ? (file.Length, file.LastWriteTimeUtc) : (-1, DateTime.MinValue);
+    }
+
+    private bool IsHardwareRuntimeCheckCurrent()
+    {
+        if (_hardwareRuntimePlan?.IsReady != true || _verifiedHardwareState is null) return false;
+        try
+        {
+            if (_verifiedHardwareState != ReadHardwareStateStamp()) return false;
+            // A same-session entry needs only the lightweight layout check.
+            // Installation/removal or a missing artifact requires full verification again.
+            return _componentManager.BuildPlanForComponents(
+                _hardwareRuntimePlan.Items.Select(item => item.ComponentId), "Hardware runtime re-entry").IsReady;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException
+            or System.Text.Json.JsonException or InvalidOperationException) { return false; }
+    }
+
+    private async Task<bool> CheckHardwareRuntimePromptAsync(ComputerPassport? knownPassport = null)
     {
         await _hardwareRuntimeCheck.WaitAsync();
+        BeginPreparationBusy();
         try
         {
             if (_processShutdownPending || _processShutdownComplete) return false;
             if (_coreModelDownloadCts is not null) return false;
-            // Refresh the inventory: installed model weights and an old passport do not prove runtime readiness.
-            var passport = await Task.Run(() => new ComputerPassportService().RegeneratePassport());
-            _hardwareRuntimePlan = await new HardwareRuntimePreparation(_componentManager).CheckAsync(passport.Gpus, CancellationToken.None);
+            // Reuse only the inventory just collected by startup; later checks refresh it.
+            _hardwareRuntimePlan = await Task.Run(async () =>
+            {
+                var passport = knownPassport ?? new ComputerPassportService().RegeneratePassport();
+                return await new HardwareRuntimePreparation(_componentManager).CheckAsync(passport.Gpus, _backgroundLifetime.Token);
+            }, _backgroundLifetime.Token);
             if (_processShutdownPending || _processShutdownComplete) return false;
             if (_coreModelDownloadCts is not null) return false;
-            if (_hardwareRuntimePlan.IsReady) return true;
+            if (_hardwareRuntimePlan.IsReady)
+            {
+                _verifiedHardwareState = ReadHardwareStateStamp();
+                return true;
+            }
             ShowHardwareRuntimePrompt();
             return false;
         }
+        catch (OperationCanceledException) when (_backgroundLifetime.IsCancellationRequested) { return false; }
         catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException
             or System.Text.Json.JsonException or InvalidOperationException)
         {
             StatusText.Text = L("HardwareRuntime.CheckFailed");
             return false;
         }
-        finally { _hardwareRuntimeCheck.Release(); }
+        finally { EndPreparationBusy(); _hardwareRuntimeCheck.Release(); }
     }
 
     private void ShowHardwareRuntimePrompt()

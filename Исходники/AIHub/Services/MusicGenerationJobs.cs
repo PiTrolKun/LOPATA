@@ -19,6 +19,7 @@ public sealed record MusicGenerationJob(string Id, string ModelsRoot, string Out
     public string RuntimeRevision { get; init; } = MusicYueRuntime.Revision;
     public string ModelRevision { get; init; } = MusicComponentCatalog.Revision;
     public string RuntimePack { get; init; } = MusicYueRuntime.CpuPack;
+    public MusicExpertSettings Expert { get; init; } = new();
 }
 
 public sealed class MusicGenerationJobs(string directory)
@@ -41,20 +42,23 @@ public sealed class MusicGenerationJobs(string directory)
         File.Move(temporary, path, true);
     }
     public MusicGenerationJob Create(string modelsRoot, string output, string title, int count, int duration, string style, string lyrics,
-        MusicGenerationVariant? repeat = null)
+        MusicGenerationVariant? repeat = null, MusicExpertSettings? expert = null)
     {
         if (count is < 1 or > 8) throw new ArgumentOutOfRangeException(nameof(count));
+        var settings = (expert ?? new()).Snapshot(); settings.Validate();
         if (string.IsNullOrWhiteSpace(output)) throw new ArgumentException("Choose an audio output folder.");
         output = Path.GetFullPath(output); Directory.CreateDirectory(output);
         var now = DateTime.Now; var name = CleanTitle(title);
         if (name.Length == 0) name = "Music_" + now.ToString("yyyy-MM-dd_HH-mm-ss");
         var variants = Enumerable.Range(0, count).Select(i => new MusicGenerationVariant(
-            repeat?.LanguageSeed ?? RandomNumberGenerator.GetInt32(1, int.MaxValue),
-            repeat?.SoundSeed ?? RandomNumberGenerator.GetInt32(1, int.MaxValue),
+            repeat?.LanguageSeed ?? Seed("lm_seed", i),
+            repeat?.SoundSeed ?? Seed("seed", i),
             UniquePath(output, name + (count > 1 ? "_" + (i + 1).ToString("000") : "")))).ToArray();
         var job = new MusicGenerationJob(Guid.NewGuid().ToString("N"), Path.GetFullPath(modelsRoot), output, name, style, lyrics, duration, now, variants)
-            { RuntimePack = Path.GetFileName(MusicYueRuntime.DirectoryPath) };
+            { RuntimePack = Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings };
         Save(job); return job;
+        int Seed(string key, int index) => settings.Integer(key) < 0 ? RandomNumberGenerator.GetInt32(1, int.MaxValue)
+            : (int)(((long)settings.Integer(key) + index) % ((long)int.MaxValue + 1));
     }
     public string StagePath(string id, string suffix) => Path.Combine(Folder(id), Guid.NewGuid().ToString("N") + suffix);
     public IReadOnlyList<MusicTrack> Tracks(string id)
@@ -66,6 +70,8 @@ public sealed class MusicGenerationJobs(string directory)
     }
     private void Validate(MusicGenerationJob job)
     {
+        if (job.Expert is null) throw new InvalidDataException("Missing music settings snapshot.");
+        job.Expert.Validate();
         var folder = Path.GetFullPath(Folder(job.Id)) + Path.DirectorySeparatorChar;
         if (job.RuntimeRevision != MusicYueRuntime.Revision || job.ModelRevision != MusicComponentCatalog.Revision
             || job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack)

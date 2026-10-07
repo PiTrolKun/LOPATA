@@ -16,14 +16,15 @@ public static class MusicHardwarePolicy
         request.Validate();
         if (prefixTokens < 0 || abcTokens < 0 || weights.ArBytes <= 0 || weights.NarBytes <= 0 ||
             weights.VaeBytes <= 0 || weights.KvBytesPerToken <= 0) throw new ArgumentOutOfRangeException(nameof(weights));
-        var semantic = Math.Min(9000, request.DurationSeconds * 25);
-        var needed = checked(prefixTokens + (synthesis ? abcTokens + 2 + semantic * 2 : request.PlanTokenLimit) + 256);
+        var semantic = request.SequenceLimit;
+        var branches = synthesis && request.EffectiveExpert.Guidance != 1 ? 2 : 1;
+        var needed = checked(prefixTokens + (synthesis ? abcTokens + 2 + semantic * 2 : request.EffectivePlanLimit) + 256);
         // Keep a complete synthesis chunk when possible; upstream itself chunks at the 24,576 ceiling.
         var context = Math.Min(MusicTextBudget.ContextSize, Math.Max(512, checked((needed + 255) / 256 * 256)));
-        var kv = checked(weights.KvBytesPerToken * context); // cot=full, batch=1, guidance=1: one KV set.
+        var kv = checked(weights.KvBytesPerToken * context * branches);
         var workingWeights = synthesis ? Math.Max(weights.ArBytes, checked(weights.NarBytes + weights.VaeBytes)) : weights.ArBytes;
         // Compute/allocator allowance is deliberately an estimate, not an exact allocation guarantee.
-        var graph = checked(1024 * MiB + prefixTokens * 32768L + (synthesis ? semantic * 131072L : 0));
+        var graph = checked((1024 * MiB + prefixTokens * 32768L + (synthesis ? semantic * 131072L : 0)) * branches);
         var required = checked(workingWeights + kv + graph + 512 * MiB);
         return new(context, kv, graph, required);
     }

@@ -36,3 +36,10 @@ VERSION text eol=lf
 Исходники/AIHub/Licenses/texts/sd-hardware-NOTICES.txt -text -eol -whitespace
 
 Исходники/AIHub/Licenses/texts/music-MSVC-RUNTIME.txt -text -eol -whitespace
+
+# Archived user research remains byte-identical to the supplied originals.
+ТЗ/Архив/LOPATA_YuE2_Studio_потенциальная_интеграция_2026-10-07.md -text -eol -whitespace
+ТЗ/Архив/LOPATA_YuE2_исследование_2026-10-07.md -text -eol -whitespace
+ТЗ/Архив/LOPATA_выходной_формат_музыки_и_метаданные_2026-10-07.md -text -eol -whitespace
+ТЗ/Архив/LOPATA_идея_контроллер_YuE2.md -text -eol -whitespace
+ТЗ/Архив/LOPATA_музыкальные_модели_для_тестов_2026-10-07.md -text -eol -whitespace

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
+using AIHub.Services;
 using Button = System.Windows.Controls.Button;
 using UserControl = System.Windows.Controls.UserControl;
 using TextBox = System.Windows.Controls.TextBox;
@@ -18,7 +19,11 @@ public sealed class MusicGenerationControl : UserControl
 {
     private readonly TextBox _title = new() { MinWidth = 70, Padding = new(5), MaxLength = 160 };
     private readonly ComboBox _count = new() { Width = 65, MinHeight = 30 }, _duration = new() { Width = 190, MinHeight = 30 };
-    private readonly Button _start, _cancel, _poetry;
+    private readonly Button _start, _cancel, _poetry, _expert;
+    private MusicExpertSettings _expertSettings = new();
+    private Exception? _expertLoadError;
+    private ModelExpertWindow? _expertWindow;
+    public MusicExpertSettings ExpertSettings => _expertSettings.Snapshot();
     private readonly TextBlock _heading = MusicAudioUi.Text(15), _titleLabel = MusicAudioUi.Text(12),
         _countLabel = MusicAudioUi.Text(12), _durationLabel = MusicAudioUi.Text(12), _readiness = MusicAudioUi.Text(11);
     private readonly Grid _settings = new();
@@ -64,9 +69,19 @@ public sealed class MusicGenerationControl : UserControl
         _cancel.Width = _cancel.Height = 26; _cancel.Padding = new(5); _cancel.Margin = new(0, 8, 0, 0);
         var actions = new StackPanel { Orientation = Orientation.Vertical }; actions.Children.Add(_start); actions.Children.Add(_cancel);
         _cancel.HorizontalAlignment = HorizontalAlignment.Center; Grid.SetColumn(actions, 1); top.Children.Add(actions);
-        var lower = new StackPanel { Margin = new(0, 20, 0, 0) };
+        var lower = new Grid(); lower.ColumnDefinitions.Add(new()); lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         _poetry = MusicAudioUi.IconButton("PoetryChat", "M2,3 H22 V16 H10 L5,21 V16 H2 Z M9,12 L16,5 L19,8 L12,15 H9 Z", () => { });
-        _poetry.Width = _poetry.Height = 42; _poetry.IsEnabled = false; lower.Children.Add(_poetry); root.Children.Add(lower);
+        _poetry.Width = _poetry.Height = 42; _poetry.IsEnabled = false;
+        _poetry.HorizontalAlignment = HorizontalAlignment.Left; lower.Children.Add(_poetry);
+        _expert = MusicAudioUi.IconButton("Expert", "M12,2 L14,5 L17,5 L19,7 L19,10 L22,12 L19,14 L19,17 L17,19 L14,19 L12,22 L10,19 L7,19 L5,17 L5,14 L2,12 L5,10 L5,7 L7,5 L10,5 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12", OpenExpert);
+        _expert.Width = _expert.Height = 42; Grid.SetColumn(_expert, 1); lower.Children.Add(_expert);
+        var toolbar = new Border { Child = lower, CornerRadius = new(10), BorderThickness = new(1),
+            Padding = new(3), Margin = new(0, 12, 0, 0) };
+        toolbar.SetResourceReference(Border.BorderBrushProperty, "LineBrush");
+        DockPanel.SetDock(toolbar, Dock.Bottom);
+        root.Children.Insert(0, toolbar); root.Children.Add(new Grid());
+        try { _expertSettings = ModelExpertPresets.Default.Current(); }
+        catch (Exception e) when (e is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { _expertLoadError = e; }
         AutomationProperties.SetAutomationId(_start, "Music.Generation.StartPause");
         AutomationProperties.SetAutomationId(_title, "Music.Generation.Title");
         AutomationProperties.SetAutomationId(_count, "Music.Generation.Variants");
@@ -90,21 +105,39 @@ public sealed class MusicGenerationControl : UserControl
         _heading.Text = L("Heading"); _titleLabel.Text = L("Title"); _countLabel.Text = L("Variants"); _durationLabel.Text = L("Duration");
         _title.ToolTip = L("TitleHint"); _duration.ToolTip = L("DurationHint");
         MusicAudioUi.Label(_poetry, L("Poetry")); MusicAudioUi.Label(_cancel, L("Cancel"));
+        MusicAudioUi.Label(_expert, _l("Music.Expert.Title"));
         UpdateCaption();
     }
     public void UpdateState(bool canStart, bool busy, bool paused, bool runtimeReady, bool commandsDisabled = false)
     {
         _busy = busy; _paused = paused; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused;
-        _start.IsEnabled = paused || busy || canStart && runtimeReady; _cancel.IsEnabled = busy || paused;
+        _expert.IsEnabled = !busy && !paused && !commandsDisabled;
+        _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null; _cancel.IsEnabled = busy || paused;
         if (commandsDisabled) _start.IsEnabled = _cancel.IsEnabled = false;
         _readiness.Text = runtimeReady ? "" : L("RuntimeMissing"); UpdateCaption();
     }
     private void UpdateCaption()
     {
-        _readiness.Text = _runtimeReady ? "" : L("RuntimeMissing");
+        _readiness.Text = _expertLoadError is not null ? _l("Music.Expert.Invalid") : _runtimeReady ? "" : L("RuntimeMissing");
         var key = _paused ? "Resume" : _busy ? "Pause" : "Start";
         _start.Content = _busy && !_paused ? Icon("M7,4 V20 M17,4 V20") : Icon("M7,4 L20,12 L7,20 Z");
         MusicAudioUi.Label(_start, L(key));
+    }
+    private void OpenExpert()
+    {
+        if (_expertWindow is not null) { _expertWindow.Activate(); return; }
+        try {
+            if (_expertLoadError is not null) System.Windows.MessageBox.Show(Window.GetWindow(this),
+                _l("Music.Expert.Invalid") + "\n" + _expertLoadError.Message, _l("Music.Expert.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            var window = new ModelExpertWindow(_expertSettings, _l) { Owner = Window.GetWindow(this) };
+            _expertWindow = window;
+            if (window.ShowDialog() == true) { _expertSettings = window.Result.Snapshot(); _expertLoadError = null; OptionsChanged?.Invoke(); }
+        }
+        catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) {
+            System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Music.Expert.Invalid") + "\n" + error.Message,
+                _l("Music.Expert.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally { _expertWindow = null; }
     }
     private static UIElement Icon(string geometry) => new Viewbox { Width = 22, Height = 22,
         Child = new System.Windows.Shapes.Path { Data = Geometry.Parse(geometry), Stroke = Brushes.White, StrokeThickness = 2.5 } };

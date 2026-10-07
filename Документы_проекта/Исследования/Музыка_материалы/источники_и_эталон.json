@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "capturedOn": "2026-10-07",
+  "sourceCommit": "a4ee25d5f81cb2e663fc5a12ead8d7d0099dc468",
+  "sources": [
+    {
+      "id": "S01",
+      "originalPath": "H:\\AI_HUB\\Данные_для_внедрения\\Идеи\\LOPATA_идея_контроллер_YuE2.md",
+      "bytes": 25761,
+      "sha256": "5bc9edc4b843a9ebc2d93c907a2d8b472a25949607eb527a660324fb15ff747c",
+      "status": "archived_unmodified",
+      "archivedPath": "H:\\AI_HUB\\ТЗ\\Архив\\LOPATA_идея_контроллер_YuE2.md"
+    },
+    {
+      "id": "S02",
+      "originalPath": "H:\\AI_HUB\\Данные_для_внедрения\\Идеи\\LOPATA_YuE2_Studio_потенциальная_интеграция_2026-10-07.md",
+      "bytes": 16720,
+      "sha256": "0d83aecd38411da3692401cd61bd314ecc1c08a60c6b94a07d9135bed6a653f9",
+      "status": "archived_unmodified",
+      "archivedPath": "H:\\AI_HUB\\ТЗ\\Архив\\LOPATA_YuE2_Studio_потенциальная_интеграция_2026-10-07.md"
+    },
+    {
+      "id": "S03",
+      "originalPath": "H:\\AI_HUB\\Данные_для_внедрения\\Идеи\\LOPATA_музыкальные_модели_для_тестов_2026-10-07.md",
+      "bytes": 15788,
+      "sha256": "1dba50d4fb0c6f8a01502cac86faf5c1cf476052af57943604c059f5fa9624e8",
+      "status": "archived_unmodified",
+      "archivedPath": "H:\\AI_HUB\\ТЗ\\Архив\\LOPATA_музыкальные_модели_для_тестов_2026-10-07.md"
+    },
+    {
+      "id": "S04",
+      "originalPath": "H:\\Googl\\LOPATA_YuE2_исследование_2026-10-07.md",
+      "bytes": 28059,
+      "sha256": "a30a23050b61d2529c099c8a6a792b49517c0c389b67990302fec7ca0cf443a5",
+      "status": "archived_unmodified",
+      "archivedPath": "H:\\AI_HUB\\ТЗ\\Архив\\LOPATA_YuE2_исследование_2026-10-07.md"
+    },
+    {
+      "id": "S05",
+      "originalPath": "H:\\AI_HUB\\Данные_для_внедрения\\Идеи\\LOPATA_выходной_формат_музыки_и_метаданные_2026-10-07.md",
+      "bytes": 14888,
+      "sha256": "9c629e57fbc33a470cbaba1be6a92756c3736b77bcdab8fd05cd9316cde8f660",
+      "status": "archived_unmodified",
+      "archivedPath": "H:\\AI_HUB\\ТЗ\\Архив\\LOPATA_выходной_формат_музыки_и_метаданные_2026-10-07.md"
+    }
+  ],
+  "benchmark": {
+    "id": "B02",
+    "file": "Все_для_людей_эталон.txt",
+    "source": "S04",
+    "sourceSection": "6",
+    "extraction": "Exact text block; only CRLF normalized to LF; final newline retained",
+    "sha256": "62ce963943bbda57a0364898aad7e2e805b38d11714f7482d546842680792f40",
+    "lineCount": 78,
+    "sourceBlockVerified": true
+  },
+  "archivedOn": "2026-10-07"
+}

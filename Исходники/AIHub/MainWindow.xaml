@@ -3527,6 +3527,9 @@
             </StackPanel>
         </Border>
 
+        <controls:StartupBusyControl x:Name="StartupBusyOverlay" Grid.Row="0" Grid.RowSpan="3"
+                                     Panel.ZIndex="1100" Visibility="Visible" />
+
         <Grid x:Name="ChoiceAiActivityPanel"
               Grid.Row="0"
               Grid.RowSpan="3"

@@ -19,18 +19,19 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
             token.ThrowIfCancellationRequested(); var variant = job.Variants[i];
             if (!variant.Completed)
             {
-                var request = new MusicYueRequest(job.Style, job.Lyrics, variant.LanguageSeed, variant.SoundSeed, job.DurationSeconds);
-                if (variant.PlanHash is null)
+                var request = new MusicYueRequest(job.Style, job.Lyrics, variant.LanguageSeed, variant.SoundSeed, job.DurationSeconds)
+                    { Expert = job.Expert.Snapshot() };
+                if (job.Expert.Cot != "off" && variant.PlanHash is null)
                 {
                     var plan = jobs.StagePath(id, ".abc"); Stage?.Invoke(MusicGenerationStage.Loading);
                     await worker.PlanAsync(Artifact(MusicComponentCatalog.ModelId), request, jobs.StagePath(id, ".json"), plan, token);
                     variant = variant with { PlanFile = plan, PlanHash = await HashAsync(plan, token) }; Save(variant);
                 }
-                await MatchHashAsync(variant.PlanFile!, variant.PlanHash!, token);
+                if (job.Expert.Cot != "off") await MatchHashAsync(variant.PlanFile!, variant.PlanHash!, token);
                 if (variant.AudioHash is null)
                 {
                     var audio = jobs.StagePath(id, ".wav"); Stage?.Invoke(MusicGenerationStage.Loading);
-                    request = request with { Abc = await File.ReadAllTextAsync(variant.PlanFile!, token) };
+                    if (job.Expert.Cot != "off") request = request with { Abc = await File.ReadAllTextAsync(variant.PlanFile!, token) };
                     await worker.SynthesizeAsync(Artifact(MusicComponentCatalog.ModelId), Artifact(MusicComponentCatalog.DecoderId), request,
                         jobs.StagePath(id, ".json"), audio, token);
                     _ = MusicWaveFile.ReadDuration(audio);

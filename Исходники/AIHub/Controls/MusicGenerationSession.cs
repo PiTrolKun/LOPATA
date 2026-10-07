@@ -49,7 +49,8 @@ public sealed class MusicGenerationSession : IDisposable
             await MusicYueRuntime.VerifyAsync(directory, token);
             var cards = MusicComponentCatalog.CreateCards(_modelsRoot);
             string Artifact(string id) { var card = cards.Single(c => c.ModelArtifactId == id); return Path.Combine(card.InstallDirectory, card.Files.Single().RelativePath); }
-            var request = new MusicYueRequest(_view.Wishes.RequestStyle, _view.Editor.Lyrics, 1, 1, _view.Generation.Options.DurationSeconds ?? 360);
+            var request = new MusicYueRequest(_view.Wishes.RequestStyle, _view.Editor.Lyrics, 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
+                { Expert = _view.Generation.ExpertSettings };
             var choice = await MusicHardwareProbe.CheckAsync(directory, Artifact(MusicComponentCatalog.ModelId),
                 Artifact(MusicComponentCatalog.DecoderId), request, true, token, NativeLog);
             if (!_disposed) { HardwareChanged(choice); _ready = true; }
@@ -68,8 +69,9 @@ public sealed class MusicGenerationSession : IDisposable
     private void RefreshBudget()
     {
         if (_disposed) return;
-        var reserve = new MusicYueRequest("", "", 1, 1, _view.Generation.Options.DurationSeconds ?? 360).OutputReserve;
-        _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, MusicTextBudget.DefaultInstruction, reserve, _view.Wishes.State.Instrumental);
+        var request = new MusicYueRequest("", "", 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
+            { Expert = _view.Generation.ExpertSettings };
+        _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, request.Instruction, request.OutputReserve, _view.Wishes.State.Instrumental);
         RefreshButtons();
     }
     private async Task StartPauseAsync()
@@ -88,7 +90,7 @@ public sealed class MusicGenerationSession : IDisposable
             _starting = true; RefreshButtons();
             var options = _view.Generation.Options;
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
-                options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics);
+                options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings);
             _starting = false; await RunAsync(job.Id);
         }
         catch (Exception error) { ReportFailure(error); }
@@ -102,11 +104,14 @@ public sealed class MusicGenerationSession : IDisposable
             _starting = true; RefreshButtons();
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
-                original.Style, original.Lyrics, variant);
+                original.Style, original.Lyrics, variant, original.Expert);
             // Preserve the exact score used by the completed track, alongside its two seeds.
-            var score = _jobs.StagePath(repeat.Id, ".abc"); File.Copy(variant.PlanFile!, score, false);
-            repeat = repeat with { RuntimePack = original.RuntimePack,
-                Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.PlanHash }] }; _jobs.Save(repeat);
+            repeat = repeat with { RuntimePack = original.RuntimePack };
+            if (original.Expert.Cot != "off") {
+                var score = _jobs.StagePath(repeat.Id, ".abc"); File.Copy(variant.PlanFile!, score, false);
+                repeat = repeat with { Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.PlanHash }] };
+            }
+            _jobs.Save(repeat);
             _starting = false; await RunAsync(repeat.Id);
         }
         catch (Exception error) { ReportFailure(error); }

@@ -20,8 +20,9 @@ public static class MusicHardwareProbe
         var weights = JsonSerializer.Deserialize<MusicWeightMemory>(await RunAsync(directory, ["--weights", model, decoder], token))
             ?? throw new InvalidDataException("Missing music memory metadata.");
         var tokenizer = await Task.Run(() => new MusicTokenizer(MusicTokenizerMetadata.Read(model, token)), token);
-        var prefix = tokenizer.Count(MusicTextBudget.BuildText(request.Lyrics, request.Style), token) + 2;
-        var abc = synthesis ? string.IsNullOrWhiteSpace(request.Abc) ? request.PlanTokenLimit : tokenizer.Count(request.Abc, token) : 0;
+        var prefix = tokenizer.Count(MusicTextBudget.BuildText(request.Lyrics, request.Style, request.Instruction), token) + 2;
+        var abc = synthesis && request.EffectiveExpert.Cot != "off"
+            ? string.IsNullOrWhiteSpace(request.Abc) ? request.EffectivePlanLimit : tokenizer.Count(request.Abc, token) : 0;
         var demand = MusicHardwarePolicy.Demand(weights, prefix, abc, request, synthesis);
         var devices = new List<MusicDevice>();
         var probeFailureReason = failedGpuReason;

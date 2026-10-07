@@ -9,22 +9,28 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
 {
     public string Abc { get; init; } = "";
     public int PlanTokenLimit { get; init; } = 4096;
-    public object NativeRequest => new { style = Style, lyrics = Lyrics, abc = Abc, cot = "full", duration = DurationSeconds,
-        lm_seed = LanguageSeed, seed = SoundSeed, steps = 32, lm_batch_size = 1, synth_batch_size = 1,
-        output_format = "wav16", abc_sampling = new { max_tokens = PlanTokenLimit, min_tokens = Math.Min(32, PlanTokenLimit) },
-        semantic_sampling = new { max_tokens = Math.Min(9000, checked(DurationSeconds * 25)),
-            min_tokens = Math.Min(200, checked(DurationSeconds * 25)) } };
-    public int OutputReserve => checked(PlanTokenLimit + Math.Min(9000, DurationSeconds * 25));
+    public MusicExpertSettings? Expert { get; init; }
+    public MusicExpertSettings EffectiveExpert => Expert ?? new();
+    public int EffectivePlanLimit => Expert?.PlanLimit ?? PlanTokenLimit;
+    public int SequenceLimit => EffectiveExpert.SequenceLimit(DurationSeconds);
+    public string Instruction => EffectiveExpert.Instruction;
+    public object NativeRequest => new { style = Style, lyrics = Lyrics, abc = Abc, cot = EffectiveExpert.Cot, duration = DurationSeconds,
+        lm_seed = LanguageSeed, seed = SoundSeed, steps = EffectiveExpert.Integer("steps"), lm_batch_size = 1, synth_batch_size = 1,
+        cfg_scale = EffectiveExpert.Get("cfg_scale"), peak_clip = EffectiveExpert.Integer("peak_clip"),
+        output_format = "wav16", abc_sampling = EffectiveExpert.Sampling("abc_sampling", Math.Max(1, EffectivePlanLimit)),
+        semantic_sampling = EffectiveExpert.Sampling("semantic_sampling", SequenceLimit) };
+    public int OutputReserve => checked(EffectivePlanLimit + SequenceLimit);
     public void CheckContext(IMusicTokenizer tokenizer, CancellationToken token)
     {
         Validate();
-        var prefix = checked(tokenizer.Count(MusicTextBudget.BuildText(Lyrics, Style), token) + 2);
+        var prefix = checked(tokenizer.Count(MusicTextBudget.BuildText(Lyrics, Style, Instruction), token) + 2);
         var needed = string.IsNullOrWhiteSpace(Abc) ? checked(prefix + OutputReserve)
-            : checked(prefix + tokenizer.Count(Abc, token) + 2 + Math.Min(9000, DurationSeconds * 25));
+            : checked(prefix + tokenizer.Count(Abc, token) + 2 + SequenceLimit);
         if (needed > MusicTextBudget.FillLimit) throw new InvalidDataException("Music request exceeds the context budget including generated output.");
     }
     public void Validate()
     {
+        Expert?.Validate();
         if (LanguageSeed < 0 || SoundSeed < 0 || DurationSeconds is < 1 or > 360 || PlanTokenLimit is < 32 or > 4096)
             throw new ArgumentOutOfRangeException(nameof(DurationSeconds), "YuE2 seeds and duration must be fixed before execution.");
     }
@@ -55,7 +61,8 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
         string outputPath, CancellationToken token)
     {
         request.Validate();
-        if (string.IsNullOrWhiteSpace(request.Abc)) throw new InvalidDataException("A saved musical plan is required before synthesis.");
+        if (request.EffectiveExpert.Cot != "off" && string.IsNullOrWhiteSpace(request.Abc))
+            throw new InvalidDataException("A saved musical plan is required before synthesis.");
         await PrepareAsync(model, request, token);
         await VerifyModelAsync(decoder, MusicComponentCatalog.DecoderId, token);
         await WriteRequestAsync(requestPath, request, token);

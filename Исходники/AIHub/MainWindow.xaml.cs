@@ -186,7 +186,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            if (!await CheckHardwareRuntimePromptAsync()) return;
+            if (!IsHardwareRuntimeCheckCurrent() && !await CheckHardwareRuntimePromptAsync()) return;
 
             if (!_userProfile.IsComplete())
             {
@@ -482,6 +482,7 @@ public partial class MainWindow : Window
 
     private void ApplyLocalization()
     {
+        StartupBusyOverlay.Message = L("Startup.Checking");
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(
             _localizationService.CurrentLanguageCode.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "en-US" : "ru-RU");
         AboutButton.ToolTip = L("About.Title");
@@ -1007,14 +1008,8 @@ public partial class MainWindow : Window
             UpdateProfileButtonState();
             StartCoreSessionLog();
             _ = InitializeUserContextAsync();
-            var passport = _computerPassportService.RegeneratePassport();
-            _lastPassport = passport;
-            SavePassportState(passport);
-            UpdateComputerPassportStep(passport);
             LoadStorageSettingsIntoControls();
             UpdateStorageSteps();
-            UpdateWelcomeStatus();
-            EvaluateCoreModelOnStartup();
         }
         catch
         {
@@ -2170,9 +2165,10 @@ public partial class MainWindow : Window
             : L("Status.PassportReadySetupIncomplete");
     }
 
-    private void EvaluateCoreModelOnStartup()
+    private async Task EvaluateCoreModelOnStartupAsync()
     {
-        var result = _coreModelManager.Check(_storageSettings);
+        var result = await Task.Run(() => _coreModelManager.Check(_storageSettings), _backgroundLifetime.Token);
+        if (_backgroundLifetime.IsCancellationRequested || _processShutdownPending || _processShutdownComplete) return;
         _lastCoreModelCheck = result;
         if (result.Availability != CoreModelAvailability.Installed && !_isCoreModelPromptPostponed)
         {
@@ -2180,15 +2176,18 @@ public partial class MainWindow : Window
             return;
         }
 
+        var rerankerInstalled = result.Availability == CoreModelAvailability.Installed
+            && await Task.Run(() => _toolModelManager.IsRerankerInstalled(_storageSettings), _backgroundLifetime.Token);
+        if (_backgroundLifetime.IsCancellationRequested || _processShutdownPending || _processShutdownComplete) return;
         if (result.Availability == CoreModelAvailability.Installed
-            && !_toolModelManager.IsRerankerInstalled(_storageSettings)
+            && !rerankerInstalled
             && !_isCoreModelPromptPostponed)
         {
             ShowRerankerModelPrompt();
         }
         else if (result.Availability == CoreModelAvailability.Installed && !_isCoreModelPromptPostponed)
         {
-            _ = CheckHardwareRuntimePromptAsync();
+            await CheckHardwareRuntimePromptAsync(_lastPassport);
         }
     }
 
