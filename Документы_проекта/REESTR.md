@@ -1,7 +1,8 @@
 
 ## 07.10.2026 — U5, совместимое расширение формата данных
 
-0.4.8-dev, пока без публикации. Новых зависимостей, runtime или лицензий нет.
+Исходники 0.4.8-dev; изменения опубликованы в [файловом 0.4.8-beta](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.4.8-beta).
+Новых зависимостей, runtime или лицензий нет.
 `LOPATA.ModelPreset` v2 добавляет Collection (Simple/Expert), Tuning и Recipe;
 model=YuE2, contract=1 сохранены. v1 остаётся экспертным снимком без выдуманных
 закреплений. Библиотеки AppDataPaths: Music/Expert/YuE2 и Music/Simple/YuE2.
