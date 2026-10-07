@@ -20,6 +20,7 @@ public sealed record MusicGenerationJob(string Id, string ModelsRoot, string Out
     public string ModelRevision { get; init; } = MusicComponentCatalog.Revision;
     public string RuntimePack { get; init; } = MusicYueRuntime.CpuPack;
     public MusicExpertSettings Expert { get; init; } = new();
+    public MusicWishSnapshot? Wishes { get; init; }
 }
 
 public sealed class MusicGenerationJobs(string directory)
@@ -42,7 +43,7 @@ public sealed class MusicGenerationJobs(string directory)
         File.Move(temporary, path, true);
     }
     public MusicGenerationJob Create(string modelsRoot, string output, string title, int count, int duration, string style, string lyrics,
-        MusicGenerationVariant? repeat = null, MusicExpertSettings? expert = null)
+        MusicGenerationVariant? repeat = null, MusicExpertSettings? expert = null, MusicWishSnapshot? wishes = null)
     {
         if (count is < 1 or > 8) throw new ArgumentOutOfRangeException(nameof(count));
         var settings = (expert ?? new()).Snapshot(); settings.Validate();
@@ -55,7 +56,7 @@ public sealed class MusicGenerationJobs(string directory)
             repeat?.SoundSeed ?? Seed("seed", i),
             UniquePath(output, name + (count > 1 ? "_" + (i + 1).ToString("000") : "")))).ToArray();
         var job = new MusicGenerationJob(Guid.NewGuid().ToString("N"), Path.GetFullPath(modelsRoot), output, name, style, lyrics, duration, now, variants)
-            { RuntimePack = Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings };
+            { RuntimePack = Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot() };
         Save(job); return job;
         int Seed(string key, int index) => settings.Integer(key) < 0 ? RandomNumberGenerator.GetInt32(1, int.MaxValue)
             : (int)(((long)settings.Integer(key) + index) % ((long)int.MaxValue + 1));

@@ -22,7 +22,7 @@ public sealed class MusicStatusControl : UserControl, IDisposable
     private readonly TextBox _terminal = new()
     {
         IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap,
-        VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+        VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
         Background = Brushes.Black, Foreground = Brushes.Gainsboro, SelectionBrush = Brushes.RoyalBlue,
         FontFamily = new FontFamily("Consolas"), FontSize = 11, Padding = new(4, 1, 4, 1), BorderThickness = new(0)
     };
@@ -39,6 +39,7 @@ public sealed class MusicStatusControl : UserControl, IDisposable
         Telemetry = telemetry;
         AutomationProperties.SetAutomationId(this, "Music.Status");
         AutomationProperties.SetAutomationId(_terminal, "Music.Status.Log");
+        _terminal.PreviewMouseWheel += (_, e) => e.Handled = true;
         AutomationProperties.SetAutomationId(_time, "Music.Status.Time");
         AutomationProperties.SetAutomationId(_progress, "Music.Status.Progress");
         // The native Windows progress theme can ignore Foreground; keep stage colours explicit.

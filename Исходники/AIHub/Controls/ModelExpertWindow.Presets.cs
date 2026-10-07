@@ -33,13 +33,15 @@ public sealed partial class ModelExpertWindow
         panel.Children.Add(actions); panel.Children.Add(_modified);
         panel.Children.Add(MusicWishUi.Text(L("PresetHint")));
         _presets.AddRange(_store.Load());
-        _selected = _presets.FirstOrDefault(p => p.Settings.SameAs(_draft));
+        var state = MusicTuningProfile.State(_draft);
+        var name = _store.Collection == "Expert" ? state.ExpertPreset : state.SimplePreset?.Replace("User:", "", StringComparison.Ordinal);
+        _selected = _presets.FirstOrDefault(p => p.Name == name) ?? _presets.FirstOrDefault(p => p.Settings.SameAs(_draft));
         _presetName.Text = _selected?.Name ?? "";
         Reload();
         _presetList.SelectionChanged += (_, _) => {
             if (_reloading) return;
             _selected = _presetList.SelectedIndex <= 0 ? null : _presetList.SelectedItem as ModelExpertPreset;
-            _draft = _selected?.Settings.Snapshot() ?? new(); _presetName.Text = _selected?.Name ?? "";
+            SelectDraft(_selected?.Settings.Snapshot() ?? new()); _presetName.Text = _selected?.Name ?? "";
             Render(); Changed();
         };
         return panel;
@@ -50,6 +52,13 @@ public sealed partial class ModelExpertWindow
         catch (Exception error) when (error is IOException or ArgumentException or System.Text.Json.JsonException or UnauthorizedAccessException) { ShowError(error); }
     }
     private string PresetName() => _presetName.Text.Trim();
+    private void SelectDraft(MusicExpertSettings settings)
+    {
+        var state = MusicTuningProfile.State(settings);
+        _draft = settings with { Tuning = _store.Collection == "Expert" ? state with {
+            ExpertPreset = _selected?.Name, ExpertModified = false, SimpleModified = true } : state with {
+            SimplePreset = _selected is null ? "Ordinary" : "User:" + _selected.Name, SimpleModified = false, ExpertModified = true } };
+    }
     private void Reload()
     {
         _reloading = true; _presetList.Items.Clear();
@@ -61,18 +70,23 @@ public sealed partial class ModelExpertWindow
     private void Commit(List<ModelExpertPreset> next, ModelExpertPreset? selection)
     {
         _store.Save(next); _presets.Clear(); _presets.AddRange(next); _selected = selection;
+        var state = MusicTuningProfile.State(_draft);
+        _draft = _draft with { Tuning = _store.Collection == "Expert" ? state with {
+            ExpertPreset = selection?.Name, ExpertModified = selection is not null && !selection.Settings.SameAs(_draft)
+        } : state with { SimplePreset = selection is null ? null : "User:" + selection.Name,
+            SimpleModified = selection is not null && !selection.Settings.SameAs(_draft) } };
         _presetName.Text = selection?.Name ?? ""; Reload(); Changed();
     }
     private void SaveNew()
     {
-        _draft.Validate(); var preset = new ModelExpertPreset(PresetName(), _draft.Snapshot());
+        _draft.Validate(); var preset = ModelExpertPresets.Create(PresetName(), _draft, _store.Collection);
         ModelExpertPresets.Validate(preset);
         Commit([.. _presets, preset], preset);
     }
     private void UpdatePreset()
     {
         if (_selected is null) { MessageBox.Show(this, L("Immutable")); return; }
-        _draft.Validate(); var updated = _selected with { Settings = _draft.Snapshot() };
+        _draft.Validate(); var updated = _selected with { Settings = _draft.Snapshot(), SchemaVersion = 2 };
         Commit(_presets.Select(p => p == _selected ? updated : p).ToList(), updated);
     }
     private void RenamePreset()
@@ -94,7 +108,7 @@ public sealed partial class ModelExpertWindow
         foreach (var file in dialog.FileNames)
         {
             try {
-                var preset = ModelExpertPresets.Import(file); var next = _presets.ToList();
+                var preset = ModelExpertPresets.Import(file); _store.CheckCollection(preset); var next = _presets.ToList();
                 var conflict = next.FindIndex(p => string.Equals(p.Name, preset.Name, StringComparison.OrdinalIgnoreCase));
                 if (conflict >= 0) {
                     var answer = MessageBox.Show(this, preset.Name + "\n" + L("Conflict"), L("Import"), MessageBoxButton.YesNoCancel);
@@ -107,7 +121,7 @@ public sealed partial class ModelExpertWindow
                         preset = preset with { Name = copy };
                     }
                 }
-                next.Add(preset); Commit(next, preset); _draft = preset.Settings.Snapshot(); Render(); Changed();
+                next.Add(preset); Commit(next, preset); SelectDraft(preset.Settings.Snapshot()); Render(); Changed();
             } catch (Exception e) when (e is IOException or ArgumentException or System.Text.Json.JsonException or UnauthorizedAccessException) {
                 MessageBox.Show(this, Path.GetFileName(file) + "\n" + L("Invalid") + "\n" + e.Message, L("Import"), MessageBoxButton.OK, MessageBoxImage.Warning);
             }
@@ -115,7 +129,7 @@ public sealed partial class ModelExpertWindow
     }
     private void ExportPreset()
     {
-        var preset = _selected ?? new ModelExpertPreset(L("Recommended"), new());
+        var preset = _selected ?? ModelExpertPresets.Create(L("Recommended"), new(), _store.Collection);
         var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "LOPATA preset (*.json)|*.json", DefaultExt = ".json",
             FileName = ModelExpertPresets.ExportName(preset.Name, DateTime.Now) };
         if (dialog.ShowDialog(this) == true) ModelExpertPresets.Export(dialog.FileName, preset);

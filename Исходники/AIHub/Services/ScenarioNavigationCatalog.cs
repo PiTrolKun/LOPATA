@@ -42,7 +42,7 @@ public static class ScenarioNavigationCatalog
         Node("creation_images", ScenarioNavigationKind.Group, Creation, "Navigation.Images", "", "create"),
         Node("creation_music", ScenarioNavigationKind.Group, Creation, "Music.Group", "", "create"),
         Node(Music, ScenarioNavigationKind.Scenario, "creation_music", "Music.Title", "Music.Description", "create",
-            tags: ["music_preparation", "music_wishes", "music_performers", "music_text_tools", "music_player", "music_status", "music_generation", "music_expert", "music_presets"], related: []),
+            tags: ["music_preparation", "music_wishes", "music_performers", "music_text_tools", "music_player", "music_status", "music_generation", "music_expert", "music_presets", "music_models"], related: []),
         Node(ImageGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Generation.Title", "Generation.Description", "create",
             tags: ["image_generation", "image_variation", "generation_history", "image_autosave", "generation_model_switch", "prompt_spelling", "prompt_assistant", "image_reference", "image_metadata", "image_resize"], related: [Images]),
         Node("analysis_images", ScenarioNavigationKind.Group, Analysis, "Navigation.Images", "", "analyze"),
@@ -65,7 +65,7 @@ public static class ScenarioNavigationCatalog
     [
         Tag("music_preparation", Music),
         Tag("music_generation", Music),
-        Tag("music_expert", Music), Tag("music_presets", Music),
+        Tag("music_expert", Music), Tag("music_presets", Music), Tag("music_models", Music), Tag("music_tuning", Music),
         Tag("music_wishes", Music), Tag("music_performers", Music), Tag("music_text_tools", Music), Tag("music_player", Music), Tag("music_status", Music),
         Tag("advisor", Literary), Tag("writer", Literary), Tag("retelling", Literary),
         Tag("rag", Literary), Tag("jelly", Literary), Tag("anchors", Literary),

@@ -21,11 +21,13 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     private TextBlock? _status;
     private ProgressBar? _progress;
     private MusicWorkspaceControl? _workspace;
+    private readonly MusicModelSelectionControl _models = new();
+    public bool IsModelSelection { get; private set; } = true;
     private string _outputFolder = "";
     private Action<string> _saveOutputFolder = _ => { };
     public bool IsBusy { get; private set; }
     public bool IsWorkspace { get; private set; }
-    public bool CanContinue => _ready && !IsBusy && !_disposed;
+    public bool CanContinue => _ready && !IsModelSelection && !IsBusy && !_disposed;
     public MusicPreparationControl() : this(new MusicPreparationService()) { }
     public MusicPreparationControl(IMusicPreparation preparation)
     {
@@ -33,6 +35,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         Resources.MergedDictionaries.Add(new ResourceDictionary
         { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
         AutomationProperties.SetAutomationId(this, "Music.Page");
+        _models.OpenRequested += SelectModelAsync;
         IsVisibleChanged += (_, _) => { if (Visibility != Visibility.Visible) _workspace?.Player.Pause(); };
     }
 
@@ -51,9 +54,14 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     { _outputFolder = folder; _saveOutputFolder = save; _workspace?.ConfigureOutput(folder, save); }
     public void DownloadConnections(int connections) => _preparation.MaximumParallelConnections = connections;
     public bool UsesArtifact(string id) => (IsBusy || _workspace?.Session.HasPendingOrRunning == true) && MusicComponentCatalog.ComponentIds.Contains(id);
-    public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (_workspace?.Session.HasPendingOrRunning == true) { ShowWorkspace(); return Task.CompletedTask; } IsWorkspace = false; return CheckAsync(); }
+    public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (_workspace?.Session.HasPendingOrRunning == true) { ShowWorkspace(); return Task.CompletedTask; } IsWorkspace = false; IsModelSelection = true; Render(); return Task.CompletedTask; }
+    public Task SelectModelAsync(string modelId, string variantId)
+    {
+        if (_disposed || IsBusy || !MusicModelSelectionCatalog.CanOpen(modelId, variantId)) return Task.CompletedTask;
+        IsModelSelection = false; return CheckAsync();
+    }
     private void ShowWorkspace()
-    { if (_cards.Count == 0) _cards = MusicComponentCatalog.CreateCards(_root); IsWorkspace = true; Render(); }
+    { if (_cards.Count == 0) _cards = MusicComponentCatalog.CreateCards(_root); IsModelSelection = false; IsWorkspace = true; Render(); }
     public Task ResumeGenerationAsync(BackgroundOperationState state, CancellationToken token)
     { ShowWorkspace(); return _workspace!.Session.ResumeAsync(state, token); }
     public void ViewGenerationResult(string id)
@@ -64,14 +72,14 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public bool GoBack()
     {
         if (IsBusy) { _cancel?.Cancel(); return true; }
-        if (!IsWorkspace) return false;
+        if (!IsWorkspace) { if (IsModelSelection) return false; IsModelSelection = true; Render(); return true; }
         IsWorkspace = false; Render(); return true;
     }
 
     private async Task RunAsync(bool acknowledge, bool download, bool open)
     {
         if (_disposed || IsBusy) return;
-        IsWorkspace = false; _ready = false;
+        IsWorkspace = false; IsModelSelection = false; _ready = false;
         if (string.IsNullOrWhiteSpace(_root)) { _statusKey = "Music.StorageRequired"; Render(); return; }
         IsBusy = true; _cancel = new();
         var operation = _cancel;
@@ -112,6 +120,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     private void Render()
     {
         if (_disposed) return;
+        if (IsModelSelection) { _models.Localize(_l); Content = _models; return; }
         if (IsWorkspace)
         {
             _workspace ??= new MusicWorkspaceControl();

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 using AIHub.Services;
 using Button = System.Windows.Controls.Button;
 using UserControl = System.Windows.Controls.UserControl;
@@ -19,10 +20,12 @@ public sealed class MusicGenerationControl : UserControl
 {
     private readonly TextBox _title = new() { MinWidth = 70, Padding = new(5), MaxLength = 160 };
     private readonly ComboBox _count = new() { Width = 65, MinHeight = 30 }, _duration = new() { Width = 190, MinHeight = 30 };
-    private readonly Button _start, _cancel, _poetry, _expert;
+    private readonly Button _start, _cancel, _poetry, _expert, _recipes;
     private MusicExpertSettings _expertSettings = new();
     private Exception? _expertLoadError;
     private ModelExpertWindow? _expertWindow;
+    public MusicTuningControl Tuning { get; } = new();
+    private readonly DispatcherTimer _saveTuning = new() { Interval = TimeSpan.FromMilliseconds(300) };
     public MusicExpertSettings ExpertSettings => _expertSettings.Snapshot();
     private readonly TextBlock _heading = MusicAudioUi.Text(15), _titleLabel = MusicAudioUi.Text(12),
         _countLabel = MusicAudioUi.Text(12), _durationLabel = MusicAudioUi.Text(12), _readiness = MusicAudioUi.Text(11);
@@ -70,18 +73,26 @@ public sealed class MusicGenerationControl : UserControl
         var actions = new StackPanel { Orientation = Orientation.Vertical }; actions.Children.Add(_start); actions.Children.Add(_cancel);
         _cancel.HorizontalAlignment = HorizontalAlignment.Center; Grid.SetColumn(actions, 1); top.Children.Add(actions);
         var lower = new Grid(); lower.ColumnDefinitions.Add(new()); lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         _poetry = MusicAudioUi.IconButton("PoetryChat", "M2,3 H22 V16 H10 L5,21 V16 H2 Z M9,12 L16,5 L19,8 L12,15 H9 Z", () => { });
         _poetry.Width = _poetry.Height = 42; _poetry.IsEnabled = false;
         _poetry.HorizontalAlignment = HorizontalAlignment.Left; lower.Children.Add(_poetry);
         _expert = MusicAudioUi.IconButton("Expert", "M12,2 L14,5 L17,5 L19,7 L19,10 L22,12 L19,14 L19,17 L17,19 L14,19 L12,22 L10,19 L7,19 L5,17 L5,14 L2,12 L5,10 L5,7 L7,5 L10,5 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12", OpenExpert);
-        _expert.Width = _expert.Height = 42; Grid.SetColumn(_expert, 1); lower.Children.Add(_expert);
+        _recipes = MusicAudioUi.IconButton("Recipes", "M3,3 H11 L12,5 L13,3 H21 V20 H13 L12,22 L11,20 H3 Z M12,5 V22 M6,7 H9 M6,11 H9 M15,7 H18 M15,11 H18", Tuning.OpenRecipes);
+        _recipes.Width = _recipes.Height = 42; Grid.SetColumn(_recipes, 1); lower.Children.Add(_recipes);
+        _expert.Width = _expert.Height = 42; Grid.SetColumn(_expert, 2); lower.Children.Add(_expert);
         var toolbar = new Border { Child = lower, CornerRadius = new(10), BorderThickness = new(1),
             Padding = new(3), Margin = new(0, 12, 0, 0) };
         toolbar.SetResourceReference(Border.BorderBrushProperty, "LineBrush");
         DockPanel.SetDock(toolbar, Dock.Bottom);
-        root.Children.Insert(0, toolbar); root.Children.Add(new Grid());
+        root.Children.Insert(0, toolbar); root.Children.Add(Tuning);
         try { _expertSettings = ModelExpertPresets.Default.Current(); }
         catch (Exception e) when (e is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { _expertLoadError = e; }
+        Tuning.Refresh(_expertSettings);
+        Tuning.SettingsChanged += settings => SetExpertSettings(settings);
+        Tuning.EditingStarted += FlushTuning;
+        _saveTuning.Tick += (_, _) => { _saveTuning.Stop(); PersistTuning(); };
+        Unloaded += (_, _) => { if (_saveTuning.IsEnabled) { _saveTuning.Stop(); PersistTuning(); } };
         AutomationProperties.SetAutomationId(_start, "Music.Generation.StartPause");
         AutomationProperties.SetAutomationId(_title, "Music.Generation.Title");
         AutomationProperties.SetAutomationId(_count, "Music.Generation.Variants");
@@ -106,12 +117,16 @@ public sealed class MusicGenerationControl : UserControl
         _title.ToolTip = L("TitleHint"); _duration.ToolTip = L("DurationHint");
         MusicAudioUi.Label(_poetry, L("Poetry")); MusicAudioUi.Label(_cancel, L("Cancel"));
         MusicAudioUi.Label(_expert, _l("Music.Expert.Title"));
+        MusicAudioUi.Label(_recipes, _l("Music.Tuning.Recipes"));
+        Tuning.Localize(localize);
         UpdateCaption();
     }
     public void UpdateState(bool canStart, bool busy, bool paused, bool runtimeReady, bool commandsDisabled = false)
     {
         _busy = busy; _paused = paused; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused;
         _expert.IsEnabled = !busy && !paused && !commandsDisabled;
+        _recipes.IsEnabled = !busy && !paused && !commandsDisabled;
+        Tuning.IsEnabled = !busy && !paused && !commandsDisabled;
         _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null; _cancel.IsEnabled = busy || paused;
         if (commandsDisabled) _start.IsEnabled = _cancel.IsEnabled = false;
         _readiness.Text = runtimeReady ? "" : L("RuntimeMissing"); UpdateCaption();
@@ -126,18 +141,37 @@ public sealed class MusicGenerationControl : UserControl
     private void OpenExpert()
     {
         if (_expertWindow is not null) { _expertWindow.Activate(); return; }
+        FlushTuning(); var before = _expertSettings.Snapshot(); var beforeError = _expertLoadError; var accepted = false;
         try {
             if (_expertLoadError is not null) System.Windows.MessageBox.Show(Window.GetWindow(this),
                 _l("Music.Expert.Invalid") + "\n" + _expertLoadError.Message, _l("Music.Expert.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
-            var window = new ModelExpertWindow(_expertSettings, _l) { Owner = Window.GetWindow(this) };
+            var window = new ModelExpertWindow(before, _l) { Owner = Window.GetWindow(this) };
+            window.PreviewChanged += settings => SetExpertSettings(settings, false);
             _expertWindow = window;
-            if (window.ShowDialog() == true) { _expertSettings = window.Result.Snapshot(); _expertLoadError = null; OptionsChanged?.Invoke(); }
+            if (window.ShowDialog() == true) { SetExpertSettings(window.Result); accepted = true; }
         }
         catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) {
             System.Windows.MessageBox.Show(Window.GetWindow(this), _l("Music.Expert.Invalid") + "\n" + error.Message,
                 _l("Music.Expert.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
-        finally { _expertWindow = null; }
+        finally {
+            _expertWindow = null;
+            if (!accepted) { _expertSettings = before; _expertLoadError = beforeError; Tuning.Refresh(before); OptionsChanged?.Invoke(); UpdateCaption(); }
+        }
+    }
+    private void FlushTuning() { if (_saveTuning.IsEnabled) { _saveTuning.Stop(); PersistTuning(); } }
+    public void SetExpertSettings(MusicExpertSettings settings, bool persist = true)
+    {
+        settings.Validate(); _expertSettings = settings.Snapshot(); _expertLoadError = null;
+        Tuning.Refresh(_expertSettings); OptionsChanged?.Invoke();
+        if (persist) { _saveTuning.Stop(); _saveTuning.Start(); }
+    }
+    private void PersistTuning()
+    {
+        try { ModelExpertPresets.Default.SetCurrent(_expertSettings); }
+        catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) {
+            _expertLoadError = error; UpdateCaption(); OptionsChanged?.Invoke();
+        }
     }
     private static UIElement Icon(string geometry) => new Viewbox { Width = 22, Height = 22,
         Child = new System.Windows.Shapes.Path { Data = Geometry.Parse(geometry), Stroke = Brushes.White, StrokeThickness = 2.5 } };

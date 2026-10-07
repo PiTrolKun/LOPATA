@@ -106,7 +106,8 @@ public sealed class MusicPreparationTests
         Assert.AreSame(workspace, control.Content);
         Assert.AreEqual("Текст песни", workspace.Editor.Lyrics);
         Assert.IsFalse(workspace.Editor.CanGenerate); // Fake preparation has no actual tokenizer file.
-        Assert.IsTrue(control.GoBack()); Assert.IsFalse(control.IsWorkspace); Assert.IsFalse(control.GoBack());
+        Assert.IsTrue(control.GoBack()); Assert.IsFalse(control.IsWorkspace);
+        Assert.IsTrue(control.GoBack()); Assert.IsTrue(control.IsModelSelection); Assert.IsFalse(control.GoBack());
         control.Configure(k => k, Storage("second-root"), 2);
         Assert.IsFalse(control.CanContinue);
         Assert.AreEqual("Текст песни", workspace.Editor.Lyrics);
@@ -127,6 +128,28 @@ public sealed class MusicPreparationTests
         control.ContinueAsync().GetAwaiter().GetResult();
         Assert.IsFalse(control.IsWorkspace); Assert.IsFalse(control.CanContinue);
         Assert.IsFalse(control.IsBusy); Assert.IsFalse(control.UsesArtifact(MusicComponentCatalog.ModelId));
+    });
+
+    [TestMethod]
+    public Task ModelSelectionRejectsPlaceholdersAndPreservesWorkspaceOnReturn() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation(); using var control = Create(fake);
+        control.OpenAsync().GetAwaiter().GetResult();
+        Assert.IsTrue(control.IsModelSelection); Assert.IsFalse(control.CanContinue);
+        control.SelectModelAsync("ace-step", "turbo").GetAwaiter().GetResult();
+        control.SelectModelAsync("yue2", "bf16").GetAwaiter().GetResult();
+        control.SelectModelAsync("unknown", "q8").GetAwaiter().GetResult();
+        Assert.IsTrue(control.IsModelSelection); Assert.AreEqual(0, fake.Preparations);
+        control.SelectModelAsync("yue2", "q8").GetAwaiter().GetResult();
+        Assert.IsFalse(control.IsModelSelection); Assert.IsTrue(control.CanContinue);
+        control.ContinueAsync().GetAwaiter().GetResult();
+        var workspace = (MusicWorkspaceControl)control.Content;
+        workspace.Editor.Lyrics = "Сохранённый текст";
+        Assert.IsTrue(control.GoBack()); Assert.IsTrue(control.GoBack());
+        Assert.IsFalse(control.CanContinue);
+        control.SelectModelAsync("yue2", "q8").GetAwaiter().GetResult();
+        control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.AreSame(workspace, control.Content); Assert.AreEqual("Сохранённый текст", workspace.Editor.Lyrics);
     });
 
     private static MusicPreparationControl Create(Preparation preparation)

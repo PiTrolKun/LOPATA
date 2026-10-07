@@ -90,7 +90,8 @@ public sealed class MusicGenerationSession : IDisposable
             _starting = true; RefreshButtons();
             var options = _view.Generation.Options;
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
-                options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings);
+                options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
+                wishes: MusicWishSnapshot.Capture(_view.Wishes.State));
             _starting = false; await RunAsync(job.Id);
         }
         catch (Exception error) { ReportFailure(error); }
@@ -104,7 +105,7 @@ public sealed class MusicGenerationSession : IDisposable
             _starting = true; RefreshButtons();
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
-                original.Style, original.Lyrics, variant, original.Expert);
+                original.Style, original.Lyrics, variant, original.Expert, original.Wishes);
             // Preserve the exact score used by the completed track, alongside its two seeds.
             repeat = repeat with { RuntimePack = original.RuntimePack };
             if (original.Expert.Cot != "off") {
@@ -126,7 +127,9 @@ public sealed class MusicGenerationSession : IDisposable
     private async Task RunAsync(string id, BackgroundOperationState? restored = null, CancellationToken token = default)
     {
         if (_working) throw new InvalidOperationException("Music generation is already active.");
-        var job = _jobs.Load(id); _working = true;
+        var job = _jobs.Load(id);
+        if (restored is not null) _view.Generation.SetExpertSettings(job.Expert, false);
+        _working = true;
         _worker.Log -= NativeLog; _worker.HardwareChanged -= HardwareChanged;
         // Re-evaluate hardware on resume, even for a job originally created on CPU.
         _worker = new(MusicYueRuntime.DirectoryPath); _worker.Log += NativeLog; _worker.HardwareChanged += HardwareChanged;

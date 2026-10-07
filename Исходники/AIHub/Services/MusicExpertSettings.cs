@@ -40,6 +40,7 @@ public static class MusicExpertCatalog
 public sealed record MusicExpertSettings
 {
     [JsonRequired] public Dictionary<string, double> Values { get; init; } = MusicExpertCatalog.Parameters.ToDictionary(p => p.Key, p => p.Default);
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public ModelTuningState? Tuning { get; init; }
     public double Get(string key) => Values[key];
     public int Integer(string key) => checked((int)Get(key));
     [JsonIgnore] public string Cot => new[] { "full", "melody", "off" }[Integer("cot")];
@@ -50,10 +51,11 @@ public sealed record MusicExpertSettings
         "melody" => "Generate a melody-only ABC transcription without chord symbols, then generate music with codec tokens from the given conditions.",
         "off" => "Generate music with codec tokens from the given conditions.",
         _ => MusicTextBudget.DefaultInstruction };
-    public MusicExpertSettings Snapshot() => this with { Values = new(Values, StringComparer.Ordinal) };
+    public MusicExpertSettings Snapshot() => this with { Values = new(Values, StringComparer.Ordinal), Tuning = Tuning?.Snapshot() };
     public bool SameAs(MusicExpertSettings other) => Values.Count == other.Values.Count && Values.All(p => other.Values.TryGetValue(p.Key, out var v) && v == p.Value);
     public void Validate()
     {
+        Tuning?.Validate();
         if (Values is null) throw new InvalidDataException("Missing parameter values.");
         var unknown = Values.Keys.Except(MusicExpertCatalog.Parameters.Select(p => p.Key)).ToArray();
         if (unknown.Length != 0) throw new InvalidDataException("Unknown parameters: " + string.Join(", ", unknown));
