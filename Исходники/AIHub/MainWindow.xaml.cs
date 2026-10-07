@@ -106,7 +106,8 @@ public partial class MainWindow : Window
     private enum PendingModelDownload
     {
         Core,
-        Reranker
+        Reranker,
+        Hardware
     }
 
     public MainWindow()
@@ -184,6 +185,8 @@ public partial class MainWindow : Window
                 ShowCoreModelPrompt(coreModelCheck);
                 return;
             }
+
+            if (!await CheckHardwareRuntimePromptAsync()) return;
 
             if (!_userProfile.IsComplete())
             {
@@ -2101,6 +2104,12 @@ public partial class MainWindow : Window
 
     private async void DownloadCoreModelButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_pendingModelDownload == PendingModelDownload.Hardware)
+        {
+            await StartHardwareRuntimeDownloadAsync();
+            return;
+        }
+
         if (_pendingModelDownload == PendingModelDownload.Reranker)
         {
             await StartRerankerDownloadAsync();
@@ -2120,7 +2129,9 @@ public partial class MainWindow : Window
     {
         _isCoreModelPromptPostponed = true;
         HideCoreModelPrompt();
-        StatusText.Text = _pendingModelDownload == PendingModelDownload.Reranker
+        StatusText.Text = _pendingModelDownload == PendingModelDownload.Hardware
+            ? L("HardwareRuntime.Postponed")
+            : _pendingModelDownload == PendingModelDownload.Reranker
             ? L("Status.RerankerModelPostponed")
             : L("Status.CoreModelPostponed");
     }
@@ -2174,6 +2185,10 @@ public partial class MainWindow : Window
             && !_isCoreModelPromptPostponed)
         {
             ShowRerankerModelPrompt();
+        }
+        else if (result.Availability == CoreModelAvailability.Installed && !_isCoreModelPromptPostponed)
+        {
+            _ = CheckHardwareRuntimePromptAsync();
         }
     }
 
@@ -2301,7 +2316,7 @@ public partial class MainWindow : Window
             await _toolModelManager.EnsureRerankerDownloadedAsync(_storageSettings, progress, _coreModelDownloadCts.Token);
             CoreModelDownloadPanel.Visibility = Visibility.Collapsed;
             HideCoreModelPrompt();
-            StatusText.Text = L("Status.CoreAndRerankerInstalled");
+            if (await CheckHardwareRuntimePromptAsync()) StatusText.Text = L("Status.CoreAndRerankerInstalled");
         }
         catch (OperationCanceledException)
         {
@@ -2374,7 +2389,7 @@ public partial class MainWindow : Window
             await _toolModelManager.EnsureRerankerDownloadedAsync(_storageSettings, progress, _coreModelDownloadCts.Token);
             CoreModelDownloadPanel.Visibility = Visibility.Collapsed;
             HideCoreModelPrompt();
-            StatusText.Text = L("Status.RerankerModelInstalled");
+            if (await CheckHardwareRuntimePromptAsync()) StatusText.Text = L("Status.RerankerModelInstalled");
         }
         catch (OperationCanceledException)
         {

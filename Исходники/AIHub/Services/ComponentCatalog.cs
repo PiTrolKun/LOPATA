@@ -379,17 +379,17 @@ public static class ComponentCatalog
             [".log", ".cs", ".js", ".ts", ".py", ".cpp", ".h", ".sql"])
     ];
 
-    public static IReadOnlyList<ComponentCatalogEntry> All => Entries;
+    public static IReadOnlyList<ComponentCatalogEntry> All { get; } = [.. Entries, .. HardwareRuntimeCatalog.Components];
 
-    public static IReadOnlyList<ComponentCatalogEntry> Processing => Entries
+    public static IReadOnlyList<ComponentCatalogEntry> Processing => All
         .Where(entry => entry.Kind == ComponentKinds.Processing)
         .ToList();
 
-    public static IReadOnlyList<ComponentCatalogEntry> Viewers => Entries
+    public static IReadOnlyList<ComponentCatalogEntry> Viewers => All
         .Where(entry => entry.Kind == ComponentKinds.Viewer)
         .ToList();
 
-    public static ComponentCatalogEntry? Find(string id) => Entries.FirstOrDefault(entry =>
+    public static ComponentCatalogEntry? Find(string id) => All.FirstOrDefault(entry =>
         string.Equals(entry.Id, id, StringComparison.OrdinalIgnoreCase));
 
     public static IReadOnlyList<ComponentCatalogEntry> FindProviders(string capability) => Processing

@@ -33,6 +33,15 @@ public sealed class ComponentLicenseService(string directory, string statePath)
         JsonSerializer.Deserialize<List<ComponentLicenseEntry>>(File.ReadAllText(Path.Combine(directory, "catalog.json")))
         ?? throw new InvalidDataException("License catalog is empty.");
 
+    public static IReadOnlyList<string> ExpandSelection(IEnumerable<string> requested, IEnumerable<ComponentLicenseEntry> catalog)
+    {
+        var ids = requested.Distinct(StringComparer.Ordinal).ToArray();
+        return ids.Where(id => id != "basic")
+            .Concat(ids.Contains("basic", StringComparer.Ordinal)
+                ? catalog.Where(entry => entry.Basic).Select(entry => entry.Id) : [])
+            .Distinct(StringComparer.Ordinal).ToArray();
+    }
+
     public IReadOnlyList<ComponentLicenseReceipt> ReadReceipts()
     {
         return ReadFile(statePath).Concat(ReadFile(Path.Combine(Path.GetDirectoryName(statePath)!, "installer-receipts.json"))).ToList();

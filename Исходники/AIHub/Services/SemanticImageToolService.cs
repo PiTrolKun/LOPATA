@@ -23,6 +23,12 @@ public sealed class SemanticImageToolService
     };
 
     private readonly VisionImagePayloadService _imagePayloadService = new();
+    private readonly bool _forceCpu;
+    private readonly HttpMessageHandler? _testHandler;
+
+    public SemanticImageToolService() : this(false, null) { }
+    internal SemanticImageToolService(bool forceCpu, HttpMessageHandler? handler = null)
+    { _forceCpu = forceCpu; _testHandler = handler; }
 
     public async Task<string> DescribeAsync(
         SessionFileManifest manifest,
@@ -37,29 +43,32 @@ public sealed class SemanticImageToolService
             .ToDictionary(status => status.Entry.Id, StringComparer.OrdinalIgnoreCase);
         var modelPath = ResolveComponentArtifact(statuses, ModelComponentId);
         var projectorPath = ResolveComponentArtifact(statuses, ProjectorComponentId);
-        var serverPath = LlamaBackendPaths.ServerExecutablePath;
-        if (!File.Exists(serverPath))
+        foreach (var (id, path) in new[] { (ModelComponentId, modelPath), (ProjectorComponentId, projectorPath) })
         {
-            throw new SessionFileToolException(
-                "vision_runtime_missing",
-                "The verified llama.cpp runtime required for semantic image analysis is unavailable.");
+            var entry = ComponentCatalog.Find(id)!;
+            if (!await LiteraryArtifactDownload.ValidAsync(path, entry.DownloadSizeBytes, entry.Sha256, "sha256", cancellationToken, true))
+                throw new SessionFileToolException("semantic_vision_component_invalid", "The semantic vision artifact differs from its pinned catalog.");
         }
+        var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(modelPath), cancellationToken);
+        var projectorBytes = new FileInfo(projectorPath).Length;
+        var requiredGpu = SemanticVisionMemoryPolicy.GpuRequired(memory, projectorBytes);
+        var selection = await LlamaRuntimeSelector.SelectAsync(requiredGpu, _forceCpu, _ => { }, cancellationToken);
 
         var imagePayload = await _imagePayloadService.PrepareAsync(image, cancellationToken);
         var dataUri = $"data:{imagePayload.MimeType};base64,{Convert.ToBase64String(imagePayload.Bytes)}";
         var requestJson = BuildRequestBody(dataUri, prompt, languageCode);
 
         var failures = new List<VisionRuntimeAttemptException>();
-        foreach (var gpuLayers in new[] { 99, 0 })
+        for (var attempt = 0; attempt < 2; attempt++)
         {
             try
             {
+                if (!selection.UsesGpu) SemanticVisionMemoryPolicy.EnsureCurrentCpuMemory(memory, projectorBytes);
                 var description = await RunInferenceAsync(
-                    serverPath,
+                    selection,
                     modelPath,
                     projectorPath,
                     requestJson,
-                    gpuLayers,
                     cancellationToken);
                 return JsonSerializer.Serialize(new
                 {
@@ -80,6 +89,9 @@ public sealed class SemanticImageToolService
             catch (VisionRuntimeAttemptException ex)
             {
                 failures.Add(ex);
+                if (attempt != 0 || !selection.UsesGpu || !ex.IsRecoverableHardwareFailure) break;
+                // RunInferenceAsync has awaited retirement before this fresh CPU selection.
+                selection = await LlamaRuntimeSelector.SelectAsync(requiredGpu, true, _ => { }, cancellationToken);
             }
         }
 
@@ -100,7 +112,8 @@ public sealed class SemanticImageToolService
         string modelPath,
         string projectorPath,
         int port,
-        int gpuLayers) =>
+        int gpuLayers,
+        string deviceId) =>
     [
         "-m", modelPath,
         "--mmproj", projectorPath,
@@ -108,6 +121,9 @@ public sealed class SemanticImageToolService
         "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
         "--ctx-size", "4096",
         "--n-gpu-layers", gpuLayers.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        "--device", deviceId,
+        gpuLayers > 0 ? "--mmproj-offload" : "--no-mmproj-offload",
+        "--fit", "off", "--no-context-shift", "--offline",
         "--jinja",
         "--reasoning", "off",
         "--no-webui"
@@ -221,27 +237,26 @@ public sealed class SemanticImageToolService
             "The semantic vision component is recorded as installed but its verified artifact is missing.");
     }
 
-    private static async Task<string> RunInferenceAsync(
-        string serverPath,
+    private async Task<string> RunInferenceAsync(
+        LlamaRuntimeSelection selection,
         string modelPath,
         string projectorPath,
         string requestJson,
-        int gpuLayers,
         CancellationToken cancellationToken)
     {
         var port = FindFreeLoopbackPort();
         var diagnostics = new VisionRuntimeDiagnosticBuffer();
         using var process = StartServer(
-            serverPath,
+            selection,
             modelPath,
             projectorPath,
             port,
-            gpuLayers,
             diagnostics);
         try
         {
             await WaitForHealthAsync(process, port, cancellationToken);
-            using var httpClient = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+            using var httpClient = _testHandler is null ? new HttpClient() : new HttpClient(_testHandler, disposeHandler: false);
+            httpClient.Timeout = Timeout.InfiniteTimeSpan;
             using var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
             using var response = await httpClient.PostAsync(
                 $"http://127.0.0.1:{port}/v1/chat/completions",
@@ -251,7 +266,7 @@ public sealed class SemanticImageToolService
             {
                 var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
                 throw new VisionRuntimeAttemptException(
-                    gpuLayers,
+                    selection.GpuLayers,
                     response.StatusCode,
                     responseBody,
                     diagnostics);
@@ -283,7 +298,7 @@ public sealed class SemanticImageToolService
         catch (Exception ex)
         {
             throw new VisionRuntimeAttemptException(
-                gpuLayers,
+                selection.GpuLayers,
                 statusCode: null,
                 responseBody: string.Empty,
                 diagnostics,
@@ -291,22 +306,21 @@ public sealed class SemanticImageToolService
         }
         finally
         {
-            StopServer(process);
+            await ModelProcessRetirement.StopAsync(process, () => StopServer(process));
         }
     }
 
     private static Process StartServer(
-        string serverPath,
+        LlamaRuntimeSelection selection,
         string modelPath,
         string projectorPath,
         int port,
-        int gpuLayers,
         VisionRuntimeDiagnosticBuffer diagnostics)
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = serverPath,
-            WorkingDirectory = Path.GetDirectoryName(serverPath)!,
+            FileName = selection.Bundle.Server,
+            WorkingDirectory = selection.Bundle.Directory,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -314,10 +328,12 @@ public sealed class SemanticImageToolService
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };
-        foreach (var argument in BuildArguments(modelPath, projectorPath, port, gpuLayers))
+        foreach (var argument in BuildArguments(modelPath, projectorPath, port, selection.GpuLayers, selection.DeviceId))
         {
             startInfo.ArgumentList.Add(argument);
         }
+
+        RuntimeDeviceProbe.ClearBackendOverrides(startInfo);
 
         var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         process.OutputDataReceived += (_, eventArgs) =>

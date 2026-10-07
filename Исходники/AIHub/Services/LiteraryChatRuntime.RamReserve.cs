@@ -7,6 +7,8 @@ public sealed partial class LiteraryChatRuntime
     private LiteraryRuntimeOptions _runtimeOptions = new();
     private LiteraryModelMemoryMetadata? _modelMemoryMetadata;
     private bool _loadedUsesRamReserve;
+    private LlamaRuntimeSelection? _selectedRuntime;
+    internal string? CurrentExecutable => _selectedRuntime?.Bundle.Server;
     private readonly object _retirementGate = new();
     private Task _processRetirement = Task.CompletedTask;
     public int? ModelContextTokens => _modelMemoryMetadata?.ModelContextTokens;
@@ -37,7 +39,8 @@ public sealed partial class LiteraryChatRuntime
         ArgumentOutOfRangeException.ThrowIfNegative(input);
         ArgumentOutOfRangeException.ThrowIfLessThan(minimumReply, LiteraryAutomaticBudget.MinimumReply);
         return new("The loaded context has insufficient space for this request.", budget:
-            LiteraryRamReservePolicy.Snapshot(_modelMemoryMetadata, ContextCapacity, input, minimumReply, _runtimeOptions.UseRamReserve));
+            LiteraryRamReservePolicy.Snapshot(_modelMemoryMetadata, ContextCapacity, input, minimumReply,
+                _runtimeOptions.UseRamReserve || _selectedRuntime?.UsesGpu == false));
     }
 
     private async Task<int> PreparePlacementAsync(string model, LiteraryStartupDiagnostics trace, CancellationToken ct)
@@ -54,7 +57,7 @@ public sealed partial class LiteraryChatRuntime
         return _modelMemoryMetadata.ReserveGpuLayers;
     }
 
-    private async Task AwaitProcessRetirementAsync(CancellationToken ct)
+    internal async Task AwaitProcessRetirementAsync(CancellationToken ct)
     {
         Task pending;
         lock (_retirementGate) pending = _processRetirement;

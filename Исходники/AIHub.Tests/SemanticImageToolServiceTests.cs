@@ -10,18 +10,46 @@ namespace AIHub.Tests;
 public sealed class SemanticImageToolServiceTests
 {
     [TestMethod]
+    public void HardwareRetryRejectsInputErrorsAndCpuFailures()
+    {
+        var diagnostics = new VisionRuntimeDiagnosticBuffer();
+        diagnostics.Add("stderr", "VK_ERROR_OUT_OF_DEVICE_MEMORY");
+        Assert.IsTrue(new VisionRuntimeAttemptException(99, System.Net.HttpStatusCode.InternalServerError, "", diagnostics).IsRecoverableHardwareFailure);
+        Assert.IsFalse(new VisionRuntimeAttemptException(99, System.Net.HttpStatusCode.BadRequest, "", diagnostics).IsRecoverableHardwareFailure);
+        Assert.IsFalse(new VisionRuntimeAttemptException(0, null, "", diagnostics).IsRecoverableHardwareFailure);
+        Assert.IsFalse(new VisionRuntimeAttemptException(99, null, "invalid image", new()).IsRecoverableHardwareFailure);
+    }
+
+    [TestMethod]
+    public void SemanticMemoryIncludesProjectorFullContextAndIndependentVisionBuffers()
+    {
+        const long gib = 1024L * 1024 * 1024;
+        var model = new LiteraryModelMemoryMetadata("llama", 32, 8192, 0, 2 * gib)
+            { HeadCount = 32, KvHeadCount = 8, EmbeddingLength = 4096 };
+        Assert.AreEqual(LlamaDenseMemoryPolicy.GpuRequired(model, 4096) + 3 * gib,
+            SemanticVisionMemoryPolicy.GpuRequired(model, gib));
+        Assert.IsFalse(SemanticVisionMemoryPolicy.CpuDecision(model, gib, 16 * gib, 8 * gib).Allowed);
+        Assert.IsTrue(SemanticVisionMemoryPolicy.CpuDecision(model, gib, 32 * gib, 24 * gib).Allowed);
+        Assert.Throws<ArgumentOutOfRangeException>(() => SemanticVisionMemoryPolicy.GpuRequired(model, 0));
+    }
+
+    [TestMethod]
     public void BuildArguments_ConnectsModelAndMultimodalProjector()
     {
         var arguments = SemanticImageToolService.BuildArguments(
             @"C:\models\vision.gguf",
             @"C:\models\projector.gguf",
             54321,
-            99);
+            99,
+            "Vulkan3");
 
         CollectionAssert.Contains(arguments.ToList(), "--mmproj");
         CollectionAssert.Contains(arguments.ToList(), @"C:\models\projector.gguf");
         CollectionAssert.Contains(arguments.ToList(), @"C:\models\vision.gguf");
         CollectionAssert.Contains(arguments.ToList(), "54321");
+        CollectionAssert.Contains(arguments.ToList(), "Vulkan3");
+        CollectionAssert.Contains(arguments.ToList(), "--mmproj-offload");
+        CollectionAssert.Contains(SemanticImageToolService.BuildArguments("model", "projector", 54321, 0, "none").ToList(), "--no-mmproj-offload");
     }
 
     [TestMethod]

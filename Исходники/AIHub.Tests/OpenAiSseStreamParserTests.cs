@@ -38,6 +38,29 @@ public sealed class OpenAiSseStreamParserTests
         Assert.IsTrue(chunks.Last().IsComplete);
     }
 
+    [TestMethod]
+    [DataRow("data: {\"choices\":[{\"delta\":{\"content\":\"partial\"}}]}\n")]
+    [DataRow("data: {\"choices\":[{\"delta\":{\"content\":\"partial\"}}]}\ndata: {\"error\":{\"message\":\"VK_ERROR_OUT_OF_DEVICE_MEMORY\"}}\n")]
+    public async Task InterruptedOrFailedStreamNeverReportsCompletion(string sse)
+    {
+        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(sse));
+        var chunks = new List<ModelStreamChunk>();
+        await Assert.ThrowsAsync<System.IO.IOException>(() => OpenAiSseStreamParser.ReadAsync(stream,
+            new ImmediateProgress<ModelStreamChunk>(chunks.Add), CancellationToken.None));
+        Assert.AreEqual("partial", string.Concat(chunks.Select(chunk => chunk.Text)));
+        Assert.IsFalse(chunks.Any(chunk => chunk.IsComplete));
+    }
+
+    [TestMethod]
+    public async Task ExplicitFinishReasonAtEofIsACompletedStream()
+    {
+        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(
+            "data: {\"choices\":[{\"delta\":{\"content\":\"answer\"},\"finish_reason\":\"stop\"}]}\n"));
+        var result = await OpenAiSseStreamParser.ReadAsync(stream, null, CancellationToken.None);
+        Assert.AreEqual("answer", result.Content);
+        Assert.AreEqual("stop", result.FinishReason);
+    }
+
     private sealed class ImmediateProgress<T>(Action<T> report) : IProgress<T>
     {
         public void Report(T value) => report(value);

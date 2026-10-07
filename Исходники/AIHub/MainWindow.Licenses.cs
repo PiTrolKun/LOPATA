@@ -21,8 +21,7 @@ public partial class MainWindow
             Path.Combine(AppDataPaths.BaseDirectory, "Licenses", "receipts.json"));
         ComponentLicenseGate.ConfirmAsync = async (ids, token) =>
         {
-            var selected = ids.Where(x => x != "basic")
-                .Concat(_componentLicenses.Entries.Where(x => x.Basic).Select(x => x.Id)).ToArray();
+            var selected = ComponentLicenseService.ExpandSelection(ids, _componentLicenses.Entries);
             try
             {
                 await _componentLicenses.EnsureAsync(selected, async entries =>

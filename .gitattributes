@@ -19,3 +19,20 @@ LICENSE text eol=lf
 VERSION text eol=lf
 
 Инструменты/CaptureRuntime/*.sh text eol=lf
+
+# Pinned hardware manifests/locks are byte contracts, including line endings.
+# Their exact upstream/staging bytes must survive Git and fresh checkouts.
+Исходники/AIHub/Tools/python-hardware-*-files.json -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+Исходники/AIHub/Tools/python-hardware-*-lock.json -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Original vendor license/NOTICE extracts retain their whitespace and exact bytes.
+Исходники/AIHub/Licenses/texts/python-*-wheel-NOTICES.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/python-*-EULA.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/python-intel-openmp-2025.3.1-NOTICES.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/python-rocm721-NOTICES.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/python-tokenizers-0.22.2-LICENSE.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/llama-hardware-NOTICES.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/llama-Vulkan-Loader-LICENSE.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/sd-hardware-NOTICES.txt -text -eol -whitespace
+
+Исходники/AIHub/Licenses/texts/music-MSVC-RUNTIME.txt -text -eol -whitespace

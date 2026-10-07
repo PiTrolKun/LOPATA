@@ -960,23 +960,6 @@
     "Texts": []
   },
   {
-    "Id": "backend.llama",
-    "Name": "llama.cpp",
-    "Version": "b9442",
-    "Author": "ggml-org contributors",
-    "License": "MIT",
-    "Source": "https://github.com/ggml-org/llama.cpp/tree/b9442",
-    "Checked": "2026-09-05",
-    "Ru": "Сведения о лицензии указаны поставщиком. Соблюдайте условия оригинальной лицензии. Проверка всех вложенных частей отдельно не завершена.",
-    "En": "License information is declared by the provider. Follow the original license terms. Review of all bundled parts is not complete.",
-    "Basic": true,
-    "Delivery": "bundled",
-    "Terms": "F88AA98AA74492D206D426C2E850EF58BBE607F8246464B3D6D0FE7557E4185D",
-    "Texts": [
-      "texts/MIT.txt"
-    ]
-  },
-  {
     "Id": "nuget.SkiaSharp",
     "Name": "SkiaSharp",
     "Version": "3.119.4",
@@ -1113,21 +1096,6 @@
     ]
   },
   {
-    "Id": "native.cuda",
-    "Name": "NVIDIA CUDA runtime / cuBLAS",
-    "Version": "12.4",
-    "Author": "NVIDIA",
-    "License": "NVIDIA CUDA EULA",
-    "Source": "https://docs.nvidia.com/cuda/archive/12.4.0/eula/index.html",
-    "Checked": "2026-09-05",
-    "Ru": "Сведения о лицензии указаны поставщиком. Соблюдайте условия оригинальной лицензии. Проверка всех вложенных частей отдельно не завершена.",
-    "En": "License information is declared by the provider. Follow the original license terms. Review of all bundled parts is not complete.",
-    "Basic": true,
-    "Delivery": "bundled",
-    "Terms": "418DB426CFD3C6E28BACB0095BF00EB7C62C9BAF028D440F53F1930CB270C9B0",
-    "Texts": []
-  },
-  {
     "Id": "native.openssl",
     "Name": "OpenSSL",
     "Version": "1.1.1k",
@@ -1176,21 +1144,6 @@
       "texts/native.imagemagick_LICENSE.txt",
       "texts/native.imagemagick_NOTICE.txt"
     ]
-  },
-  {
-    "Id": "native.libomp",
-    "Name": "OpenMP runtime (libomp140)",
-    "Version": "bundled DLL",
-    "Author": "See distribution source",
-    "License": "Not fully identified / не уточнена",
-    "Source": "https://github.com/ggml-org/llama.cpp/releases/tag/b9442",
-    "Checked": "2026-09-05",
-    "Ru": "Точное происхождение и комплект лицензий этой DLL на дату проверки не установлены. Это не означает отсутствия ограничений.",
-    "En": "The exact provenance and license bundle of this DLL have not been established as of the check date. This does not mean there are no restrictions.",
-    "Basic": true,
-    "Delivery": "bundled",
-    "Terms": "4095546A081587FD8598AB42C76FDDEEF601C9FD2FEA79D5FCF680334F599785",
-    "Texts": []
   },
   {
     "Id": "bge-reranker-v2-m3-tool",
@@ -1344,17 +1297,17 @@
   },
   {
     "Id": "runtime.giga-python",
-    "Name": "Giga Python processing environment",
-    "Version": "Python 3.12.10 / PyTorch 2.10.0 cu128 / Transformers 5.3.0 / pip 25.3",
-    "Author": "Python Software Foundation, PyTorch, Hugging Face, pip and dependency authors",
-    "License": "PSF-2.0; BSD-3-Clause; Apache-2.0; MIT; NVIDIA CUDA terms; dependency licenses",
+    "Name": "Giga common Python processing libraries",
+    "Version": "Python 3.12.10 / Transformers 5.3.0; managed PyTorch hardware profiles",
+    "Author": "Python Software Foundation, PyTorch, Hugging Face and dependency authors",
+    "License": "PSF-2.0; BSD-3-Clause; Apache-2.0; MIT; dependency licenses",
     "Source": "https://pytorch.org/get-started/previous-versions/",
-    "Checked": "2026-09-10",
-    "Ru": "Изолированное окружение скачивается отдельно: Python, pip, PyTorch с CUDA 12.8 и Transformers. Приложены оригинальные основные лицензии; пакеты сохраняют собственные LICENSE/NOTICE. Условия NVIDIA: https://docs.nvidia.com/cuda/archive/12.8.0/eula/index.html. Точный состав транзитивных зависимостей фиксируется при установке; отдельный аудит всех зависимостей не завершён.",
-    "En": "A separate environment downloads Python, pip, PyTorch with CUDA 12.8 and Transformers. Original primary licenses are included; packages retain their LICENSE/NOTICE files. NVIDIA terms: https://docs.nvidia.com/cuda/archive/12.8.0/eula/index.html. Transitive package versions are recorded during installation; a separate review of every dependency is incomplete.",
+    "Checked": "2026-10-07",
+    "Ru": "Giga использует общий управляемый Python с проверяемым комплектом файлов. Профиль CPU, NVIDIA CUDA 12.6/12.8, Intel XPU или поддерживаемый Windows AMD ROCm выбирается отдельно; его лицензии показываются штатным загрузчиком главного окна. Giga не требует CUDA. Оригинальные LICENSE/NOTICE и точные манифесты сохраняются; условия аппаратных библиотек относятся к выбранному комплекту.",
+    "En": "Giga uses a common managed Python runtime with a verified file set. CPU, NVIDIA CUDA 12.6/12.8, Intel XPU or supported Windows AMD ROCm is selected separately; its licenses are shown by the main-window downloader. Giga does not require CUDA. Original LICENSE/NOTICE and exact manifests are retained; hardware-library terms apply to the selected bundle.",
     "Basic": false,
     "Delivery": "download",
-    "Terms": "804831AE2DC9C842838EC01540036E93111EFF5BF1A945F86AD1B0C00DF6BE37",
+    "Terms": "3C377948FD053B73C3BB9E03FEE3E00664433DB2DE41D4BDB67B346DF7BD7C41",
     "Texts": [
       "texts/python-3.12.10-LICENSE.txt",
       "texts/pytorch-LICENSE.txt",
@@ -1403,12 +1356,12 @@
     "Author": "Fastino, Hugging Face and dependency authors",
     "License": "Apache-2.0; MIT; BSD; dependency licenses",
     "Source": "https://github.com/fastino-ai/GLiNER2",
-    "Checked": "2026-09-12",
-    "Ru": "Две изолированные группы Python-пакетов используют подготовленный PyTorch/CUDA. Версии фиксируются в манифесте и отчёте установки. Оригинальные LICENSE/NOTICE сохраняются в пакетах. Полный аудит всех транзитивных зависимостей не завершён; применяются также условия Python, PyTorch и NVIDIA.",
-    "En": "Two isolated Python package sets use the prepared PyTorch/CUDA runtime. Versions are pinned in the manifest and installation report. Packages retain original LICENSE/NOTICE files. Full transitive dependency review is incomplete; Python, PyTorch and NVIDIA terms also apply.",
+    "Checked": "2026-10-07",
+    "Ru": "Две изолированные группы Python-пакетов используют общий управляемый PyTorch на выбранном совместимом CPU или GPU. CUDA не обязательна. Версии дополнительных пакетов фиксируются в манифесте и отчёте установки; оригинальные LICENSE/NOTICE сохраняются в пакетах. Полный аудит дополнительных транзитивных пакетов не завершён. Условия Python/PyTorch и конкретных аппаратных библиотек действуют отдельно через штатный загрузчик.",
+    "En": "Two isolated Python package sets use the common managed PyTorch runtime on the selected compatible CPU or GPU. CUDA is not mandatory. Extra package versions are pinned in the manifest and installation report; original LICENSE/NOTICE are retained. Full review of extra transitive packages is incomplete. Python/PyTorch and selected hardware-library terms apply separately through the standard downloader.",
     "Basic": false,
     "Delivery": "download",
-    "Terms": "EA4EA792B399FC28F29AD4EE4BA7DB755B61B0ED614B24FD4EF70254CD4942C0",
+    "Terms": "8B201377F9D25CA5DFA9B17E38A2A150DA247856DBC92207A616B11F235A86D9",
     "Texts": [
       "texts/transformers-LICENSE.txt"
     ]
@@ -1755,5 +1708,216 @@
     "Terms": "3789CDEE27E2C2A233B4D3F53C30E433352F8395987B7B93EBD9CA271B2B82C0",
     "Ru": "Встроенный справочник 2208 названий и ID жанров MusicBrainz. В документации MusicBrainz_Database жанровые сущности Name/aliases/comment/MBID перечислены в Core data под CC0. Пользовательские теги, жанровые связи с исполнителями, оценки, описания документации и обложки не включены. Снимок работает без сети; русские поисковые синонимы и рекомендации инструментов созданы ЛОПАТОЙ. Источник условий: https://musicbrainz.org/doc/MusicBrainz_Database. Полный текст CC0 сохранён. Каталог не является перечнем гарантированно поддерживаемых моделью стилей.",
     "En": "Bundled snapshot of 2208 MusicBrainz genre names and IDs. MusicBrainz_Database lists genre entity Name/aliases/comment/MBID as CC0 core data. User tags, artist-to-genre associations, ratings, documentation descriptions and cover art are not included. Works offline; Russian search aliases and instrument suggestions are original LOPATA additions. License source: https://musicbrainz.org/doc/MusicBrainz_Database. Full CC0 text retained. This is not a list of styles the model is guaranteed to perform."
+  },
+  {
+    "Id": "runtime.llama-engine",
+    "Name": "LOPATA llama.cpp CPU/Vulkan",
+    "Version": "b9442-lopata1",
+    "Author": "ggml and third-party authors; LOPATA build",
+    "License": "MIT; MIT No Attribution; public-domain notices",
+    "Source": "https://github.com/ggml-org/llama.cpp/tree/d4c8e2c29ce2fb9a251a0a4a16d6c857b4f70f8c",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/llama-hardware-NOTICES.txt"
+    ],
+    "Ru": "Отдельный исполнитель, собранный из закреплённых исходников. Без OpenMP, CUDA, HTTPS и встроенного web-интерфейса. Оригинальные лицензии и заголовки сторонних компонентов сохранены в архиве. Веса и системные драйверы имеют отдельные условия.",
+    "En": "Separate executor built from pinned sources, without OpenMP, CUDA, HTTPS or embedded web UI. Original third-party notices and headers accompany the archive. Weights and system drivers have separate terms.",
+    "Terms": "53336FC467611371FE12B111E25A29A21ABB62CE5AD4AAAC065FCB33EE91472B"
+  },
+  {
+    "Id": "runtime.llama-msvc",
+    "Name": "Microsoft Visual C++ runtime for llama.cpp",
+    "Version": "14.44.35211.0",
+    "Author": "Microsoft Corporation",
+    "License": "Microsoft Visual C++ Runtime license",
+    "Source": "https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/music-MSVC-RUNTIME.txt"
+    ],
+    "Ru": "Неизменённые MSVCP140, VCRUNTIME140 и VCRUNTIME140_1 из Microsoft VC/Redist поставляются рядом с llama.cpp. Системная установка не выполняется. Оригинальные условия Microsoft сохранены; лицензия GPL приложения не распространяется на эти отдельные библиотеки.",
+    "En": "Unmodified MSVCP140, VCRUNTIME140 and VCRUNTIME140_1 from Microsoft VC/Redist accompany llama.cpp. No system installation. Original Microsoft terms are retained; the application GPL does not apply to these separate libraries.",
+    "Terms": "F070879800B5C9D29DF572EFA41C5360657084F2F6A971E0020751D7884AA324"
+  },
+  {
+    "Id": "runtime.llama-vulkan-loader",
+    "Name": "Vulkan Loader for llama.cpp",
+    "Version": "1.4.304.0",
+    "Author": "Khronos Group contributors; LunarG distribution",
+    "License": "Apache-2.0 and more permissive exceptions",
+    "Source": "https://github.com/KhronosGroup/Vulkan-Loader/tree/v1.4.304",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/llama-Vulkan-Loader-LICENSE.txt"
+    ],
+    "Ru": "Неизменённая vulkan-1.dll 1.4.304.0 с проверенной подписью LunarG. Оригинальный LICENSE сохранён. Совместимый драйвер предоставляет производитель видеокарты; наличие loader не доказывает поддержку модели на GPU.",
+    "En": "Unmodified vulkan-1.dll 1.4.304.0 with a verified LunarG signature. Original LICENSE retained. A compatible driver is supplied by the GPU vendor; a loader alone does not prove model support.",
+    "Terms": "1EB9030E1ED8C494EB170B264D20EEC065586BB97F27D041988BD0F98A6ADCBE"
+  },
+  {
+    "Id": "runtime.sd-engine",
+    "Name": "stable-diffusion.cpp CPU/Vulkan",
+    "Version": "3f8527a-lopata1",
+    "Author": "leejet, GGML and third-party authors",
+    "License": "MIT; BSD; retained dependency licenses",
+    "Source": "https://github.com/leejet/stable-diffusion.cpp/tree/3f8527a46c54ecf4cb4ed6003da8e8982283c73c",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/sd-hardware-NOTICES.txt"
+    ],
+    "Ru": "Закреплённые официальные CPU/Vulkan-исполнители без CUDA. Оригинальные лицензии GGML, WebP, WebM, токенизатора и заголовков сторонних компонентов сохраняются в архиве. Веса и драйверы имеют отдельные условия.",
+    "En": "Pinned official CPU/Vulkan executors without CUDA. Original GGML, WebP, WebM, tokenizer and third-party header notices are preserved in the archive. Weights and drivers have separate terms.",
+    "Terms": "75590134CC2AFC20A77CE8900FADDED385576FB67CD5E707CC10074442407DD2"
+  },
+  {
+    "Id": "runtime.sd-msvc",
+    "Name": "Microsoft Visual C++ runtime for stable-diffusion.cpp",
+    "Version": "14.44.35211.0",
+    "Author": "Microsoft Corporation",
+    "License": "Microsoft Visual C++ Runtime license",
+    "Source": "https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/music-MSVC-RUNTIME.txt"
+    ],
+    "Ru": "Неизменённые MSVCP140, MSVCP140_CODECVT_IDS, VCRUNTIME140, VCRUNTIME140_1 и VCOMP140 из Microsoft VC/Redist поставляются рядом с исполнителем. Системная установка не выполняется; библиотека LLVM libomp не используется. Оригинальные условия Microsoft сохранены.",
+    "En": "Unmodified MSVCP140, MSVCP140_CODECVT_IDS, VCRUNTIME140, VCRUNTIME140_1 and VCOMP140 from Microsoft VC/Redist accompany the executor. No system installation; LLVM libomp is not used. Original Microsoft terms are retained.",
+    "Terms": "2E0C75D6B51D9FBB271A705DF86EFCA5606014E30838F38FD58D1B4E2C6BF4A1"
+  },
+  {
+    "Id": "runtime.python-cpu",
+    "Name": "Windows Python CPU processing environment",
+    "Version": "Python 3.12.10 / PyTorch 2.10.0+cpu / Transformers 5.3.0 / pip 25.3",
+    "Author": "Python Software Foundation, PyTorch, Hugging Face and dependency authors",
+    "License": "PSF-2.0; BSD; Apache-2.0; MIT; MPL-2.0; ISC; original dependency notices",
+    "Source": "https://pytorch.org/get-started/previous-versions/",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/python-3.12.10-LICENSE.txt",
+      "texts/python-cpu-wheel-NOTICES.txt",
+      "texts/python-tokenizers-0.22.2-LICENSE.txt"
+    ],
+    "Ru": "Отдельный CPU-профиль: 36 закреплённых wheels и исходный Python/pip скачиваются непосредственно из официальных upstream источников, без плавающего разрешения зависимостей. Сохраняются оригинальные LICENSE/NOTICE пакетов. Tokenizers LICENSE получен из закреплённого исходника f383101a26663708484cac0727792aad74f78234. Модели, Intel OpenMP и Microsoft runtime имеют отдельные условия.",
+    "En": "Separate CPU profile: 36 pinned wheels and original Python/pip are downloaded directly from official upstream origins, without floating dependency resolution. Original package LICENSE/NOTICE files are retained. Tokenizers LICENSE comes from pinned source f383101a26663708484cac0727792aad74f78234. Models, Intel OpenMP and Microsoft runtime have separate terms.",
+    "Terms": "FC277322E989E5F0F8B9FCD3AF342FB8F39C98CB88D70C19467600B521359B05"
+  },
+  {
+    "Id": "runtime.python-intel-openmp",
+    "Name": "Intel OpenMP runtime inside official PyTorch CPU wheel",
+    "Version": "2025.3.1 / DLL 20250910",
+    "Author": "Intel Corporation and third-party authors",
+    "License": "Intel developer-tools EULA August 2024; retained third-party terms",
+    "Source": "https://www.intel.com/content/www/us/en/content-details/777700/intel-end-user-license-agreement-for-developer-tools-august-2024.html",
+    "Checked": "2026-10-05",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/python-intel-openmp-2025.3.1-EULA.txt",
+      "texts/python-intel-openmp-2025.3.1-NOTICES.txt"
+    ],
+    "Ru": "Оригинальные DLL в официальном PyTorch CPU wheel совпадают с intel-openmp 2025.3.1. Они скачиваются в составе неизменённого upstream wheel; отдельный архив этих DLL от ЛОПАТЫ не публикуется. Исходные условия Intel и third-party-programs сохранены, бинарники не изменяются. Эти отдельные библиотеки не становятся частью GPL-лицензии приложения. Подтверждение новых условий требуется до установки и исполнения.",
+    "En": "Original DLLs in the official PyTorch CPU wheel match intel-openmp 2025.3.1. They are fetched inside the unchanged upstream wheel; LOPATA does not publish a separate archive of these DLLs. Original Intel terms and third-party-programs are retained; binaries remain unmodified. These separate libraries do not become part of the application GPL license. Acknowledgement of these terms is required before installation and execution.",
+    "Terms": "DA24B446B7C9C796CA053BA5A6CC0CBC1E8B8DDC5A3F7342C37B77BFB16DF210"
+  },
+  {
+    "Id": "runtime.python-cuda",
+    "Name": "Windows PyTorch NVIDIA CUDA 12.6 processing environment",
+    "Version": "PyTorch 2.10.0+cu126 / pinned Windows dependency set",
+    "Author": "PyTorch, vendor and dependency authors",
+    "License": "BSD; MIT; Apache-2.0; original dependency notices; NVIDIA CUDA 12.6 terms; separate NVIDIA cuDNN 9.10.2 terms",
+    "Source": "https://pytorch.org/get-started/previous-versions/",
+    "Checked": "2026-10-07",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/python-cu126-wheel-NOTICES.txt",
+      "texts/python-cu126-CUDA-EULA.txt",
+      "texts/python-cuDNN-9.10.2-EULA.txt"
+    ],
+    "Ru": "Отдельный закреплённый upstream wheel PyTorch с CUDA 12.6. Оригинальные лицензии пакета и условия NVIDIA сохранены. ЛОПАТА не публикует отдельный архив библиотек NVIDIA и не устанавливает системные драйверы. GPU проверяется реальным вычислением; модельные веса имеют отдельные условия.",
+    "En": "Separate pinned upstream PyTorch wheel with CUDA 12.6. Original package notices and NVIDIA terms are retained. LOPATA does not publish a separate NVIDIA library archive or install system drivers. GPUs are checked by actual computations; model weights have separate terms.",
+    "Terms": "F0E8CA782DB0A8D85594F7FB8FADD41379DA31C69028AB6C21E1F6F52E3C0AE7"
+  },
+  {
+    "Id": "runtime.python-xpu",
+    "Name": "Windows PyTorch Intel XPU/oneAPI processing environment",
+    "Version": "PyTorch 2.10.0+xpu / pinned Windows dependency set",
+    "Author": "PyTorch, vendor and dependency authors",
+    "License": "BSD; MIT; Apache-2.0; original dependency notices; Intel XPU/oneAPI terms",
+    "Source": "https://pytorch.org/get-started/previous-versions/",
+    "Checked": "2026-10-07",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/python-xpu-wheel-NOTICES.txt"
+    ],
+    "Ru": "Отдельные неизменённые wheels PyTorch XPU, Intel oneAPI/oneMKL/OpenCL/SYCL, Triton XPU и pyelftools скачиваются из upstream. Оригинальные EULA, LICENSE и third-party-programs сохранены. Системный драйвер не устанавливается. Комплект и CPU-путь проверены; физическое исполнение на Intel GPU ещё не испытано.",
+    "En": "Separate unmodified PyTorch XPU, Intel oneAPI/oneMKL/OpenCL/SYCL, Triton XPU and pyelftools wheels are downloaded from upstream. Original EULA, LICENSE and third-party-programs are retained. System drivers are not installed. Package integrity and CPU execution were tested; physical Intel GPU execution has not been tested.",
+    "Terms": "3FF39F4B7176D14D0AEA1A15DE811685F58D597D23EED25EDDF727BF27F9A865"
+  },
+  {
+    "Id": "runtime.python-cuda128",
+    "Name": "Windows PyTorch NVIDIA CUDA 12.8 processing environment",
+    "Version": "PyTorch 2.10.0+cu128 / pinned Windows dependency set",
+    "Author": "PyTorch, vendor and dependency authors",
+    "License": "BSD; MIT; Apache-2.0; original dependency notices; NVIDIA CUDA 12.8 terms; separate NVIDIA cuDNN 9.10.2 terms",
+    "Source": "https://pytorch.org/get-started/previous-versions/",
+    "Checked": "2026-10-07",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/python-cu128-wheel-NOTICES.txt",
+      "texts/python-cu128-CUDA-EULA.txt",
+      "texts/python-cuDNN-9.10.2-EULA.txt"
+    ],
+    "Ru": "Отдельный закреплённый upstream wheel PyTorch с CUDA 12.8. Оригинальные лицензии пакета и условия NVIDIA сохранены. ЛОПАТА не публикует отдельный архив библиотек NVIDIA и не устанавливает системные драйверы. GPU проверяется реальным вычислением; модельные веса имеют отдельные условия.",
+    "En": "Separate pinned upstream PyTorch wheel with CUDA 12.8. Original package notices and NVIDIA terms are retained. LOPATA does not publish a separate NVIDIA library archive or install system drivers. GPUs are checked by actual computations; model weights have separate terms.",
+    "Terms": "969AE84A04F09F43A844E3F080C69FC61914C515AA23D2F547983C0346B695F3"
+  },
+  {
+    "Id": "runtime.python-rocm721",
+    "Name": "Windows PyTorch AMD ROCm 7.2.1 processing environment",
+    "Version": "PyTorch 2.9.1+rocm7.2.1 / Python 3.12.10",
+    "Author": "AMD, PyTorch and dependency authors",
+    "License": "MIT; BSD; Apache-2.0 with LLVM exceptions; 0BSD; retained upstream dependency notices",
+    "Source": "https://rocm.docs.amd.com/projects/radeon-ryzen/en/docs-7.2.1/docs/install/installrad/windows/install-pytorch.html",
+    "Checked": "2026-10-07",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/python-rocm721-NOTICES.txt"
+    ],
+    "Ru": "Неизменённые закреплённые пакеты AMD скачиваются напрямую из официального источника. Исходный модуль rocm_sdk устанавливается без исполнения setup.py; полный архив исходников сохраняется. Недостающие LICENSE/NOTICE дополнены из официальных исходных репозиториев, включая ROCm 7.2.1, LLVM, OpenBLAS и liblzma. Комплект проверен на CPU; физическая проверка AMD GPU не выполнена. Нужны Windows 11, поддерживаемая видеокарта и соответствующий драйвер AMD. Модельные веса имеют отдельные условия.",
+    "En": "Unmodified pinned AMD packages are downloaded directly from the official origin. The rocm_sdk module is extracted without executing setup.py; its complete source archive is retained. Missing LICENSE/NOTICE files are supplemented from official source repositories including ROCm 7.2.1, LLVM, OpenBLAS and liblzma. The package was tested on CPU; physical AMD GPU execution was not tested. Windows 11, a supported GPU and the appropriate AMD driver are required. Model weights have separate terms.",
+    "Terms": "D2FF9DB206C15AE442B5FF58EC112D3110D88D9B607D0715E184FCE8B080A438"
+  },
+  {
+    "Id": "runtime.image-utility-msvc-openmp",
+    "Name": "Microsoft OpenMP runtime for Real-CUGAN",
+    "Version": "14.32.31332.0",
+    "Author": "Microsoft Corporation",
+    "License": "Microsoft Visual C++ Runtime license",
+    "Source": "https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/",
+    "Checked": "2026-10-07",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/music-MSVC-RUNTIME.txt"
+    ],
+    "Ru": "Оригинальный vcomp140.dll из закреплённого официального пакета Real-CUGAN 20220728. Неизменённая отдельная библиотека Microsoft, необходимая CPU и Vulkan исполнителю; системная установка не выполняется. Оригинальные условия Visual C++ Runtime сохранены; MIT/GPL не распространяются на эту DLL.",
+    "En": "Original vcomp140.dll from the pinned official Real-CUGAN 20220728 package. Unmodified separate Microsoft library required by its CPU and Vulkan executor; no system installation. Original Visual C++ Runtime terms are retained; MIT/GPL do not apply to this DLL.",
+    "Terms": "96278C41D62D5DC173A63AD098CC983142335C2EDA9AB7F0C58C4B56AC56DB1A"
   }
 ]

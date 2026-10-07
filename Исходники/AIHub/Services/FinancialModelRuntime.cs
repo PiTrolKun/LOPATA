@@ -17,15 +17,22 @@ public sealed class FinancialModelRuntime : IDisposable
     private Process? _process;
     private string? _path;
     private int _port;
-    public FinancialModelRuntime(UserContextService context)
+    public FinancialModelRuntime(UserContextService context) : this(context, null) { }
+    internal FinancialModelRuntime(UserContextService context, HttpMessageHandler? llamaHandler)
     {
-        _llama = new(context);
+        _llama = new(context, false, llamaHandler);
         ApplicationBackgroundOperations.RegisterModel(this, runtime => ModelProcessRetirement.StopAsync(runtime._process, runtime.Stop));
     }
     public Task<string> GenerateAsync(DebugModelInfo model, string system, string prompt, int maxTokens, CancellationToken token) =>
         GenerateConversationAsync(model, system, [new("user", prompt)], maxTokens, token, exploratory: false);
 
     public async Task<string> GenerateConversationAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory = true)
+    {
+        try { return await GenerateConversationCoreAsync(model, system, messages, maxTokens, token, exploratory); }
+        catch (OperationCanceledException) { Stop(); throw; }
+    }
+
+    private async Task<string> GenerateConversationCoreAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory)
     {
         if (!File.Exists(model.Path)) throw new BackgroundOperationWaitingException("Finance.ModelMissing");
         // Thinking BIN models spend the same generation budget on reasoning and the final answer.
@@ -48,6 +55,7 @@ public sealed class FinancialModelRuntime : IDisposable
             using var counts = JsonDocument.Parse(await countResponse.Content.ReadAsStringAsync(token));
             if (counts.RootElement.GetProperty("tokens").GetArrayLength() + maxTokens + 128 > CoreContextRuntimeLimits.CurrentBackendContextLimit)
                 throw new BackgroundOperationWaitingException("Finance.ContextTooSmall");
+            return ParseResponse(await _llama.GeneratePrivateJsonAsync(model, requestJson, token), generationBudget);
         }
         else
         {

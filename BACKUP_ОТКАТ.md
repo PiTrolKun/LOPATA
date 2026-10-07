@@ -1,3 +1,11 @@
+## 05.10.2026 — Постоянное правило аппаратной универсальности
+
+По прямому указанию пользователя в Инструкции/AGENTS.md и Инструкции/CODEX.md добавлено постоянное правило: ЛОПАТА предназначена для разных совместимых ПК; оборудование пользователя/разработчика не определяет искусственные ограничения всех сценариев. Универсальность — в пределах возможностей технологии/модели/лицензии, с реальным выбором backend/памяти и раздельными статусами внедрения и физических испытаний. До правок path-safe backup: `_backups/20261005_112728_hardware_universality_rules` (оба файла правил и BACKUP_ОТКАТ.md). Откат — восстановлением этих файлов с сохранением относительных путей. Код и версия не менялись; публикация не выполнялась.
+
+## 05.10.2026 — Подготовка аппаратного аудита
+
+До правок сохранён path-safe backup `_backups/20261005_112159_hardware_audit_preparation`: CONTEXTHUB.md, Диалог_сжато.md, BACKUP_ОТКАТ.md, ТЗ/README.md, Документы_проекта/ROADMAP.md и копия исходного аудита. Созданы ТЗ/2026-10-05_Аппаратная_независимость_сценариев.md и Документы_проекта/Исследования/2026-10-05_Аппаратная_независимость_первичная_сверка.md. Обновлены указатели и контекст. Для отката восстановить документы из backup с теми же относительными путями; перед удалением двух новых файлов проверить отсутствие дальнейших правок. Код, версия, runtime, модели и профиль не менялись. Исходный аудит не перемещался; посторонние изменения не затронуты. Новое ТЗ активно, закрытие/коммит/push/публикация не выполнялись: текущая задача — подготовка следующего направления, приёмки реализации ещё нет. Порог безопасной паузы 1% остатка лимита; в подготовке 7%.
+
 ## 05.10.2026 — 0.4.1-beta опубликована: аппаратная поддержка музыки
 
 [Файловое обновление](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.4.1-beta) опубликовано и независимо проверено:
@@ -9694,3 +9702,193 @@ RU/EN содержат 4059 одинаковых уникальных ключе
 ## 05.10.2026 — YuE2: аппаратная поддержка
 
 До реализации создан path-safe backup _backups/20261005_1023_music_hardware: исходники, документация, лицензии и оба прежних runtime целиком. Системные драйверы/настройки не изменялись. Для отката восстановить собственные изменённые пути и runtime из этого backup. Несвязанные идеи и пользовательские WAV не затронуты. Публикация ещё не выполнена.
+
+## 2026-10-05 — аппаратная независимость: начало реализации
+Пользователь разрешил необходимые загрузки/установку и публикацию после фактической готовности. Backup: _backups/20261005_hardware_independence_impl. Первый каталог CPU/Vulkan b9442 и интеграция штатного загрузчика добавлены; официальные архивы проверены SHA-256. 28 целевых тестов passed, build 0 errors / 4 прежних warnings. Желе: CPU/RAM/device policy и fallback загрузки подготовлены; native проверки впереди. ТЗ остаётся активным. Остаток лимита 6%, пауза при 1%. Посторонние изменения не затрагивать.
+
+2026-10-05: промежуточный этап аппаратной независимости. Backup _backups/20261005_runtime_bundle_verification сохраняет изменённые verifier/catalog/manager/license/core/metadata/SwinIR файлы и документы перед этим этапом. Пакеты и TRX в _tmp/hardware-independence; новый component-state-before-*.json сохранён перед установкой новых managed CPU/Vulkan компонентов. Ничего не опубликовано, ТЗ активно. Не откатывать пользовательское удаление Cloud Import Review и посторонние тестовые материалы.
+
+2026-10-05: SD CPU/Vulkan этап; backups _backups/20261005_sd_path_repair, 20261005_sd_managed_runtime, 20261005_hybrid_memory, 20261005_sd_stage_checkpoint. Entries восстановлены штатной offline SHA256-проверкой, веса не менялись. ТЗ открыт, публикации нет.
+
+## Промежуточный этап 2026-10-05: литература, Omni и CLI
+
+ТЗ остаётся активным. Версия 0.4.1-dev; commit/push/публичные вложения и обновление пока не выпускались.
+
+- LiteraryChatRuntime и LiteraryPreparation переведены на проверенные managed CPU/Vulkan bundles. Жёсткий CUDA0 и обязательная установка старого CUDA-архива удалены. Выбор и лицензии привязаны к реально запускаемому комплекту; GPU startup hardware failure допускает один чистый CPU повтор после освобождения owned-процесса. Инвентаризация памяти использует ordinal выбранного runtime.
+- Для qwen35 учтены F16 KV только attention-слоёв и отдельные F32 recurrent R/S state, включая prediction-layer консервативный резерв. Проверены реальные GGUF dimensions: embedding не обязан делиться на head_count при явных key/value length. CPU контекст выбирается по физической RAM и native capacity, GPU — по фактическому upstream fit.
+- hybrid-hardware-quality-dimensions.trx 4/4: 3 memory-policy проверки и реальный ответ Paris от литературных весов на CPU/Vulkan. literary-managed-hardware.trx 14/14: actual LiteraryChatRuntime, /slots и содержательный ответ на CPU/Vulkan плюс прежние контракты. На этом ПК CPU n_ctx=262144, Vulkan n_ctx=147200; это измерения конкретного запуска, не обещание другим ПК и не универсальный benchmark скорости.
+- Omni Alpha/Beta/Gamma теперь выбирают verified CPU/Vulkan, передают --device фактического ordinal и отключают projector offload на CPU. Контекст остаётся 32768, один слот, fit off. План памяти учитывает основной GGUF, KV/recurrent state, projector и отдельный vision workspace; CPU проверяет физическую RAM без расчёта на pagefile.
+- Omni телеметрия больше не приписывает текущему процессу память первого GPU из nvidia-smi. GPU startup failure с аппаратной диагностикой допускает один чистый CPU повтор; отмена и ошибки входа не маскируются. Завершение owned-процесса ожидается до следующего запуска.
+- omni-managed-hardware.trx 27/27: все 6 native сочетаний Alpha/Beta/Gamma × CPU/Vulkan загрузили настоящий model+projector, /slots подтвердил 32768, распознали красное изображение; 21 остальные проверки профилей/протокола. Входные PNG, response.json и runtime.log сохранены в _tmp/hardware-independence/omni-native-tests. AMD/Intel физически не проверялись.
+- CLI больше не принимает nonzero exit с частичным stdout за успех. Аппаратная GPU ошибка отбрасывает обрывок и допускает один CPU повтор в новом owned-процессе, после retirement; CPU/ошибка GGUF/отмена не повторяются. Общий сервер и CLI больше не требуют blanket basic-группу: лицензии их реально выбранного runtime проверяет selector. MainWindow и старые потребители basic ещё нуждаются в отдельном пересмотре поставки и зависимостей.
+- omni-cli-foundation-regression.trx 18/18; build 0 errors, прежние 4 test warnings без новых. Исходники ещё требуют итогового scanner/full suite и safe-start после оставшихся изменений.
+
+Backup: _backups/20261005_omni_managed_runtime, _backups/20261005_core_cli_hardware, _backups/20261005_omni_checkpoint. Новые файлы: OmniRuntimeMemoryPolicy, OmniHardwareRuntimeTests, LlamaCliExitPolicy и его тест. Для отката восстановить именно сохранённые пути, не затрагивать посторонние пользовательские файлы/модели.
+
+Следующее: Windows CPU/PyTorch доставка и Giga/SwinIR/Желе через штатный первый загрузчик; остаточные сценарии/providers и полноценная аппаратная матрица; расширить generic GGUF planner без потери прежних архитектур; проверить inference OOM/отмену, реальные лицензии/поставку и safe-start; затем документы, scoped commit/push и подписанный patch. При остатке лимита 1% — безопасный checkpoint/пауза, не закрытие частичного ТЗ. Последний usage-read: 96% использовано (4% осталось).
+
+## Аппаратная независимость: Python/CLI checkpoint 2026-10-05
+
+Активное ТЗ: ТЗ/2026-10-05_Аппаратная_независимость_сценариев.md, раздел «Промежуточная проверка Python и CLI». CPU-only Python кандидат собран отдельно, 36 wheels закреплены по официальным SHA (165602524 байта). Giga: giga-cpu-only-hardware.trx 2/2, giga-device-api.trx 2/2; GLiNER/NuExtract CPU-only: jelly-cpu-only-hardware.trx 2/2; производственный CLI CPU/Vulkan: cli-managed-native.trx 2/2. Python общий CUDA/HIP/XPU API: 7/7, AMD/Intel физически не проверены. Все новые native процессы завершены. Повторный build 0 ошибок/0 предупреждений; при перекомпиляции 4 прежних предупреждения.
+
+Исходники/AIHub/Tools/python-hardware-cpu-lock.json и Инструменты/prepare-python-hardware.ps1 — проверяемая подготовка, ещё не компонент штатного первого загрузчика. Intel OpenMP DLL внутри CPU PyTorch требуют завершения проверки лицензий; сравниваемый intel-openmp 2025.3.0 не совпал по SHA, бинарники кандидата не подменялись. Прямая загрузка upstream wheels также требует корректных условий и уведомлений, это не обход лицензий.
+
+Официальные Windows направления: PyTorch XPU https://pytorch.org/get-started/additional-platforms/ и API 2.10 https://docs.pytorch.org/docs/2.10/xpu.html; AMD https://rocm.docs.amd.com/projects/radeon-ryzen/en/latest/docs/install/installrad/windows/install-pytorch.html, матрица оборудования https://rocm.docs.amd.com/projects/radeon-ryzen/en/latest/docs/compatibility/compatibilityrad/windows/windows_compatibility.html. Версии/драйверы сверять перед внедрением; наличие upstream не означает завершение поставки в ЛОПАТЕ. Intel условия https://cdrdv2-public.intel.com/777700/intel-end-user-license-agreement-for-developer-tools-version-august-2024.pdf.
+
+Следующее: лицензионно проверенная Python поставка/выбор окружения через первый загрузчик, Giga/Jelly/SwinIR; generic GGUF planners и остальные сценарии; inference OOM/cancel/cleanup, safe-start и документы. Версия 0.4.1-dev, ни закрытия, ни публикации. Backup: _backups/20261005_python_device_api, _backups/20261005_jelly_cpu_only_test, _backups/20261005_cli_native, _backups/20261005_python_hardware_checkpoint. Пользовательские модели/данные не менялись. Последний лимит: 3% остатка, безопасная пауза по указанию пользователя при 1%.
+### Уточнение Python checkpoint: происхождение DLL и обычные GGUF
+
+Точное соответствие Intel OpenMP найдено в официальном intel_openmp-2025.3.1-py2.py3-none-win_amd64.whl, wheel SHA256 bf325e802d9f52f95ca8d2558bb66f30d1839aed30426533063a78a3587e9035. Обе DLL совпадают: libiomp5md d41a71c38f627a95748596820ab380135dcccc4ceecd6fe7d4e247d015bf55a4 и libiompstubs5md 137dd44f652a926eb540861994c58ea24ebfbf6b45886ac964a68c5742549c47. Происхождение: _tmp/hardware-independence/intel-openmp/2025.3.1-provenance.json. Оригинальные EULA/third-party-programs сохранены в Licenses/texts/python-intel-openmp-2025.3.1-{EULA,NOTICES}.txt с переводом исходной CP1252-кодировки в UTF-8 без переписывания условий. В wheel нет redist.txt, а notices ссылаются на внешний oneTBB файл; распространение бинарников и полнота транзитивных условий ещё не подтверждены. Дополнительные скачивания 2025.3.2/.3 завершились, они имеют другие DLL SHA; ни одна библиотека рабочей среды не подменялась.
+
+Планировщик памяти дополнен phi2/phi3/gemma (первое поколение)/starcoder2/gpt2 по закреплённым исходникам llama b9442. KV head count, отсутствующий в GGUF, использует upstream MHA-default query head count; явные неправильные или массивные dimensions не маскируются значением по умолчанию. dense-architecture-regression.trx 22/22. Backup _backups/20261005_dense_architectures. Это не снимает оставшийся пункт dedicated planners для остальных generic архитектур. Сборка: 0 ошибок, 4 прежних предупреждения тестов. Все model/test/download процессы завершены; публикация не выполнялась. Порог паузы 1% ещё не достигнут, последний замер 3% остатка.
+### Основа составной Python доставки
+
+Добавлен PinnedPythonWheelSet: exact CPU lock, HTTPS upstream allowlist, проверка SHA/размеров/имён/дубликатов, никакого pip разрешения плавающих зависимостей. Manifest теперь копируется в build через AIHub.csproj. python-wheel-lock.trx 9/9: реальные 36 artifacts/165602524 байта, reject посторонних origins/ports/credentials, traversal/ADS, duplicate packages и другой torch профиль. Это только проверяемый вход для будущего составного ComponentManager installer, UI/catalog install пока не подключены. Backup csproj: _backups/20261005_python_wheel_delivery. Сборка 0 ошибок, прежние 4 предупреждения. Следующий кодовый шаг: отдельный staged downloader/extractor/probe и интеграция с ComponentManager/HardwareRuntimePreparation; лицензии/целостность/прерывание проверяются перед заменой прежнего runtime.
+### Текущий код составной установки Python — ещё не подключён к UI
+
+PythonWheelExtractor распаковывает проверенные по SHA/точному размеру wheels в отдельный staging, оставляет dist-info/LICENSE, учитывает purelib/platlib/data/scripts/headers. Проверенный архив остаётся открыт с блокировкой записи на всё извлечение; traversal/ADS/symlink/дубли/существующие файлы/reparse/лимиты и отмена проверяются. python-wheel-foundation.trx 16/16; python-official-wheels-staging.trx 1/1: все 36 настоящих upstream wheels распакованы отдельно, torch_cpu.dll/Pillow/лицензия есть, CUDA DLL и pycache отсутствуют, код пакетов не запускался. Staging сохранён в _tmp/hardware-independence/python-direct-wheels/<guid>.installing. PythonBootstrapArtifacts закрепляет официальные embed Python 3.12.10 и pip 25.3 с прежними проверенными SHA; CPUDownloadSet состоит из 38 загрузок. Сборку после добавления последнего bootstrap helper ещё выполнить.
+
+ComponentManager не модифицирован для составного runtime, новых Python entries в каталог ещё нет. Следующее: staged downloader/bootstrap/доверенный файловый manifest/probe, фактические лицензионные записи и общая HardwareRuntimePreparation интеграция. Не считать сохранённый staging установленным окружением. Версия/публикация остаются прежними. Последний account usage: 98% использовано / 2% осталось, пауза при 1%.
+### Проверка самостоятельного Python staging и Giga fallback, 2026-10-05
+
+PythonRuntimeStaging собирает полный CPU runtime из 38 закреплённых upstream artifacts (178514752 байта загрузки) в новую .installing папку; прежнее окружение не заменяется. python-cpu-direct-stage.trx 1/1, сборка после bootstrap helper выполнена. Исходные Microsoft/Intel тексты сохранены, Microsoft DLL взяты только из проверенного llama CPU bundle. Независимый python -I -B импортирует torch 2.10.0+cpu, transformers 5.3.0, tokenizers/safetensors/numpy/Pillow и выполняет матричное умножение; sys.path содержит только staging. Доказательство: _tmp/hardware-independence/python-direct-stage-health.json. Предварительная расширенная проба включала scipy, которого в согласованном CPU lock нет; после исключения этой необязательной библиотеки реальная проба прошла. Не считать SciPy установленным или обязательным для этих сценариев.
+
+GigaSourceEmbedding теперь допускает один свежий CPU запуск после подтверждённой аппаратной ошибки автоматически выбранного cuda/xpu устройства; отмена, явный выбор CUDA и ошибки входа не запускают этот fallback. python-delivery-fallback-foundation.trx 19/19, giga-pipeline-hardware.trx 2/2: реальные CPU/auto embeddings, исходник неизменен, конечный checkpoint и нормированные конечные 1024-мерные векторы. Сообщение Loading с фактическим устройством теперь отправляется до выбора dtype, чтобы ранняя аппаратная ошибка также имела контекст для fallback. Новая физическая проверка полного direct-wheel staging с Giga и Желе запущена отдельно; результат фиксируется после завершения.
+
+Распаковщик дополнительно запрещает Windows device names, неоднозначные пустые сегменты, завершающие точки/пробелы и недопустимые символы; соответствующие проверки добавлены. Backup: _backups/20261005_python_staging_health, _backups/20261005_python_archive_paths, _backups/20261005_giga_cpu_fallback, _backups/20261005_giga_pipeline_native. Новые проверки распаковщика ещё выполнить после завершения native tests; не запускать конкурентную сборку с тестовым процессом.
+
+Составной Python installer пока НЕ подключён к ComponentManager/первому окну, staged folders НЕ отмечены установленными. Не завершены лицензионные записи и полнота Intel OpenMP notices, доверенная installed receipt/health gate, GPU Python profiles, generic planners/оставшиеся сценарии и полный цикл публикации. ТЗ активно; версия 0.4.1-dev, закрытия/push/патча/установщика не было. Порог безопасной паузы: 1% остатка; последний замер 98% использовано / 2% осталось.
+
+### Доверенный Python file profile и итог текущей проверки
+
+Полный direct-wheel staging подтверждён python-direct-stage-native.trx 4/4: Giga CPU и контроль CUDA, GLiNER/NuExtract CPU без CUDA wheels. Это проверка исполнения/протокола, не обещание качества извлечения. python-stage-health-and-paths.trx 29/29: полный health probe, распаковка, pinned wheel policy и fallback policy. PythonRuntimeHealthProbe запускает принадлежащий приложению отдельный процесс -I -B, ограничивает вывод/время, сверяет Python и профиль библиотек, выполняет CPU матричное умножение и проверяет, что sys.path не выходит из runtime; процесс закрывается и при отмене.
+
+Инструменты/manifest-python-hardware.ps1 создаёт список файлов из независимо проверенного clean staging. Tools/python-hardware-cpu-files.json: 19529 файлов, 629083203 байта, manifest 3176188 байт, SHA256 97c5b8c7dc621f84431ee56aad5884344134d4a4d3ec7104a5cf00ffbba5919f. Отличие от прежнего 19182-файлового кандидата: полный direct bootstrap содержит pip и исходные дополнительные notices. PythonRuntimeBundleVerifier закрепляет SHA manifest в коде, проверяет все размеры/суммы, ссылки/пути и лишние файлы до исполнения health probe. python-cpu-file-receipt.trx 1/1: настоящая повторная сборка 38 загрузок, полная проверка/health, обнаружение лишнего модуля и подмены существующего файла без изменения его длины; тест восстанавливает испорченный файл. Backup _backups/20261005_python_health_probe и _backups/20261005_python_file_receipt. csproj копирует file manifest в output.
+
+Сборки: 0 ошибок и 4 прежних test warnings; новых предупреждений нет. Scanner отдельно прошёл Исходники (1134), Инструкции (2), Документы_проекта (143), ТЗ (173), корневые журналы и новый manifest script (4). Полный корневой scanner остановлен как принадлежащий этому запуску процесс: он обходил временные сторонние build trees и _backups, которых его штатный exclude list не исключает; scoped проверки проверяют реальные изменённые источники/документы, без изменения scanner и без переписывания vendor материалов. Последний git diff --check: только прежние уведомления о нормализации CRLF/LF, whitespace errors нет. После последней пары новых Python services ещё повторить scoped source scanner.
+
+ComponentManager/HardwareRuntimePreparation всё ещё не подключены к Python composite installer; лицензии/профили CUDA, ROCm, XPU и замена старого Basic/bundled CUDA состава остаются следующим шагом. Никто не отметил staging установленным, не повысил версию и не опубликовал частичную работу. ТЗ остаётся активным. Порог паузы 1%, последний usage 98%/2%.
+
+### Pinned downloader и явные ошибки разных GPU
+
+PinnedPythonDownloader добавлен как отдельная основа составного ComponentManager acquisition: только абсолютный normal cache, закреплённые upstream origins, exact SHA/size, .part возобновление с проверкой Content-Range и предела bytes, корректный restart при HTTP 200 вместо range, verified cache без сети, unchecked bytes не заменяют прежний cache. python-pinned-download.trx 6/6: range resume/restart, offline reuse, плохой range, oversize, digest и посторонний redirect. К ComponentManager/catalog UI ещё не подключён. Нужны дополнительные проверки отмены/прерывания, реального набора 38 archives и state/rollback интеграция.
+
+Giga fallback дополнен конкретными CUDA invalid-device-function/no-kernel-image, HIP hipErrorNoBinaryForGpu и Intel SYCL ZE_RESULT_ERROR_OUT_OF_DEVICE_MEMORY/UNSUPPORTED_FEATURE. Только для автоматически выбранного фактического GPU, с прежним запретом fallback на отмене/CPU/ошибке данных/явном CUDA. python-vendor-failure-policy.trx 8/8. Это контрактные проверки сообщений, не физические тесты AMD/Intel GPU. Backup _backups/20261005_python_device_failures. Сборка 0 ошибок, прежние 4 предупреждения.
+
+Повторный source scanner после file verifier/health: 1136 файлов, чисто; после двух последних файлов downloader и расширения fallback ещё повторить scanner. Проверка полного cpu-file-receipt завершена. Все native/test процессы этого этапа завершены. Intel EULA и оригинальный third-party-programs перечитаны: oneTBB-раздел включает собственные условия, фраза о third-party-software.txt условная (may be included), она не доказывает отсутствующий обязательный отдельный файл. Право rehosting Intel DLL по redist.txt всё ещё не подтверждено, прямой fixed upstream download предусмотрен без нового LOPATA binary zip. Tokenizers 0.22.2 dist-info не содержит LICENSE, metadata указывает Apache; официальный v0.22.2 LICENSE проверен отдельно, следует сохранить оригинал в каталоге. Источник: https://raw.githubusercontent.com/huggingface/tokenizers/v0.22.2/LICENSE . Никаких новых license receipts за пользователя не создано.
+
+## Безопасная пауза по порогу 1%, 2026-10-05
+
+Account usage tool подтвердил 99% использовано / 1% осталось. По временному прямому правилу пользователя новые реализации и скачивания прекращены, текущие проверки завершены. ТЗ НЕ выполнено и НЕ закрыто. Разрешение пользователя на скачивания/установки и автоматическое закрытие/push/подписанный patch после настоящего завершения сохраняется; пауза не означает отзыв этого разрешения. Версия остаётся 0.4.1-dev. Публикации, новый установщик и перезапуск приложения не выполнялись. Все model/test/download процессы, запущенные на этом этапе, завершены; Get-Process для AIHub.Tests/python/llama-server/sd-cli не нашёл процессов. Посторонние пользовательские изменения сохранены.
+
+Новые лицензии runtime.python-cpu и runtime.python-intel-openmp добавлены в hardware-runtime-entries.json и catalog.json (Basic=false, download), с исходными текстами и проверенными Terms SHA. Они НЕ отмечены принятыми за пользователя. python-cpu-wheel-NOTICES.txt объединяет 74 исходных LICENSE/NOTICE файлов wheel-пакетов; два исходных upstream mojibake-фрагмента copyright строк PyTorch исправлены только в отображаемой UTF-8 копии, с явной пометкой. Оригинальный LICENSE внутри установленного/staged wheel не изменён, доверенный file profile не менялся. Backup отображаемого оригинала и каталогов: _backups/20261005_python_notice_utf8. Tokenizers 0.22.2: сохранён LICENSE из commit f383101a26663708484cac0727792aad74f78234, SHA c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4. Licence scanner 68 файлов чисто, Terms обеих новых записей пересчитаны и подтверждены. Отдельного Intel DLL binary zip не создаётся; прямой upstream acquisition не подменяет условия Intel и не означает подтверждённое право rehosting.
+
+Последние проверки: dotnet build 0 ошибок, прежние 4 test warnings; hardware-safe-pause-foundation.trx 22/22 (licensing gate, Giga hardware fallback, pinned downloader). До этого python-stage-health-and-paths.trx 29/29, python-cpu-file-receipt.trx 1/1 (19529 файлов, полной копии/подмена/лишний файл), python-direct-stage-native.trx 4/4 (CPU Giga/GLiNER/NuExtract и CUDA контроль Giga), python-pinned-download.trx 6/6, python-vendor-failure-policy.trx 8/8. После final source/scoped journal scanner результат дописать. Результаты находятся в _tmp/hardware-independence/tests. UI safe-start, полная финальная матрица/сборка ещё обязательны перед закрытием.
+
+Следующий конкретный шаг: подключить готовые PinnedPythonDownloader + PythonRuntimeStaging + PythonRuntimeBundleVerifier + PythonRuntimeHealthProbe к составному ComponentManager installer, с атомарной заменой/state rollback/отменой и обычным license gate; добавить CPU entry в аппаратный план штатного первого запуска и semantic passport. Пока ComponentManager НЕ стал partial, delivery kind/entry Python НЕ добавлены, RequiredComponents остаётся 2/4 llama+SD. _backups/20261005_python_component_bridge содержит только подготовительный backup этих файлов — bridge-код ещё не правился, потому что именно тогда достигнут порог лимита. Дальше — миграция Giga/Jelly/SwinIR на управляемые среды, фактически совместимые GPU profiles CUDA/XPU/ROCm и проверка разных runtime versions, cleanup старого bundled CUDA/libomp/Basic, generic GGUF planners и оставшиеся сценарии/Kimi/providers, server inference OOM/cancel fault matrix, документация/safe-start. Затем и только затем закрытие активного ТЗ, scoped commit/push и подписанное файловое обновление с фактически опубликованными runtime assets; полного установщика эта текущая команда отдельно не требует.
+
+Rollback: последняя точка _backups/20261005_hardware_safe_pause_1percent (журналы), code backups перечислены выше, license catalog _backups/20261005_python_license_catalog/_python_notice_utf8. Сохранённые model weights/исходные пользовательские файлы не менять и не удалять; ТЗ/Отложено не трогать, чужие удаления/неотслеживаемые идеи не включать в будущий commit.
+Итог перед паузой: повторный scanner чисто — Исходники 1140, Инструкции 2, Документы_проекта 143, ТЗ 173, корневые журналы и новый script 4. git diff --check не выявил whitespace errors (только уведомления CRLF/LF). Все проверки завершены. Работа безопасно приостановлена по прямому порогу пользователя 1%; продолжение с составного Python ComponentManager bridge, без объявления завершения ТЗ.
+
+## Продолжение аппаратного ТЗ, 2026-10-07
+
+Пользователь отменил временное отслеживание лимита и разрешил продолжить работу. Аппаратное ТЗ остаётся активным, версия 0.4.1-dev; закрытие и публикация разрешены после фактической готовности. Правила перечитаны, чужие изменения сохранены. Backup изменённых существующих файлов: _backups/20261007_python_component_bridge и _backups/20261007_python_cancel_tests.
+
+Python CPU добавлен в общий каталог/план первого запуска (3 компонента без GPU, 5 с реальной GPU), отдельный delivery kind python_profile. ComponentManager.Python собирает 38 исходных закреплённых архивов через PinnedPythonDownloader, сохраняет прогресс и state, проверяет все 19529 файлов и изолированный health probe перед заменой. Лицензии runtime.python-cpu/runtime.python-intel-openmp/MSVC проходят обычный шлюз; CUDA не требуется. Общая блокировка установки теперь действует между экземплярами ComponentManager. Предыдущий runtime и receipt сохраняются при ошибке/отмене, частичные загрузки остаются для продолжения. Статус готовности требует соответствующей версии, verified receipt и основных файлов; HardwareRuntimePreparation делает полную проверку до сценариев. Bridge пока не испытан end-to-end, потребители ещё на прежнем Python. Сборка после первоначального подключения прошла: 0 ошибок, 4 прежних test warnings. Добавлен отдельный тест настоящей отмены потока и продолжения range; запуск проверок следует далее. Commit/push/patch/installer и перезапуск приложения не выполнялись.
+
+2026-10-07: python-component-foundation.trx 20/20; python-composite-install-v2.trx 1/1 в UPDATE_STAND, полноценная установка, license refusal до изменений, 38 cached digests, receipt+health, отмена до замены, обнаружение лишнего файла и восстановление после прерванного swap. Первый TRX выявил отсутствие InvalidDataException в маршрутизации ошибок: исправлено в HardwareRuntimePreparation, recovery и UI hardware prompt. Новые CUDA126/XPU torch 2.10.0 wheels обнаружены в официальном индексе PyTorch по точным SHA/байтам; загрузки во временный кэш идут, runtime ещё не установлен. NVIDIA Skill Finder применён только для чтения каталога (npx --list), skills не устанавливались. Backup _backups/20261007_python_corruption_routing и _backups/20261007_python_profiles. Версия/публикация без изменений.
+
+## 2026-10-07 — продолжение аппаратной независимости, управляемый Python
+
+Пользователь отменил правило отслеживания лимита; остановка по процентам больше не применяется. ТЗ остаётся активным, версия 0.4.1-dev, публикации/нового установщика/перезапуска приложения пока нет.
+
+CPU profile подключён к составному ComponentManager и плану первого запуска: проверка закреплённых upstream архивов, лицензии, staged SHA всех файлов, health, атомарная замена, отмена и восстановление после прерванной замены. Composite CPU test прошёл. Добавлены отдельные CUDA 12.6 и Intel XPU профили PyTorch 2.10/Python 3.12.10, точные locks и полные доверенные manifests (CUDA 19564 файла, XPU 21793). Загрузка библиотек идёт штатным первым загрузчиком; в обработке новых загрузок нет. GPU acquisition завершён из официальных источников, лицензии добавлены отдельно, принятие за пользователя не записывается.
+
+Фактическая сборка staged CUDA/XPU и health 2/2; production hardware probe/полные SHA до и после 2/2; каталог/лицензии 16/16. NVIDIA RTX4090 исполнила CUDA matmul, XPU здесь корректно выбрал CPU (Intel GPU физически отсутствует). Аппаратный выбор использует реальную операцию/свободную память и сохраняет ordinal. Giga/Jelly/SwinIR перенесены на managed runtime; реальные модельные повторные проверки этой миграции ещё нужны.
+
+Composite GPU test выявил Windows WinError206 в длинном пути CUDA DLL. Сокращение тестового пути не применено. Проверка sys.path с расширенным Windows префиксом выполнила реальный CUDA matmul; общий ManagedPythonLaunch применяет это в health, inventory и production workers. Полный повтор штатной установки выполняется на исходном длинном пути. Исходный неуспешный TRX python-gpu-composite-install.trx сохраняется. Также исправлено ошибочное ожидание CUDA в Intel-only тесте при отсутствии установленного CUDA профиля.
+
+Исходные wheel-файлы и DLL не изменяются. Отображаемые GPU notices исправляют только два upstream mojibake copyright фрагмента с явной пометкой. Scanner исходников чисто; последняя сборка 0 ошибок, 4 прежних предупреждения тестов. CUDA128/новые NVIDIA, Windows AMD ROCm, остальные сценарии/планировщики/сбои/отмена и финальная документация пока не закрыты. Не объявлять всю аппаратную поддержку завершённой.
+
+Backups: _backups/20261007_python_profile_types, _backups/20261007_gpu_python_catalog, _backups/20261007_managed_python_consumers, _backups/20261007_python_long_paths, _backups/20261007_gpu_checkpoint. Не включать постороннее перемещение Cloud idea и пользовательские новые идеи/тестовые материалы в будущий scoped commit. Разрешение на окончательное закрытие/push/подписанный файловый патч после настоящего завершения сохраняется.
+
+## 2026-10-07 — CUDA128, Windows AMD и фактическая инвентаризация
+
+Продолжение активного ТЗ аппаратной независимости. Ограничение по лимиту отменено пользователем. Версия 0.4.1-dev; commit/push/патч/полный установщик пока не выпускались.
+
+- Подготовлены официальные CPU, CUDA126, CUDA128, Intel XPU и Windows ROCm7.2.1 комплекты с закреплёнными исходными архивами, SHA каждого установленного файла, оригинальными лицензиями и штатной управляемой установкой. Исправлены Windows long paths и нежелательное stdout-сообщение исходного AMD SDK без изменения upstream binaries.
+- python-cuda128-composite-and-policy.trx 13/13; python-amd-composite-origin-fixed.trx 8/8; managed-python-real-consumers.trx 9/9: реальная миграция Giga/Jelly/SwinIR, CPU и NVIDIA. python-device-inventory-and-amd-consumers.trx: 8 passed/1 skipped, 0 failures. Оригинальный AMD wheel исполнил Giga, GLiNER, NuExtract и SwinIR на CPU; полный SHA компонентов проверен до/после. AMD/Intel GPU физически отсутствуют, их GPU-исполнение не объявляется проверенным. Пропуск — opt-in Intel stage в последней проверке; отдельные ранние проверки XPU сохранены.
+- Выбор устройства использует реальные torch operation, имя, ordinal и свободную память; cuda:99/hip:99/xpu:99 отвергаются при явном выборе. SwinIR получает фактический список устройств вместо WMI-номеров.
+- Из доставки установщика/патча убран обязательный старый CUDA llama bundle и три basic license entries, относящиеся только к нему. Исторический installation-state root сохраняется для безопасной обработки старых установок. PowerShell syntax чисто; фактическая пакетная проверка ещё нужна.
+- Планировщик GGUF теперь учитывает массивы attention heads по слоям, Deci-слои без attention/KV и консервативную верхнюю границу SWA dimensions. gguf-layer-memory-regression.trx 39/39; новые архитектуры не выдаются за физически испытанные модели. Последняя сборка: 0 errors, прежние 4 test warnings.
+
+Открыты остальные аппаратные пути, inference failures/cancellation, NCNN inventory, итоговая документация и выпуск. ТЗ не закрывать преждевременно. Backups: _backups/20261007_python_inventory_checks, _backups/20261007_legacy_cuda_delivery, _backups/20261007_gguf_layer_memory; эта контрольная точка дополнительно сохранена path-safe.
+
+## 2026-10-07 — реальные native пути, восстановление запросов и NCNN
+
+- Лимит больше не отслеживается, правило паузы отменено. ТЗ активно; версия 0.4.1-dev, commit/push/патч/полный установщик/перезапуск приложения не выполнялись.
+- Общий llama-server обрабатывает доказанный GPU-сбой до видимого вывода одним повтором того же запроса в новом CPU-процессе после остановки старого. Отмена останавливает owned worker без повтора. Частичный SSE не выдаётся за завершённый; ошибки и оборванные потоки не возвращают IsComplete. Финансовые GGUF-запросы подключены к той же политике без изменения личного payload, sampling, token budget и проверок усечения. financial-and-core-worker-recovery.trx: 64/64, включая реальные GPU/CPU workers на Qwen3-8B и контролируемый HTTP fault. Это проверка восстановления, не искусственно вызванный физический OOM.
+- Дополнительный старый CUDA-путь SmolVLM2 в Песочнице заменён общим управляемым CPU/Vulkan selection с действительными ordinal, полным SHA модели/projector, памятью полного контекста 4096 и визуальных буферов. Hardware fallback только при конкретной аппаратной ошибке, после retirement; ошибки входа/CPU не маскируются. semantic-original-model-cpu-vulkan-and-recovery.trx: 12/12, реальный красный PNG, исходная модель и projector на CPU/Vulkan, повтор на CPU с неизменным запросом, вход и worker lifetime проверены.
+- NCNN inventory извлекается из самих закреплённых оригинальных executables, не из WMI-номеров. Полный SHA оригинального ZIP и каждого распакованного файла перед проверкой/работой; подмена того же размера/mtime и посторонняя DLL отвергаются. Real-CUGAN допускает CPU; Real-ESRGAN требует совместимый Vulkan GPU. ncnn-actual-inventory-and-models-path-fixed.trx: 8/8, настоящие новые PNG GPU/CPU, исходники сохранены. Исправлен конфликт updater-only правила Models с законной models/ внутри оригинального архива, защита самого updater не изменена.
+- Оригинальный vcomp140.dll из Real-CUGAN 20220728 включён в отдельное лицензионное условие Microsoft runtime.image-utility-msvc-openmp; каталог 115 entries. Gate действует перед загрузкой/проверкой/исполнением. Пользовательские согласия не создавались и не изменялись; тесты используют временный callback в своём процессе.
+- Снятие старого обязательного llama CUDA bundle из доставки проверено фактическим ZIP builder/planner: hardware-delivery-update-fixed.trx 63/63. Удаляются лишь принадлежащие установке неизменённые старые binaries; чужие GGUF и изменённые owned-файлы защищены. Это не выпуск публичного патча.
+- Предшествующие неуспешные TRX сохранены: ошибки тестового HTTP forwarding/assertion и updater-only archive path устранены, не скрыты. Последняя сборка 0 ошибок, прежние 4 test warnings. Scanner до последних финансовых/SmolVLM правок чистый, повтор обязателен.
+
+Открыто: аудит оставшихся chatllm/потребителей, завершение доверенной доставки Python зависимостей сценариев и лицензионных описаний, first-launch/safe-start, финальная матрица/документация, фактическая публикация runtime assets и подписанного файлового обновления. AMD/Intel/новые NVIDIA физически не испытаны; CPU исполнение AMD wheel не является испытанием AMD GPU. Не закрывать ТЗ по этим промежуточным проверкам.
+
+Backups перед изменениями: _backups/20261007_core_inference_recovery, _core_fault_native, _inference_cancel, _delivery_fixture, _ncnn_inventory, _ncnn_localization, _ncnn_archive_paths_*, _financial_inference_*, _semantic_runtime_*, _semantic_testability_*; журналы этой точки сохранены path-safe. Посторонние идеи/перенос Cloud и ТЗ/Отложено не затронуты.
+
+Источники NCNN: https://raw.githubusercontent.com/nihui/realcugan-ncnn-vulkan/20220728/src/main.cpp ; https://raw.githubusercontent.com/xinntao/Real-ESRGAN-ncnn-vulkan/master/src/main.cpp (текущий master, поведение старого оригинального exe проверено отдельно); Microsoft runtime terms: https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/ .
+## 2026-10-07 — итоговые проверки и подготовка 0.4.2
+
+Работа безопасно продолжена после сбоя. Последние изменения: отдельный inference
+helper для Omni с одним CPU повтором до видимого ответа, подтверждённым retirement
+и сохранением точного запроса; отмена ожидает завершение собственного процесса.
+Native omni-completion-recovery.trx 6/6. Kimi закреплён на прежнем CPU/RAM профиле,
+ложное сообщение об автоматической CUDA заменено; upstream v24 не использует -ngl
+для offload. Аппаратные лицензионные описания Giga/Желе отделены от CUDA-only истории.
+
+hardware-final-full-regression.trx: 1267 passed, 0 failed, 73 opt-in skipped;
+hardware-updates-full.trx: 63/63. Прежние native проверки моделей и контролируемого
+восстановления сохранены отдельно. Scanner Исходники/Инструменты/Документы_проекта
+прошёл, RU/EN 4079 одинаковых ключей. Приложение build: 0 ошибок/предупреждений,
+тестовый baseline четыре прежних предупреждения без новых.
+
+Штатный safe-start проверил отвечающее главное окно и аппаратную подготовку.
+Пользователь сообщил: скачал запрошенные библиотеки и закрыл приложение.
+При первом запуске цель проверки не была обозначена достаточно прямо; это
+исправлено сообщением. Текущие runtime.python.cpu и runtime.python.cuda126
+проверяются повторно без скачивания. Дальнейший запуск объявлять заранее.
+
+Документация/справка «?»/лицензии актуализированы, аппаратная матрица отделяет
+реализацию/доставку от физических испытаний. VERSION повышена до 0.4.2-dev;
+свежий public payload и updater 0.4.2-beta собираются отдельно. Публикация ещё
+не выполнена. Нового полного установщика нет по правилам обычной правки.
+Политика отслеживания лимита отменена прямым указанием пользователя.
+Посторонний перенос Cloud Import Review и пользовательские идеи/тестовые файлы
+не включать в scoped commit.
+
+Backups: _backups/20261007_omni_completion_3ca985f135d14c67ae370af30b92e7bb,
+_backups/20261007_hardware_docs_5aaf165d9deb442e9229d2f3ac2dd994,
+_backups/20261007_release_checkpoint_c77dd6e2816f4acd91d6a40613a2d9f2.
+Evidence: _tmp/hardware-independence/tests, all-test-reports.json,
+safe-start-ui.json, safe-start-hardware-prompt.json. Ранние failed TRX не удалять.
+## 2026-10-07 — готовность 0.4.2 перед публикацией
+
+Пользователь скачал предложенные первым запуском библиотеки и закрыл программу.
+installed-first-launch-readiness.trx: 1/1; штатный аппаратный план готов,
+CPU проверен реальными операциями, автоматический Python на этом ПК видит cuda:0.
+Заранее объявленный safe-start 0.4.2-dev: главное окно отвечает, StatusText
+подтверждает завершённую настройку. Собственное проверочное окно закрыто.
+
+Public payload 0.4.2-beta и отдельный updater: 0 ошибок/предупреждений.
+Все десять закреплённых Python manifests/locks и копируемые лицензии/NOTICE
+проверены как точные байты Git index и public payload. Scoped .gitattributes
+сохраняет оригинальные переводы строк/пробелы vendor notices; контрольные суммы
+и runtime verifier не ослаблялись. ROCm original tar проверен по pinned lock.
+Evidence: git-byte-contracts.json, safe-start-042.json, release-paths.json.
+
+Следующее действие — scoped commit/push, подписанный файловый пакет и native
+assets v0.4.2-beta. До фактической проверки публикации ТЗ не закрывать.
+Посторонние идеи, перенос Cloud и ТЗ/Отложено остаются вне публикации.
+Полный установщик не пересобирался по правилу обычных правок.

@@ -33,7 +33,7 @@ public sealed class ImageAnalysisLiteraryScenarioTests
         AssertArgumentValue(arguments, "-c", "4096");
         AssertArgumentValue(arguments, "--max_proj_length", "1024");
         Assert.Contains("+single_turn", arguments);
-        Assert.DoesNotContain("-ngl", arguments);
+        AssertArgumentValue(arguments, "-ngl", "0");
     }
 
     [TestMethod]

@@ -41,8 +41,11 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
     public void ResetAnchor(LiteraryChatProfile role) => _anchors.Remove(role);
     public bool IsBusy => Volatile.Read(ref _busy) != 0;
     public event Action? BusyChanged;
-    public LiteraryChatRuntime(string? projectDirectory = null, bool preparing = false)
+    private readonly bool _forceCpu;
+    public LiteraryChatRuntime(string? projectDirectory = null, bool preparing = false) : this(projectDirectory, preparing, false) { }
+    internal LiteraryChatRuntime(string? projectDirectory, bool preparing, bool forceCpu)
     {
+        _forceCpu = forceCpu;
         ApplicationBackgroundOperations.RegisterModel(this, async runtime =>
         { runtime.Stop(); await runtime.AwaitProcessRetirementAsync(CancellationToken.None); });
         _preparationRoot = preparing ? projectDirectory ?? throw new ArgumentNullException(nameof(projectDirectory)) : null;
@@ -64,13 +67,15 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
         if (IsBusy || !string.Equals(Path.GetFullPath(root), _preparationRoot, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException();
         _layout = new LiteraryProjectLayout(root);
     }
-    public static string[] Arguments(string model, int port, int fitMarginMiB = 1024, int gpuLayers = 99) =>
+    public static string[] Arguments(string model, int port, int fitMarginMiB = 1024, int gpuLayers = 99,
+        string deviceId = "none", int contextCapacity = 0) =>
     ["-m", model, "--host", IPAddress.Loopback.ToString(), "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
-        "-c", "0", "-np", LiteraryModelPolicy.SlotCount.ToString(),
-        "-ngl", gpuLayers.ToString(System.Globalization.CultureInfo.InvariantCulture), "--device", "CUDA0", "--fit", "on", "--fit-target", fitMarginMiB.ToString(), "--fit-ctx", "1024", "--cache-ram", "0", "--no-context-shift",
+        "-c", contextCapacity.ToString(System.Globalization.CultureInfo.InvariantCulture), "-np", LiteraryModelPolicy.SlotCount.ToString(),
+        "-ngl", gpuLayers.ToString(System.Globalization.CultureInfo.InvariantCulture), "--device", deviceId, "--fit", deviceId == "none" ? "off" : "on", "--fit-target", fitMarginMiB.ToString(), "--fit-ctx", "1024", "--cache-ram", "0", "--no-context-shift",
         "--offline", "--jinja", "--slots", "--reasoning-format", "deepseek", "-fa", "auto", "-n", "-1",
         "-t", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString(), "-tb", Math.Clamp(Environment.ProcessorCount / 2, 1, 8).ToString()];
     private Uri Server => new($"http://{IPAddress.Loopback}:{_port}/");
+    internal Uri Endpoint => Server;
 
     public async Task<string> SendAsync(LiteraryChatProfile role, IReadOnlyList<ImageAnalysisHiddenMessage> history,
         string draft, LiteraryProject project, IProgress<ModelStreamChunk>? progress, CancellationToken token,
@@ -226,8 +231,9 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
         catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or InvalidOperationException or JsonException)
         { Log("Could not confirm idle; restarting on next request: " + ex.Message); StopProcess(); }
     }
-    private async Task PrepareAsync(CancellationToken token)
+    internal async Task PrepareAsync(CancellationToken token, bool forceCpu = false)
     {
+        forceCpu |= _forceCpu;
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_process is { HasExited: false } && _loadedUsesRamReserve != _runtimeOptions.UseRamReserve) StopProcess();
         await AwaitProcessRetirementAsync(token).ConfigureAwait(false);
@@ -245,7 +251,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
         {
             trace.EnvironmentInfo();
             trace.Stage("license_check");
-            await ComponentLicenseGate.EnsureAsync([ManagedModelCatalog.OmniGammaArtifactId, "backend.llama", "native.cuda"], token).ConfigureAwait(false);
+            await ComponentLicenseGate.EnsureAsync(ManagedModelCatalog.OmniGammaArtifactId, token).ConfigureAwait(false);
             trace.Stage("model_resolution");
             var model = await LiteraryModelLocation.ResolveAsync(token).ConfigureAwait(false);
             var modelInfo = new FileInfo(model);
@@ -253,21 +259,25 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
                 nonAsciiPath = model.Any(c => c > 127) });
             trace.Stage("memory_placement");
             var gpuLayers = await PreparePlacementAsync(model, trace, token).ConfigureAwait(false);
+            _selectedRuntime = await LlamaRuntimeSelector.SelectAsync(LlamaDenseMemoryPolicy.GpuRequired(_modelMemoryMetadata!, 1024),
+                forceCpu, Log, token).ConfigureAwait(false);
+            var cpuContext = _selectedRuntime.UsesGpu ? 0 : LlamaDenseMemoryPolicy.MaximumCpuContext(_modelMemoryMetadata!);
+            if (!_selectedRuntime.UsesGpu) gpuLayers = 0;
             trace.Stage("backend_check");
-            if (!File.Exists(LlamaBackendPaths.ServerExecutablePath)) throw new FileNotFoundException("Installed llama.cpp backend is required.");
             using var listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start(); _port = ((IPEndPoint)listener.LocalEndpoint).Port; listener.Stop();
-            var info = new ProcessStartInfo(LlamaBackendPaths.ServerExecutablePath)
+            var info = new ProcessStartInfo(_selectedRuntime.Bundle.Server)
             {
-                WorkingDirectory = LlamaBackendPaths.DirectoryPath, UseShellExecute = false, CreateNoWindow = true,
+                WorkingDirectory = _selectedRuntime.Bundle.Directory, UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true
             };
-            foreach (var key in info.Environment.Keys.Where(k => k.StartsWith("LLAMA_ARG_", StringComparison.Ordinal)).ToArray()) info.Environment.Remove(key);
+            RuntimeDeviceProbe.ClearBackendOverrides(info);
             trace.Stage("gpu_inventory");
-            var fitMargin = await LiteraryAutomaticBudget.FitMarginAsync(token, trace,
-                spare => Volatile.Write(ref _recommendedGpuSpare, spare)).ConfigureAwait(false);
+            var spare = _selectedRuntime.Device is { } device ? Math.Max(1024 * LiteraryAutomaticBudget.MiB, device.FreeBytes / 10) : 0;
+            Volatile.Write(ref _recommendedGpuSpare, spare);
+            var fitMargin = (int)Math.Max(1024, spare / LiteraryAutomaticBudget.MiB);
             trace.Record("gpu_budget", new { fitMarginMiB = fitMargin });
-            foreach (var arg in Arguments(model, _port, fitMargin, gpuLayers)) info.ArgumentList.Add(arg);
+            foreach (var arg in Arguments(model, _port, fitMargin, gpuLayers, _selectedRuntime.DeviceId, cpuContext)) info.ArgumentList.Add(arg);
             trace.Stage("cache_preparation");
             if (_layout is not null || _preparationRoot is not null)
             {
@@ -282,14 +292,14 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             process.OutputDataReceived += (_, e) =>
             {
                 if (e.Data is not { } line) { outputEnded.TrySetResult(); return; }
-                if (LiteraryRamReservePolicy.IsExplicitCudaOutOfMemory(line)) Interlocked.Exchange(ref gpuAllocationFailed, 1);
+                if (NativeHardwareFailure.IsRecoverable(line)) Interlocked.Exchange(ref gpuAllocationFailed, 1);
                 trace.Capture("stdout", line);
                 if (!_suppressBackendLog) { Log(line); _diagnostics?.Write("stdout", line); }
             };
             process.ErrorDataReceived += (_, e) =>
             {
                 if (e.Data is not { } line) { errorEnded.TrySetResult(); return; }
-                if (LiteraryRamReservePolicy.IsExplicitCudaOutOfMemory(line)) Interlocked.Exchange(ref gpuAllocationFailed, 1);
+                if (NativeHardwareFailure.IsRecoverable(line)) Interlocked.Exchange(ref gpuAllocationFailed, 1);
                 trace.Capture("stderr", line);
                 if (!_suppressBackendLog) { Log(line); _diagnostics?.Write("stderr", line); }
             };
@@ -304,7 +314,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             trace.Record("process_started", new { pid = process.Id });
             Log(RuntimeResourceDiagnostics.DescribeLaunch("LiteraryShared", process,
                 $"Qwen text-only; automatic context; gpuLayers={gpuLayers}; temporaryRamReserve={_runtimeOptions.UseRamReserve}; slots=1; sequential", model));
-            startup.CancelAfter(TimeSpan.FromSeconds(90));
+            startup.CancelAfter(TimeSpan.FromMinutes(_selectedRuntime.UsesGpu ? 2 : 10));
             trace.Stage("health_check");
             int? lastHealthStatus = null;
             while (true)
@@ -339,9 +349,14 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             try { StopProcess(); }
             catch (Exception cleanup) when (cleanup is InvalidOperationException or System.ComponentModel.Win32Exception)
             { trace.Record("cleanup_failure", new { exception = cleanup.ToString() }); }
-            if (Volatile.Read(ref gpuAllocationFailed) != 0 && !token.IsCancellationRequested && ex is not OperationCanceledException)
-                throw new LiteraryGpuContextUnavailableException(!_runtimeOptions.UseRamReserve
-                    && _modelMemoryMetadata?.SupportsRamReserve == true, ex);
+            if (!forceCpu && _selectedRuntime?.UsesGpu == true && Volatile.Read(ref gpuAllocationFailed) != 0
+                && !token.IsCancellationRequested && ex is not OperationCanceledException)
+            {
+                await AwaitProcessRetirementAsync(token).ConfigureAwait(false);
+                Log("GPU hardware failure; one clean CPU startup retry.");
+                await PrepareAsync(token, forceCpu: true).ConfigureAwait(false);
+                return;
+            }
             throw;
         }
     }

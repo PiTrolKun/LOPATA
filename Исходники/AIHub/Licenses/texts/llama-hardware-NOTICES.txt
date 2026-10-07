@@ -1,0 +1,305 @@
+MIT License
+
+Copyright (c) 2023-2026 The ggml authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+cpp-httplib
+The MIT License (MIT)
+
+Copyright (c) 2017 yhirose
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+nlohmann JSON: MIT
+// SPDX-FileCopyrightText: 2008 - 2009 Björn Hoehrmann <bjoern@hoehrmann.de>
+// SPDX-FileCopyrightText: 2009 Florian Loitsch <https://florian.loitsch.com/>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2016 - 2021 Evan Nemerson <evan@nemerson.com>
+// SPDX-FileCopyrightText: 2018 The Abseil Authors
+Permission and warranty terms: MIT text above. Complete original header is retained in each archive's Notices/vendor directory.
+
+
+vendor/miniaudio/miniaudio.h
+a_dr_mp3_config* pConfig, ma_uint64* pTotalFrameCount, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    ma_dr_mp3 mp3;
+    if (!ma_dr_mp3_init(&mp3, onRead, onSeek, onTell, NULL, pUserData, pAllocationCallbacks)) {
+        return NULL;
+    }
+    return ma_dr_mp3__full_read_and_close_s16(&mp3, pConfig, pTotalFrameCount);
+}
+MA_API float* ma_dr_mp3_open_memory_and_read_pcm_frames_f32(const void* pData, size_t dataSize, ma_dr_mp3_config* pConfig, ma_uint64* pTotalFrameCount, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    ma_dr_mp3 mp3;
+    if (!ma_dr_mp3_init_memory(&mp3, pData, dataSize, pAllocationCallbacks)) {
+        return NULL;
+    }
+    return ma_dr_mp3__full_read_and_close_f32(&mp3, pConfig, pTotalFrameCount);
+}
+MA_API ma_int16* ma_dr_mp3_open_memory_and_read_pcm_frames_s16(const void* pData, size_t dataSize, ma_dr_mp3_config* pConfig, ma_uint64* pTotalFrameCount, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    ma_dr_mp3 mp3;
+    if (!ma_dr_mp3_init_memory(&mp3, pData, dataSize, pAllocationCallbacks)) {
+        return NULL;
+    }
+    return ma_dr_mp3__full_read_and_close_s16(&mp3, pConfig, pTotalFrameCount);
+}
+#ifndef MA_DR_MP3_NO_STDIO
+MA_API float* ma_dr_mp3_open_file_and_read_pcm_frames_f32(const char* filePath, ma_dr_mp3_config* pConfig, ma_uint64* pTotalFrameCount, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    ma_dr_mp3 mp3;
+    if (!ma_dr_mp3_init_file(&mp3, filePath, pAllocationCallbacks)) {
+        return NULL;
+    }
+    return ma_dr_mp3__full_read_and_close_f32(&mp3, pConfig, pTotalFrameCount);
+}
+MA_API ma_int16* ma_dr_mp3_open_file_and_read_pcm_frames_s16(const char* filePath, ma_dr_mp3_config* pConfig, ma_uint64* pTotalFrameCount, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    ma_dr_mp3 mp3;
+    if (!ma_dr_mp3_init_file(&mp3, filePath, pAllocationCallbacks)) {
+        return NULL;
+    }
+    return ma_dr_mp3__full_read_and_close_s16(&mp3, pConfig, pTotalFrameCount);
+}
+#endif
+MA_API void* ma_dr_mp3_malloc(size_t sz, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    if (pAllocationCallbacks != NULL) {
+        return ma_dr_mp3__malloc_from_callbacks(sz, pAllocationCallbacks);
+    } else {
+        return ma_dr_mp3__malloc_default(sz, NULL);
+    }
+}
+MA_API void ma_dr_mp3_free(void* p, const ma_allocation_callbacks* pAllocationCallbacks)
+{
+    if (pAllocationCallbacks != NULL) {
+        ma_dr_mp3__free_from_callbacks(p, pAllocationCallbacks);
+    } else {
+        ma_dr_mp3__free_default(p, NULL);
+    }
+}
+#endif
+/* dr_mp3_c end */
+#endif  /* MA_DR_MP3_IMPLEMENTATION */
+#endif  /* MA_NO_MP3 */
+
+
+/* End globally disabled warnings. */
+#if defined(_MSC_VER)
+    #pragma warning(pop)
+#endif
+
+#endif  /* miniaudio_c */
+#endif  /* MINIAUDIO_IMPLEMENTATION */
+
+
+/*
+This software is available as a choice of the following licenses. Choose
+whichever you prefer.
+
+===============================================================================
+ALTERNATIVE 1 - Public Domain (www.unlicense.org)
+===============================================================================
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+
+===============================================================================
+ALTERNATIVE 2 - MIT No Attribution
+===============================================================================
+Copyright 2026 David Reid
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+
+vendor/stb/stb_image.h
+itialize some fields for thread safety
+      1.14    fix threadsafe conversion bug
+              header-file-only version (#define STBI_HEADER_FILE_ONLY before including)
+      1.13    threadsafe
+      1.12    const qualifiers in the API
+      1.11    Support installable IDCT, colorspace conversion routines
+      1.10    Fixes for 64-bit (don't use "unsigned long")
+              optimized upsampling by Fabian "ryg" Giesen
+      1.09    Fix format-conversion for PSD code (bad global variables!)
+      1.08    Thatcher Ulrich's PSD code integrated by Nicolas Schulz
+      1.07    attempt to fix C++ warning/errors again
+      1.06    attempt to fix C++ warning/errors again
+      1.05    fix TGA loading to return correct *comp and use good luminance calc
+      1.04    default float alpha is 1, not 255; use 'void *' for stbi_image_free
+      1.03    bugfixes to STBI_NO_STDIO, STBI_NO_HDR
+      1.02    support for (subset of) HDR files, float interface for preferred access to them
+      1.01    fix bug: possible bug in handling right-side up bmps... not sure
+              fix bug: the stbi__bmp_load() and stbi__tga_load() functions didn't work at all
+      1.00    interface to zlib that skips zlib header
+      0.99    correct handling of alpha in palette
+      0.98    TGA loader by lonesock; dynamically add loaders (untested)
+      0.97    jpeg errors on too large a file; also catch another malloc failure
+      0.96    fix detection of invalid v value - particleman@mollyrocket forum
+      0.95    during header scan, seek to markers in case of padding
+      0.94    STBI_NO_STDIO to disable stdio usage; rename all #defines the same
+      0.93    handle jpegtran output; verbose errors
+      0.92    read 4,8,16,24,32-bit BMP files of several formats
+      0.91    output 24-bit Windows 3.0 BMP files
+      0.90    fix a few more warnings; bump version number to approach 1.0
+      0.61    bugfixes due to Marc LeBlanc, Christopher Lloyd
+      0.60    fix compiling as c++
+      0.59    fix warnings: merge Dave Moore's -Wall fixes
+      0.58    fix bug: zlib uncompressed mode len/nlen was wrong endian
+      0.57    fix bug: jpg last huffman symbol before marker was >9 bits but less than 16 available
+      0.56    fix bug: zlib uncompressed mode len vs. nlen
+      0.55    fix bug: restart_interval not initialized to 0
+      0.54    allow NULL for 'int *comp'
+      0.53    fix bug in png 3->4; speedup png decoding
+      0.52    png handles req_comp=3,4 directly; minor cleanup; jpeg comments
+      0.51    obey req_comp requests, 1-component jpegs return as 1-component,
+              on 'test' only check type, not whether we support this variant
+      0.50  (2006-11-19)
+              first released version
+*/
+
+
+/*
+------------------------------------------------------------------------------
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2017 Sean Barrett
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+------------------------------------------------------------------------------
+*/
+
+
+sheredom/subprocess.h
+/*
+   The latest version of this library is available on GitHub;
+   https://github.com/sheredom/subprocess.h
+*/
+
+/*
+   This is free and unencumbered software released into the public domain.
+
+   Anyone is free to copy, modify, publish, use, compile, sell, or
+   distribute this software, either in source code form or as a compiled
+   binary, for any purpose, commercial or non-commercial, and by any
+   means.
+
+   In jurisdictions that recognize copyright laws, the author or authors
+   of this software dedicate any and all copyright interest in the
+   software to the public domain. We make this dedication for the benefit
+   of the public at large and to the detriment of our heirs and
+   successors. We intend this dedication to be an overt act of
+   relinquishment in perpetuity of all present and future rights to this
+   software under copyright law.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   OTHER DEALINGS IN THE SOFTWARE.
+
+   For more information, please refer to <http://unlicense.org/>
+*/
+

@@ -15,6 +15,7 @@ public static class ComponentDeliveryKinds
     public const string BuiltIn = "built_in";
     public const string Archive = "archive";
     public const string File = "file";
+    public const string PythonProfile = "python_profile";
     public const string SystemInstaller = "system_installer";
     public const string Planned = "planned";
 }
@@ -56,6 +57,9 @@ public sealed class ComponentCatalogEntry
     public long InstalledSizeBytes { get; init; }
 
     public string License { get; init; } = string.Empty;
+
+    // Composite runtimes reuse the original licenses of their actual bundled dependencies.
+    public IReadOnlyList<string> LicenseIds { get; init; } = [];
 
     public string Source { get; init; } = string.Empty;
 

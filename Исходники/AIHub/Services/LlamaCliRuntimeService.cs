@@ -7,15 +7,20 @@ namespace AIHub.Services;
 
 public sealed class LlamaCliRuntimeService
 {
-    public string ExpectedExecutablePath { get; } = LlamaBackendPaths.CliExecutablePath;
+    public string ExpectedExecutablePath => LlamaRuntimeSelector.InstalledBundles().FirstOrDefault()?.Cli ?? LlamaBackendPaths.CliExecutablePath;
 
     public bool IsAvailable => File.Exists(ExpectedExecutablePath);
 
     private readonly CoreIdentityService _coreIdentityService;
+    private readonly bool _forceCpu;
 
     public LlamaCliRuntimeService(UserContextService userContextService)
+        : this(userContextService, false) { }
+
+    internal LlamaCliRuntimeService(UserContextService userContextService, bool forceCpu)
     {
         _coreIdentityService = new CoreIdentityService(userContextService);
+        _forceCpu = forceCpu;
     }
 
     public async Task<string> GenerateAsync(
@@ -25,19 +30,41 @@ public sealed class LlamaCliRuntimeService
         Action<string> log,
         CancellationToken cancellationToken)
     {
-        await ComponentLicenseGate.EnsureAsync("basic", cancellationToken);
         if (!IsAvailable)
         {
             throw new FileNotFoundException("llama-cli.exe was not found.", ExpectedExecutablePath);
         }
 
+        var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), cancellationToken);
+        var selection = await LlamaRuntimeSelector.SelectAsync(LlamaDenseMemoryPolicy.GpuRequired(memory,
+            CoreContextRuntimeLimits.CurrentBackendContextLimit), _forceCpu, log, cancellationToken);
+        if (!selection.UsesGpu) LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, CoreContextRuntimeLimits.CurrentBackendContextLimit);
+
         var promptPath = CreatePromptFile(model, history, userMessage);
         try
         {
+            try { return await GenerateAttemptAsync(model, promptPath, selection, log, cancellationToken); }
+            catch (NativeGpuExecutionException) when (selection.UsesGpu && !cancellationToken.IsCancellationRequested)
+            {
+                log("GPU hardware failure; discarded incomplete output and retrying once on CPU.");
+                var cpu = await LlamaRuntimeSelector.SelectAsync(0, true, log, cancellationToken);
+                LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, CoreContextRuntimeLimits.CurrentBackendContextLimit);
+                return await GenerateAttemptAsync(model, promptPath, cpu, log, cancellationToken);
+            }
+        }
+        finally
+        {
+            TryDelete(promptPath);
+        }
+    }
+
+    private static async Task<string> GenerateAttemptAsync(DebugModelInfo model, string promptPath,
+        LlamaRuntimeSelection selection, Action<string> log, CancellationToken cancellationToken)
+    {
             var startInfo = new ProcessStartInfo
             {
-                FileName = ExpectedExecutablePath,
-                WorkingDirectory = Path.GetDirectoryName(ExpectedExecutablePath)!,
+                FileName = selection.Bundle.Cli,
+                WorkingDirectory = selection.Bundle.Directory,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -45,6 +72,7 @@ public sealed class LlamaCliRuntimeService
                 StandardOutputEncoding = Encoding.UTF8,
                 StandardErrorEncoding = Encoding.UTF8
             };
+            RuntimeDeviceProbe.ClearBackendOverrides(startInfo);
 
             AddArgument(startInfo, "-m");
             AddArgument(startInfo, model.Path);
@@ -55,7 +83,9 @@ public sealed class LlamaCliRuntimeService
             AddArgument(startInfo, "--ctx-size");
             AddArgument(startInfo, CoreContextRuntimeLimits.CurrentBackendContextLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
             AddArgument(startInfo, "--n-gpu-layers");
-            AddArgument(startInfo, "99");
+            AddArgument(startInfo, selection.GpuLayers.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            AddArgument(startInfo, "--device");
+            AddArgument(startInfo, selection.DeviceId);
             AddArgument(startInfo, "--temp");
             AddArgument(startInfo, "0.2");
             AddArgument(startInfo, "--simple-io");
@@ -67,7 +97,6 @@ public sealed class LlamaCliRuntimeService
             AddArgument(startInfo, "--reasoning-budget");
             AddArgument(startInfo, "0");
             AddArgument(startInfo, "--offline");
-            AddArgument(startInfo, "--log-disable");
 
             using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             log($"Starting llama-cli: {Path.GetFileName(model.Path)}");
@@ -86,10 +115,7 @@ public sealed class LlamaCliRuntimeService
                     log(error.Trim());
                 }
 
-                if (process.ExitCode != 0 && string.IsNullOrWhiteSpace(output))
-                {
-                    throw new InvalidOperationException($"llama-cli exited with code {process.ExitCode}.");
-                }
+                LlamaCliExitPolicy.EnsureSuccessful(process.ExitCode, error, selection.UsesGpu);
 
                 return CleanOutput(output);
             }
@@ -98,11 +124,6 @@ public sealed class LlamaCliRuntimeService
                 await ModelProcessRetirement.StopAsync(process, () => { if (!process.HasExited) process.Kill(entireProcessTree: true); });
                 await Task.WhenAll(outputTask, errorTask);
             }
-        }
-        finally
-        {
-            TryDelete(promptPath);
-        }
     }
 
     private string CreatePromptFile(DebugModelInfo model, IReadOnlyList<DebugChatMessage> history, string userMessage)

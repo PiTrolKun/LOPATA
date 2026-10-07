@@ -1,0 +1,504 @@
+LOPATA stable-diffusion.cpp CPU/Vulkan — pinned official executables, third-party notices retained in the accompanying archive. Source headers with additional notices are included under Notices/thirdparty. Microsoft and Vulkan Loader terms are supplied separately.
+
+ggml-MIT.txt
+MIT License
+
+Copyright (c) 2023-2026 The ggml authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+stable-diffusion-MIT.txt
+MIT License
+
+Copyright (c) 2023 leejet
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+thirdparty\LICENSE.darts_clone.txt
+Copyright (c) 2008-2011, Susumu Yata
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 
+- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution. 
+- Neither the name of the <ORGANIZATION> nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+thirdparty\libwebm\AUTHORS.TXT
+# Names should be added to this file like so:
+# Name or Organization <email address>
+
+Google Inc.
+Elijah Cirioli <eli.cirioli@gmail.com>
+
+
+thirdparty\libwebm\LICENSE.TXT
+Copyright (c) 2010, Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+  * Neither the name of Google nor the names of its contributors may
+    be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+
+thirdparty\libwebm\PATENTS.TXT
+Additional IP Rights Grant (Patents)
+------------------------------------
+
+"These implementations" means the copyrightable works that implement the WebM
+codecs distributed by Google as part of the WebM Project.
+
+Google hereby grants to you a perpetual, worldwide, non-exclusive, no-charge,
+royalty-free, irrevocable (except as stated in this section) patent license to
+make, have made, use, offer to sell, sell, import, transfer, and otherwise
+run, modify and propagate the contents of these implementations of WebM, where
+such license applies only to those patent claims, both currently owned by
+Google and acquired in the future, licensable by Google that are necessarily
+infringed by these implementations of WebM. This grant does not include claims
+that would be infringed only as a consequence of further modification of these
+implementations. If you or your agent or exclusive licensee institute or order
+or agree to the institution of patent litigation or any other patent
+enforcement activity against any entity (including a cross-claim or
+counterclaim in a lawsuit) alleging that any of these implementations of WebM
+or any code incorporated within any of these implementations of WebM
+constitute direct or contributory patent infringement, or inducement of
+patent infringement, then any patent rights granted to you under this License
+for these implementations of WebM shall terminate as of the date such
+litigation is filed.
+
+
+thirdparty\libwebm\webm_parser\test_utils\limited_reader.h
+// Copyright (c) 2016 The WebM project authors. All Rights Reserved.
+//
+// Use of this source code is governed by a BSD-style license
+// that can be found in the LICENSE file in the root of the source
+// tree. An additional intellectual property rights grant can be found
+// in the file PATENTS.  All contributing project authors may
+// be found in the AUTHORS file in the root of the source tree.
+#ifndef TEST_UTILS_LIMITED_READER_H_
+#define TEST_UTILS_LIMITED_READER_H_
+
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <memory>
+
+#include "webm/reader.h"
+#include "webm/status.h"
+
+namespace webm {
+
+// An adapter that uses an underlying reader to read data, but with added
+// limitations on how much data can be read/skipped. Its primary use is for
+// testing APIs that consume a reader to make sure they gracefully handle
+// arbitrary reading failures.
+class LimitedReader : public Reader {
+ public:
+  LimitedReader() = delete;
+  LimitedReader(const LimitedReader&) = delete;
+  LimitedReader& operator=(const LimitedReader&) = delete;
+
+  LimitedReader(LimitedReader&&) = default;
+  LimitedReader& operator=(LimitedReader&&) = default;
+
+  explicit LimitedReader(std::unique_ptr<Reader> impl);
+
+  // Reads data using the internal reader, but limits the number of bytes that
+  // can be read based on the settings of this LimitedReader. If this reader has
+  // reached its cap of maximum number of bytes allowed to be read, the chosen
+  // status will be returned.
+  Status Read(std::size_t num_to_read, std::uint8_t* buffer,
+              std::uint64_t* num_actually_read) override;
+
+  // Skips data using the internal reader, but limits the number of bytes that
+  // can be skipped based on the settings of this LimitedReader. If this reader
+  // has reached its cap of maximum number of bytes allowed to be skipped, the
+  // chosen status will be returned.
+  Status Skip(std::uint64_t num_to_skip,
+              std::uint64_t* num_actually_skipped) override;
+
+  std::uint64_t Position() const override;
+
+  // Sets the status that should be returned when the reader reaches its cap of
+  // maximum number of bytes that can be read/skipped and cannot read/skip any
+  // more bytes. By default, this reader will return Status::kWouldBlock when
+  // this maximum limit is hit.
+  void set_return_status_when_blocked(Status status);
+
+  // Sets the total number of bytes that can be read in a single call to Read.
+  void set_single_read_limit(std::size_t max_num_bytes);
+
+  // Sets the total number of bytes that can be skipped in a single call to
+  // Skip.
+  void set_single_skip_limit(std::uint64_t max_num_bytes);
+
+  // Sets the total number of bytes that can be read by the reader with Read.
+  // This total is considered to be cumulative for reads, but not skips.
+  // Setting this to std::numeric_limits<std::size_t>::max() will result in no
+  // extra limitation being imposed on reads.
+  void set_total_read_limit(std::size_t max_num_bytes);
+
+  // Sets the total number of bytes that can be skipped by the reader with Skip.
+  // This total is considered to be cumulative for skips, but not reads.
+  // Setting this to std::numeric_limits<std::uint64_t>::max() will result in no
+  // extra limitation being imposed on skips.
+  void set_total_skip_limit(std::uint64_t max_num_bytes);
+
+  // Sets the total number of bytes that can be read/skipped by the reader.
+  // This total is considered to be cumulative between reads and skips.
+  // Setting this to std::numeric_limits<std::uint64_t>::max() will result in no
+  // extra limitation being imposed on reads/skips.
+  void set_total_read_skip_limit(std::uint64_t max_num_bytes);
+
+ private:
+  // The maximum number of bytes to let a single call to Read return.
+  std::size_t single_read_limit_ = std::numeric_limits<std::size_t>::max();
+
+  // The maximum number of bytes to let a single call to Skip return.
+  std::uint64_t single_skip_limit_ = std::numeric_limits<std::uint64_t>::max();
+
+  // The total maximum number of bytes that can be read with multiple calls to
+  // Read.
+  std::size_t total_read_limit_ = std::numeric_limits<std::size_t>::max();
+
+  // The total maximum number of bytes that can be skipped with multiple calls
+  // to Skip.
+  std::uint64_t total_skip_limit_ = std::numeric_limits<std::uint64_t>::max();
+
+  // The total maximum number of bytes that can be read or skipped with multiple
+  // calls to Read and/or Skip.
+  std::uint64_t total_read_skip_limit_ =
+      std::numeric_limits<std::uint64_t>::max();
+
+  // The status to return when the reader has reached is maximum limit for
+  // Read/Skip and cannot read or skip any data.
+  Status return_status_when_blocked_ = Status(Status::kWouldBlock);
+
+  // The actual reader that does the real reading/skipping.
+  std::unique_ptr<Reader> impl_;
+};
+
+}  // namespace webm
+
+#endif  // TEST_UTILS_LIMITED_READER_H_
+
+
+thirdparty\libwebp\AUTHORS
+Contributors:
+- Aidan O'Loan (aidanol at gmail dot com)
+- Alan Browning (browning at google dot com)
+- Alexandru Ardelean (ardeleanalex at gmail dot com)
+- Anuraag Agrawal (anuraaga at gmail dot com)
+- Arthur Eubanks (aeubanks at google dot com)
+- Brian Ledger (brianpl at google dot com)
+- Charles Munger (clm at google dot com)
+- Cheng Yi (cyi at google dot com)
+- Christian Duvivier (cduvivier at google dot com)
+- Christopher Degawa (ccom at randomderp dot com)
+- Clement Courbet (courbet at google dot com)
+- devtools-clrobot at google dot com (devtools-clrobot@google dot com)
+- Djordje Pesut (djordje dot pesut at imgtec dot com)
+- Frank (1433351828 at qq dot com)
+- Frank Barchard (fbarchard at google dot com)
+- Henner Zeller (hzeller at google dot com)
+- Hui Su (huisu at google dot com)
+- H. Vetinari (h dot vetinari at gmx dot com)
+- Ilya Kurdyukov (jpegqs at gmail dot com)
+- Ingvar Stepanyan (rreverser at google dot com)
+- Istvan Stefan (Istvan dot Stefan at arm dot com)
+- James Zern (jzern at google dot com)
+- Jan Engelhardt (jengelh at medozas dot de)
+- Jehan (jehan at girinstud dot io)
+- Jeremy Maitin-Shepard (jbms at google dot com)
+- Johann Koenig (johann dot koenig at duck dot com)
+- Jonathan Grant (jgrantinfotech at gmail dot com)
+- Jonliu1993 (13720414433 at 163 dot com)
+- Jovan Zelincevic (jovan dot zelincevic at imgtec dot com)
+- Jyrki Alakuijala (jyrki at google dot com)
+- Konstantin Ivlev (tomskside at gmail dot com)
+- Lode Vandevenne (lode at google dot com)
+- Lou Quillio (louquillio at google dot com)
+- Mans Rullgard (mans at mansr dot com)
+- Marcin Kowalczyk (qrczak at google dot com)
+- Martin Olsson (mnemo at minimum dot se)
+- Maryla Ustarroz-Calonge (maryla at google dot com)
+- Masahiro Hanada (hanada at atmark-techno dot com)
+- Mikołaj Zalewski (mikolajz at google dot com)
+- Mislav Bradac (mislavm at google dot com)
+- natewood (natewood at fb dot com)
+- Nico Weber (thakis at chromium dot org)
+- Noel Chromium (noel at chromium dot org)
+- Nozomi Isozaki (nontan at pixiv dot co dot jp)
+- Oliver Wolff (oliver dot wolff at qt dot io)
+- Owen Rodley (orodley at google dot com)
+- Ozkan Sezer (sezeroz at gmail dot com)
+- Parag Salasakar (img dot mips1 at gmail dot com)
+- Pascal Massimino (pascal dot massimino at gmail dot com)
+- Paweł Hajdan, Jr (phajdan dot jr at chromium dot org)
+- Pierre Joye (pierre dot php at gmail dot com)
+- Roberto Alanis (alanisbaez at google dot com)
+- Sam Clegg (sbc at chromium dot org)
+- Scott Hancher (seh at google dot com)
+- Scott LaVarnway (slavarnway at google dot com)
+- Scott Talbot (s at chikachow dot org)
+- Slobodan Prijic (slobodan dot prijic at imgtec dot com)
+- Somnath Banerjee (somnath dot banerjee at gmail dot com)
+- Sriraman Tallam (tmsriram at google dot com)
+- Tamar Levy (tamar dot levy at intel dot com)
+- Thiago Perrotta (tperrotta at google dot com)
+- Timothy Gu (timothygu99 at gmail dot com)
+- Urvang Joshi (urvang at google dot com)
+- Vikas Arora (vikasa at google dot com)
+- Vincent Rabaud (vrabaud at google dot com)
+- Vlad Tsyrklevich (vtsyrklevich at chromium dot org)
+- Wan-Teh Chang (wtc at google dot com)
+- wrv (wrv at utexas dot edu)
+- Yang Zhang (yang dot zhang at arm dot com)
+- Yannis Guyon (yguyon at google dot com)
+- Zhi An Ng (zhin at chromium dot org)
+
+
+thirdparty\libwebp\COPYING
+Copyright (c) 2010, Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+  * Neither the name of Google nor the names of its contributors may
+    be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+
+thirdparty\libwebp\PATENTS
+Additional IP Rights Grant (Patents)
+------------------------------------
+
+"These implementations" means the copyrightable works that implement the WebM
+codecs distributed by Google as part of the WebM Project.
+
+Google hereby grants to you a perpetual, worldwide, non-exclusive, no-charge,
+royalty-free, irrevocable (except as stated in this section) patent license to
+make, have made, use, offer to sell, sell, import, transfer, and otherwise
+run, modify and propagate the contents of these implementations of WebM, where
+such license applies only to those patent claims, both currently owned by
+Google and acquired in the future, licensable by Google that are necessarily
+infringed by these implementations of WebM. This grant does not include claims
+that would be infringed only as a consequence of further modification of these
+implementations. If you or your agent or exclusive licensee institute or order
+or agree to the institution of patent litigation or any other patent
+enforcement activity against any entity (including a cross-claim or
+counterclaim in a lawsuit) alleging that any of these implementations of WebM
+or any code incorporated within any of these implementations of WebM
+constitute direct or contributory patent infringement, or inducement of
+patent infringement, then any patent rights granted to you under this License
+for these implementations of WebM shall terminate as of the date such
+litigation is filed.
+
+
+thirdparty\oniguruma\COPYING
+Oniguruma LICENSE
+-----------------
+
+Copyright (c) 2002-2021  K.Kosako  <kkosako0@gmail.com>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+
+
+thirdparty\utf8proc\LICENSE.md
+## utf8proc license ##
+
+**utf8proc** is a software package originally developed
+by Jan Behrens and the rest of the Public Software Group, who
+deserve nearly all of the credit for this library, that is now maintained by the Julia-language developers.  Like the original utf8proc,
+whose copyright and license statements are reproduced below, all new
+work on the utf8proc library is licensed under the [MIT "expat"
+license](http://opensource.org/licenses/MIT):
+
+*Copyright &copy; 2014-2021 by Steven G. Johnson, Jiahao Chen, Tony Kelman, Jonas Fonseca, and other contributors listed in the git history.*
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+## Original utf8proc license ##
+
+*Copyright (c) 2009, 2013 Public Software Group e. V., Berlin, Germany*
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+## Unicode data license ##
+
+This software contains data (`utf8proc_data.c`) derived from processing
+the Unicode data files. The following license applies to that data:
+
+**COPYRIGHT AND PERMISSION NOTICE**
+
+*Copyright (c) 1991-2007 Unicode, Inc. All rights reserved. Distributed
+under the Terms of Use in http://www.unicode.org/copyright.html.*
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of the Unicode data files and any associated documentation (the "Data
+Files") or Unicode software and any associated documentation (the
+"Software") to deal in the Data Files or Software without restriction,
+including without limitation the rights to use, copy, modify, merge,
+publish, distribute, and/or sell copies of the Data Files or Software, and
+to permit persons to whom the Data Files or Software are furnished to do
+so, provided that (a) the above copyright notice(s) and this permission
+notice appear with all copies of the Data Files or Software, (b) both the
+above copyright notice(s) and this permission notice appear in associated
+documentation, and (c) there is clear notice in each modified Data File or
+in the Software as well as in the documentation associated with the Data
+File(s) or Software that the data or software has been modified.
+
+THE DATA FILES AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
+THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS
+INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR
+CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THE DATA FILES OR SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder shall
+not be used in advertising or otherwise to promote the sale, use or other
+dealings in these Data Files or Software without prior written
+authorization of the copyright holder.
+
+Unicode and the Unicode logo are trademarks of Unicode, Inc., and may be
+registered in some jurisdictions. All other trademarks and registered
+trademarks mentioned herein are the property of their respective owners.

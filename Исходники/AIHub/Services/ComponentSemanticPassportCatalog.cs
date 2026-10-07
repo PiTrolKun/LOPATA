@@ -7,6 +7,33 @@ public static class ComponentSemanticPassportCatalog
     private static readonly IReadOnlyDictionary<string, ComponentSemanticPassport> Passports =
         new Dictionary<string, ComponentSemanticPassport>(StringComparer.OrdinalIgnoreCase)
         {
+            [HardwareRuntimeCatalog.PythonCpuId] = new(
+                "Проверенная среда Python/PyTorch для embeddings, «Желе» и SwinIR на процессоре без CUDA. Модели загружаются отдельно.",
+                "Verified Python/PyTorch libraries for embeddings, Jelly and SwinIR on the CPU without CUDA. Model weights are downloaded separately."),
+            [HardwareRuntimeCatalog.PythonCudaId] = new(
+                "Закреплённая среда Python/PyTorch CUDA 12.6. Совместимость видеокарты и драйвера проверяется реальным вычислением; веса моделей загружаются отдельно.",
+                "Pinned Python/PyTorch CUDA 12.6 runtime. GPU and driver compatibility is checked by an actual computation; model weights are downloaded separately."),
+            [HardwareRuntimeCatalog.PythonXpuId] = new(
+                "Закреплённая среда Python/PyTorch XPU для совместимых Intel GPU. Нужен подходящий драйвер; физические испытания Intel GPU ещё не выполнены. Веса загружаются отдельно.",
+                "Pinned Python/PyTorch XPU runtime for compatible Intel GPUs. A suitable driver is required; physical Intel GPU tests are still pending. Weights are downloaded separately."),
+            [HardwareRuntimeCatalog.PythonCuda128Id] = new(
+                "Закреплённая среда Python/PyTorch CUDA 12.8, включая новые архитектуры NVIDIA. Совместимость проверяется реальным вычислением; модели загружаются отдельно.",
+                "Pinned Python/PyTorch CUDA 12.8 runtime, including newer NVIDIA architectures. Compatibility is checked by an actual computation; models are downloaded separately."),
+            [HardwareRuntimeCatalog.PythonRocmId] = new(
+                "Закреплённая среда Python/PyTorch ROCm 7.2.1 для поддерживаемых AMD Radeon в Windows 11. Требуется драйвер AMD; совместимость проверяется вычислением. Физические испытания AMD GPU ещё не выполнены.",
+                "Pinned Python/PyTorch ROCm 7.2.1 runtime for supported AMD Radeon GPUs on Windows 11. An AMD driver is required; compatibility is checked by a computation. Physical AMD GPU tests are still pending."),
+            [HardwareRuntimeCatalog.SdCpuId] = new(
+                "Создаёт изображения совместимыми моделями stable-diffusion.cpp на процессоре. Веса загружаются отдельно.",
+                "Generates images with compatible stable-diffusion.cpp models on the CPU. Weights are downloaded separately."),
+            [HardwareRuntimeCatalog.SdVulkanId] = new(
+                "Создаёт изображения на совместимых Vulkan-видеокартах. Устройства проверяются исполнителем; веса загружаются отдельно.",
+                "Generates images on compatible Vulkan GPUs. Devices are checked by the executor; weights are downloaded separately."),
+            [HardwareRuntimeCatalog.LlamaCpuId] = new(
+                "Запускает совместимые модели llama.cpp на процессоре без обязательного CUDA. Сам по себе не содержит модели.",
+                "Runs compatible llama.cpp models on the CPU without requiring CUDA. It contains no model weights."),
+            [HardwareRuntimeCatalog.LlamaVulkanId] = new(
+                "Исполнитель llama.cpp для совместимых Vulkan-видеокарт. Доступность проверяется по драйверу и устройствам исполнителя; веса моделей загружаются отдельно.",
+                "llama.cpp runtime for compatible Vulkan GPUs. Availability is checked against the driver and runtime devices; model weights are downloaded separately."),
             ["builtin.dotnet"] = new(
                 "Читает TXT, JSON и XML, работает с потоками и базовыми метаданными файлов. Не понимает смысл нетекстового содержимого.",
                 "Reads TXT, JSON and XML, handles streams and basic file metadata. It does not understand non-text content."),

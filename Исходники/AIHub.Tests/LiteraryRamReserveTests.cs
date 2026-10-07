@@ -13,7 +13,7 @@ public sealed class LiteraryRamReserveTests
     public void VerifiedHybridProfileMovesExactlyTwoMainLayersWithoutChangingKvOrFitReserve()
     {
         Assert.AreEqual(64, Model.ReserveGpuLayers); // 65 GGUF blocks + output, minus two.
-        var args = LiteraryChatRuntime.Arguments("model.gguf", 12345, 4123, Model.ReserveGpuLayers);
+        var args = LiteraryChatRuntime.Arguments("model.gguf", 12345, 4123, Model.ReserveGpuLayers, "Vulkan2");
         Assert.AreEqual("64", args[Array.IndexOf(args, "-ngl") + 1]);
         Assert.AreEqual("4123", args[Array.IndexOf(args, "--fit-target") + 1]);
         Assert.AreEqual("on", args[Array.IndexOf(args, "--fit") + 1]);

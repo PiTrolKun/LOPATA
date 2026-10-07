@@ -1,3 +1,28 @@
+## 2026-10-07 — managed hardware libraries
+
+Active GGUF and image-generation scenarios use separate CPU/Vulkan bundles:
+llama.cpp b9442 (`d4c8e2c29ce2fb9a251a0a4a16d6c857b4f70f8c`, MIT),
+stable-diffusion.cpp `3f8527a46c54ecf4cb4ed6003da8e8982283c73c` (MIT and preserved
+third-party notices), Microsoft VC/Redist 14.44.35211.0 and Vulkan Loader 1.4.304.0.
+Build/package recipes, original notices and archive/file SHA-256 manifests are
+retained. The old mandatory llama CUDA/libomp payload is retired; historical
+entries below do not describe its current delivery.
+
+Managed Python 3.12.10 profiles use pinned upstream downloads: PyTorch 2.10
+CPU/CUDA 12.6/CUDA 12.8/XPU, or AMD PyTorch 2.9.1 / Windows ROCm 7.2.1;
+Transformers 5.3.0. Original package licenses and notices are retained in each
+profile and `Исходники/AIHub/Licenses/texts/python-*-NOTICES.txt`.
+Separate catalog entries cover Microsoft redistributables, Intel OpenMP/XPU,
+NVIDIA CUDA/cuDNN and the AMD component terms. Acquiring a CPU profile does not
+require CUDA agreement. Profiles are assembled from original sources, not
+redistributed as a repackaged Python binary archive. NCNN Real-CUGAN's original
+Microsoft vcomp140.dll is covered by its separate redistributable entry.
+
+Additional Jelly dependencies retain their existing separate notices and
+version reports; this does not claim a complete transitive license audit.
+See [hardware matrix](Документы_проекта/АППАРАТНАЯ_ПОДДЕРЖКА.md) and the component
+license catalog for sources, versions, delivery and physical test boundaries.
+
 ## 0.4.1-beta — CUDA и Vulkan для YuE2
 
 Музыкальный GPU-комплект содержит CUDA SM86/SM89/SM120a, Vulkan и CPU через

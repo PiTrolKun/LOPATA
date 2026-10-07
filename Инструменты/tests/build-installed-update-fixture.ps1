@@ -21,7 +21,6 @@ $notes = Join-Path $stand 'fixture-notes.md'
 'Isolated installed update test. This is not a public release.' | Set-Content -LiteralPath $notes -Encoding utf8
 $output = Join-Path $stand 'UpgradePackages'
 & (Join-Path $repoRoot 'Инструменты/build-file-update.ps1') -Version '0.2.43-beta' -PublishDir $payload `
-    -BackendDir (Join-Path $repoRoot 'Runtime/Backends/llama.cpp/b9442/win-cuda-12.4-x64') `
     -ChatLlmBackendDir (Join-Path $repoRoot 'Runtime/Backends/chatllm.cpp/v24/win-x64') -NotesPath $notes `
     -OutputDirectory $output -PreviousManifestPath $receipt.fileManifest `
     -HistoryPath (Join-Path $receipt.packageDirectory 'build-inputs/history.json') -StandBuild

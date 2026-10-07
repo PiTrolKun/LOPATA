@@ -14,11 +14,13 @@ public sealed class ImageGenerationInstallation : IDisposable
     public IReadOnlyList<ManagedModelArtifactCard> Register(string root, string modelId)
     {
         if (string.IsNullOrWhiteSpace(root)) throw new InvalidOperationException("Generation.StorageRequired");
-        var components = ImageGenerationCatalog.Get(modelId).Components;
+        root = Path.GetFullPath(root);
+        var components = ImageGenerationCatalog.Get(modelId).Components
+            .Where(id => id != "generation-runtime" || SdRuntimeSelector.AvailableExecutable() is null).ToArray();
         return ImageGenerationCatalog.CreateCards(root).Where(c => components.Contains(c.ModelArtifactId)).Select(card =>
         {
             var prior = _store.Load(card.ModelArtifactId);
-            if (prior is not null && string.Equals(prior.InstallDirectory, card.InstallDirectory, StringComparison.OrdinalIgnoreCase))
+            if (prior is not null && ManagedModelPathIdentity.SameDirectory(prior.InstallDirectory, card.InstallDirectory))
             { card.Status = prior.Status; card.StoredBytes = prior.StoredBytes; }
             return _store.Upsert(card);
         }).ToArray();
@@ -50,7 +52,8 @@ public sealed class ImageGenerationInstallation : IDisposable
             }
         }
         cards = Register(root, modelId);
-        await Task.Run(() => EnsureRuntime(cards.Single(c => c.ModelArtifactId == "generation-runtime"), token), token);
+        if (cards.SingleOrDefault(c => c.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
+            await Task.Run(() => EnsureRuntime(legacyRuntime, token), token);
         return cards;
     }
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root, string modelId,
@@ -66,6 +69,7 @@ public sealed class ImageGenerationInstallation : IDisposable
     }
     public static string Executable(IReadOnlyList<ManagedModelArtifactCard> cards)
     {
+        if (SdRuntimeSelector.AvailableExecutable() is { } managed) return managed;
         var directory = Path.Combine(cards.Single(c => c.ModelArtifactId == "generation-runtime").InstallDirectory, "bin");
         if (!Directory.Exists(directory)) throw new FileNotFoundException("Generation.DownloadRequired");
         return Directory.EnumerateFiles(directory, "sd-cli.exe", SearchOption.AllDirectories).Single();

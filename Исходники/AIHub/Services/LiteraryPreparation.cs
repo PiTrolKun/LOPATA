@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Text.Json;
 
 namespace AIHub.Services;
@@ -10,7 +9,7 @@ public sealed record LiteraryComponentState(string Key, bool Ready);
 public static class LiteraryPreparation
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
-    public static readonly string[] Licenses = [ManagedModelCatalog.OmniGammaArtifactId, "backend.llama", "native.cuda", QdrantOptions.LicenseId,
+    public static readonly string[] Licenses = [ManagedModelCatalog.OmniGammaArtifactId, QdrantOptions.LicenseId,
         GigaEmbeddingInstallation.LicenseId, GigaEmbeddingInstallation.RuntimeLicenseId, .. LiteraryJellyInstallation.Licenses];
     public static async Task<IReadOnlyList<LiteraryComponentState>> CheckAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct, bool forceVerification = false)
     {
@@ -43,21 +42,14 @@ public static class LiteraryPreparation
     }
     private static async Task<bool> LlamaReadyAsync(CancellationToken ct)
     {
-        if (!new[] { "llama-server.exe", "ggml-cuda.dll", "cublas64_12.dll", "cublasLt64_12.dll", "cudart64_12.dll" }
-            .All(name => File.Exists(Path.Combine(LlamaBackendPaths.DirectoryPath, name)))) return false;
-        var info = new ProcessStartInfo(LlamaBackendPaths.ServerExecutablePath) { WorkingDirectory = LlamaBackendPaths.DirectoryPath,
-            UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
-        info.ArgumentList.Add("--version");
         try
         {
-            using var process = OwnedProcessRegistry.Shared.Start(info, "Literary backend check");
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(15));
-            var output = process.StandardOutput.ReadToEndAsync(timeout.Token); var error = process.StandardError.ReadToEndAsync(timeout.Token);
-            try { await process.WaitForExitAsync(timeout.Token); return process.ExitCode == 0 && ((await output) + (await error)).Contains("9442"); }
-            finally { if (!process.HasExited) process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); }
+            var manager = new ComponentManager();
+            var directory = manager.GetInstallDirectory(ComponentCatalog.Find(HardwareRuntimeCatalog.LlamaCpuId)!);
+            await HardwareRuntimeBundleVerifier.VerifyExecutableAsync(HardwareRuntimeCatalog.LlamaCpuId, directory, ct);
+            return true;
         }
-        catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return false; }
-        catch (System.ComponentModel.Win32Exception) { return false; }
+        catch (Exception error) when (error is IOException or InvalidOperationException or TimeoutException or System.ComponentModel.Win32Exception) { return false; }
     }
     public static async Task InstallAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
     {
@@ -69,7 +61,7 @@ public static class LiteraryPreparation
             using var lease = new FileStream(Path.Combine(AppDataPaths.RuntimeDirectory, "literary-prepare.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             var state = await CheckAsync(progress, ct);
             bool Missing(string key) => !state.Single(s => s.Key == key).Ready;
-            if (Missing("Llama")) await InstallLlamaAsync(progress, ct);
+            if (Missing("Llama")) throw new IOException("Prepare hardware libraries through the main-window downloader first.");
             if (Missing("Runeweaver"))
             {
                 var path = LiteraryModelLocation.DownloadPath;
@@ -84,7 +76,7 @@ public static class LiteraryPreparation
             if (Missing("Qdrant")) await QdrantInstaller.InstallAsync(QdrantRuntime.Shared.Options,
                 new InlineProgress<double>(p => progress.Report(new("Qdrant", p))), ct);
             if (Missing("Giga")) await GigaEmbeddingInstallation.InstallModelAsync(progress, ct);
-            if (Missing("Python")) await GigaEmbeddingInstallation.InstallRuntimeAsync(progress, ct);
+            if (Missing("Python")) throw new IOException("Prepare Python hardware libraries through the main-window downloader first.");
             foreach (var mode in LiteraryJellyInstallation.Modes)
                 if (Missing("Jelly." + mode) || Missing("Jelly." + mode + ".Runtime")) await LiteraryJellyInstallation.InstallAsync(mode, progress, ct);
             progress.Report(new("Checking"));
@@ -92,26 +84,5 @@ public static class LiteraryPreparation
             await LiterarySourceIndex.RecoverAsync(ct);
         }
         finally { Gate.Release(); }
-    }
-    private static async Task InstallLlamaAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
-    {
-        var archives = new[]
-        {
-            ("llama-b9442-bin-win-cuda-12.4-x64.zip", 260238608L, "77d78a1d7a1d80e051c3b43db64c0433b97d11fe12f525ddfa50302f726515f1"),
-            ("cudart-llama-bin-win-cuda-12.4-x64.zip", 391443627L, "8c79a9b226de4b3cacfd1f83d24f962d0773be79f1e7b75c6af4ded7e32ae1d6")
-        };
-        var stage = LlamaBackendPaths.DirectoryPath + ".install"; Directory.CreateDirectory(stage);
-        foreach (var (name, size, hash) in archives)
-        {
-            var zip = Path.Combine(stage, name);
-            await LiteraryArtifactDownload.GetAsync(new Uri("https://github.com/ggml-org/llama.cpp/releases/download/b9442/" + name), zip,
-                size, hash, "sha256", new InlineProgress<double>(p => progress.Report(new("Llama", p, name))), ct);
-            using var archive = ZipFile.OpenRead(zip);
-            foreach (var entry in archive.Entries.Where(e => e.Name.Length > 0)) entry.ExtractToFile(Path.Combine(stage, entry.Name), true);
-        }
-        // Existing runtime is left intact until both archives have been verified/extracted.
-        if (Directory.Exists(LlamaBackendPaths.DirectoryPath))
-            Directory.Move(LlamaBackendPaths.DirectoryPath, LlamaBackendPaths.DirectoryPath + ".previous-" + Guid.NewGuid().ToString("N"));
-        Directory.Move(stage, LlamaBackendPaths.DirectoryPath);
     }
 }

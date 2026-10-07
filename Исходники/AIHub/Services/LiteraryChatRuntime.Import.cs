@@ -24,7 +24,7 @@ public sealed partial class LiteraryChatRuntime
             var ct = active.Token;
             ValidatePreparation(); _layout?.EnsurePresent();
             await PrepareAsync(ct).ConfigureAwait(false);
-            var backendHash = ImportSession.HashFile(LlamaBackendPaths.ServerExecutablePath);
+            var backendHash = ImportSession.HashFile(_process!.StartInfo.FileName);
             var fingerprint = ImportSession.Hash(LiteraryModelLocation.Sha256 + backendHash + "import-v2-json-object-t0.2");
             if (session.State.RuntimeFingerprint.Length > 0 && session.State.RuntimeFingerprint != fingerprint)
                 throw new InvalidDataException("Literary.Import.RuntimeChanged");

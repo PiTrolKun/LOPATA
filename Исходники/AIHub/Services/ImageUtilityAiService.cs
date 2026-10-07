@@ -18,9 +18,10 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
     public void ConfigureStorage(string root) => _storageRoot = string.IsNullOrWhiteSpace(root) ? null : Path.GetFullPath(root);
     public static bool UsesArtifact(string methodId, string artifactId) =>
         ImageUtilityAiCatalog.Artifacts.Any(a => a.MethodId == methodId && a.Id == artifactId)
-        || methodId == "swinir" && artifactId == GigaEmbeddingInstallation.RuntimeLicenseId;
+        || methodId == "swinir" && artifactId == GigaEmbeddingInstallation.RuntimeLicenseId
+        || methodId == "real-cugan" && artifactId == NcnnMsvcLicenseId;
     public static long DownloadBytes(string methodId) => ImageUtilityAiCatalog.Artifacts.Where(a => a.MethodId == methodId).Sum(a => a.Files.Sum(f => f.SizeBytes));
-    public static bool NeedsSharedPython(string methodId) => methodId == "swinir" && !File.Exists(GigaEmbeddingInstallation.Python);
+    public static bool NeedsSharedPython(string methodId) => methodId == "swinir" && !ManagedPythonRuntime.HasCpu;
     private static string Worker => Path.Combine(AppContext.BaseDirectory, "Tools", "image-utility-swinir.py");
 
     public IReadOnlyList<ManagedModelArtifactCard> Register(string methodId)
@@ -29,7 +30,17 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
         {
             var prior = _store.Load(card.ModelArtifactId);
             if (prior is not null && string.Equals(prior.InstallDirectory, card.InstallDirectory, StringComparison.OrdinalIgnoreCase))
-            { card.Status = prior.Status; card.StoredBytes = prior.StoredBytes; }
+            {
+                card.Status = prior.Status; card.StoredBytes = prior.StoredBytes;
+                foreach (var file in card.Files)
+                {
+                    var verified = prior.Files.FirstOrDefault(old => old.RelativePath == file.RelativePath
+                        && old.SizeBytes == file.SizeBytes && old.Sha256.Equals(file.Sha256, StringComparison.OrdinalIgnoreCase));
+                    if (verified is null) continue;
+                    file.VerifiedSizeBytes = verified.VerifiedSizeBytes;
+                    file.VerifiedLastWriteTimeUtc = verified.VerifiedLastWriteTimeUtc;
+                }
+            }
             return _store.Upsert(card);
         }).ToArray();
     }
@@ -53,7 +64,7 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
             {
                 var info = new FileInfo(Path.Combine(c.InstallDirectory, f.RelativePath));
                 return info.Exists && info.Length == f.VerifiedSizeBytes && info.LastWriteTimeUtc == f.VerifiedLastWriteTimeUtc;
-            })) && ExtractionReady(cards.Single()!) && (methodId != "swinir" || File.Exists(GigaEmbeddingInstallation.Python));
+            })) && ExtractionReady(cards.Single()!) && (methodId != "swinir" || ManagedPythonRuntime.HasCpu);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return false; }
     }
@@ -62,11 +73,21 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
         foreach (var card in Register(methodId))
             if ((await _downloads.VerifyAsync(card.ModelArtifactId, progress, token)).Status != ManagedModelStatuses.Installed) return false;
         if (!IsReady(methodId)) return false;
+        if (methodId != "swinir")
+        {
+            var card = Register(methodId).Single();
+            await ComponentLicenseGate.EnsureAsync(NativeLicenseIds(card, methodId), token);
+            await VerifyNativeAsync(card, token);
+        }
         if (methodId == "swinir")
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
             timeout.CancelAfter(TimeSpan.FromSeconds(45));
-            try { await RunAsync(GigaEmbeddingInstallation.Python, PythonArguments(Register(methodId).Single(), "--check"), null, timeout.Token); }
+            try
+            {
+                var runtime = await ManagedPythonRuntime.ResolveAsync("cpu", timeout.Token);
+                await RunAsync(runtime.Python, PythonArguments(Register(methodId).Single(), "--check"), null, timeout.Token);
+            }
             catch (OperationCanceledException) when (!token.IsCancellationRequested) { return false; }
             catch (Exception ex) when (ex is ImageUtilityException or IOException or System.ComponentModel.Win32Exception) { return false; }
         }
@@ -80,6 +101,7 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
             var cards = Register(methodId);
             var licenses = cards.Select(c => c.ModelArtifactId).ToList();
             if (methodId == "swinir") licenses.Add(GigaEmbeddingInstallation.RuntimeLicenseId);
+            if (methodId == "real-cugan") licenses.Add(NcnnMsvcLicenseId);
             await ComponentLicenseGate.EnsureAsync(licenses, token);
             foreach (var card in cards)
             {
@@ -91,10 +113,8 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
             }
             if (methodId == "swinir")
             {
-                if (!await GigaEmbeddingInstallation.RuntimeReadyAsync(token))
-                    await GigaEmbeddingInstallation.InstallRuntimeAsync(new InlineProgress<LiteraryPreparationProgress>(p =>
-                        progress?.Report(new("image-utility-swinir", p.Detail, 0, 0, 0, p.Stage))), token);
-                await RunAsync(GigaEmbeddingInstallation.Python, PythonArguments(cards.Single(), "--check"), null, token);
+                var runtime = await ManagedPythonRuntime.ResolveAsync("cpu", token);
+                await RunAsync(runtime.Python, PythonArguments(cards.Single(), "--check"), null, token);
             }
         }
         finally { InstallationGate.Release(); }
@@ -150,7 +170,13 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
         token.ThrowIfCancellationRequested();
         var info = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true,
             WorkingDirectory = Path.GetDirectoryName(executable)!, RedirectStandardOutput = true, RedirectStandardError = true };
-        foreach (var value in arguments) info.ArgumentList.Add(value);
+        if (Path.GetFileName(executable).Equals("python.exe", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var key in info.Environment.Keys.Where(key => key.StartsWith("PYTHON", StringComparison.OrdinalIgnoreCase)).ToArray())
+                info.Environment.Remove(key);
+            ManagedPythonLaunch.ScriptArguments(info, arguments);
+        }
+        else foreach (var value in arguments) info.ArgumentList.Add(value);
         info.Environment["PYTHONUTF8"] = "1"; info.Environment["PYTHONUNBUFFERED"] = "1";
         info.Environment["HF_HUB_OFFLINE"] = "1";
         using var process = OwnedProcessRegistry.Shared.Start(info, "ImageUtility.AI");

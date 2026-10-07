@@ -11,8 +11,10 @@ public sealed partial class LiteraryChatRuntime
     {
         if (_resourcesChecked) return;
         _resourcesChecked = true;
-        var free = await LiteraryGpuBudget.FreeBytesAsync(ct)
-            ?? throw new IOException("Physical GPU memory inventory is unavailable.");
+        if (_selectedRuntime is not { UsesGpu: true } selected) return;
+        var inventory = await RuntimeDeviceProbe.RunAsync(selected.Bundle.Server, "--list-devices", ct);
+        var free = RuntimeDeviceProbe.ParseDevices(inventory).SingleOrDefault(device => device.Id == selected.DeviceId)?.FreeBytes
+            ?? throw new IOException("Selected GPU memory inventory is unavailable.");
         _diagnostics?.Write("gpu_before_request", new { free, context = ContextCapacity });
         // Only a material loss of the safety reserve triggers unloading, never small fluctuations.
         if (free < 512 * LiteraryAutomaticBudget.MiB) StopProcess();

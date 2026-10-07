@@ -187,14 +187,20 @@ public sealed class ImageAnalysisKimiRuntimeService : IDisposable
         string requestJson,
         CancellationToken cancellationToken)
     {
-        using var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
-        using var response = await _httpClient.PostAsync(
-            $"http://127.0.0.1:{port}/v1/chat/completions",
-            content,
-            cancellationToken);
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return responseBody;
+        try
+        {
+            using var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+            using var response = await _httpClient.PostAsync(
+                $"http://127.0.0.1:{port}/v1/chat/completions", content, cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return responseBody;
+        }
+        catch (OperationCanceledException)
+        {
+            await ModelProcessRetirement.StopAsync(_process, Stop);
+            throw;
+        }
     }
 
     private static Process StartServer(
@@ -234,7 +240,7 @@ public sealed class ImageAnalysisKimiRuntimeService : IDisposable
         log(RuntimeResourceDiagnostics.DescribeLaunch(
             "Kimi visual analyst / chatllm.cpp",
             process,
-            "chatllm.cpp automatic placement; CPU/RAM and CUDA VRAM/shared GPU memory may be used",
+            "chatllm.cpp verified CPU/RAM profile; GPU offload disabled",
             modelPath));
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();

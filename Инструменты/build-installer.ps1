@@ -52,7 +52,6 @@ $publishDir = Join-Path $repoRoot 'Runtime\Publish\AIHub-win-x64'
 $installerDir = Join-Path $repoRoot 'Тесты\Установщики'
 $innoScriptPath = Join-Path $repoRoot 'Инструменты\Installer\LOPATA.iss'
 $iconPath = Join-Path $repoRoot 'Исходники\AIHub\Assets\AppIcon.ico'
-$backendDir = Join-Path $repoRoot 'Runtime\Backends\llama.cpp\b9442\win-cuda-12.4-x64'
 $chatLlmBackendDir = Join-Path $repoRoot 'Runtime\Backends\chatllm.cpp\v24\win-x64'
 
 if (-not (Test-Path -LiteralPath $projectPath)) {
@@ -69,10 +68,6 @@ if (-not (Test-Path -LiteralPath $innoScriptPath)) {
 
 if (-not (Test-Path -LiteralPath $iconPath)) {
     throw "Не найдена иконка установщика: $iconPath"
-}
-
-if (-not (Test-Path -LiteralPath (Join-Path $backendDir 'llama-server.exe'))) {
-    throw "Не найден llama.cpp backend для установщика: $backendDir"
 }
 
 if (-not (Test-Path -LiteralPath (Join-Path $chatLlmBackendDir 'server.exe'))) {
@@ -187,7 +182,7 @@ Write-Host "ISCC: $iscc"
 
 $packageDirectory = Join-Path $repoRoot ("Runtime/UpdatePackages/$version-" + [guid]::NewGuid().ToString('N'))
 & (Join-Path $PSScriptRoot 'build-file-update.ps1') -Version $version -PublishDir $publishDir `
-    -BackendDir $backendDir -ChatLlmBackendDir $chatLlmBackendDir -NotesPath $NotesPath `
+    -ChatLlmBackendDir $chatLlmBackendDir -NotesPath $NotesPath `
     -OutputDirectory $packageDirectory -PreviousManifestPath $PreviousManifestPath -HistoryPath $HistoryPath -StandBuild:([bool]$StandDataRoot)
 $fileManifest = Join-Path $packageDirectory 'lopata-files.json'
 if (!(Test-Path -LiteralPath $fileManifest)) { throw 'Signed release manifest is missing.' }
@@ -196,7 +191,6 @@ $arguments = @(
     "/DAppVersion=$version",
     "/DNumericVersion=$($version -replace '-.*$', '')",
     "/DPublishDir=$(Escape-InnoDefineValue $publishDir)",
-    "/DBackendDir=$(Escape-InnoDefineValue $backendDir)",
     "/DChatLlmBackendDir=$(Escape-InnoDefineValue $chatLlmBackendDir)",
     "/DOutputDir=$(Escape-InnoDefineValue $installerDir)",
     "/DSetupIconFile=$(Escape-InnoDefineValue $iconPath)",

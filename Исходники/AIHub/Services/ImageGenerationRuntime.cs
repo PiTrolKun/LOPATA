@@ -42,15 +42,49 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
-        using var process = OwnedProcessRegistry.Shared.Start(Command(request, index, cards, promptFile, output), "ImageGeneration");
+        var selection = await SdRuntimeSelector.SelectAsync(cards, false, token);
+        var result = await AttemptAsync(request, index, cards, promptFile, output, selection, token);
+        if (result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log))
+        {
+            token.ThrowIfCancellationRequested();
+            var cpu = await SdRuntimeSelector.SelectAsync(cards, true, token);
+            var retry = await AttemptAsync(request, index, cards, promptFile, output, cpu, token);
+            result = (retry.ExitCode, result.Log + "\nCPU retry:\n" + retry.Log);
+        }
+        await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_" + index + ".runtime.log"), result.Log, token);
+        if (result.ExitCode != 0) throw new InvalidOperationException("Generation.RuntimeError");
+    }
+
+    internal static ProcessStartInfo ManagedCommand(ImageGenerationRequest request, int index,
+        IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, SdRuntimeSelection selection)
+    {
+        var info = Command(request, index, cards, promptFile, output);
+        info.FileName = selection.Executable; info.WorkingDirectory = selection.Directory;
+        RuntimeDeviceProbe.ClearBackendOverrides(info);
+        info.ArgumentList.Remove("--offload-to-cpu");
+        info.ArgumentList.Add("--auto-fit"); info.ArgumentList.Add("on");
+        if (!selection.UsesGpu)
+        {
+            info.ArgumentList.Add("--backend"); info.ArgumentList.Add("cpu");
+            info.ArgumentList.Add("--params-backend"); info.ArgumentList.Add("cpu");
+        }
+        return info;
+    }
+
+    internal static bool IsHardwareFailure(string log) => NativeHardwareFailure.IsRecoverable(log);
+
+    private static async Task<(int ExitCode, string Log)> AttemptAsync(ImageGenerationRequest request, int index,
+        IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output,
+        SdRuntimeSelection selection, CancellationToken token)
+    {
+        using var process = OwnedProcessRegistry.Shared.Start(ManagedCommand(request, index, cards, promptFile, output, selection), "ImageGeneration");
         var stdout = DrainAsync(process.StandardOutput); var stderr = DrainAsync(process.StandardError);
         try
         {
             await process.WaitForExitAsync(token);
-            var log = $"Backend: {ImageGenerationCatalog.Manifest.BackendCommit}\nExit: 0x{process.ExitCode:X8}\n"
+            var log = $"Backend: {ImageGenerationCatalog.Manifest.BackendCommit}; runtime={selection.ComponentId}; executable={selection.Executable}\nExit: 0x{process.ExitCode:X8}\n"
                 + await stdout + Environment.NewLine + await stderr;
-            await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_" + index + ".runtime.log"), log, token);
-            if (process.ExitCode != 0) throw new InvalidOperationException("Generation.RuntimeError");
+            return (process.ExitCode, log);
         }
         finally
         {

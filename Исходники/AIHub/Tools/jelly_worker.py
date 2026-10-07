@@ -1,4 +1,4 @@
-"""Isolated CUDA extraction worker. JSON-lines protocol; no model tool execution."""
+"""Isolated hardware-aware extraction worker. JSON-lines protocol; no model tool execution."""
 import argparse
 import contextlib
 import json
@@ -11,7 +11,9 @@ parser.add_argument('--deps', required=True)
 parser.add_argument('--mode', choices=['gliner', 'nuextract'], required=True)
 parser.add_argument('--model')
 parser.add_argument('--check', action='store_true')
+parser.add_argument('--device', default='auto')
 args = parser.parse_args()
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, args.deps)
 os.environ.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', TOKENIZERS_PARALLELISM='false',
                   HF_HUB_DISABLE_PROGRESS_BARS='1', PYTHONDONTWRITEBYTECODE='1')
@@ -34,11 +36,19 @@ with contextlib.redirect_stdout(sys.stderr):
 if args.check:
     emit(dict(type='checked', transformers=transformers.__version__, torch=torch.__version__))
     sys.exit(0)
-if not torch.cuda.is_available():
-    raise RuntimeError('CUDA is required for the selected memory extractor')
-torch.cuda.set_device(0)
-free, total = torch.cuda.mem_get_info()
-emit(dict(type='device', free=free, total=total, name=torch.cuda.get_device_name(0)))
+from runtime_hardware import (system_memory, cpu_model_budget, select_torch_device,
+    torch_device_api, torch_backend_name, torch_inference_dtype, torch_is_out_of_memory)
+device, gpu_memory, device_reason = select_torch_device(torch, args.device)
+device_api = torch_device_api(torch, device)
+on_gpu = device_api is not None
+if on_gpu:
+    free, total, device_name = gpu_memory
+else:
+    total, free = system_memory()
+    device_name = 'CPU'
+emit(dict(type='device', free=free, total=total, name=device_name, device=device,
+          backend=torch_backend_name(torch, device), reason=device_reason, torch=torch.__version__,
+          cuda=torch.version.cuda, hip=torch.version.hip))
 KINDS = ['event', 'property', 'belief', 'intention', 'reported']
 FIELDS = dict(subject='Person or thing explicitly named in this passage',
               relation='Action or property, preserving negation',
@@ -50,10 +60,21 @@ for line in sys.stdin:
     try:
         request = json.loads(line)
         start = time.perf_counter()
-        if request['action'] == 'load':
+        if request['action'] == 'memory':
+            if on_gpu:
+                free, total = device_api.mem_get_info(device)
+            else:
+                total, free = system_memory()
+            emit(dict(type='memory', free=free, total=total, device=device))
+        elif request['action'] == 'load':
+            if not on_gpu:
+                total, available = system_memory()
+                required = cpu_model_budget(args.model, total)
+                if available < required:
+                    raise MemoryError(f'Insufficient free RAM: required={required}; available={available}')
             with contextlib.redirect_stdout(sys.stderr):
                 if args.mode == 'gliner':
-                    model = AutoExtractor.from_pretrained(args.model, map_location='cpu').to('cuda').eval()
+                    model = AutoExtractor.from_pretrained(args.model, map_location='cpu').to(device).eval()
                     schema = model.create_schema().structure('facts', mode='natural', anchor='subject')
                     for key, description in FIELDS.items():
                         schema = schema.field(key, dtype='str', description=description,
@@ -61,12 +82,15 @@ for line in sys.stdin:
                             cardinality='optional_one' if key == 'value' else 'required_one')
                 else:
                     tokenizer = AutoTokenizer.from_pretrained(args.model, local_files_only=True)
-                    model = AutoModelForImageTextToText.from_pretrained(args.model, dtype=torch.bfloat16,
-                        local_files_only=True, attn_implementation='sdpa').to('cuda').eval()
-            if next(model.parameters()).device.type != 'cuda':
-                raise RuntimeError('Extractor did not load on GPU')
-            emit(dict(type='loaded', seconds=time.perf_counter()-start, device='cuda:0',
-                      allocated=torch.cuda.memory_allocated(), reserved=torch.cuda.memory_reserved()))
+                    dtype = torch_inference_dtype(torch, device)
+                    model = AutoModelForImageTextToText.from_pretrained(args.model, dtype=dtype,
+                        local_files_only=True, attn_implementation='sdpa').to(device).eval()
+            actual_device = next(model.parameters()).device
+            if actual_device != torch.device(device):
+                raise RuntimeError('Extractor loaded on an unexpected device')
+            emit(dict(type='loaded', seconds=time.perf_counter()-start, device=device,
+                      allocated=device_api.memory_allocated(device) if on_gpu else 0,
+                      reserved=device_api.memory_reserved(device) if on_gpu else 0))
         elif request['action'] == 'extract':
             text = request['text']
             if model is None or len(text) > 1600:
@@ -86,8 +110,8 @@ for line in sys.stdin:
                         'Return an empty list when nothing is stated. Fields: '+json.dumps(FIELDS))
                     inputs = tokenizer.apply_chat_template([dict(role='user', content=text)], template=json.dumps(template),
                         instructions=instructions, enable_thinking=False, add_generation_prompt=True,
-                        tokenize=True, return_dict=True, return_tensors='pt').to('cuda')
-                    generated = model.generate(**inputs, max_new_tokens=1800, max_time=110, do_sample=False)
+                        tokenize=True, return_dict=True, return_tensors='pt').to(device)
+                    generated = model.generate(**inputs, max_new_tokens=1800, max_time=110 if on_gpu else 660, do_sample=False)
                     raw = tokenizer.decode(generated[0, inputs['input_ids'].shape[1]:], skip_special_tokens=True).strip()
                     rows = json.loads(raw)['facts']
                 # Preserve every proposed record; malformed fields fail visibly instead of inventing replacements.
@@ -99,10 +123,12 @@ for line in sys.stdin:
                         if row.get(key) is None: row[key] = ''
                         if not isinstance(row[key], str): raise ValueError('Invalid fact field '+key)
             emit(dict(type='result', output={'facts': rows}, raw=raw, seconds=time.perf_counter()-start,
-                      peak_allocated=torch.cuda.max_memory_allocated(), peak_reserved=torch.cuda.max_memory_reserved()))
+                      peak_allocated=device_api.max_memory_allocated(device) if on_gpu else 0,
+                      peak_reserved=device_api.max_memory_reserved(device) if on_gpu else 0))
         else:
             raise ValueError('Unknown action')
     except Exception as error:
-        emit(dict(type='error', error=type(error).__name__+': '+str(error), oom=isinstance(error, torch.cuda.OutOfMemoryError)))
+        oom = torch_is_out_of_memory(torch, error)
+        emit(dict(type='error', error=type(error).__name__+': '+str(error), oom=oom))
         # An OOM or failed load requires a fresh process, never a partially loaded model.
-        if model is None or isinstance(error, torch.cuda.OutOfMemoryError): sys.exit(2)
+        if model is None or oom: sys.exit(2)

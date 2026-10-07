@@ -392,13 +392,6 @@
     "Source": "installer"
   },
   {
-    "Id": "backend.llama",
-    "AcceptedAt": "__ACCEPTED_AT__",
-    "Terms": "F88AA98AA74492D206D426C2E850EF58BBE607F8246464B3D6D0FE7557E4185D",
-    "AppVersion": "__APP_VERSION__",
-    "Source": "installer"
-  },
-  {
     "Id": "nuget.SkiaSharp",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "5B9DC3F50095E7710463EC951F5B169611076CA775A7094F9FF0AFEC21F287C6",
@@ -448,13 +441,6 @@
     "Source": "installer"
   },
   {
-    "Id": "native.cuda",
-    "AcceptedAt": "__ACCEPTED_AT__",
-    "Terms": "418DB426CFD3C6E28BACB0095BF00EB7C62C9BAF028D440F53F1930CB270C9B0",
-    "AppVersion": "__APP_VERSION__",
-    "Source": "installer"
-  },
-  {
     "Id": "native.openssl",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "F66CACCE2EC7851A29A10542C3E95B79FA8F420D30B1E25D071E6E482685BD99",
@@ -472,13 +458,6 @@
     "Id": "native.imagemagick",
     "AcceptedAt": "__ACCEPTED_AT__",
     "Terms": "E763AB4587C0EC5EA385937B16CF46E81DFBA073EC7CAE0D4DEE27DDB916C995",
-    "AppVersion": "__APP_VERSION__",
-    "Source": "installer"
-  },
-  {
-    "Id": "native.libomp",
-    "AcceptedAt": "__ACCEPTED_AT__",
-    "Terms": "4095546A081587FD8598AB42C76FDDEEF601C9FD2FEA79D5FCF680334F599785",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
   },

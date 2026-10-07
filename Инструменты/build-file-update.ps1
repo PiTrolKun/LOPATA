@@ -1,7 +1,6 @@
 param(
     [Parameter(Mandatory)][string]$Version,
     [Parameter(Mandatory)][string]$PublishDir,
-    [Parameter(Mandatory)][string]$BackendDir,
     [Parameter(Mandatory)][string]$ChatLlmBackendDir,
     [Parameter(Mandatory)][string]$NotesPath,
     [Parameter(Mandatory)][string]$OutputDirectory,
@@ -25,9 +24,9 @@ if ((Test-Path -LiteralPath (Join-Path $PublishDir 'lopata-stand-build.marker'))
     throw 'Stand payload cannot be packaged as a public update.'
 }
 # Mirror the installer payload precisely, without logs or user data from runtime folders.
-foreach ($pair in @(@('llama', $BackendDir), @('chatllm', $ChatLlmBackendDir))) {
-    $source = (Resolve-Path -LiteralPath $pair[1]).Path
-    $destination = Join-Path $packaging ($pair[0] + '-' + [guid]::NewGuid().ToString('N'))
+foreach ($pair in ([ordered]@{ chatllm = $ChatLlmBackendDir }).GetEnumerator()) {
+    $source = (Resolve-Path -LiteralPath $pair.Value).Path
+    $destination = Join-Path $packaging ($pair.Key + '-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $destination | Out-Null
     foreach ($file in Get-ChildItem -LiteralPath $source -File -Recurse) {
         if ($file.Extension -eq '.log') { continue }
@@ -37,7 +36,7 @@ foreach ($pair in @(@('llama', $BackendDir), @('chatllm', $ChatLlmBackendDir))) 
         New-Item -ItemType Directory -Path (Split-Path $target) -Force | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $target
     }
-    $roots[$pair[0]] = $destination
+    $roots[$pair.Key] = $destination
 }
 if ($HistoryPath) { $history = @(Get-Content -LiteralPath $HistoryPath -Raw | ConvertFrom-Json) }
 else {

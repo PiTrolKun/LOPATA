@@ -102,7 +102,7 @@ public sealed class ManagedModelLibraryStore
         }
         if (existing is not null)
         {
-            var sameDirectory = string.Equals(existing.InstallDirectory, candidate.InstallDirectory, StringComparison.OrdinalIgnoreCase);
+            var sameDirectory = ManagedModelPathIdentity.SameDirectory(existing.InstallDirectory, candidate.InstallDirectory);
             candidate.FirstDiscoveredAt = existing.FirstDiscoveredAt;
             candidate.FirstInstalledAt ??= existing.FirstInstalledAt;
             if (sameDirectory)

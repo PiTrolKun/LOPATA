@@ -17,7 +17,7 @@ public sealed partial class ImageUtilityAiService
         if (!IsReady(methodId)) throw new ImageUtilityException("ImageUtility.Ai.DownloadRequired");
         var cards = Register(methodId); var card = cards.Single();
         await ComponentLicenseGate.EnsureAsync(methodId == "swinir"
-            ? [card.ModelArtifactId, GigaEmbeddingInstallation.RuntimeLicenseId] : [card.ModelArtifactId], token);
+            ? [card.ModelArtifactId, GigaEmbeddingInstallation.RuntimeLicenseId] : NativeLicenseIds(card, methodId), token);
         progress?.Report(new("ImageUtility.Ai.Loading"));
         if (methodId == "swinir")
         {
@@ -27,18 +27,40 @@ public sealed partial class ImageUtilityAiService
             var overlap = Number(parameters, "overlap", 32, 0, 32767);
             if (tile != 0 && (tile < 8 || tile % 8 != 0 || overlap >= tile)) Invalid();
             var device = Value(parameters, "device", "auto");
-            if (!Regex.IsMatch(device, @"\A(auto|cpu|cuda(?::[0-9]+)?)\z", RegexOptions.CultureInvariant)) Invalid();
+            if (!Regex.IsMatch(device, @"\A(auto|cpu|cuda(?::[0-9]{1,2})?|hip(?::[0-9]{1,2})?|xpu(?::[0-9]{1,2})?)\z", RegexOptions.CultureInvariant)) Invalid();
+            var runtime = await ManagedPythonRuntime.ResolveAsync(device, token);
             var weight = card.Files.Single(f => f.Purpose == "scale-" + scale.ToString(CultureInfo.InvariantCulture));
-            var args = PythonArguments(card, "--input", inputPath, "--output", outputPngPath, "--weights",
+            IEnumerable<string> Arguments(string selected) => PythonArguments(card, "--input", inputPath, "--output", outputPngPath, "--weights",
                 Path.Combine(card.InstallDirectory, weight.RelativePath), "--scale", scale.ToString(CultureInfo.InvariantCulture),
-                "--tile", tile.ToString(CultureInfo.InvariantCulture), "--overlap", overlap.ToString(CultureInfo.InvariantCulture), "--device", device);
-            await RunAsync(GigaEmbeddingInstallation.Python, args, progress, token);
+                "--tile", tile.ToString(CultureInfo.InvariantCulture), "--overlap", overlap.ToString(CultureInfo.InvariantCulture), "--device", selected);
+            try { await RunAsync(runtime.Python, Arguments(runtime.Device), progress, token); }
+            catch (ImageUtilityException error) when (device == "auto" && runtime.Device != "cpu"
+                && !token.IsCancellationRequested && !File.Exists(outputPngPath) && PythonHardwareFailure.IsRecoverable(error.Message))
+            {
+                // The previous worker has exited. Never retry storage/input failures or replace a partial file.
+                new ComponentEventLog().Write("swinir_cpu_fallback", new { runtime.Device, error.Message });
+                var cpu = await ManagedPythonRuntime.ResolveAsync("cpu", token);
+                await RunAsync(cpu.Python, Arguments("cpu"), progress, token);
+            }
         }
         else
         {
             var executable = NativeExecutable(card, methodId);
             var args = BuildNativeArguments(methodId, Path.GetDirectoryName(executable)!, inputPath, outputPngPath, parameters);
-            await RunAsync(executable, args, progress, token);
+            await VerifyNativeAsync(card, token);
+            var available = await NcnnDeviceProbe.ReadAsync(executable, token);
+            var selected = Value(parameters, "device", "auto");
+            ValidateNativeDevices(methodId, selected, available);
+            try { await RunAsync(executable, args, progress, token); }
+            catch (ImageUtilityException error) when (methodId == "real-cugan" && selected == "auto"
+                && available.Count > 0 && !token.IsCancellationRequested && !File.Exists(outputPngPath)
+                && NativeHardwareFailure.IsRecoverable(error.Message))
+            {
+                new ComponentEventLog().Write("ncnn_cpu_fallback", new { methodId, error.Message });
+                var cpu = new Dictionary<string, string>(parameters) { ["device"] = "-1" };
+                await RunAsync(executable, BuildNativeArguments(methodId, Path.GetDirectoryName(executable)!,
+                    inputPath, outputPngPath, cpu), progress, token);
+            }
         }
         if (!File.Exists(outputPngPath) || new FileInfo(outputPngPath).Length == 0)
             throw new ImageUtilityException("ImageUtility.Ai.WorkerFailed", "AI worker returned no image.", retryable: true);

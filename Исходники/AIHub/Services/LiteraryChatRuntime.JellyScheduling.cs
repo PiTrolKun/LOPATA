@@ -5,6 +5,12 @@ namespace AIHub.Services;
 
 public sealed partial class LiteraryChatRuntime
 {
+    private static string JellyHardwareMessage(string key)
+    {
+        var localization = new LocalizationService();
+        localization.Load(new AppSettingsStore().LoadOrCreate().LanguageCode);
+        return localization.T(key);
+    }
     public static long JellyRequiredFreeBytes(string mode) => mode switch
     {
         "gliner" => 3L * 1024 * 1024 * 1024,
@@ -23,7 +29,8 @@ public sealed partial class LiteraryChatRuntime
         _active = active; Interlocked.Exchange(ref _busy, 1); BusyChanged?.Invoke();
         LiteraryRequestDiagnostics? log = null; LiteraryJellyWorker? worker = null;
         var wasLoaded = _process is { HasExited: false }; var swapped = false;
-        string[] savedSlots = []; var initialized = false;
+        string[] savedSlots = []; var initialized = false; var usesGpu = false;
+        string? workerModel = null, workerDependencies = null;
         try
         {
             log = new LiteraryRequestDiagnostics("JellyScheduling", Log, _layout.EnsureFolder("Diagnostics/LiteraryDetailed"));
@@ -40,35 +47,59 @@ public sealed partial class LiteraryChatRuntime
                         await ComponentLicenseGate.EnsureAsync(LiteraryJellyInstallation.Licenses, ct);
                         var model = await LiteraryJellyInstallation.FindModelAsync(mode, ct) ?? throw new FileNotFoundException("Memory model must be prepared first.");
                         var dependencies = await LiteraryJellyInstallation.FindDependenciesAsync(mode, ct) ?? throw new FileNotFoundException("Memory runtime must be prepared first.");
+                        workerModel = model; workerDependencies = dependencies;
                         using var startup = CancellationTokenSource.CreateLinkedTokenSource(ct); startup.CancelAfter(TimeSpan.FromMinutes(3));
-                        worker = new(mode, model, dependencies, (kind, data) => log.Write(kind, data));
+                        worker = await LiteraryJellyWorker.CreateAsync(mode, model, dependencies, (kind, data) => log.Write(kind, data), "auto", startup.Token);
                         var device = await worker.ReadAsync(startup.Token);
-                        if (device.GetProperty("type").GetString() != "device") throw new InvalidDataException("Missing GPU inventory.");
+                        if (device.GetProperty("type").GetString() != "device") throw new InvalidDataException("Missing runtime device inventory.");
+                        var onGpu = device.GetProperty("backend").GetString() != "cpu";
                         var required = JellyRequiredFreeBytes(mode);
                         var cudaFree = device.GetProperty("free").GetInt64();
-                        var physicalFree = await LiteraryGpuBudget.FreeBytesAsync(startup.Token);
-                        var free = physicalFree is { } measured ? Math.Min(cudaFree, measured) : 0;
-                        log.Write("placement", new { mode, free, cudaFree, physicalFree, required, wasLoaded });
-                        if (free < required && wasLoaded && !swapped)
+                        var free = cudaFree;
+                        log.Write("placement", new { mode, onGpu, free, required, wasLoaded, device });
+                        if (onGpu && free < required && wasLoaded && !swapped)
                         {
                             savedSlots = await SaveJellyCheckpointAsync(ct); swapped = true;
                             await UnloadForJellyAsync(); log.Write("rune_unloaded", new { reason = "VRAM budget" });
                         }
-                        var afterUnloadFree = await LiteraryGpuBudget.FreeBytesAsync(startup.Token);
-                        if (afterUnloadFree is { } available && available < required)
-                            throw new LiteraryGpuMemoryException(required, available);
+                        if (onGpu)
+                        {
+                            var inventory = await worker.CallAsync(new { action = "memory" }, startup.Token);
+                            if (inventory.GetProperty("free").GetInt64() < required)
+                            {
+                                await worker.DisposeAsync();
+                                worker = await LiteraryJellyWorker.CreateAsync(mode, model, dependencies, (kind, data) => log.Write(kind, data), "cpu", startup.Token);
+                                await worker.ReadAsync(startup.Token); onGpu = false;
+                                Log(JellyHardwareMessage("HardwareRuntime.JellyCpuMemory"));
+                            }
+                        }
+                        if (!onGpu) startup.CancelAfter(TimeSpan.FromMinutes(10));
                         try { await worker.CallAsync(new { action = "load" }, startup.Token); }
-                        catch (LiteraryJellyWorkerException ex) when (ex.OutOfMemory && wasLoaded && !swapped)
+                        catch (LiteraryJellyWorkerException ex) when (onGpu && (ex.OutOfMemory || PythonHardwareFailure.IsRecoverable(ex.Message)))
                         {
                             await worker.DisposeAsync(); worker = null;
-                            savedSlots = await SaveJellyCheckpointAsync(ct); swapped = true; await UnloadForJellyAsync();
-                            log.Write("rune_unloaded", new { reason = "CUDA allocation failed despite preflight" });
-                            worker = new(mode, model, dependencies, (kind, data) => log.Write(kind, data));
-                            await worker.ReadAsync(startup.Token); await worker.CallAsync(new { action = "load" }, startup.Token);
+                            if (wasLoaded && !swapped)
+                            {
+                                savedSlots = await SaveJellyCheckpointAsync(ct); swapped = true; await UnloadForJellyAsync();
+                                log.Write("rune_unloaded", new { reason = "GPU allocation failed despite preflight" });
+                            }
+                            Log(JellyHardwareMessage("HardwareRuntime.JellyCpuOom"));
+                            startup.CancelAfter(TimeSpan.FromMinutes(10));
+                            worker = await LiteraryJellyWorker.CreateAsync(mode, model, dependencies, (kind, data) => log.Write(kind, data), "cpu", startup.Token);
+                            await worker.ReadAsync(startup.Token); await worker.CallAsync(new { action = "load" }, startup.Token); onGpu = false;
                         }
-                        initialized = true;
+                        initialized = true; usesGpu = onGpu;
                     }
-                    return await worker!.ExtractAsync(source, ct);
+                    try { return await worker!.ExtractAsync(source, ct); }
+                    catch (LiteraryJellyWorkerException ex) when (usesGpu && (ex.OutOfMemory || PythonHardwareFailure.IsRecoverable(ex.Message)))
+                    {
+                        await worker!.DisposeAsync(); worker = null; usesGpu = false;
+                        Log(JellyHardwareMessage("HardwareRuntime.JellyCpuOom"));
+                        using var startup = CancellationTokenSource.CreateLinkedTokenSource(ct); startup.CancelAfter(TimeSpan.FromMinutes(10));
+                        worker = await LiteraryJellyWorker.CreateAsync(mode, workerModel!, workerDependencies!, (kind, data) => log.Write(kind, data), "cpu", startup.Token);
+                        await worker.ReadAsync(startup.Token); await worker.CallAsync(new { action = "load" }, startup.Token);
+                        return await worker.ExtractAsync(source, ct);
+                    }
                 }
                 catch
                 {

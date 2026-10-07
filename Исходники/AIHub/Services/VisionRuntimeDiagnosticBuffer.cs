@@ -149,6 +149,10 @@ internal sealed class VisionRuntimeAttemptException : Exception
 
     public string ResponseBody { get; }
 
+    internal bool IsRecoverableHardwareFailure => GpuLayers > 0
+        && (StatusCode is null || (int)StatusCode >= 500)
+        && NativeHardwareFailure.IsRecoverable(ResponseBody + "\n" + _diagnostics.CreateExcerpt() + "\n" + InnerException?.Message);
+
     public string CreateDiagnosticSummary() =>
         VisionRuntimeDiagnosticBuffer.CreateAttemptSummary(
             GpuLayers,

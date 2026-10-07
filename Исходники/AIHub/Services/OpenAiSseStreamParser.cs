@@ -15,6 +15,7 @@ public static class OpenAiSseStreamParser
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
         var content = new StringBuilder();
         var finishReason = string.Empty;
+        var completed = false;
         var toolCalls = new Dictionary<int, ToolCallBuilder>();
         while (await reader.ReadLineAsync(cancellationToken) is { } line)
         {
@@ -26,10 +27,20 @@ public static class OpenAiSseStreamParser
             var data = line[5..].Trim();
             if (data == "[DONE]")
             {
+                completed = true;
                 break;
             }
 
+            if (data.Length == 0) continue;
+
             using var document = JsonDocument.Parse(data);
+            if (document.RootElement.TryGetProperty("error", out var error)
+                && error.ValueKind != JsonValueKind.Null)
+            {
+                var diagnostic = error.ValueKind == JsonValueKind.Object && error.TryGetProperty("message", out var message)
+                    ? message.ToString() : error.ToString();
+                throw new IOException("Model stream failed: " + diagnostic[..Math.Min(diagnostic.Length, 4096)]);
+            }
             if (!document.RootElement.TryGetProperty("choices", out var choices)
                 || choices.ValueKind != JsonValueKind.Array
                 || choices.GetArrayLength() == 0)
@@ -78,6 +89,9 @@ public static class OpenAiSseStreamParser
             }
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!completed && string.IsNullOrWhiteSpace(finishReason))
+            throw new IOException("Model stream ended before a completion marker. Partial output is not a completed result.");
         progress?.Report(new ModelStreamChunk(string.Empty, true));
         return new StructuredChatResult
         {

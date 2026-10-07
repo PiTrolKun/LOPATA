@@ -7,6 +7,11 @@ import time
 import hashlib
 import math
 
+# Embedded Python uses an explicit _pth list, so sibling helpers need this path.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from runtime_hardware import (select_torch_device, system_memory, cpu_model_budget,
+    torch_device_api, torch_backend_name, torch_inference_dtype, require_supported_torch)
+
 
 def emit(**data):
     print(json.dumps(data, ensure_ascii=False), flush=True)
@@ -60,11 +65,12 @@ def main():
     parser.add_argument("--input")
     parser.add_argument("--output")
     parser.add_argument("--query", action="store_true")
-    parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+    parser.add_argument("--device", default="auto")
     args = parser.parse_args()
     import torch
     import transformers
-    if torch.__version__.split("+")[0] != "2.10.0" or transformers.__version__ != "5.3.0":
+    require_supported_torch(torch)
+    if transformers.__version__ != "5.3.0":
         raise RuntimeError("Unexpected runtime versions")
     from transformers import AutoModel, AutoTokenizer
     if args.check:
@@ -72,9 +78,15 @@ def main():
         return
     started = time.monotonic()
     torch.set_num_threads(max(1, min(4, (os.cpu_count() or 2) // 2)))
-    device = ("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device
-    dtype = (torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16) if device == "cuda" else torch.float32
-    emit(stage="Loading", device=device)
+    device, inventory, reason = select_torch_device(torch, args.device)
+    if device == "cpu":
+        total, available = system_memory()
+        required = cpu_model_budget(args.model, total)
+        if available < required:
+            raise RuntimeError(f"Insufficient physical RAM for CPU embeddings: required={required}, available={available}")
+    emit(stage="Loading", device=device, backend=torch_backend_name(torch, device), hardware=inventory, reason=reason)
+    dtype = torch_inference_dtype(torch, device)
+    device_api = torch_device_api(torch, device)
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True, local_files_only=True)
     model = AutoModel.from_pretrained(args.model, trust_remote_code=True, local_files_only=True,
                                       dtype=dtype, attn_implementation="sdpa").to(device).eval()
@@ -127,7 +139,7 @@ def main():
             os.fsync(output.fileno())
             emit(stage="Embedding", done=min(i + 4, len(chunks)), total=len(chunks), device=device)
     emit(stage="Complete", total=len(chunks), device=device, seconds=round(time.monotonic() - started, 3),
-         peak_vram_bytes=torch.cuda.max_memory_allocated() if device == "cuda" else 0)
+         peak_vram_bytes=device_api.max_memory_allocated(device) if device_api is not None else 0)
 
 
 if __name__ == "__main__":

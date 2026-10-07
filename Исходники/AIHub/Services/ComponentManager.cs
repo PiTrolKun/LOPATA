@@ -9,7 +9,7 @@ using SharpCompress.Archives;
 
 namespace AIHub.Services;
 
-public sealed class ComponentManager
+public sealed partial class ComponentManager
 {
     private const long MaximumExtractedBytes = 8L * 1024 * 1024 * 1024;
     private const int MaximumArchiveEntries = 100_000;
@@ -20,7 +20,7 @@ public sealed class ComponentManager
 
     private readonly ComponentStateStore _stateStore;
     private readonly ComponentEventLog _eventLog = new();
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private static readonly SemaphoreSlim InstallGate = new(1, 1);
 
     public ComponentManager(ComponentStateStore? stateStore = null)
     {
@@ -119,16 +119,18 @@ public sealed class ComponentManager
     public async Task<ComponentStatusSnapshot> DownloadAndInstallAsync(
         string componentId,
         IProgress<ComponentDownloadProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool forceReinstall = false)
     {
         var ordered = ComponentCatalog.ResolveDependencies([componentId]);
-        await ComponentLicenseGate.EnsureAsync(ordered.Select(x => x.Id).ToArray(), cancellationToken);
+        await ComponentLicenseGate.EnsureAsync(ordered.SelectMany(x =>
+            x.LicenseIds.Count > 0 ? x.LicenseIds : new[] { x.Id }).Distinct(StringComparer.Ordinal).ToArray(), cancellationToken);
         ComponentStatusSnapshot? result = null;
         for (var index = 0; index < ordered.Count; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var entry = ordered[index];
-            result = await DownloadSingleAsync(entry, progress, cancellationToken);
+            result = await DownloadSingleAsync(entry, progress, cancellationToken, forceReinstall && entry.Id == componentId);
             if (!result.IsAvailable && index < ordered.Count - 1)
             {
                 throw new InvalidOperationException(
@@ -252,18 +254,19 @@ public sealed class ComponentManager
     private async Task<ComponentStatusSnapshot> DownloadSingleAsync(
         ComponentCatalogEntry entry,
         IProgress<ComponentDownloadProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool forceReinstall = false)
     {
         if (entry.IsBuiltIn || entry.IsPlanned)
         {
             return Verify(entry.Id);
         }
 
-        await _gate.WaitAsync(cancellationToken);
+        await InstallGate.WaitAsync(cancellationToken);
         try
         {
             var current = GetStatus().First(status => status.Entry.Id == entry.Id);
-            if (current.IsAvailable)
+            if (current.IsAvailable && !forceReinstall)
             {
                 return current;
             }
@@ -276,6 +279,8 @@ public sealed class ComponentManager
 
             AppDataPaths.EnsureComponentDirectories();
             EnsureLocalCompatibility(entry);
+            if (entry.DeliveryKind == ComponentDeliveryKinds.PythonProfile)
+                return await InstallPythonProfileAsync(entry, progress, cancellationToken);
             var state = _stateStore.Load();
             var record = FindRecord(state, entry);
             var downloadPath = Path.Combine(AppDataPaths.ComponentDownloadsDirectory, entry.FileName);
@@ -294,8 +299,14 @@ public sealed class ComponentManager
                 entry.DownloadSizeBytes
             });
 
-            await DownloadWithResumeAsync(entry, partialPath, progress, cancellationToken);
-            File.Move(partialPath, downloadPath, true);
+            var verifiedCache = !string.IsNullOrWhiteSpace(entry.Sha256) && File.Exists(downloadPath)
+                && new FileInfo(downloadPath).Length == entry.DownloadSizeBytes
+                && string.Equals(await ComputeSha256Async(downloadPath, cancellationToken), entry.Sha256, StringComparison.OrdinalIgnoreCase);
+            if (!verifiedCache)
+            {
+                await DownloadWithResumeAsync(entry, partialPath, progress, cancellationToken);
+                File.Move(partialPath, downloadPath, true);
+            }
             var actualSize = new FileInfo(downloadPath).Length;
             if (entry.DownloadSizeBytes > 0
                 && Math.Abs(actualSize - entry.DownloadSizeBytes) > Math.Max(1024 * 1024, entry.DownloadSizeBytes / 50))
@@ -347,6 +358,10 @@ public sealed class ComponentManager
             {
                 ExtractArchiveSafely(downloadPath, temporaryDirectory);
             }
+
+            // Validate staged libraries while the previous installation is still intact.
+            if (HardwareRuntimeBundleVerifier.IsManaged(entry.Id))
+                await HardwareRuntimeBundleVerifier.VerifyExecutableAsync(entry.Id, temporaryDirectory, cancellationToken);
 
             Directory.CreateDirectory(Path.GetDirectoryName(installDirectory)!);
             var previousDirectory = installDirectory + ".previous";
@@ -402,7 +417,7 @@ public sealed class ComponentManager
         }
         finally
         {
-            _gate.Release();
+            InstallGate.Release();
         }
     }
 
@@ -562,6 +577,13 @@ public sealed class ComponentManager
         var healthy = installed && (entry.DeliveryKind == ComponentDeliveryKinds.SystemInstaller
             || string.IsNullOrWhiteSpace(entry.HealthCheckRelativePath)
             || FindExpectedArtifact(installPath, entry.HealthCheckRelativePath));
+        if (healthy && HardwareRuntimeBundleVerifier.IsManaged(entry.Id))
+            healthy = HardwareRuntimeBundleVerifier.HasCompleteLayout(entry.Id, installPath);
+        if (healthy && entry.DeliveryKind == ComponentDeliveryKinds.PythonProfile)
+            healthy = record.Version == entry.Version && record.VerifiedAt is not null
+                && record.ComputedSha256.Equals(entry.Sha256, StringComparison.OrdinalIgnoreCase)
+                && ManagedModelPathIdentity.SameDirectory(installPath, GetInstallDirectory(entry))
+                && PythonRuntimeBundleVerifier.HasCpuLayout(installPath);
         return new ComponentStatusSnapshot
         {
             Entry = entry,

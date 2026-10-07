@@ -26,6 +26,7 @@ public static class ImageAnalysisKimiRequestBuilder
         "--host", "127.0.0.1",
         "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
         "---chat", modelPath,
+        "-ngl", "0",
         "-n", ResolveThreadCount(logicalProcessorCount ?? Environment.ProcessorCount)
             .ToString(System.Globalization.CultureInfo.InvariantCulture),
         "--batch_size", BatchSize.ToString(System.Globalization.CultureInfo.InvariantCulture),

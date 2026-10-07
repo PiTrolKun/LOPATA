@@ -34,7 +34,12 @@ public sealed class LiteraryQwenTests
     [TestMethod]
     public void BothLogicalRolesUseOneTextOnlySlotWithoutImplicitHistoryCache()
     {
-        var args = LiteraryChatRuntime.Arguments("model.gguf", 12345);
+        var args = LiteraryChatRuntime.Arguments("model.gguf", 12345, deviceId: "Vulkan3");
+        Assert.AreEqual("Vulkan3", args[Array.IndexOf(args, "--device") + 1]);
+        var cpu = LiteraryChatRuntime.Arguments("model.gguf", 12345, gpuLayers: 0, contextCapacity: 16384);
+        Assert.AreEqual("none", cpu[Array.IndexOf(cpu, "--device") + 1]);
+        Assert.AreEqual("off", cpu[Array.IndexOf(cpu, "--fit") + 1]);
+        Assert.AreEqual("16384", cpu[Array.IndexOf(cpu, "-c") + 1]);
         Assert.AreEqual("1", args[Array.IndexOf(args, "-np") + 1]);
         Assert.AreEqual("0", args[Array.IndexOf(args, "-c") + 1]);
         Assert.AreEqual("on", args[Array.IndexOf(args, "--fit") + 1]);

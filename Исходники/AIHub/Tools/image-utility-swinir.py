@@ -22,12 +22,14 @@ def main():
     parser.add_argument("--overlap", type=int, default=32)
     parser.add_argument("--device", default="auto")
     args = parser.parse_args()
+    # Embedded Python's isolated _pth may omit the worker directory.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     sys.path.insert(0, args.dependencies)
     import numpy as np
     import torch
     from PIL import Image
-    if torch.__version__.split("+")[0] != "2.10.0":
-        raise RuntimeError("The shared PyTorch runtime must be version 2.10.0.")
+    from runtime_hardware import require_supported_torch
+    require_supported_torch(torch)
     if args.check:
         print("LOPATA_READY", flush=True)
         return
@@ -38,7 +40,16 @@ def main():
     if args.tile < 0 or args.tile and (args.tile % 8 or args.tile < 8 or args.overlap >= args.tile) or args.overlap < 0:
         raise ValueError("Invalid tile/overlap.")
     torch.set_num_threads(max(1, min(8, (os.cpu_count() or 2) // 2)))
-    device = torch.device(("cuda" if torch.cuda.is_available() else "cpu") if args.device == "auto" else args.device)
+    if args.device == "auto":
+        from runtime_hardware import select_torch_device
+        selected, memory, reason = select_torch_device(torch, "auto")
+        device = torch.device(selected)
+        print(f"LOPATA_DEVICE {selected}: {reason}; memory={memory}", flush=True)
+    else:
+        # Preserve the user's explicit device choice; a failed device must not
+        # silently run a different profile.
+        device = torch.device(args.device)
+        print(f"LOPATA_DEVICE {device}: explicit prepared device", flush=True)
     spec = importlib.util.spec_from_file_location("lopata_swinir", Path(__file__).with_name("image-utility-swinir-network.py"))
     network = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(network)
@@ -85,7 +96,8 @@ def main():
                     del patch, prediction
             result.div_(counts)
     result = result[..., :height * args.scale, :width * args.scale]
-    array = result.squeeze(0).clamp_(0, 1).permute(1, 2, 0).mul_(255).round_().byte().numpy()
+    # Outside inference_mode, create a normal tensor before in-place conversion.
+    array = result.squeeze(0).clamp(0, 1).permute(1, 2, 0).mul_(255).round_().byte().numpy()
     output = Image.fromarray(array)
     if rgba is not None:
         output.putalpha(rgba.getchannel("A").resize(output.size, Image.Resampling.LANCZOS))

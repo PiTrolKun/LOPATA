@@ -17,18 +17,18 @@ public static class OmniLlamaProtocol
 
     public static string DeviceMapJson => DescribeDeviceMap(OmniLlamaProfile.Alpha);
 
-    public static string DescribeDeviceMap(OmniLlamaProfile profile) => JsonSerializer.Serialize(new
+    public static string DescribeDeviceMap(OmniLlamaProfile profile, string backend = "CPU", string device = "none") => JsonSerializer.Serialize(new
     {
-        model = "cuda", projector = "cuda", quantization = profile.Quantization, projectorQuantization = profile.ProjectorQuantization,
+        model = backend, projector = backend, device, quantization = profile.Quantization, projectorQuantization = profile.ProjectorQuantization,
         sourceModel = profile.SourceModel, modelRevision = profile.Revision,
         contextTokens = ContextTokens, slots = 1, fit = false,
         temperature = profile.Temperature, topP = TopP, topK = TopK, minP = 0, reasoning = true
     });
 
-    public static string[] Arguments(string model, string projector, int port) =>
+    public static string[] Arguments(string model, string projector, int port, string device = "none", bool usesGpu = false) =>
     ["-m", model, "--mmproj", projector, "--host", "127.0.0.1", "--port", port.ToString(System.Globalization.CultureInfo.InvariantCulture),
-        "-c", ContextTokens.ToString(System.Globalization.CultureInfo.InvariantCulture), "-np", "1", "-ngl", "99",
-        "--mmproj-offload", "--fit", "off", "--no-context-shift", "--offline", "--jinja",
+        "-c", ContextTokens.ToString(System.Globalization.CultureInfo.InvariantCulture), "-np", "1", "-ngl", usesGpu ? "99" : "0",
+        "--device", device, usesGpu ? "--mmproj-offload" : "--no-mmproj-offload", "--fit", "off", "--no-context-shift", "--offline", "--jinja",
         "--reasoning-format", "deepseek", "-fa", "auto", "-n", "-1",
         "--image-max-tokens", OmniContextBudget.ImageTokenUpperBound.ToString(System.Globalization.CultureInfo.InvariantCulture)];
 

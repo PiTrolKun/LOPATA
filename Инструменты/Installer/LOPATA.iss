@@ -10,10 +10,6 @@
 #error OutputDir is required. Pass /DOutputDir=...
 #endif
 
-#ifndef BackendDir
-#error BackendDir is required. Pass /DBackendDir=...
-#endif
-
 #ifndef ChatLlmBackendDir
 #error ChatLlmBackendDir is required. Pass /DChatLlmBackendDir=...
 #endif
@@ -93,7 +89,6 @@ Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 #endif
 Source: "{#PublishDir}\Updater\LOPATA.Updater.exe"; DestDir: "{#UserDataRoot}\UpdateHost"; Flags: ignoreversion
 #ifndef NetworkSetup
-Source: "{#BackendDir}\*"; DestDir: "{#LlamaTarget}"; Excludes: "*.log"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#ChatLlmBackendDir}\*"; DestDir: "{#ChatLlmTarget}"; Excludes: "*.log"; Flags: ignoreversion recursesubdirs createallsubdirs
 #endif
 

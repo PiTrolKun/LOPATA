@@ -10,5 +10,6 @@
     <ProjectReference Include="..\AIHub\AIHub.csproj" />
     <None Update="Fixtures\LiteraryLoops\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Fixtures\Music\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures\Hardware\*.py" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

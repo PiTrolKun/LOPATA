@@ -114,7 +114,10 @@ public sealed partial class ImageUtilityControl
         var values = Enumerable.Range(0, count).Select(i => old.ElementAtOrDefault(i) ?? "0").ToArray();
         values[index] = value.ToString(CultureInfo.InvariantCulture); SetParameter("tile", string.Join(',', values));
     }
-    private string DeviceLabel(string value) => value is "cpu" or "-1" ? L("Cpu") : value == "auto" ? L("Ai.Value.auto") : "GPU " + value.Replace("cuda:", "").Replace("cuda", "0");
+    private string DeviceLabel(string value) => value is "cpu" or "-1" ? L("Cpu") : value == "auto" ? L("Ai.Value.auto")
+        : value.StartsWith("hip", StringComparison.Ordinal) ? "AMD GPU " + (value.Split(':').ElementAtOrDefault(1) ?? "0")
+        : value.StartsWith("xpu", StringComparison.Ordinal) ? "Intel GPU " + (value.Split(':').ElementAtOrDefault(1) ?? "0")
+        : value.StartsWith("cuda", StringComparison.Ordinal) ? "NVIDIA GPU " + (value.Split(':').ElementAtOrDefault(1) ?? "0") : "GPU " + value;
     private void SettingHintText(StackPanel panel, string text) { if (_lastSettingGroups.TryGetValue(panel, out var group)) group.Children.Add(ImageUtilityUi.Text(text)); }
 
     private void SelectAiDevices(bool swinir)
@@ -124,15 +127,43 @@ public sealed partial class ImageUtilityControl
         var list = new ListBox { SelectionMode = swinir ? SelectionMode.Single : SelectionMode.Multiple, Height = 260 };
         var choices = new List<ImageUtilityUi.Choice> { new("auto", L("Ai.Value.auto")) };
         if (swinir || Options.MethodId == "real-cugan") choices.Add(new(swinir ? "cpu" : "-1", L("Cpu")));
-        var gpus = new ComputerPassportService().EnsurePassport().Gpus;
-        var relevant = swinir ? gpus.Where(x => x.Name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)).ToArray() : gpus.ToArray();
-        for (var index = 0; index < relevant.Length; index++) choices.Add(new(swinir ? "cuda:" + index : index.ToString(CultureInfo.InvariantCulture), "GPU " + index + " · " + relevant[index].Name));
         list.ItemsSource = choices;
         var current = Parameter("device", "auto").Split(',');
         if (swinir) list.SelectedItem = choices.FirstOrDefault(x => current.Contains(x.Id)) ?? choices[0];
         else foreach (var choice in choices.Where(x => current.Contains(x.Id))) list.SelectedItems.Add(choice);
         panel.Children.Add(list);
-        panel.Children.Add(ImageUtilityUi.Text(L("DeviceIndexHint")));
+        panel.Children.Add(ImageUtilityUi.Text(L(swinir ? "Ai.SwinirDeviceHelp" : "DeviceIndexHint")));
+        using var cancellation = new CancellationTokenSource();
+        var token = cancellation.Token;
+        {
+            var checking = ImageUtilityUi.Text(L("Ai.ProbingDevices")); panel.Children.Add(checking);
+            window.Closed += (_, _) => cancellation.Cancel();
+            window.Loaded += async (_, _) =>
+            {
+                try
+                {
+                    if (swinir)
+                    {
+                        var devices = await ManagedPythonRuntime.ListGpuDevicesAsync(token);
+                        choices.AddRange(devices.Select(device => new ImageUtilityUi.Choice(device.Device,
+                            DeviceLabel(device.Device) + " · " + device.Name)));
+                    }
+                    else
+                    {
+                        var devices = await _ai.ListNativeDevicesAsync(Options.MethodId, token);
+                        choices.AddRange(devices.Select(device => new ImageUtilityUi.Choice(
+                            device.Index.ToString(CultureInfo.InvariantCulture), "GPU " + device.Index + " · " + device.Name)));
+                    }
+                    token.ThrowIfCancellationRequested();
+                    list.ItemsSource = null; list.ItemsSource = choices;
+                    if (swinir) list.SelectedItem = choices.FirstOrDefault(choice => current.Contains(choice.Id)) ?? choices[0];
+                    else foreach (var choice in choices.Where(choice => current.Contains(choice.Id))) list.SelectedItems.Add(choice);
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+                catch (Exception error) { if (!token.IsCancellationRequested) Error(error); }
+                finally { checking.Visibility = System.Windows.Visibility.Collapsed; }
+            };
+        }
         panel.Children.Add(ImageUtilityUi.Button(L("Apply"), "ApplyDevices", () =>
         {
             var selected = list.SelectedItems.Cast<ImageUtilityUi.Choice>().Select(x => x.Id).ToArray();

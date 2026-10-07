@@ -32,6 +32,23 @@ public sealed class ImageAnalysisHeavyResourcePlanningService
     public Task<ImageAnalysisHeavyResourceSample> CaptureCurrentAsync(
         CancellationToken cancellationToken) => CaptureSampleAsync(cancellationToken);
 
+    // Managed runtimes report their own ordinals. Do not attribute another GPU's memory
+    // (or nvidia-smi's first device) to the process actually running this scenario.
+    internal async Task<ImageAnalysisHeavyResourceSample> CaptureForRuntimeAsync(
+        LlamaRuntimeSelection selection, CancellationToken cancellationToken)
+    {
+        var memory = ReadMemory();
+        RuntimeDevice? device = null;
+        if (selection.UsesGpu)
+        {
+            var inventory = await RuntimeDeviceProbe.RunAsync(selection.Bundle.Server, "--list-devices", cancellationToken);
+            device = RuntimeDeviceProbe.ParseDevices(inventory).SingleOrDefault(item => item.Id == selection.DeviceId);
+            if (device is null) throw new IOException("The selected runtime device no longer reports memory inventory.");
+        }
+        return new(DateTimeOffset.Now, memory.AvailableRamBytes, memory.TotalRamBytes,
+            memory.CommitAvailableBytes, memory.CommitLimitBytes, device?.FreeBytes ?? 0, device?.TotalBytes ?? 0);
+    }
+
     public ImageAnalysisHeavyResourcePlan Calculate(
         IReadOnlyList<ImageAnalysisHeavyResourceSample> samples)
     {
