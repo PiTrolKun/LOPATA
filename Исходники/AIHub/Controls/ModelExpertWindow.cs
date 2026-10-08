@@ -150,16 +150,22 @@ public sealed partial class ModelExpertWindow : Window
     private void Changed()
     {
         var reference = _selected is null ? MusicModelVariants.Defaults(_draft.Variation) : _selected.Settings;
-        _modified.Text = (_draft.SameAs(reference) ? "" : L("Modified")) + (MusicAceCatalog.IsAce(_draft.Variation) ? "" :
-            " · " + string.Format(L("PinCount"), MusicTuningProfile.State(_draft).Pins.Length));
-        try { _draft.Validate(); PreviewChanged?.Invoke(_draft.Snapshot()); }
+        _modified.Text = (_draft.SameAs(reference) ? "" : L("Modified")) +
+            " · " + string.Format(L("PinCount"), MusicTuningProfile.State(_draft).Pins.Length);
+        try { ValidateDraft(); PreviewChanged?.Invoke(_draft.Snapshot()); }
         catch (System.IO.InvalidDataException) { /* Incomplete text edits do not replace the effective preview. */ }
     }
     private void Apply()
     {
-        try { _draft.Validate(); if (_store.Collection == "Expert") _store.SetCurrent(_draft); Result = _draft.Snapshot(); DialogResult = true; }
+        try { ValidateDraft(); if (_store.Collection == "Expert") _store.SetCurrent(_draft); Result = _draft.Snapshot(); DialogResult = true; }
         catch (Exception error) when (error is System.IO.IOException or ArgumentException or System.Text.Json.JsonException or UnauthorizedAccessException)
         { ShowError(error); }
+    }
+    private void ValidateDraft()
+    {
+        _draft.Validate();
+        if (MusicAceCatalog.IsAce(_draft.Variation) && _draft.Get("inference_steps") > MusicAceCatalog.MaximumInferenceSteps)
+            throw new System.IO.InvalidDataException(_l("Music.Ace.StepsLimit"));
     }
     private void ShowError(Exception error) => MessageBox.Show(this, L("Invalid") + "\n" + error.Message,
         L("Title"), MessageBoxButton.OK, MessageBoxImage.Warning);

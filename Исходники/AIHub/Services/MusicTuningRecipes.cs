@@ -2,15 +2,24 @@ namespace AIHub.Services;
 
 public sealed record MusicTuningRecipe(string Id, string Source, IReadOnlyDictionary<string, double> Values, string Adaptation)
 {
+    public string? Variation { get; init; }
+    public IReadOnlyDictionary<string, string> TextValues { get; init; } = new Dictionary<string, string>();
+    public string[] Fields => [.. Values.Keys, .. TextValues.Keys];
+    public bool Matches(MusicExpertSettings settings) => Values.All(p => settings.Get(p.Key) == p.Value) &&
+        TextValues.All(p => settings.TextValues[p.Key] == p.Value);
     public MusicExpertSettings Apply(MusicExpertSettings current)
     {
+        if ((Variation is null && MusicAceCatalog.IsAce(current.Variation)) || (Variation is not null && Variation != current.Variation))
+            throw new System.IO.InvalidDataException("Recipe belongs to another model variation.");
         var next = current.Snapshot(); foreach (var pair in Values) next.Values[pair.Key] = pair.Value;
+        foreach (var pair in TextValues) next.TextValues[pair.Key] = pair.Value;
         var state = MusicTuningProfile.State(next);
         next = next with { Tuning = state with { X = null, Y = null, Pins = state.Pins.Except(Values.Keys).ToArray(),
+            Sound = Fields.Any(k => k.StartsWith("dcw_", StringComparison.Ordinal)) ? null : state.Sound,
             SimplePreset = Id, SimpleModified = false, ExpertModified = true } };
         next.Validate(); return next;
     }
-    public ModelPresetRecipe Metadata => new(Id, Source, "Experimental sampling adaptation", Adaptation, Values.Keys.ToArray());
+    public ModelPresetRecipe Metadata => new(Id, Source, "Experimental parameter adaptation", Adaptation, Fields);
 }
 
 public static class MusicTuningRecipes
@@ -21,10 +30,11 @@ public static class MusicTuningRecipes
         Group("S1", "abc_sampling", .55, .82, 16), Group("S2", "abc_sampling", 1, .97, 64),
         Group("S3", "semantic_sampling", .8, .88, 50), Group("S4", "semantic_sampling", 1.2, .99, 200),
         Cover("R1", .8, 1.2), Cover("R2", .9, 2), Cover("R3", .95, 1.9) ];
+    public static IReadOnlyList<MusicTuningRecipe> For(string variation) => MusicAceCatalog.IsAce(variation) ? MusicAceRecipes.All : All;
     public static MusicExpertSettings Ordinary(MusicExpertSettings current)
     {
         var next = MusicTuningProfile.ResetCircle(current);
-        if (!MusicTuningProfile.State(next).Pins.Contains("cfg_scale")) next.Values["cfg_scale"] = -1;
+        if (!MusicAceCatalog.IsAce(current.Variation) && !MusicTuningProfile.State(next).Pins.Contains("cfg_scale")) next.Values["cfg_scale"] = -1;
         return next with { Tuning = MusicTuningProfile.State(next) with { SimplePreset = "Ordinary", SimpleModified = false } };
     }
     private static MusicTuningRecipe Group(string id, string prefix, double t, double p, int k) => new(id, Studio,

@@ -70,13 +70,19 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         {
             var variant = (MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag;
             _choices[model.Id] = variant.Id;
-            assessment.Visibility = model.Id == "yue2" && variant.Id is "q8" or "bf16" or "studio-q8"
+            assessment.Visibility = (model.Id == "yue2" && variant.Id is "q8" or "bf16" or "studio-q8")
+                || model.Id == "ace-step" && variant.Id == "xl-turbo"
                 ? Visibility.Visible : Visibility.Collapsed;
             if (model.Id == "yue2") {
                 var prefix = "Music.Models.yue2." + variant.Id + ".";
                 assessment.Children.Clear();
                 foreach (var key in new[] { "Pros", "Cons", "Memory" }) assessment.Children.Add(Text(_l(prefix + key)));
                 description.Text = _l(variant.Id is "bf16" or "studio-q8" ? prefix + "Description" : model.DescriptionKey);
+            }
+            if (model.Id == "ace-step") {
+                assessment.Children.Clear();
+                description.Text = _l(variant.Id == "xl-turbo" ? "Music.Models.ace-step.xl-turbo.Description" : model.DescriptionKey);
+                if (variant.Id == "xl-turbo") assessment.Children.Add(Text(_l("Music.Models.ace-step.xl-turbo.Memory")));
             }
             status.Text = _l(variant.Connected ? "Music.Models.Connected" : "Music.Models.Planned");
             open.Content = _l(variant.Connected ? "Music.Models.Open" : "Music.Models.NotConnected");

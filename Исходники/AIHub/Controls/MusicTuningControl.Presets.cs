@@ -15,7 +15,7 @@ public sealed partial class MusicTuningControl
         }
     }
     private string NameFor(string id) => id == "Ordinary" ? L("Ordinary")
-        : MusicTuningRecipes.All.Any(r => r.Id == id) ? L("Recipe." + id) : id.Replace("User:", "", StringComparison.Ordinal);
+        : MusicTuningRecipes.For(_settings.Variation).Any(r => r.Id == id) ? L("Recipe." + id) : id.Replace("User:", "", StringComparison.Ordinal);
     public void OpenRecipes()
     {
         if (!IsEnabled) return;

@@ -11,6 +11,8 @@ public static class MusicAceRequest
         var expert = request.EffectiveExpert; expert.Validate();
         if (!MusicAceCatalog.IsAce(expert.Variation)) throw new InvalidDataException("ACE settings required.");
         var warnings = new List<string>();
+        if (expert.Integer("inference_steps") > MusicAceCatalog.MaximumInferenceSteps)
+            warnings.Add("Legacy inference_steps exceeds the XL Turbo limit; effective inference_steps is 20. Custom timesteps, if supplied, have priority.");
         var wishes = request.Wishes;
         var instrumental = wishes?.Instrumental == true;
         var language = expert.TextValues["vocal_language"];
@@ -40,6 +42,7 @@ public static class MusicAceRequest
             ["seed"] = request.SoundSeed, ["retake_seed"] = expert.Integer("retake_seed") < 0 ? null : expert.Integer("retake_seed"),
             ["infer_method"] = new[] { "ode", "sde" }[expert.Integer("infer_method")],
             ["sampler_mode"] = new[] { "euler", "heun" }[expert.Integer("sampler_mode")],
+            ["inference_steps"] = Math.Min(expert.Integer("inference_steps"), MusicAceCatalog.MaximumInferenceSteps),
             ["dcw_enabled"] = expert.Integer("dcw_enabled") < 0 ? null : expert.Integer("dcw_enabled") == 1,
             ["dcw_mode"] = expert.TextValues["dcw_mode"], ["dcw_wavelet"] = expert.TextValues["dcw_wavelet"],
             ["lm_negative_prompt"] = negative, ["use_cot_lyrics"] = false,
@@ -54,7 +57,8 @@ public static class MusicAceRequest
             ["config"] = new { batch_size = 1, allow_lm_batch = false, use_random_seed = false, seeds = new[] { request.SoundSeed },
                 audio_format = "wav", constrained_decoding_debug = expert.Get("constrained_decoding_debug") == 1 },
             ["warnings"] = warnings.ToArray(), ["source_revision"] = MusicAceCatalog.SourceRevision,
-            ["model_revision"] = MusicAceCatalog.ModelRevision, ["companion_revision"] = MusicAceCatalog.CompanionRevision };
+            ["model_revision"] = MusicAceCatalog.ModelRevision, ["companion_revision"] = MusicAceCatalog.CompanionRevision,
+            ["tuning"] = expert.Tuning };
     }
     private static string Language(string value) => value switch {
         "russian" => "ru", "english" => "en", "chinese" => "zh", "japanese" => "ja", "korean" => "ko",

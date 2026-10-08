@@ -35,6 +35,7 @@
     <Content Include="..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\*.exe;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\*.dll;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\manifest.json;..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\LICENSE-*.txt" Link="MusicRuntime\win-cuda128-x64\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Tools\ace-xl-python-files.json" LogicalName="AIHub.AcePythonManifest" />
     <EmbeddedResource Include="Tools\image-generation-manifest.json" LogicalName="AIHub.ImageGenerationManifest" />
     <EmbeddedResource Include="Content\ImageGenerationExamples.json" LogicalName="AIHub.ImageGenerationExamples" />
     <Resource Include="Assets\GenerationExamples\*.png" />

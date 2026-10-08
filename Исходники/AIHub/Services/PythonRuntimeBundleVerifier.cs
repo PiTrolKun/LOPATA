@@ -40,7 +40,8 @@ internal static class PythonRuntimeBundleVerifier
     internal static async Task VerifyCpuAsync(string directory, CancellationToken token) =>
         await VerifyAsync(PythonRuntimeProfile.Cpu, directory, token);
 
-    internal static async Task VerifyAsync(PythonRuntimeProfile profile, string directory, CancellationToken token)
+    internal static async Task VerifyAsync(PythonRuntimeProfile profile, string directory, CancellationToken token,
+        Action<int, int>? progress = null)
     {
         token.ThrowIfCancellationRequested();
         var manifestPath = Path.Combine(AppContext.BaseDirectory, "Tools", "python-hardware-" + profile.Flavor() + "-files.json");
@@ -51,34 +52,13 @@ internal static class PythonRuntimeBundleVerifier
             throw new InvalidDataException("Python file manifest differs from the trusted catalog.");
         manifestFile.Position = 0;
         using var manifest = await JsonDocument.ParseAsync(manifestFile, cancellationToken: token);
-        var root = Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar);
-        Lopata.Updates.SafeUpdatePath.RejectLinks(root);
-        var expected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var files = new List<PinnedTreeFile>();
         foreach (var file in manifest.RootElement.GetProperty("files").EnumerateArray())
         {
             token.ThrowIfCancellationRequested();
             var relative = file.GetProperty("path").GetString()!;
-            PythonWheelExtractor.RelativeDestination(relative, wheelLayout: false);
-            var path = Path.GetFullPath(Path.Combine(root, relative));
-            if (!path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) || !expected.Add(path))
-                throw new InvalidDataException("Ambiguous Python file manifest path.");
-            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
-            await using var input = File.OpenRead(path);
-            if (input.Length != file.GetProperty("size").GetInt64()
-                || !Convert.ToHexString(await SHA256.HashDataAsync(input, token)).Equals(
-                    file.GetProperty("sha256").GetString(), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Python runtime file differs from the pinned profile: " + relative);
+            files.Add(new(relative, file.GetProperty("size").GetInt64(), file.GetProperty("sha256").GetString()!));
         }
-        var pending = new Queue<string>(); pending.Enqueue(root); var visited = 0;
-        while (pending.TryDequeue(out var current))
-            foreach (var path in Directory.EnumerateFileSystemEntries(current))
-            {
-                token.ThrowIfCancellationRequested();
-                if (++visited > 100000) throw new InvalidDataException("Oversized Python runtime tree.");
-                Lopata.Updates.SafeUpdatePath.RejectLinks(path);
-                if (Directory.Exists(path)) pending.Enqueue(path);
-                else if (!expected.Contains(Path.GetFullPath(path)))
-                    throw new InvalidDataException("Python runtime contains an unlisted file: " + path);
-            }
+        await PinnedFileTreeVerifier.VerifyAsync(directory, files, token, progress);
     }
 }

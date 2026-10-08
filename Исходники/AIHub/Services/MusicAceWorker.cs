@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using AIHub.Models;
 
 namespace AIHub.Services;
 
@@ -11,18 +12,20 @@ public sealed class MusicAceWorker : IMusicYueWorker
     public string? LastHardware { get; private set; }
     public string? LastRuntimePack { get; private set; }
     public string? LastRequestReceipt { get; private set; }
+    private IReadOnlyList<ManagedModelArtifactCard> _verifiedCards = [];
+    internal sealed record PreparationReceipt(string Hardware, IReadOnlyList<ManagedModelArtifactCard> Cards);
     public Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token) =>
         throw new NotSupportedException("ACE generates its LM plan inside the official pipeline.");
     public Task SynthesizeAsync(string model, string decoder, MusicYueRequest request, string requestPath, string outputPath, CancellationToken token) =>
         RunAsync(Root(model), request, requestPath, outputPath, false, token);
     private static string Root(string model) => Directory.GetParent(model)!.Parent!.Parent!.FullName;
-    internal static async Task<string> ProbeAsync(string root, CancellationToken token, Action<string> log)
+    internal static async Task<PreparationReceipt> ProbeAsync(string root, CancellationToken token, Action<string> log)
     {
         var worker = new MusicAceWorker(); worker.Log += log;
         var path = Path.Combine(Path.GetTempPath(), "lopata-ace-" + Guid.NewGuid().ToString("N"));
         try {
             await worker.RunAsync(root, new("", "", 1, 1) { Expert = MusicAceCatalog.Defaults() }, path + ".json", path + ".probe", true, token);
-            return worker.LastHardware ?? "ACE / PyTorch";
+            return new(worker.LastHardware ?? "ACE / PyTorch", worker._verifiedCards);
         }
         finally { foreach (var suffix in new[] { ".json", ".probe", ".probe.receipt.json" }) if (File.Exists(path + suffix)) File.Delete(path + suffix); }
     }
@@ -35,13 +38,14 @@ public sealed class MusicAceWorker : IMusicYueWorker
         Log?.Invoke("[Prepare] Verifying pinned ACE source");
         await MusicAceSource.VerifyAsync(token);
         StageFinished("source", preparation.Elapsed);
-        var overlay = await MusicAceRuntime.PrepareAsync(root, token, line => Log?.Invoke(line));
+        var prepared = await MusicAceRuntime.PrepareAsync(root, token, line => Log?.Invoke(line));
+        _verifiedCards = prepared.Cards;
         StageFinished("libraries", preparation.Elapsed);
         Log?.Invoke("[Prepare] Verifying Python hardware runtime and selecting device");
         // The pinned torchaudio ABI is 2.10. ROCm's separate 2.9.1 pack is not
         // interchangeable; unsupported GPU packs fall back to the prepared CPU.
         var runtime = await ManagedPythonRuntime.ResolveAsync("auto", token, new HashSet<string> {
-            HardwareRuntimeCatalog.PythonCuda128Id, HardwareRuntimeCatalog.PythonCudaId, HardwareRuntimeCatalog.PythonXpuId });
+            HardwareRuntimeCatalog.PythonCuda128Id, HardwareRuntimeCatalog.PythonCudaId, HardwareRuntimeCatalog.PythonXpuId }, line => Log?.Invoke(line));
         StageFinished("hardware", preparation.Elapsed);
         LastRuntimePack = runtime.Entry.Id + "/" + MusicAceCatalog.RuntimeRevision;
         await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
@@ -53,7 +57,7 @@ public sealed class MusicAceWorker : IMusicYueWorker
         info.Environment["PYTHONNOUSERSITE"] = "1"; info.Environment["PYTHONDONTWRITEBYTECODE"] = "1";
         info.Environment["GRADIO_ANALYTICS_ENABLED"] = "False";
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "music_ace_worker.py"),
-            overlay, MusicAceSource.DirectoryPath, MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Variation),
+            prepared.Overlay, MusicAceSource.DirectoryPath, MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Variation),
             MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Companions), requestPath, temporary, runtime.Device, probe ? "probe" : "generate"]);
         token.ThrowIfCancellationRequested();
         Log?.Invoke(probe ? "[Check] Importing official ACE API · timeout=90s" : "[Load] Starting official ACE pipeline");

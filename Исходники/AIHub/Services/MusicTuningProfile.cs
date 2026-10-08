@@ -8,7 +8,8 @@ public static class MusicTuningProfile
     public const string Id = "YuE2.Native.Q8.Bubble";
     public const string Bf16Id = "YuE2.PyTorch.BF16.Bubble";
     public const string StudioId = "YuE2.Studio.Q8.Bubble";
-    public static string ForVariation(string variation) => variation == MusicStudioRuntime.Variation ? StudioId : variation == MusicModelVariants.Bf16 ? Bf16Id : Id;
+    public static string ForVariation(string variation) => MusicAceCatalog.IsAce(variation) ? MusicAceTuningProfile.Id
+        : variation == MusicStudioRuntime.Variation ? StudioId : variation == MusicModelVariants.Bf16 ? Bf16Id : Id;
     private static readonly double[][] Plan = [[.55, .82, 16], [.60, .86, 24], [.70, .90, 30], [.85, .94, 45], [1, .97, 64]];
     private static readonly double[][] Sequence = [[.8, .88, 50], [.9, .92, 75], [1, .95, 100], [1.1, .97, 140], [1.2, .99, 200]];
     private static readonly string[] Suffixes = ["temperature", "top_p", "top_k"];
@@ -16,6 +17,7 @@ public static class MusicTuningProfile
         Profile = ForVariation(settings.Variation) };
     public static MusicExpertSettings Move(MusicExpertSettings current, double x, double y, bool suppliedPlan = false)
     {
+        if (MusicAceCatalog.IsAce(current.Variation)) return MusicAceTuningProfile.Move(current, x, y);
         if (!double.IsFinite(x) || !double.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(x));
         x = Math.Clamp(x, -1, 1); y = Math.Clamp(y, -1, 1);
         var state = State(current); var next = current.Snapshot();
@@ -26,6 +28,7 @@ public static class MusicTuningProfile
     }
     public static ModelBubblePosition Position(MusicExpertSettings settings, bool suppliedPlan = false)
     {
+        if (MusicAceCatalog.IsAce(settings.Variation)) return MusicAceTuningProfile.Position(settings);
         var (x, xa) = Project(settings, "abc_sampling", Plan);
         var (y, ya) = Project(settings, "semantic_sampling", Sequence);
         var enabled = settings.Cot != "off" && !suppliedPlan;
@@ -33,6 +36,7 @@ public static class MusicTuningProfile
     }
     public static MusicExpertSettings Guidance(MusicExpertSettings current, double? value)
     {
+        if (MusicAceCatalog.IsAce(current.Variation)) throw new NotSupportedException("ACE LM guidance is controlled by its circle.");
         var next = current.Snapshot(); next.Values["cfg_scale"] = value ?? -1;
         var state = State(next);
         next = next with { Tuning = state with { Pins = state.Pins.Except(["cfg_scale"]).ToArray(), SimpleModified = true, ExpertModified = true } };
@@ -45,6 +49,7 @@ public static class MusicTuningProfile
     }
     public static MusicExpertSettings Release(MusicExpertSettings current, string key)
     {
+        if (MusicAceCatalog.IsAce(current.Variation)) return MusicAceTuningProfile.Release(current, key);
         var state = State(current);
         var next = current.Snapshot() with { Tuning = state with { Pins = state.Pins.Except([key]).ToArray(), SimpleModified = true, ExpertModified = true } };
         if (key == "cfg_scale") next.Values[key] = -1;

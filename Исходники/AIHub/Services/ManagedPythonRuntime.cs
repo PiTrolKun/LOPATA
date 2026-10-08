@@ -20,7 +20,8 @@ internal static partial class ManagedPythonRuntime
         .Any(item => item.Entry.Id == HardwareRuntimeCatalog.PythonCpuId && item.IsAvailable);
     internal static string CpuDirectory => new ComponentManager().GetInstallDirectory(ComponentCatalog.Find(HardwareRuntimeCatalog.PythonCpuId)!);
 
-    internal static async Task<ManagedPythonSelection> ResolveAsync(string requested, CancellationToken token, IReadOnlySet<string>? allowedProfiles = null)
+    internal static async Task<ManagedPythonSelection> ResolveAsync(string requested, CancellationToken token,
+        IReadOnlySet<string>? allowedProfiles = null, Action<string>? log = null)
     {
         if (!DevicePattern().IsMatch(requested)) throw new ArgumentException("Unknown Python device policy.", nameof(requested));
         var manager = new ComponentManager();
@@ -39,7 +40,13 @@ internal static partial class ManagedPythonRuntime
                 await ComponentLicenseGate.EnsureAsync(status.Entry.LicenseIds, token);
                 var directory = manager.GetInstallDirectory(status.Entry);
                 // Integrity/license failures must not masquerade as a hardware fallback.
-                await PythonRuntimeBundleVerifier.VerifyAsync(profile, directory, token);
+                log?.Invoke("[Prepare] Python profile · " + profile.Flavor());
+                var reported = 0;
+                await PythonRuntimeBundleVerifier.VerifyAsync(profile, directory, token, (done, total) => {
+                    var bucket = done * 20 / total;
+                    if (bucket > Volatile.Read(ref reported) && Interlocked.Exchange(ref reported, bucket) < bucket)
+                        log?.Invoke($"[Prepare] Python profile · {done}/{total}");
+                });
                 try
                 {
                     var runtimeRequest = family == "hip" && requested.StartsWith("hip", StringComparison.Ordinal)
@@ -58,6 +65,7 @@ internal static partial class ManagedPythonRuntime
         if (!cpu.IsAvailable) throw new IOException("Prepare Python hardware libraries through the main-window downloader first.");
         await ComponentLicenseGate.EnsureAsync(cpu.Entry.LicenseIds, token);
         var root = manager.GetInstallDirectory(cpu.Entry);
+        log?.Invoke("[Prepare] Python profile · cpu");
         await PythonRuntimeBundleVerifier.VerifyCpuAsync(root, token);
         var cpuProbe = await ManagedPythonHardwareProbe.ReadAsync(PythonRuntimeProfile.Cpu, root, "cpu", token);
         return new(cpu.Entry, PythonRuntimeProfile.Cpu, Path.Combine(root, "python.exe"), "cpu", cpuProbe.FreeBytes,

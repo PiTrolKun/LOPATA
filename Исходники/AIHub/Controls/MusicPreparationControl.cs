@@ -149,24 +149,33 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         });
         try
         {
-            _cards = acknowledge
+            var filesWatch = System.Diagnostics.Stopwatch.StartNew();
+            // Opening ACE delegates its single complete verification to the worker.
+            // Previous status is a UI hint only; the worker re-hashes every component before execution.
+            if (!(open && MusicAceCatalog.IsAce(_variation))) _cards = acknowledge
                 ? await _preparation.PrepareAsync(_root, download, progress, operation.Token)
                 : await _preparation.CheckAsync(_root, progress, operation.Token);
+            else if (_progress is not null) _progress.IsIndeterminate = true;
+            OwnedProcessRegistry.Log("music_ui_preparation", "Music.Preparation", detail:
+                $"variation={_variation}; stage={(open && MusicAceCatalog.IsAce(_variation) ? "worker-verifies" : "files")}; elapsedMs={filesWatch.ElapsedMilliseconds}");
             operation.Token.ThrowIfCancellationRequested();
             _ready = _cards.Count == MusicModelVariants.Cards(_root, _variation).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             _statusKey = _ready ? "Music.Preparation.Ready" : "Music.Preparation.Missing";
             if (open && _ready && _variation == MusicModelVariants.Bf16)
                 _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
                     line => { if (_status is not null) _status.Text = line; });
-            if (open && _ready && MusicAceCatalog.IsAce(_variation))
-                _preparedHardware = await MusicAceWorker.ProbeAsync(_root, operation.Token, line => { if (_status is not null) _status.Text = line; });
+            if (open && _ready && MusicAceCatalog.IsAce(_variation)) {
+                var receipt = await MusicAceWorker.ProbeAsync(_root, operation.Token, line => ReportAcePreparation(line, operation));
+                _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
+                _ready = _cards.Count == MusicAceCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
+            }
             operation.Token.ThrowIfCancellationRequested();
             IsWorkspace = open && _ready && !_disposed;
         }
-        catch (OperationCanceledException) { _statusKey = "Music.Canceled"; }
+        catch (OperationCanceledException) { _ready = false; _statusKey = "Music.Canceled"; }
         catch (Exception e)
         {
-            _statusKey = "Music.Error";
+            _ready = false; _statusKey = "Music.Error";
             ErrorText = e.Message;
         }
         finally
@@ -177,6 +186,23 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         }
     }
     private string ErrorText { get; set; } = "";
+
+    private void ReportAcePreparation(string line, CancellationTokenSource operation)
+    {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => ReportAcePreparation(line, operation)); return; }
+        if (_disposed || !IsBusy || _cancel != operation) return;
+        var key = line.Contains("source", StringComparison.OrdinalIgnoreCase) ? "Source"
+            : line.Contains("Importing", StringComparison.Ordinal) ? "Api"
+            : line.Contains("hardware", StringComparison.OrdinalIgnoreCase) || line.Contains("Python profile", StringComparison.Ordinal) ? "Hardware"
+            : line.Contains("librar", StringComparison.OrdinalIgnoreCase) ? "Libraries" : "Files";
+        if (_status is not null) _status.Text = _l("Music.Ace.Prepare." + key) + "\n" + line;
+        if (_progress is not null) {
+            var count = System.Text.RegularExpressions.Regex.Match(line, @" · (\d+)/(\d+)$");
+            _progress.IsIndeterminate = !count.Success;
+            if (count.Success) _progress.Value = 100d * double.Parse(count.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture)
+                / double.Parse(count.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
 
     private void Render()
     {

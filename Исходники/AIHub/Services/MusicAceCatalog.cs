@@ -15,11 +15,12 @@ public static class MusicAceCatalog
     public const string CompanionRevision = "19671f406d603126926c1b7e2adc169acbcade22";
     public const string RuntimeRevision = "ace15-xl-ca1e85fe-py312-1";
     public const string ModelName = "ACE-Step 1.5";
+    public const int MaximumInferenceSteps = 20;
     public static bool IsAce(string id) => id == Variation;
     public static IReadOnlyList<ExpertParameter> Parameters { get; } = [
         new("bpm", "Conditions", 0, 0, 300),
         new("seed", "Random", -1, -1, int.MaxValue),
-        new("inference_steps", "Diffusion", 8, 1, 200),
+        new("inference_steps", "Diffusion", 8, 1, MaximumInferenceSteps),
         new("shift", "Diffusion", 1, 1, 5, .01),
         new("infer_method", "Diffusion", 0, 0, 1, Choices: ["ode", "sde"]),
         new("sampler_mode", "Diffusion", 0, 0, 1, Choices: ["euler", "heun"]),
@@ -69,11 +70,16 @@ public static class MusicAceCatalog
         TextValues = TextParameters.ToDictionary(p => p.Key, p => p.Default) };
     public static void Validate(MusicExpertSettings settings)
     {
-        if (settings.Tuning is not null) throw new InvalidDataException("ACE circle settings are not supported yet.");
+        settings.Tuning?.Validate();
+        if (settings.Tuning is not null && settings.Tuning.Profile != MusicAceTuningProfile.Id)
+            throw new InvalidDataException("ACE circle profile belongs to another model.");
         if (settings.Values.Count != Parameters.Count || settings.TextValues.Count != TextParameters.Count)
             throw new InvalidDataException("Incomplete or unknown ACE parameters.");
         foreach (var p in Parameters) {
-            if (!settings.Values.TryGetValue(p.Key, out var v) || !double.IsFinite(v) || v < p.Minimum || v > p.Maximum || p.Step == 1 && v != Math.Truncate(v))
+            // Read old projects/presets without discarding them. New editor input is bounded separately;
+            // the request builder records the upstream clamp for legacy values.
+            var maximum = p.Key == "inference_steps" ? 200 : p.Maximum;
+            if (!settings.Values.TryGetValue(p.Key, out var v) || !double.IsFinite(v) || v < p.Minimum || v > maximum || p.Step == 1 && v != Math.Truncate(v))
                 throw new InvalidDataException("Invalid ACE parameter: " + p.Key);
         }
         if (settings.Get("bpm") is > 0 and < 30) throw new InvalidDataException("ACE bpm: 0 = auto; otherwise 30–300.");

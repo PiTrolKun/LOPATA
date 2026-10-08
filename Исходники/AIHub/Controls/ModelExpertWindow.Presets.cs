@@ -33,7 +33,7 @@ public sealed partial class ModelExpertWindow
         panel.Children.Add(actions); panel.Children.Add(_modified);
         panel.Children.Add(MusicWishUi.Text(L("PresetHint")));
         _presets.AddRange(_store.Load());
-        var state = MusicAceCatalog.IsAce(_draft.Variation) ? null : MusicTuningProfile.State(_draft);
+        var state = MusicTuningProfile.State(_draft);
         var name = _store.Collection == "Expert" ? state?.ExpertPreset : state?.SimplePreset?.Replace("User:", "", StringComparison.Ordinal);
         _selected = _presets.FirstOrDefault(p => p.Name == name) ?? _presets.FirstOrDefault(p => p.Settings.SameAs(_draft));
         _presetName.Text = _selected?.Name ?? "";
@@ -54,7 +54,6 @@ public sealed partial class ModelExpertWindow
     private string PresetName() => _presetName.Text.Trim();
     private void SelectDraft(MusicExpertSettings settings)
     {
-        if (MusicAceCatalog.IsAce(settings.Variation)) { _draft = settings.Snapshot(); return; }
         var state = MusicTuningProfile.State(settings);
         _draft = settings with { Tuning = _store.Collection == "Expert" ? state with {
             ExpertPreset = _selected?.Name, ExpertModified = false, SimpleModified = true } : state with {
@@ -71,7 +70,6 @@ public sealed partial class ModelExpertWindow
     private void Commit(List<ModelExpertPreset> next, ModelExpertPreset? selection)
     {
         _store.Save(next); _presets.Clear(); _presets.AddRange(next); _selected = selection;
-        if (MusicAceCatalog.IsAce(_draft.Variation)) { _presetName.Text = selection?.Name ?? ""; Reload(); Changed(); return; }
         var state = MusicTuningProfile.State(_draft);
         _draft = _draft with { Tuning = _store.Collection == "Expert" ? state with {
             ExpertPreset = selection?.Name, ExpertModified = selection is not null && !selection.Settings.SameAs(_draft)
@@ -81,14 +79,16 @@ public sealed partial class ModelExpertWindow
     }
     private void SaveNew()
     {
-        _draft.Validate(); var preset = ModelExpertPresets.Create(PresetName(), _draft, _store.Collection);
+        ValidateDraft(); var preset = ModelExpertPresets.Create(PresetName(), _draft, _store.Collection);
+        preset = preset with { Recipe = preset.Recipe ?? _selected?.Recipe };
         ModelExpertPresets.Validate(preset);
         Commit([.. _presets, preset], preset);
     }
     private void UpdatePreset()
     {
         if (_selected is null) { MessageBox.Show(this, L("Immutable")); return; }
-        _draft.Validate(); var updated = _selected with { Settings = _draft.Snapshot(), SchemaVersion = ModelExpertPresets.SchemaFor(_draft.Variation) };
+        ValidateDraft(); var updated = ModelExpertPresets.Create(_selected.Name, _draft, _store.Collection);
+        updated = updated with { Recipe = updated.Recipe ?? _selected.Recipe };
         Commit(_presets.Select(p => p == _selected ? updated : p).ToList(), updated);
     }
     private void RenamePreset()
@@ -138,6 +138,7 @@ public sealed partial class ModelExpertWindow
     }
     private void ExportPreset()
     {
+        if (_selected is null) ValidateDraft();
         var preset = _selected ?? ModelExpertPresets.Create(L("Recommended"), _draft, _store.Collection);
         var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "LOPATA preset (*.json)|*.json", DefaultExt = ".json",
             FileName = ModelExpertPresets.ExportName(preset.Name, DateTime.Now, preset.Settings.Variation) };

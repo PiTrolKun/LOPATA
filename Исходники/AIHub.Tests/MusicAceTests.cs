@@ -66,7 +66,7 @@ public sealed class MusicAceTests
         expert.TextValues["keyscale"] = "F# minor"; expert.Values["inference_steps"] = 12;
         var preset = ModelExpertPresets.Create("Тест ACE", expert, "Expert");
         var path = Path.Combine(files.Root, "preset.json"); ModelExpertPresets.Export(path, preset);
-        var loaded = ModelExpertPresets.Import(path); Assert.AreEqual(4, loaded.SchemaVersion); Assert.AreEqual(MusicAceCatalog.ModelName, loaded.Model);
+        var loaded = ModelExpertPresets.Import(path); Assert.AreEqual(6, loaded.SchemaVersion); Assert.AreEqual(MusicAceCatalog.ModelName, loaded.Model);
         Assert.IsTrue(expert.SameAs(loaded.Settings));
         Assert.Throws<InvalidDataException>(() => MusicModelVariants.Transfer(expert, MusicStudioRuntime.Variation));
         var store = new MusicProjects(Path.Combine(files.Root, "projects"));
@@ -197,7 +197,7 @@ public sealed class MusicAceTests
         var editor = new MusicLyricsEditor(); editor.Lyrics = "Слова";
         editor.ConfigureRequest("rock", "", ace: true); Assert.IsTrue(editor.CanGenerate); Assert.IsNull(editor.Usage);
         var generation = new MusicGenerationControl(); generation.SetExpertSettings(MusicAceCatalog.Defaults(), false);
-        Assert.AreEqual(Visibility.Collapsed, generation.Tuning.Visibility);
+        Assert.AreEqual(Visibility.Visible, generation.Tuning.Visibility);
         generation.ConfigureVariation(MusicStudioRuntime.Variation, MusicModelVariants.Defaults(MusicStudioRuntime.Variation));
         Assert.AreEqual(Visibility.Visible, generation.Tuning.Visibility);
         editor.ConfigureRequest("rock", MusicTextBudget.DefaultInstruction); Assert.IsFalse(editor.CanGenerate); editor.Dispose();
