@@ -38,7 +38,7 @@ public sealed class MusicProjectController
     {
         var options = _view.Generation.Options;
         var expert = _view.Generation.ExpertSettings; _modelSettings[expert.Variation] = expert.Snapshot();
-        return new() { Variation = expert.Variation, ModelRevision = MusicModelVariants.Revision(expert.Variation),
+        return new() { Model = MusicAceCatalog.IsAce(expert.Variation) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model, Variation = expert.Variation, ModelRevision = MusicModelVariants.Revision(expert.Variation),
             ModelSettings = _modelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Lyrics = _view.Editor.Lyrics, Title = options.Title, Artist = options.Artist, Comment = options.Comment,
             Variants = options.Variants, DurationSeconds = options.DurationSeconds, OutputFolder = _view.Tracks.OutputFolder,
             Expert = _view.Generation.ExpertSettings, Output = options.Output, Wishes = MusicWishSnapshot.Capture(_view.Wishes.State) };
@@ -56,7 +56,7 @@ public sealed class MusicProjectController
     private void Apply(MusicProjectSnapshot snapshot, bool lyrics, bool settings, bool restoreBank = false)
     {
         if (settings) {
-            if (snapshot.Model != MusicExpertCatalog.Model || !MusicModelVariants.Supported(snapshot.Variation)
+            if (snapshot.Model != (MusicAceCatalog.IsAce(snapshot.Variation) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model) || !MusicModelVariants.Supported(snapshot.Variation)
                 || snapshot.ModelRevision != MusicModelVariants.Revision(snapshot.Variation)) throw new InvalidDataException("Unsupported music project model.");
             _modelSettings[_view.Generation.Variation] = _view.Generation.ExpertSettings;
             if (restoreBank) foreach (var pair in snapshot.ModelSettings) _modelSettings[pair.Key] = pair.Value.Snapshot();
@@ -92,7 +92,7 @@ public sealed class MusicProjectController
     public void Open(string id)
     {
         EnsureIdle(); var project = _store.Load(id); project.Saved.Validate();
-        if (project.Saved.Model != MusicExpertCatalog.Model || !MusicModelVariants.Supported(project.Saved.Variation)
+        if (project.Saved.Model != (MusicAceCatalog.IsAce(project.Saved.Variation) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model) || !MusicModelVariants.Supported(project.Saved.Variation)
             || project.Saved.ModelRevision != MusicModelVariants.Revision(project.Saved.Variation)) throw new InvalidDataException("Unsupported music project model.");
         _modelSettings.Clear();
         Current = project; _cursor = project.Steps.Length - 1; _view.Player.Clear(); _view.Tracks.ClearTracks();

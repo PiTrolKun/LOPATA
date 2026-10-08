@@ -46,6 +46,12 @@ public sealed class MusicGenerationSession : IDisposable
         try
         {
             var token = ApplicationBackgroundOperations.ExitToken;
+            if (MusicAceCatalog.IsAce(variation)) {
+                var hardware = await MusicAceWorker.ProbeAsync(_modelsRoot, token,
+                    line => { if (!_disposed && check == _modelCheck) NativeLog(line); });
+                if (!_disposed && check == _modelCheck) { _view.Generation.SetHardware("ACE · " + hardware); _ready = true; }
+                return;
+            }
             if (variation == MusicStudioRuntime.Variation) {
                 await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(variation), token);
                 await MusicStudioRuntime.VerifyAsync(token); await MusicStudioRuntime.VerifyModelsAsync(_modelsRoot, token);
@@ -89,6 +95,11 @@ public sealed class MusicGenerationSession : IDisposable
         _ready = false; RefreshBudget();
         if (string.IsNullOrWhiteSpace(_modelsRoot)) return;
         var variation = _view.Generation.Variation;
+        if (MusicAceCatalog.IsAce(variation)) {
+            if (verifiedHardware is not null) { ++_modelCheck; _checking = false; _ready = true; _view.Generation.SetHardware("ACE · " + verifiedHardware); RefreshButtons(); }
+            else _ = CheckRuntimeAsync();
+            return;
+        }
         var cards = MusicModelVariants.Cards(_modelsRoot, variation);
         var card = cards.Single(c => c.ModelArtifactId == MusicModelVariants.Weights(variation));
         var tokenizer = variation == MusicModelVariants.Bf16 ? "qwen.tiktoken" : card.Files.Single().RelativePath;
@@ -109,7 +120,8 @@ public sealed class MusicGenerationSession : IDisposable
         if (_disposed) return;
         var request = new MusicYueRequest("", "", 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
             { Expert = _view.Generation.ExpertSettings };
-        _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, request.Instruction, request.OutputReserve, _view.Wishes.State.Instrumental);
+        _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, request.Instruction, request.OutputReserve, _view.Wishes.State.Instrumental,
+            MusicAceCatalog.IsAce(_view.Generation.Variation));
         RefreshButtons();
     }
     private async Task StartPauseAsync()
@@ -130,7 +142,7 @@ public sealed class MusicGenerationSession : IDisposable
             var options = _view.Generation.Options;
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
                 options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
-                wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment);
+                wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment, durationAutomatic: options.DurationSeconds is null);
             submitted = job = _view.Projects.Record(job, _view.Projects.Capture());
             await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             _starting = false; await RunAsync(job.Id);
@@ -148,7 +160,7 @@ public sealed class MusicGenerationSession : IDisposable
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
             if (MusicModelVariants.WorkspaceVariation(original.Variation) != original.Variation) return;
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
-                original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment);
+                original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment, original.DurationAutomatic);
             submitted = repeat = _view.Projects.Record(repeat, MusicProjectSnapshot.FromJob(repeat));
             if (original.Output is not null) await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             // Preserve the exact score used by the completed track, alongside its two seeds.
@@ -184,7 +196,7 @@ public sealed class MusicGenerationSession : IDisposable
         _worker.Log -= NativeLog; if (_worker is MusicYueWorker oldNative) oldNative.HardwareChanged -= HardwareChanged;
         if (_worker is MusicStudioWorker oldStudio) oldStudio.HardwareChanged -= HardwareChanged;
         // Re-evaluate hardware on resume, even for a job originally created on CPU.
-        _worker = job.Variation == MusicStudioRuntime.Variation ? new MusicStudioWorker()
+        _worker = MusicAceCatalog.IsAce(job.Variation) ? new MusicAceWorker() : job.Variation == MusicStudioRuntime.Variation ? new MusicStudioWorker()
             : job.Variation == MusicModelVariants.Bf16 ? new MusicBf16Worker() : new MusicYueWorker(MusicYueRuntime.DirectoryPath);
         _worker.Log += NativeLog; if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
         if (_worker is MusicStudioWorker studio) studio.HardwareChanged += HardwareChanged;
@@ -267,9 +279,9 @@ public sealed class MusicGenerationSession : IDisposable
         if (_disposed) return;
         _view.Status.AppendLog(message); var operation = _telemetry;
         MusicGenerationStage? stage = message.StartsWith("[Load]", StringComparison.Ordinal) ? MusicGenerationStage.Loading
-            : message.StartsWith("[ABC]", StringComparison.Ordinal) || message.StartsWith("[AR] Score", StringComparison.Ordinal) ? MusicGenerationStage.Planning
+            : message.StartsWith("[Plan]", StringComparison.Ordinal) || message.StartsWith("[ABC]", StringComparison.Ordinal) || message.StartsWith("[AR] Score", StringComparison.Ordinal) ? MusicGenerationStage.Planning
             : message.StartsWith("[AR]", StringComparison.Ordinal) ? MusicGenerationStage.Sequence
-            : message.StartsWith("[NAR]", StringComparison.Ordinal) || message.StartsWith("[VAE]", StringComparison.Ordinal) ? MusicGenerationStage.Sound : null;
+            : message.StartsWith("[Synth]", StringComparison.Ordinal) || message.StartsWith("[NAR]", StringComparison.Ordinal) || message.StartsWith("[VAE]", StringComparison.Ordinal) ? MusicGenerationStage.Sound : null;
         if (stage is { } value) _view.Status.Telemetry.Report(operation, value);
     }
     private void HardwareChanged(MusicHardwareChoice choice)

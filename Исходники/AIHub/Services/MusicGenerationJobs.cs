@@ -37,6 +37,7 @@ public sealed record MusicGenerationJob(string Id, string ModelsRoot, string Out
     public MusicOutputSettings? Output { get; init; }
     public string Artist { get; init; } = "";
     public string Comment { get; init; } = "";
+    public bool DurationAutomatic { get; init; }
     public string AppVersion { get; init; } = MusicSongMetadata.AppVersion;
     public string? ProjectId { get; init; }
     public string? ProjectName { get; init; }
@@ -66,7 +67,7 @@ public sealed class MusicGenerationJobs(string directory)
     }
     public MusicGenerationJob Create(string modelsRoot, string output, string title, int count, int duration, string style, string lyrics,
         MusicGenerationVariant? repeat = null, MusicExpertSettings? expert = null, MusicWishSnapshot? wishes = null,
-        MusicOutputSettings? outputSettings = null, string artist = "", string comment = "")
+        MusicOutputSettings? outputSettings = null, string artist = "", string comment = "", bool durationAutomatic = false)
     {
         if (count is < 1 or > 8) throw new ArgumentOutOfRangeException(nameof(count));
         var settings = (expert ?? new()).Snapshot(); settings.Validate();
@@ -84,13 +85,13 @@ public sealed class MusicGenerationJobs(string directory)
         var job = new MusicGenerationJob(Guid.NewGuid().ToString("N"), Path.GetFullPath(modelsRoot), output,
             outputSettings is null && string.IsNullOrWhiteSpace(title) ? name : title.Trim(), style, lyrics, duration, now, variants)
             { Schema = 2, Variation = settings.Variation, ModelRevision = MusicModelVariants.Revision(settings.Variation),
-                DecoderRevision = settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision,
-                RuntimeRevision = settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Revision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
-                RuntimePack = settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(),
+                DecoderRevision = MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.CompanionRevision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision,
+                RuntimeRevision = MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.SourceRevision : settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Revision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
+                RuntimePack = MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.RuntimeRevision : settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(), DurationAutomatic = durationAutomatic,
                 Output = outputSettings, Artist = artist.Trim(), Comment = comment };
-        if (settings.Variation == MusicModelVariants.Bf16) job = job with { Variants = job.Variants.Select(v => v with { LanguageSeed = v.SoundSeed }).ToArray() };
+        if (settings.Variation == MusicModelVariants.Bf16 || MusicAceCatalog.IsAce(settings.Variation)) job = job with { Variants = job.Variants.Select(v => v with { LanguageSeed = v.SoundSeed }).ToArray() };
         Save(job); return job;
-        int Seed(string key, int index) => settings.Integer(key) < 0 ? RandomNumberGenerator.GetInt32(1, int.MaxValue)
+        int Seed(string key, int index) => !settings.Values.ContainsKey(key) || settings.Integer(key) < 0 ? RandomNumberGenerator.GetInt32(1, int.MaxValue)
             : (int)(((long)settings.Integer(key) + index) % ((long)int.MaxValue + 1));
     }
     public string StagePath(string id, string suffix) => Path.Combine(Folder(id), Guid.NewGuid().ToString("N") + suffix);
@@ -114,17 +115,18 @@ public sealed class MusicGenerationJobs(string directory)
         var folder = Path.GetFullPath(Folder(job.Id)) + Path.DirectorySeparatorChar;
         var bf16 = job.Variation == MusicModelVariants.Bf16;
         var studio = job.Variation == MusicStudioRuntime.Variation;
-        if (job.Schema is not (1 or 2) || job.Schema == 1 && (bf16 || studio) || !MusicModelVariants.Supported(job.Variation) || job.Expert.Variation != job.Variation
+        var ace = MusicAceCatalog.IsAce(job.Variation);
+        if (job.Schema is not (1 or 2) || job.Schema == 1 && (bf16 || studio || ace) || !MusicModelVariants.Supported(job.Variation) || job.Expert.Variation != job.Variation
             || job.ModelRevision != MusicModelVariants.Revision(job.Variation)
-            || job.DecoderRevision != (bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision)
-            || job.RuntimeRevision != (studio ? MusicStudioRuntime.Revision : bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision)
-            || (studio ? job.RuntimePack != MusicStudioRuntime.Pack : bf16 ? job.RuntimePack != "pytorch-bf16" : job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack))
+            || job.DecoderRevision != (ace ? MusicAceCatalog.CompanionRevision : bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision)
+            || job.RuntimeRevision != (ace ? MusicAceCatalog.SourceRevision : studio ? MusicStudioRuntime.Revision : bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision)
+            || (ace ? job.RuntimePack != MusicAceCatalog.RuntimeRevision : studio ? job.RuntimePack != MusicStudioRuntime.Pack : bf16 ? job.RuntimePack != "pytorch-bf16" : job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack))
             || job.Variants.Length is < 1 or > 8 || !Path.IsPathFullyQualified(job.ModelsRoot)
             || !Path.IsPathFullyQualified(job.OutputFolder) || job.DurationSeconds is < 1 or > 360)
             throw new InvalidDataException("Unsupported music job.");
         foreach (var v in job.Variants)
         {
-            if (bf16 && v.LanguageSeed != v.SoundSeed) throw new InvalidDataException("BF16 requires one seed for all stages.");
+            if ((bf16 || ace) && v.LanguageSeed != v.SoundSeed) throw new InvalidDataException("This model requires one seed for all stages.");
             if (job.Output is null && (v.AdditionalPath is not null || v.AdditionalHash is not null)) throw new InvalidDataException("Unexpected duplicate in legacy music job.");
             if (v.LanguageSeed < 0 || v.SoundSeed < 0 || Path.GetDirectoryName(Path.GetFullPath(v.ResultPath)) != job.OutputFolder)
                 throw new InvalidDataException("Invalid music variant.");

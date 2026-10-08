@@ -511,3 +511,16 @@ See Инструменты/MusicStudio/README.md and the central music-studio-en
 Optional ASR models, soundfonts, React/Tauri UI and training resources are not installed.
 The separately downloaded decoder companion v9 declares CC BY-NC 4.0; its pinned model
 card and the full standard legal text are retained. No extra commercial rights are granted.
+
+## ACE-Step 1.5 XL Turbo integration (2026-10-08)
+
+Unmodified official source, MIT, commit ca1e85fe9430179831e6bc6be790c332190a3866,
+is retained in Runtime/MusicAce and verified by a SHA256 manifest. LOPATA's
+process adapter calls the upstream API; it does not implement model inference.
+Model/companions and 88 pinned Python wheels are installed separately through
+the managed downloader. Original wheel copyright/LICENSE/NOTICE extracts are
+retained in Licenses/texts/ace-*.txt and covered by music-ace-entries.json.
+Qwen companion components additionally use Apache-2.0. PyTorch hardware packs
+keep their existing separate terms. No vLLM, flash-attn or training dependencies
+are supplied. See Документы_проекта/ACE_XL_Turbo_4B_паспорт.md for revisions,
+sources, integration boundaries and what has actually been verified.

@@ -45,6 +45,7 @@ public sealed partial class ModelExpertWindow : Window
     {
         _parameters.Children.Clear();
         _pinButtons.Clear();
+        if (MusicAceCatalog.IsAce(_draft.Variation)) { RenderAce(); return; }
         if (_store.Collection == "Simple") {
             _parameters.Children.Add(MusicWishUi.Text(_l("Music.Tuning.FullSnapshot")));
             foreach (var p in MusicExpertCatalog.Parameters.Where(p => MusicModelVariants.SupportsParameter(_draft.Variation, p.Key))) _parameters.Children.Add(MusicWishUi.Text(
@@ -149,8 +150,8 @@ public sealed partial class ModelExpertWindow : Window
     private void Changed()
     {
         var reference = _selected is null ? MusicModelVariants.Defaults(_draft.Variation) : _selected.Settings;
-        _modified.Text = (_draft.SameAs(reference) ? "" : L("Modified")) +
-            " · " + string.Format(L("PinCount"), MusicTuningProfile.State(_draft).Pins.Length);
+        _modified.Text = (_draft.SameAs(reference) ? "" : L("Modified")) + (MusicAceCatalog.IsAce(_draft.Variation) ? "" :
+            " · " + string.Format(L("PinCount"), MusicTuningProfile.State(_draft).Pins.Length));
         try { _draft.Validate(); PreviewChanged?.Invoke(_draft.Snapshot()); }
         catch (System.IO.InvalidDataException) { /* Incomplete text edits do not replace the effective preview. */ }
     }

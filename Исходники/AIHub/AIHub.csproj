@@ -20,6 +20,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="..\..\Runtime\MusicAce\ca1e85fe9430179831e6bc6be790c332190a3866\**\*" Link="MusicAceRuntime\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Tools\ace-xl-models.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="..\..\Runtime\MusicStudio\v3.4.0-lopata-paths-1\**\*" Link="MusicStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -118,6 +123,7 @@
   </ItemGroup>
 
   <Target Name="CheckMusicRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\MusicAce\ca1e85fe9430179831e6bc6be790c332190a3866\manifest.json')" Text="Pinned official ACE source bundle is missing." />
     <Error Condition="!Exists('..\..\Runtime\MusicStudio\v3.4.0-lopata-paths-1\manifest.json')" Text="Pinned Studio runtime is missing. Follow Инструменты/MusicStudio/README.md." />
     <Error Condition="!Exists('..\..\Runtime\MusicAudio\FFmpeg-8.1\bundle\manifest.json')" Text="Music audio bundle is missing. Follow Инструменты/MusicAudioRuntime/README.md." />
     <Error Condition="!Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\manifest.json') Or !Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\manifest.json')" Text="Pinned YuE2 CPU/CUDA runtimes are missing. Restore the bundles documented in REESTR.md before building LOPATA." />

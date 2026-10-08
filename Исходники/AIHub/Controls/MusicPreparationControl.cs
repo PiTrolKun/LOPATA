@@ -38,7 +38,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void ShowModelMenu(Button anchor)
     {
         var menu = new ContextMenu { PlacementTarget = anchor };
-        foreach (var id in new[] { MusicStudioRuntime.Variation }) {
+        foreach (var id in new[] { MusicStudioRuntime.Variation, MusicAceCatalog.Variation }) {
             var cards = MusicModelVariants.Cards(_root, id);
             var installed = cards.All(c => c.Files.All(f => System.IO.File.Exists(System.IO.Path.Combine(c.InstallDirectory, f.RelativePath))));
             if (!installed || id == MusicStudioRuntime.Variation && !MusicStudioRuntime.Available) continue;
@@ -96,7 +96,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void DownloadConnections(int connections) => _preparation.MaximumParallelConnections = connections;
     public bool UsesArtifact(string id) => (IsBusy || _workspace?.Session.HasPendingOrRunning == true) &&
         (MusicComponentCatalog.ComponentIds.Contains(id) || MusicModelVariants.Components(MusicModelVariants.Bf16).Contains(id)
-            || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id));
+            || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id) || MusicAceCatalog.Components.Contains(id));
     public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (_workspace?.Session.HasPendingOrRunning == true) { ShowWorkspace(); return Task.CompletedTask; } IsWorkspace = false; IsModelSelection = true; Render(); return Task.CompletedTask; }
     public Task SelectModelAsync(string modelId, string variantId)
     {
@@ -158,6 +158,8 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
             if (open && _ready && _variation == MusicModelVariants.Bf16)
                 _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
                     line => { if (_status is not null) _status.Text = line; });
+            if (open && _ready && MusicAceCatalog.IsAce(_variation))
+                _preparedHardware = await MusicAceWorker.ProbeAsync(_root, operation.Token, line => { if (_status is not null) _status.Text = line; });
             operation.Token.ThrowIfCancellationRequested();
             IsWorkspace = open && _ready && !_disposed;
         }
@@ -195,12 +197,12 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
             if (_pendingExample is { } example) { _workspace.Projects.ApplyExample(example); _pendingExample = null; }
             Content = _workspace;
             var model = MusicModelVariants.Cards(_root, _workspace.Generation.Variation).Single(c => c.ModelArtifactId == MusicModelVariants.Weights(_workspace.Generation.Variation));
-            _ = _workspace.Editor.LoadTokenizerAsync(System.IO.Path.Combine(model.InstallDirectory,
+            if (!MusicAceCatalog.IsAce(_workspace.Generation.Variation)) _ = _workspace.Editor.LoadTokenizerAsync(System.IO.Path.Combine(model.InstallDirectory,
                 _workspace.Generation.Variation == MusicModelVariants.Bf16 ? "qwen.tiktoken" : model.Files.Single().RelativePath));
             return;
         }
         var panel = new StackPanel { MaxWidth = 1000, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(24) };
-        panel.Children.Add(Text(_l("Music.Preparation.Title"), true));
+        panel.Children.Add(Text(_l(MusicAceCatalog.IsAce(_variation) ? "Music.Ace.PreparationTitle" : "Music.Preparation.Title"), true));
         panel.Children.Add(Text(_l("Music.Preparation.Hint")));
         foreach (var card in MusicModelVariants.Cards(_root, _variation))
         {

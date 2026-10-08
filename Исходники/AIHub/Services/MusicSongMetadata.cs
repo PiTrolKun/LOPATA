@@ -19,20 +19,25 @@ public static class MusicSongMetadata
             ["LOPATA_VARIATION"] = job.Variation, ["LOPATA_DECODER_REVISION"] = job.DecoderRevision,
             ["LOPATA_MODEL_REVISION"] = job.ModelRevision, ["LOPATA_RUNTIME_REVISION"] = job.RuntimeRevision,
             ["LOPATA_RUNTIME_PACK"] = variant.UsedRuntimePack ?? job.RuntimePack, ["LOPATA_VERSION"] = job.AppVersion,
-            ["LOPATA_GGML_REVISION"] = job.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation ? "" : MusicYueRuntime.GgmlRevision,
+            ["LOPATA_GGML_REVISION"] = job.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation or MusicAceCatalog.Variation ? "" : MusicYueRuntime.GgmlRevision,
             ["LOPATA_AUDIO_RUNTIME"] = MusicAudioRuntime.Revision,
             ["LOPATA_LM_SEED"] = variant.LanguageSeed.ToString(culture),
             ["LOPATA_SEED"] = variant.SoundSeed.ToString(culture),
-            ["LOPATA_DURATION_REQUEST_SECONDS"] = job.DurationSeconds.ToString(culture),
+            ["LOPATA_DURATION_REQUEST_SECONDS"] = job.DurationAutomatic ? "auto" : job.DurationSeconds.ToString(culture),
             ["LOPATA_PARAMETERS"] = string.Join('\n', job.Expert.Values.Where(p => MusicModelVariants.SupportsParameter(job.Variation, p.Key)).OrderBy(p => p.Key).Select(p => p.Key + "=" +
                 (p.Key == "lm_seed" ? variant.LanguageSeed : p.Key == "seed" ? variant.SoundSeed : p.Value).ToString("R", culture))) +
-                "\ncot_mode=" + job.Expert.Cot + "\neffective_cfg=" + job.Expert.Guidance.ToString("R", culture) +
+                (MusicAceCatalog.IsAce(job.Variation) ? "\n" + string.Join('\n', job.Expert.TextValues.OrderBy(p => p.Key).Select(p => p.Key + "=" + p.Value)) : "\ncot_mode=" + job.Expert.Cot + "\neffective_cfg=" + job.Expert.Guidance.ToString("R", culture) +
                 "\nsemantic_output_limit=" + job.Expert.SequenceLimit(job.DurationSeconds).ToString(culture) +
-                "\neffective_semantic_min_tokens=" + Math.Min(job.Expert.Integer("semantic_sampling.min_tokens"), job.Expert.SequenceLimit(job.DurationSeconds)).ToString(culture)
+                "\neffective_semantic_min_tokens=" + Math.Min(job.Expert.Integer("semantic_sampling.min_tokens"), job.Expert.SequenceLimit(job.DurationSeconds)).ToString(culture))
         };
         if (job.Wishes is { } wishes) {
             result["LOPATA_WISHES"] = JsonSerializer.Serialize(wishes);
             if (wishes.Selections.TryGetValue("genres", out var genres)) result["genre"] = string.Join("; ", genres);
+        }
+        if (MusicAceCatalog.IsAce(job.Variation)) {
+            result.Remove("LOPATA_LM_SEED");
+            result["LOPATA_ACE_REQUEST"] = variant.ExecutionReceipt ?? "";
+            result["LOPATA_ADAPTER"] = "official Python API; LM=1.7B/PyTorch; task=text2music; batch=1; no lyric rewrite";
         }
         if (job.Variation == MusicModelVariants.Bf16) {
             result.Remove("LOPATA_LM_SEED");

@@ -32,6 +32,10 @@ Runtime/**
 !Runtime/*/
 !Runtime/*/README.md
 
+# Small, unmodified official ACE source bundle; no model weights or wheels.
+!Runtime/MusicAce/
+!Runtime/MusicAce/**
+
 # User-selected result folders may live inside the repo during tests
 **/AI_HUB/Core/Sessions/**
 **/AI_HUB/Debug/ModelTester/**

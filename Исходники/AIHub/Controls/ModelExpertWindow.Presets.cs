@@ -33,8 +33,8 @@ public sealed partial class ModelExpertWindow
         panel.Children.Add(actions); panel.Children.Add(_modified);
         panel.Children.Add(MusicWishUi.Text(L("PresetHint")));
         _presets.AddRange(_store.Load());
-        var state = MusicTuningProfile.State(_draft);
-        var name = _store.Collection == "Expert" ? state.ExpertPreset : state.SimplePreset?.Replace("User:", "", StringComparison.Ordinal);
+        var state = MusicAceCatalog.IsAce(_draft.Variation) ? null : MusicTuningProfile.State(_draft);
+        var name = _store.Collection == "Expert" ? state?.ExpertPreset : state?.SimplePreset?.Replace("User:", "", StringComparison.Ordinal);
         _selected = _presets.FirstOrDefault(p => p.Name == name) ?? _presets.FirstOrDefault(p => p.Settings.SameAs(_draft));
         _presetName.Text = _selected?.Name ?? "";
         Reload();
@@ -54,6 +54,7 @@ public sealed partial class ModelExpertWindow
     private string PresetName() => _presetName.Text.Trim();
     private void SelectDraft(MusicExpertSettings settings)
     {
+        if (MusicAceCatalog.IsAce(settings.Variation)) { _draft = settings.Snapshot(); return; }
         var state = MusicTuningProfile.State(settings);
         _draft = settings with { Tuning = _store.Collection == "Expert" ? state with {
             ExpertPreset = _selected?.Name, ExpertModified = false, SimpleModified = true } : state with {
@@ -70,6 +71,7 @@ public sealed partial class ModelExpertWindow
     private void Commit(List<ModelExpertPreset> next, ModelExpertPreset? selection)
     {
         _store.Save(next); _presets.Clear(); _presets.AddRange(next); _selected = selection;
+        if (MusicAceCatalog.IsAce(_draft.Variation)) { _presetName.Text = selection?.Name ?? ""; Reload(); Changed(); return; }
         var state = MusicTuningProfile.State(_draft);
         _draft = _draft with { Tuning = _store.Collection == "Expert" ? state with {
             ExpertPreset = selection?.Name, ExpertModified = selection is not null && !selection.Settings.SameAs(_draft)
@@ -110,6 +112,8 @@ public sealed partial class ModelExpertWindow
             try {
                 var preset = ModelExpertPresets.Import(file);
                 if (preset.Settings.Variation != _draft.Variation) {
+                    if (MusicAceCatalog.IsAce(preset.Settings.Variation) || MusicAceCatalog.IsAce(_draft.Variation))
+                        throw new InvalidDataException(_l("Music.Ace.NoTransfer"));
                     if (MessageBox.Show(this, L("TransferConfirm"), L("Import"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) continue;
                     preset = preset with { SchemaVersion = 3, Settings = MusicModelVariants.Transfer(preset.Settings, _draft.Variation), Recipe = null };
                 }

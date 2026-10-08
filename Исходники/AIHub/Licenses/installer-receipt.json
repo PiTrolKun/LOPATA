@@ -516,5 +516,12 @@
     "Terms": "F1A69DA44D7C207D6F1E9490B80E433E85119DA70078676B80B9D7DB0E2B5B70",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
+  },
+  {
+    "Id": "backend.ace-step",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "FACD09133944D9675B337B40C8DAC4B2DC3C850644FA4AF6EBD8E61E2AF8C7EF",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
   }
 ]

@@ -57,7 +57,7 @@ public sealed class ModelExpertPresets(string directory, string collection = "Ex
     public void SetCurrent(MusicExpertSettings settings)
     { settings.Validate(); if (settings.Variation != variation) throw new InvalidDataException("Settings variation mismatch."); Write(Path.Combine(directory, "current.json"), Create("Current", settings, "Expert")); }
     public static ModelExpertPreset Create(string name, MusicExpertSettings settings, string kind) =>
-        new(name, settings.Snapshot()) { SchemaVersion = SchemaFor(settings.Variation), Collection = kind,
+        new(name, settings.Snapshot()) { SchemaVersion = SchemaFor(settings.Variation), Collection = kind, Model = MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model,
             Recipe = MusicTuningRecipes.All.FirstOrDefault(r => r.Id == settings.Tuning?.SimplePreset)?.Metadata };
     public static ModelExpertPreset Import(string path)
     { var result = Read<ModelExpertPreset>(path); Validate(result); return result with { Settings = result.Settings.Snapshot() }; }
@@ -65,17 +65,18 @@ public sealed class ModelExpertPresets(string directory, string collection = "Ex
     { Validate(preset); Write(path, preset); }
     public static string ExportName(string name, DateTime date, string variation = MusicComponentCatalog.ModelId) => "LOPATA_Preset_" +
         string.Concat(name.Take(100).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).TrimEnd(' ', '.') +
-        "_" + MusicExpertCatalog.Model + (variation == MusicModelVariants.Bf16 ? "_BF16" : variation == MusicStudioRuntime.Variation ? "_Studio_Q8" : "") + "_" + date.ToString("yyyy-MM-dd") + ".json";
-    public static int SchemaFor(string variation) => variation == MusicComponentCatalog.ModelId ? 2 : 3;
+        "_" + (MusicAceCatalog.IsAce(variation) ? "ACE15_XL_Turbo_4B" : MusicExpertCatalog.Model + (variation == MusicModelVariants.Bf16 ? "_BF16" : variation == MusicStudioRuntime.Variation ? "_Studio_Q8" : "")) + "_" + date.ToString("yyyy-MM-dd") + ".json";
+    public static int SchemaFor(string variation) => MusicAceCatalog.IsAce(variation) ? 4 : variation == MusicComponentCatalog.ModelId ? 2 : 3;
     public static void Validate(ModelExpertPreset preset)
     {
-        if (preset.Format != "LOPATA.ModelPreset" || preset.SchemaVersion is not (1 or 2 or 3) ||
+        if (preset.Format != "LOPATA.ModelPreset" || preset.SchemaVersion is not (1 or 2 or 3 or 4) ||
+            MusicAceCatalog.IsAce(preset.Settings?.Variation ?? "") != (preset.SchemaVersion == 4) ||
             preset.Settings?.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation && preset.SchemaVersion != 3)
             throw new InvalidDataException("Unsupported preset file/schema.");
         if (preset.Collection is not ("Expert" or "Simple") || preset.SchemaVersion == 1 &&
             (preset.Collection != "Expert" || preset.Recipe is not null || preset.Settings?.Tuning is not null))
             throw new InvalidDataException("Unsupported preset collection/metadata.");
-        if (preset.Model != MusicExpertCatalog.Model || preset.ContractVersion != MusicExpertCatalog.ContractVersion)
+        if (preset.Model != (MusicAceCatalog.IsAce(preset.Settings?.Variation ?? "") ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model) || preset.ContractVersion != MusicExpertCatalog.ContractVersion)
             throw new InvalidDataException("Preset belongs to another model or parameter contract: " + preset.Model);
         if (string.IsNullOrWhiteSpace(preset.Name) || preset.Name.Length > 100 || preset.Name.Any(char.IsControl) || preset.Settings is null)
             throw new InvalidDataException("Invalid preset name/settings.");

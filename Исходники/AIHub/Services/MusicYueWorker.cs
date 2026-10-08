@@ -10,6 +10,8 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
     public string Abc { get; init; } = "";
     public int PlanTokenLimit { get; init; } = 4096;
     public MusicExpertSettings? Expert { get; init; }
+    public AIHub.Models.MusicWishSnapshot? Wishes { get; init; }
+    public bool DurationAutomatic { get; init; }
     public MusicExpertSettings EffectiveExpert => Expert ?? new();
     public int EffectivePlanLimit => Expert?.PlanLimit ?? PlanTokenLimit;
     public int SequenceLimit => EffectiveExpert.SequenceLimit(DurationSeconds);

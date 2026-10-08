@@ -20,7 +20,7 @@ internal static partial class ManagedPythonRuntime
         .Any(item => item.Entry.Id == HardwareRuntimeCatalog.PythonCpuId && item.IsAvailable);
     internal static string CpuDirectory => new ComponentManager().GetInstallDirectory(ComponentCatalog.Find(HardwareRuntimeCatalog.PythonCpuId)!);
 
-    internal static async Task<ManagedPythonSelection> ResolveAsync(string requested, CancellationToken token)
+    internal static async Task<ManagedPythonSelection> ResolveAsync(string requested, CancellationToken token, IReadOnlySet<string>? allowedProfiles = null)
     {
         if (!DevicePattern().IsMatch(requested)) throw new ArgumentException("Unknown Python device policy.", nameof(requested));
         var manager = new ComponentManager();
@@ -30,6 +30,7 @@ internal static partial class ManagedPythonRuntime
         {
             foreach (var id in GpuProfiles)
             {
+                if (allowedProfiles is not null && !allowedProfiles.Contains(id)) continue;
                 var profile = HardwareRuntimeCatalog.PythonProfile(id);
                 var family = profile == PythonRuntimeProfile.Xpu ? "xpu" : profile == PythonRuntimeProfile.Rocm721 ? "hip" : "cuda";
                 if (requested != "auto" && !requested.StartsWith(family, StringComparison.Ordinal)) continue;

@@ -18,6 +18,10 @@
 LICENSE text eol=lf
 VERSION text eol=lf
 
+# Official ACE source and license bytes are pinned by SHA256.
+Runtime/MusicAce/** -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/ace-*.txt -text -eol -whitespace
+
 Инструменты/CaptureRuntime/*.sh text eol=lf
 
 # Pinned hardware manifests/locks are byte contracts, including line endings.

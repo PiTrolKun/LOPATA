@@ -32,6 +32,7 @@ public sealed class MusicPreparationService : IMusicPreparation
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
         if (Variation == MusicStudioRuntime.Variation) await MusicStudioRuntime.VerifyAsync(token);
+        if (MusicAceCatalog.IsAce(Variation)) await MusicAceSource.VerifyAsync(token);
         var result = new List<ManagedModelArtifactCard>();
         foreach (var card in Register(root))
         {
@@ -46,6 +47,7 @@ public sealed class MusicPreparationService : IMusicPreparation
     {
         var cards = Register(root);
         await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(Variation), token);
+        if (MusicAceCatalog.IsAce(Variation)) await MusicAceSource.VerifyAsync(token);
         if (Variation == MusicStudioRuntime.Variation) await MusicStudioRuntime.VerifyAsync(token);
         var result = new List<ManagedModelArtifactCard>();
         foreach (var card in cards)

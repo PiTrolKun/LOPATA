@@ -19,10 +19,10 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     private CancellationTokenSource? _loadCancel, _countCancel;
     private string _modelPath = "", _tags = "", _instruction = MusicTextBudget.DefaultInstruction;
     private int _outputReserve, _revision;
-    private bool _disposed, _instrumental, _counting = true;
+    private bool _disposed, _instrumental, _ace, _counting = true;
     private string _stateKey = "Music.Editor.Loading";
     public MusicTextUsage? Usage { get; private set; }
-    public bool CanGenerate => !_disposed && MusicTextBudget.CanStart(Usage, _counting, _editor.Text, _instrumental);
+    public bool CanGenerate => !_disposed && (_ace ? _instrumental || !string.IsNullOrWhiteSpace(_editor.Text) : MusicTextBudget.CanStart(Usage, _counting, _editor.Text, _instrumental));
     public event EventHandler? ValidityChanged;
     public event EventHandler? SelectionChanged;
     public string Lyrics { get => _editor.Text; set => _editor.Text = value; }
@@ -113,9 +113,10 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         finally { if (_loadCancel == cancel) _loadCancel = null; }
     }
 
-    public void ConfigureRequest(string tags, string instruction, int outputReserve = 0, bool instrumental = false)
+    public void ConfigureRequest(string tags, string instruction, int outputReserve = 0, bool instrumental = false, bool ace = false)
     {
         if (outputReserve < 0) throw new ArgumentOutOfRangeException(nameof(outputReserve));
+        if (ace != _ace) { ResetTokenizer(); _ace = ace; }
         _tags = tags; _instruction = instruction; _outputReserve = outputReserve; _instrumental = instrumental; InvalidateCounts();
     }
     // Every future launch handler must take this snapshot, not read the textbox directly.
@@ -126,6 +127,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     {
         if (_disposed) return;
         _revision++; _countCancel?.Cancel(); Usage = null; _counting = true;
+        if (_ace) { _debounce.Stop(); _counting = false; _stateKey = "Music.Ace.EditorHint"; UpdateLabels(); ValidityChanged?.Invoke(this, EventArgs.Empty); return; }
         _stateKey = _tokenizer is null ? _loadCancel is null ? "Music.Editor.Unavailable" : "Music.Editor.Loading" : "Music.Editor.Counting";
         UpdateLabels(); ValidityChanged?.Invoke(this, EventArgs.Empty);
         _debounce.Stop(); if (_tokenizer is not null) _debounce.Start();
@@ -161,6 +163,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     private void UpdateLabels()
     {
         _title.Text = _l("Music.Editor.Title");
+        _context.Visibility = _weight.Visibility = _ace ? Visibility.Collapsed : Visibility.Visible;
         AutomationProperties.SetName(_editor, _title.Text);
         _context.Text = string.Format(_l("Music.Editor.Context"), Usage?.TotalTokens.ToString("N0") ?? "—", MusicTextBudget.ContextSize.ToString("N0"));
         _weight.Text = string.Format(_l("Music.Editor.Weight"), Usage?.LyricsTokens.ToString("N0") ?? "—", Usage?.LyricsBudget.ToString("N0") ?? "—");
