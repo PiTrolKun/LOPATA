@@ -41,7 +41,8 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         _editor.Focus(); return true;
     }
 
-    public MusicLyricsEditor() : this((path, token) => Task.Run<IMusicTokenizer>(() => new MusicTokenizer(MusicTokenizerMetadata.Read(path, token)), token)) { }
+    public MusicLyricsEditor() : this((path, token) => Task.Run<IMusicTokenizer>(() => path.EndsWith(".tiktoken", StringComparison.Ordinal)
+        ? new MusicBf16Tokenizer(path, token) : new MusicTokenizer(MusicTokenizerMetadata.Read(path, token)), token)) { }
     public MusicLyricsEditor(Func<string, CancellationToken, Task<IMusicTokenizer>> loader)
     {
         _loader = loader;

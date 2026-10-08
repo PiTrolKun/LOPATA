@@ -25,12 +25,12 @@ public sealed partial class ModelExpertWindow : Window
     public MusicExpertSettings Result { get; private set; }
     public ModelExpertWindow(MusicExpertSettings settings, Func<string, string> localize, ModelExpertPresets? store = null)
     {
-        _l = localize; _store = store ?? ModelExpertPresets.Default;
+        _l = localize; _store = store ?? ModelExpertPresets.For(settings.Variation);
         _draft = settings.Snapshot(); Result = settings.Snapshot();
-        MusicWishUi.PrepareWindow(this, (_store.Collection == "Simple" ? _l("Music.Tuning.Library") : L("Title")) + " · " + MusicExpertCatalog.Model, "Music.Expert.Window", 880);
+        MusicWishUi.PrepareWindow(this, (_store.Collection == "Simple" ? _l("Music.Tuning.Library") : L("Title")) + " · " + MusicModelVariants.Name(settings.Variation), "Music.Expert.Window", 880);
         var root = new DockPanel { Margin = new(16), LastChildFill = true };
         var footer = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
-        footer.Children.Add(MusicWishUi.Button(L("Reset"), "Music.Expert.Reset", () => { _draft = new(); _selected = null; Reload(); Render(); Changed(); }));
+        footer.Children.Add(MusicWishUi.Button(L("Reset"), "Music.Expert.Reset", () => { _draft = MusicModelVariants.Defaults(_draft.Variation); _selected = null; Reload(); Render(); Changed(); }));
         footer.Children.Add(MusicWishUi.Button(L("Apply"), "Music.Expert.Apply", Apply));
         footer.Children.Add(MusicWishUi.Button(L("Cancel"), "Music.Expert.Cancel", () => { DialogResult = false; }));
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
@@ -47,13 +47,13 @@ public sealed partial class ModelExpertWindow : Window
         _pinButtons.Clear();
         if (_store.Collection == "Simple") {
             _parameters.Children.Add(MusicWishUi.Text(_l("Music.Tuning.FullSnapshot")));
-            foreach (var p in MusicExpertCatalog.Parameters) _parameters.Children.Add(MusicWishUi.Text(
+            foreach (var p in MusicExpertCatalog.Parameters.Where(p => MusicModelVariants.SupportsParameter(_draft.Variation, p.Key))) _parameters.Children.Add(MusicWishUi.Text(
                 L("Parameter." + ParameterKey(p.Key)) + " (" + p.Key + "): " + Number(_draft.Get(p.Key))));
             if (_selected?.Recipe is { } recipe) _parameters.Children.Add(MusicWishUi.Text(recipe.Source + "\n" + recipe.Adaptation));
             return;
         }
         _parameters.Children.Add(MusicWishUi.Text(L("Warning")));
-        foreach (var group in MusicExpertCatalog.Parameters.GroupBy(p => p.Group))
+        foreach (var group in MusicExpertCatalog.Parameters.Where(p => MusicModelVariants.SupportsParameter(_draft.Variation, p.Key)).GroupBy(p => p.Group))
         {
             _parameters.Children.Add(MusicWishUi.Text(L("Group." + group.Key), true));
             foreach (var parameter in group) AddParameter(parameter);
@@ -148,7 +148,7 @@ public sealed partial class ModelExpertWindow : Window
     }
     private void Changed()
     {
-        var reference = _selected is null ? new MusicExpertSettings() : _selected.Settings;
+        var reference = _selected is null ? MusicModelVariants.Defaults(_draft.Variation) : _selected.Settings;
         _modified.Text = (_draft.SameAs(reference) ? "" : L("Modified")) +
             " · " + string.Format(L("PinCount"), MusicTuningProfile.State(_draft).Pins.Length);
         try { _draft.Validate(); PreviewChanged?.Invoke(_draft.Snapshot()); }

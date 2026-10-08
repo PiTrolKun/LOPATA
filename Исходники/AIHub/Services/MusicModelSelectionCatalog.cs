@@ -8,7 +8,7 @@ public static class MusicModelSelectionCatalog
 {
     public static IReadOnlyList<MusicModelCandidate> All { get; } = Array.AsReadOnly(new[]
     {
-        Model("yue2", "YuE2", V("q8", "Q8", true), V("bf16", "BF16"), V("q6-q5", "Q6Q5"), V("q4", "Q4"), V("community", "Community")),
+        Model("yue2", "YuE2", V("q8", "Q8", true), V("bf16", "BF16", true)),
         Model("ace-step", "ACE-Step 1.5", V("xl", "XL"), V("sft", "SFT"), V("turbo", "Turbo"), V("bf16", "BF16"), V("community", "Community")),
         Model("diffrhythm", "DiffRhythm 2", V("base", "Base"), V("hybrid", "Hybrid")),
         Model("heartmula", "HeartMuLa", V("3b", "3B")),

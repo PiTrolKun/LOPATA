@@ -10,13 +10,15 @@ public sealed class MusicGenerationSession : IDisposable
 {
     private readonly MusicWorkspaceControl _view;
     private readonly MusicGenerationJobs _jobs;
-    private MusicYueWorker _worker = new(MusicYueRuntime.DirectoryPath);
+    private IMusicYueWorker _worker = new MusicYueWorker(MusicYueRuntime.DirectoryPath);
     private readonly BackgroundOperationController? _controller;
     private string _modelsRoot = "";
     private Func<string, string> _l = key => key;
     private CancellationTokenSource? _cancel;
     private Guid _telemetry;
     private bool _ready, _starting, _working, _disposed, _checking, _cancelRequested;
+    private int _modelCheck;
+    public event Action? StateChanged;
 
     public MusicGenerationSession(MusicWorkspaceControl view, MusicGenerationJobs? jobs = null)
     {
@@ -27,7 +29,7 @@ public sealed class MusicGenerationSession : IDisposable
         _view.Editor.ValidityChanged += ValidityChanged;
         if (_controller is not null) _controller.Changed += ControllerChanged;
         _worker.Log += NativeLog;
-        _worker.HardwareChanged += HardwareChanged;
+        if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
         _view.Player.ConfigureRepeat(track => _ready && !_working && !_starting && _controller?.HasPending != true && track.JobId is not null,
             track => { _ = RepeatAsync(track); });
     }
@@ -39,10 +41,17 @@ public sealed class MusicGenerationSession : IDisposable
     }
     private async Task CheckRuntimeAsync()
     {
+        var check = ++_modelCheck; var variation = _view.Generation.Variation;
         _checking = true; _ready = false;
         try
         {
             var token = ApplicationBackgroundOperations.ExitToken;
+            if (variation == MusicModelVariants.Bf16) {
+                var hardware = await MusicBf16Worker.ProbeAsync(_modelsRoot, token,
+                    line => { if (!_disposed && check == _modelCheck) NativeLog(line); });
+                if (!_disposed && check == _modelCheck) { _view.Generation.SetHardware("BF16 · " + hardware.Split(':')[0]); _ready = true; }
+                return;
+            }
             var directory = MusicYueRuntime.DirectoryPath;
             await ComponentLicenseGate.EnsureAsync(MusicYueRuntime.IsCuda(directory)
                 ? [MusicYueRuntime.ComponentId, MusicYueRuntime.CudaComponentId, MusicYueRuntime.VulkanComponentId, .. MusicComponentCatalog.ComponentIds]
@@ -54,19 +63,36 @@ public sealed class MusicGenerationSession : IDisposable
                 { Expert = _view.Generation.ExpertSettings };
             var choice = await MusicHardwareProbe.CheckAsync(directory, Artifact(MusicComponentCatalog.ModelId),
                 Artifact(MusicComponentCatalog.DecoderId), request, true, token, NativeLog);
-            if (!_disposed) { HardwareChanged(choice); _ready = true; }
+            if (!_disposed && check == _modelCheck) { HardwareChanged(choice); _ready = true; }
         }
         catch (InsufficientMemoryException error)
         {
             // Entry is an estimate for the current duration; a shorter request may fit. Execution checks again.
-            if (!_disposed) { _ready = true; _view.Generation.SetHardware(_l("Music.Hardware.MemoryLow")); NativeLog("[Hardware] " + error.Message); }
+            if (!_disposed && check == _modelCheck) { _ready = true; _view.Generation.SetHardware(_l("Music.Hardware.MemoryLow")); NativeLog("[Hardware] " + error.Message); }
         }
-        catch (Exception error) { if (!_disposed) _view.Status.AppendLog(_l("Music.Generation.RuntimeMissing") + " " + error.Message); }
-        finally { _checking = false; if (!_disposed) RefreshButtons(); }
+        catch (Exception error) { if (!_disposed && check == _modelCheck) _view.Status.AppendLog(_l("Music.Generation.RuntimeMissing") + " " + error.Message); }
+        finally { if (check == _modelCheck) { _checking = false; if (!_disposed) RefreshButtons(); } }
+    }
+    public void ModelChanged(string? verifiedHardware = null)
+    {
+        _ready = false; RefreshBudget();
+        if (string.IsNullOrWhiteSpace(_modelsRoot)) return;
+        var variation = _view.Generation.Variation;
+        var cards = MusicModelVariants.Cards(_modelsRoot, variation);
+        var card = cards.Single(c => c.ModelArtifactId == variation);
+        var tokenizer = variation == MusicModelVariants.Bf16 ? "qwen.tiktoken" : card.Files.Single().RelativePath;
+        _view.Editor.ResetTokenizer(); _ = _view.Editor.LoadTokenizerAsync(Path.Combine(card.InstallDirectory, tokenizer));
+        if (verifiedHardware is not null) {
+            ++_modelCheck; _checking = false; _ready = true;
+            _view.Generation.SetHardware("BF16 · " + verifiedHardware.Split(':')[0]); RefreshButtons(); return;
+        }
+        _ = CheckRuntimeAsync();
     }
     private void WishesChanged(object? sender, EventArgs args) => RefreshBudget();
     private void ValidityChanged(object? sender, EventArgs args) => RefreshButtons();
     public bool HasPendingOrRunning => _working || _controller is { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind };
+    public bool CanChangeModel => !_starting && !_working &&
+        (_controller?.HasPending != true || _controller.State?.Phase == BackgroundOperationPhase.Paused);
     private void RefreshBudget()
     {
         if (_disposed) return;
@@ -137,9 +163,10 @@ public sealed class MusicGenerationSession : IDisposable
         var job = _jobs.Load(id);
         if (restored is not null) job = _view.Projects.RestoreJob(job);
         _working = true;
-        _worker.Log -= NativeLog; _worker.HardwareChanged -= HardwareChanged;
+        _worker.Log -= NativeLog; if (_worker is MusicYueWorker oldNative) oldNative.HardwareChanged -= HardwareChanged;
         // Re-evaluate hardware on resume, even for a job originally created on CPU.
-        _worker = new(MusicYueRuntime.DirectoryPath); _worker.Log += NativeLog; _worker.HardwareChanged += HardwareChanged;
+        _worker = job.Variation == MusicModelVariants.Bf16 ? new MusicBf16Worker() : new MusicYueWorker(MusicYueRuntime.DirectoryPath);
+        _worker.Log += NativeLog; if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
         _cancel = CancellationTokenSource.CreateLinkedTokenSource(token); RefreshButtons();
         var runner = new MusicGenerationRunner(_jobs, _worker);
         runner.Stage += stage => _view.Status.Telemetry.Report(_telemetry, stage);
@@ -212,6 +239,7 @@ public sealed class MusicGenerationSession : IDisposable
         _view.Generation.UpdateState(_view.Editor.CanGenerate && _controller?.HasPending != true && !_starting, busy, paused, _ready,
             _starting || _cancelRequested || own && state!.Phase == BackgroundOperationPhase.Pausing);
         _view.Player.RefreshRepeat();
+        StateChanged?.Invoke();
     }
     private void NativeLog(string message)
     {
@@ -252,6 +280,6 @@ public sealed class MusicGenerationSession : IDisposable
         _view.Editor.ValidityChanged -= ValidityChanged; _view.Wishes.Changed -= WishesChanged;
         _view.Generation.OptionsChanged -= RefreshBudget; if (_controller is not null) _controller.Changed -= ControllerChanged;
         _worker.Log -= NativeLog;
-        _worker.HardwareChanged -= HardwareChanged;
+        if (_worker is MusicYueWorker native) native.HardwareChanged -= HardwareChanged;
     }
 }

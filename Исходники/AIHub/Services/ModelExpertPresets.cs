@@ -19,12 +19,15 @@ public sealed record ModelExpertPreset([property: JsonRequired] string Name, [pr
 }
 
 /// <summary>Model-aware, bounded JSON exchange. Imports never resolve code, paths or dependencies.</summary>
-public sealed class ModelExpertPresets(string directory, string collection = "Expert")
+public sealed class ModelExpertPresets(string directory, string collection = "Expert", string variation = MusicComponentCatalog.ModelId)
 {
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow };
     public static ModelExpertPresets Default { get; } = new(Path.Combine(AppDataPaths.BaseDirectory, "Music", "Expert", MusicExpertCatalog.Model));
     public static ModelExpertPresets Simple { get; } = new(Path.Combine(AppDataPaths.BaseDirectory, "Music", "Simple", MusicExpertCatalog.Model), "Simple");
+    public static ModelExpertPresets For(string variation, string collection = "Expert") => variation == MusicComponentCatalog.ModelId
+        ? collection == "Simple" ? Simple : Default
+        : new(Path.Combine(AppDataPaths.BaseDirectory, "Music", collection, variation), collection, variation);
     public string Collection => collection;
     private string Library => Path.Combine(directory, "presets.json");
     public IReadOnlyList<ModelExpertPreset> Load()
@@ -46,24 +49,27 @@ public sealed class ModelExpertPresets(string directory, string collection = "Ex
     public MusicExpertSettings Current()
     {
         var path = Path.Combine(directory, "current.json");
-        if (!File.Exists(path)) return new();
-        var preset = Read<ModelExpertPreset>(path); Validate(preset); return preset.Settings.Snapshot();
+        if (!File.Exists(path)) return MusicModelVariants.Defaults(variation);
+        var preset = Read<ModelExpertPreset>(path); Validate(preset);
+        if (preset.Settings.Variation != variation) throw new InvalidDataException("Preset belongs to another variation.");
+        return preset.Settings.Snapshot();
     }
     public void SetCurrent(MusicExpertSettings settings)
-    { settings.Validate(); Write(Path.Combine(directory, "current.json"), Create("Current", settings, "Expert")); }
+    { settings.Validate(); if (settings.Variation != variation) throw new InvalidDataException("Settings variation mismatch."); Write(Path.Combine(directory, "current.json"), Create("Current", settings, "Expert")); }
     public static ModelExpertPreset Create(string name, MusicExpertSettings settings, string kind) =>
-        new(name, settings.Snapshot()) { SchemaVersion = 2, Collection = kind,
+        new(name, settings.Snapshot()) { SchemaVersion = settings.Variation == MusicModelVariants.Bf16 ? 3 : 2, Collection = kind,
             Recipe = MusicTuningRecipes.All.FirstOrDefault(r => r.Id == settings.Tuning?.SimplePreset)?.Metadata };
     public static ModelExpertPreset Import(string path)
     { var result = Read<ModelExpertPreset>(path); Validate(result); return result with { Settings = result.Settings.Snapshot() }; }
     public static void Export(string path, ModelExpertPreset preset)
     { Validate(preset); Write(path, preset); }
-    public static string ExportName(string name, DateTime date) => "LOPATA_Preset_" +
+    public static string ExportName(string name, DateTime date, string variation = MusicComponentCatalog.ModelId) => "LOPATA_Preset_" +
         string.Concat(name.Take(100).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).TrimEnd(' ', '.') +
-        "_" + MusicExpertCatalog.Model + "_" + date.ToString("yyyy-MM-dd") + ".json";
+        "_" + MusicExpertCatalog.Model + (variation == MusicModelVariants.Bf16 ? "_BF16" : "") + "_" + date.ToString("yyyy-MM-dd") + ".json";
     public static void Validate(ModelExpertPreset preset)
     {
-        if (preset.Format != "LOPATA.ModelPreset" || preset.SchemaVersion is not (1 or 2))
+        if (preset.Format != "LOPATA.ModelPreset" || preset.SchemaVersion is not (1 or 2 or 3) ||
+            preset.Settings?.Variation == MusicModelVariants.Bf16 && preset.SchemaVersion != 3)
             throw new InvalidDataException("Unsupported preset file/schema.");
         if (preset.Collection is not ("Expert" or "Simple") || preset.SchemaVersion == 1 &&
             (preset.Collection != "Expert" || preset.Recipe is not null || preset.Settings?.Tuning is not null))
@@ -76,7 +82,7 @@ public sealed class ModelExpertPresets(string directory, string collection = "Ex
         preset.Recipe?.Validate();
     }
     public void CheckCollection(ModelExpertPreset preset)
-    { if (preset.Collection != collection) throw new InvalidDataException("Preset collection: " + preset.Collection + "; expected " + collection + "."); }
+    { if (preset.Collection != collection || preset.Settings.Variation != variation) throw new InvalidDataException("Preset collection or model variation mismatch."); }
     private static T Read<T>(string path)
     {
         if (new FileInfo(path).Length > 1_048_576) throw new InvalidDataException("Preset file exceeds 1 MB.");

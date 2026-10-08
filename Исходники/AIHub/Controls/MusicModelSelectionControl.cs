@@ -51,7 +51,7 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         var chosen = _choices.GetValueOrDefault(model.Id, model.Variants[0].Id);
         selector.SelectedIndex = Math.Max(0, model.Variants.ToList().FindIndex(v => v.Id == chosen));
         body.Children.Add(selector);
-        body.Children.Add(Text(_l(model.DescriptionKey)));
+        var description = Text(_l(model.DescriptionKey)); body.Children.Add(description);
         var assessment = new StackPanel();
         if (model.Id == "yue2")
         {
@@ -69,8 +69,14 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         {
             var variant = (MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag;
             _choices[model.Id] = variant.Id;
-            assessment.Visibility = model.Id == "yue2" && variant.Id == "q8"
+            assessment.Visibility = model.Id == "yue2" && variant.Id is "q8" or "bf16"
                 ? Visibility.Visible : Visibility.Collapsed;
+            if (model.Id == "yue2") {
+                var prefix = "Music.Models.yue2." + variant.Id + ".";
+                assessment.Children.Clear();
+                foreach (var key in new[] { "Pros", "Cons", "Memory" }) assessment.Children.Add(Text(_l(prefix + key)));
+                description.Text = _l(variant.Id == "bf16" ? prefix + "Description" : model.DescriptionKey);
+            }
             status.Text = _l(variant.Connected ? "Music.Models.Connected" : "Music.Models.Planned");
             open.Content = _l(variant.Connected ? "Music.Models.Open" : "Music.Models.NotConnected");
             open.IsEnabled = variant.Connected;
@@ -104,8 +110,9 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         {
             foreach (var border in examples) {
                 if (border.Child is MusicExamplePlayerControl old) { old.Dispose(); _players.Remove(old); }
-                if (model.Id == "yue2" && variant.Id == "q8") {
-                    var entry = MusicExamples.All.Single(e => e.Cloud == (Grid.GetColumn(border) == 2));
+                if (model.Id == "yue2" && variant.Id is "q8" or "bf16") {
+                    var cloud = Grid.GetColumn(border) == 2;
+                    var entry = MusicExamples.All.Single(e => cloud ? e.Cloud : !e.Cloud && e.Variation == MusicModelVariants.Normalize(variant.Id));
                     var player = new MusicExamplePlayerControl(entry, _l, () => CanApplyExample());
                     player.Playing += () => { foreach (var other in _players.Where(p => p != player)) other.Pause(); };
                     player.ApplyRequested += snapshot => ExampleRequested?.Invoke(snapshot) ?? Task.CompletedTask;

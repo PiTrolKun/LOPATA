@@ -39,6 +39,15 @@ public sealed class MusicGenerationControl : UserControl
     public MusicTuningControl Tuning { get; } = new();
     private readonly DispatcherTimer _saveTuning = new() { Interval = TimeSpan.FromMilliseconds(300) };
     public MusicExpertSettings ExpertSettings => _expertSettings.Snapshot();
+    public string Variation => _expertSettings.Variation;
+    public void ConfigureVariation(string variation, MusicExpertSettings? settings = null)
+    {
+        if (variation == Variation && settings is null) return;
+        var next = settings ?? ModelExpertPresets.For(variation).Current(); next.Validate();
+        if (next.Variation != variation) throw new System.IO.InvalidDataException("Settings variation mismatch.");
+        FlushTuning(); Tuning.ConfigureVariation(variation);
+        SetExpertSettings(next, false);
+    }
     private readonly TextBlock _heading = MusicAudioUi.Text(15), _titleLabel = MusicAudioUi.Text(12),
         _countLabel = MusicAudioUi.Text(12), _durationLabel = MusicAudioUi.Text(12), _readiness = MusicAudioUi.Text(11);
     private readonly Grid _settings = new();
@@ -210,13 +219,14 @@ public sealed class MusicGenerationControl : UserControl
     private void FlushTuning() { if (_saveTuning.IsEnabled) { _saveTuning.Stop(); PersistTuning(); } }
     public void SetExpertSettings(MusicExpertSettings settings, bool persist = true)
     {
+        if (settings.Variation != Variation) { settings.Validate(); FlushTuning(); Tuning.ConfigureVariation(settings.Variation); }
         settings.Validate(); _expertSettings = settings.Snapshot(); _expertLoadError = null;
         Tuning.Refresh(_expertSettings); OptionsChanged?.Invoke();
         if (persist) { _saveTuning.Stop(); _saveTuning.Start(); }
     }
     private void PersistTuning()
     {
-        try { ModelExpertPresets.Default.SetCurrent(_expertSettings); }
+        try { ModelExpertPresets.For(Variation).SetCurrent(_expertSettings); }
         catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) {
             _expertLoadError = error; UpdateCaption(); OptionsChanged?.Invoke();
         }

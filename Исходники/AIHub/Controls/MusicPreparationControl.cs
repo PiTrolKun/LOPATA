@@ -6,6 +6,8 @@ using AIHub.Services;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using ProgressBar = System.Windows.Controls.ProgressBar;
+using ContextMenu = System.Windows.Controls.ContextMenu;
+using MenuItem = System.Windows.Controls.MenuItem;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace AIHub.Controls;
@@ -28,6 +30,41 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     private Action<string> _saveOutputFolder = _ => { };
     public bool IsBusy { get; private set; }
     public bool IsWorkspace { get; private set; }
+    private string _variation = MusicComponentCatalog.ModelId;
+    private bool _applySelection;
+    private string? _preparedHardware;
+    public event Action? WorkspaceChanged;
+    public bool CanChangeModel => IsWorkspace && !IsBusy && _workspace?.Session.CanChangeModel == true;
+    public void ShowModelMenu(Button anchor)
+    {
+        var menu = new ContextMenu { PlacementTarget = anchor };
+        foreach (var id in new[] { MusicComponentCatalog.ModelId, MusicModelVariants.Bf16 }) {
+            var cards = MusicModelVariants.Cards(_root, id);
+            var installed = cards.All(c => c.Files.All(f => System.IO.File.Exists(System.IO.Path.Combine(c.InstallDirectory, f.RelativePath))));
+            if (!installed) continue;
+            var item = new MenuItem { Header = MusicModelVariants.Name(id), IsCheckable = true,
+                IsChecked = _workspace?.Generation.Variation == id, IsEnabled = installed && CanChangeModel };
+            item.Click += async (_, _) => {
+                var previous = _variation; IsBusy = true; WorkspaceChanged?.Invoke();
+                try {
+                    _preparation.Variation = id;
+                    var checkedCards = await _preparation.CheckAsync(_root, null, ApplicationBackgroundOperations.ExitToken);
+                    if (!checkedCards.All(c => c.Status == ManagedModelStatuses.Installed)) throw new System.IO.IOException(_l("Music.Preparation.Missing"));
+                    var hardware = id == MusicModelVariants.Bf16 ? await MusicBf16Worker.ProbeAsync(_root, ApplicationBackgroundOperations.ExitToken,
+                        line => _workspace!.Status.AppendLog(line)) : null;
+                    _workspace!.Projects.SwitchModel(id, hardware); _variation = id; _cards = checkedCards;
+                }
+                catch (Exception error) { _preparation.Variation = previous; _workspace?.Status.AppendLog(error.Message); }
+                finally { IsBusy = false; WorkspaceChanged?.Invoke(); }
+            };
+            menu.Items.Add(item);
+        }
+        menu.Items.Add(new Separator());
+        var all = new MenuItem { Header = _l("Music.Models.All"), IsEnabled = CanChangeModel };
+        all.Click += (_, _) => { IsWorkspace = false; IsModelSelection = true; Render(); };
+        menu.Items.Add(all);
+        anchor.ContextMenu = menu; menu.IsOpen = true;
+    }
     public bool CanContinue => _ready && !IsModelSelection && !IsBusy && !_disposed;
     public MusicPreparationControl() : this(new MusicPreparationService()) { }
     public MusicPreparationControl(IMusicPreparation preparation)
@@ -56,23 +93,27 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void ConfigureOutput(string folder, Action<string> save)
     { _outputFolder = folder; _saveOutputFolder = save; _workspace?.ConfigureOutput(folder, save); }
     public void DownloadConnections(int connections) => _preparation.MaximumParallelConnections = connections;
-    public bool UsesArtifact(string id) => (IsBusy || _workspace?.Session.HasPendingOrRunning == true) && MusicComponentCatalog.ComponentIds.Contains(id);
+    public bool UsesArtifact(string id) => (IsBusy || _workspace?.Session.HasPendingOrRunning == true) &&
+        (MusicComponentCatalog.ComponentIds.Contains(id) || MusicModelVariants.Components(MusicModelVariants.Bf16).Contains(id));
     public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (_workspace?.Session.HasPendingOrRunning == true) { ShowWorkspace(); return Task.CompletedTask; } IsWorkspace = false; IsModelSelection = true; Render(); return Task.CompletedTask; }
     public Task SelectModelAsync(string modelId, string variantId)
     {
         if (_disposed || IsBusy || !MusicModelSelectionCatalog.CanOpen(modelId, variantId)) return Task.CompletedTask;
         _pendingExample = null;
+        _variation = MusicModelVariants.Normalize(variantId); _preparation.Variation = _variation;
+        _applySelection = true;
         IsModelSelection = false; return CheckAsync();
     }
     private async Task ApplyExampleAsync(MusicProjectSnapshot snapshot)
     {
         if (_disposed || IsBusy || _workspace?.Session.HasPendingOrRunning == true) return;
         snapshot.Validate(); _pendingExample = snapshot.Snapshot(); IsModelSelection = false;
+        _variation = snapshot.Variation; _preparation.Variation = _variation;
         await CheckAsync();
         if (CanContinue) await ContinueAsync();
     }
     private void ShowWorkspace()
-    { if (_cards.Count == 0) _cards = MusicComponentCatalog.CreateCards(_root); IsModelSelection = false; IsWorkspace = true; Render(); }
+    { if (_cards.Count == 0) _cards = MusicModelVariants.Cards(_root, _variation); IsModelSelection = false; IsWorkspace = true; Render(); }
     public Task ResumeGenerationAsync(BackgroundOperationState state, CancellationToken token)
     { ShowWorkspace(); return _workspace!.Session.ResumeAsync(state, token); }
     public void ViewGenerationResult(string id)
@@ -93,6 +134,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         IsWorkspace = false; IsModelSelection = false; _ready = false;
         if (string.IsNullOrWhiteSpace(_root)) { _statusKey = "Music.StorageRequired"; Render(); return; }
         IsBusy = true; _cancel = new();
+        _preparedHardware = null;
         var operation = _cancel;
         _statusKey = "Music.Preparation.Checking"; Render();
         var progress = new Progress<ManagedModelDownloadProgress>(p =>
@@ -109,8 +151,12 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
                 ? await _preparation.PrepareAsync(_root, download, progress, operation.Token)
                 : await _preparation.CheckAsync(_root, progress, operation.Token);
             operation.Token.ThrowIfCancellationRequested();
-            _ready = MusicComponentCatalog.IsComplete(_cards);
+            _ready = _cards.Count == MusicModelVariants.Components(_variation).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             _statusKey = _ready ? "Music.Preparation.Ready" : "Music.Preparation.Missing";
+            if (open && _ready && _variation == MusicModelVariants.Bf16)
+                _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
+                    line => { if (_status is not null) _status.Text = line; });
+            operation.Token.ThrowIfCancellationRequested();
             IsWorkspace = open && _ready && !_disposed;
         }
         catch (OperationCanceledException) { _statusKey = "Music.Canceled"; }
@@ -131,23 +177,30 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     private void Render()
     {
         if (_disposed) return;
+        WorkspaceChanged?.Invoke();
         if (IsModelSelection) { _models.Localize(_l); Content = _models; return; }
         if (IsWorkspace)
         {
-            _workspace ??= new MusicWorkspaceControl();
+            if (_workspace is null) {
+                _workspace = new MusicWorkspaceControl();
+                _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };
+                _workspace.Session.StateChanged += () => WorkspaceChanged?.Invoke();
+            }
             _workspace.ConfigureOutput(_outputFolder, _saveOutputFolder);
             _workspace.Localize(_l);
             _workspace.ConfigureGeneration(_root, _l);
+            if (_applySelection) { _workspace.Projects.SwitchModel(_preparation.Variation, _preparedHardware); _variation = _workspace.Generation.Variation; _applySelection = false; _preparedHardware = null; }
             if (_pendingExample is { } example) { _workspace.Projects.ApplyExample(example); _pendingExample = null; }
             Content = _workspace;
-            var model = _cards.Single(c => c.ModelArtifactId == MusicComponentCatalog.ModelId);
-            _ = _workspace.Editor.LoadTokenizerAsync(System.IO.Path.Combine(model.InstallDirectory, model.Files.Single().RelativePath));
+            var model = MusicModelVariants.Cards(_root, _workspace.Generation.Variation).Single(c => c.ModelArtifactId == _workspace.Generation.Variation);
+            _ = _workspace.Editor.LoadTokenizerAsync(System.IO.Path.Combine(model.InstallDirectory,
+                _workspace.Generation.Variation == MusicModelVariants.Bf16 ? "qwen.tiktoken" : model.Files.Single().RelativePath));
             return;
         }
         var panel = new StackPanel { MaxWidth = 1000, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(24) };
         panel.Children.Add(Text(_l("Music.Preparation.Title"), true));
         panel.Children.Add(Text(_l("Music.Preparation.Hint")));
-        foreach (var card in MusicComponentCatalog.CreateCards(_root))
+        foreach (var card in MusicModelVariants.Cards(_root, _variation))
         {
             var current = _cards.FirstOrDefault(c => c.ModelArtifactId == card.ModelArtifactId);
             panel.Children.Add(Text(card.DisplayName + " · " + $"{card.TotalBytes / 1e9:0.00} GB" + " — " +

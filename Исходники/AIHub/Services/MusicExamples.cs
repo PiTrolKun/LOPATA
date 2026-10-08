@@ -10,6 +10,7 @@ namespace AIHub.Services;
 public sealed record MusicExample(string Id, string File, string Title, bool Cloud, string Sha256,
     long Bytes, double DurationSeconds, string Request, string Genre)
 {
+    public string Variation { get; init; } = MusicComponentCatalog.ModelId;
     public string Path => System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "MusicExamples", File);
 }
 
@@ -22,20 +23,23 @@ public sealed record MusicExampleMetadata(Dictionary<string, string> Tags, strin
     {
         string Required(string key) => Tags.TryGetValue(key, out var value) && value.Length > 0
             ? value : throw new InvalidDataException("Missing audio metadata: " + key);
-        if (Required("LOPATA_MODEL") != "YuE2 3B Q8_0" || Required("LOPATA_MODEL_REVISION") != MusicComponentCatalog.Revision)
+        var variation = Tags.GetValueOrDefault("LOPATA_VARIATION", MusicComponentCatalog.ModelId);
+        if (!MusicModelVariants.Supported(variation) || Required("LOPATA_MODEL") != MusicModelVariants.Name(variation)
+            || Required("LOPATA_MODEL_REVISION") != MusicModelVariants.Revision(variation))
             throw new InvalidDataException("Unsupported example model.");
         var raw = Required("LOPATA_PARAMETERS").Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Select(line => line.Split('=', 2)).ToDictionary(p => p[0], p => p.Length == 2 ? p[1] : "", StringComparer.Ordinal);
-        var values = new Dictionary<string, double>(StringComparer.Ordinal);
-        foreach (var parameter in MusicExpertCatalog.Parameters) {
+        var values = MusicModelVariants.Defaults(variation).Values;
+        foreach (var parameter in MusicExpertCatalog.Parameters.Where(p => MusicModelVariants.SupportsParameter(variation, p.Key))) {
             if (!raw.TryGetValue(parameter.Key, out var text) || !double.TryParse(text, NumberStyles.Float,
                 CultureInfo.InvariantCulture, out var value)) throw new InvalidDataException("Missing/invalid parameter: " + parameter.Key);
-            values.Add(parameter.Key, value);
+            values[parameter.Key] = value;
         }
-        var expert = new MusicExpertSettings { Values = values, Tuning = Tags.TryGetValue("LOPATA_TUNING", out var tuning)
+        var expert = new MusicExpertSettings { Variation = variation, Values = values, Tuning = Tags.TryGetValue("LOPATA_TUNING", out var tuning)
             ? JsonSerializer.Deserialize<ModelTuningState>(tuning) : null };
         expert.Validate();
         var snapshot = new MusicProjectSnapshot {
+            Variation = variation, ModelRevision = MusicModelVariants.Revision(variation),
             Lyrics = Lyrics.Length > 0 ? Lyrics : throw new InvalidDataException("Missing lyrics."),
             Title = Tags.GetValueOrDefault("title", ""), Artist = Tags.GetValueOrDefault("artist", ""),
             Comment = Tags.GetValueOrDefault("comment", ""),
@@ -57,7 +61,8 @@ public static class MusicExamples
         var entries = JsonSerializer.Deserialize<MusicExample[]>(stream) ?? throw new InvalidDataException("Missing examples.");
         foreach (var item in entries)
             if (System.IO.Path.GetFileName(item.File) != item.File || !item.File.EndsWith(".mp3", StringComparison.Ordinal)
-                || item.Sha256.Length != 64 || item.Bytes <= 0 || !double.IsFinite(item.DurationSeconds) || item.DurationSeconds <= 0)
+                || item.Sha256.Length != 64 || item.Bytes <= 0 || !double.IsFinite(item.DurationSeconds) || item.DurationSeconds <= 0
+                || !item.Cloud && !MusicModelVariants.Supported(item.Variation))
                 throw new InvalidDataException("Invalid music example.");
         return Array.AsReadOnly(entries);
     }

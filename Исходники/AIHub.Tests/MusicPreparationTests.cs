@@ -137,7 +137,7 @@ public sealed class MusicPreparationTests
         control.OpenAsync().GetAwaiter().GetResult();
         Assert.IsTrue(control.IsModelSelection); Assert.IsFalse(control.CanContinue);
         control.SelectModelAsync("ace-step", "turbo").GetAwaiter().GetResult();
-        control.SelectModelAsync("yue2", "bf16").GetAwaiter().GetResult();
+        control.SelectModelAsync("yue2", "q4").GetAwaiter().GetResult();
         control.SelectModelAsync("unknown", "q8").GetAwaiter().GetResult();
         Assert.IsTrue(control.IsModelSelection); Assert.AreEqual(0, fake.Preparations);
         control.SelectModelAsync("yue2", "q8").GetAwaiter().GetResult();

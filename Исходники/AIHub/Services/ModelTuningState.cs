@@ -17,7 +17,7 @@ public sealed record ModelTuningState
     public ModelTuningState Snapshot() => this with { Pins = [.. Pins] };
     public void Validate()
     {
-        if (Profile != MusicTuningProfile.Id || Version != 1 || X.HasValue != Y.HasValue ||
+        if (Profile is not (MusicTuningProfile.Id or MusicTuningProfile.Bf16Id) || Version != 1 || X.HasValue != Y.HasValue ||
             X is { } x && (!double.IsFinite(x) || Math.Abs(x) > 1) ||
             Y is { } y && (!double.IsFinite(y) || Math.Abs(y) > 1))
             throw new InvalidDataException("Unsupported tuning profile or position.");

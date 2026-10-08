@@ -21,8 +21,8 @@ public sealed class MusicRecipeWindow : Window
     public MusicExpertSettings Result { get; private set; }
     public MusicRecipeWindow(MusicExpertSettings settings, Func<string, string> localize, ModelExpertPresets? store = null)
     {
-        _l = localize; _store = store ?? ModelExpertPresets.Simple; _current = settings.Snapshot(); Result = settings.Snapshot();
-        MusicWishUi.PrepareWindow(this, L("Recipes") + " · " + MusicExpertCatalog.Model, "Music.Recipes.Window", 940);
+        _l = localize; _store = store ?? ModelExpertPresets.For(settings.Variation, "Simple"); _current = settings.Snapshot(); Result = settings.Snapshot();
+        MusicWishUi.PrepareWindow(this, L("Recipes") + " · " + MusicModelVariants.Name(settings.Variation), "Music.Recipes.Window", 940);
         var root = new DockPanel { Margin = new(16) };
         var footer = new DockPanel();
         var library = MusicWishUi.Button(L("Library"), "Music.Recipes.Library", OpenLibrary);
@@ -30,7 +30,7 @@ public sealed class MusicRecipeWindow : Window
         var actions = MusicWishUi.Footer(_l, () => { Result = SelectedSettings(); DialogResult = true; }, () => DialogResult = false);
         actions.HorizontalAlignment = System.Windows.HorizontalAlignment.Right; footer.Children.Add(actions);
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
-        var hint = MusicWishUi.Text(L("RecipesHint")); DockPanel.SetDock(hint, Dock.Top); root.Children.Add(hint);
+        var hint = MusicWishUi.Text(L("RecipesHint") + (settings.Variation == MusicModelVariants.Bf16 ? "\n" + _l("Music.Models.yue2.bf16.RecipeWarning") : "")); DockPanel.SetDock(hint, Dock.Top); root.Children.Add(hint);
         var columns = new Grid(); columns.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         columns.ColumnDefinitions.Add(new() { Width = new(2, GridUnitType.Star) });
         _choices.Margin = new(0, 0, 14, 0); columns.Children.Add(_choices);

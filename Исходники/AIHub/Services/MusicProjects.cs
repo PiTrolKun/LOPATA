@@ -58,10 +58,20 @@ public sealed class MusicProjects(string directory)
         var saved = project with { Steps = project.Steps.Select(s => s.JobId == jobId ? s with { Outcome = outcome, Message = message } : s).ToArray() };
         Save(saved); return saved;
     }
-    private void Save(MusicProject project) { Validate(project); Write(PathFor(project.Id), project); }
+    public MusicProject SaveWorkspace(MusicProject project, MusicProjectSnapshot snapshot)
+    {
+        snapshot.Validate(); if (!project.Persistent) return project;
+        using var gate = Lock(); var current = Load(project.Id);
+        var updated = current with { Saved = snapshot.Snapshot() }; Save(updated); return updated;
+    }
+    private void Save(MusicProject project) {
+        Validate(project); var path = PathFor(project.Id);
+        if (File.Exists(path) && Read<MusicProject>(path).Schema == 1 && !File.Exists(path + ".schema1.bak")) File.Copy(path, path + ".schema1.bak");
+        Write(path, project with { Schema = 2 });
+    }
     private static void Validate(MusicProject project)
     {
-        if (project.Schema != 1 || !Guid.TryParseExact(project.Id, "N", out _) || project.Number < 1
+        if (project.Schema is not (1 or 2) || !Guid.TryParseExact(project.Id, "N", out _) || project.Number < 1
             || project.Name is null || project.Name.Length > 200 || project.Saved is null || project.Steps is null
             || project.Steps.Length > 10000 || project.Manual && !project.Persistent)
             throw new InvalidDataException("Unsupported music project.");

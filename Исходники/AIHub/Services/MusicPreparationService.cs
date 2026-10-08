@@ -4,6 +4,7 @@ namespace AIHub.Services;
 
 public interface IMusicPreparation : IDisposable
 {
+    string Variation { get => MusicComponentCatalog.ModelId; set { } }
     int MaximumParallelConnections { get; set; }
     Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token);
@@ -13,6 +14,7 @@ public interface IMusicPreparation : IDisposable
 
 public sealed class MusicPreparationService : IMusicPreparation
 {
+    public string Variation { get; set; } = MusicComponentCatalog.ModelId;
     private readonly ManagedModelLibraryStore _store;
     private readonly ManagedModelAcquisitionService _downloads;
     public MusicPreparationService(ManagedModelLibraryStore? store = null)
@@ -23,7 +25,7 @@ public sealed class MusicPreparationService : IMusicPreparation
     private IReadOnlyList<ManagedModelArtifactCard> Register(string root)
     {
         if (string.IsNullOrWhiteSpace(root)) throw new InvalidOperationException("Music.StorageRequired");
-        return MusicComponentCatalog.CreateCards(root).Select(c => _store.Upsert(c)).ToArray();
+        return MusicModelVariants.Cards(root, Variation).Select(c => _store.Upsert(c)).ToArray();
     }
 
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root,

@@ -19,9 +19,9 @@ public sealed class MusicExamplesTests
     [TestMethod]
     public async Task PackagedAudioIsExactAndRestoresItsActualTags()
     {
-        Assert.HasCount(2, MusicExamples.All);
+        Assert.HasCount(3, MusicExamples.All);
         foreach (var item in MusicExamples.All) await MusicExamples.VerifyAsync(item, default);
-        var local = MusicExamples.All.Single(e => !e.Cloud);
+        var local = MusicExamples.All.Single(e => !e.Cloud && e.Variation == MusicComponentCatalog.ModelId);
         var metadata = await MusicExamples.ReadAsync(local, default);
         var restored = metadata.Restore();
         Assert.AreEqual("doom metal", metadata.Tags["genre"]);
@@ -49,10 +49,10 @@ public sealed class MusicExamplesTests
         CollectionAssert.AreEqual(File.ReadAllBytes(local.Path), File.ReadAllBytes(saved));
     }
 
-    [TestMethod]
-    public async Task ExampleTransferKeepsProjectHistoryAndOutputFolder()
+    [TestMethod, DataRow(MusicComponentCatalog.ModelId), DataRow(MusicModelVariants.Bf16)]
+    public async Task ExampleTransferKeepsProjectHistoryAndOutputFolder(string variation)
     {
-        var restored = (await MusicExamples.ReadAsync(MusicExamples.All.Single(e => !e.Cloud), default)).Restore();
+        var restored = (await MusicExamples.ReadAsync(MusicExamples.All.Single(e => !e.Cloud && e.Variation == variation), default)).Restore();
         await ScenarioNavigationTests.Sta(() => {
             using var files = new Files(); var projects = new MusicProjects(Path.Combine(files.Root, "projects"));
             using var view = new MusicWorkspaceControl(projects, new MusicGenerationJobs(Path.Combine(files.Root, "jobs")), new(Path.Combine(files.Root, "output.json")));
@@ -61,6 +61,7 @@ public sealed class MusicExamplesTests
             Assert.AreEqual(restored.Lyrics, view.Editor.Lyrics); Assert.AreEqual(files.Root, view.Tracks.OutputFolder);
             Assert.AreEqual(id, view.Projects.Current.Id); Assert.HasCount(0, view.Projects.Current.Steps); Assert.IsFalse(view.Projects.Current.Persistent);
             Assert.AreEqual(restored.Expert.Get("seed"), view.Generation.ExpertSettings.Get("seed"));
+            Assert.AreEqual(variation, view.Generation.Variation);
             Assert.AreEqual(restored.Expert.Tuning!.X, view.Generation.ExpertSettings.Tuning!.X);
             Assert.AreEqual(360, view.Generation.Options.DurationSeconds); Assert.AreEqual(MusicAudioFormat.Mp3, view.Generation.Options.Output.Format);
             view.Projects.SetBusy(true); Assert.Throws<InvalidOperationException>(() => view.Projects.ApplyExample(restored));
@@ -70,7 +71,9 @@ public sealed class MusicExamplesTests
     [TestMethod, DataRow("ru", true), DataRow("en", false)]
     public async Task CardsAndExternalParametersAreLocalizedAndBounded(string language, bool dark)
     {
-        var metadata = await MusicExamples.ReadAsync(MusicExamples.All.Single(e => !e.Cloud), default);
+        var allMetadata = new Dictionary<string, MusicExampleMetadata>();
+        foreach (var entry in MusicExamples.All.Where(e => !e.Cloud))
+            allMetadata.Add(entry.Id, await MusicExamples.ReadAsync(entry, default));
         await ScenarioNavigationTests.Sta(() => {
             var l = new LocalizationService(); l.Load(language);
             using var cards = new MusicModelSelectionControl(); cards.Localize(l.T);
@@ -80,26 +83,58 @@ public sealed class MusicExamplesTests
                 Assert.HasCount(2, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
                 var yue = ScenarioNavigationTests.LogicalDescendants(cards).OfType<ComboBox>().Single(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Variants.yue2");
                 Capture(host, language + "-cards"); yue.SelectedIndex = 1;
-                Assert.HasCount(0, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
+                var bf16Players = ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray();
+                Assert.HasCount(2, bf16Players);
+                CollectionAssert.AreEquivalent(new[] { "Music.Examples.Player.yue2-bf16-punk", "Music.Examples.Player.suno-doom" },
+                    bf16Players.Select(AutomationProperties.GetAutomationId).ToArray());
+                Capture(host, language + "-bf16-cards");
                 yue.SelectedIndex = 0; Assert.HasCount(2, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
             });
             foreach (var entry in MusicExamples.All) {
+                var metadata = entry.Cloud ? null : allMetadata[entry.Id];
                 var window = new MusicExampleParametersWindow(entry, entry.Cloud ? null : metadata, l.T, true); Theme(window, dark);
                 Modal(window, () => {
                     var elements = ScenarioNavigationTests.LogicalDescendants(window).ToArray();
                     var boxes = elements.OfType<TextBox>().ToArray();
                     Assert.IsTrue(boxes.All(b => b.IsReadOnly));
-                    Assert.AreEqual(entry.Cloud ? 2 : metadata.Tags.Count + 1, boxes.Length);
+                    Assert.AreEqual(entry.Cloud ? 2 : metadata!.Tags.Count + 1, boxes.Length);
                     Assert.AreEqual(entry.Cloud ? 0 : 1, elements.OfType<Button>().Count(b => AutomationProperties.GetAutomationId(b) == "Music.Examples.Apply"));
-                    if (!entry.Cloud) CollectionAssert.AreEquivalent(metadata.Tags.Values.ToArray(), boxes.Where(b => AutomationProperties.GetAutomationId(b) != "Music.Examples.Technical").Select(b => b.Text).ToArray());
-                    window.UpdateLayout(); Capture(window, language + (entry.Cloud ? "-cloud" : "-local"));
+                    if (!entry.Cloud) CollectionAssert.AreEquivalent(metadata!.Tags.Values.ToArray(), boxes.Where(b => AutomationProperties.GetAutomationId(b) != "Music.Examples.Technical").Select(b => b.Text).ToArray());
+                    window.UpdateLayout(); Capture(window, language + "-" + entry.Id);
                 });
             }
             var tag = ScenarioNavigationCatalog.GetTag("music_examples"); Assert.AreNotEqual(tag.DescriptionKey, l.T(tag.DescriptionKey));
         });
     }
     [TestMethod]
-    public Task BothActualSamplesDecodeAndPlaySilently() => ScenarioNavigationTests.Sta(() => {
+    public async Task Bf16DefaultsMatchAcceptedSampleWithoutFixingItsSeed()
+    {
+        var example = MusicExamples.All.Single(e => !e.Cloud && e.Variation == MusicModelVariants.Bf16);
+        await MusicExamples.VerifyAsync(example, default);
+        var metadata = await MusicExamples.ReadAsync(example, default);
+        var restored = metadata.Restore();
+        Assert.AreEqual(MusicModelVariants.Bf16, restored.Variation);
+        Assert.AreEqual(MusicModelVariants.Bf16Revision, restored.ModelRevision);
+        Assert.AreEqual("punk", metadata.Tags["genre"]);
+        Assert.AreEqual(666271731d, restored.Expert.Get("seed"));
+        Assert.AreEqual("7d5f8609959a470fb9e5e9cbb0acf7c3", metadata.Tags["LOPATA_JOB"]);
+        var defaults = MusicModelVariants.Defaults(MusicModelVariants.Bf16);
+        defaults.Validate(); Assert.AreEqual(-1d, defaults.Get("seed"));
+        var sample = restored.Expert.Snapshot(); sample.Values["seed"] = -1;
+        Assert.IsTrue(defaults.SameAs(sample));
+        Assert.AreEqual(restored.Expert.Tuning!.X, defaults.Tuning!.X);
+        Assert.AreEqual(restored.Expert.Tuning.Y, defaults.Tuning.Y);
+        Assert.IsTrue(MusicModelVariants.Defaults(MusicComponentCatalog.ModelId).SameAs(new MusicExpertSettings()));
+        defaults.Values["cfg_scale"] = 4;
+        Assert.AreEqual(1.9, MusicModelVariants.Defaults(MusicModelVariants.Bf16).Get("cfg_scale"));
+        var invalid = new Dictionary<string, string>(metadata.Tags) { ["LOPATA_VARIATION"] = MusicComponentCatalog.ModelId };
+        Assert.Throws<InvalidDataException>(() => new MusicExampleMetadata(invalid, "{}").Restore());
+        invalid = new(metadata.Tags) { ["LOPATA_PARAMETERS"] = metadata.Tags["LOPATA_PARAMETERS"].Replace("cfg_scale=1.9", "cfg_scale=99") };
+        Assert.Throws<InvalidDataException>(() => new MusicExampleMetadata(invalid, "{}").Restore());
+    }
+
+    [TestMethod]
+    public Task PackagedSamplesDecodeAndPlaySilently() => ScenarioNavigationTests.Sta(() => {
         foreach (var example in MusicExamples.All) {
             using var audio = new MusicAudioPlayer { Volume = 0 };
             string? error = null; audio.Failed += key => error = key;
@@ -142,6 +177,10 @@ public sealed class MusicExamplesTests
     private static void Capture(Window window, string name)
     {
         var folder = Environment.GetEnvironmentVariable("LOPATA_MUSIC_EXAMPLE_UI_EVIDENCE"); if (string.IsNullOrEmpty(folder)) return;
+        window.UpdateLayout();
+        var frame = new DispatcherFrame();
+        window.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => frame.Continue = false));
+        Dispatcher.PushFrame(frame);
         Directory.CreateDirectory(folder); var image = new RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, PixelFormats.Pbgra32);
         var drawing = new DrawingVisual(); using (var canvas = drawing.RenderOpen()) {
             canvas.DrawRectangle((Brush)window.FindResource("WindowBackgroundBrush"), null, new Rect(0, 0, window.ActualWidth, window.ActualHeight));

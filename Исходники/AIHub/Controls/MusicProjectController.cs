@@ -15,6 +15,7 @@ public sealed class MusicProjectController
     private readonly MusicGenerationJobs _jobs;
     private Func<string, string> _l = key => key;
     private MusicProjectSnapshot? _initial;
+    private Dictionary<string, MusicExpertSettings> _modelSettings = new();
     private int _cursor = -1;
     public MusicProject Current { get; private set; }
     public bool Busy { get; private set; }
@@ -36,7 +37,9 @@ public sealed class MusicProjectController
     public MusicProjectSnapshot Capture()
     {
         var options = _view.Generation.Options;
-        return new() { Lyrics = _view.Editor.Lyrics, Title = options.Title, Artist = options.Artist, Comment = options.Comment,
+        var expert = _view.Generation.ExpertSettings; _modelSettings[expert.Variation] = expert.Snapshot();
+        return new() { Variation = expert.Variation, ModelRevision = MusicModelVariants.Revision(expert.Variation),
+            ModelSettings = _modelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Lyrics = _view.Editor.Lyrics, Title = options.Title, Artist = options.Artist, Comment = options.Comment,
             Variants = options.Variants, DurationSeconds = options.DurationSeconds, OutputFolder = _view.Tracks.OutputFolder,
             Expert = _view.Generation.ExpertSettings, Output = options.Output, Wishes = MusicWishSnapshot.Capture(_view.Wishes.State) };
     }
@@ -50,15 +53,20 @@ public sealed class MusicProjectController
         _cursor += delta; Apply(Current.Steps[_cursor].Snapshot, Mode == MusicHistoryMode.Text, Mode == MusicHistoryMode.Settings);
         History.Refresh();
     }
-    private void Apply(MusicProjectSnapshot snapshot, bool lyrics, bool settings)
+    private void Apply(MusicProjectSnapshot snapshot, bool lyrics, bool settings, bool restoreBank = false)
     {
         if (settings) {
-            if (snapshot.Model != MusicExpertCatalog.Model || snapshot.Variation != MusicComponentCatalog.ModelId
-                || snapshot.ModelRevision != MusicComponentCatalog.Revision) throw new InvalidDataException("Unsupported music project model.");
+            if (snapshot.Model != MusicExpertCatalog.Model || !MusicModelVariants.Supported(snapshot.Variation)
+                || snapshot.ModelRevision != MusicModelVariants.Revision(snapshot.Variation)) throw new InvalidDataException("Unsupported music project model.");
+            _modelSettings[_view.Generation.Variation] = _view.Generation.ExpertSettings;
+            if (restoreBank) foreach (var pair in snapshot.ModelSettings) _modelSettings[pair.Key] = pair.Value.Snapshot();
+            _modelSettings[snapshot.Variation] = snapshot.Expert.Snapshot();
+            _view.Generation.ConfigureVariation(snapshot.Variation, snapshot.Expert);
             _view.Generation.SetOptions(new(snapshot.Title, snapshot.Variants, snapshot.DurationSeconds) {
                 Artist = snapshot.Artist, Comment = snapshot.Comment, Output = snapshot.Output });
             _view.Generation.SetExpertSettings(snapshot.Expert, false);
             _view.Wishes.Apply(snapshot.Wishes.ToPreferences()); _view.Tracks.SetOutputFolder(snapshot.OutputFolder);
+            _view.Session.ModelChanged();
         }
         if (lyrics) _view.Editor.Lyrics = snapshot.Lyrics;
     }
@@ -76,17 +84,18 @@ public sealed class MusicProjectController
     private MusicProject Named() => Current.Name.Length > 0 ? Current : Current with { Name = Name(Current) };
     public void New()
     {
-        EnsureIdle(); RememberDefaults(); Current = _store.CreateDraft(); _cursor = -1;
-        _view.Player.Clear(); _view.Tracks.ClearTracks(); Apply(_initial!, true, true); History.Refresh();
+        EnsureIdle(); RememberDefaults(); Current = _store.CreateDraft(); _cursor = -1; _modelSettings.Clear();
+        _view.Player.Clear(); _view.Tracks.ClearTracks(); Apply(_initial!, true, true, true); History.Refresh();
     }
     public IReadOnlyList<MusicProject> List() => _store.List();
     public void Open(string id)
     {
         EnsureIdle(); var project = _store.Load(id); project.Saved.Validate();
-        if (project.Saved.Model != MusicExpertCatalog.Model || project.Saved.Variation != MusicComponentCatalog.ModelId
-            || project.Saved.ModelRevision != MusicComponentCatalog.Revision) throw new InvalidDataException("Unsupported music project model.");
+        if (project.Saved.Model != MusicExpertCatalog.Model || !MusicModelVariants.Supported(project.Saved.Variation)
+            || project.Saved.ModelRevision != MusicModelVariants.Revision(project.Saved.Variation)) throw new InvalidDataException("Unsupported music project model.");
+        _modelSettings.Clear();
         Current = project; _cursor = project.Steps.Length - 1; _view.Player.Clear(); _view.Tracks.ClearTracks();
-        Apply(project.Saved, true, true); LoadTracks(); History.Refresh();
+        Apply(project.Saved, true, true, true); LoadTracks(); History.Refresh();
     }
     private void LoadTracks()
     {
@@ -113,6 +122,18 @@ public sealed class MusicProjectController
         try { _jobs.Save(linked); }
         catch (Exception error) { Current = _store.SetOutcome(Current.Id, job.Id, MusicProjectOutcome.Failed, error.Message); throw; }
         History.Refresh(); return linked;
+    }
+    public void SwitchModel(string variation, string? verifiedHardware = null)
+    {
+        if (!_view.Session.CanChangeModel) throw new InvalidOperationException(_l("Music.Projects.Busy"));
+        if (!MusicModelVariants.Supported(variation)) throw new InvalidDataException("Unsupported model variation.");
+        _modelSettings[_view.Generation.Variation] = _view.Generation.ExpertSettings;
+        var previous = _view.Generation.ExpertSettings;
+        try {
+            _view.Generation.ConfigureVariation(variation, _modelSettings.GetValueOrDefault(variation));
+            Current = _store.SaveWorkspace(Current, Capture()); _view.Session.ModelChanged(verifiedHardware); History.Refresh();
+        }
+        catch { _view.Generation.ConfigureVariation(previous.Variation, previous); _view.Session.ModelChanged(); throw; }
     }
     public MusicGenerationJob RestoreJob(MusicGenerationJob job)
     {

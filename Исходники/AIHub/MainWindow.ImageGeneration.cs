@@ -26,15 +26,22 @@ public partial class MainWindow
     private void RefreshGenerationHeader()
     {
         var visible = GenerationPage.IsVisible && GenerationPage.IsChat;
-        GenerationModelButton.Visibility = GenerationClearButton.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        GenerationModelButton.IsEnabled = GenerationClearButton.IsEnabled = GenerationPage.CanChangeModel;
-        GenerationModelButton.ToolTip = L("Generation.ChangeModel"); GenerationClearButton.ToolTip = L("Generation.ClearWorkspace");
+        var music = MusicPage.IsVisible && MusicPage.IsWorkspace;
+        GenerationModelButton.Visibility = visible || music ? Visibility.Visible : Visibility.Collapsed;
+        GenerationClearButton.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        GenerationClearButton.IsEnabled = GenerationPage.CanChangeModel;
+        GenerationModelButton.IsEnabled = music ? MusicPage.CanChangeModel : GenerationPage.CanChangeModel;
+        var changeModel = L(music ? "Music.Models.ChangeModel" : "Generation.ChangeModel");
+        GenerationModelButton.ToolTip = changeModel; GenerationClearButton.ToolTip = L("Generation.ClearWorkspace");
         GenerationModelButton.Content = L("Generation.ModelSymbol");
-        System.Windows.Automation.AutomationProperties.SetName(GenerationModelButton, L("Generation.ChangeModel"));
+        System.Windows.Automation.AutomationProperties.SetName(GenerationModelButton, changeModel);
         System.Windows.Automation.AutomationProperties.SetName(GenerationClearButton, L("Generation.ClearWorkspace"));
         GenerationModelButton.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, "TextPrimaryBrush");
     }
-    private void GenerationModelButton_Click(object sender, RoutedEventArgs e) => GenerationPage.ShowModelMenu(GenerationModelButton);
+    private void GenerationModelButton_Click(object sender, RoutedEventArgs e) {
+        if (MusicPage.IsVisible && MusicPage.IsWorkspace) MusicPage.ShowModelMenu(GenerationModelButton);
+        else GenerationPage.ShowModelMenu(GenerationModelButton);
+    }
     private void GenerationClearButton_Click(object sender, RoutedEventArgs e) => GenerationPage.ClearWorkspace();
     private void OpenImageGenerationScenario()
     {

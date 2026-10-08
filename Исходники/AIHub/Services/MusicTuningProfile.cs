@@ -6,10 +6,12 @@ public sealed record ModelBubblePosition(double X, double Y, bool Approximate, b
 public static class MusicTuningProfile
 {
     public const string Id = "YuE2.Native.Q8.Bubble";
+    public const string Bf16Id = "YuE2.PyTorch.BF16.Bubble";
     private static readonly double[][] Plan = [[.55, .82, 16], [.60, .86, 24], [.70, .90, 30], [.85, .94, 45], [1, .97, 64]];
     private static readonly double[][] Sequence = [[.8, .88, 50], [.9, .92, 75], [1, .95, 100], [1.1, .97, 140], [1.2, .99, 200]];
     private static readonly string[] Suffixes = ["temperature", "top_p", "top_k"];
-    public static ModelTuningState State(MusicExpertSettings settings) => settings.Tuning?.Snapshot() ?? new();
+    public static ModelTuningState State(MusicExpertSettings settings) => settings.Tuning?.Snapshot() ?? new() {
+        Profile = settings.Variation == MusicModelVariants.Bf16 ? Bf16Id : Id };
     public static MusicExpertSettings Move(MusicExpertSettings current, double x, double y, bool suppliedPlan = false)
     {
         if (!double.IsFinite(x) || !double.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(x));
@@ -50,7 +52,7 @@ public static class MusicTuningProfile
         } else if (key.StartsWith("semantic_sampling.", StringComparison.Ordinal) && Suffixes.Any(s => key.EndsWith("." + s, StringComparison.Ordinal))) {
             var point = Interpolate(Sequence, state.Y ?? Position(current).Y);
             next.Values[key] = point[Array.IndexOf(Suffixes, key[(key.LastIndexOf('.') + 1)..])];
-        } else next.Values[key] = MusicExpertCatalog.Parameters.Single(p => p.Key == key).Default;
+        } else next.Values[key] = MusicModelVariants.Defaults(current.Variation).Get(key);
         next.Validate(); return next;
     }
     public static MusicExpertSettings ResetCircle(MusicExpertSettings current) => Move(current, 0, 0);

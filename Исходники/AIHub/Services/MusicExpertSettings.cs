@@ -39,6 +39,7 @@ public static class MusicExpertCatalog
 
 public sealed record MusicExpertSettings
 {
+    public string Variation { get; init; } = MusicComponentCatalog.ModelId;
     [JsonRequired] public Dictionary<string, double> Values { get; init; } = MusicExpertCatalog.Parameters.ToDictionary(p => p.Key, p => p.Default);
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public ModelTuningState? Tuning { get; init; }
     public double Get(string key) => Values[key];
@@ -52,11 +53,16 @@ public sealed record MusicExpertSettings
         "off" => "Generate music with codec tokens from the given conditions.",
         _ => MusicTextBudget.DefaultInstruction };
     public MusicExpertSettings Snapshot() => this with { Values = new(Values, StringComparer.Ordinal), Tuning = Tuning?.Snapshot() };
-    public bool SameAs(MusicExpertSettings other) => Values.Count == other.Values.Count && Values.All(p => other.Values.TryGetValue(p.Key, out var v) && v == p.Value);
+    public bool SameAs(MusicExpertSettings other) => Variation == other.Variation && Values.Count == other.Values.Count && Values.All(p => other.Values.TryGetValue(p.Key, out var v) && v == p.Value);
     public void Validate()
     {
-        Tuning?.Validate();
+        if (!MusicModelVariants.Supported(Variation)) throw new InvalidDataException("Unsupported settings variation.");
         if (Values is null) throw new InvalidDataException("Missing parameter values.");
+        if (Variation == MusicModelVariants.Bf16 && (Values.GetValueOrDefault("lm_seed", -2) != -1 || Values.GetValueOrDefault("peak_clip", -2) != 10))
+            throw new InvalidDataException("BF16 uses one seed and does not support peak_clip.");
+        Tuning?.Validate();
+        if (Tuning is not null && Tuning.Profile != (Variation == MusicModelVariants.Bf16 ? MusicTuningProfile.Bf16Id : MusicTuningProfile.Id))
+            throw new InvalidDataException("Tuning profile belongs to another model variation.");
         var unknown = Values.Keys.Except(MusicExpertCatalog.Parameters.Select(p => p.Key)).ToArray();
         if (unknown.Length != 0) throw new InvalidDataException("Unknown parameters: " + string.Join(", ", unknown));
         foreach (var p in MusicExpertCatalog.Parameters)

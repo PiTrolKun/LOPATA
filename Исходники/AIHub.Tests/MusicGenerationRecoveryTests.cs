@@ -7,10 +7,13 @@ namespace AIHub.Tests;
 public sealed class MusicGenerationRecoveryTests
 {
     [TestMethod]
-    public async Task PausePreservesPlanAndResumeDoesNotDuplicateCompletedTracks()
+    [DataRow(MusicComponentCatalog.ModelId)]
+    [DataRow(MusicModelVariants.Bf16)]
+    public async Task PausePreservesPlanAndResumeDoesNotDuplicateCompletedTracks(string variation)
     {
         using var files = new Files(); var jobs = new MusicGenerationJobs(Path.Combine(files.Root, "jobs"));
-        var job = jobs.Create(Path.Combine(files.Root, "models"), Path.Combine(files.Root, "audio"), "Тест", 1, 30, "rock", "Текст");
+        var job = jobs.Create(Path.Combine(files.Root, "models"), Path.Combine(files.Root, "audio"), "Тест", 1, 30, "rock", "Текст",
+            expert: MusicModelVariants.Defaults(variation));
         var worker = new FakeWorker { PauseFirst = true }; var runner = new MusicGenerationRunner(jobs, worker);
         var controller = new BackgroundOperationController(new(Path.Combine(files.Root, "background.json")));
         var previous = ApplicationBackgroundOperations.Current; ApplicationBackgroundOperations.Current = controller;
@@ -62,11 +65,18 @@ public sealed class MusicGenerationRecoveryTests
         public Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token)
         {
             if (FailOnUse) throw new AssertFailedException("Completed audio was regenerated.");
-            Plans++; Log?.Invoke("[ABC] test"); return File.WriteAllTextAsync(planPath, "X:1\nK:C\nC D E F|", token);
+            Plans++; Log?.Invoke("[ABC] test"); return File.WriteAllTextAsync(planPath, request.EffectiveExpert.Variation == MusicModelVariants.Bf16
+                ? "{\"abc\":\"X:1\\nK:C\\nC D E F|\",\"abc_ids\":[52,25,16]}" : "X:1\nK:C\nC D E F|", token);
         }
         public async Task SynthesizeAsync(string model, string decoder, MusicYueRequest request, string requestPath, string outputPath, CancellationToken token)
         {
             if (FailOnUse) throw new AssertFailedException("Completed audio was regenerated.");
+            if (request.EffectiveExpert.Variation == MusicModelVariants.Bf16) {
+                Assert.EndsWith("model.safetensors", model); Assert.Contains(MusicModelVariants.Bf16Vae, decoder);
+                Assert.AreEqual(request.LanguageSeed, request.SoundSeed);
+                using var saved = System.Text.Json.JsonDocument.Parse(request.Abc);
+                CollectionAssert.AreEqual(new[] { 52, 25, 16 }, saved.RootElement.GetProperty("abc_ids").EnumerateArray().Select(t => t.GetInt32()).ToArray());
+            }
             Synths++; Started.TrySetResult();
             if (PauseFirst && Synths == 1) await Task.Delay(Timeout.Infinite, token);
             token.ThrowIfCancellationRequested();

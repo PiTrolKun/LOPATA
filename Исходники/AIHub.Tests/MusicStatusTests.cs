@@ -94,6 +94,28 @@ public sealed class MusicStatusTests
     });
 
     [TestMethod]
+    public Task CompactLogFollowsLatestEventsAfterOverflowAndResize() => ScenarioNavigationTests.Sta(() =>
+    {
+        using var status = new MusicStatusControl();
+        var window = Host(status, true, 650, 110);
+        Modal(window, () =>
+        {
+            var log = Desc<System.Windows.Controls.TextBox>(status).Single();
+            Assert.AreEqual(ScrollBarVisibility.Hidden, log.VerticalScrollBarVisibility);
+            Assert.AreEqual(ScrollBarVisibility.Disabled, log.HorizontalScrollBarVisibility);
+            for (var i = 0; i < 40; i++) { status.AppendLog("Событие " + i); Pump(); }
+            Assert.IsTrue(log.VerticalOffset >= log.ExtentHeight - log.ViewportHeight - 2);
+            // Losing the old offset must not permanently stop a stream without a selection.
+            log.ScrollToHome(); log.Select(0, 0); Pump();
+            window.Height = 135; window.UpdateLayout();
+            status.AppendLog("Текущее событие"); Pump();
+            Assert.IsTrue(log.VerticalOffset >= log.ExtentHeight - log.ViewportHeight - 2);
+            StringAssert.Contains(log.GetLineText(log.GetLastVisibleLineIndex()), "Текущее событие");
+            Snapshot(window, "log-latest-visible");
+        });
+    });
+
+    [TestMethod]
     public Task LogCanBeSelectedWithoutNewEventsPullingItDownAndIsBounded() => ScenarioNavigationTests.Sta(() =>
     {
         using var status = new MusicStatusControl(); var l = new LocalizationService(); l.Load("ru"); status.Localize(l.T);

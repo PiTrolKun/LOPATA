@@ -15,15 +15,16 @@ public static class MusicSongMetadata
             ["artist"] = job.Artist, ["comment"] = job.Comment,
             ["lyrics"] = job.Lyrics, ["LOPATA_STYLE"] = job.Style,
             ["date"] = job.CreatedAt.ToString("O", culture), ["track"] = (index + 1).ToString(culture),
-            ["LOPATA_JOB"] = job.Id, ["LOPATA_MODEL"] = "YuE2 3B Q8_0",
+            ["LOPATA_JOB"] = job.Id, ["LOPATA_MODEL"] = MusicModelVariants.Name(job.Variation),
+            ["LOPATA_VARIATION"] = job.Variation, ["LOPATA_DECODER_REVISION"] = job.DecoderRevision,
             ["LOPATA_MODEL_REVISION"] = job.ModelRevision, ["LOPATA_RUNTIME_REVISION"] = job.RuntimeRevision,
             ["LOPATA_RUNTIME_PACK"] = variant.UsedRuntimePack ?? job.RuntimePack, ["LOPATA_VERSION"] = job.AppVersion,
-            ["LOPATA_GGML_REVISION"] = MusicYueRuntime.GgmlRevision,
+            ["LOPATA_GGML_REVISION"] = job.Variation == MusicModelVariants.Bf16 ? "" : MusicYueRuntime.GgmlRevision,
             ["LOPATA_AUDIO_RUNTIME"] = MusicAudioRuntime.Revision,
             ["LOPATA_LM_SEED"] = variant.LanguageSeed.ToString(culture),
             ["LOPATA_SEED"] = variant.SoundSeed.ToString(culture),
             ["LOPATA_DURATION_REQUEST_SECONDS"] = job.DurationSeconds.ToString(culture),
-            ["LOPATA_PARAMETERS"] = string.Join('\n', job.Expert.Values.OrderBy(p => p.Key).Select(p => p.Key + "=" +
+            ["LOPATA_PARAMETERS"] = string.Join('\n', job.Expert.Values.Where(p => MusicModelVariants.SupportsParameter(job.Variation, p.Key)).OrderBy(p => p.Key).Select(p => p.Key + "=" +
                 (p.Key == "lm_seed" ? variant.LanguageSeed : p.Key == "seed" ? variant.SoundSeed : p.Value).ToString("R", culture))) +
                 "\ncot_mode=" + job.Expert.Cot + "\neffective_cfg=" + job.Expert.Guidance.ToString("R", culture) +
                 "\nsemantic_output_limit=" + job.Expert.SequenceLimit(job.DurationSeconds).ToString(culture) +
@@ -32,6 +33,11 @@ public static class MusicSongMetadata
         if (job.Wishes is { } wishes) {
             result["LOPATA_WISHES"] = JsonSerializer.Serialize(wishes);
             if (wishes.Selections.TryGetValue("genres", out var genres)) result["genre"] = string.Join("; ", genres);
+        }
+        if (job.Variation == MusicModelVariants.Bf16) {
+            result.Remove("LOPATA_LM_SEED");
+            result["LOPATA_PRECISION"] = "generator=bfloat16;vae=float32;quantization=none";
+            result["LOPATA_ADAPTER"] = "yue2-infer-0.1.5;torch-eager;offload_ar=true;ode_method=midpoint;context=24576";
         }
         if (job.Expert.Tuning is { } tuning) result["LOPATA_TUNING"] = JsonSerializer.Serialize(tuning);
         if (job.Output is { } output) result["LOPATA_OUTPUT"] = JsonSerializer.Serialize(output);

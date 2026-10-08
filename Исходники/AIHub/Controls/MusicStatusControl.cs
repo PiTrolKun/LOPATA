@@ -94,7 +94,9 @@ public sealed class MusicStatusControl : UserControl, IDisposable
     {
         if (_disposed) return;
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => AppendLog(message)); return; }
-        var follow = _terminal.ExtentHeight <= _terminal.ViewportHeight ||
+        // With manual scrolling hidden, an old viewport offset must never stop the stream.
+        // Preserve the viewport only while the user selects earlier text for copying.
+        var follow = _terminal.SelectionLength == 0 ||
             _terminal.VerticalOffset >= _terminal.ExtentHeight - _terminal.ViewportHeight - 2;
         var offset = _terminal.VerticalOffset; var start = _terminal.SelectionStart; var length = _terminal.SelectionLength;
         var stamp = DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture);
@@ -107,7 +109,7 @@ public sealed class MusicStatusControl : UserControl, IDisposable
             removed = all.Take(all.Length - 500).Sum(line => line.Length + 1);
             _terminal.Text = string.Join("\n", all.Skip(all.Length - 500));
         }
-        if (follow) _terminal.ScrollToEnd();
+        if (follow) { _terminal.UpdateLayout(); _terminal.ScrollToEnd(); }
         else
         {
             var end = Math.Max(0, start + length - removed); start = Math.Max(0, start - removed);

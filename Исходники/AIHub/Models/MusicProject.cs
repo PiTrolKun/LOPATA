@@ -18,9 +18,11 @@ public sealed record MusicProjectSnapshot
     public int? DurationSeconds { get; init; }
     public string OutputFolder { get; init; } = "";
     public MusicExpertSettings Expert { get; init; } = new();
+    public Dictionary<string, MusicExpertSettings> ModelSettings { get; init; } = new();
     public MusicOutputSettings Output { get; init; } = new();
     public MusicWishSnapshot Wishes { get; init; } = MusicWishSnapshot.Capture(new());
-    public MusicProjectSnapshot Snapshot() => this with { Expert = Expert.Snapshot(), Wishes = Wishes.Snapshot() };
+    public MusicProjectSnapshot Snapshot() => this with { Expert = Expert.Snapshot(), Wishes = Wishes.Snapshot(),
+        ModelSettings = ModelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()) };
     public void Validate()
     {
         if (Lyrics is null || Title is null || Artist is null || Comment is null || string.IsNullOrWhiteSpace(Model)
@@ -29,12 +31,18 @@ public sealed record MusicProjectSnapshot
             || Expert is null || Output is null || Wishes is null || Wishes.Selections is null || Wishes.Performers is null)
             throw new System.IO.InvalidDataException("Invalid music project snapshot.");
         Expert.Validate(); Output.Validate();
+        if (Expert.Variation != Variation || ModelSettings is null || ModelSettings.Count > 100)
+            throw new System.IO.InvalidDataException("Invalid project model settings.");
+        foreach (var pair in ModelSettings) {
+            if (pair.Value is null || pair.Key != pair.Value.Variation) throw new System.IO.InvalidDataException("Invalid project settings bank.");
+            pair.Value.Validate();
+        }
         if (Wishes.Selections.Any(p => p.Value is null || p.Value.Any(v => v is null))
             || Wishes.Performers.Any(p => p is null || p.Name is null || p.Id is null || p.Timbres is null || p.Delivery is null))
             throw new System.IO.InvalidDataException("Invalid music project wishes.");
     }
     public static MusicProjectSnapshot FromJob(MusicGenerationJob job) => new() {
-        Lyrics = job.Lyrics, Title = job.Title, Artist = job.Artist, Comment = job.Comment, ModelRevision = job.ModelRevision,
+        Lyrics = job.Lyrics, Title = job.Title, Artist = job.Artist, Comment = job.Comment, ModelRevision = job.ModelRevision, Variation = job.Variation,
         Variants = job.Variants.Length, DurationSeconds = job.DurationSeconds, OutputFolder = job.OutputFolder,
         Expert = job.Expert.Snapshot(), Output = job.Output ?? new() { Format = MusicAudioFormat.Wav },
         Wishes = job.Wishes?.Snapshot() ?? MusicWishSnapshot.Capture(new()) };

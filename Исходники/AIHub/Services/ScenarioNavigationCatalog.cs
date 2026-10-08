@@ -67,6 +67,7 @@ public static class ScenarioNavigationCatalog
         Tag("music_generation", Music),
         Tag("music_formats", Music), Tag("music_metadata", Music), Tag("music_projects", Music), Tag("music_history", Music), Tag("music_examples", Music),
         Tag("music_expert", Music), Tag("music_presets", Music), Tag("music_models", Music), Tag("music_tuning", Music),
+        Tag("music_model_switch", Music), Tag("music_bf16", Music),
         Tag("music_wishes", Music), Tag("music_performers", Music), Tag("music_text_tools", Music), Tag("music_player", Music), Tag("music_status", Music),
         Tag("advisor", Literary), Tag("writer", Literary), Tag("retelling", Literary),
         Tag("rag", Literary), Tag("jelly", Literary), Tag("anchors", Literary),

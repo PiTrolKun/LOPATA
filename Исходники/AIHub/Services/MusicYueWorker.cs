@@ -39,6 +39,8 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
 /// <summary>One owned CLI process per stage. Completed plan files can survive a cancelled synthesis.</summary>
 public interface IMusicYueWorker
 {
+    string? LastHardware => null;
+    string? LastRuntimePack => null;
     event Action<string>? Log;
     Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token);
     Task SynthesizeAsync(string model, string decoder, MusicYueRequest request, string requestPath, string outputPath, CancellationToken token);

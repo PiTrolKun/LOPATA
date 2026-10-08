@@ -135,7 +135,7 @@ foreach($pair in @(@('builtin.dotnet','microsoft.netcore.app.runtime.win-x64'),@
   }
  }
 }
-foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','hardware-runtime-entries.json')){
+foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','hardware-runtime-entries.json')){
  $scenarioEntries=Join-Path $dest $entryFile
  if(Test-Path $scenarioEntries){
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }

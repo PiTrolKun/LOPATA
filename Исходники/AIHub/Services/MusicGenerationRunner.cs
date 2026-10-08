@@ -13,8 +13,7 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
     public async Task RunAsync(string id, CancellationToken token)
     {
         var job = jobs.Load(id);
-        var cards = MusicComponentCatalog.CreateCards(job.ModelsRoot);
-        string Artifact(string key) { var card = cards.Single(c => c.ModelArtifactId == key); return Path.Combine(card.InstallDirectory, card.Files.Single().RelativePath); }
+        string Artifact(string key) => MusicModelVariants.Artifact(job.ModelsRoot, job.Variation, key);
         for (var i = 0; i < job.Variants.Length; i++)
         {
             token.ThrowIfCancellationRequested(); var variant = job.Variants[i];
@@ -28,21 +27,21 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                 if (job.Expert.Cot != "off" && variant.PlanHash is null)
                 {
                     var plan = jobs.StagePath(id, ".abc"); Stage?.Invoke(MusicGenerationStage.Loading);
-                    await worker.PlanAsync(Artifact(MusicComponentCatalog.ModelId), request, jobs.StagePath(id, ".json"), plan, token);
+                    await worker.PlanAsync(Artifact(job.Variation), request, jobs.StagePath(id, ".json"), plan, token);
                     variant = variant with { PlanFile = plan, PlanHash = await HashAsync(plan, token),
-                        GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds, PlanHardware = (worker as MusicYueWorker)?.LastHardware }; Save(variant);
+                        GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds, PlanHardware = worker.LastHardware }; Save(variant);
                 }
                 if (job.Expert.Cot != "off") await MatchHashAsync(variant.PlanFile!, variant.PlanHash!, token);
                 if (variant.AudioHash is null)
                 {
                     var audio = jobs.StagePath(id, ".wav"); Stage?.Invoke(MusicGenerationStage.Loading);
                     if (job.Expert.Cot != "off") request = request with { Abc = await File.ReadAllTextAsync(variant.PlanFile!, token) };
-                    await worker.SynthesizeAsync(Artifact(MusicComponentCatalog.ModelId), Artifact(MusicComponentCatalog.DecoderId), request,
+                    await worker.SynthesizeAsync(Artifact(job.Variation), Artifact(MusicModelVariants.Decoder(job.Variation)), request,
                         jobs.StagePath(id, ".json"), audio, token);
                     _ = MusicWaveFile.ReadDuration(audio);
                     variant = variant with { AudioFile = audio, AudioHash = await HashAsync(audio, token),
                         DurationSeconds = MusicWaveFile.ReadDuration(audio).TotalSeconds, GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds,
-                        Hardware = (worker as MusicYueWorker)?.LastHardware, UsedRuntimePack = (worker as MusicYueWorker)?.LastRuntimePack }; Save(variant);
+                        Hardware = worker.LastHardware, UsedRuntimePack = worker.LastRuntimePack }; Save(variant);
                 }
                 }
                 finally {

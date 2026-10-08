@@ -41,7 +41,7 @@ public sealed partial class ModelExpertWindow
         _presetList.SelectionChanged += (_, _) => {
             if (_reloading) return;
             _selected = _presetList.SelectedIndex <= 0 ? null : _presetList.SelectedItem as ModelExpertPreset;
-            SelectDraft(_selected?.Settings.Snapshot() ?? new()); _presetName.Text = _selected?.Name ?? "";
+            SelectDraft(_selected?.Settings.Snapshot() ?? MusicModelVariants.Defaults(_draft.Variation)); _presetName.Text = _selected?.Name ?? "";
             Render(); Changed();
         };
         return panel;
@@ -62,7 +62,7 @@ public sealed partial class ModelExpertWindow
     private void Reload()
     {
         _reloading = true; _presetList.Items.Clear();
-        _presetList.Items.Add(new ModelExpertPreset(L("Recommended"), new()));
+        _presetList.Items.Add(new ModelExpertPreset(L("Recommended"), MusicModelVariants.Defaults(_draft.Variation)));
         foreach (var p in _presets) _presetList.Items.Add(p);
         _presetList.SelectedIndex = _selected is null ? 0 : _presets.IndexOf(_selected) + 1;
         _reloading = false;
@@ -86,7 +86,7 @@ public sealed partial class ModelExpertWindow
     private void UpdatePreset()
     {
         if (_selected is null) { MessageBox.Show(this, L("Immutable")); return; }
-        _draft.Validate(); var updated = _selected with { Settings = _draft.Snapshot(), SchemaVersion = 2 };
+        _draft.Validate(); var updated = _selected with { Settings = _draft.Snapshot(), SchemaVersion = _draft.Variation == MusicModelVariants.Bf16 ? 3 : 2 };
         Commit(_presets.Select(p => p == _selected ? updated : p).ToList(), updated);
     }
     private void RenamePreset()
@@ -108,7 +108,12 @@ public sealed partial class ModelExpertWindow
         foreach (var file in dialog.FileNames)
         {
             try {
-                var preset = ModelExpertPresets.Import(file); _store.CheckCollection(preset); var next = _presets.ToList();
+                var preset = ModelExpertPresets.Import(file);
+                if (preset.Settings.Variation != _draft.Variation) {
+                    if (MessageBox.Show(this, L("TransferConfirm"), L("Import"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) continue;
+                    preset = preset with { SchemaVersion = 3, Settings = MusicModelVariants.Transfer(preset.Settings, _draft.Variation), Recipe = null };
+                }
+                _store.CheckCollection(preset); var next = _presets.ToList();
                 var conflict = next.FindIndex(p => string.Equals(p.Name, preset.Name, StringComparison.OrdinalIgnoreCase));
                 if (conflict >= 0) {
                     var answer = MessageBox.Show(this, preset.Name + "\n" + L("Conflict"), L("Import"), MessageBoxButton.YesNoCancel);
@@ -129,9 +134,9 @@ public sealed partial class ModelExpertWindow
     }
     private void ExportPreset()
     {
-        var preset = _selected ?? ModelExpertPresets.Create(L("Recommended"), new(), _store.Collection);
+        var preset = _selected ?? ModelExpertPresets.Create(L("Recommended"), _draft, _store.Collection);
         var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "LOPATA preset (*.json)|*.json", DefaultExt = ".json",
-            FileName = ModelExpertPresets.ExportName(preset.Name, DateTime.Now) };
+            FileName = ModelExpertPresets.ExportName(preset.Name, DateTime.Now, preset.Settings.Variation) };
         if (dialog.ShowDialog(this) == true) ModelExpertPresets.Export(dialog.FileName, preset);
     }
 }

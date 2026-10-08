@@ -19,7 +19,8 @@ public sealed partial class MusicTuningControl : UserControl
         _status = Text(), _guidanceLabel = Text(), _guidanceValue = Text();
     private readonly Button _reset, _guidanceHelp;
     private IReadOnlyList<ModelExpertPreset> _userPresets = [];
-    private readonly ModelExpertPresets _store;
+    private ModelExpertPresets _store;
+    public void ConfigureVariation(string variation) { _store = ModelExpertPresets.For(variation, "Simple"); _userPresets = []; }
     private readonly Grid _root = new(), _middle = new();
     private readonly StackPanel _side = new() { Margin = new(12, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
     private readonly StackPanel _axes = new(), _guidancePanel = new() { Margin = new(0, 8, 0, 0) };
@@ -87,7 +88,7 @@ public sealed partial class MusicTuningControl : UserControl
             var selectedPreset = _userPresets.FirstOrDefault(p => "User:" + p.Name == state.SimplePreset);
             var modified = selectedRecipe is not null ? selectedRecipe.Values.Any(p => settings.Get(p.Key) != p.Value)
                 : selectedPreset is not null ? !selectedPreset.Settings.SameAs(settings) : state.SimpleModified;
-            _profileState.Text = state.SimplePreset is null ? L(settings.SameAs(new()) && state.Pins.Length == 0 ? "Ordinary" : "Own")
+            _profileState.Text = state.SimplePreset is null ? L(settings.SameAs(MusicModelVariants.Defaults(settings.Variation)) && state.Pins.Length == 0 ? "Ordinary" : "Own")
                 : NameFor(state.SimplePreset) + (modified ? " · " + L("Modified") : "");
             _status.ToolTip = string.Join("\n", settings.Values.Select(p => p.Key + " = " + p.Value.ToString("0.######", CultureInfo.CurrentCulture) +
                 (state.Pins.Contains(p.Key) ? " · " + _l("Music.Expert.Pinned") : "")));
