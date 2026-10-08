@@ -1,3 +1,45 @@
+## 08.10.2026 — четыре примера Studio/Suno, 0.4.24-dev
+
+Пользователь предоставил четыре MP3 для встроенных примеров. Исходники:
+C:\Users\Admin\Music\ЛОПАТА_Тесты\Лопата — Опера_002.mp3;
+C:\Users\Admin\Music\ЛОПАТА_Тесты\Лопата — Тяжелый рок.mp3;
+H:\Googl\Suno - Песня о ЛОПАТЕ (Опера).mp3;
+H:\Googl\Suno - Песня о ЛОПАТЕ (hard rock).mp3.
+Файлы сохранены побитово, метаданные не редактировались. Состав поставки —
+Content/MusicExamples.json и Assets/MusicExamples. Облачные версии подписаны Suno.
+Стоковая BF16 снята с выбора; исторический runtime и паспорт сохраняются для
+ранее созданных проектов/операций. Новых зависимостей и скачиваний нет.
+
+- yue2-studio-opera.mp3: 5065835 байт; 126.398667 с; SHA256 B76541170FDE7A97454DFB7BEAFC3A133627DE9542C2F73454E1F85F8F70E73C.
+- yue2-studio-hard-rock.mp3: 5651877 байт; 141.038667 с; SHA256 2B3EFB11D706039820F9787679F50180EC950ED1666F0E539AE27CFC32984C2C.
+- suno-opera.mp3: 1948812 байт; 88.344 с; SHA256 0B2E5CA75DF2ADF6E83BDB92983FA7A14495696E9286C91F5B413A69F5424EC8.
+- suno-hard-rock.mp3: 2525494 байт; 107.952 с; SHA256 12C5E1651A67708359B9723E989E4B52CCB015A72D545345B0A4CBA6EE2933FE.
+
+## 08.10.2026 — основной Q8 теперь Studio
+
+0.4.23-dev: по решению пользователя убрана обычная Q8 из карточки/ИИ±.
+Studio 3.4.0, прежние Q8/VAE и decoder companion остаются основным Q8-комплектом.
+Старые runtime/ID сохраняются для чтения и восстановления ранее созданных заданий.
+Новых зависимостей или загрузок этим переключением не добавлено.
+## 08.10.2026 — YuE2 Studio Q8, 0.4.22-dev
+
+Новый runtime `runtime.music-yue2-studio`, v3.4.0-lopata-paths-1:
+Studio source 9125be3cf9ba720ac439a81cd09ff8bcc2a00368, engine
+1141479c725b803a3649c900fd3e6fcb27f6f595. Native CUDA12/13, Vulkan/CPU;
+CUDA cuBLAS 12.9.1.4 / 13.5.1.27, Microsoft app-local runtime.
+Пакет 1 892 558 508 байт без manifest, включая исходники Cargo/Studio и оригинальные
+уведомления; это размер полного developer/runtime комплекта, не требование RAM.
+Manifest каждого файла, размеры/SHA и рецепт в Инструменты/MusicStudio/README.md.
+Rust/Cargo/MSVC — только developer tooling; пользовательские Python/Node не добавлены.
+MIT/Apache/MPL/LGPL и отдельные условия NVIDIA/Microsoft сохранены в центральном каталоге;
+исходники Cargo включают LAME для восстановления/перелинковки.
+
+Основные Q8/VAE повторно не загружаются. Новый managed component
+`music-yue2-studio-companion`, CC BY-NC 4.0 по карточке автора, revision
+ e2e63d859f3af879baf1b4d4e9f22d1eeda6fde5, 140 560 592 байта.
+[Паспорт](YuE2_Studio_Q8_паспорт.md) отделяет реальные CUDA13/RTX4090 проверки
+от неподтверждённых требований/качества. Комплект для AMD/Intel/CPU физически здесь не тестировался.
+
 
 ## 08.10.2026 — встроенные музыкальные примеры, 0.4.12-dev
 

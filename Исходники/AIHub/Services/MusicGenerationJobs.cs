@@ -19,6 +19,7 @@ public sealed record MusicGenerationVariant(int LanguageSeed, int SoundSeed, str
     public string? Hardware { get; init; }
     public string? PlanHardware { get; init; }
     public string? UsedRuntimePack { get; init; }
+    public string? ExecutionReceipt { get; init; }
     public bool Completed { get; init; }
 }
 public sealed record MusicGenerationJob(string Id, string ModelsRoot, string OutputFolder, string Title,
@@ -84,8 +85,8 @@ public sealed class MusicGenerationJobs(string directory)
             outputSettings is null && string.IsNullOrWhiteSpace(title) ? name : title.Trim(), style, lyrics, duration, now, variants)
             { Schema = 2, Variation = settings.Variation, ModelRevision = MusicModelVariants.Revision(settings.Variation),
                 DecoderRevision = settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision,
-                RuntimeRevision = settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
-                RuntimePack = settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(),
+                RuntimeRevision = settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Revision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
+                RuntimePack = settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(),
                 Output = outputSettings, Artist = artist.Trim(), Comment = comment };
         if (settings.Variation == MusicModelVariants.Bf16) job = job with { Variants = job.Variants.Select(v => v with { LanguageSeed = v.SoundSeed }).ToArray() };
         Save(job); return job;
@@ -112,11 +113,12 @@ public sealed class MusicGenerationJobs(string directory)
             || job.ProjectId is null && job.ProjectStep is not null) throw new InvalidDataException("Invalid music project link.");
         var folder = Path.GetFullPath(Folder(job.Id)) + Path.DirectorySeparatorChar;
         var bf16 = job.Variation == MusicModelVariants.Bf16;
-        if (job.Schema is not (1 or 2) || job.Schema == 1 && bf16 || !MusicModelVariants.Supported(job.Variation) || job.Expert.Variation != job.Variation
+        var studio = job.Variation == MusicStudioRuntime.Variation;
+        if (job.Schema is not (1 or 2) || job.Schema == 1 && (bf16 || studio) || !MusicModelVariants.Supported(job.Variation) || job.Expert.Variation != job.Variation
             || job.ModelRevision != MusicModelVariants.Revision(job.Variation)
             || job.DecoderRevision != (bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision)
-            || job.RuntimeRevision != (bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision)
-            || (bf16 ? job.RuntimePack != "pytorch-bf16" : job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack))
+            || job.RuntimeRevision != (studio ? MusicStudioRuntime.Revision : bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision)
+            || (studio ? job.RuntimePack != MusicStudioRuntime.Pack : bf16 ? job.RuntimePack != "pytorch-bf16" : job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack))
             || job.Variants.Length is < 1 or > 8 || !Path.IsPathFullyQualified(job.ModelsRoot)
             || !Path.IsPathFullyQualified(job.OutputFolder) || job.DurationSeconds is < 1 or > 360)
             throw new InvalidDataException("Unsupported music job.");

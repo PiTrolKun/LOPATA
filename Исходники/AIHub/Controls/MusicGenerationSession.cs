@@ -30,7 +30,7 @@ public sealed class MusicGenerationSession : IDisposable
         if (_controller is not null) _controller.Changed += ControllerChanged;
         _worker.Log += NativeLog;
         if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
-        _view.Player.ConfigureRepeat(track => _ready && !_working && !_starting && _controller?.HasPending != true && track.JobId is not null,
+        _view.Player.ConfigureRepeat(track => _ready && !_working && !_starting && _controller?.HasPending != true && CanRepeat(track),
             track => { _ = RepeatAsync(track); });
     }
     public void Configure(string modelsRoot, Func<string, string> localize)
@@ -46,6 +46,17 @@ public sealed class MusicGenerationSession : IDisposable
         try
         {
             var token = ApplicationBackgroundOperations.ExitToken;
+            if (variation == MusicStudioRuntime.Variation) {
+                await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(variation), token);
+                await MusicStudioRuntime.VerifyAsync(token); await MusicStudioRuntime.VerifyModelsAsync(_modelsRoot, token);
+                var studioRequest = new MusicYueRequest(_view.Wishes.RequestStyle, _view.Editor.Lyrics, 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
+                    { Expert = _view.Generation.ExpertSettings };
+                var studioChoice = await MusicHardwareProbe.CheckAsync(MusicYueRuntime.DirectoryPath,
+                    MusicModelVariants.Artifact(_modelsRoot, variation, MusicComponentCatalog.ModelId),
+                    MusicModelVariants.Artifact(_modelsRoot, variation, MusicComponentCatalog.DecoderId), studioRequest, true, token, NativeLog);
+                if (!_disposed && check == _modelCheck) { _view.Generation.SetHardware("Studio · " + studioChoice.Device.Backend); _ready = true; }
+                return;
+            }
             if (variation == MusicModelVariants.Bf16) {
                 var hardware = await MusicBf16Worker.ProbeAsync(_modelsRoot, token,
                     line => { if (!_disposed && check == _modelCheck) NativeLog(line); });
@@ -79,7 +90,7 @@ public sealed class MusicGenerationSession : IDisposable
         if (string.IsNullOrWhiteSpace(_modelsRoot)) return;
         var variation = _view.Generation.Variation;
         var cards = MusicModelVariants.Cards(_modelsRoot, variation);
-        var card = cards.Single(c => c.ModelArtifactId == variation);
+        var card = cards.Single(c => c.ModelArtifactId == MusicModelVariants.Weights(variation));
         var tokenizer = variation == MusicModelVariants.Bf16 ? "qwen.tiktoken" : card.Files.Single().RelativePath;
         _view.Editor.ResetTokenizer(); _ = _view.Editor.LoadTokenizerAsync(Path.Combine(card.InstallDirectory, tokenizer));
         if (verifiedHardware is not null) {
@@ -135,6 +146,7 @@ public sealed class MusicGenerationSession : IDisposable
         {
             _starting = true; RefreshButtons();
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
+            if (MusicModelVariants.WorkspaceVariation(original.Variation) != original.Variation) return;
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
                 original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment);
             submitted = repeat = _view.Projects.Record(repeat, MusicProjectSnapshot.FromJob(repeat));
@@ -151,6 +163,12 @@ public sealed class MusicGenerationSession : IDisposable
         catch (Exception error) { if (submitted is not null) Outcome(submitted, MusicProjectOutcome.Failed, error.Message); ReportFailure(error); }
         finally { _starting = false; if (!_disposed) RefreshButtons(); }
     }
+    private bool CanRepeat(MusicTrack track)
+    {
+        if (track.JobId is null) return false;
+        try { var variation = _jobs.Load(track.JobId).Variation; return MusicModelVariants.WorkspaceVariation(variation) == variation; }
+        catch (Exception error) when (error is IOException or JsonException or UnauthorizedAccessException) { return false; }
+    }
     public Task ResumeAsync(BackgroundOperationState state, CancellationToken token)
     {
         if (state.Kind != MusicGenerationRunner.BackgroundKind) throw new InvalidDataException("Unexpected music operation.");
@@ -164,9 +182,12 @@ public sealed class MusicGenerationSession : IDisposable
         if (restored is not null) job = _view.Projects.RestoreJob(job);
         _working = true;
         _worker.Log -= NativeLog; if (_worker is MusicYueWorker oldNative) oldNative.HardwareChanged -= HardwareChanged;
+        if (_worker is MusicStudioWorker oldStudio) oldStudio.HardwareChanged -= HardwareChanged;
         // Re-evaluate hardware on resume, even for a job originally created on CPU.
-        _worker = job.Variation == MusicModelVariants.Bf16 ? new MusicBf16Worker() : new MusicYueWorker(MusicYueRuntime.DirectoryPath);
+        _worker = job.Variation == MusicStudioRuntime.Variation ? new MusicStudioWorker()
+            : job.Variation == MusicModelVariants.Bf16 ? new MusicBf16Worker() : new MusicYueWorker(MusicYueRuntime.DirectoryPath);
         _worker.Log += NativeLog; if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
+        if (_worker is MusicStudioWorker studio) studio.HardwareChanged += HardwareChanged;
         _cancel = CancellationTokenSource.CreateLinkedTokenSource(token); RefreshButtons();
         var runner = new MusicGenerationRunner(_jobs, _worker);
         runner.Stage += stage => _view.Status.Telemetry.Report(_telemetry, stage);
@@ -281,5 +302,6 @@ public sealed class MusicGenerationSession : IDisposable
         _view.Generation.OptionsChanged -= RefreshBudget; if (_controller is not null) _controller.Changed -= ControllerChanged;
         _worker.Log -= NativeLog;
         if (_worker is MusicYueWorker native) native.HardwareChanged -= HardwareChanged;
+        if (_worker is MusicStudioWorker studio) studio.HardwareChanged -= HardwareChanged;
     }
 }

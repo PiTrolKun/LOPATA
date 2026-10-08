@@ -65,17 +65,18 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         AutomationProperties.SetAutomationId(open, "Music.Models.Open." + model.Id);
         body.Children.Add(open);
         var examples = new List<Border>();
+        var examplePlayers = new Dictionary<Border, List<MusicExamplePlayerControl>>();
         void Update()
         {
             var variant = (MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag;
             _choices[model.Id] = variant.Id;
-            assessment.Visibility = model.Id == "yue2" && variant.Id is "q8" or "bf16"
+            assessment.Visibility = model.Id == "yue2" && variant.Id is "q8" or "bf16" or "studio-q8"
                 ? Visibility.Visible : Visibility.Collapsed;
             if (model.Id == "yue2") {
                 var prefix = "Music.Models.yue2." + variant.Id + ".";
                 assessment.Children.Clear();
                 foreach (var key in new[] { "Pros", "Cons", "Memory" }) assessment.Children.Add(Text(_l(prefix + key)));
-                description.Text = _l(variant.Id == "bf16" ? prefix + "Description" : model.DescriptionKey);
+                description.Text = _l(variant.Id is "bf16" or "studio-q8" ? prefix + "Description" : model.DescriptionKey);
             }
             status.Text = _l(variant.Connected ? "Music.Models.Connected" : "Music.Models.Planned");
             open.Content = _l(variant.Connected ? "Music.Models.Open" : "Music.Models.NotConnected");
@@ -109,14 +110,21 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         void UpdateExamples(MusicModelVariant variant)
         {
             foreach (var border in examples) {
-                if (border.Child is MusicExamplePlayerControl old) { old.Dispose(); _players.Remove(old); }
-                if (model.Id == "yue2" && variant.Id is "q8" or "bf16") {
-                    var cloud = Grid.GetColumn(border) == 2;
-                    var entry = MusicExamples.All.Single(e => cloud ? e.Cloud : !e.Cloud && e.Variation == MusicModelVariants.Normalize(variant.Id));
-                    var player = new MusicExamplePlayerControl(entry, _l, () => CanApplyExample());
-                    player.Playing += () => { foreach (var other in _players.Where(p => p != player)) other.Pause(); };
-                    player.ApplyRequested += snapshot => ExampleRequested?.Invoke(snapshot) ?? Task.CompletedTask;
-                    _players.Add(player); border.Child = player;
+                if (examplePlayers.Remove(border, out var previous))
+                    foreach (var old in previous) { old.Dispose(); _players.Remove(old); }
+                var entries = model.Id == "yue2"
+                    ? MusicExamples.ForVariation(MusicModelVariants.Normalize(variant.Id), Grid.GetColumn(border) == 2)
+                    : Array.Empty<MusicExample>();
+                if (entries.Count > 0) {
+                    var group = new StackPanel();
+                    var owned = new List<MusicExamplePlayerControl>();
+                    foreach (var entry in entries) {
+                        var player = new MusicExamplePlayerControl(entry, _l, () => CanApplyExample()) { Margin = new(0, 0, 0, 12) };
+                        player.Playing += () => { foreach (var other in _players.Where(p => p != player)) other.Pause(); };
+                        player.ApplyRequested += snapshot => ExampleRequested?.Invoke(snapshot) ?? Task.CompletedTask;
+                        _players.Add(player); owned.Add(player); group.Children.Add(player);
+                    }
+                    examplePlayers.Add(border, owned); border.Child = group;
                 }
                 else {
                     var pending = new StackPanel { VerticalAlignment = VerticalAlignment.Center };

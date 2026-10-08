@@ -41,7 +41,8 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                     _ = MusicWaveFile.ReadDuration(audio);
                     variant = variant with { AudioFile = audio, AudioHash = await HashAsync(audio, token),
                         DurationSeconds = MusicWaveFile.ReadDuration(audio).TotalSeconds, GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds,
-                        Hardware = worker.LastHardware, UsedRuntimePack = worker.LastRuntimePack }; Save(variant);
+                        Hardware = worker.LastHardware, UsedRuntimePack = worker.LastRuntimePack,
+                        ExecutionReceipt = worker.LastRequestReceipt }; Save(variant);
                 }
                 }
                 finally {

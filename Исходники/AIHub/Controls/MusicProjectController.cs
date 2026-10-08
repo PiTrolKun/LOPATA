@@ -61,10 +61,11 @@ public sealed class MusicProjectController
             _modelSettings[_view.Generation.Variation] = _view.Generation.ExpertSettings;
             if (restoreBank) foreach (var pair in snapshot.ModelSettings) _modelSettings[pair.Key] = pair.Value.Snapshot();
             _modelSettings[snapshot.Variation] = snapshot.Expert.Snapshot();
-            _view.Generation.ConfigureVariation(snapshot.Variation, snapshot.Expert);
+            var active = MusicModelVariants.WorkspaceSettings(snapshot.Expert);
+            _view.Generation.ConfigureVariation(active.Variation, active);
             _view.Generation.SetOptions(new(snapshot.Title, snapshot.Variants, snapshot.DurationSeconds) {
                 Artist = snapshot.Artist, Comment = snapshot.Comment, Output = snapshot.Output });
-            _view.Generation.SetExpertSettings(snapshot.Expert, false);
+            _view.Generation.SetExpertSettings(active, false);
             _view.Wishes.Apply(snapshot.Wishes.ToPreferences()); _view.Tracks.SetOutputFolder(snapshot.OutputFolder);
             _view.Session.ModelChanged();
         }

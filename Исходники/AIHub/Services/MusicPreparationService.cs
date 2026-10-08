@@ -31,6 +31,7 @@ public sealed class MusicPreparationService : IMusicPreparation
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        if (Variation == MusicStudioRuntime.Variation) await MusicStudioRuntime.VerifyAsync(token);
         var result = new List<ManagedModelArtifactCard>();
         foreach (var card in Register(root))
         {
@@ -44,7 +45,8 @@ public sealed class MusicPreparationService : IMusicPreparation
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
         var cards = Register(root);
-        await ComponentLicenseGate.EnsureAsync(cards.Select(c => c.ModelArtifactId).ToArray(), token);
+        await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(Variation), token);
+        if (Variation == MusicStudioRuntime.Variation) await MusicStudioRuntime.VerifyAsync(token);
         var result = new List<ManagedModelArtifactCard>();
         foreach (var card in cards)
         {

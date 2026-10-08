@@ -2034,5 +2034,40 @@
     "Ru": "Оригинальный vcomp140.dll из закреплённого официального пакета Real-CUGAN 20220728. Неизменённая отдельная библиотека Microsoft, необходимая CPU и Vulkan исполнителю; системная установка не выполняется. Оригинальные условия Visual C++ Runtime сохранены; MIT/GPL не распространяются на эту DLL.",
     "En": "Original vcomp140.dll from the pinned official Real-CUGAN 20220728 package. Unmodified separate Microsoft library required by its CPU and Vulkan executor; no system installation. Original Visual C++ Runtime terms are retained; MIT/GPL do not apply to this DLL.",
     "Terms": "96278C41D62D5DC173A63AD098CC983142335C2EDA9AB7F0C58C4B56AC56DB1A"
+  },
+  {
+    "Id": "runtime.music-yue2-studio",
+    "Name": "YuE2 Studio headless runtime",
+    "Version": "v3.4.0-lopata-paths-1",
+    "Author": "timoncool and upstream contributors",
+    "License": "MIT / Apache-2.0 / MPL-2.0 / LGPL / NVIDIA / Microsoft / dependency notices",
+    "Source": "https://github.com/timoncool/YuE2-Studio/releases/tag/v3.4.0",
+    "Checked": "2026-10-08",
+    "Ru": "Отдельный сервер Studio, native CUDA/Vulkan/CPU и их библиотеки. Оригинальные лицензии, закреплённые исходники и patch адаптера сохранены в MusicStudioRuntime; CargoSources содержит исходники зависимостей для восстановления и перелинковки. Коммерческие права на веса этим пакетом не предоставляются.",
+    "En": "Separate Studio server, native CUDA/Vulkan/CPU and their libraries. Original notices, pinned source and adapter patch are retained in MusicStudioRuntime; CargoSources contains dependency sources for rebuilding and relinking. This package grants no commercial rights to the model weights.",
+    "Delivery": "bundled",
+    "Basic": false,
+    "Terms": "8075934DE8072E4A0A24A43D9C2B162458E55C051DDED8B14C2CADB86A90EE13",
+    "Texts": [
+      "texts/music-studio-NOTICES.txt"
+    ]
+  },
+  {
+    "Id": "music-yue2-studio-companion",
+    "Name": "YuE2 Studio decoder companion v9",
+    "Version": "e2e63d859f3af879baf1b4d4e9f22d1eeda6fde5",
+    "Author": "Mothersuperior and upstream YuE2 authors",
+    "License": "CC BY-NC 4.0 (publisher declaration)",
+    "Source": "https://huggingface.co/Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4",
+    "Checked": "2026-10-08",
+    "Ru": "Decoder companion nar_lora_joint_v9.safetensors скачивается отдельно. Закреплённая карточка автора указывает CC BY-NC 4.0; отдельный LICENSE в репозитории отсутствует. Сохраняются карточка и полный стандартный текст CC BY-NC 4.0. Дополнительные коммерческие права не предоставляются.",
+    "En": "Decoder companion nar_lora_joint_v9.safetensors is downloaded separately. The pinned publisher card declares CC BY-NC 4.0; there is no separate repository LICENSE. The model card and the full standard CC BY-NC 4.0 legal text are retained. No additional commercial rights are granted.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "57E120484AE2620FE7EF8421572DA9A743E4F4E4E610E29EE5D126D9CF85409B",
+    "Texts": [
+      "texts/music-studio-companion-MODEL_CARD.txt",
+      "texts/music-studio-companion-LICENSE.txt"
+    ]
   }
 ]

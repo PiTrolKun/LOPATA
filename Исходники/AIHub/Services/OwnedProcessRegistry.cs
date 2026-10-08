@@ -119,6 +119,14 @@ public sealed class OwnedProcessRegistry : IDisposable
         }
     }
 
+    public Task StopAndWaitAsync(int pid)
+    {
+        lock (_gate) {
+            // Only a pinned identity started by this registry may be stopped.
+            return _entries.TryGetValue(pid, out var entry) ? entry.Job.TerminateAndWaitAsync() : Task.CompletedTask;
+        }
+    }
+
     public void Dispose()
     {
         lock (_gate)

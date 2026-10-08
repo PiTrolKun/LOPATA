@@ -19,7 +19,7 @@ public static class MusicSongMetadata
             ["LOPATA_VARIATION"] = job.Variation, ["LOPATA_DECODER_REVISION"] = job.DecoderRevision,
             ["LOPATA_MODEL_REVISION"] = job.ModelRevision, ["LOPATA_RUNTIME_REVISION"] = job.RuntimeRevision,
             ["LOPATA_RUNTIME_PACK"] = variant.UsedRuntimePack ?? job.RuntimePack, ["LOPATA_VERSION"] = job.AppVersion,
-            ["LOPATA_GGML_REVISION"] = job.Variation == MusicModelVariants.Bf16 ? "" : MusicYueRuntime.GgmlRevision,
+            ["LOPATA_GGML_REVISION"] = job.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation ? "" : MusicYueRuntime.GgmlRevision,
             ["LOPATA_AUDIO_RUNTIME"] = MusicAudioRuntime.Revision,
             ["LOPATA_LM_SEED"] = variant.LanguageSeed.ToString(culture),
             ["LOPATA_SEED"] = variant.SoundSeed.ToString(culture),
@@ -38,6 +38,14 @@ public static class MusicSongMetadata
             result.Remove("LOPATA_LM_SEED");
             result["LOPATA_PRECISION"] = "generator=bfloat16;vae=float32;quantization=none";
             result["LOPATA_ADAPTER"] = "yue2-infer-0.1.5;torch-eager;offload_ar=true;ode_method=midpoint;context=24576";
+        }
+        if (job.Variation == MusicStudioRuntime.Variation) {
+            result["LOPATA_ENGINE_REVISION"] = MusicStudioRuntime.EngineRevision;
+            result["LOPATA_STUDIO_SOURCE"] = MusicStudioRuntime.SourceRevision;
+            result["LOPATA_PRECISION"] = "generator=Q8_0;vae=F32";
+            result["LOPATA_ADAPTER"] = "nar_lora_joint_v9.safetensors;revision=" + MusicStudioRuntime.CompanionRevision;
+            result["LOPATA_STUDIO_POLICY"] = "headless;keep_loaded=false;max_batch=1;output=wav16;backend=auto";
+            if (variant.ExecutionReceipt is { Length: > 0 } receipt) result["LOPATA_STUDIO_REQUEST"] = receipt;
         }
         if (job.Expert.Tuning is { } tuning) result["LOPATA_TUNING"] = JsonSerializer.Serialize(tuning);
         if (job.Output is { } output) result["LOPATA_OUTPUT"] = JsonSerializer.Serialize(output);

@@ -86,7 +86,7 @@ public sealed partial class ModelExpertWindow
     private void UpdatePreset()
     {
         if (_selected is null) { MessageBox.Show(this, L("Immutable")); return; }
-        _draft.Validate(); var updated = _selected with { Settings = _draft.Snapshot(), SchemaVersion = _draft.Variation == MusicModelVariants.Bf16 ? 3 : 2 };
+        _draft.Validate(); var updated = _selected with { Settings = _draft.Snapshot(), SchemaVersion = ModelExpertPresets.SchemaFor(_draft.Variation) };
         Commit(_presets.Select(p => p == _selected ? updated : p).ToList(), updated);
     }
     private void RenamePreset()

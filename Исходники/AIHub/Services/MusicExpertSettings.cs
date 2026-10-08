@@ -61,7 +61,7 @@ public sealed record MusicExpertSettings
         if (Variation == MusicModelVariants.Bf16 && (Values.GetValueOrDefault("lm_seed", -2) != -1 || Values.GetValueOrDefault("peak_clip", -2) != 10))
             throw new InvalidDataException("BF16 uses one seed and does not support peak_clip.");
         Tuning?.Validate();
-        if (Tuning is not null && Tuning.Profile != (Variation == MusicModelVariants.Bf16 ? MusicTuningProfile.Bf16Id : MusicTuningProfile.Id))
+        if (Tuning is not null && Tuning.Profile != MusicTuningProfile.ForVariation(Variation))
             throw new InvalidDataException("Tuning profile belongs to another model variation.");
         var unknown = Values.Keys.Except(MusicExpertCatalog.Parameters.Select(p => p.Key)).ToArray();
         if (unknown.Length != 0) throw new InvalidDataException("Unknown parameters: " + string.Join(", ", unknown));

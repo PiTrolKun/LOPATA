@@ -22,6 +22,27 @@ internal sealed class WindowsProcessJob : IDisposable
         if (!AssignProcessToJobObject(_handle, process)) throw new Win32Exception(Marshal.GetLastWin32Error());
     }
     public void Dispose() => _handle.Dispose();
+    public async Task TerminateAndWaitAsync()
+    {
+        // Keep the Job handle alive while the registry observes the root's exit.
+        var held = false;
+        _handle.DangerousAddRef(ref held);
+        try {
+            var handle = _handle.DangerousGetHandle();
+            if (!TerminateJobObject(handle, 1)) throw new Win32Exception(Marshal.GetLastWin32Error());
+            while (true) {
+                if (!QueryInformationJobObject(handle, 1, out var accounting, (uint)Marshal.SizeOf<Accounting>(), IntPtr.Zero))
+                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                if (accounting.ActiveProcesses == 0) return;
+                await Task.Delay(20).ConfigureAwait(false);
+            }
+        } finally { if (held) _handle.DangerousRelease(); }
+    }
+    [StructLayout(LayoutKind.Sequential)] private struct Accounting
+    {
+        public long TotalUserTime, TotalKernelTime, PeriodUserTime, PeriodKernelTime;
+        public uint PageFaults, TotalProcesses, ActiveProcesses, TerminatedProcesses;
+    }
 
     [StructLayout(LayoutKind.Sequential)] private struct BasicLimits
     {
@@ -48,4 +69,8 @@ internal sealed class WindowsProcessJob : IDisposable
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool SetInformationJobObject(SafeJobHandle job, int infoClass, ref ExtendedLimits limits, uint size);
     [DllImport("kernel32.dll", SetLastError = true)] private static extern bool AssignProcessToJobObject(SafeJobHandle job, IntPtr process);
     [DllImport("kernel32.dll")] private static extern bool CloseHandle(IntPtr handle);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TerminateJobObject(IntPtr job, uint exitCode);
+    [DllImport("kernel32.dll", SetLastError = true)] [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool QueryInformationJobObject(IntPtr job, int infoClass, out Accounting info, uint length, IntPtr returnedLength);
 }

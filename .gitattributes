@@ -36,6 +36,10 @@ VERSION text eol=lf
 Исходники/AIHub/Licenses/texts/sd-hardware-NOTICES.txt -text -eol -whitespace
 
 Исходники/AIHub/Licenses/texts/music-MSVC-RUNTIME.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/music-studio-NOTICES.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/music-studio-companion-LICENSE.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/music-studio-companion-MODEL_CARD.txt -text -eol -whitespace
+Инструменты/MusicStudio/lopata-paths.patch -text -eol -whitespace
 
 # Archived user research remains byte-identical to the supplied originals.
 ТЗ/Архив/LOPATA_YuE2_Studio_потенциальная_интеграция_2026-10-07.md -text -eol -whitespace

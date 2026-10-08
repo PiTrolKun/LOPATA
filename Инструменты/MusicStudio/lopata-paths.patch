@@ -1,0 +1,30 @@
+diff --git a/crates/music-server/src/lib.rs b/crates/music-server/src/lib.rs
+index 7ba34a3..a4f3088 100644
+--- a/crates/music-server/src/lib.rs
++++ b/crates/music-server/src/lib.rs
+@@ -973,7 +973,7 @@ pub async fn serve() -> anyhow::Result<()> {
+             // two seconds is what filled a whole log with one sentence.
+             let mut was_running = false;
+             loop {
+-                let ready = state.model_manager.status(effective_install_target(&state).await).await.ready;
++                let ready = lopata_models().is_some() || state.model_manager.status(effective_install_target(&state).await).await.ready;
+                 let running = state.music_server.health().await;
+                 // the card has one owner: a preparation or a training run
+                 // holding it is left alone, and the engine comes back after
+@@ -4015,7 +4015,16 @@ fn engine_location(options: EngineOptions) -> music_engine::yue_server::YueServe
+ }
+ 
+ /// The weights the selected set resolves to, as paths the engine can open.
++// Explicit model paths supplied and integrity checked by the owning LOPATA adapter.
++fn lopata_models() -> Option<music_engine::yue_server::YueModelFiles> {
++    let backbone = PathBuf::from(env::var_os("LOPATA_YUE_BACKBONE")?);
++    let vae = PathBuf::from(env::var_os("LOPATA_YUE_VAE")?);
++    let companion = PathBuf::from(env::var_os("LOPATA_YUE_COMPANION")?);
++    if !backbone.is_file() || !vae.is_file() || !companion.is_file() { return None; }
++    Some(music_engine::yue_server::YueModelFiles { backbone, vae, companion, transcriber: None, adapters: None })
++}
+ async fn selected_engine_models(state: &AppState) -> Result<music_engine::yue_server::YueModelFiles, String> {
++    if let Some(models) = lopata_models() { return Ok(models); }
+     let selected_component_ids = state.selected_component_ids.read().await.clone();
+     let selected_profile_id = state.selected_profile_id.read().await.clone();
+     let files = match (selected_component_ids, selected_profile_id) {

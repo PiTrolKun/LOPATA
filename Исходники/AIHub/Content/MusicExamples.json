@@ -32,5 +32,55 @@
     "Request": "",
     "Genre": "punk",
     "Variation": "music-yue2-bf16"
+  },
+  {
+    "Sha256": "B76541170FDE7A97454DFB7BEAFC3A133627DE9542C2F73454E1F85F8F70E73C",
+    "Variation": "music-yue2-studio-q8",
+    "Bytes": 5065835,
+    "DurationSeconds": 126.398667,
+    "Request": "",
+    "Cloud": false,
+    "Title": "YuE2 Studio · opera",
+    "Pair": "opera",
+    "Genre": "opera",
+    "Id": "yue2-studio-opera",
+    "File": "yue2-studio-opera.mp3"
+  },
+  {
+    "Sha256": "2B3EFB11D706039820F9787679F50180EC950ED1666F0E539AE27CFC32984C2C",
+    "Variation": "music-yue2-studio-q8",
+    "Bytes": 5651877,
+    "DurationSeconds": 141.038667,
+    "Request": "",
+    "Cloud": false,
+    "Title": "YuE2 Studio · hard rock",
+    "Pair": "hard-rock",
+    "Genre": "hard rock",
+    "Id": "yue2-studio-hard-rock",
+    "File": "yue2-studio-hard-rock.mp3"
+  },
+  {
+    "Sha256": "0B2E5CA75DF2ADF6E83BDB92983FA7A14495696E9286C91F5B413A69F5424EC8",
+    "Bytes": 1948812,
+    "DurationSeconds": 88.344,
+    "Request": "[Verse 1]\nНочью мастер сел за стол,\nСтарый ящик вдруг ожил.\nОн ЛОПАТУ в нём завёл —\nИ экран заговорил.\n\n[Chorus]\nЭй, ЛОПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!\n\n[Verse 2]\nВ ящик бросил он рассказ,\nПару строчек и портрет.\nА ЛОПАТА в тот же час\nПрошептала: «Вот ответ».\n\n[Verse 3]\nТолько мастер отвернулся —\nЧто-то грохнуло внутри.\nМонитор слегка качнулся:\n«Это тест номер три!»\n\n[Verse 4]\nДо рассвета шёл их спор,\nКто умнее — человек?\nНо ЛОПАТА с этих пор\nРоет данные вовек.\n\n[Chorus]\nЭй, ЛОПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!",
+    "Cloud": true,
+    "Title": "Suno · opera",
+    "Pair": "opera",
+    "Genre": "opera",
+    "Id": "suno-opera",
+    "File": "suno-opera.mp3"
+  },
+  {
+    "Sha256": "12C5E1651A67708359B9723E989E4B52CCB015A72D545345B0A4CBA6EE2933FE",
+    "Bytes": 2525494,
+    "DurationSeconds": 107.952,
+    "Request": "[Verse 1]\nНочью мастер сел за стол,\nСтарый ящик вдруг ожил.\nОн ЛОПАТУ в нём завёл —\nИ экран заговорил.\n\n[Chorus]\nЭй, ЛОПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!\n\n[Verse 2]\nВ ящик бросил он рассказ,\nПару строчек и портрет.\nА ЛОПАТА в тот же час\nПрошептала: «Вот ответ».\n\n[Verse 3]\nТолько мастер отвернулся —\nЧто-то грохнуло внутри.\nМонитор слегка качнулся:\n«Это тест номер три!»\n\n[Verse 4]\nДо рассвета шёл их спор,\nКто умнее — человек?\nНо ЛОПАТА с этих пор\nРоет данные вовек.\n\n[Chorus]\nЭй, ЛОПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!",
+    "Cloud": true,
+    "Title": "Suno · hard rock",
+    "Pair": "hard-rock",
+    "Genre": "hard rock",
+    "Id": "suno-hard-rock",
+    "File": "suno-hard-rock.mp3"
   }
 ]

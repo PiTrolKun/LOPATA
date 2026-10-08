@@ -11,6 +11,7 @@ public sealed record MusicExample(string Id, string File, string Title, bool Clo
     long Bytes, double DurationSeconds, string Request, string Genre)
 {
     public string Variation { get; init; } = MusicComponentCatalog.ModelId;
+    public string Pair { get; init; } = "";
     public string Path => System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "MusicExamples", File);
 }
 
@@ -54,6 +55,11 @@ public sealed record MusicExampleMetadata(Dictionary<string, string> Tags, strin
 public static class MusicExamples
 {
     public static IReadOnlyList<MusicExample> All { get; } = Load();
+    public static IReadOnlyList<MusicExample> ForVariation(string variation, bool cloud)
+    {
+        var local = All.Where(e => !e.Cloud && e.Variation == variation).ToArray();
+        return cloud ? local.Select(e => All.Single(c => c.Cloud && c.Pair == e.Pair)).ToArray() : local;
+    }
     private static IReadOnlyList<MusicExample> Load()
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AIHub.Content.MusicExamples.json")
@@ -64,6 +70,11 @@ public static class MusicExamples
                 || item.Sha256.Length != 64 || item.Bytes <= 0 || !double.IsFinite(item.DurationSeconds) || item.DurationSeconds <= 0
                 || !item.Cloud && !MusicModelVariants.Supported(item.Variation))
                 throw new InvalidDataException("Invalid music example.");
+        if (entries.Select(e => e.Id).Distinct(StringComparer.Ordinal).Count() != entries.Length)
+            throw new InvalidDataException("Duplicate music example identifier.");
+        foreach (var item in entries.Where(e => !e.Cloud && e.Pair.Length > 0))
+            if (entries.Count(e => e.Cloud && e.Pair == item.Pair) != 1)
+                throw new InvalidDataException("Missing or ambiguous cloud comparison.");
         return Array.AsReadOnly(entries);
     }
     public static async Task VerifyAsync(MusicExample example, CancellationToken token)

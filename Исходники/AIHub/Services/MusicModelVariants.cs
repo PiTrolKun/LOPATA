@@ -13,12 +13,25 @@ public static class MusicModelVariants
     public const string VaeRevision = "152733a19ad43aa67e367f9b5503ef8075bb5126";
     public const string RuntimeRevision = "yue2-infer-0.1.5-lopata-1";
     public const string RuntimeId = "runtime-music-yue2-bf16";
-    public static string Normalize(string id) => id switch { "q8" => MusicComponentCatalog.ModelId, "bf16" => Bf16, _ => id };
-    public static bool Supported(string id) => id is MusicComponentCatalog.ModelId or Bf16;
+    public static string Normalize(string id) => id switch { "q8" => MusicComponentCatalog.ModelId, "bf16" => Bf16, "studio-q8" => MusicStudioRuntime.Variation, _ => id };
+    public static bool Supported(string id) => id is MusicComponentCatalog.ModelId or Bf16 or MusicStudioRuntime.Variation;
+    public static string Weights(string id) => id == MusicStudioRuntime.Variation ? MusicComponentCatalog.ModelId : id;
+    public static string WorkspaceVariation(string id) => id is MusicComponentCatalog.ModelId or Bf16 ? MusicStudioRuntime.Variation : id;
+    public static MusicExpertSettings WorkspaceSettings(MusicExpertSettings source)
+    {
+        source.Validate(); var next = source.Snapshot(); var variation = WorkspaceVariation(source.Variation);
+        if (variation == source.Variation) return next;
+        if (source.Variation == Bf16) next = Transfer(source, variation) with { Tuning = source.Tuning?.Snapshot() };
+        next = next with { Variation = variation, Tuning = next.Tuning is { } tuning
+            ? tuning with { Profile = MusicTuningProfile.ForVariation(variation) } : null };
+        next.Validate(); return next;
+    }
     public static string Revision(string id) => id == Bf16 ? Bf16Revision : MusicComponentCatalog.Revision;
-    public static string Name(string id) => id == Bf16 ? "YuE2 3B BF16" : "YuE2 3B Q8_0";
+    public static string Name(string id) => id == MusicStudioRuntime.Variation ? "YuE2 Studio · Q8_0" : id == Bf16 ? "YuE2 3B BF16" : "YuE2 3B Q8_0";
     public static string Decoder(string id) => id == Bf16 ? Bf16Vae : MusicComponentCatalog.DecoderId;
-    public static IReadOnlyList<string> Components(string id) => id == Bf16 ? [id, Decoder(id), RuntimeId] : [id, Decoder(id)];
+    public static IReadOnlyList<string> Components(string id) => id == MusicStudioRuntime.Variation
+        ? [MusicComponentCatalog.ModelId, MusicComponentCatalog.DecoderId, MusicStudioRuntime.CompanionId, MusicStudioRuntime.ComponentId]
+        : id == Bf16 ? [id, Decoder(id), RuntimeId] : [id, Decoder(id)];
     public static bool SupportsParameter(string id, string key) => id != Bf16 || key is not ("lm_seed" or "peak_clip");
     public static MusicExpertSettings Defaults(string id)
     {
@@ -44,6 +57,7 @@ public static class MusicModelVariants
     }
     public static IReadOnlyList<ManagedModelArtifactCard> Cards(string root, string id)
     {
+        if (id == MusicStudioRuntime.Variation) return MusicStudioRuntime.Cards(root);
         if (id == MusicComponentCatalog.ModelId) return MusicComponentCatalog.CreateCards(root);
         if (id != Bf16) throw new InvalidDataException("Unsupported music model variation.");
         var manifest = JsonSerializer.Deserialize<Bf16Files>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Tools", "yue2-bf16-models.json")))!;
@@ -61,7 +75,8 @@ public static class MusicModelVariants
     }
     private sealed record Bf16Files(List<ManagedModelArtifactFile> Model, List<ManagedModelArtifactFile> Vae, List<ManagedModelArtifactFile> Runtime);
     public static string Artifact(string root, string variation, string id) {
-        var card = Cards(root, variation).Single(c => c.ModelArtifactId == id);
-        return Path.Combine(card.InstallDirectory, card.Files.Single(f => f.RelativePath.EndsWith(variation == Bf16 ? ".safetensors" : ".gguf", StringComparison.Ordinal)).RelativePath);
+        var card = Cards(root, variation).Single(c => c.ModelArtifactId == Weights(id));
+        var extension = variation == Bf16 || id == MusicStudioRuntime.CompanionId ? ".safetensors" : ".gguf";
+        return Path.Combine(card.InstallDirectory, card.Files.Single(f => f.RelativePath.EndsWith(extension, StringComparison.Ordinal)).RelativePath);
     }
 }

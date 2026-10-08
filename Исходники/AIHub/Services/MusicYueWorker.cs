@@ -41,6 +41,7 @@ public interface IMusicYueWorker
 {
     string? LastHardware => null;
     string? LastRuntimePack => null;
+    string? LastRequestReceipt => null;
     event Action<string>? Log;
     Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token);
     Task SynthesizeAsync(string model, string decoder, MusicYueRequest request, string requestPath, string outputPath, CancellationToken token);

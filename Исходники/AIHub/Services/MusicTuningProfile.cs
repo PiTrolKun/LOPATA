@@ -7,11 +7,13 @@ public static class MusicTuningProfile
 {
     public const string Id = "YuE2.Native.Q8.Bubble";
     public const string Bf16Id = "YuE2.PyTorch.BF16.Bubble";
+    public const string StudioId = "YuE2.Studio.Q8.Bubble";
+    public static string ForVariation(string variation) => variation == MusicStudioRuntime.Variation ? StudioId : variation == MusicModelVariants.Bf16 ? Bf16Id : Id;
     private static readonly double[][] Plan = [[.55, .82, 16], [.60, .86, 24], [.70, .90, 30], [.85, .94, 45], [1, .97, 64]];
     private static readonly double[][] Sequence = [[.8, .88, 50], [.9, .92, 75], [1, .95, 100], [1.1, .97, 140], [1.2, .99, 200]];
     private static readonly string[] Suffixes = ["temperature", "top_p", "top_k"];
     public static ModelTuningState State(MusicExpertSettings settings) => settings.Tuning?.Snapshot() ?? new() {
-        Profile = settings.Variation == MusicModelVariants.Bf16 ? Bf16Id : Id };
+        Profile = ForVariation(settings.Variation) };
     public static MusicExpertSettings Move(MusicExpertSettings current, double x, double y, bool suppliedPlan = false)
     {
         if (!double.IsFinite(x) || !double.IsFinite(y)) throw new ArgumentOutOfRangeException(nameof(x));

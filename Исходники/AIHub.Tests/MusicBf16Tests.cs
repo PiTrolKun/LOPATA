@@ -174,7 +174,7 @@ public sealed class MusicBf16Tests
         Assert.AreEqual(MusicComponentCatalog.ModelId, view.Projects.Current.Steps[0].Snapshot.Variation);
         Assert.AreEqual(11d, view.Projects.Current.Steps[0].Snapshot.Expert.Get("seed"));
         var saved = projects.Load(projectId); Assert.HasCount(2, saved.Saved.ModelSettings);
-        view.Projects.New(); view.Projects.Open(projectId); Assert.AreEqual(MusicModelVariants.Bf16, view.Generation.Variation);
+        view.Projects.New(); view.Projects.Open(projectId); Assert.AreEqual(MusicStudioRuntime.Variation, view.Generation.Variation);
         Assert.AreEqual(22d, view.Generation.ExpertSettings.Get("seed"));
     });
     [TestMethod]

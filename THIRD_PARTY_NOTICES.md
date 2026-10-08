@@ -497,3 +497,17 @@ Package source: https://github.com/mono/SkiaSharp (version 3.119.4).
 The capture module calls Windows-provided WGC and Direct3D11 interfaces.
 Microsoft.Windows.SDK.NET and WinRT.Runtime assemblies are not bundled by this
 feature. PNG/JPEG use Windows/WPF codecs. No GIF/video encoder is bundled yet.
+
+
+## YuE2 Studio headless runtime (0.4.22-dev)
+
+Pinned YuE2 Studio v3.4.0 source 9125be3cf9ba720ac439a81cd09ff8bcc2a00368
+and native yue2.cpp 1141479c725b803a3649c900fd3e6fcb27f6f595.
+The LOPATA patch supplies explicit managed model paths; it does not replace generation logic.
+The runtime retains Studio-source.zip, Cargo.lock, the patch, CargoSources, CargoLicenses,
+original LAME LGPL text, native MIT notices, NVIDIA and Microsoft terms.
+Registry sources include MPL-covered files and LAME 3.100 sources for rebuilding/relinking.
+See Инструменты/MusicStudio/README.md and the central music-studio-entries.json catalog.
+Optional ASR models, soundfonts, React/Tauri UI and training resources are not installed.
+The separately downloaded decoder companion v9 declares CC BY-NC 4.0; its pinned model
+card and the full standard legal text are retained. No extra commercial rights are granted.

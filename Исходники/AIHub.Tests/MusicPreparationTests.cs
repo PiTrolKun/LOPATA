@@ -140,16 +140,31 @@ public sealed class MusicPreparationTests
         control.SelectModelAsync("yue2", "q4").GetAwaiter().GetResult();
         control.SelectModelAsync("unknown", "q8").GetAwaiter().GetResult();
         Assert.IsTrue(control.IsModelSelection); Assert.AreEqual(0, fake.Preparations);
-        control.SelectModelAsync("yue2", "q8").GetAwaiter().GetResult();
+        control.SelectModelAsync("yue2", "studio-q8").GetAwaiter().GetResult();
         Assert.IsFalse(control.IsModelSelection); Assert.IsTrue(control.CanContinue);
         control.ContinueAsync().GetAwaiter().GetResult();
         var workspace = (MusicWorkspaceControl)control.Content;
         workspace.Editor.Lyrics = "Сохранённый текст";
         Assert.IsTrue(control.GoBack()); Assert.IsTrue(control.GoBack());
         Assert.IsFalse(control.CanContinue);
-        control.SelectModelAsync("yue2", "q8").GetAwaiter().GetResult();
+        control.SelectModelAsync("yue2", "studio-q8").GetAwaiter().GetResult();
         control.ContinueAsync().GetAwaiter().GetResult();
         Assert.AreSame(workspace, control.Content); Assert.AreEqual("Сохранённый текст", workspace.Editor.Lyrics);
+    });
+
+    [TestMethod]
+    public Task StudioUsesBundledRuntimeAndSharedWeightsWhenEnteringWorkspace() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation(); using var control = Create(fake);
+        control.SelectModelAsync("yue2", "studio-q8").GetAwaiter().GetResult();
+        Assert.IsTrue(control.CanContinue);
+        control.ContinueAsync().GetAwaiter().GetResult();
+        Assert.IsTrue(control.IsWorkspace);
+        var workspace = (MusicWorkspaceControl)control.Content;
+        Assert.AreEqual(MusicStudioRuntime.Variation, workspace.Generation.Variation);
+        workspace.Editor.Lyrics = "Общий текст";
+        control.Localize(k => k);
+        Assert.AreEqual("Общий текст", workspace.Editor.Lyrics);
     });
 
     private static MusicPreparationControl Create(Preparation preparation)
@@ -163,6 +178,7 @@ public sealed class MusicPreparationTests
     }
     private sealed class Preparation : IMusicPreparation
     {
+        public string Variation { get; set; } = MusicComponentCatalog.ModelId;
         public int MaximumParallelConnections { get; set; }
         public bool Complete { get; set; } = true;
         public bool Decline { get; set; }
@@ -170,7 +186,7 @@ public sealed class MusicPreparationTests
         public int Preparations { get; private set; }
         public Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
         {
-            var cards = MusicComponentCatalog.CreateCards(root);
+            var cards = MusicModelVariants.Cards(root, Variation);
             foreach (var c in cards) c.Status = Complete ? ManagedModelStatuses.Installed : ManagedModelStatuses.Corrupted;
             return Task.FromResult(cards);
         }

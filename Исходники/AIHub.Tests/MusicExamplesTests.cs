@@ -19,7 +19,7 @@ public sealed class MusicExamplesTests
     [TestMethod]
     public async Task PackagedAudioIsExactAndRestoresItsActualTags()
     {
-        Assert.HasCount(3, MusicExamples.All);
+        Assert.HasCount(7, MusicExamples.All);
         foreach (var item in MusicExamples.All) await MusicExamples.VerifyAsync(item, default);
         var local = MusicExamples.All.Single(e => !e.Cloud && e.Variation == MusicComponentCatalog.ModelId);
         var metadata = await MusicExamples.ReadAsync(local, default);
@@ -36,7 +36,7 @@ public sealed class MusicExamplesTests
         CollectionAssert.AreEqual(new[] { "doom metal" }, restored.Wishes.Selections["genres"]);
         Assert.AreEqual("", restored.OutputFolder); Assert.AreEqual(1, restored.Variants);
         Assert.IsTrue(metadata.Tags.ContainsKey("LOPATA_PROJECT")); StringAssert.Contains(metadata.Technical, "sample_rate");
-        var cloud = MusicExamples.All.Single(e => e.Cloud);
+        var cloud = MusicExamples.All.Single(e => e.Id == "suno-doom");
         StringAssert.Contains(cloud.Request, "ЛОПАТА"); Assert.AreEqual("doom metal", cloud.Genre);
         foreach (var key in new[] { "LOPATA_PARAMETERS", "LOPATA_WISHES", "LOPATA_OUTPUT", "LOPATA_MODEL_REVISION" }) {
             var invalid = new Dictionary<string, string>(metadata.Tags); invalid.Remove(key);
@@ -61,7 +61,7 @@ public sealed class MusicExamplesTests
             Assert.AreEqual(restored.Lyrics, view.Editor.Lyrics); Assert.AreEqual(files.Root, view.Tracks.OutputFolder);
             Assert.AreEqual(id, view.Projects.Current.Id); Assert.HasCount(0, view.Projects.Current.Steps); Assert.IsFalse(view.Projects.Current.Persistent);
             Assert.AreEqual(restored.Expert.Get("seed"), view.Generation.ExpertSettings.Get("seed"));
-            Assert.AreEqual(variation, view.Generation.Variation);
+            Assert.AreEqual(MusicModelVariants.WorkspaceVariation(variation), view.Generation.Variation);
             Assert.AreEqual(restored.Expert.Tuning!.X, view.Generation.ExpertSettings.Tuning!.X);
             Assert.AreEqual(360, view.Generation.Options.DurationSeconds); Assert.AreEqual(MusicAudioFormat.Mp3, view.Generation.Options.Output.Format);
             view.Projects.SetBusy(true); Assert.Throws<InvalidOperationException>(() => view.Projects.ApplyExample(restored));
@@ -80,15 +80,15 @@ public sealed class MusicExamplesTests
             var host = new Window { Content = cards, Width = 1500, Height = 840 };
             Theme(host, dark);
             Modal(host, () => {
-                Assert.HasCount(2, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
+                var players = ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray();
+                Assert.HasCount(4, players);
+                CollectionAssert.AreEquivalent(new[] { "Music.Examples.Player.yue2-studio-opera", "Music.Examples.Player.yue2-studio-hard-rock",
+                    "Music.Examples.Player.suno-opera", "Music.Examples.Player.suno-hard-rock" }, players.Select(AutomationProperties.GetAutomationId).ToArray());
                 var yue = ScenarioNavigationTests.LogicalDescendants(cards).OfType<ComboBox>().Single(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Variants.yue2");
-                Capture(host, language + "-cards"); yue.SelectedIndex = 1;
-                var bf16Players = ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray();
-                Assert.HasCount(2, bf16Players);
-                CollectionAssert.AreEquivalent(new[] { "Music.Examples.Player.yue2-bf16-punk", "Music.Examples.Player.suno-doom" },
-                    bf16Players.Select(AutomationProperties.GetAutomationId).ToArray());
-                Capture(host, language + "-bf16-cards");
-                yue.SelectedIndex = 0; Assert.HasCount(2, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
+                Capture(host, language + "-cards");
+                Assert.HasCount(1, yue.Items.Cast<object>().ToArray());
+                cards.Localize(l.T);
+                Assert.HasCount(4, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
             });
             foreach (var entry in MusicExamples.All) {
                 var metadata = entry.Cloud ? null : allMetadata[entry.Id];
@@ -105,6 +105,34 @@ public sealed class MusicExamplesTests
             }
             var tag = ScenarioNavigationCatalog.GetTag("music_examples"); Assert.AreNotEqual(tag.DescriptionKey, l.T(tag.DescriptionKey));
         });
+    }
+    [TestMethod]
+    public async Task StudioPairsRestoreActualLyricsAndSettingsAndMatchCloudGenre()
+    {
+        var local = MusicExamples.ForVariation(MusicStudioRuntime.Variation, false);
+        var cloud = MusicExamples.ForVariation(MusicStudioRuntime.Variation, true);
+        CollectionAssert.AreEqual(new[] { "opera", "hard rock" }, local.Select(e => e.Genre).ToArray());
+        for (var i = 0; i < local.Count; i++) {
+            var metadata = await MusicExamples.ReadAsync(local[i], default);
+            var restored = metadata.Restore();
+            Assert.AreEqual(MusicStudioRuntime.Variation, restored.Variation);
+            Assert.AreEqual(local[i].Genre, metadata.Tags["genre"]);
+            Assert.AreEqual(local[i].Pair, cloud[i].Pair); Assert.AreEqual(local[i].Genre, cloud[i].Genre);
+            Assert.AreEqual(metadata.Lyrics, restored.Lyrics);
+            Assert.AreEqual(metadata.Lyrics.Replace("\r\n", "\n"), cloud[i].Request.Replace("\r\n", "\n"));
+            StringAssert.Contains(metadata.Tags["LOPATA_STUDIO_REQUEST"], "lyrics");
+            Assert.AreEqual(double.Parse(metadata.Tags["LOPATA_SEED"], System.Globalization.CultureInfo.InvariantCulture), restored.Expert.Get("seed"));
+            await ScenarioNavigationTests.Sta(() => {
+                using var files = new Files();
+                using var view = new MusicWorkspaceControl(new MusicProjects(Path.Combine(files.Root, "projects")),
+                    new MusicGenerationJobs(Path.Combine(files.Root, "jobs")), new(Path.Combine(files.Root, "output.json")));
+                view.Tracks.SetOutputFolder(files.Root); view.Projects.ApplyExample(restored);
+                Assert.AreEqual(restored.Lyrics, view.Editor.Lyrics);
+                Assert.IsTrue(restored.Expert.SameAs(view.Generation.ExpertSettings));
+                Assert.AreEqual(files.Root, view.Tracks.OutputFolder);
+                Assert.HasCount(0, view.Projects.Current.Steps);
+            });
+        }
     }
     [TestMethod]
     public async Task Bf16DefaultsMatchAcceptedSampleWithoutFixingItsSeed()
