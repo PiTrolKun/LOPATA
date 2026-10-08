@@ -82,5 +82,30 @@
     "Genre": "hard rock",
     "Id": "suno-hard-rock",
     "File": "suno-hard-rock.mp3"
+  },
+  {
+    "Id": "ace-xl-jpop",
+    "File": "ace-xl-jpop.mp3",
+    "Title": "ACE-Step XL Turbo · j-pop",
+    "Cloud": false,
+    "Sha256": "FDC543F025818B03A7F6963F4A01C55A131D4D3FE328B999E8E5B30F6EB7AC3A",
+    "Bytes": 5305316,
+    "DurationSeconds": 132.0,
+    "Request": "",
+    "Genre": "j-pop",
+    "Pair": "ace-jpop",
+    "Variation": "music-ace15-xl-turbo"
+  },
+  {
+    "Id": "suno-jpop",
+    "File": "suno-jpop.mp3",
+    "Title": "Suno · j-pop",
+    "Cloud": true,
+    "Sha256": "ED589358E3BC8EDC9F62DE7FDD2944516CF2F630AE8FC1A6FA9C64405EC61B59",
+    "Bytes": 2401674,
+    "DurationSeconds": 101.28,
+    "Request": "[Verse 1]\nНочью мастер сел за стол,\nСтарый ящик вдруг ожил.\nОн ЛАПАТУ в нём завёл —\nИ экран заговорил.\n\n[Chorus]\nЭй, ЛАПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!\n\n[Verse 2]\nВ ящик бросил он рассказ,\nПару строчек и портрет.\nА ЛАПАТА в тот же час\nПрошептала: «Вот ответ».\n\n[Verse 3]\nТолько мастер отвернулся —\nЧто-то грохнуло внутри.\nМонитор слегка качнулся:\n«Это тест номер три!»\n\n[Verse 4]\nДо рассвета шёл их спор,\nКто умнее — человек?\nНо ЛАПАТА с этих пор\nРоет данные вовек.\n\n[Chorus]\nЭй, ЛАПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!",
+    "Genre": "j-pop",
+    "Pair": "ace-jpop"
   }
 ]

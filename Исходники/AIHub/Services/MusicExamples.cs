@@ -30,21 +30,27 @@ public sealed record MusicExampleMetadata(Dictionary<string, string> Tags, strin
             throw new InvalidDataException("Unsupported example model.");
         var raw = Required("LOPATA_PARAMETERS").Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Select(line => line.Split('=', 2)).ToDictionary(p => p[0], p => p.Length == 2 ? p[1] : "", StringComparer.Ordinal);
-        var values = MusicModelVariants.Defaults(variation).Values;
-        foreach (var parameter in MusicExpertCatalog.Parameters.Where(p => MusicModelVariants.SupportsParameter(variation, p.Key))) {
-            if (!raw.TryGetValue(parameter.Key, out var text) || !double.TryParse(text, NumberStyles.Float,
-                CultureInfo.InvariantCulture, out var value)) throw new InvalidDataException("Missing/invalid parameter: " + parameter.Key);
-            values[parameter.Key] = value;
+        var defaults = MusicModelVariants.Defaults(variation);
+        var values = defaults.Values;
+        foreach (var key in values.Keys.Where(key => MusicModelVariants.SupportsParameter(variation, key)).ToArray()) {
+            if (!raw.TryGetValue(key, out var text) || !double.TryParse(text, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out var value)) throw new InvalidDataException("Missing/invalid parameter: " + key);
+            values[key] = value;
         }
-        var expert = new MusicExpertSettings { Variation = variation, Values = values, Tuning = Tags.TryGetValue("LOPATA_TUNING", out var tuning)
+        var textValues = defaults.TextValues;
+        foreach (var key in textValues.Keys.ToArray())
+            textValues[key] = raw.TryGetValue(key, out var value) ? value : throw new InvalidDataException("Missing parameter: " + key);
+        var expert = defaults with { Values = values, TextValues = textValues, Tuning = Tags.TryGetValue("LOPATA_TUNING", out var tuning)
             ? JsonSerializer.Deserialize<ModelTuningState>(tuning) : null };
         expert.Validate();
+        var duration = Required("LOPATA_DURATION_REQUEST_SECONDS");
         var snapshot = new MusicProjectSnapshot {
+            Model = MusicAceCatalog.IsAce(variation) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model,
             Variation = variation, ModelRevision = MusicModelVariants.Revision(variation),
             Lyrics = Lyrics.Length > 0 ? Lyrics : throw new InvalidDataException("Missing lyrics."),
             Title = Tags.GetValueOrDefault("title", ""), Artist = Tags.GetValueOrDefault("artist", ""),
             Comment = Tags.GetValueOrDefault("comment", ""),
-            DurationSeconds = int.Parse(Required("LOPATA_DURATION_REQUEST_SECONDS"), CultureInfo.InvariantCulture),
+            DurationSeconds = duration == "auto" ? null : int.Parse(duration, CultureInfo.InvariantCulture),
             Expert = expert,
             Wishes = JsonSerializer.Deserialize<MusicWishSnapshot>(Required("LOPATA_WISHES")) ?? throw new InvalidDataException("Missing wishes."),
             Output = JsonSerializer.Deserialize<MusicOutputSettings>(Required("LOPATA_OUTPUT")) ?? throw new InvalidDataException("Missing output.") };

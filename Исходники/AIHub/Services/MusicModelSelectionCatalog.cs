@@ -9,7 +9,7 @@ public static class MusicModelSelectionCatalog
     public static IReadOnlyList<MusicModelCandidate> All { get; } = Array.AsReadOnly(new[]
     {
         Model("yue2", "YuE2", V("studio-q8", "StudioQ8", true)),
-        Model("ace-step", "ACE-Step 1.5", V("xl-turbo", "AceXLTurbo4B", true), V("xl", "XL"), V("sft", "SFT"), V("turbo", "Turbo"), V("community", "Community")),
+        Model("ace-step", "ACE-Step 1.5", V("xl-turbo", "AceXLTurbo4B", true)),
         Model("diffrhythm", "DiffRhythm 2", V("base", "Base"), V("hybrid", "Hybrid")),
         Model("heartmula", "HeartMuLa", V("3b", "3B")),
         Model("songgeneration", "SongGeneration 2 / LeVo 2", V("base", "Base"), V("hybrid", "Hybrid")),

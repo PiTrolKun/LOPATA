@@ -41,16 +41,29 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         var body = new StackPanel();
-        var selector = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 20, Margin = new(0, 0, 0, 8) };
-        AutomationProperties.SetAutomationId(selector, "Music.Models.Variants." + model.Id);
-        AutomationProperties.SetName(selector, string.Format(_l("Music.Models.Variations"), model.Name));
-        selector.ToolTip = _l("Music.Models.VariationHint");
-        foreach (var variant in model.Variants)
-            selector.Items.Add(new ComboBoxItem { Tag = variant, Content = model.Name + " · " + _l("Music.Models.Variant." + variant.LabelKey) });
-        var chosen = _choices.GetValueOrDefault(model.Id, model.Variants[0].Id);
-        selector.SelectedIndex = Math.Max(0, model.Variants.ToList().FindIndex(v => v.Id == chosen));
-        body.Children.Add(selector);
+        var singleConnected = model.Variants.Count == 1 && model.Variants[0].Connected;
+        var open = new Button { Padding = new(14, 8, 14, 8),
+            HorizontalAlignment = singleConnected ? HorizontalAlignment.Stretch : HorizontalAlignment.Left,
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+            FontSize = singleConnected ? 20 : 15,
+            Margin = singleConnected ? new(0, 0, 0, 8) : new(0, 6, 0, 0) };
+        AutomationProperties.SetAutomationId(open, "Music.Models.Open." + model.Id);
+        ComboBox? selector = null;
+        if (singleConnected) body.Children.Add(open);
+        else {
+            selector = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left, FontSize = 20, Margin = new(0, 0, 0, 8) };
+            AutomationProperties.SetAutomationId(selector, "Music.Models.Variants." + model.Id);
+            AutomationProperties.SetName(selector, string.Format(_l("Music.Models.Variations"), model.Name));
+            selector.ToolTip = _l("Music.Models.VariationHint");
+            foreach (var variant in model.Variants)
+                selector.Items.Add(new ComboBoxItem { Tag = variant, Content = model.Name + " · " + _l("Music.Models.Variant." + variant.LabelKey) });
+            var chosen = _choices.GetValueOrDefault(model.Id, model.Variants[0].Id);
+            selector.SelectedIndex = Math.Max(0, model.Variants.ToList().FindIndex(v => v.Id == chosen));
+            body.Children.Add(selector);
+        }
+        MusicModelVariant CurrentVariant() => selector?.SelectedItem is ComboBoxItem item
+            ? (MusicModelVariant)item.Tag : model.Variants[0];
         var description = Text(_l(model.DescriptionKey)); body.Children.Add(description);
         var assessment = new StackPanel();
         if (model.Id == "yue2")
@@ -61,14 +74,12 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         }
         body.Children.Add(assessment);
         var status = Text(""); status.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush"); body.Children.Add(status);
-        var open = new Button { Padding = new(14, 8, 14, 8), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 6, 0, 0) };
-        AutomationProperties.SetAutomationId(open, "Music.Models.Open." + model.Id);
-        body.Children.Add(open);
+        if (!singleConnected) body.Children.Add(open);
         var examples = new List<Border>();
         var examplePlayers = new Dictionary<Border, List<MusicExamplePlayerControl>>();
         void Update()
         {
-            var variant = (MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag;
+            var variant = CurrentVariant();
             _choices[model.Id] = variant.Id;
             assessment.Visibility = (model.Id == "yue2" && variant.Id is "q8" or "bf16" or "studio-q8")
                 || model.Id == "ace-step" && variant.Id == "xl-turbo"
@@ -82,18 +93,23 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
             if (model.Id == "ace-step") {
                 assessment.Children.Clear();
                 description.Text = _l(variant.Id == "xl-turbo" ? "Music.Models.ace-step.xl-turbo.Description" : model.DescriptionKey);
-                if (variant.Id == "xl-turbo") assessment.Children.Add(Text(_l("Music.Models.ace-step.xl-turbo.Memory")));
+                if (variant.Id == "xl-turbo")
+                    foreach (var key in new[] { "Pros", "Cons", "Memory" })
+                        assessment.Children.Add(Text(_l("Music.Models.ace-step.xl-turbo." + key)));
             }
             status.Text = _l(variant.Connected ? "Music.Models.Connected" : "Music.Models.Planned");
-            open.Content = _l(variant.Connected ? "Music.Models.Open" : "Music.Models.NotConnected");
+            open.Content = singleConnected ? model.Name + " · " + _l("Music.Models.Variant." + variant.LabelKey)
+                : _l(variant.Connected ? "Music.Models.Open" : "Music.Models.NotConnected");
             open.IsEnabled = variant.Connected;
-            AutomationProperties.SetName(open, model.Name + " · " + open.Content);
+            AutomationProperties.SetName(open, singleConnected ? open.Content.ToString() : model.Name + " · " + open.Content);
+            if (singleConnected) open.ToolTip = _l("Music.Models.Open");
             if (examples.Count > 0) UpdateExamples(variant);
         }
-        selector.SelectionChanged += (_, _) => Update(); Update();
+        if (selector is not null) selector.SelectionChanged += (_, _) => Update();
+        Update();
         open.Click += async (_, _) =>
         {
-            var variant = (MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag;
+            var variant = CurrentVariant();
             if (MusicModelSelectionCatalog.CanOpen(model.Id, variant.Id) && OpenRequested is { } action)
                 await action(model.Id, variant.Id);
         };
@@ -111,14 +127,14 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
             examples.Add(border);
             AutomationProperties.SetAutomationId(border, "Music.Models." + key + "." + model.Id);
             Grid.SetColumn(border, column); row.Children.Add(border);
-            if (examples.Count == 2) UpdateExamples((MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag);
+            if (examples.Count == 2) UpdateExamples(CurrentVariant());
         }
         void UpdateExamples(MusicModelVariant variant)
         {
             foreach (var border in examples) {
                 if (examplePlayers.Remove(border, out var previous))
                     foreach (var old in previous) { old.Dispose(); _players.Remove(old); }
-                var entries = model.Id == "yue2"
+                var entries = model.Id == "yue2" || model.Id == "ace-step" && variant.Id == "xl-turbo"
                     ? MusicExamples.ForVariation(MusicModelVariants.Normalize(variant.Id), Grid.GetColumn(border) == 2)
                     : Array.Empty<MusicExample>();
                 if (entries.Count > 0) {
