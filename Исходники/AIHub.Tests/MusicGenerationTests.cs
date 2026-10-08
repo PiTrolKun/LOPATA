@@ -73,7 +73,9 @@ public sealed class MusicGenerationTests
     [DataRow("en", 550d, false)]
     public Task CompactControlsExposeSafeStatesAndDoNotClip(string language, double width, bool dark) => ScenarioNavigationTests.Sta(() =>
     {
-        var control = new MusicGenerationControl(); var l = new LocalizationService(); l.Load(language); control.Localize(l.T);
+        using var files = new MusicProjectTests.Files();
+        var control = new MusicGenerationControl(new MusicOutputPreferences(Path.Combine(files.Root, "output.json")));
+        var l = new LocalizationService(); l.Load(language); control.Localize(l.T);
         var window = new Window { Content = control, Width = width, Height = 560, ShowInTaskbar = false, Left = -10000, Top = -10000,
             WindowStartupLocation = WindowStartupLocation.Manual, Background = dark ? Brushes.DarkSlateGray : Brushes.WhiteSmoke };
         window.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });

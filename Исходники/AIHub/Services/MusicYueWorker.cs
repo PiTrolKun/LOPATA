@@ -47,6 +47,8 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
 {
     public event Action<string>? Log;
     public event Action<MusicHardwareChoice>? HardwareChanged;
+    public string? LastHardware { get; private set; }
+    public string? LastRuntimePack { get; private set; }
     public async Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token)
     {
         request.Validate();
@@ -95,7 +97,10 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
         await MusicGpuFallback.ExecuteAsync(choice, async selected =>
         {
             HardwareChanged?.Invoke(selected);
+            LastHardware = selected.Device.Backend + ": " + selected.Device.Description + " (" + selected.Device.Name +
+                "; driver=" + selected.Device.Driver + "; capability=" + selected.Device.Capability + ")";
             var directory = selected.Device.Backend == "CPU" ? MusicYueRuntime.DirectoryForPack(MusicYueRuntime.CpuPack) : runtimeDirectory;
+            LastRuntimePack = Path.GetFileName(directory);
             await MusicYueRuntime.VerifyAsync(directory, token);
             var temporary = outputPath + "." + Guid.NewGuid().ToString("N") + ".part";
             var args = new List<string> { "--model", model, "--request", requestPath, "--out", temporary,

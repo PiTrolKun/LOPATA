@@ -1,0 +1,17 @@
+[
+  {
+    "Id": "music.audio",
+    "Name": "FFmpeg music audio · Opus / MP3 / FLAC / WAV",
+    "Version": "8.1-lopata-audio-1 / Opus 1.5.2 / LAME 3.100",
+    "Author": "FFmpeg, Xiph.Org, LAME, MinGW-w64 and GCC contributors",
+    "License": "LGPL-2.1-or-later; LGPL-2.0-or-later; BSD-3-Clause; MinGW notices; GPL-3.0 with GCC-exception-3.1",
+    "Source": "https://github.com/FFmpeg/FFmpeg/tree/330caae0c1acccd2222edc52a05940c574561ce5",
+    "Checked": "2026-10-07",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "",
+    "Texts": ["texts/FFmpeg-8.1-LGPL.txt", "texts/FFmpeg-8.1-GPL2.txt", "texts/music-audio-NOTICE.md", "texts/music-audio-LAME-LGPL.txt", "texts/Capture-Opus-COPYING.txt", "texts/Capture-Opus-IPR.txt", "texts/Capture-GCC-Exception.txt", "texts/Capture-GCC-GPL3.txt", "texts/Capture-MinGW-runtime.txt", "texts/Capture-MinGW-LICENSE.txt", "texts/Capture-MinGW-COPYING.txt"],
+    "Ru": "Отдельный аудиокодировщик и декодировщик на CPU с заменяемыми DLL. Не устанавливает системные кодеки и не содержит сетевых протоколов, GPL/nonfree-библиотек. Точные исходники всех трёх компонентов, рецепт сборки, параметры и состав инструментария включены в MusicAudioRuntime/corresponding-source.zip; оригинальные лицензии — рядом в licenses. Сохраняйте их при распространении. LGPL-компоненты можно заменить и пересобрать; допускается исследование работы и обратная разработка для отладки собственных изменений этих компонентов.",
+    "En": "Separate CPU audio encoder and decoder with replaceable DLLs. Installs no system codecs and contains no network protocols or GPL/nonfree libraries. Exact source archives for all three components, build recipe, configuration and toolchain inventory are included in MusicAudioRuntime/corresponding-source.zip; original licenses are in licenses alongside it. Retain these when redistributing. LGPL components may be replaced and rebuilt; reverse engineering for debugging your modifications to those components is permitted."
+  }
+]

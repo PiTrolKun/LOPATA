@@ -64,6 +64,8 @@ public sealed class MusicTracksControl : UserControl
         Selected?.Invoke(track, false);
     }
     public void SetPlaying(bool playing) { _playing = playing; UpdateSelection(); }
+    public void ClearTracks() { _tracks.Clear(); _playing = false; _message.Visibility = Visibility.Collapsed; Rebuild(); }
+    public void SetOutputFolder(string folder) { OutputFolder = folder; UpdateFolder(); FolderChanged?.Invoke(folder); }
     private void Rebuild(MusicTrack? select = null)
     {
         select ??= SelectedTrack ?? _tracks.FirstOrDefault();
@@ -77,6 +79,19 @@ public sealed class MusicTracksControl : UserControl
             title.Text = track.IsExample ? _l(track.Title) : track.Title; title.ToolTip = title.Text; labels.Children.Add(title);
             var detail = MusicAudioUi.Text(11); detail.Margin = new(0, 4, 0, 0);
             detail.Text = MusicAudioUi.Time(track.Duration) + " · " + track.CreatedAt.ToString("dd.MM.yyyy HH:mm"); labels.Children.Add(detail);
+            if (track.AdditionalPath is { } extra) {
+                var formats = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+                foreach (var path in new[] { track.Path!, extra }) {
+                    var format = new Button { Content = Path.GetExtension(path).TrimStart('.').ToUpperInvariant(), Padding = new(4, 1, 4, 1),
+                        MinWidth = 0, MinHeight = 0, FontSize = 10, Margin = new(0, 3, 4, 0), ToolTip = path };
+                    AutomationProperties.SetAutomationId(format, "Music.Audio.Format." + Path.GetExtension(path).TrimStart('.'));
+                    format.IsEnabled = File.Exists(path);
+                    format.Click += (_, e) => { _list.SelectedItem = _list.Items.OfType<ListBoxItem>().Single(item => Equals(item.Tag, track));
+                        Selected?.Invoke(track with { Path = path, Title = Path.GetFileName(path) }, false); e.Handled = true; };
+                    formats.Children.Add(format);
+                }
+                labels.Children.Add(formats);
+            }
             if (track.IsExample) { var example = MusicAudioUi.Text(11); example.Text = _l("Music.Audio.Example"); labels.Children.Add(example); }
             row.Children.Add(labels);
             var copy = MusicAudioUi.IconButton("Copy", "M8,7 H21 V22 H8 Z M16,7 V2 H3 V17 H8", () => Copy(track));
@@ -118,7 +133,11 @@ public sealed class MusicTracksControl : UserControl
     private void Copy(MusicTrack track)
     {
         if (track.IsExample || !File.Exists(track.Path)) return;
-        try { Clipboard.SetFileDropList(new() { Path.GetFullPath(track.Path!) }); _message.Text = _l("Music.Audio.Copied"); _message.Visibility = Visibility.Visible; }
+        try {
+            var files = new System.Collections.Specialized.StringCollection { Path.GetFullPath(track.Path!) };
+            if (track.AdditionalPath is { } extra && File.Exists(extra)) files.Add(Path.GetFullPath(extra));
+            Clipboard.SetFileDropList(files); _message.Text = _l("Music.Audio.Copied"); _message.Visibility = Visibility.Visible;
+        }
         catch (Exception e) when (e is System.Runtime.InteropServices.ExternalException or IOException) { Error(e); }
     }
     private void Error(Exception e) { _message.Text = _l("Music.Audio.FileError") + " " + e.Message; _message.Visibility = Visibility.Visible; }

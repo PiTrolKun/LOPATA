@@ -1,3 +1,16 @@
+## 2026-10-07 — music audio runtime
+
+The separate `music.audio` bundle uses FFmpeg 8.1 LGPL shared libraries,
+Opus 1.5.2 (BSD-3-Clause and IPR notice), and LAME 3.100 (LGPL-2.0-or-later).
+No GPL/nonfree codecs or network protocols are enabled. Replaceable DLLs,
+original licenses, MinGW/GCC runtime notices and exact corresponding sources
+accompany every bundle in `MusicAudioRuntime`. See
+[the reproducible recipe](Инструменты/MusicAudioRuntime/README.md) and
+[component notice](Исходники/AIHub/Licenses/texts/music-audio-NOTICE.md).
+The source ZIP includes the FFmetadata escaping fix, configuration and toolchain
+inventory. Reverse engineering to debug modifications to LGPL components is
+permitted. This runtime does not replace the separate video capture bundle.
+
 ## 2026-10-07 — managed hardware libraries
 
 Active GGUF and image-generation scenarios use separate CPU/Vulkan bundles:

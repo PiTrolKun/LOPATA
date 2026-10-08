@@ -83,6 +83,7 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
         AutomationProperties.SetName(_seek, _l("Music.Audio.Seek")); AutomationProperties.SetName(_volume, _l("Music.Audio.Volume")); Refresh();
     }
     private void AudioChanged() { Refresh(); PlaybackChanged?.Invoke(); }
+    public void Clear() { _track = null; _errorKey = ""; _audio.Open(null); Refresh(); }
     private void Failed(string key) { _errorKey = key; Refresh(); }
     private void Tick(object? sender, EventArgs e) => RefreshTime();
     private void Refresh()
@@ -96,12 +97,13 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
         _play.Opacity = _play.IsEnabled ? 1 : .45;
         _play.Content = MusicAudioUi.Icon(_audio.IsPlaying ? "M7,3 V21 M17,3 V21" : "M7,3 L21,12 L7,21 Z");
         MusicAudioUi.Label(_play, _l(_audio.IsPlaying ? "Music.Audio.Pause" : "Music.Audio.Play"));
-        _seek.IsEnabled = _audio.IsReady; RefreshTime();
+        _seek.IsEnabled = _track is not null && _audio.IsReady; RefreshTime();
     }
     private void RefreshTime()
     {
         if (_disposed) return;
         _refreshing = true;
+        if (_track is null) { _seek.Value = 0; _time.Text = "00:00 / 00:00"; _refreshing = false; return; }
         _seek.Maximum = Math.Max(1, (_audio.IsReady ? _audio.Duration : _track?.Duration ?? TimeSpan.Zero).TotalSeconds);
         _seek.Value = _audio.IsReady ? _audio.Position.TotalSeconds : 0;
         _refreshing = false;

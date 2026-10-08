@@ -1919,5 +1919,32 @@
     "Ru": "Оригинальный vcomp140.dll из закреплённого официального пакета Real-CUGAN 20220728. Неизменённая отдельная библиотека Microsoft, необходимая CPU и Vulkan исполнителю; системная установка не выполняется. Оригинальные условия Visual C++ Runtime сохранены; MIT/GPL не распространяются на эту DLL.",
     "En": "Original vcomp140.dll from the pinned official Real-CUGAN 20220728 package. Unmodified separate Microsoft library required by its CPU and Vulkan executor; no system installation. Original Visual C++ Runtime terms are retained; MIT/GPL do not apply to this DLL.",
     "Terms": "96278C41D62D5DC173A63AD098CC983142335C2EDA9AB7F0C58C4B56AC56DB1A"
+  },
+  {
+    "Id": "music.audio",
+    "Name": "FFmpeg music audio · Opus / MP3 / FLAC / WAV",
+    "Version": "8.1-lopata-audio-1 / Opus 1.5.2 / LAME 3.100",
+    "Author": "FFmpeg, Xiph.Org, LAME, MinGW-w64 and GCC contributors",
+    "License": "LGPL-2.1-or-later; LGPL-2.0-or-later; BSD-3-Clause; MinGW notices; GPL-3.0 with GCC-exception-3.1",
+    "Source": "https://github.com/FFmpeg/FFmpeg/tree/330caae0c1acccd2222edc52a05940c574561ce5",
+    "Checked": "2026-10-07",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "F1A69DA44D7C207D6F1E9490B80E433E85119DA70078676B80B9D7DB0E2B5B70",
+    "Texts": [
+      "texts/FFmpeg-8.1-LGPL.txt",
+      "texts/FFmpeg-8.1-GPL2.txt",
+      "texts/music-audio-NOTICE.md",
+      "texts/music-audio-LAME-LGPL.txt",
+      "texts/Capture-Opus-COPYING.txt",
+      "texts/Capture-Opus-IPR.txt",
+      "texts/Capture-GCC-Exception.txt",
+      "texts/Capture-GCC-GPL3.txt",
+      "texts/Capture-MinGW-runtime.txt",
+      "texts/Capture-MinGW-LICENSE.txt",
+      "texts/Capture-MinGW-COPYING.txt"
+    ],
+    "Ru": "Отдельный аудиокодировщик и декодировщик на CPU с заменяемыми DLL. Не устанавливает системные кодеки и не содержит сетевых протоколов, GPL/nonfree-библиотек. Точные исходники всех трёх компонентов, рецепт сборки, параметры и состав инструментария включены в MusicAudioRuntime/corresponding-source.zip; оригинальные лицензии — рядом в licenses. Сохраняйте их при распространении. LGPL-компоненты можно заменить и пересобрать; допускается исследование работы и обратная разработка для отладки собственных изменений этих компонентов.",
+    "En": "Separate CPU audio encoder and decoder with replaceable DLLs. Installs no system codecs and contains no network protocols or GPL/nonfree libraries. Exact source archives for all three components, build recipe, configuration and toolchain inventory are included in MusicAudioRuntime/corresponding-source.zip; original licenses are in licenses alongside it. Retain these when redistributing. LGPL components may be replaced and rebuilt; reverse engineering for debugging your modifications to those components is permitted."
   }
 ]

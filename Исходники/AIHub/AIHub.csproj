@@ -29,6 +29,10 @@
     <EmbeddedResource Include="Tools\image-generation-manifest.json" LogicalName="AIHub.ImageGenerationManifest" />
     <EmbeddedResource Include="Content\ImageGenerationExamples.json" LogicalName="AIHub.ImageGenerationExamples" />
     <Resource Include="Assets\GenerationExamples\*.png" />
+    <Content Include="Assets\MusicExamples\*.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <ProjectReference Include="..\LOPATA.Updates\LOPATA.Updates.csproj" />
     <ProjectReference Include="..\LOPATA.Capture\LOPATA.Capture.csproj" />
     <PackageReference Include="AngleSharp" Version="1.5.2" />
@@ -51,6 +55,9 @@
   <ItemGroup>
     <Content Include="..\..\Runtime\Backends\chatllm.cpp\v24\win-x64\imagemagick\magick.exe;..\..\Runtime\Backends\chatllm.cpp\v24\win-x64\imagemagick\*.xml;..\..\Runtime\Backends\chatllm.cpp\v24\win-x64\imagemagick\*.icc;..\..\Runtime\Backends\chatllm.cpp\v24\win-x64\imagemagick\LICENSE.txt;..\..\Runtime\Backends\chatllm.cpp\v24\win-x64\imagemagick\NOTICE.txt"
              Link="ImageUtilityRuntime\ImageMagick\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Runtime\MusicAudio\FFmpeg-8.1\bundle\**\*" Link="MusicAudioRuntime\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Runtime\Capture\FFmpeg-8.1\bundle\**\*" Exclude="..\..\Runtime\Capture\FFmpeg-8.1\bundle\files.json" Link="CaptureRuntime\%(RecursiveDir)%(Filename)%(Extension)">
@@ -106,6 +113,7 @@
   </ItemGroup>
 
   <Target Name="CheckMusicRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\MusicAudio\FFmpeg-8.1\bundle\manifest.json')" Text="Music audio bundle is missing. Follow Инструменты/MusicAudioRuntime/README.md." />
     <Error Condition="!Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\manifest.json') Or !Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\manifest.json')" Text="Pinned YuE2 CPU/CUDA runtimes are missing. Restore the bundles documented in REESTR.md before building LOPATA." />
   </Target>
   <Target Name="CheckCaptureRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">

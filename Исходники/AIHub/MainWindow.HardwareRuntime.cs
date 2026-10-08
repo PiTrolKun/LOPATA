@@ -9,7 +9,7 @@ public partial class MainWindow
 {
     private ComponentAcquisitionPlan? _hardwareRuntimePlan;
     private readonly SemaphoreSlim _hardwareRuntimeCheck = new(1, 1);
-    private (long Length, DateTime Written)? _verifiedHardwareState;
+    private (long Length, DateTime Written)? _readyHardwareState;
 
     private (long Length, DateTime Written) ReadHardwareStateStamp()
     {
@@ -19,12 +19,13 @@ public partial class MainWindow
 
     private bool IsHardwareRuntimeCheckCurrent()
     {
-        if (_hardwareRuntimePlan?.IsReady != true || _verifiedHardwareState is null) return false;
+        if (_hardwareRuntimePlan?.IsReady != true || _readyHardwareState is null) return false;
         try
         {
-            if (_verifiedHardwareState != ReadHardwareStateStamp()) return false;
+            if (_readyHardwareState != ReadHardwareStateStamp()) return false;
             // A same-session entry needs only the lightweight layout check.
-            // Installation/removal or a missing artifact requires full verification again.
+            // Installation/removal or a missing artifact requires a new acquisition plan.
+            // Content verification belongs to installation and selected-runtime execution.
             return _componentManager.BuildPlanForComponents(
                 _hardwareRuntimePlan.Items.Select(item => item.ComponentId), "Hardware runtime re-entry").IsReady;
         }
@@ -36,6 +37,8 @@ public partial class MainWindow
     {
         await _hardwareRuntimeCheck.WaitAsync();
         BeginPreparationBusy();
+        var elapsed = System.Diagnostics.Stopwatch.StartNew();
+        OwnedProcessRegistry.Log("startup_check_started", "HardwareReadiness");
         try
         {
             if (_processShutdownPending || _processShutdownComplete) return false;
@@ -44,13 +47,13 @@ public partial class MainWindow
             _hardwareRuntimePlan = await Task.Run(async () =>
             {
                 var passport = knownPassport ?? new ComputerPassportService().RegeneratePassport();
-                return await new HardwareRuntimePreparation(_componentManager).CheckAsync(passport.Gpus, _backgroundLifetime.Token);
+                return await new HardwareRuntimePreparation(_componentManager).CheckReadinessAsync(passport.Gpus, _backgroundLifetime.Token);
             }, _backgroundLifetime.Token);
             if (_processShutdownPending || _processShutdownComplete) return false;
             if (_coreModelDownloadCts is not null) return false;
             if (_hardwareRuntimePlan.IsReady)
             {
-                _verifiedHardwareState = ReadHardwareStateStamp();
+                _readyHardwareState = ReadHardwareStateStamp();
                 return true;
             }
             ShowHardwareRuntimePrompt();
@@ -60,10 +63,15 @@ public partial class MainWindow
         catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException
             or System.Text.Json.JsonException or InvalidOperationException)
         {
+            OwnedProcessRegistry.Log("startup_check_failed", "HardwareReadiness", detail: error.GetType().Name);
             StatusText.Text = L("HardwareRuntime.CheckFailed");
             return false;
         }
-        finally { EndPreparationBusy(); _hardwareRuntimeCheck.Release(); }
+        finally
+        {
+            OwnedProcessRegistry.Log("startup_check_finished", "HardwareReadiness", detail: $"elapsedMs={elapsed.ElapsedMilliseconds}");
+            EndPreparationBusy(); _hardwareRuntimeCheck.Release();
+        }
     }
 
     private void ShowHardwareRuntimePrompt()

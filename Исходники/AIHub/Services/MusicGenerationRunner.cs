@@ -1,10 +1,11 @@
 using System.IO;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using AIHub.Models;
 
 namespace AIHub.Services;
 
-public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWorker worker)
+public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWorker worker, IMusicAudioEncoder? encoder = null)
 {
     public const string BackgroundKind = "music.generate";
     public event Action<MusicGenerationStage>? Stage;
@@ -19,13 +20,17 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
             token.ThrowIfCancellationRequested(); var variant = job.Variants[i];
             if (!variant.Completed)
             {
+                var elapsed = Stopwatch.StartNew();
+                var previousSeconds = variant.GenerationSeconds ?? 0;
+                try {
                 var request = new MusicYueRequest(job.Style, job.Lyrics, variant.LanguageSeed, variant.SoundSeed, job.DurationSeconds)
                     { Expert = job.Expert.Snapshot() };
                 if (job.Expert.Cot != "off" && variant.PlanHash is null)
                 {
                     var plan = jobs.StagePath(id, ".abc"); Stage?.Invoke(MusicGenerationStage.Loading);
                     await worker.PlanAsync(Artifact(MusicComponentCatalog.ModelId), request, jobs.StagePath(id, ".json"), plan, token);
-                    variant = variant with { PlanFile = plan, PlanHash = await HashAsync(plan, token) }; Save(variant);
+                    variant = variant with { PlanFile = plan, PlanHash = await HashAsync(plan, token),
+                        GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds, PlanHardware = (worker as MusicYueWorker)?.LastHardware }; Save(variant);
                 }
                 if (job.Expert.Cot != "off") await MatchHashAsync(variant.PlanFile!, variant.PlanHash!, token);
                 if (variant.AudioHash is null)
@@ -35,11 +40,19 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                     await worker.SynthesizeAsync(Artifact(MusicComponentCatalog.ModelId), Artifact(MusicComponentCatalog.DecoderId), request,
                         jobs.StagePath(id, ".json"), audio, token);
                     _ = MusicWaveFile.ReadDuration(audio);
-                    variant = variant with { AudioFile = audio, AudioHash = await HashAsync(audio, token) }; Save(variant);
+                    variant = variant with { AudioFile = audio, AudioHash = await HashAsync(audio, token),
+                        DurationSeconds = MusicWaveFile.ReadDuration(audio).TotalSeconds, GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds,
+                        Hardware = (worker as MusicYueWorker)?.LastHardware, UsedRuntimePack = (worker as MusicYueWorker)?.LastRuntimePack }; Save(variant);
+                }
+                }
+                finally {
+                    if (variant.AudioHash is null) { variant = variant with { GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds }; Save(variant); }
                 }
                 // AudioHash is durable before publishing. Recovery can recognise the completed move.
                 Stage?.Invoke(MusicGenerationStage.Encoding);
-                if (File.Exists(variant.ResultPath)) await MatchHashAsync(variant.ResultPath, variant.AudioHash!, token);
+                if (job.Output is not null)
+                    variant = await new MusicOutputPublisher(encoder ?? MusicAudioEncoder.Default).PublishAsync(job, variant, i, Save, token);
+                else if (File.Exists(variant.ResultPath)) await MatchHashAsync(variant.ResultPath, variant.AudioHash!, token);
                 else
                 {
                     await MatchHashAsync(variant.AudioFile!, variant.AudioHash!, token);
@@ -55,10 +68,11 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                     finally { if (File.Exists(temporary)) File.Delete(temporary); }
                 }
                 variant = variant with { Completed = true }; Save(variant);
+                if (job.Output is not null && variant.AudioFile is { } nativeAudio && File.Exists(nativeAudio)) File.Delete(nativeAudio);
             }
-            await MatchHashAsync(variant.ResultPath, variant.AudioHash!, token);
-            TrackReady?.Invoke(new(variant.ResultPath, Path.GetFileName(variant.ResultPath), MusicWaveFile.ReadDuration(variant.ResultPath), job.CreatedAt)
-                { JobId = id, Variant = i });
+            await MatchHashAsync(variant.ResultPath, variant.ResultHash ?? variant.AudioHash!, token);
+            if (variant.AdditionalPath is { } additional) await MatchHashAsync(additional, variant.AdditionalHash!, token);
+            TrackReady?.Invoke(MusicGenerationJobs.Track(job, variant, i));
             void Save(MusicGenerationVariant updated)
             {
                 var variants = job.Variants.ToArray(); variants[i] = updated; job = job with { Variants = variants }; jobs.Save(job);

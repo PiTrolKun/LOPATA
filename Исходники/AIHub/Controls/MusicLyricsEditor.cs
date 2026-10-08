@@ -78,6 +78,11 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     }
 
     public void Localize(Func<string, string> localize) { _l = localize; UpdateLabels(); }
+    public void AttachHistory(MusicHistoryControl history)
+    {
+        var grid = (Grid)Content; grid.Children.Remove(_title); _title.FontSize = 18; _title.TextWrapping = TextWrapping.Wrap;
+        _title.Margin = new(3, 0, 3, 8); Grid.SetColumn(_title, 1); history.Children.Add(_title); grid.Children.Add(history);
+    }
     public void ResetTokenizer()
     {
         _modelPath = ""; _loadCancel?.Cancel(); _countCancel?.Cancel(); _tokenizer = null;

@@ -9,7 +9,7 @@ namespace AIHub.Controls;
 public sealed class MusicGenerationSession : IDisposable
 {
     private readonly MusicWorkspaceControl _view;
-    private readonly MusicGenerationJobs _jobs = MusicGenerationJobs.Default;
+    private readonly MusicGenerationJobs _jobs;
     private MusicYueWorker _worker = new(MusicYueRuntime.DirectoryPath);
     private readonly BackgroundOperationController? _controller;
     private string _modelsRoot = "";
@@ -18,8 +18,9 @@ public sealed class MusicGenerationSession : IDisposable
     private Guid _telemetry;
     private bool _ready, _starting, _working, _disposed, _checking, _cancelRequested;
 
-    public MusicGenerationSession(MusicWorkspaceControl view)
+    public MusicGenerationSession(MusicWorkspaceControl view, MusicGenerationJobs? jobs = null)
     {
+        _jobs = jobs ?? MusicGenerationJobs.Default;
         _view = view; _controller = ApplicationBackgroundOperations.Current;
         _view.Generation.StartPause = StartPauseAsync; _view.Generation.Cancel = CancelAsync;
         _view.Generation.OptionsChanged += RefreshBudget; _view.Wishes.Changed += WishesChanged;
@@ -77,6 +78,7 @@ public sealed class MusicGenerationSession : IDisposable
     private async Task StartPauseAsync()
     {
         if (_disposed || _starting) return;
+        MusicGenerationJob? submitted = null;
         try
         {
             if (_controller is { HasPending: true })
@@ -91,31 +93,36 @@ public sealed class MusicGenerationSession : IDisposable
             var options = _view.Generation.Options;
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
                 options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
-                wishes: MusicWishSnapshot.Capture(_view.Wishes.State));
+                wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment);
+            submitted = job = _view.Projects.Record(job, _view.Projects.Capture());
+            await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             _starting = false; await RunAsync(job.Id);
         }
-        catch (Exception error) { ReportFailure(error); }
+        catch (Exception error) { if (submitted is not null) Outcome(submitted, MusicProjectOutcome.Failed, error.Message); ReportFailure(error); }
         finally { _starting = false; if (!_disposed) RefreshButtons(); }
     }
     private async Task RepeatAsync(MusicTrack track)
     {
         if (_working || _starting || _controller?.HasPending == true || track.JobId is null) return;
+        MusicGenerationJob? submitted = null;
         try
         {
             _starting = true; RefreshButtons();
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
-                original.Style, original.Lyrics, variant, original.Expert, original.Wishes);
+                original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment);
+            submitted = repeat = _view.Projects.Record(repeat, MusicProjectSnapshot.FromJob(repeat));
+            if (original.Output is not null) await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             // Preserve the exact score used by the completed track, alongside its two seeds.
             repeat = repeat with { RuntimePack = original.RuntimePack };
             if (original.Expert.Cot != "off") {
                 var score = _jobs.StagePath(repeat.Id, ".abc"); File.Copy(variant.PlanFile!, score, false);
-                repeat = repeat with { Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.PlanHash }] };
+                repeat = repeat with { Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.PlanHash, PlanHardware = variant.PlanHardware }] };
             }
             _jobs.Save(repeat);
             _starting = false; await RunAsync(repeat.Id);
         }
-        catch (Exception error) { ReportFailure(error); }
+        catch (Exception error) { if (submitted is not null) Outcome(submitted, MusicProjectOutcome.Failed, error.Message); ReportFailure(error); }
         finally { _starting = false; if (!_disposed) RefreshButtons(); }
     }
     public Task ResumeAsync(BackgroundOperationState state, CancellationToken token)
@@ -128,7 +135,7 @@ public sealed class MusicGenerationSession : IDisposable
     {
         if (_working) throw new InvalidOperationException("Music generation is already active.");
         var job = _jobs.Load(id);
-        if (restored is not null) _view.Generation.SetExpertSettings(job.Expert, false);
+        if (restored is not null) job = _view.Projects.RestoreJob(job);
         _working = true;
         _worker.Log -= NativeLog; _worker.HardwareChanged -= HardwareChanged;
         // Re-evaluate hardware on resume, even for a job originally created on CPU.
@@ -140,31 +147,40 @@ public sealed class MusicGenerationSession : IDisposable
             if (!present) _view.Status.AppendLog(_l("Music.Audio.Saved") + ": " + track.Title); });
         try
         {
-            await ApplicationBackgroundOperations.RunAsync(MusicGenerationRunner.BackgroundKind, job.Title, id, new { JobId = id }, async attempt =>
+            _view.Projects.Outcome(job, MusicProjectOutcome.Running);
+            await ApplicationBackgroundOperations.RunAsync(MusicGenerationRunner.BackgroundKind,
+                string.IsNullOrWhiteSpace(job.Title) ? Path.GetFileNameWithoutExtension(job.Variants[0].ResultPath) : job.Title, id, new { JobId = id }, async attempt =>
             {
                 _telemetry = _view.Status.Telemetry.Begin(TimeSpan.FromSeconds(_controller?.State?.ElapsedSeconds ?? 0));
                 await ApplicationBackgroundOperations.RetireModelsAsync();
                 await runner.RunAsync(id, attempt); return id;
             }, _cancel.Token, restored);
-            _view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Completed);
+            var completed = _jobs.Load(id).Variants.All(v => v.Completed);
+            Outcome(job, completed ? MusicProjectOutcome.Completed : MusicProjectOutcome.Paused);
+            _view.Status.Telemetry.Report(_telemetry, completed ? MusicGenerationStage.Completed : MusicGenerationStage.Paused);
         }
         catch (OperationCanceledException)
         {
+            Outcome(job, ApplicationBackgroundOperations.ExitToken.IsCancellationRequested ? MusicProjectOutcome.Paused : MusicProjectOutcome.Cancelled);
             if (!ApplicationBackgroundOperations.ExitToken.IsCancellationRequested && _controller is { IsRunning: false, State.Kind: MusicGenerationRunner.BackgroundKind })
                 _controller.DiscardPending(_controller.State!.Id);
             _view.Status.Telemetry.Report(_telemetry, ApplicationBackgroundOperations.ExitToken.IsCancellationRequested
                 ? MusicGenerationStage.Paused : MusicGenerationStage.Cancelled);
         }
-        catch (Exception error) { ReportFailure(error); }
+        catch (Exception error) { Outcome(job, MusicProjectOutcome.Failed, error.Message); ReportFailure(error); }
         finally { _cancel.Dispose(); _cancel = null; _working = false; _cancelRequested = false; if (!_disposed) RefreshButtons(); }
     }
     public void ViewResult(string id)
-    { foreach (var track in _jobs.Tracks(id)) _view.Tracks.AddTrack(track); }
+    { var job = _jobs.Load(id); if (job.ProjectId is not null && !HasPendingOrRunning) _view.Projects.Open(job.ProjectId);
+        else foreach (var track in _jobs.Tracks(id)) _view.Tracks.AddTrack(track); }
     private Task CancelAsync()
     {
         if (_controller?.State?.Kind != MusicGenerationRunner.BackgroundKind && !_working) return Task.CompletedTask;
         if (_cancel is not null) { _cancelRequested = true; RefreshButtons(); _cancel.Cancel(); }
-        else if (_controller is { IsRunning: false, State: { } state }) _controller.DiscardPending(state.Id);
+        else if (_controller is { IsRunning: false, State: { } state }) {
+            Outcome(_jobs.Load(state.Input.GetProperty("JobId").GetString()!), MusicProjectOutcome.Cancelled);
+            _controller.DiscardPending(state.Id);
+        }
         return Task.CompletedTask;
     }
     private void ControllerChanged()
@@ -175,6 +191,14 @@ public sealed class MusicGenerationSession : IDisposable
             if (_disposed) return;
             if (_controller?.State is { Kind: MusicGenerationRunner.BackgroundKind, Phase: BackgroundOperationPhase.Paused })
                 _view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Paused);
+            if (_controller?.State is { Kind: MusicGenerationRunner.BackgroundKind } state
+                && state.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Running
+                && state.Input.TryGetProperty("JobId", out var identifier)) {
+                var outcome = state.Phase == BackgroundOperationPhase.Paused ? MusicProjectOutcome.Paused : MusicProjectOutcome.Running;
+                var id = identifier.GetString();
+                if (id is not null && _view.Projects.Current.Steps.Any(s => s.JobId == id && s.Outcome != outcome))
+                    Outcome(_jobs.Load(id), outcome);
+            }
             RefreshButtons();
         });
     }
@@ -184,6 +208,7 @@ public sealed class MusicGenerationSession : IDisposable
         var state = _controller?.State; var own = _controller?.HasPending == true && state?.Kind == MusicGenerationRunner.BackgroundKind;
         var paused = own && state!.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Countdown;
         var busy = _working && !paused || own && state!.Phase is BackgroundOperationPhase.Running or BackgroundOperationPhase.Pausing;
+        _view.Projects.SetBusy(_starting || _working || own);
         _view.Generation.UpdateState(_view.Editor.CanGenerate && _controller?.HasPending != true && !_starting, busy, paused, _ready,
             _starting || _cancelRequested || own && state!.Phase == BackgroundOperationPhase.Pausing);
         _view.Player.RefreshRepeat();
@@ -215,6 +240,11 @@ public sealed class MusicGenerationSession : IDisposable
         if (!_view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error))
         { _telemetry = _view.Status.Telemetry.Begin(); _view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error); }
         _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + error.Message);
+    }
+    private void Outcome(MusicGenerationJob job, MusicProjectOutcome outcome, string message = "")
+    {
+        try { _view.Projects.Outcome(job, outcome, message); }
+        catch (Exception error) { _view.Status.AppendLog(_l("Music.Projects.WriteError") + " " + error.Message); }
     }
     public void Dispose()
     {

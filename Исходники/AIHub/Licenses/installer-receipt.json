@@ -509,5 +509,12 @@
     "Terms": "3789CDEE27E2C2A233B4D3F53C30E433352F8395987B7B93EBD9CA271B2B82C0",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
+  },
+  {
+    "Id": "music.audio",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "F1A69DA44D7C207D6F1E9490B80E433E85119DA70078676B80B9D7DB0E2B5B70",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
   }
 ]

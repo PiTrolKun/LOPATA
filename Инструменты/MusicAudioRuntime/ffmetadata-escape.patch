@@ -1,0 +1,22 @@
+--- a/libavformat/ffmetadec.c
++++ b/libavformat/ffmetadec.c
+@@ -37,7 +37,7 @@
+     int64_t read = 0;
+     char tmp[1024];
+     char c;
+-    char prev = ' ';
++    int escaped = 0;
+ 
+     do {
+         len = 0;
+@@ -45,10 +45,10 @@
+             c = avio_r8(s);
+-            end = prev != '\\' && (c == '\r' || c == '\n' || c == '\0');
++            end = !escaped && (c == '\r' || c == '\n' || c == '\0');
+             if (!end)
+                 tmp[len++] = c;
+-            prev = c;
++            escaped = c == '\\' ? !escaped : 0;
+         } while (!end && len < sizeof(tmp));
+         av_bprint_append_data(bp, tmp, len);
+         read += len;

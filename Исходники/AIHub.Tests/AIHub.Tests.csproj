@@ -11,5 +11,6 @@
     <None Update="Fixtures\LiteraryLoops\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Fixtures\Music\*.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Fixtures\Hardware\*.py" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures\Hardware\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

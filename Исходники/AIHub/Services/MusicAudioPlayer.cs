@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace AIHub.Services;
 
@@ -23,6 +24,8 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
 {
     private MediaPlayer? _player;
     private bool _playWhenReady, _disposed;
+    private CancellationTokenSource? _opening;
+    private string? _temporary;
     private double _volume = .75;
     public bool IsReady { get; private set; }
     public bool IsPlaying { get; private set; }
@@ -34,11 +37,47 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
     public void Open(string? path)
     {
         if (_disposed) return;
+        _opening?.Cancel(); _opening = null;
         var previous = _player; _player = null; previous?.Close();
+        DeleteTemporary(_temporary); _temporary = null;
         IsReady = IsPlaying = _playWhenReady = false;
         Changed?.Invoke();
         if (string.IsNullOrEmpty(path)) return;
         if (!File.Exists(path)) { Failed?.Invoke("Music.Audio.Missing"); return; }
+        if (Path.GetExtension(path).ToLowerInvariant() is ".opus" or ".mp3" or ".flac") {
+            var cancellation = new CancellationTokenSource(); _opening = cancellation;
+            _ = DecodeAndOpenAsync(path, cancellation, Dispatcher.CurrentDispatcher); return;
+        }
+        OpenMedia(path);
+    }
+    private async Task DecodeAndOpenAsync(string source, CancellationTokenSource cancellation, Dispatcher dispatcher)
+    {
+        var folder = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Playback");
+        var temporary = Path.Combine(folder, Guid.NewGuid().ToString("N") + ".wav");
+        try {
+            Directory.CreateDirectory(folder);
+            await MusicAudioRuntime.Default.DecodeAsync(source, temporary, cancellation.Token).ConfigureAwait(false);
+            await dispatcher.InvokeAsync(() => {
+                if (_disposed || _opening != cancellation) return;
+                _opening = null; _temporary = temporary; OpenMedia(temporary); temporary = "";
+            });
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException or TimeoutException) {
+            if (!dispatcher.HasShutdownStarted) await dispatcher.InvokeAsync(() => {
+                if (_opening != cancellation || _disposed) return; _opening = null; _playWhenReady = false;
+                Failed?.Invoke("Music.Audio.Error"); Changed?.Invoke();
+            });
+        }
+        finally {
+            if (!dispatcher.HasShutdownStarted) await dispatcher.InvokeAsync(() => {
+                if (_opening == cancellation) { _opening = null; _playWhenReady = false; if (!_disposed) Changed?.Invoke(); }
+            });
+            DeleteTemporary(temporary); cancellation.Dispose();
+        }
+    }
+    private void OpenMedia(string path)
+    {
         var player = new MediaPlayer { Volume = _volume }; _player = player;
         player.MediaOpened += (_, _) =>
         {
@@ -57,7 +96,9 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
     }
     public void Toggle()
     {
-        if (_disposed || _player is null) return;
+        if (_disposed) return;
+        if (_opening is not null) { _playWhenReady = !_playWhenReady; return; }
+        if (_player is null) return;
         if (!IsReady) { _playWhenReady = !_playWhenReady; return; }
         if (IsPlaying) _player.Pause(); else _player.Play();
         IsPlaying = !IsPlaying; Changed?.Invoke();
@@ -67,5 +108,8 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
     public void Seek(TimeSpan position)
     { if (IsReady) _player!.Position = TimeSpan.FromSeconds(Math.Clamp(position.TotalSeconds, 0, Duration.TotalSeconds)); }
     public void Dispose()
-    { if (_disposed) return; _disposed = true; _player?.Close(); _player = null; IsReady = IsPlaying = false; Changed = null; Failed = null; }
+    { if (_disposed) return; _disposed = true; _opening?.Cancel(); _opening = null; _player?.Close(); _player = null;
+        DeleteTemporary(_temporary); _temporary = null; IsReady = IsPlaying = false; Changed = null; Failed = null; }
+    private static void DeleteTemporary(string? path)
+    { if (string.IsNullOrEmpty(path)) return; try { if (File.Exists(path)) File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
 }

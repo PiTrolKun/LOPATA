@@ -1,0 +1,28 @@
+[
+  {
+    "Name": "ffmpeg",
+    "Repository": "FFmpeg/FFmpeg",
+    "Ref": "330caae0c1",
+    "Commit": "330caae0c1acccd2222edc52a05940c574561ce5",
+    "Url": "https://github.com/FFmpeg/FFmpeg/archive/330caae0c1acccd2222edc52a05940c574561ce5.tar.gz",
+    "Archive": "ffmpeg.tar.gz",
+    "SHA256": "67B5876EE973A26F267280B2C1EB851A0AC7A502382D20E41B7A819111886AF9"
+  },
+  {
+    "Name": "opus",
+    "Repository": "xiph/opus",
+    "Ref": "v1.5.2",
+    "Commit": "ddbe48383984d56acd9e1ab6a090c54ca6b735a6",
+    "Url": "https://github.com/xiph/opus/archive/ddbe48383984d56acd9e1ab6a090c54ca6b735a6.tar.gz",
+    "Archive": "opus.tar.gz",
+    "SHA256": "18E9D9E26565E279753AAFB6823A482EF85EA9FDDBFDCDBFF8FD095B12DD96B6"
+  },
+  {
+    "Name": "lame",
+    "Version": "3.100",
+    "Url": "https://ftp.osuosl.org/pub/blfs/conglomeration/lame/lame-3.100.tar.gz",
+    "UpstreamUrl": "https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz",
+    "Archive": "lame.tar.gz",
+    "SHA256": "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
+  }
+]

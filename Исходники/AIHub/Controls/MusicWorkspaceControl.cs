@@ -15,10 +15,13 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public MusicPlayerControl Player { get; } = new();
     public MusicTracksControl Tracks { get; } = new();
     public MusicStatusControl Status { get; } = new();
-    public MusicGenerationControl Generation { get; } = new();
+    public MusicGenerationControl Generation { get; }
     public MusicGenerationSession Session { get; }
-    public MusicWorkspaceControl()
+    public MusicProjectController Projects { get; }
+    private bool _outputConfigured;
+    public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null)
     {
+        Generation = new(outputPreferences);
         AutomationProperties.SetAutomationId(this, "Music.Workspace");
         var grid = new Grid { Margin = new(8) };
         var editorWidth = new ColumnDefinition { Width = new(360), MinWidth = 250 };
@@ -44,7 +47,11 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Add(Card(Player), 3, 1);
         var tracks = new Grid(); tracks.ColumnDefinitions.Add(new() { Width = new(54) }); tracks.ColumnDefinitions.Add(new());
         TextActions = new MusicTextActionsControl(Editor, () => Wishes.State.Performers);
-        var textActions = Card(TextActions); tracks.Children.Add(textActions);
+        Projects = new(this, projects ?? MusicProjects.Default, jobs ?? MusicGenerationJobs.Default);
+        Editor.AttachHistory(Projects.History);
+        var tools = new DockPanel(); DockPanel.SetDock(Projects.ManageButton, Dock.Bottom);
+        tools.Children.Add(Projects.ManageButton); tools.Children.Add(TextActions);
+        var textActions = Card(tools); tracks.Children.Add(textActions);
         var results = Card(Tracks); Grid.SetColumn(results, 1); tracks.Children.Add(results);
         Tracks.Selected += (track, play) => Player.Select(track, play);
         Tracks.FolderChanged += Player.ConfigureFolder;
@@ -52,7 +59,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Add(tracks, 3, 2);
         Add(Card(Generation), 4, 1, 2);
         Content = grid;
-        Session = new(this);
+        Session = new(this, jobs);
         double MaximumWidth() => Math.Max(250, grid.ActualWidth - 140 - 12 - 220 - 260);
         void Add(UIElement element, int column, int row, int rowSpan = 1, int columnSpan = 1)
         { Grid.SetColumn(element, column); Grid.SetRow(element, row); Grid.SetRowSpan(element, rowSpan); Grid.SetColumnSpan(element, columnSpan); grid.Children.Add(element); }
@@ -66,6 +73,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Tracks.Localize(localize);
         Status.Localize(localize);
         Generation.Localize(localize);
+        Projects.Localize(localize);
         var grid = (Grid)Content;
         var divider = (Thumb)grid.Children[1]; divider.ToolTip = localize("Music.Editor.Resize");
         AutomationProperties.SetName(divider, localize("Music.Editor.Resize"));
@@ -76,7 +84,8 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         border.SetResourceReference(BackgroundProperty, "PanelBrush"); border.SetResourceReference(Border.BorderBrushProperty, "LineBrush"); return border;
     }
     public void ConfigureOutput(string folder, Action<string> save)
-    { Tracks.ConfigureFolder(folder, save); Player.ConfigureFolder(folder); }
+    { if (_outputConfigured) return; _outputConfigured = true;
+        Tracks.ConfigureFolder(folder, save); Player.ConfigureFolder(folder); Projects.RememberDefaults(); }
     public void ConfigureGeneration(string modelsRoot, Func<string, string> localize) => Session.Configure(modelsRoot, localize);
     public void Dispose() { Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
 }

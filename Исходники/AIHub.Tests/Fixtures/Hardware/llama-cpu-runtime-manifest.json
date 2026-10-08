@@ -1,0 +1,171 @@
+{
+  "version": "b9442-lopata1",
+  "revision": "d4c8e2c29ce2fb9a251a0a4a16d6c857b4f70f8c",
+  "backend": "cpu",
+  "openmp": false,
+  "cuda": false,
+  "embeddedUI": false,
+  "msvc": "14.44.35211.0",
+  "files": [
+    {
+      "path": "ggml-base.dll",
+      "size": 635904,
+      "sha256": "902e421146e366bcdab7ee382727b551b31e11d84d7fd532bae35882b3695d49"
+    },
+    {
+      "path": "ggml-cpu-alderlake.dll",
+      "size": 887296,
+      "sha256": "b02b9a99e2f35bc75f05c3452cb5a42be76268bd70426be3b436c27e5d50e03d"
+    },
+    {
+      "path": "ggml-cpu-cannonlake.dll",
+      "size": 992256,
+      "sha256": "9f0acfdb02db8ab77e5915020323851c8ca5b2d9f976eec735b55e75b9af8802"
+    },
+    {
+      "path": "ggml-cpu-cascadelake.dll",
+      "size": 991232,
+      "sha256": "732a26770813b4a08d12f91579cf69f369e9272e2c047a48303eddc6fbe6ede2"
+    },
+    {
+      "path": "ggml-cpu-haswell.dll",
+      "size": 889344,
+      "sha256": "c25ecf41b7c7ca93bd230e9bb3167e3620814e6f48c3c19b89de19ecd797ef10"
+    },
+    {
+      "path": "ggml-cpu-icelake.dll",
+      "size": 991232,
+      "sha256": "34cdeef7ae574b230b50aa5dd9b326235a6e92f21144822be86aee3a5a6af3bc"
+    },
+    {
+      "path": "ggml-cpu-sandybridge.dll",
+      "size": 832000,
+      "sha256": "f16732ecc87e571b006758a6f4d85bfd1aed279a4679de7fc25c31b5c843bf68"
+    },
+    {
+      "path": "ggml-cpu-skylakex.dll",
+      "size": 992256,
+      "sha256": "56c073bc2bad03ca5fa55b41e9c35f559c6838a91c410e62404f07ce7904d1fe"
+    },
+    {
+      "path": "ggml-cpu-sse42.dll",
+      "size": 752128,
+      "sha256": "6a92b7420d95941517cf6a0e83483dc1e6fd63ce829c78c09d2c8bb626508ecc"
+    },
+    {
+      "path": "ggml-cpu-x64.dll",
+      "size": 753664,
+      "sha256": "a563630d28a35eb0d18847b5e2e57d3aa52c71b7875e36f57c36a6ca277cade7"
+    },
+    {
+      "path": "ggml.dll",
+      "size": 66560,
+      "sha256": "9a3ab367e230c37eea52e72db7ab34eaa73028660522cb51e1edf8d286456726"
+    },
+    {
+      "path": "llama-cli-impl.dll",
+      "size": 2025472,
+      "sha256": "2250eb874749630093f04000cd54d11d5b0160b2dec8f62870c3ef014ce5c8e6"
+    },
+    {
+      "path": "llama-cli.exe",
+      "size": 10752,
+      "sha256": "7047bd3bf60a1d89fc7e45f80eae781ccfde2ad19bc42b4009652620fa567343"
+    },
+    {
+      "path": "llama-common.dll",
+      "size": 8973824,
+      "sha256": "74ca31adcc9acd7c57ddbdd8c444bdd1aeff70ceb2b0ff8c8c49b7e16528ec06"
+    },
+    {
+      "path": "llama-server-impl.dll",
+      "size": 3584000,
+      "sha256": "38ffe6af7b84713282e763b8c90dd1cceb9686925226fa6e964d60feb07402be"
+    },
+    {
+      "path": "llama-server.exe",
+      "size": 10752,
+      "sha256": "53f58ad98402ea48c3acea641bb7d007d6184b9891d7b32bd2cc6de57bc20329"
+    },
+    {
+      "path": "llama.dll",
+      "size": 2036224,
+      "sha256": "44a349c549e14336ce54fb4e7bb4d16514253f9e29b24036eda6b4656f0d5c46"
+    },
+    {
+      "path": "msvcp140.dll",
+      "size": 557728,
+      "sha256": "0f885b509a685d2bbfa652fed26b5fb31d88fbdab0a978c641d1c7b8aa460aa9"
+    },
+    {
+      "path": "mtmd.dll",
+      "size": 890368,
+      "sha256": "fe8b2b7c75ef50a2cc3f9f03844264372e1934257f7948011f60b9d007f5773a"
+    },
+    {
+      "path": "vcruntime140_1.dll",
+      "size": 49792,
+      "sha256": "1f2d41c4aa5db0bc33ebf7b66d72943a817d7ce6cbe880502a9403823633093f"
+    },
+    {
+      "path": "vcruntime140.dll",
+      "size": 124544,
+      "sha256": "d5e4d9a3e835fa679450145d6a7d94e36573a509317111904d9b3712c30d9066"
+    },
+    {
+      "path": "Notices/llama-MIT.txt",
+      "size": 1099,
+      "sha256": "bcd8ec749126d45cb06737d0690295d73df4b6e7e194205bcf91190368f27285"
+    },
+    {
+      "path": "Notices/MSVC-RUNTIME.txt",
+      "size": 6615,
+      "sha256": "8943a3857da566f61eaf0ae4b816f0f356779096f8fa188bdadbe8eec45fd420"
+    },
+    {
+      "path": "Notices/vendor/cpp-httplib/CMakeLists.txt",
+      "size": 6958,
+      "sha256": "2ee4e9de6b5d0a294de2722dec9db0270f64e18191f22de0377cddcb9f5a7c9e"
+    },
+    {
+      "path": "Notices/vendor/cpp-httplib/httplib.cpp",
+      "size": 557172,
+      "sha256": "9ee985b29396ec74ddf64e3f2d4039410a2707c2f490a9997811314f0dee6c22"
+    },
+    {
+      "path": "Notices/vendor/cpp-httplib/httplib.h",
+      "size": 143762,
+      "sha256": "a1e360e950c2f0ece8420a331fd5dc0eb876c5bdf73f712d80ec46d48af824c8"
+    },
+    {
+      "path": "Notices/vendor/cpp-httplib/LICENSE",
+      "size": 1097,
+      "sha256": "bb546eae5924d8ee842e0e567e6d533c5824bdebccf605f99a5b3429034e6697"
+    },
+    {
+      "path": "Notices/vendor/miniaudio/miniaudio.h",
+      "size": 4204032,
+      "sha256": "e9e742f8c4d7cdd0fc81ba7f1c47b719d98d45e0138849aa0ec1e574d554a1ee"
+    },
+    {
+      "path": "Notices/vendor/nlohmann/json_fwd.hpp",
+      "size": 6843,
+      "sha256": "0ad6d984f1144129cfb088b0b93b7c0c4a06c235cfe899493d4a8cae0bb0a25c"
+    },
+    {
+      "path": "Notices/vendor/nlohmann/json.hpp",
+      "size": 978962,
+      "sha256": "5f09d1eebe9b3557f21df155869af13bcde79b74a0748f82ca946e8cc088aaa0"
+    },
+    {
+      "path": "Notices/vendor/sheredom/subprocess.h",
+      "size": 37592,
+      "sha256": "9d153d3d5bf711da279bfada0ec52419a747540a294146bfe604e4c68bdaa776"
+    },
+    {
+      "path": "Notices/vendor/stb/stb_image.h",
+      "size": 290998,
+      "sha256": "1f8c1b6b408f26e3b20cbfbbd4758afb3dc9b837ff1e17c258928f406148a87c"
+    }
+  ]
+}

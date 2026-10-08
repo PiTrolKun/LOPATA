@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using AIHub.Services;
+using AIHub.Models;
 using Button = System.Windows.Controls.Button;
 using ComboBox = System.Windows.Controls.ComboBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -9,16 +10,20 @@ using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
 namespace AIHub.Controls;
 
-public sealed class MusicModelSelectionControl : UserControl
+public sealed class MusicModelSelectionControl : UserControl, IDisposable
 {
     private readonly Dictionary<string, string> _choices = new(StringComparer.Ordinal);
     private Func<string, string> _l = key => key;
+    private readonly List<MusicExamplePlayerControl> _players = [];
     public event Func<string, string, Task>? OpenRequested;
+    public event Func<MusicProjectSnapshot, Task>? ExampleRequested;
+    public Func<bool> CanApplyExample { get; set; } = () => true;
 
     public MusicModelSelectionControl() => AutomationProperties.SetAutomationId(this, "Music.Models");
 
     public void Localize(Func<string, string> localize)
     {
+        DisposePlayers();
         _l = localize;
         var panel = new StackPanel { Margin = new(24), MaxWidth = 1560, HorizontalAlignment = HorizontalAlignment.Stretch };
         panel.Children.Add(Text(_l("Music.Models.Title"), true));
@@ -47,18 +52,30 @@ public sealed class MusicModelSelectionControl : UserControl
         selector.SelectedIndex = Math.Max(0, model.Variants.ToList().FindIndex(v => v.Id == chosen));
         body.Children.Add(selector);
         body.Children.Add(Text(_l(model.DescriptionKey)));
+        var assessment = new StackPanel();
+        if (model.Id == "yue2")
+        {
+            assessment.Children.Add(Text(_l("Music.Models.yue2.q8.Pros")));
+            assessment.Children.Add(Text(_l("Music.Models.yue2.q8.Cons")));
+            assessment.Children.Add(Text(_l("Music.Models.yue2.q8.Memory")));
+        }
+        body.Children.Add(assessment);
         var status = Text(""); status.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush"); body.Children.Add(status);
         var open = new Button { Padding = new(14, 8, 14, 8), HorizontalAlignment = HorizontalAlignment.Left, Margin = new(0, 6, 0, 0) };
         AutomationProperties.SetAutomationId(open, "Music.Models.Open." + model.Id);
         body.Children.Add(open);
+        var examples = new List<Border>();
         void Update()
         {
             var variant = (MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag;
             _choices[model.Id] = variant.Id;
+            assessment.Visibility = model.Id == "yue2" && variant.Id == "q8"
+                ? Visibility.Visible : Visibility.Collapsed;
             status.Text = _l(variant.Connected ? "Music.Models.Connected" : "Music.Models.Planned");
             open.Content = _l(variant.Connected ? "Music.Models.Open" : "Music.Models.NotConnected");
             open.IsEnabled = variant.Connected;
             AutomationProperties.SetName(open, model.Name + " · " + open.Content);
+            if (examples.Count > 0) UpdateExamples(variant);
         }
         selector.SelectionChanged += (_, _) => Update(); Update();
         open.Click += async (_, _) =>
@@ -78,8 +95,28 @@ public sealed class MusicModelSelectionControl : UserControl
             example.Children.Add(Text("♫"));
             example.Children.Add(Text(_l("Music.Models.ExamplePending")));
             var border = Frame(example, new(column == 1 ? 0 : 6, 0, 0, 0));
+            examples.Add(border);
             AutomationProperties.SetAutomationId(border, "Music.Models." + key + "." + model.Id);
             Grid.SetColumn(border, column); row.Children.Add(border);
+            if (examples.Count == 2) UpdateExamples((MusicModelVariant)((ComboBoxItem)selector.SelectedItem).Tag);
+        }
+        void UpdateExamples(MusicModelVariant variant)
+        {
+            foreach (var border in examples) {
+                if (border.Child is MusicExamplePlayerControl old) { old.Dispose(); _players.Remove(old); }
+                if (model.Id == "yue2" && variant.Id == "q8") {
+                    var entry = MusicExamples.All.Single(e => e.Cloud == (Grid.GetColumn(border) == 2));
+                    var player = new MusicExamplePlayerControl(entry, _l, () => CanApplyExample());
+                    player.Playing += () => { foreach (var other in _players.Where(p => p != player)) other.Pause(); };
+                    player.ApplyRequested += snapshot => ExampleRequested?.Invoke(snapshot) ?? Task.CompletedTask;
+                    _players.Add(player); border.Child = player;
+                }
+                else {
+                    var pending = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+                    pending.Children.Add(Text(_l(Grid.GetColumn(border) == 1 ? "Music.Models.LocalExample" : "Music.Models.CloudExample"), true));
+                    pending.Children.Add(Text("♫")); pending.Children.Add(Text(_l("Music.Models.ExamplePending"))); border.Child = pending;
+                }
+            }
         }
     }
 
@@ -96,4 +133,7 @@ public sealed class MusicModelSelectionControl : UserControl
         border.SetResourceReference(Border.BackgroundProperty, "PanelBrush");
         border.SetResourceReference(Border.BorderBrushProperty, "LineBrush"); return border;
     }
+    public void PauseExamples() { foreach (var player in _players) player.Pause(); }
+    private void DisposePlayers() { foreach (var player in _players) player.Dispose(); _players.Clear(); }
+    public void Dispose() => DisposePlayers();
 }

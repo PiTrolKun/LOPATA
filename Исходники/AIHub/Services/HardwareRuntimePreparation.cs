@@ -12,12 +12,21 @@ public sealed partial class HardwareRuntimePreparation(ComponentManager manager)
     public static bool IsPinnedVersion(string output) => PinnedVersion().IsMatch(output)
         && output.Contains("d4c8e2c", StringComparison.OrdinalIgnoreCase);
 
-    public async Task<ComponentAcquisitionPlan> CheckAsync(IEnumerable<GpuPassport> devices, CancellationToken token)
+    /// <summary>Startup inventory only; consumers still verify content before executing a selected runtime.</summary>
+    public async Task<ComponentAcquisitionPlan> CheckReadinessAsync(IEnumerable<GpuPassport> devices, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         var inventory = devices.ToArray();
         var cudaMajors = inventory.Any(gpu => gpu.Name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase))
             ? await Task.Run(NvidiaDriverCapabilities.ReadComputeMajors, token) : [];
-        var plan = manager.BuildPlanForComponents(HardwareRuntimeCatalog.RequiredComponents(inventory, cudaMajors), "Hardware runtime preparation");
+        token.ThrowIfCancellationRequested();
+        return manager.BuildPlanForComponents(HardwareRuntimeCatalog.RequiredComponents(inventory, cudaMajors), "Hardware runtime preparation");
+    }
+
+    /// <summary>Explicit complete integrity check, including executable version probes.</summary>
+    public async Task<ComponentAcquisitionPlan> CheckAsync(IEnumerable<GpuPassport> devices, CancellationToken token)
+    {
+        var plan = await CheckReadinessAsync(devices, token);
         foreach (var item in plan.Items.Where(item => item.AlreadyAvailable))
         {
             var entry = ComponentCatalog.Find(item.ComponentId)!;

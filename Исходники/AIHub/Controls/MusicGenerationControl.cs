@@ -11,14 +11,26 @@ using Brushes = System.Windows.Media.Brushes;
 using Orientation = System.Windows.Controls.Orientation;
 using ComboBox = System.Windows.Controls.ComboBox;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
+using Size = System.Windows.Size;
 
 namespace AIHub.Controls;
 
-public sealed record MusicGenerationOptions(string Title, int Variants, int? DurationSeconds);
+public sealed record MusicGenerationOptions(string Title, int Variants, int? DurationSeconds)
+{
+    public string Artist { get; init; } = "";
+    public string Comment { get; init; } = "";
+    public MusicOutputSettings Output { get; init; } = new();
+}
 
 public sealed class MusicGenerationControl : UserControl
 {
-    private readonly TextBox _title = new() { MinWidth = 70, Padding = new(5), MaxLength = 160 };
+    private readonly MusicIdentityInput _titleInput = new("Music.Generation.Title"), _artistInput = new("Music.Generation.Artist"),
+        _commentInput = new("Music.Generation.Comment", true);
+    private TextBox _title => _titleInput.Input;
+    private readonly MusicOutputControl _output = new();
+    private readonly DispatcherTimer _saveOutput = new() { Interval = TimeSpan.FromMilliseconds(300) };
+    private Exception? _outputError;
+    private readonly MusicOutputPreferences _outputPreferences;
     private readonly ComboBox _count = new() { Width = 65, MinHeight = 30 }, _duration = new() { Width = 190, MinHeight = 30 };
     private readonly Button _start, _cancel, _poetry, _expert, _recipes;
     private MusicExpertSettings _expertSettings = new();
@@ -37,10 +49,12 @@ public sealed class MusicGenerationControl : UserControl
     public Func<Task>? Cancel { get; set; }
     public event Action? OptionsChanged;
     public MusicGenerationOptions Options => new(_title.Text.Trim(), (int)(_count.SelectedItem ?? 1),
-        _duration.SelectedIndex <= 0 ? null : (int?)((ComboBoxItem)_duration.SelectedItem).Tag);
+        _duration.SelectedIndex <= 0 ? null : (int?)((ComboBoxItem)_duration.SelectedItem).Tag)
+        { Artist = _artistInput.Input.Text.Trim(), Comment = _commentInput.Input.Text, Output = _output.Settings };
 
-    public MusicGenerationControl()
+    public MusicGenerationControl(MusicOutputPreferences? outputPreferences = null)
     {
+        _outputPreferences = outputPreferences ?? MusicOutputPreferences.Default;
         AutomationProperties.SetAutomationId(this, "Music.Generation");
         var root = new DockPanel { Margin = new(12) };
         var top = new Grid(); top.ColumnDefinitions.Add(new()); top.ColumnDefinitions.Add(new() { Width = new(70) });
@@ -48,12 +62,19 @@ public sealed class MusicGenerationControl : UserControl
         _settings.Margin = new(0, 0, 12, 0);
         _settings.ColumnDefinitions.Add(new()); _settings.ColumnDefinitions.Add(new());
         for (var i = 0; i < 6; i++) _settings.RowDefinitions.Add(new() { Height = GridLength.Auto });
-        Add(_heading, 0, 0, 2); _heading.FontWeight = FontWeights.SemiBold;
-        Add(_titleLabel, 0, 1, 2); Add(_title, 0, 2, 2);
+        var header = new Grid(); header.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); header.ColumnDefinitions.Add(new());
+        _heading.FontWeight = FontWeights.SemiBold; _heading.Margin = new(0, 0, 10, 0); header.Children.Add(_heading);
+        Grid.SetColumn(_commentInput, 1); header.Children.Add(_commentInput); Add(header, 0, 0, 2);
+        Add(_titleLabel, 0, 1, 2);
+        var identity = new Grid(); identity.ColumnDefinitions.Add(new()); identity.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); identity.ColumnDefinitions.Add(new());
+        identity.Children.Add(_artistInput); var separator = MusicAudioUi.Text(); separator.Text = "—"; separator.Margin = new(6, 0, 6, 0);
+        Grid.SetColumn(separator, 1); identity.Children.Add(separator); Grid.SetColumn(_titleInput, 2); identity.Children.Add(_titleInput); Add(identity, 0, 2, 2);
         var choices = new WrapPanel();
         var counts = new StackPanel { Margin = new(0, 4, 12, 0) }; counts.Children.Add(_countLabel); counts.Children.Add(_count);
         var durations = new StackPanel { Margin = new(0, 4, 0, 0) }; durations.Children.Add(_durationLabel); durations.Children.Add(_duration);
-        choices.Children.Add(counts); choices.Children.Add(durations); Add(choices, 0, 3, 2);
+        _output.Margin = new(0, 4, 0, 0); durations.Margin = new(0, 4, 12, 0);
+        choices.Children.Add(counts); choices.Children.Add(durations); choices.Children.Add(_output); Add(choices, 0, 3, 2);
+        _settings.SizeChanged += (_, _) => SizeChoices(_settings.ActualWidth - 8);
         _hardware.TextWrapping = TextWrapping.Wrap; Add(_hardware, 0, 4, 2);
         AutomationProperties.SetAutomationId(_hardware, "Music.Generation.Hardware");
         _readiness.TextWrapping = TextWrapping.Wrap; _readiness.Margin = new(0, 8, 0, 0);
@@ -89,6 +110,11 @@ public sealed class MusicGenerationControl : UserControl
         try { _expertSettings = ModelExpertPresets.Default.Current(); }
         catch (Exception e) when (e is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { _expertLoadError = e; }
         Tuning.Refresh(_expertSettings);
+        try { _output.Set(_outputPreferences.Load()); }
+        catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { _outputError = error; }
+        _output.Changed += () => { _saveOutput.Stop(); _saveOutput.Start(); OptionsChanged?.Invoke(); };
+        _saveOutput.Tick += (_, _) => { _saveOutput.Stop(); PersistOutput(); };
+        Unloaded += (_, _) => { if (_saveOutput.IsEnabled) { _saveOutput.Stop(); PersistOutput(); } };
         Tuning.SettingsChanged += settings => SetExpertSettings(settings);
         Tuning.EditingStarted += FlushTuning;
         _saveTuning.Tick += (_, _) => { _saveTuning.Stop(); PersistTuning(); };
@@ -101,10 +127,30 @@ public sealed class MusicGenerationControl : UserControl
         _start.Click += async (_, _) => { if (StartPause is not null) await StartPause(); };
         _cancel.Click += async (_, _) => { if (Cancel is not null) await Cancel(); };
         _title.TextChanged += (_, _) => OptionsChanged?.Invoke(); _count.SelectionChanged += (_, _) => OptionsChanged?.Invoke();
+        _artistInput.Input.TextChanged += (_, _) => OptionsChanged?.Invoke(); _commentInput.Input.TextChanged += (_, _) => OptionsChanged?.Invoke();
         _duration.SelectionChanged += (_, _) => OptionsChanged?.Invoke();
         Content = root; UpdateState(false, false, false, false);
     }
     public void SetHardware(string text) => _hardware.Text = text;
+    public void SetOptions(MusicGenerationOptions options)
+    {
+        _title.Text = options.Title; _artistInput.Input.Text = options.Artist; _commentInput.Input.Text = options.Comment;
+        _count.SelectedItem = options.Variants;
+        _duration.SelectedIndex = Enumerable.Range(0, _duration.Items.Count).FirstOrDefault(i =>
+            (int)((ComboBoxItem)_duration.Items[i]).Tag == (options.DurationSeconds ?? 0));
+        _output.Set(options.Output); OptionsChanged?.Invoke();
+    }
+
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        if (double.IsFinite(availableSize.Width)) SizeChoices(availableSize.Width - 114);
+        return base.MeasureOverride(availableSize);
+    }
+    private void SizeChoices(double available)
+    {
+        _duration.Width = available >= 360 ? Math.Clamp(available - 277, 110, 190) : Math.Clamp(available - 89, 70, 190);
+        _output.Width = Math.Clamp(available, 149, 185);
+    }
 
     public void Localize(Func<string, string> localize)
     {
@@ -115,6 +161,8 @@ public sealed class MusicGenerationControl : UserControl
         _duration.SelectedIndex = Math.Max(0, selected);
         _heading.Text = L("Heading"); _titleLabel.Text = L("Title"); _countLabel.Text = L("Variants"); _durationLabel.Text = L("Duration");
         _title.ToolTip = L("TitleHint"); _duration.ToolTip = L("DurationHint");
+        _titleInput.Localize(_l("Music.Output.Title")); _artistInput.Localize(_l("Music.Output.Artist"));
+        _commentInput.Localize(_l("Music.Output.Comment")); _output.Localize(localize);
         MusicAudioUi.Label(_poetry, L("Poetry")); MusicAudioUi.Label(_cancel, L("Cancel"));
         MusicAudioUi.Label(_expert, _l("Music.Expert.Title"));
         MusicAudioUi.Label(_recipes, _l("Music.Tuning.Recipes"));
@@ -127,13 +175,13 @@ public sealed class MusicGenerationControl : UserControl
         _expert.IsEnabled = !busy && !paused && !commandsDisabled;
         _recipes.IsEnabled = !busy && !paused && !commandsDisabled;
         Tuning.IsEnabled = !busy && !paused && !commandsDisabled;
-        _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null; _cancel.IsEnabled = busy || paused;
+        _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null && _outputError is null; _cancel.IsEnabled = busy || paused;
         if (commandsDisabled) _start.IsEnabled = _cancel.IsEnabled = false;
         _readiness.Text = runtimeReady ? "" : L("RuntimeMissing"); UpdateCaption();
     }
     private void UpdateCaption()
     {
-        _readiness.Text = _expertLoadError is not null ? _l("Music.Expert.Invalid") : _runtimeReady ? "" : L("RuntimeMissing");
+        _readiness.Text = _outputError is not null ? _l("Music.Output.Invalid") : _expertLoadError is not null ? _l("Music.Expert.Invalid") : _runtimeReady ? "" : L("RuntimeMissing");
         var key = _paused ? "Resume" : _busy ? "Pause" : "Start";
         _start.Content = _busy && !_paused ? Icon("M7,4 V20 M17,4 V20") : Icon("M7,4 L20,12 L7,20 Z");
         MusicAudioUi.Label(_start, L(key));
@@ -172,6 +220,12 @@ public sealed class MusicGenerationControl : UserControl
         catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) {
             _expertLoadError = error; UpdateCaption(); OptionsChanged?.Invoke();
         }
+    }
+    private void PersistOutput()
+    {
+        try { _outputPreferences.Save(_output.Settings); _outputError = null; }
+        catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { _outputError = error; }
+        UpdateCaption(); OptionsChanged?.Invoke();
     }
     private static UIElement Icon(string geometry) => new Viewbox { Width = 22, Height = 22,
         Child = new System.Windows.Shapes.Path { Data = Geometry.Parse(geometry), Stroke = Brushes.White, StrokeThickness = 2.5 } };

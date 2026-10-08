@@ -21,6 +21,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     private TextBlock? _status;
     private ProgressBar? _progress;
     private MusicWorkspaceControl? _workspace;
+    private MusicProjectSnapshot? _pendingExample;
     private readonly MusicModelSelectionControl _models = new();
     public bool IsModelSelection { get; private set; } = true;
     private string _outputFolder = "";
@@ -36,7 +37,9 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
         AutomationProperties.SetAutomationId(this, "Music.Page");
         _models.OpenRequested += SelectModelAsync;
-        IsVisibleChanged += (_, _) => { if (Visibility != Visibility.Visible) _workspace?.Player.Pause(); };
+        _models.CanApplyExample = () => !IsBusy && _workspace?.Session.HasPendingOrRunning != true;
+        _models.ExampleRequested += ApplyExampleAsync;
+        IsVisibleChanged += (_, _) => { if (Visibility != Visibility.Visible) { _workspace?.Player.Pause(); _models.PauseExamples(); } };
     }
 
     public void Configure(Func<string, string> localize, StorageSettings storage, int connections)
@@ -58,7 +61,15 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public Task SelectModelAsync(string modelId, string variantId)
     {
         if (_disposed || IsBusy || !MusicModelSelectionCatalog.CanOpen(modelId, variantId)) return Task.CompletedTask;
+        _pendingExample = null;
         IsModelSelection = false; return CheckAsync();
+    }
+    private async Task ApplyExampleAsync(MusicProjectSnapshot snapshot)
+    {
+        if (_disposed || IsBusy || _workspace?.Session.HasPendingOrRunning == true) return;
+        snapshot.Validate(); _pendingExample = snapshot.Snapshot(); IsModelSelection = false;
+        await CheckAsync();
+        if (CanContinue) await ContinueAsync();
     }
     private void ShowWorkspace()
     { if (_cards.Count == 0) _cards = MusicComponentCatalog.CreateCards(_root); IsModelSelection = false; IsWorkspace = true; Render(); }
@@ -72,7 +83,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public bool GoBack()
     {
         if (IsBusy) { _cancel?.Cancel(); return true; }
-        if (!IsWorkspace) { if (IsModelSelection) return false; IsModelSelection = true; Render(); return true; }
+        if (!IsWorkspace) { if (IsModelSelection) return false; _pendingExample = null; IsModelSelection = true; Render(); return true; }
         IsWorkspace = false; Render(); return true;
     }
 
@@ -127,6 +138,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
             _workspace.ConfigureOutput(_outputFolder, _saveOutputFolder);
             _workspace.Localize(_l);
             _workspace.ConfigureGeneration(_root, _l);
+            if (_pendingExample is { } example) { _workspace.Projects.ApplyExample(example); _pendingExample = null; }
             Content = _workspace;
             var model = _cards.Single(c => c.ModelArtifactId == MusicComponentCatalog.ModelId);
             _ = _workspace.Editor.LoadTokenizerAsync(System.IO.Path.Combine(model.InstallDirectory, model.Files.Single().RelativePath));
@@ -172,7 +184,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _disposed = true; _cancel?.Cancel(); _workspace?.Dispose();
+        _disposed = true; _cancel?.Cancel(); _models.Dispose(); _workspace?.Dispose();
         if (!IsBusy) _preparation.Dispose();
     }
 }
