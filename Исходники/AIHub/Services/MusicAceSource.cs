@@ -6,10 +6,40 @@ namespace AIHub.Services;
 
 internal static class MusicAceSource
 {
-    internal static string DirectoryPath => Path.Combine(AppContext.BaseDirectory, "MusicAceRuntime");
+    private static readonly SemaphoreSlim Gate = new(1);
+    internal const string ArchiveDigest = "BA8D5E5874F61140C2EC15FB9BFE36ABDF22B63BC7A7A7476EE8ECE0D1387D5B";
+    internal static string ArchivePath => Path.Combine(AppContext.BaseDirectory, "MusicAceRuntime", "source.zip");
+    internal static string DirectoryPath => Path.Combine(AppDataPaths.BaseDirectory, "Music", "AceSource", MusicAceCatalog.SourceRevision);
     internal static async Task VerifyAsync(CancellationToken token)
     {
-        var root = DirectoryPath;
+        await Gate.WaitAsync(token);
+        try {
+            Lopata.Updates.SafeUpdatePath.RejectLinks(ArchivePath);
+            await using (var archive = File.OpenRead(ArchivePath))
+                if (archive.Length != 2_157_596 || Convert.ToHexString(await SHA256.HashDataAsync(archive, token)) != ArchiveDigest)
+                    throw new InvalidDataException("ACE source archive integrity failure.");
+            var root = DirectoryPath;
+            Lopata.Updates.SafeUpdatePath.RejectLinks(root);
+            if (!Directory.Exists(root)) {
+                var staging = root + "." + Guid.NewGuid().ToString("N") + ".partial";
+                if (!Path.GetFullPath(staging).StartsWith(Path.GetFullPath(root) + ".", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("ACE source staging path escapes cache.");
+                Directory.CreateDirectory(staging);
+                try {
+                    var artifact = new PinnedPythonArtifact("ACE source", MusicAceCatalog.SourceRevision, "source.zip",
+                        2_157_596, ArchiveDigest, new("https://github.com/ace-step/ACE-Step-1.5"));
+                    await PythonWheelExtractor.ExtractAsync(artifact, ArchivePath, staging, token, wheelLayout: false);
+                    await VerifyDirectoryAsync(staging, token);
+                    token.ThrowIfCancellationRequested(); Directory.Move(staging, root);
+                }
+                finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
+            }
+            await VerifyDirectoryAsync(root, token);
+        }
+        finally { Gate.Release(); }
+    }
+    internal static async Task VerifyDirectoryAsync(string root, CancellationToken token)
+    {
         Lopata.Updates.SafeUpdatePath.RejectLinks(root);
         var manifestPath = Path.Combine(root, "manifest.json");
         await using var input = File.OpenRead(manifestPath);

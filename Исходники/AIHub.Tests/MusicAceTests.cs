@@ -151,6 +151,19 @@ public sealed class MusicAceTests
             token => Task.Delay(Timeout.Infinite, token), true, cancel.Token));
     }
     [TestMethod]
+    public async Task DeliveredSourceArchivePreservesOfficialBytesAndRejectsTampering()
+    {
+        using var files = new MusicProjectTests.Files();
+        var staging = Path.Combine(files.Root, "source"); Directory.CreateDirectory(staging);
+        var artifact = new PinnedPythonArtifact("ACE", "source", "source.zip", 2_157_596,
+            MusicAceSource.ArchiveDigest, new Uri("https://github.com/ace-step/ACE-Step-1.5"));
+        await PythonWheelExtractor.ExtractAsync(artifact, MusicAceSource.ArchivePath, staging, default, wheelLayout: false);
+        await MusicAceSource.VerifyDirectoryAsync(staging, default);
+        Assert.IsTrue(Directory.Exists(Path.Combine(staging, "acestep", "models")));
+        await File.AppendAllTextAsync(Path.Combine(staging, "acestep", "__init__.py"), "\n# tampered");
+        await Assert.ThrowsAsync<InvalidDataException>(() => MusicAceSource.VerifyDirectoryAsync(staging, default));
+    }
+    [TestMethod]
     public async Task PreparationHasPinnedFilesLicensesAndNoImplicitDownload()
     {
         using var files = new MusicProjectTests.Files(); var store = new ManagedModelLibraryStore(Path.Combine(files.Root, "library"));

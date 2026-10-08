@@ -21,3 +21,8 @@ PyTorch hardware runtime with an isolated library overlay.
 
 See `Документы_проекта/ACE_XL_Turbo_4B_паспорт.md` for component identities,
 hardware boundaries, user request mapping and verification status.
+
+Delivery: run Инструменты/MusicAce/pack-source.ps1 once to build source.zip.
+The archive is pinned by size and SHA256, retains all original source bytes,
+and is extracted/verified in AppData/Music/AceSource/<revision>. Its protected
+models package is never exposed as a loose updater installation path.
