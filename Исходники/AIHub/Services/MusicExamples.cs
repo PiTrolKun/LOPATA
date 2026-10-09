@@ -74,7 +74,7 @@ public static class MusicExamples
             ?? throw new InvalidDataException("Missing music examples catalog.");
         var entries = JsonSerializer.Deserialize<MusicExample[]>(stream) ?? throw new InvalidDataException("Missing examples.");
         foreach (var item in entries)
-            if (System.IO.Path.GetFileName(item.File) != item.File || !item.File.EndsWith(".mp3", StringComparison.Ordinal)
+            if (System.IO.Path.GetFileName(item.File) != item.File || System.IO.Path.GetExtension(item.File) is not (".mp3" or ".opus")
                 || item.Sha256.Length != 64 || item.Bytes <= 0 || !double.IsFinite(item.DurationSeconds) || item.DurationSeconds <= 0
                 || !item.Cloud && !MusicModelVariants.Supported(item.Variation))
                 throw new InvalidDataException("Invalid music example.");
@@ -105,6 +105,12 @@ public static class MusicExamples
         var tags = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (document.RootElement.TryGetProperty("format", out var format) && format.TryGetProperty("tags", out var values))
             foreach (var tag in values.EnumerateObject()) tags.Add(tag.Name, tag.Value.GetString() ?? "");
+        // Ogg/Opus stores comments in the audio stream rather than format tags.
+        if (document.RootElement.TryGetProperty("streams", out var streams))
+            foreach (var stream in streams.EnumerateArray())
+                if (stream.TryGetProperty("codec_type", out var type) && type.GetString() == "audio"
+                    && stream.TryGetProperty("tags", out var streamTags))
+                    foreach (var tag in streamTags.EnumerateObject()) tags.TryAdd(tag.Name, tag.Value.GetString() ?? "");
         return new(tags, JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions { WriteIndented = true }));
     }
 }

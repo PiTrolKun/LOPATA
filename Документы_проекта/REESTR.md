@@ -1,3 +1,20 @@
+## 10.10.2026 — HeartMuLa, 0.4.37-dev
+
+Штатный heartlib 5858ca8f1ffe58d62be7c007ea55f1033c5ca456.
+Модель 41f6fc68490e11dc43fdabaa6b5767946408c903;
+codec f889dab0532cfa4bf459f2a3367eb6d346b8eeda;
+tokenizer/config 2e18e01702011f4f7dc8642b6260967df62417ea.
+Runtime/MusicHeartMuLa/source.zip: 50806 байт,
+83EB311C33655A22574073A6E6E6704151363D461770DB0566B2996A5BB2C892.
+Tools/heartmula-models.json — 9 model + 4 codec + 91 wheel;
+AIHub.HeartMuLaPythonManifest — доверенный manifest 22138 файлов.
+Python 3.12 / общий Torch 2.10, библиотечный overlay heartmula-5858ca8f-py312-1.
+Модель/codec/bibliотеки загружаются отдельно; global pip и драйверы не изменены.
+Три собственных лицензионных ID; прежние 128 записи сохранены.
+Eager/device-aware unload/soundfile adapter отмечен в receipt; native sampler
+и decoder не подменены. [Паспорт](HeartMuLa_паспорт.md),
+[рецепт](../Инструменты/MusicHeartMuLa/README.md).
+
 ## 09.10.2026 — выбранные примеры ACE/Suno j-pop, 0.4.30-dev
 
 Пользователь предоставил два MP3 для встроенных примеров. Существующий

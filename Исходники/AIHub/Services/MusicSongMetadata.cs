@@ -19,7 +19,7 @@ public static class MusicSongMetadata
             ["LOPATA_VARIATION"] = job.Variation, ["LOPATA_DECODER_REVISION"] = job.DecoderRevision,
             ["LOPATA_MODEL_REVISION"] = job.ModelRevision, ["LOPATA_RUNTIME_REVISION"] = job.RuntimeRevision,
             ["LOPATA_RUNTIME_PACK"] = variant.UsedRuntimePack ?? job.RuntimePack, ["LOPATA_VERSION"] = job.AppVersion,
-            ["LOPATA_GGML_REVISION"] = job.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation or MusicAceCatalog.Variation or MusicDiffRhythmCatalog.Variation ? "" : MusicYueRuntime.GgmlRevision,
+            ["LOPATA_GGML_REVISION"] = job.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation or MusicAceCatalog.Variation or MusicDiffRhythmCatalog.Variation or MusicHeartMuLaCatalog.Variation ? "" : MusicYueRuntime.GgmlRevision,
             ["LOPATA_AUDIO_RUNTIME"] = MusicAudioRuntime.Revision,
             ["LOPATA_LM_SEED"] = variant.LanguageSeed.ToString(culture),
             ["LOPATA_SEED"] = variant.SoundSeed.ToString(culture),
@@ -33,6 +33,12 @@ public static class MusicSongMetadata
         if (job.Wishes is { } wishes) {
             result["LOPATA_WISHES"] = JsonSerializer.Serialize(wishes);
             if (wishes.Selections.TryGetValue("genres", out var genres)) result["genre"] = string.Join("; ", genres);
+        }
+        if (MusicHeartMuLaCatalog.IsHeart(job.Variation)) {
+            result.Remove("LOPATA_LM_SEED");
+            result["LOPATA_ENGINE_REVISION"] = MusicHeartMuLaCatalog.SourceRevision;
+            result["LOPATA_HEARTMULA_REQUEST"] = variant.ExecutionReceipt ?? "";
+            result["LOPATA_ADAPTER"] = "HeartMuLa author API; Windows eager execution and device-aware release";
         }
         if (MusicDiffRhythmCatalog.IsDiff(job.Variation)) {
             result.Remove("LOPATA_LM_SEED");

@@ -13,8 +13,8 @@ public static class MusicModelVariants
     public const string VaeRevision = "152733a19ad43aa67e367f9b5503ef8075bb5126";
     public const string RuntimeRevision = "yue2-infer-0.1.5-lopata-1";
     public const string RuntimeId = "runtime-music-yue2-bf16";
-    public static string Normalize(string id) => id switch { "q8" => MusicComponentCatalog.ModelId, "bf16" => Bf16, "studio-q8" => MusicStudioRuntime.Variation, "xl-turbo" => MusicAceCatalog.Variation, "diff2" => MusicDiffRhythmCatalog.Variation, _ => id };
-    public static bool Supported(string id) => id is MusicComponentCatalog.ModelId or Bf16 or MusicStudioRuntime.Variation or MusicAceCatalog.Variation or MusicDiffRhythmCatalog.Variation;
+    public static string Normalize(string id) => id switch { "q8" => MusicComponentCatalog.ModelId, "bf16" => Bf16, "studio-q8" => MusicStudioRuntime.Variation, "xl-turbo" => MusicAceCatalog.Variation, "heart3b" => MusicHeartMuLaCatalog.Variation, "diff2" => MusicDiffRhythmCatalog.Variation, _ => id };
+    public static bool Supported(string id) => id is MusicComponentCatalog.ModelId or Bf16 or MusicStudioRuntime.Variation or MusicAceCatalog.Variation or MusicDiffRhythmCatalog.Variation or MusicHeartMuLaCatalog.Variation;
     public static string Weights(string id) => id == MusicStudioRuntime.Variation ? MusicComponentCatalog.ModelId : id;
     public static string WorkspaceVariation(string id) => id is MusicComponentCatalog.ModelId or Bf16 ? MusicStudioRuntime.Variation : id;
     public static MusicExpertSettings WorkspaceSettings(MusicExpertSettings source)
@@ -26,17 +26,18 @@ public static class MusicModelVariants
             ? tuning with { Profile = MusicTuningProfile.ForVariation(variation) } : null };
         next.Validate(); return next;
     }
-    public static string Family(string id) => MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.ModelName : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model;
-    public static bool ExternalPipeline(string id) => MusicAceCatalog.IsAce(id) || MusicDiffRhythmCatalog.IsDiff(id);
-    public static string Revision(string id) => MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.ModelRevision : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.ModelRevision : id == Bf16 ? Bf16Revision : MusicComponentCatalog.Revision;
-    public static string Name(string id) => MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.ModelName : MusicAceCatalog.IsAce(id) ? "ACE-Step 1.5 · XL Turbo · 4B" : id == MusicStudioRuntime.Variation ? "YuE2 Studio · Q8_0" : id == Bf16 ? "YuE2 3B BF16" : "YuE2 3B Q8_0";
-    public static string Decoder(string id) => MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.Companions : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.Companions : id == Bf16 ? Bf16Vae : MusicComponentCatalog.DecoderId;
-    public static IReadOnlyList<string> Components(string id) => MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.Components : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.Components : id == MusicStudioRuntime.Variation
+    public static string Family(string id) => MusicHeartMuLaCatalog.IsHeart(id) ? MusicHeartMuLaCatalog.ModelName : MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.ModelName : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model;
+    public static bool ExternalPipeline(string id) => MusicHeartMuLaCatalog.IsHeart(id) || MusicAceCatalog.IsAce(id) || MusicDiffRhythmCatalog.IsDiff(id);
+    public static string Revision(string id) => MusicHeartMuLaCatalog.IsHeart(id) ? MusicHeartMuLaCatalog.ModelRevision : MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.ModelRevision : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.ModelRevision : id == Bf16 ? Bf16Revision : MusicComponentCatalog.Revision;
+    public static string Name(string id) => MusicHeartMuLaCatalog.IsHeart(id) ? "HeartMuLa · 3B happy-new-year" : MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.ModelName : MusicAceCatalog.IsAce(id) ? "ACE-Step 1.5 · XL Turbo · 4B" : id == MusicStudioRuntime.Variation ? "YuE2 Studio · Q8_0" : id == Bf16 ? "YuE2 3B BF16" : "YuE2 3B Q8_0";
+    public static string Decoder(string id) => MusicHeartMuLaCatalog.IsHeart(id) ? MusicHeartMuLaCatalog.Companions : MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.Companions : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.Companions : id == Bf16 ? Bf16Vae : MusicComponentCatalog.DecoderId;
+    public static IReadOnlyList<string> Components(string id) => MusicHeartMuLaCatalog.IsHeart(id) ? MusicHeartMuLaCatalog.Components : MusicDiffRhythmCatalog.IsDiff(id) ? MusicDiffRhythmCatalog.Components : MusicAceCatalog.IsAce(id) ? MusicAceCatalog.Components : id == MusicStudioRuntime.Variation
         ? [MusicComponentCatalog.ModelId, MusicComponentCatalog.DecoderId, MusicStudioRuntime.CompanionId, MusicStudioRuntime.ComponentId]
         : id == Bf16 ? [id, Decoder(id), RuntimeId] : [id, Decoder(id)];
     public static bool SupportsParameter(string id, string key) => id != Bf16 || key is not ("lm_seed" or "peak_clip");
     public static MusicExpertSettings Defaults(string id)
     {
+        if (MusicHeartMuLaCatalog.IsHeart(id)) return MusicHeartMuLaCatalog.Defaults();
         if (MusicDiffRhythmCatalog.IsDiff(id)) return MusicDiffRhythmCatalog.Defaults();
         if (MusicAceCatalog.IsAce(id)) return MusicAceCatalog.Defaults();
         var settings = new MusicExpertSettings { Variation = id };
@@ -62,6 +63,7 @@ public static class MusicModelVariants
     }
     public static IReadOnlyList<ManagedModelArtifactCard> Cards(string root, string id)
     {
+        if (MusicHeartMuLaCatalog.IsHeart(id)) return MusicHeartMuLaCatalog.Cards(root);
         if (MusicDiffRhythmCatalog.IsDiff(id)) return MusicDiffRhythmCatalog.Cards(root);
         if (MusicAceCatalog.IsAce(id)) return MusicAceCatalog.Cards(root);
         if (id == MusicStudioRuntime.Variation) return MusicStudioRuntime.Cards(root);

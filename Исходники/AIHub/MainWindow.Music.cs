@@ -20,6 +20,8 @@ public partial class MainWindow
     {
         MusicPage.IsVisibleChanged += (_, _) => { if (MusicPage.IsVisible) ConfigureMusic(); RefreshGenerationHeader(); };
         MusicPage.WorkspaceChanged += RefreshGenerationHeader;
+        MusicPage.CanRemoveModel = CanRemoveMusicModel;
+        MusicPage.RemoveModelRequested += RemoveMusicModelAsync;
         foreach (var page in new FrameworkElement[] { ScenarioNavigationPage, FinancialPage, CapturePage, GenerationPage, ImageUtilityPage })
             page.IsVisibleChanged += (_, _) => { if (page.IsVisible) MusicPage.Visibility = Visibility.Collapsed; };
         Closed += (_, _) => MusicPage.Dispose();

@@ -86,7 +86,10 @@ public sealed class MusicExamplePlayerControl : UserControl, IDisposable
     private void Release() { Pause(); if (!_disposed) { _opened = false; _audio.Open(null); } }
     private void Save()
     {
-        var dialog = new Microsoft.Win32.SaveFileDialog { Title = _l("Music.Examples.Save"), FileName = _example.DisplayTitle(_l).Replace('·', '-') + ".mp3", Filter = "MP3 (*.mp3)|*.mp3" };
+        var extension = Path.GetExtension(_example.File);
+        var dialog = new Microsoft.Win32.SaveFileDialog { Title = _l("Music.Examples.Save"),
+            FileName = _example.DisplayTitle(_l).Replace('·', '-') + extension,
+            Filter = extension == ".opus" ? "Opus (*.opus)|*.opus" : "MP3 (*.mp3)|*.mp3" };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
         try { MusicTrackFiles.Copy(_example.Path, dialog.FileName); _status.Text = _l("Music.Audio.Saved"); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException) {

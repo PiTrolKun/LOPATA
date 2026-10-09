@@ -12,7 +12,7 @@ using UserControl = System.Windows.Controls.UserControl;
 
 namespace AIHub.Controls;
 
-public sealed class MusicPreparationControl : UserControl, IDisposable
+public sealed partial class MusicPreparationControl : UserControl, IDisposable
 {
     private readonly IMusicPreparation _preparation;
     private readonly Func<MusicWorkspaceControl> _createWorkspace;
@@ -39,7 +39,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void ShowModelMenu(Button anchor)
     {
         var menu = new ContextMenu { PlacementTarget = anchor };
-        foreach (var id in new[] { MusicStudioRuntime.Variation, MusicAceCatalog.Variation, MusicDiffRhythmCatalog.Variation }) {
+        foreach (var id in new[] { MusicStudioRuntime.Variation, MusicAceCatalog.Variation, MusicDiffRhythmCatalog.Variation, MusicHeartMuLaCatalog.Variation }) {
             var cards = MusicModelVariants.Cards(_root, id);
             var installed = cards.All(c => c.Files.All(f => System.IO.File.Exists(System.IO.Path.Combine(c.InstallDirectory, f.RelativePath))));
             if (!installed || id == MusicStudioRuntime.Variation && !MusicStudioRuntime.Available) continue;
@@ -78,8 +78,10 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
         AutomationProperties.SetAutomationId(this, "Music.Page");
         _models.OpenRequested += SelectModelAsync;
-        _models.CanApplyExample = () => !IsBusy && _workspace?.Session.HasPendingOrRunning != true;
+        _models.CanApplyExample = () => !IsBusy && !PendingMusicOperation && _workspace?.Session.HasPendingOrRunning != true;
         _models.ExampleRequested += ApplyExampleAsync;
+        _models.CanRemoveModel = variation => CanRemoveModel?.Invoke(variation) == true;
+        _models.RemoveRequested += variation => RemoveModelRequested?.Invoke(variation) ?? Task.CompletedTask;
         IsVisibleChanged += (_, _) => { if (Visibility != Visibility.Visible) { _workspace?.Player.Pause(); _models.PauseExamples(); } };
     }
 
@@ -97,9 +99,9 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void ConfigureOutput(string folder, Action<string> save)
     { _outputFolder = folder; _saveOutputFolder = save; _workspace?.ConfigureOutput(folder, save); }
     public void DownloadConnections(int connections) => _preparation.MaximumParallelConnections = connections;
-    public bool UsesArtifact(string id) => (IsBusy || _workspace?.Session.HasPendingOrRunning == true) &&
+    public bool UsesArtifact(string id) => (IsBusy && !_removingModel || PendingMusicOperation || _workspace?.Session.HasPendingOrRunning == true) &&
         (MusicComponentCatalog.ComponentIds.Contains(id) || MusicModelVariants.Components(MusicModelVariants.Bf16).Contains(id)
-            || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id) || MusicAceCatalog.Components.Contains(id) || MusicDiffRhythmCatalog.Components.Contains(id));
+            || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id) || MusicAceCatalog.Components.Contains(id) || MusicDiffRhythmCatalog.Components.Contains(id) || MusicHeartMuLaCatalog.Components.Contains(id));
     public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (ShowPendingWorkspace()) return Task.CompletedTask; IsWorkspace = false; IsModelSelection = true; Render(); return Task.CompletedTask; }
     public Task SelectModelAsync(string modelId, string variantId)
     {
@@ -196,6 +198,11 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
             if (open && _ready && _variation == MusicModelVariants.Bf16)
                 _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
                     line => { if (_status is not null) _status.Text = line; });
+            if (open && _ready && MusicHeartMuLaCatalog.IsHeart(_variation)) {
+                var receipt = await MusicHeartMuLaWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
+                _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
+                _ready = _cards.Count == MusicHeartMuLaCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
+            }
             if (open && _ready && MusicDiffRhythmCatalog.IsDiff(_variation)) {
                 var receipt = await MusicDiffRhythmWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
                 _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
@@ -242,7 +249,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
             : line.Contains("Importing", StringComparison.Ordinal) ? "Api"
             : line.Contains("hardware", StringComparison.OrdinalIgnoreCase) || line.Contains("Python profile", StringComparison.Ordinal) ? "Hardware"
             : line.Contains("librar", StringComparison.OrdinalIgnoreCase) ? "Libraries" : "Files";
-        var prefix = MusicDiffRhythmCatalog.IsDiff(_variation) ? "Music.Diff.Prepare." : "Music.Ace.Prepare.";
+        var prefix = MusicHeartMuLaCatalog.IsHeart(_variation) ? "Music.HeartMuLa.Prepare." : MusicDiffRhythmCatalog.IsDiff(_variation) ? "Music.Diff.Prepare." : "Music.Ace.Prepare.";
         if (_status is not null) _status.Text = _l(prefix + key) + "\n" + line;
         if (_progress is not null) {
             var count = System.Text.RegularExpressions.Regex.Match(line, @" · (\d+)/(\d+)$");
@@ -270,7 +277,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
             return;
         }
         var panel = new StackPanel { MaxWidth = 1000, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(24) };
-        panel.Children.Add(Text(_l(MusicDiffRhythmCatalog.IsDiff(_variation) ? "Music.DiffRhythm.PreparationTitle" : MusicAceCatalog.IsAce(_variation) ? "Music.Ace.PreparationTitle" : "Music.Preparation.Title"), true));
+        panel.Children.Add(Text(_l(MusicHeartMuLaCatalog.IsHeart(_variation) ? "Music.HeartMuLa.PreparationTitle" : MusicDiffRhythmCatalog.IsDiff(_variation) ? "Music.DiffRhythm.PreparationTitle" : MusicAceCatalog.IsAce(_variation) ? "Music.Ace.PreparationTitle" : "Music.Preparation.Title"), true));
         panel.Children.Add(Text(_l("Music.Preparation.Hint")));
         foreach (var card in MusicModelVariants.Cards(_root, _variation))
         {

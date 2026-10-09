@@ -65,11 +65,12 @@ public sealed class ModelExpertPresets(string directory, string collection = "Ex
     { Validate(preset); Write(path, preset); }
     public static string ExportName(string name, DateTime date, string variation = MusicComponentCatalog.ModelId) => "LOPATA_Preset_" +
         string.Concat(name.Take(100).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).TrimEnd(' ', '.') +
-        "_" + (MusicDiffRhythmCatalog.IsDiff(variation) ? "DiffRhythm2" : MusicAceCatalog.IsAce(variation) ? "ACE15_XL_Turbo_4B" : MusicExpertCatalog.Model + (variation == MusicModelVariants.Bf16 ? "_BF16" : variation == MusicStudioRuntime.Variation ? "_Studio_Q8" : "")) + "_" + date.ToString("yyyy-MM-dd") + ".json";
-    public static int SchemaFor(string variation) => MusicDiffRhythmCatalog.IsDiff(variation) ? 7 : MusicAceCatalog.IsAce(variation) ? 6 : variation == MusicComponentCatalog.ModelId ? 2 : 3;
+        "_" + (MusicHeartMuLaCatalog.IsHeart(variation) ? "HeartMuLa3B" : MusicDiffRhythmCatalog.IsDiff(variation) ? "DiffRhythm2" : MusicAceCatalog.IsAce(variation) ? "ACE15_XL_Turbo_4B" : MusicExpertCatalog.Model + (variation == MusicModelVariants.Bf16 ? "_BF16" : variation == MusicStudioRuntime.Variation ? "_Studio_Q8" : "")) + "_" + date.ToString("yyyy-MM-dd") + ".json";
+    public static int SchemaFor(string variation) => MusicHeartMuLaCatalog.IsHeart(variation) ? 8 : MusicDiffRhythmCatalog.IsDiff(variation) ? 7 : MusicAceCatalog.IsAce(variation) ? 6 : variation == MusicComponentCatalog.ModelId ? 2 : 3;
     public static void Validate(ModelExpertPreset preset)
     {
-        if (preset.Format != "LOPATA.ModelPreset" || preset.SchemaVersion is not (1 or 2 or 3 or 4 or 5 or 6 or 7) ||
+        if (preset.Format != "LOPATA.ModelPreset" || preset.SchemaVersion is not (1 or 2 or 3 or 4 or 5 or 6 or 7 or 8) ||
+            MusicHeartMuLaCatalog.IsHeart(preset.Settings?.Variation ?? "") != (preset.SchemaVersion == 8) ||
             MusicDiffRhythmCatalog.IsDiff(preset.Settings?.Variation ?? "") != (preset.SchemaVersion == 7) ||
             MusicAceCatalog.IsAce(preset.Settings?.Variation ?? "") != (preset.SchemaVersion is 4 or 5 or 6) ||
             preset.Settings?.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation && preset.SchemaVersion != 3)

@@ -27,6 +27,9 @@
     <Content Include="Tools\ace-xl-models.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="..\..\Runtime\MusicDiffRhythm\source.zip" Link="MusicDiffRhythmRuntime\source.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\diffrhythm2-models.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\MusicHeartMuLa\source.zip" Link="MusicHeartMuLaRuntime\source.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\heartmula-models.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\heartmula-python-files.json" LogicalName="AIHub.HeartMuLaPythonManifest" />
     <EmbeddedResource Include="Tools\diffrhythm2-python-files.json" LogicalName="AIHub.DiffRhythmPythonManifest" />
     <Content Include="..\..\Runtime\MusicStudio\v3.4.0-lopata-paths-1\**\*" Link="MusicStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -42,7 +45,7 @@
     <EmbeddedResource Include="Tools\image-generation-manifest.json" LogicalName="AIHub.ImageGenerationManifest" />
     <EmbeddedResource Include="Content\ImageGenerationExamples.json" LogicalName="AIHub.ImageGenerationExamples" />
     <Resource Include="Assets\GenerationExamples\*.png" />
-    <Content Include="Assets\MusicExamples\*.mp3">
+    <Content Include="Assets\MusicExamples\*.mp3;Assets\MusicExamples\*.opus">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>

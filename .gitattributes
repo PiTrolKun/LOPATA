@@ -23,6 +23,9 @@ Runtime/MusicAce/** -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/ace-*.txt -text -eol -whitespace
 Runtime/MusicDiffRhythm/source.zip binary
 Исходники/AIHub/Licenses/texts/diff2-*.txt -text -eol -whitespace
+Runtime/MusicHeartMuLa/source.zip binary
+Исходники/AIHub/Licenses/texts/heartmula-* -text -eol -whitespace
+Исходники/AIHub/Tools/heartmula-python-files.json -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 Инструменты/CaptureRuntime/*.sh text eol=lf
 

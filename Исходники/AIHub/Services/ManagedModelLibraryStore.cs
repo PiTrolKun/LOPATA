@@ -191,6 +191,16 @@ public sealed class ManagedModelLibraryStore
             .ToLowerInvariant()[..24];
     }
 
+    internal void ResetMusicInstallationReceipt(string artifactId, string status, long storedBytes)
+    {
+        var card = Load(artifactId) ?? throw new InvalidOperationException("Model card disappeared during removal.");
+        card.Status = status; card.StoredBytes = storedBytes;
+        card.LastVerifiedAt = null; card.RuntimeVerifiedAt = null; card.LastError = "";
+        foreach (var file in card.Files) { file.VerifiedSizeBytes = 0; file.VerifiedLastWriteTimeUtc = null; }
+        SaveAtomic(GetEntryPath(artifactId), card);
+        Log("music_removal_state", artifactId, status);
+    }
+
     private void SaveAtomic(string path, ManagedModelArtifactCard card)
     {
         EnsureDirectory();

@@ -17,9 +17,41 @@ namespace AIHub.Tests;
 public sealed class MusicExamplesTests
 {
     [TestMethod]
+    public async Task HeartMuLaOpusKeepsStreamCommentsSettingsAndHasNoCloudComparison()
+    {
+        var example = MusicExamples.ForVariation(MusicHeartMuLaCatalog.Variation, false).Single();
+        Assert.AreEqual(".opus", Path.GetExtension(example.File));
+        Assert.HasCount(0, MusicExamples.ForVariation(MusicHeartMuLaCatalog.Variation, true));
+        var metadata = await MusicExamples.ReadAsync(example, default);
+        var snapshot = metadata.Restore();
+        Assert.AreEqual(MusicHeartMuLaCatalog.Variation, snapshot.Variation);
+        Assert.AreEqual(.75, snapshot.Expert.Get("temperature"));
+        Assert.AreEqual(492140412d, snapshot.Expert.Get("seed"));
+        Assert.AreEqual(metadata.Lyrics, snapshot.Lyrics);
+        Assert.IsTrue(snapshot.Lyrics.Length > 0);
+        await ScenarioNavigationTests.Sta(() => {
+            var l = new LocalizationService(); l.Load("ru");
+            using var cards = new MusicModelSelectionControl(); cards.Localize(l.T);
+            var elements = ScenarioNavigationTests.LogicalDescendants(cards).OfType<FrameworkElement>().ToArray();
+            Assert.IsFalse(elements.Any(e => AutomationProperties.GetAutomationId(e) == "Music.Models.CloudExample.heartmula"));
+            Assert.AreEqual(1, elements.Count(e => AutomationProperties.GetAutomationId(e) == "Music.Examples.Player." + example.Id));
+            var host = new Window { Content = cards, Width = 1500, Height = 840 };
+            Theme(host, true);
+            Modal(host, () => {
+                var title = elements.OfType<Button>().Single(e => AutomationProperties.GetAutomationId(e) == "Music.Models.Open.heartmula");
+                host.UpdateLayout();
+                var scroll = (ScrollViewer)cards.Content;
+                var position = title.TransformToAncestor((Visual)scroll.Content).Transform(new Point());
+                scroll.ScrollToVerticalOffset(Math.Max(0, position.Y - 20));
+                Capture(host, "ru-heartmula-card");
+            });
+        });
+    }
+
+    [TestMethod]
     public async Task PackagedAudioIsExactAndRestoresItsActualTags()
     {
-        Assert.HasCount(12, MusicExamples.All);
+        Assert.HasCount(13, MusicExamples.All);
         foreach (var item in MusicExamples.All) await MusicExamples.VerifyAsync(item, default);
         var local = MusicExamples.All.Single(e => !e.Cloud && e.Variation == MusicComponentCatalog.ModelId);
         var metadata = await MusicExamples.ReadAsync(local, default);
@@ -81,12 +113,12 @@ public sealed class MusicExamplesTests
             Theme(host, dark);
             Modal(host, () => {
                 var players = ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray();
-                Assert.HasCount(9, players);
+                Assert.HasCount(10, players);
                 CollectionAssert.AreEquivalent(new[] { "Music.Examples.Player.yue2-studio-opera", "Music.Examples.Player.yue2-studio-hard-rock",
                     "Music.Examples.Player.suno-opera", "Music.Examples.Player.suno-hard-rock",
                     "Music.Examples.Player.ace-xl-jpop", "Music.Examples.Player.suno-jpop",
                     "Music.Examples.Player.diffrhythm2-zh", "Music.Examples.Player.diffrhythm2-en",
-                    "Music.Examples.Player.diffrhythm2-ru" }, players.Select(AutomationProperties.GetAutomationId).ToArray());
+                    "Music.Examples.Player.diffrhythm2-ru", "Music.Examples.Player.heartmula-blues-jazz" }, players.Select(AutomationProperties.GetAutomationId).ToArray());
                 Assert.IsFalse(ScenarioNavigationTests.LogicalDescendants(cards).OfType<FrameworkElement>()
                     .Any(e => AutomationProperties.GetAutomationId(e) == "Music.Models.CloudExample.diffrhythm"));
                 foreach (var entry in MusicExamples.ForVariation(MusicDiffRhythmCatalog.Variation, false)) {
@@ -111,7 +143,7 @@ public sealed class MusicExamplesTests
                 Assert.IsFalse(MusicModelSelectionCatalog.All.Any(c => c.Id is "regrind" or "mothersuperior" or "yue2-lora"));
                 Capture(host, language + "-cards");
                 cards.Localize(l.T);
-                Assert.HasCount(9, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
+                Assert.HasCount(10, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
                 var ace = ScenarioNavigationTests.LogicalDescendants(cards).OfType<Button>()
                     .Single(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Open.ace-step");
                 host.UpdateLayout();
@@ -137,8 +169,10 @@ public sealed class MusicExamplesTests
                 Assert.AreEqual(enPosition.X, zhPosition.X, .1);
                 Assert.IsTrue(enPosition.Y > zhPosition.Y);
                 Assert.IsTrue(russian.ActualWidth > english.ActualWidth);
-                var diffRow = (Grid)((FrameworkElement)((FrameworkElement)diff.Parent).Parent).Parent;
-                Assert.IsTrue(diffRow.ActualHeight < 600, "Card must fit the two-example layout without the former empty height.");
+                FrameworkElement ancestor = diff;
+                while (ancestor is not Grid { ColumnDefinitions.Count: 2 }) ancestor = (FrameworkElement)ancestor.Parent;
+                var diffRow = (Grid)ancestor;
+                Assert.IsTrue(diffRow.ActualHeight < 650, "Card must fit the two-example layout plus the 50-pixel removal footer without the former empty height.");
                 var labels = ScenarioNavigationTests.LogicalDescendants(cards).OfType<TextBlock>().Select(t => t.Text).ToArray();
                 CollectionAssert.Contains(labels, l.T("Music.Models.diffrhythm.Memory"));
                 Assert.AreNotEqual("Music.Models.diffrhythm.Memory", l.T("Music.Models.diffrhythm.Memory"));

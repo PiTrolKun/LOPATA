@@ -18,6 +18,8 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
     public event Func<string, string, Task>? OpenRequested;
     public event Func<MusicProjectSnapshot, Task>? ExampleRequested;
     public Func<bool> CanApplyExample { get; set; } = () => true;
+    public Func<string, bool> CanRemoveModel { get; set; } = _ => false;
+    public event Func<string, Task>? RemoveRequested;
 
     public MusicModelSelectionControl() => AutomationProperties.SetAutomationId(this, "Music.Models");
 
@@ -39,8 +41,12 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         var row = new Grid { Margin = new(0, 8, 0, 12) };
         row.ColumnDefinitions.Add(new() { Width = new(2, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        if (model.Id != "diffrhythm") row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+        if (model.Id is not ("diffrhythm" or "heartmula")) row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         var body = new StackPanel();
+        var remove = MusicAudioUi.IconButton("RemoveModel", "M3,5 L21,5 M9,5 L9,2 L15,2 L15,5 M5,5 L6,22 L18,22 L19,5 M10,9 L10,18 M14,9 L14,18", () => { });
+        remove.Width = remove.Height = 36;
+        remove.Margin = new(0, 14, 0, 0); remove.HorizontalAlignment = HorizontalAlignment.Left;
+        AutomationProperties.SetAutomationId(remove, "Music.Models.Remove." + model.Id);
         var singleConnected = model.Variants.Count == 1 && model.Variants[0].Connected;
         var open = new Button { Padding = new(14, 8, 14, 8),
             HorizontalAlignment = singleConnected ? HorizontalAlignment.Stretch : HorizontalAlignment.Left,
@@ -69,6 +75,10 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
             body.Children.Add(Text(_l("Music.Diff.LicenseHint")));
             body.Children.Add(Text(_l("Music.Models.diffrhythm.Memory")));
         }
+        if (model.Id == "heartmula") {
+            body.Children.Add(Text(_l("Music.Models.heartmula.Experiments")));
+            body.Children.Add(Text(_l("Music.Models.heartmula.Memory")));
+        }
         var assessment = new StackPanel();
         if (model.Id == "yue2")
         {
@@ -85,6 +95,8 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         {
             var variant = CurrentVariant();
             _choices[model.Id] = variant.Id;
+            remove.IsEnabled = variant.Connected && CanApplyExample() && CanRemoveModel(MusicModelVariants.Normalize(variant.Id));
+            MusicAudioUi.Label(remove, _l(remove.IsEnabled ? "Music.Models.Remove.Tooltip" : "Music.Models.Remove.Unavailable"));
             assessment.Visibility = (model.Id == "yue2" && variant.Id is "q8" or "bf16" or "studio-q8")
                 || model.Id == "ace-step" && variant.Id == "xl-turbo"
                 ? Visibility.Visible : Visibility.Collapsed;
@@ -104,7 +116,7 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
             status.Text = _l(variant.Connected ? "Music.Models.Connected" : "Music.Models.Planned");
             open.Content = singleConnected ? model.Name + " · " + _l("Music.Models.Variant." + variant.LabelKey)
                 : _l(variant.Connected ? "Music.Models.Open" : "Music.Models.NotConnected");
-            open.IsEnabled = variant.Connected;
+            open.IsEnabled = variant.Connected && CanApplyExample();
             AutomationProperties.SetName(open, singleConnected ? open.Content.ToString() : model.Name + " · " + open.Content);
             if (singleConnected) open.ToolTip = _l("Music.Models.Open");
             if (examples.Count > 0) UpdateExamples(variant);
@@ -117,10 +129,20 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
             if (MusicModelSelectionCatalog.CanOpen(model.Id, variant.Id) && OpenRequested is { } action)
                 await action(model.Id, variant.Id);
         };
-        row.Children.Add(Frame(body, new(0, 0, 12, 0)));
+        remove.Click += async (_, _) => {
+            var variant = CurrentVariant();
+            if (variant.Connected && CanApplyExample() && CanRemoveModel(MusicModelVariants.Normalize(variant.Id)) && RemoveRequested is { } action)
+                await action(MusicModelVariants.Normalize(variant.Id));
+        };
+        var bodyFrame = new Grid();
+        bodyFrame.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        bodyFrame.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        body.VerticalAlignment = VerticalAlignment.Top; bodyFrame.Children.Add(body);
+        Grid.SetRow(remove, 1); bodyFrame.Children.Add(remove);
+        row.Children.Add(Frame(bodyFrame, new(0, 0, 12, 0)));
         if (model.Id == "diffrhythm") AddExample("LocalExample", 0);
         AddExample("LocalExample", 1);
-        if (model.Id != "diffrhythm") AddExample("CloudExample", 2);
+        if (model.Id is not ("diffrhythm" or "heartmula")) AddExample("CloudExample", 2);
         UpdateExamples(CurrentVariant());
         return row;
 
@@ -142,7 +164,7 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
             foreach (var border in examples) {
                 if (examplePlayers.Remove(border, out var previous))
                     foreach (var old in previous) { old.Dispose(); _players.Remove(old); }
-                var entries = model.Id is "yue2" or "diffrhythm" || model.Id == "ace-step" && variant.Id == "xl-turbo"
+                var entries = model.Id is "yue2" or "diffrhythm" or "heartmula" || model.Id == "ace-step" && variant.Id == "xl-turbo"
                     ? MusicExamples.ForVariation(MusicModelVariants.Normalize(variant.Id), Grid.GetColumn(border) == 2)
                     : Array.Empty<MusicExample>();
                 if (model.Id == "diffrhythm") entries = entries.Where(e =>

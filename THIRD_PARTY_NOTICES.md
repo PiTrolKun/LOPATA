@@ -542,3 +542,17 @@ the Space states py3langid/BSD provenance; its unavailable original fork was not
 independently verified. eSpeak and shared Torch packs keep their separate terms.
 See Документы_проекта/DiffRhythm2_паспорт.md and Инструменты/MusicDiffRhythm/README.md
 for precise revisions, reproduction and the limits of runtime verification.
+
+## HeartMuLa integration (2026-10-10)
+
+heartlib 5858ca8f1ffe58d62be7c007ea55f1033c5ca456, HeartMuLa-oss-3B-happy-new-year
+41f6fc68490e11dc43fdabaa6b5767946408c903, HeartCodec-oss-20260123
+f889dab0532cfa4bf459f2a3367eb6d346b8eeda and HeartMuLaGen tokenizer/config
+2e18e01702011f4f7dc8642b6260967df62417ea declare Apache-2.0.
+The original author source and Apache license ship in MusicHeartMuLaRuntime/source.zip.
+Weights and the 91 pinned Python wheels are separate managed downloads; no model
+weights are bundled. Original dependency licenses/notices and the package inventory
+ship as Licenses/texts/heartmula-*; dependency terms apply independently.
+The Windows adapter uses eager execution, device-aware release and soundfile WAV
+writing, preserving the author sampler and codec. See the model passport for test
+coverage and limitations. The shared managed Torch runtime has its own terms.

@@ -54,7 +54,7 @@ public sealed partial class ModelExpertWindow
     private string PresetName() => _presetName.Text.Trim();
     private void SelectDraft(MusicExpertSettings settings)
     {
-        if (MusicDiffRhythmCatalog.IsDiff(settings.Variation)) { _draft = settings.Snapshot(); return; }
+        if (MusicHeartMuLaCatalog.NoCircle(settings.Variation)) { _draft = settings.Snapshot(); return; }
         var state = MusicTuningProfile.State(settings);
         _draft = settings with { Tuning = _store.Collection == "Expert" ? state with {
             ExpertPreset = _selected?.Name, ExpertModified = false, SimpleModified = true } : state with {
@@ -71,7 +71,7 @@ public sealed partial class ModelExpertWindow
     private void Commit(List<ModelExpertPreset> next, ModelExpertPreset? selection)
     {
         _store.Save(next); _presets.Clear(); _presets.AddRange(next); _selected = selection;
-        if (MusicDiffRhythmCatalog.IsDiff(_draft.Variation)) { _presetName.Text = selection?.Name ?? ""; Reload(); Changed(); return; }
+        if (MusicHeartMuLaCatalog.NoCircle(_draft.Variation)) { _presetName.Text = selection?.Name ?? ""; Reload(); Changed(); return; }
         var state = MusicTuningProfile.State(_draft);
         _draft = _draft with { Tuning = _store.Collection == "Expert" ? state with {
             ExpertPreset = selection?.Name, ExpertModified = selection is not null && !selection.Settings.SameAs(_draft)

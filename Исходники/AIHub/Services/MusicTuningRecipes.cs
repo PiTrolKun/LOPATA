@@ -30,7 +30,7 @@ public static class MusicTuningRecipes
         Group("S1", "abc_sampling", .55, .82, 16), Group("S2", "abc_sampling", 1, .97, 64),
         Group("S3", "semantic_sampling", .8, .88, 50), Group("S4", "semantic_sampling", 1.2, .99, 200),
         Cover("R1", .8, 1.2), Cover("R2", .9, 2), Cover("R3", .95, 1.9) ];
-    public static IReadOnlyList<MusicTuningRecipe> For(string variation) => MusicDiffRhythmCatalog.IsDiff(variation) ? [] : MusicAceCatalog.IsAce(variation) ? MusicAceRecipes.All : All;
+    public static IReadOnlyList<MusicTuningRecipe> For(string variation) => MusicHeartMuLaCatalog.NoCircle(variation) ? [] : MusicAceCatalog.IsAce(variation) ? MusicAceRecipes.All : All;
     public static MusicExpertSettings Ordinary(MusicExpertSettings current)
     {
         var next = MusicTuningProfile.ResetCircle(current);

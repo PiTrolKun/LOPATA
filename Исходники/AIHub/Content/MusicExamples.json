@@ -146,5 +146,17 @@
   "Request": "",
   "Genre": "j-pop",
   "Variation": "music-diffrhythm2"
+},
+{
+  "Id": "heartmula-blues-jazz",
+  "File": "heartmula-blues-jazz.opus",
+  "Title": "HeartMuLa · blues rock / jazz",
+  "Cloud": false,
+  "Sha256": "1DAB6E864F4F52CF2290F21BF2F134EC3A1ED0E41F9999A38972882A887507DA",
+  "Bytes": 3782448,
+  "DurationSeconds": 92.8865,
+  "Request": "",
+  "Genre": "blues rock; jazz",
+  "Variation": "music-heartmula3b"
 }
 ]

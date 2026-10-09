@@ -36,7 +36,7 @@ public sealed class MusicGenerationSession : IDisposable
     public void Configure(string modelsRoot, Func<string, string> localize)
     {
         _modelsRoot = modelsRoot; _l = localize; RefreshBudget();
-        if (MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation)) EnableDiffStart();
+        if (MusicHeartMuLaCatalog.NoCircle(_view.Generation.Variation)) EnableDiffStart();
         else if (!_checking && !_working && _controller?.HasPending != true && (MusicModelVariants.ExternalPipeline(_view.Generation.Variation) ||
             File.Exists(Path.Combine(MusicYueRuntime.DirectoryPath, "manifest.json")))) _ = CheckRuntimeAsync();
         RefreshButtons();
@@ -95,10 +95,10 @@ public sealed class MusicGenerationSession : IDisposable
     public void ModelChanged(string? verifiedHardware = null)
     {
         _ready = false; RefreshBudget();
-        if (MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation)) {
+        if (MusicHeartMuLaCatalog.NoCircle(_view.Generation.Variation)) {
             EnableDiffStart();
-            _view.Generation.SetHardware(verifiedHardware is null ? _l("Music.Diff.HardwareOnStart")
-                : "DiffRhythm 2 · " + verifiedHardware);
+            _view.Generation.SetHardware(verifiedHardware is null ? _l(MusicHeartMuLaCatalog.IsHeart(_view.Generation.Variation) ? "Music.HeartMuLa.HardwareOnStart" : "Music.Diff.HardwareOnStart")
+                : MusicModelVariants.Family(_view.Generation.Variation) + " · " + verifiedHardware);
             RefreshButtons(); return;
         }
         if (string.IsNullOrWhiteSpace(_modelsRoot) || _controller?.HasPending == true) { RefreshButtons(); return; }
@@ -136,7 +136,7 @@ public sealed class MusicGenerationSession : IDisposable
             { Expert = _view.Generation.ExpertSettings };
         _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, request.Instruction, request.OutputReserve, _view.Wishes.State.Instrumental,
             MusicModelVariants.ExternalPipeline(_view.Generation.Variation),
-            MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation) ? "Music.Diff.EditorHint" : "Music.Ace.EditorHint");
+            MusicHeartMuLaCatalog.IsHeart(_view.Generation.Variation) ? "Music.HeartMuLa.EditorHint" : MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation) ? "Music.Diff.EditorHint" : "Music.Ace.EditorHint");
         RefreshButtons();
     }
     private async Task StartPauseAsync()
@@ -218,7 +218,7 @@ public sealed class MusicGenerationSession : IDisposable
         _worker.Log -= NativeLog; if (_worker is MusicYueWorker oldNative) oldNative.HardwareChanged -= HardwareChanged;
         if (_worker is MusicStudioWorker oldStudio) oldStudio.HardwareChanged -= HardwareChanged;
         // Re-evaluate hardware on resume, even for a job originally created on CPU.
-        _worker = MusicDiffRhythmCatalog.IsDiff(job.Variation) ? new MusicDiffRhythmWorker() : MusicAceCatalog.IsAce(job.Variation) ? new MusicAceWorker() : job.Variation == MusicStudioRuntime.Variation ? new MusicStudioWorker()
+        _worker = MusicHeartMuLaCatalog.IsHeart(job.Variation) ? new MusicHeartMuLaWorker() : MusicDiffRhythmCatalog.IsDiff(job.Variation) ? new MusicDiffRhythmWorker() : MusicAceCatalog.IsAce(job.Variation) ? new MusicAceWorker() : job.Variation == MusicStudioRuntime.Variation ? new MusicStudioWorker()
             : job.Variation == MusicModelVariants.Bf16 ? new MusicBf16Worker() : new MusicYueWorker(MusicYueRuntime.DirectoryPath);
         _worker.Log += NativeLog; if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
         if (_worker is MusicStudioWorker studio) studio.HardwareChanged += HardwareChanged;
@@ -300,9 +300,9 @@ public sealed class MusicGenerationSession : IDisposable
     {
         if (_disposed) return;
         _view.Status.AppendLog(message); var operation = _telemetry;
-        if (_worker is MusicDiffRhythmWorker && message.StartsWith("[Hardware]", StringComparison.Ordinal)
+        if ((_worker is MusicDiffRhythmWorker or MusicHeartMuLaWorker) && message.StartsWith("[Hardware]", StringComparison.Ordinal)
             && !_view.Dispatcher.HasShutdownStarted)
-            _view.Dispatcher.Invoke(() => { if (!_disposed) _view.Generation.SetHardware("DiffRhythm 2 · " + message[10..].Trim()); });
+            _view.Dispatcher.Invoke(() => { if (!_disposed) _view.Generation.SetHardware(MusicModelVariants.Family(_view.Generation.Variation) + " · " + message[10..].Trim()); });
         MusicGenerationStage? stage = message.StartsWith("[Load]", StringComparison.Ordinal) ? MusicGenerationStage.Loading
             : message.StartsWith("[Plan]", StringComparison.Ordinal) || message.StartsWith("[ABC]", StringComparison.Ordinal) || message.StartsWith("[AR] Score", StringComparison.Ordinal) ? MusicGenerationStage.Planning
             : message.StartsWith("[AR]", StringComparison.Ordinal) ? MusicGenerationStage.Sequence

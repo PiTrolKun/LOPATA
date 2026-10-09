@@ -72,6 +72,7 @@ public sealed class MusicGenerationJobs(string directory)
         if (count is < 1 or > 8) throw new ArgumentOutOfRangeException(nameof(count));
         var settings = (expert ?? new()).Snapshot(); settings.Validate();
         outputSettings?.Validate();
+        if (MusicHeartMuLaCatalog.IsHeart(settings.Variation) && durationAutomatic) duration = settings.Integer("max_duration");
         if (MusicDiffRhythmCatalog.IsDiff(settings.Variation)) {
             if (durationAutomatic) duration = MusicDiffRhythmCatalog.MaximumDuration;
             if (duration > MusicDiffRhythmCatalog.MaximumDuration) throw new InvalidDataException("DiffRhythm duration exceeds 240 seconds.");
@@ -89,9 +90,9 @@ public sealed class MusicGenerationJobs(string directory)
         var job = new MusicGenerationJob(Guid.NewGuid().ToString("N"), Path.GetFullPath(modelsRoot), output,
             outputSettings is null && string.IsNullOrWhiteSpace(title) ? name : title.Trim(), style, lyrics, duration, now, variants)
             { Schema = 2, Variation = settings.Variation, ModelRevision = MusicModelVariants.Revision(settings.Variation),
-                DecoderRevision = MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.CompanionRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.CompanionRevision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision,
-                RuntimeRevision = MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.SourceRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.SourceRevision : settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Revision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
-                RuntimePack = MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.RuntimeRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.RuntimeRevision : settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(), DurationAutomatic = durationAutomatic,
+                DecoderRevision = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.CompanionRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.CompanionRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.CompanionRevision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision,
+                RuntimeRevision = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.SourceRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.SourceRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.SourceRevision : settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Revision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
+                RuntimePack = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.RuntimeRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.RuntimeRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.RuntimeRevision : settings.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(), DurationAutomatic = durationAutomatic,
                 Output = outputSettings, Artist = artist.Trim(), Comment = comment };
         if (settings.Variation == MusicModelVariants.Bf16 || MusicModelVariants.ExternalPipeline(settings.Variation)) job = job with { Variants = job.Variants.Select(v => v with { LanguageSeed = v.SoundSeed }).ToArray() };
         Save(job); return job;
@@ -121,18 +122,19 @@ public sealed class MusicGenerationJobs(string directory)
         var studio = job.Variation == MusicStudioRuntime.Variation;
         var ace = MusicAceCatalog.IsAce(job.Variation);
         var diff = MusicDiffRhythmCatalog.IsDiff(job.Variation);
-        if (job.Schema is not (1 or 2) || job.Schema == 1 && (bf16 || studio || ace || diff) || !MusicModelVariants.Supported(job.Variation) || job.Expert.Variation != job.Variation
+        var heart = MusicHeartMuLaCatalog.IsHeart(job.Variation);
+        if (job.Schema is not (1 or 2) || job.Schema == 1 && (bf16 || studio || ace || diff || heart) || !MusicModelVariants.Supported(job.Variation) || job.Expert.Variation != job.Variation
             || job.ModelRevision != MusicModelVariants.Revision(job.Variation)
-            || job.DecoderRevision != (diff ? MusicDiffRhythmCatalog.CompanionRevision : ace ? MusicAceCatalog.CompanionRevision : bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision)
-            || job.RuntimeRevision != (diff ? MusicDiffRhythmCatalog.SourceRevision : ace ? MusicAceCatalog.SourceRevision : studio ? MusicStudioRuntime.Revision : bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision)
-            || (diff ? job.RuntimePack != MusicDiffRhythmCatalog.RuntimeRevision : ace ? job.RuntimePack != MusicAceCatalog.RuntimeRevision : studio ? job.RuntimePack != MusicStudioRuntime.Pack : bf16 ? job.RuntimePack != "pytorch-bf16" : job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack))
+            || job.DecoderRevision != (heart ? MusicHeartMuLaCatalog.CompanionRevision : diff ? MusicDiffRhythmCatalog.CompanionRevision : ace ? MusicAceCatalog.CompanionRevision : bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision)
+            || job.RuntimeRevision != (heart ? MusicHeartMuLaCatalog.SourceRevision : diff ? MusicDiffRhythmCatalog.SourceRevision : ace ? MusicAceCatalog.SourceRevision : studio ? MusicStudioRuntime.Revision : bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision)
+            || (heart ? job.RuntimePack != MusicHeartMuLaCatalog.RuntimeRevision : diff ? job.RuntimePack != MusicDiffRhythmCatalog.RuntimeRevision : ace ? job.RuntimePack != MusicAceCatalog.RuntimeRevision : studio ? job.RuntimePack != MusicStudioRuntime.Pack : bf16 ? job.RuntimePack != "pytorch-bf16" : job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack))
             || job.Variants.Length is < 1 or > 8 || !Path.IsPathFullyQualified(job.ModelsRoot)
             || !Path.IsPathFullyQualified(job.OutputFolder) || job.DurationSeconds is < 1 or > 360
             || diff && job.DurationSeconds > MusicDiffRhythmCatalog.MaximumDuration)
             throw new InvalidDataException("Unsupported music job.");
         foreach (var v in job.Variants)
         {
-            if ((bf16 || ace || diff) && v.LanguageSeed != v.SoundSeed) throw new InvalidDataException("This model requires one seed for all stages.");
+            if ((bf16 || ace || diff || heart) && v.LanguageSeed != v.SoundSeed) throw new InvalidDataException("This model requires one seed for all stages.");
             if (job.Output is null && (v.AdditionalPath is not null || v.AdditionalHash is not null)) throw new InvalidDataException("Unexpected duplicate in legacy music job.");
             if (v.LanguageSeed < 0 || v.SoundSeed < 0 || Path.GetDirectoryName(Path.GetFullPath(v.ResultPath)) != job.OutputFolder)
                 throw new InvalidDataException("Invalid music variant.");

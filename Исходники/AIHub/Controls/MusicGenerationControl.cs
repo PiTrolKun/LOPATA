@@ -45,7 +45,7 @@ public sealed class MusicGenerationControl : UserControl
         if (variation == Variation && settings is null) return;
         var next = settings ?? ModelExpertPresets.For(variation).Current(); next.Validate();
         if (next.Variation != variation) throw new System.IO.InvalidDataException("Settings variation mismatch.");
-        FlushTuning(); if (!MusicDiffRhythmCatalog.IsDiff(variation)) Tuning.ConfigureVariation(variation);
+        FlushTuning(); if (!MusicHeartMuLaCatalog.NoCircle(variation)) Tuning.ConfigureVariation(variation);
         SetExpertSettings(next, false);
     }
     private readonly TextBlock _heading = MusicAudioUi.Text(15), _titleLabel = MusicAudioUi.Text(12),
@@ -221,17 +221,17 @@ public sealed class MusicGenerationControl : UserControl
         }
         finally {
             _expertWindow = null;
-            if (!accepted) { _expertSettings = before; _expertLoadError = beforeError; if (!MusicDiffRhythmCatalog.IsDiff(before.Variation)) Tuning.Refresh(before); OptionsChanged?.Invoke(); UpdateCaption(); }
+            if (!accepted) { _expertSettings = before; _expertLoadError = beforeError; if (!MusicHeartMuLaCatalog.NoCircle(before.Variation)) Tuning.Refresh(before); OptionsChanged?.Invoke(); UpdateCaption(); }
         }
     }
     private void FlushTuning() { if (_saveTuning.IsEnabled) { _saveTuning.Stop(); PersistTuning(); } }
     public void SetExpertSettings(MusicExpertSettings settings, bool persist = true)
     {
-        if (settings.Variation != Variation) { settings.Validate(); FlushTuning(); if (!MusicDiffRhythmCatalog.IsDiff(settings.Variation)) Tuning.ConfigureVariation(settings.Variation); }
+        if (settings.Variation != Variation) { settings.Validate(); FlushTuning(); if (!MusicHeartMuLaCatalog.NoCircle(settings.Variation)) Tuning.ConfigureVariation(settings.Variation); }
         settings.Validate(); _expertSettings = settings.Snapshot(); _expertLoadError = null;
-        Tuning.Visibility = _recipes.Visibility = MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? Visibility.Collapsed : Visibility.Visible;
+        Tuning.Visibility = _recipes.Visibility = MusicHeartMuLaCatalog.NoCircle(settings.Variation) ? Visibility.Collapsed : Visibility.Visible;
         RefreshDuration();
-        if (!MusicDiffRhythmCatalog.IsDiff(settings.Variation)) Tuning.Refresh(_expertSettings); OptionsChanged?.Invoke();
+        if (!MusicHeartMuLaCatalog.NoCircle(settings.Variation)) Tuning.Refresh(_expertSettings); OptionsChanged?.Invoke();
         if (persist) { _saveTuning.Stop(); _saveTuning.Start(); }
     }
     private void PersistTuning()
