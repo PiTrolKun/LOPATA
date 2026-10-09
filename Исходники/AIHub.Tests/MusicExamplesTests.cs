@@ -129,7 +129,13 @@ public sealed class MusicExamplesTests
                 }
                 var opened = new List<(string Model, string Variant)>();
                 cards.OpenRequested += (model, variant) => { opened.Add((model, variant)); return Task.CompletedTask; };
-                foreach (var (model, variant) in new[] { ("yue2", "studio-q8"), ("ace-step", "xl-turbo"), ("diffrhythm", "diff2") }) {
+                var titles = ScenarioNavigationTests.LogicalDescendants(cards).OfType<Button>()
+                    .Where(b => AutomationProperties.GetAutomationId(b).StartsWith("Music.Models.Open.", StringComparison.Ordinal)).ToArray();
+                Assert.HasCount(4, titles);
+                Assert.IsTrue(titles.All(b => b.IsEnabled));
+                Assert.IsFalse(ScenarioNavigationTests.LogicalDescendants(cards).OfType<ComboBox>()
+                    .Any(c => AutomationProperties.GetAutomationId(c).StartsWith("Music.Models.Variants.", StringComparison.Ordinal)));
+                foreach (var (model, variant) in new[] { ("yue2", "studio-q8"), ("ace-step", "xl-turbo"), ("diffrhythm", "diff2"), ("heartmula", "heart3b") }) {
                     var elements = ScenarioNavigationTests.LogicalDescendants(cards).ToArray();
                     Assert.IsFalse(elements.OfType<ComboBox>().Any(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Variants." + model));
                     var title = elements.OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Music.Models.Open." + model);
@@ -139,7 +145,7 @@ public sealed class MusicExamplesTests
                     title.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Assert.AreEqual((model, variant), opened.Last());
                 }
-                Assert.HasCount(3, opened);
+                Assert.HasCount(4, opened);
                 Assert.IsFalse(MusicModelSelectionCatalog.All.Any(c => c.Id is "regrind" or "mothersuperior" or "yue2-lora"));
                 Capture(host, language + "-cards");
                 cards.Localize(l.T);

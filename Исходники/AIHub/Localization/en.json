@@ -4347,7 +4347,7 @@
   "Music.Hardware.GpuFailed": "graphics card could not execute the stage",
   "Music.Hardware.MemoryLow": "Insufficient available memory for the current estimate. Try a shorter duration.",
   "Music.Models.Title": "Create music",
-  "Music.Models.Hint": "Click a ready model title to open preparation. YuE2 Studio Q8, ACE-Step XL Turbo and DiffRhythm 2 are connected; DiffRhythm Russian is experimental. Play or save examples and inspect parameters. Switch installed models through AI±.",
+  "Music.Models.Hint": "Click a model title to open preparation. YuE2 Studio Q8, ACE-Step XL Turbo, DiffRhythm 2 and HeartMuLa are available; Russian in DiffRhythm and HeartMuLa is experimental. Play or save examples and inspect parameters. Switch installed models through AI±.",
   "Music.Models.Variations": "{0} variants",
   "Music.Models.VariationHint": "Open the title to choose a model variant.",
   "Music.Models.Connected": "Connected. Components and licenses are checked after selection.",

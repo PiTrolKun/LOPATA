@@ -11,13 +11,7 @@ public static class MusicModelSelectionCatalog
         Model("yue2", "YuE2", V("studio-q8", "StudioQ8", true)),
         Model("ace-step", "ACE-Step 1.5", V("xl-turbo", "AceXLTurbo4B", true)),
         Model("diffrhythm", "DiffRhythm 2", V("diff2", "DiffRhythm2", true)),
-        Model("heartmula", "HeartMuLa", V("heart3b", "Heart3B", true)),
-        Model("songgeneration", "SongGeneration 2 / LeVo 2", V("base", "Base"), V("hybrid", "Hybrid")),
-        Model("minimax", "MiniMax Music 3", V("base", "Base"), V("bf16", "BF16"), V("community", "Community"), V("hybrid", "Hybrid")),
-        Model("mulacover", "MuLaCover", V("base", "Base")),
-        Model("yingmusic", "YingMusic-Singer-Plus", V("base", "Base")),
-        Model("vibe", "VIBE", V("base", "Base")),
-        Model("midasheng", "MiDashengLM-Gen", V("base", "Base"))
+        Model("heartmula", "HeartMuLa", V("heart3b", "Heart3B", true))
     });
 
     public static bool CanOpen(string modelId, string variantId) => All.Any(model => model.Id == modelId &&
