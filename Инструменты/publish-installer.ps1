@@ -11,9 +11,19 @@ $repo = 'PiTrolKun/LOPATA'
 $root = Split-Path -Parent $PSScriptRoot
 function Invoke-GitHub {
     param([string[]]$Arguments)
-    $result = & gh @Arguments
-    if ($LASTEXITCODE -ne 0) { throw "GitHub command failed: $($Arguments[0])" }
-    return $result
+    # These api calls use GET only. Never retry mutations with an unknown outcome.
+    $readOnlyApi = $Arguments[0] -eq 'api' -and
+        @($Arguments | Where-Object { $_ -cmatch '^(-X|-f|-F|--method|--field|--raw-field|--input)(=|$)' }).Count -eq 0
+    $attempts = if ($readOnlyApi) { 3 } else { 1 }
+    for ($attempt = 1; $attempt -le $attempts; $attempt++) {
+        $result = & gh @Arguments
+        if ($LASTEXITCODE -eq 0) { return $result }
+        if ($attempt -lt $attempts) {
+            Write-Warning "GitHub read failed; retry $attempt/$($attempts - 1)."
+            Start-Sleep -Seconds (2 * $attempt)
+        }
+    }
+    throw "GitHub command failed: $($Arguments[0])"
 }
 
 $installer = (Resolve-Path -LiteralPath $InstallerPath).Path
@@ -69,9 +79,13 @@ if (-not $Publish) {
 $remoteCommit = Invoke-GitHub @('api', "repos/$repo/commits/$($receipt.sourceCommit)", '--jq', '.sha')
 if ($remoteCommit -ne $receipt.sourceCommit) { throw 'Source commit is not available on GitHub.' }
 if ($bundle) {
+    $referencedReleases = @{}
     foreach ($package in $bundle.Reused) {
         $oldTag = ([uri]$package.url).Segments[-2].TrimEnd('/')
-        $oldRelease = Invoke-GitHub @('api', "repos/$repo/releases/tags/$oldTag") | Out-String | ConvertFrom-Json
+        if (-not $referencedReleases.ContainsKey($oldTag)) {
+            $referencedReleases[$oldTag] = Invoke-GitHub @('api', "repos/$repo/releases/tags/$oldTag") | Out-String | ConvertFrom-Json
+        }
+        $oldRelease = $referencedReleases[$oldTag]
         $oldAsset = @($oldRelease.assets | Where-Object name -eq $package.id)
         if ($oldRelease.draft -or $oldAsset.Count -ne 1 -or $oldAsset[0].size -ne $package.size -or $oldAsset[0].digest -ne "sha256:$($package.sha256)") {
             throw "Referenced package is unavailable or changed: $($package.id). No release published."

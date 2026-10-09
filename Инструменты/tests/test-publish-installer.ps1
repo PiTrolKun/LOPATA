@@ -15,10 +15,18 @@ $global:UpdatePublishHash = $hash
 $global:UpdatePublishBadHash = $false
 $global:UpdatePublishUploaded = $false
 $global:UpdatePublishResume = $false
+$global:UpdatePublishReadFailures = 0
+$global:UpdatePublishMutationFailure = $false
 function global:gh {
     $global:LASTEXITCODE = 0
     $line = $args -join ' '
     $global:UpdatePublishCommands.Add($line)
+    if ($line -match '^api repos/.+/releases\?' -and $global:UpdatePublishReadFailures -gt 0) {
+        $global:UpdatePublishReadFailures--; $global:LASTEXITCODE=1; return
+    }
+    if ($line -match '^release create ' -and $global:UpdatePublishMutationFailure) {
+        $global:LASTEXITCODE=1; return
+    }
     if ($line -match '^api repos/.+/commits/') { return ('a'*40) }
     if ($line -match '^release view ') { return '53' }
     if ($line -match '^release upload ') { $global:UpdatePublishUploaded=$true; return }
@@ -57,6 +65,15 @@ try {
     & "$root/Инструменты/publish-installer.ps1" -InstallerPath $installer -NotesPath $notes -Publish -ResumeDraft
     $commands=$global:UpdatePublishCommands -join "`n"
     if($commands -match 'release upload|release create' -or $commands -notmatch 'release edit'){throw 'Draft resume must reuse verified uploaded assets.'}
-    Write-Host 'PASS: preview, draft publication/resume, checksum rejection, multi-page retention; no GitHub mutations.'
+    $global:UpdatePublishResume=$false; $global:UpdatePublishCommands.Clear(); $global:UpdatePublishReadFailures=2
+    & "$root/Инструменты/publish-installer.ps1" -InstallerPath $installer -NotesPath $notes
+    if (@($global:UpdatePublishCommands | Where-Object { $_ -match '^api repos/.+/releases\?' }).Count -ne 3) { throw 'Transient reads were not retried.' }
+    $global:UpdatePublishCommands.Clear(); $global:UpdatePublishReadFailures=3; $rejected=$false
+    try { & "$root/Инструменты/publish-installer.ps1" -InstallerPath $installer -NotesPath $notes } catch { $rejected=$true }
+    if (-not $rejected -or $global:UpdatePublishCommands.Count -ne 3) { throw 'Read retries were not bounded.' }
+    $global:UpdatePublishCommands.Clear(); $global:UpdatePublishMutationFailure=$true; $rejected=$false
+    try { & "$root/Инструменты/publish-installer.ps1" -InstallerPath $installer -NotesPath $notes -Publish } catch { $rejected=$true }
+    if (-not $rejected -or @($global:UpdatePublishCommands | Where-Object { $_ -match '^release create ' }).Count -ne 1) { throw 'A failed mutation was retried.' }
+    Write-Host 'PASS: preview, draft publication/resume, checksum rejection, retention, bounded read retries, no mutation retries; no GitHub mutations.'
 }
 finally { Remove-Item Function:\gh }
