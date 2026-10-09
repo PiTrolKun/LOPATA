@@ -39,7 +39,7 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         var row = new Grid { Margin = new(0, 8, 0, 12) };
         row.ColumnDefinitions.Add(new() { Width = new(2, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
-        row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+        if (model.Id != "diffrhythm") row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         var body = new StackPanel();
         var singleConnected = model.Variants.Count == 1 && model.Variants[0].Connected;
         var open = new Button { Padding = new(14, 8, 14, 8),
@@ -65,6 +65,10 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         MusicModelVariant CurrentVariant() => selector?.SelectedItem is ComboBoxItem item
             ? (MusicModelVariant)item.Tag : model.Variants[0];
         var description = Text(_l(model.DescriptionKey)); body.Children.Add(description);
+        if (model.Id == "diffrhythm") {
+            body.Children.Add(Text(_l("Music.Diff.LicenseHint")));
+            body.Children.Add(Text(_l("Music.Models.diffrhythm.Memory")));
+        }
         var assessment = new StackPanel();
         if (model.Id == "yue2")
         {
@@ -114,7 +118,10 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
                 await action(model.Id, variant.Id);
         };
         row.Children.Add(Frame(body, new(0, 0, 12, 0)));
-        AddExample("LocalExample", 1); AddExample("CloudExample", 2);
+        if (model.Id == "diffrhythm") AddExample("LocalExample", 0);
+        AddExample("LocalExample", 1);
+        if (model.Id != "diffrhythm") AddExample("CloudExample", 2);
+        UpdateExamples(CurrentVariant());
         return row;
 
         void AddExample(string key, int column)
@@ -123,20 +130,23 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
             example.Children.Add(Text(_l("Music.Models." + key), true));
             example.Children.Add(Text("♫"));
             example.Children.Add(Text(_l("Music.Models.ExamplePending")));
-            var border = Frame(example, new(column == 1 ? 0 : 6, 0, 0, 0));
+            var border = column == 0 ? new Border { Child = example, Margin = new(0, 12, 0, 0) }
+                : Frame(example, new(column == 1 ? 0 : 6, 0, 0, 0));
             examples.Add(border);
-            AutomationProperties.SetAutomationId(border, "Music.Models." + key + "." + model.Id);
-            Grid.SetColumn(border, column); row.Children.Add(border);
-            if (examples.Count == 2) UpdateExamples(CurrentVariant());
+            AutomationProperties.SetAutomationId(border, "Music.Models." + key + "." + model.Id + (column == 0 ? ".ru" : ""));
+            Grid.SetColumn(border, column);
+            if (column == 0) body.Children.Add(border); else row.Children.Add(border);
         }
         void UpdateExamples(MusicModelVariant variant)
         {
             foreach (var border in examples) {
                 if (examplePlayers.Remove(border, out var previous))
                     foreach (var old in previous) { old.Dispose(); _players.Remove(old); }
-                var entries = model.Id == "yue2" || model.Id == "ace-step" && variant.Id == "xl-turbo"
+                var entries = model.Id is "yue2" or "diffrhythm" || model.Id == "ace-step" && variant.Id == "xl-turbo"
                     ? MusicExamples.ForVariation(MusicModelVariants.Normalize(variant.Id), Grid.GetColumn(border) == 2)
                     : Array.Empty<MusicExample>();
+                if (model.Id == "diffrhythm") entries = entries.Where(e =>
+                    (e.Id == "diffrhythm2-ru") == (Grid.GetColumn(border) == 0)).ToArray();
                 if (entries.Count > 0) {
                     var group = new StackPanel();
                     var owned = new List<MusicExamplePlayerControl>();

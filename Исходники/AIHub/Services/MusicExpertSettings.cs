@@ -45,11 +45,11 @@ public sealed record MusicExpertSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public ModelTuningState? Tuning { get; init; }
     public double Get(string key) => Values[key];
     public int Integer(string key) => checked((int)Get(key));
-    [JsonIgnore] public string Cot => MusicAceCatalog.IsAce(Variation) ? "off" : new[] { "full", "melody", "off" }[Integer("cot")];
+    [JsonIgnore] public string Cot => MusicModelVariants.ExternalPipeline(Variation) ? "off" : new[] { "full", "melody", "off" }[Integer("cot")];
     [JsonIgnore] public int PlanLimit => Cot == "off" ? 0 : Integer("abc_sampling.max_tokens");
-    public int SequenceLimit(int duration) => MusicAceCatalog.IsAce(Variation) ? 0 : Math.Min(Integer("semantic_sampling.max_tokens"), checked(duration * 25));
-    [JsonIgnore] public double Guidance => MusicAceCatalog.IsAce(Variation) ? 1 : Get("cfg_scale") < 0 ? Cot == "off" ? 1.01 : 1 : Get("cfg_scale");
-    [JsonIgnore] public string Instruction => MusicAceCatalog.IsAce(Variation) ? "Fill the audio semantic mask based on the given conditions:" : Cot switch {
+    public int SequenceLimit(int duration) => MusicModelVariants.ExternalPipeline(Variation) ? 0 : Math.Min(Integer("semantic_sampling.max_tokens"), checked(duration * 25));
+    [JsonIgnore] public double Guidance => MusicDiffRhythmCatalog.IsDiff(Variation) ? Get("cfg") : MusicAceCatalog.IsAce(Variation) ? 1 : Get("cfg_scale") < 0 ? Cot == "off" ? 1.01 : 1 : Get("cfg_scale");
+    [JsonIgnore] public string Instruction => MusicDiffRhythmCatalog.IsDiff(Variation) ? "Generate music from lyrics and style." : MusicAceCatalog.IsAce(Variation) ? "Fill the audio semantic mask based on the given conditions:" : Cot switch {
         "melody" => "Generate a melody-only ABC transcription without chord symbols, then generate music with codec tokens from the given conditions.",
         "off" => "Generate music with codec tokens from the given conditions.",
         _ => MusicTextBudget.DefaultInstruction };
@@ -60,6 +60,7 @@ public sealed record MusicExpertSettings
         if (!MusicModelVariants.Supported(Variation)) throw new InvalidDataException("Unsupported settings variation.");
         if (Values is null) throw new InvalidDataException("Missing parameter values.");
         if (TextValues is null) throw new InvalidDataException("Missing text parameter values.");
+        if (MusicDiffRhythmCatalog.IsDiff(Variation)) { MusicDiffRhythmCatalog.Validate(this); return; }
         if (MusicAceCatalog.IsAce(Variation)) { MusicAceCatalog.Validate(this); return; }
         if (TextValues.Count != 0) throw new InvalidDataException("Unexpected YuE text parameters.");
         if (Variation == MusicModelVariants.Bf16 && (Values.GetValueOrDefault("lm_seed", -2) != -1 || Values.GetValueOrDefault("peak_clip", -2) != 10))

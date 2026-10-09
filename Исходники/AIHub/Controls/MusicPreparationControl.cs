@@ -15,6 +15,7 @@ namespace AIHub.Controls;
 public sealed class MusicPreparationControl : UserControl, IDisposable
 {
     private readonly IMusicPreparation _preparation;
+    private readonly Func<MusicWorkspaceControl> _createWorkspace;
     private Func<string, string> _l = key => key;
     private string _root = "", _statusKey = "Music.Preparation.Checking";
     private IReadOnlyList<ManagedModelArtifactCard> _cards = [];
@@ -38,7 +39,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void ShowModelMenu(Button anchor)
     {
         var menu = new ContextMenu { PlacementTarget = anchor };
-        foreach (var id in new[] { MusicStudioRuntime.Variation, MusicAceCatalog.Variation }) {
+        foreach (var id in new[] { MusicStudioRuntime.Variation, MusicAceCatalog.Variation, MusicDiffRhythmCatalog.Variation }) {
             var cards = MusicModelVariants.Cards(_root, id);
             var installed = cards.All(c => c.Files.All(f => System.IO.File.Exists(System.IO.Path.Combine(c.InstallDirectory, f.RelativePath))));
             if (!installed || id == MusicStudioRuntime.Variation && !MusicStudioRuntime.Available) continue;
@@ -67,9 +68,11 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     }
     public bool CanContinue => _ready && !IsModelSelection && !IsBusy && !_disposed;
     public MusicPreparationControl() : this(new MusicPreparationService()) { }
-    public MusicPreparationControl(IMusicPreparation preparation)
+    public MusicPreparationControl(IMusicPreparation preparation) : this(preparation, () => new MusicWorkspaceControl()) { }
+    internal MusicPreparationControl(IMusicPreparation preparation, Func<MusicWorkspaceControl> createWorkspace)
     {
         _preparation = preparation;
+        _createWorkspace = createWorkspace;
         _preparation.Variation = _variation;
         Resources.MergedDictionaries.Add(new ResourceDictionary
         { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
@@ -96,11 +99,12 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     public void DownloadConnections(int connections) => _preparation.MaximumParallelConnections = connections;
     public bool UsesArtifact(string id) => (IsBusy || _workspace?.Session.HasPendingOrRunning == true) &&
         (MusicComponentCatalog.ComponentIds.Contains(id) || MusicModelVariants.Components(MusicModelVariants.Bf16).Contains(id)
-            || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id) || MusicAceCatalog.Components.Contains(id));
-    public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (_workspace?.Session.HasPendingOrRunning == true) { ShowWorkspace(); return Task.CompletedTask; } IsWorkspace = false; IsModelSelection = true; Render(); return Task.CompletedTask; }
+            || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id) || MusicAceCatalog.Components.Contains(id) || MusicDiffRhythmCatalog.Components.Contains(id));
+    public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (ShowPendingWorkspace()) return Task.CompletedTask; IsWorkspace = false; IsModelSelection = true; Render(); return Task.CompletedTask; }
     public Task SelectModelAsync(string modelId, string variantId)
     {
         if (_disposed || IsBusy || !MusicModelSelectionCatalog.CanOpen(modelId, variantId)) return Task.CompletedTask;
+        if (ShowPendingWorkspace()) return Task.CompletedTask;
         _pendingExample = null;
         _variation = MusicModelVariants.Normalize(variantId); _preparation.Variation = _variation;
         _applySelection = true;
@@ -116,6 +120,33 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     }
     private void ShowWorkspace()
     { if (_cards.Count == 0) _cards = MusicModelVariants.Cards(_root, _variation); IsModelSelection = false; IsWorkspace = true; Render(); }
+    private void EnsureWorkspace()
+    {
+        if (_workspace is not null) return;
+        _workspace = _createWorkspace();
+        _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };
+        _workspace.Session.StateChanged += () => WorkspaceChanged?.Invoke();
+    }
+    private bool ShowPendingWorkspace()
+    {
+        if (ApplicationBackgroundOperations.Current is not { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind }) return false;
+        try {
+            EnsureWorkspace();
+            _pendingExample = null; _applySelection = false; _preparedHardware = null;
+            _workspace!.Localize(_l);
+            _workspace.Session.RestorePendingJob();
+            _variation = _workspace.Generation.Variation; _preparation.Variation = _variation;
+            ShowWorkspace();
+        }
+        catch (Exception error) { ShowPreparationError(error); Render(); }
+        return true;
+    }
+    private void ShowPreparationError(Exception error)
+    {
+        IsWorkspace = false; IsModelSelection = false; _ready = false;
+        _statusKey = "Music.Error"; ErrorText = error.Message;
+        OwnedProcessRegistry.Log("music_ui_preparation_failed", "Music.Preparation", detail: error.ToString());
+    }
     public Task ResumeGenerationAsync(BackgroundOperationState state, CancellationToken token)
     { ShowWorkspace(); return _workspace!.Session.ResumeAsync(state, token); }
     public void ViewGenerationResult(string id)
@@ -133,6 +164,7 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     private async Task RunAsync(bool acknowledge, bool download, bool open)
     {
         if (_disposed || IsBusy) return;
+        if (open && ShowPendingWorkspace()) return;
         IsWorkspace = false; IsModelSelection = false; _ready = false;
         if (string.IsNullOrWhiteSpace(_root)) { _statusKey = "Music.StorageRequired"; Render(); return; }
         IsBusy = true; _cancel = new();
@@ -150,33 +182,48 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         try
         {
             var filesWatch = System.Diagnostics.Stopwatch.StartNew();
-            // Opening ACE delegates its single complete verification to the worker.
+            // External pipelines delegate complete verification to their worker.
             // Previous status is a UI hint only; the worker re-hashes every component before execution.
-            if (!(open && MusicAceCatalog.IsAce(_variation))) _cards = acknowledge
+            if (!(open && MusicModelVariants.ExternalPipeline(_variation))) _cards = acknowledge
                 ? await _preparation.PrepareAsync(_root, download, progress, operation.Token)
                 : await _preparation.CheckAsync(_root, progress, operation.Token);
             else if (_progress is not null) _progress.IsIndeterminate = true;
             OwnedProcessRegistry.Log("music_ui_preparation", "Music.Preparation", detail:
-                $"variation={_variation}; stage={(open && MusicAceCatalog.IsAce(_variation) ? "worker-verifies" : "files")}; elapsedMs={filesWatch.ElapsedMilliseconds}");
+                $"variation={_variation}; stage={(open && MusicModelVariants.ExternalPipeline(_variation) ? "worker-verifies" : "files")}; elapsedMs={filesWatch.ElapsedMilliseconds}");
             operation.Token.ThrowIfCancellationRequested();
             _ready = _cards.Count == MusicModelVariants.Cards(_root, _variation).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             _statusKey = _ready ? "Music.Preparation.Ready" : "Music.Preparation.Missing";
             if (open && _ready && _variation == MusicModelVariants.Bf16)
                 _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
                     line => { if (_status is not null) _status.Text = line; });
+            if (open && _ready && MusicDiffRhythmCatalog.IsDiff(_variation)) {
+                var receipt = await MusicDiffRhythmWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
+                _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
+                _ready = _cards.Count == MusicDiffRhythmCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
+            }
             if (open && _ready && MusicAceCatalog.IsAce(_variation)) {
-                var receipt = await MusicAceWorker.ProbeAsync(_root, operation.Token, line => ReportAcePreparation(line, operation));
+                var receipt = await MusicAceWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
                 _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
                 _ready = _cards.Count == MusicAceCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             }
             operation.Token.ThrowIfCancellationRequested();
-            IsWorkspace = open && _ready && !_disposed;
+            if (open && _ready && !_disposed && !ShowPendingWorkspace()) {
+                EnsureWorkspace();
+                _workspace!.ConfigureOutput(_outputFolder, _saveOutputFolder);
+                _workspace.Localize(_l);
+                _workspace.ConfigureGeneration(_root, _l);
+                if (_applySelection) {
+                    _workspace.Projects.SwitchModel(_preparation.Variation, _preparedHardware);
+                    _variation = _workspace.Generation.Variation; _applySelection = false; _preparedHardware = null;
+                }
+                if (_pendingExample is { } example) { _workspace.Projects.ApplyExample(example); _pendingExample = null; }
+                IsWorkspace = true;
+            }
         }
         catch (OperationCanceledException) { _ready = false; _statusKey = "Music.Canceled"; }
         catch (Exception e)
         {
-            _ready = false; _statusKey = "Music.Error";
-            ErrorText = e.Message;
+            ShowPreparationError(e);
         }
         finally
         {
@@ -187,15 +234,16 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
     }
     private string ErrorText { get; set; } = "";
 
-    private void ReportAcePreparation(string line, CancellationTokenSource operation)
+    private void ReportExternalPreparation(string line, CancellationTokenSource operation)
     {
-        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => ReportAcePreparation(line, operation)); return; }
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => ReportExternalPreparation(line, operation)); return; }
         if (_disposed || !IsBusy || _cancel != operation) return;
         var key = line.Contains("source", StringComparison.OrdinalIgnoreCase) ? "Source"
             : line.Contains("Importing", StringComparison.Ordinal) ? "Api"
             : line.Contains("hardware", StringComparison.OrdinalIgnoreCase) || line.Contains("Python profile", StringComparison.Ordinal) ? "Hardware"
             : line.Contains("librar", StringComparison.OrdinalIgnoreCase) ? "Libraries" : "Files";
-        if (_status is not null) _status.Text = _l("Music.Ace.Prepare." + key) + "\n" + line;
+        var prefix = MusicDiffRhythmCatalog.IsDiff(_variation) ? "Music.Diff.Prepare." : "Music.Ace.Prepare.";
+        if (_status is not null) _status.Text = _l(prefix + key) + "\n" + line;
         if (_progress is not null) {
             var count = System.Text.RegularExpressions.Regex.Match(line, @" · (\d+)/(\d+)$");
             _progress.IsIndeterminate = !count.Success;
@@ -211,24 +259,18 @@ public sealed class MusicPreparationControl : UserControl, IDisposable
         if (IsModelSelection) { _models.Localize(_l); Content = _models; return; }
         if (IsWorkspace)
         {
-            if (_workspace is null) {
-                _workspace = new MusicWorkspaceControl();
-                _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };
-                _workspace.Session.StateChanged += () => WorkspaceChanged?.Invoke();
-            }
-            _workspace.ConfigureOutput(_outputFolder, _saveOutputFolder);
+            EnsureWorkspace();
+            _workspace!.ConfigureOutput(_outputFolder, _saveOutputFolder);
             _workspace.Localize(_l);
             _workspace.ConfigureGeneration(_root, _l);
-            if (_applySelection) { _workspace.Projects.SwitchModel(_preparation.Variation, _preparedHardware); _variation = _workspace.Generation.Variation; _applySelection = false; _preparedHardware = null; }
-            if (_pendingExample is { } example) { _workspace.Projects.ApplyExample(example); _pendingExample = null; }
             Content = _workspace;
             var model = MusicModelVariants.Cards(_root, _workspace.Generation.Variation).Single(c => c.ModelArtifactId == MusicModelVariants.Weights(_workspace.Generation.Variation));
-            if (!MusicAceCatalog.IsAce(_workspace.Generation.Variation)) _ = _workspace.Editor.LoadTokenizerAsync(System.IO.Path.Combine(model.InstallDirectory,
+            if (!MusicModelVariants.ExternalPipeline(_workspace.Generation.Variation)) _ = _workspace.Editor.LoadTokenizerAsync(System.IO.Path.Combine(model.InstallDirectory,
                 _workspace.Generation.Variation == MusicModelVariants.Bf16 ? "qwen.tiktoken" : model.Files.Single().RelativePath));
             return;
         }
         var panel = new StackPanel { MaxWidth = 1000, HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(24) };
-        panel.Children.Add(Text(_l(MusicAceCatalog.IsAce(_variation) ? "Music.Ace.PreparationTitle" : "Music.Preparation.Title"), true));
+        panel.Children.Add(Text(_l(MusicDiffRhythmCatalog.IsDiff(_variation) ? "Music.DiffRhythm.PreparationTitle" : MusicAceCatalog.IsAce(_variation) ? "Music.Ace.PreparationTitle" : "Music.Preparation.Title"), true));
         panel.Children.Add(Text(_l("Music.Preparation.Hint")));
         foreach (var card in MusicModelVariants.Cards(_root, _variation))
         {

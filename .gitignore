@@ -36,6 +36,9 @@ Runtime/**
 !Runtime/MusicAce/
 !Runtime/MusicAce/**
 
+# Pinned DiffRhythm author source only; downloaded weights/wheels stay excluded.
+!Runtime/MusicDiffRhythm/source.zip
+
 # User-selected result folders may live inside the repo during tests
 **/AI_HUB/Core/Sessions/**
 **/AI_HUB/Debug/ModelTester/**

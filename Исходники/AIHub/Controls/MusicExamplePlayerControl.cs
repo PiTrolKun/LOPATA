@@ -35,7 +35,7 @@ public sealed class MusicExamplePlayerControl : UserControl, IDisposable
         var body = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var title = MusicAudioUi.Text(18); title.Text = l(example.Cloud ? "Music.Models.CloudExample" : "Music.Models.LocalExample");
         title.FontWeight = FontWeights.SemiBold; title.TextWrapping = TextWrapping.Wrap; body.Children.Add(title);
-        var name = MusicAudioUi.Text(13); name.Text = example.Title; name.Margin = new(0, 10, 0, 10); body.Children.Add(name);
+        var name = MusicAudioUi.Text(13); name.Text = example.DisplayTitle(l); name.Margin = new(0, 10, 0, 10); body.Children.Add(name);
         var tools = new StackPanel { Orientation = Orientation.Horizontal };
         _play = MusicAudioUi.IconButton("Example.Play", "M7,3 L21,12 L7,21 Z", () => _ = ToggleAsync());
         _play.Width = _play.Height = 36;
@@ -86,7 +86,7 @@ public sealed class MusicExamplePlayerControl : UserControl, IDisposable
     private void Release() { Pause(); if (!_disposed) { _opened = false; _audio.Open(null); } }
     private void Save()
     {
-        var dialog = new Microsoft.Win32.SaveFileDialog { Title = _l("Music.Examples.Save"), FileName = _example.Title.Replace('·', '-') + ".mp3", Filter = "MP3 (*.mp3)|*.mp3" };
+        var dialog = new Microsoft.Win32.SaveFileDialog { Title = _l("Music.Examples.Save"), FileName = _example.DisplayTitle(_l).Replace('·', '-') + ".mp3", Filter = "MP3 (*.mp3)|*.mp3" };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
         try { MusicTrackFiles.Copy(_example.Path, dialog.FileName); _status.Text = _l("Music.Audio.Saved"); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException) {

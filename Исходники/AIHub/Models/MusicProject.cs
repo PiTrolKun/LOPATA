@@ -42,7 +42,7 @@ public sealed record MusicProjectSnapshot
             throw new System.IO.InvalidDataException("Invalid music project wishes.");
     }
     public static MusicProjectSnapshot FromJob(MusicGenerationJob job) => new() {
-        Model = MusicAceCatalog.IsAce(job.Variation) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model,
+        Model = MusicModelVariants.Family(job.Variation),
         Lyrics = job.Lyrics, Title = job.Title, Artist = job.Artist, Comment = job.Comment, ModelRevision = job.ModelRevision, Variation = job.Variation,
         Variants = job.Variants.Length, DurationSeconds = job.DurationAutomatic ? null : job.DurationSeconds, OutputFolder = job.OutputFolder,
         Expert = job.Expert.Snapshot(), Output = job.Output ?? new() { Format = MusicAudioFormat.Wav },

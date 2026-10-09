@@ -36,7 +36,9 @@ public sealed class MusicGenerationSession : IDisposable
     public void Configure(string modelsRoot, Func<string, string> localize)
     {
         _modelsRoot = modelsRoot; _l = localize; RefreshBudget();
-        if (!_checking && !_working && File.Exists(Path.Combine(MusicYueRuntime.DirectoryPath, "manifest.json"))) _ = CheckRuntimeAsync();
+        if (MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation)) EnableDiffStart();
+        else if (!_checking && !_working && _controller?.HasPending != true && (MusicModelVariants.ExternalPipeline(_view.Generation.Variation) ||
+            File.Exists(Path.Combine(MusicYueRuntime.DirectoryPath, "manifest.json")))) _ = CheckRuntimeAsync();
         RefreshButtons();
     }
     private async Task CheckRuntimeAsync()
@@ -93,10 +95,16 @@ public sealed class MusicGenerationSession : IDisposable
     public void ModelChanged(string? verifiedHardware = null)
     {
         _ready = false; RefreshBudget();
-        if (string.IsNullOrWhiteSpace(_modelsRoot)) return;
+        if (MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation)) {
+            EnableDiffStart();
+            _view.Generation.SetHardware(verifiedHardware is null ? _l("Music.Diff.HardwareOnStart")
+                : "DiffRhythm 2 · " + verifiedHardware);
+            RefreshButtons(); return;
+        }
+        if (string.IsNullOrWhiteSpace(_modelsRoot) || _controller?.HasPending == true) { RefreshButtons(); return; }
         var variation = _view.Generation.Variation;
-        if (MusicAceCatalog.IsAce(variation)) {
-            if (verifiedHardware is not null) { ++_modelCheck; _checking = false; _ready = true; _view.Generation.SetHardware("ACE · " + verifiedHardware); RefreshButtons(); }
+        if (MusicModelVariants.ExternalPipeline(variation)) {
+            if (verifiedHardware is not null) { ++_modelCheck; _checking = false; _ready = true; _view.Generation.SetHardware(MusicModelVariants.Family(variation) + " · " + verifiedHardware); RefreshButtons(); }
             else _ = CheckRuntimeAsync();
             return;
         }
@@ -110,6 +118,12 @@ public sealed class MusicGenerationSession : IDisposable
         }
         _ = CheckRuntimeAsync();
     }
+    private void EnableDiffStart()
+    {
+        // This enables the command, not a verified-runtime claim. The durable worker
+        // checks files, licenses and hardware during launch, with cancellation and logs.
+        ++_modelCheck; _checking = false; _ready = !string.IsNullOrWhiteSpace(_modelsRoot);
+    }
     private void WishesChanged(object? sender, EventArgs args) => RefreshBudget();
     private void ValidityChanged(object? sender, EventArgs args) => RefreshButtons();
     public bool HasPendingOrRunning => _working || _controller is { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind };
@@ -121,7 +135,8 @@ public sealed class MusicGenerationSession : IDisposable
         var request = new MusicYueRequest("", "", 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
             { Expert = _view.Generation.ExpertSettings };
         _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, request.Instruction, request.OutputReserve, _view.Wishes.State.Instrumental,
-            MusicAceCatalog.IsAce(_view.Generation.Variation));
+            MusicModelVariants.ExternalPipeline(_view.Generation.Variation),
+            MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation) ? "Music.Diff.EditorHint" : "Music.Ace.EditorHint");
         RefreshButtons();
     }
     private async Task StartPauseAsync()
@@ -187,6 +202,13 @@ public sealed class MusicGenerationSession : IDisposable
         var id = state.Input.GetProperty("JobId").GetString() ?? throw new InvalidDataException("Missing music job identifier.");
         return RunAsync(id, state, token);
     }
+    internal void RestorePendingJob()
+    {
+        if (_working || _starting || _controller is not { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind }) return;
+        var id = _controller.State!.Input.GetProperty("JobId").GetString() ?? throw new InvalidDataException("Missing music job identifier.");
+        if (!_view.Projects.Current.Steps.Any(s => s.JobId == id)) _view.Projects.RestoreJob(_jobs.Load(id));
+        RefreshButtons();
+    }
     private async Task RunAsync(string id, BackgroundOperationState? restored = null, CancellationToken token = default)
     {
         if (_working) throw new InvalidOperationException("Music generation is already active.");
@@ -196,7 +218,7 @@ public sealed class MusicGenerationSession : IDisposable
         _worker.Log -= NativeLog; if (_worker is MusicYueWorker oldNative) oldNative.HardwareChanged -= HardwareChanged;
         if (_worker is MusicStudioWorker oldStudio) oldStudio.HardwareChanged -= HardwareChanged;
         // Re-evaluate hardware on resume, even for a job originally created on CPU.
-        _worker = MusicAceCatalog.IsAce(job.Variation) ? new MusicAceWorker() : job.Variation == MusicStudioRuntime.Variation ? new MusicStudioWorker()
+        _worker = MusicDiffRhythmCatalog.IsDiff(job.Variation) ? new MusicDiffRhythmWorker() : MusicAceCatalog.IsAce(job.Variation) ? new MusicAceWorker() : job.Variation == MusicStudioRuntime.Variation ? new MusicStudioWorker()
             : job.Variation == MusicModelVariants.Bf16 ? new MusicBf16Worker() : new MusicYueWorker(MusicYueRuntime.DirectoryPath);
         _worker.Log += NativeLog; if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
         if (_worker is MusicStudioWorker studio) studio.HardwareChanged += HardwareChanged;
@@ -278,6 +300,9 @@ public sealed class MusicGenerationSession : IDisposable
     {
         if (_disposed) return;
         _view.Status.AppendLog(message); var operation = _telemetry;
+        if (_worker is MusicDiffRhythmWorker && message.StartsWith("[Hardware]", StringComparison.Ordinal)
+            && !_view.Dispatcher.HasShutdownStarted)
+            _view.Dispatcher.Invoke(() => { if (!_disposed) _view.Generation.SetHardware("DiffRhythm 2 · " + message[10..].Trim()); });
         MusicGenerationStage? stage = message.StartsWith("[Load]", StringComparison.Ordinal) ? MusicGenerationStage.Loading
             : message.StartsWith("[Plan]", StringComparison.Ordinal) || message.StartsWith("[ABC]", StringComparison.Ordinal) || message.StartsWith("[AR] Score", StringComparison.Ordinal) ? MusicGenerationStage.Planning
             : message.StartsWith("[AR]", StringComparison.Ordinal) ? MusicGenerationStage.Sequence

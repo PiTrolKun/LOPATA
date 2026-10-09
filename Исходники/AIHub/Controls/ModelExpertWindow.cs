@@ -45,6 +45,7 @@ public sealed partial class ModelExpertWindow : Window
     {
         _parameters.Children.Clear();
         _pinButtons.Clear();
+        if (MusicDiffRhythmCatalog.IsDiff(_draft.Variation)) { RenderDiffRhythm(); return; }
         if (MusicAceCatalog.IsAce(_draft.Variation)) { RenderAce(); return; }
         if (_store.Collection == "Simple") {
             _parameters.Children.Add(MusicWishUi.Text(_l("Music.Tuning.FullSnapshot")));
@@ -135,6 +136,7 @@ public sealed partial class ModelExpertWindow : Window
     private static string Number(double number) => number.ToString("0.###", CultureInfo.CurrentCulture);
     private void Edited(string key)
     {
+        if (MusicDiffRhythmCatalog.IsDiff(_draft.Variation)) { Changed(); return; }
         _draft = MusicTuningProfile.Pin(_draft, key);
         if (_draft.Get(key) == -1 && key is "cfg_scale" or "seed" or "lm_seed")
             _draft = _draft with { Tuning = MusicTuningProfile.State(_draft) with { Pins = MusicTuningProfile.State(_draft).Pins.Except([key]).ToArray() } };
@@ -151,7 +153,7 @@ public sealed partial class ModelExpertWindow : Window
     {
         var reference = _selected is null ? MusicModelVariants.Defaults(_draft.Variation) : _selected.Settings;
         _modified.Text = (_draft.SameAs(reference) ? "" : L("Modified")) +
-            " · " + string.Format(L("PinCount"), MusicTuningProfile.State(_draft).Pins.Length);
+            (MusicDiffRhythmCatalog.IsDiff(_draft.Variation) ? "" : " · " + string.Format(L("PinCount"), MusicTuningProfile.State(_draft).Pins.Length));
         try { ValidateDraft(); PreviewChanged?.Invoke(_draft.Snapshot()); }
         catch (System.IO.InvalidDataException) { /* Incomplete text edits do not replace the effective preview. */ }
     }

@@ -1,4 +1,6 @@
 using System.Windows.Controls;
+using System.Windows.Automation;
+using System.Text.Json;
 using AIHub.Controls;
 using AIHub.Models;
 using AIHub.Services;
@@ -165,6 +167,85 @@ public sealed class MusicPreparationTests
         workspace.Editor.Lyrics = "Общий текст";
         control.Localize(k => k);
         Assert.AreEqual("Общий текст", workspace.Editor.Lyrics);
+    });
+
+    [TestMethod, DataRow(BackgroundOperationPhase.Waiting), DataRow(BackgroundOperationPhase.Paused)]
+    public Task PendingDiffJobOpensItsProjectWithoutSwitchingOrStarting(BackgroundOperationPhase phase) => ScenarioNavigationTests.Sta(() =>
+    {
+        using var files = new MusicProjectTests.Files();
+        var projects = new MusicProjects(Path.Combine(files.Root, "projects"));
+        var jobs = new MusicGenerationJobs(Path.Combine(files.Root, "jobs"));
+        var output = new MusicOutputPreferences(Path.Combine(files.Root, "output.json"));
+        MusicGenerationJob job;
+        using (var original = new MusicWorkspaceControl(projects, jobs, output)) {
+            original.Generation.ConfigureVariation(MusicDiffRhythmCatalog.Variation, MusicDiffRhythmCatalog.Defaults());
+            original.Editor.Lyrics = "深夜工匠坐桌旁，\n旧机器忽然发亮。";
+            job = jobs.Create(files.Root, files.Root, "Chinese test", 1, 30, "j-pop", original.Editor.Lyrics,
+                expert: original.Generation.ExpertSettings);
+            job = original.Projects.Record(job, original.Projects.Capture());
+            original.Projects.Outcome(job, MusicProjectOutcome.Failed, "Previous worker failure");
+        }
+        var checkpoint = new BackgroundOperationStore(Path.Combine(files.Root, "operation.json"));
+        checkpoint.Save(new() { Kind = MusicGenerationRunner.BackgroundKind, Title = job.Title, Project = job.Id,
+            Input = JsonSerializer.SerializeToElement(new { JobId = job.Id }), Phase = phase, RequiresDecision = true });
+        var controller = new BackgroundOperationController(checkpoint); controller.Load();
+        var previous = ApplicationBackgroundOperations.Current;
+        ApplicationBackgroundOperations.Current = controller;
+        try {
+            var before = File.ReadAllText(Path.Combine(files.Root, "operation.json"));
+            var fake = new Preparation();
+            using var control = new MusicPreparationControl(fake, () => new MusicWorkspaceControl(projects, jobs, output));
+            var l = new LocalizationService(); l.Load("ru"); control.Configure(l.T, Storage(files.Root), 1);
+            control.OpenAsync().GetAwaiter().GetResult();
+            Assert.IsTrue(control.IsWorkspace);
+            var workspace = (MusicWorkspaceControl)control.Content;
+            Assert.AreEqual(job.ProjectId, workspace.Projects.Current.Id);
+            Assert.AreEqual(job.Lyrics, workspace.Editor.Lyrics);
+            Assert.AreEqual(MusicDiffRhythmCatalog.Variation, workspace.Generation.Variation);
+            Assert.HasCount(1, workspace.Projects.Current.Steps);
+            Assert.IsTrue(workspace.Projects.Busy);
+            var buttons = ScenarioNavigationTests.LogicalDescendants(workspace).OfType<Button>();
+            Assert.IsTrue(buttons.Single(b => AutomationProperties.GetAutomationId(b) == "Music.Audio.CancelGeneration").IsEnabled);
+            Assert.IsTrue(buttons.Single(b => AutomationProperties.GetAutomationId(b) == "Music.Generation.StartPause").IsEnabled);
+            control.SelectModelAsync("yue2", "studio-q8").GetAwaiter().GetResult();
+            control.Localize(l.T);
+            Assert.AreSame(workspace, control.Content);
+            Assert.AreEqual(MusicDiffRhythmCatalog.Variation, workspace.Generation.Variation);
+            Assert.AreEqual(0, fake.Preparations);
+            Assert.AreEqual(before, File.ReadAllText(Path.Combine(files.Root, "operation.json")));
+            Assert.IsTrue(controller.HasPending); Assert.IsFalse(controller.IsRunning);
+            Assert.HasCount(1, projects.Load(job.ProjectId!).Steps);
+        }
+        finally { ApplicationBackgroundOperations.Current = previous; }
+    });
+
+    [TestMethod]
+    public Task OperationAppearingDuringPreparationShowsErrorAndKeepsCheckpoint() => ScenarioNavigationTests.Sta(() =>
+    {
+        using var files = new MusicProjectTests.Files();
+        var store = new BackgroundOperationStore(Path.Combine(files.Root, "operation.json"));
+        var controller = new BackgroundOperationController(store); controller.Load();
+        var previous = ApplicationBackgroundOperations.Current;
+        ApplicationBackgroundOperations.Current = controller;
+        try {
+            var fake = new Preparation { OnPrepare = () => {
+                store.Save(new() { Kind = "other.test", Title = "Other operation", Phase = BackgroundOperationPhase.Waiting,
+                    Input = JsonSerializer.SerializeToElement(new { Test = true }) });
+                controller.Load();
+            } };
+            using var control = new MusicPreparationControl(fake, () => new MusicWorkspaceControl(
+                new MusicProjects(Path.Combine(files.Root, "projects")), new MusicGenerationJobs(Path.Combine(files.Root, "jobs")),
+                new MusicOutputPreferences(Path.Combine(files.Root, "output.json"))));
+            var l = new LocalizationService(); l.Load("ru"); control.Configure(l.T, Storage(files.Root), 1);
+            control.SelectModelAsync("yue2", "studio-q8").GetAwaiter().GetResult();
+            control.ContinueAsync().GetAwaiter().GetResult();
+            Assert.IsFalse(control.IsWorkspace); Assert.IsFalse(control.IsBusy);
+            var text = ScenarioNavigationTests.LogicalDescendants(control).OfType<TextBlock>();
+            Assert.IsTrue(text.Any(t => t.Text.Contains(l.T("Music.Projects.Busy"), StringComparison.Ordinal)));
+            control.Localize(l.T); // Rendering again must not retry the rejected switch.
+            Assert.IsTrue(controller.HasPending); Assert.AreEqual("other.test", controller.State!.Kind);
+        }
+        finally { ApplicationBackgroundOperations.Current = previous; }
     });
 
     private static MusicPreparationControl Create(Preparation preparation)

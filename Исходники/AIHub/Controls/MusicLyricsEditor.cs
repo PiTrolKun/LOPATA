@@ -21,6 +21,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     private int _outputReserve, _revision;
     private bool _disposed, _instrumental, _ace, _counting = true;
     private string _stateKey = "Music.Editor.Loading";
+    private string _externalHintKey = "Music.Ace.EditorHint";
     public MusicTextUsage? Usage { get; private set; }
     public bool CanGenerate => !_disposed && (_ace ? _instrumental || !string.IsNullOrWhiteSpace(_editor.Text) : MusicTextBudget.CanStart(Usage, _counting, _editor.Text, _instrumental));
     public event EventHandler? ValidityChanged;
@@ -113,10 +114,12 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         finally { if (_loadCancel == cancel) _loadCancel = null; }
     }
 
-    public void ConfigureRequest(string tags, string instruction, int outputReserve = 0, bool instrumental = false, bool ace = false)
+    public void ConfigureRequest(string tags, string instruction, int outputReserve = 0, bool instrumental = false, bool ace = false,
+        string externalHintKey = "Music.Ace.EditorHint")
     {
         if (outputReserve < 0) throw new ArgumentOutOfRangeException(nameof(outputReserve));
         if (ace != _ace) { ResetTokenizer(); _ace = ace; }
+        _externalHintKey = externalHintKey;
         _tags = tags; _instruction = instruction; _outputReserve = outputReserve; _instrumental = instrumental; InvalidateCounts();
     }
     // Every future launch handler must take this snapshot, not read the textbox directly.
@@ -127,7 +130,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     {
         if (_disposed) return;
         _revision++; _countCancel?.Cancel(); Usage = null; _counting = true;
-        if (_ace) { _debounce.Stop(); _counting = false; _stateKey = "Music.Ace.EditorHint"; UpdateLabels(); ValidityChanged?.Invoke(this, EventArgs.Empty); return; }
+        if (_ace) { _debounce.Stop(); _counting = false; _stateKey = _externalHintKey; UpdateLabels(); ValidityChanged?.Invoke(this, EventArgs.Empty); return; }
         _stateKey = _tokenizer is null ? _loadCancel is null ? "Music.Editor.Unavailable" : "Music.Editor.Loading" : "Music.Editor.Counting";
         UpdateLabels(); ValidityChanged?.Invoke(this, EventArgs.Empty);
         _debounce.Stop(); if (_tokenizer is not null) _debounce.Start();

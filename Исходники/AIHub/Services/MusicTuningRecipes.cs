@@ -9,7 +9,7 @@ public sealed record MusicTuningRecipe(string Id, string Source, IReadOnlyDictio
         TextValues.All(p => settings.TextValues[p.Key] == p.Value);
     public MusicExpertSettings Apply(MusicExpertSettings current)
     {
-        if ((Variation is null && MusicAceCatalog.IsAce(current.Variation)) || (Variation is not null && Variation != current.Variation))
+        if ((Variation is null && MusicModelVariants.ExternalPipeline(current.Variation)) || (Variation is not null && Variation != current.Variation))
             throw new System.IO.InvalidDataException("Recipe belongs to another model variation.");
         var next = current.Snapshot(); foreach (var pair in Values) next.Values[pair.Key] = pair.Value;
         foreach (var pair in TextValues) next.TextValues[pair.Key] = pair.Value;
@@ -30,7 +30,7 @@ public static class MusicTuningRecipes
         Group("S1", "abc_sampling", .55, .82, 16), Group("S2", "abc_sampling", 1, .97, 64),
         Group("S3", "semantic_sampling", .8, .88, 50), Group("S4", "semantic_sampling", 1.2, .99, 200),
         Cover("R1", .8, 1.2), Cover("R2", .9, 2), Cover("R3", .95, 1.9) ];
-    public static IReadOnlyList<MusicTuningRecipe> For(string variation) => MusicAceCatalog.IsAce(variation) ? MusicAceRecipes.All : All;
+    public static IReadOnlyList<MusicTuningRecipe> For(string variation) => MusicDiffRhythmCatalog.IsDiff(variation) ? [] : MusicAceCatalog.IsAce(variation) ? MusicAceRecipes.All : All;
     public static MusicExpertSettings Ordinary(MusicExpertSettings current)
     {
         var next = MusicTuningProfile.ResetCircle(current);

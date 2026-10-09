@@ -524,3 +524,21 @@ Qwen companion components additionally use Apache-2.0. PyTorch hardware packs
 keep their existing separate terms. No vLLM, flash-attn or training dependencies
 are supplied. See Документы_проекта/ACE_XL_Turbo_4B_паспорт.md for revisions,
 sources, integration boundaries and what has actually been verified.
+# DiffRhythm 2 integration (2026-10-09)
+
+Pinned ASLP-lab author Space source 0563fcec4bdf42ca33f6e76ebe9949429d07bf00
+is retained in Runtime/MusicDiffRhythm/source.zip with per-file hashes. Author
+sampling and BigVGAN are unchanged. LOPATA provides offline local loaders,
+owned process control, deferred eSpeak voice initialization for Windows,
+and a separately disclosed experimental Russian frontend authorized by the user.
+Original EN/ZH processing is retained. Russian phoneme approximations are recorded
+in execution metadata; unsupported phones fail explicitly.
+DiffRhythm is Apache-2.0; BigVGAN/HiFiGAN and MuQ code use MIT.
+MuQ/MuLan weights use **CC BY-NC 4.0**, restricting this supplied bundle to
+noncommercial use under those terms; no additional rights are granted.
+Original notices for 97 pinned Windows wheels and MuQ/Jieba source are retained
+in Licenses/texts/diff2-*.txt and music-diffrhythm-entries.json. LangSegment from
+the Space states py3langid/BSD provenance; its unavailable original fork was not
+independently verified. eSpeak and shared Torch packs keep their separate terms.
+See Документы_проекта/DiffRhythm2_паспорт.md and Инструменты/MusicDiffRhythm/README.md
+for precise revisions, reproduction and the limits of runtime verification.

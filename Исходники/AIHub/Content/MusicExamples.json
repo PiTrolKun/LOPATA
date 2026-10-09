@@ -107,5 +107,44 @@
     "Request": "[Verse 1]\nНочью мастер сел за стол,\nСтарый ящик вдруг ожил.\nОн ЛАПАТУ в нём завёл —\nИ экран заговорил.\n\n[Chorus]\nЭй, ЛАПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!\n\n[Verse 2]\nВ ящик бросил он рассказ,\nПару строчек и портрет.\nА ЛАПАТА в тот же час\nПрошептала: «Вот ответ».\n\n[Verse 3]\nТолько мастер отвернулся —\nЧто-то грохнуло внутри.\nМонитор слегка качнулся:\n«Это тест номер три!»\n\n[Verse 4]\nДо рассвета шёл их спор,\nКто умнее — человек?\nНо ЛАПАТА с этих пор\nРоет данные вовек.\n\n[Chorus]\nЭй, ЛАПАТА, глубже рой!\nПод железом клад зарой!\nТекст и музыку достань —\nИ машине волю дай!",
     "Genre": "j-pop",
     "Pair": "ace-jpop"
-  }
+  },
+{
+  "Id": "diffrhythm2-zh",
+  "File": "diffrhythm2-zh.mp3",
+  "Title": "Китайский",
+  "TitleKey": "Music.Examples.Language.Chinese",
+  "Cloud": false,
+  "Sha256": "12758B29FBE36BED65F678DDCC3E2B0944F008307EC44C8D1AB633A130A35124",
+  "Bytes": 4801078,
+  "DurationSeconds": 119.8,
+  "Request": "",
+  "Genre": "",
+  "Variation": "music-diffrhythm2"
+},
+{
+  "Id": "diffrhythm2-en",
+  "File": "diffrhythm2-en.mp3",
+  "Title": "Английский",
+  "TitleKey": "Music.Examples.Language.English",
+  "Cloud": false,
+  "Sha256": "12161FBE6BB699E0D7B7DCAA33A1A35C9FB40E5D85B7115732D410FA7FEB11A0",
+  "Bytes": 4697902,
+  "DurationSeconds": 117.2,
+  "Request": "",
+  "Genre": "",
+  "Variation": "music-diffrhythm2"
+},
+{
+  "Id": "diffrhythm2-ru",
+  "File": "diffrhythm2-ru.mp3",
+  "Title": "Русский",
+  "TitleKey": "Music.Examples.Language.Russian",
+  "Cloud": false,
+  "Sha256": "35D085B5073671C94F6F9B58259BFC676D492F55017F7518C682FB64A3224481",
+  "Bytes": 4663461,
+  "DurationSeconds": 116.2,
+  "Request": "",
+  "Genre": "j-pop",
+  "Variation": "music-diffrhythm2"
+}
 ]

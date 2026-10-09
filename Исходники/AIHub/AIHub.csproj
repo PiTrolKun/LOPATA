@@ -25,6 +25,9 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
     <Content Include="Tools\ace-xl-models.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="..\..\Runtime\MusicDiffRhythm\source.zip" Link="MusicDiffRhythmRuntime\source.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\diffrhythm2-models.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\diffrhythm2-python-files.json" LogicalName="AIHub.DiffRhythmPythonManifest" />
     <Content Include="..\..\Runtime\MusicStudio\v3.4.0-lopata-paths-1\**\*" Link="MusicStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

@@ -15,7 +15,7 @@ public sealed class MusicExampleParametersWindow : Window
     public MusicProjectSnapshot? Result { get; private set; }
     public MusicExampleParametersWindow(MusicExample example, MusicExampleMetadata? metadata, Func<string, string> l, bool canApply)
     {
-        MusicWishUi.PrepareWindow(this, l("Music.Examples.Parameters") + " · " + example.Title,
+        MusicWishUi.PrepareWindow(this, l("Music.Examples.Parameters") + " · " + example.DisplayTitle(l),
             "Music.Examples.Parameters." + example.Id, 780);
         Width = 780; Height = 740; MinWidth = 480; MinHeight = 420; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");

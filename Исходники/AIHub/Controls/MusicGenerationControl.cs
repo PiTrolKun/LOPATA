@@ -45,7 +45,7 @@ public sealed class MusicGenerationControl : UserControl
         if (variation == Variation && settings is null) return;
         var next = settings ?? ModelExpertPresets.For(variation).Current(); next.Validate();
         if (next.Variation != variation) throw new System.IO.InvalidDataException("Settings variation mismatch.");
-        FlushTuning(); Tuning.ConfigureVariation(variation);
+        FlushTuning(); if (!MusicDiffRhythmCatalog.IsDiff(variation)) Tuning.ConfigureVariation(variation);
         SetExpertSettings(next, false);
     }
     private readonly TextBlock _heading = MusicAudioUi.Text(15), _titleLabel = MusicAudioUi.Text(12),
@@ -175,7 +175,7 @@ public sealed class MusicGenerationControl : UserControl
         MusicAudioUi.Label(_poetry, L("Poetry")); MusicAudioUi.Label(_cancel, L("Cancel"));
         MusicAudioUi.Label(_expert, _l("Music.Expert.Title"));
         MusicAudioUi.Label(_recipes, _l("Music.Tuning.Recipes"));
-        Tuning.Localize(localize);
+        Tuning.Localize(localize); RefreshDuration();
         UpdateCaption();
     }
     public void UpdateState(bool canStart, bool busy, bool paused, bool runtimeReady, bool commandsDisabled = false)
@@ -187,6 +187,14 @@ public sealed class MusicGenerationControl : UserControl
         _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null && _outputError is null; _cancel.IsEnabled = busy || paused;
         if (commandsDisabled) _start.IsEnabled = _cancel.IsEnabled = false;
         _readiness.Text = runtimeReady ? "" : L("RuntimeMissing"); UpdateCaption();
+    }
+    private void RefreshDuration()
+    {
+        var value = _duration.SelectedItem is ComboBoxItem item ? (int)item.Tag : 0;
+        _duration.Items.Clear(); _duration.Items.Add(new ComboBoxItem { Content = L("Automatic"), Tag = 0 });
+        foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 }.Where(s => !MusicDiffRhythmCatalog.IsDiff(Variation) || s <= MusicDiffRhythmCatalog.MaximumDuration))
+            _duration.Items.Add(new ComboBoxItem { Content = seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), Tag = seconds });
+        _duration.SelectedIndex = Enumerable.Range(0, _duration.Items.Count).FirstOrDefault(i => (int)((ComboBoxItem)_duration.Items[i]).Tag == value);
     }
     private void UpdateCaption()
     {
@@ -213,16 +221,17 @@ public sealed class MusicGenerationControl : UserControl
         }
         finally {
             _expertWindow = null;
-            if (!accepted) { _expertSettings = before; _expertLoadError = beforeError; Tuning.Refresh(before); OptionsChanged?.Invoke(); UpdateCaption(); }
+            if (!accepted) { _expertSettings = before; _expertLoadError = beforeError; if (!MusicDiffRhythmCatalog.IsDiff(before.Variation)) Tuning.Refresh(before); OptionsChanged?.Invoke(); UpdateCaption(); }
         }
     }
     private void FlushTuning() { if (_saveTuning.IsEnabled) { _saveTuning.Stop(); PersistTuning(); } }
     public void SetExpertSettings(MusicExpertSettings settings, bool persist = true)
     {
-        if (settings.Variation != Variation) { settings.Validate(); FlushTuning(); Tuning.ConfigureVariation(settings.Variation); }
+        if (settings.Variation != Variation) { settings.Validate(); FlushTuning(); if (!MusicDiffRhythmCatalog.IsDiff(settings.Variation)) Tuning.ConfigureVariation(settings.Variation); }
         settings.Validate(); _expertSettings = settings.Snapshot(); _expertLoadError = null;
-        Tuning.Visibility = _recipes.Visibility = Visibility.Visible;
-        Tuning.Refresh(_expertSettings); OptionsChanged?.Invoke();
+        Tuning.Visibility = _recipes.Visibility = MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? Visibility.Collapsed : Visibility.Visible;
+        RefreshDuration();
+        if (!MusicDiffRhythmCatalog.IsDiff(settings.Variation)) Tuning.Refresh(_expertSettings); OptionsChanged?.Invoke();
         if (persist) { _saveTuning.Stop(); _saveTuning.Start(); }
     }
     private void PersistTuning()

@@ -19,7 +19,7 @@ public sealed class MusicExamplesTests
     [TestMethod]
     public async Task PackagedAudioIsExactAndRestoresItsActualTags()
     {
-        Assert.HasCount(9, MusicExamples.All);
+        Assert.HasCount(12, MusicExamples.All);
         foreach (var item in MusicExamples.All) await MusicExamples.VerifyAsync(item, default);
         var local = MusicExamples.All.Single(e => !e.Cloud && e.Variation == MusicComponentCatalog.ModelId);
         var metadata = await MusicExamples.ReadAsync(local, default);
@@ -81,13 +81,23 @@ public sealed class MusicExamplesTests
             Theme(host, dark);
             Modal(host, () => {
                 var players = ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray();
-                Assert.HasCount(6, players);
+                Assert.HasCount(9, players);
                 CollectionAssert.AreEquivalent(new[] { "Music.Examples.Player.yue2-studio-opera", "Music.Examples.Player.yue2-studio-hard-rock",
                     "Music.Examples.Player.suno-opera", "Music.Examples.Player.suno-hard-rock",
-                    "Music.Examples.Player.ace-xl-jpop", "Music.Examples.Player.suno-jpop" }, players.Select(AutomationProperties.GetAutomationId).ToArray());
+                    "Music.Examples.Player.ace-xl-jpop", "Music.Examples.Player.suno-jpop",
+                    "Music.Examples.Player.diffrhythm2-zh", "Music.Examples.Player.diffrhythm2-en",
+                    "Music.Examples.Player.diffrhythm2-ru" }, players.Select(AutomationProperties.GetAutomationId).ToArray());
+                Assert.IsFalse(ScenarioNavigationTests.LogicalDescendants(cards).OfType<FrameworkElement>()
+                    .Any(e => AutomationProperties.GetAutomationId(e) == "Music.Models.CloudExample.diffrhythm"));
+                foreach (var entry in MusicExamples.ForVariation(MusicDiffRhythmCatalog.Variation, false)) {
+                    var player = players.Single(p => AutomationProperties.GetAutomationId(p) == "Music.Examples.Player." + entry.Id);
+                    CollectionAssert.Contains(ScenarioNavigationTests.LogicalDescendants(player).OfType<TextBlock>()
+                        .Select(t => t.Text).ToArray(), entry.DisplayTitle(l.T));
+                    Assert.AreNotEqual(entry.TitleKey, entry.DisplayTitle(l.T));
+                }
                 var opened = new List<(string Model, string Variant)>();
                 cards.OpenRequested += (model, variant) => { opened.Add((model, variant)); return Task.CompletedTask; };
-                foreach (var (model, variant) in new[] { ("yue2", "studio-q8"), ("ace-step", "xl-turbo") }) {
+                foreach (var (model, variant) in new[] { ("yue2", "studio-q8"), ("ace-step", "xl-turbo"), ("diffrhythm", "diff2") }) {
                     var elements = ScenarioNavigationTests.LogicalDescendants(cards).ToArray();
                     Assert.IsFalse(elements.OfType<ComboBox>().Any(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Variants." + model));
                     var title = elements.OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Music.Models.Open." + model);
@@ -97,11 +107,11 @@ public sealed class MusicExamplesTests
                     title.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Assert.AreEqual((model, variant), opened.Last());
                 }
-                Assert.HasCount(2, opened);
-                Assert.IsTrue(ScenarioNavigationTests.LogicalDescendants(cards).OfType<ComboBox>().Any(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Variants.diffrhythm"));
+                Assert.HasCount(3, opened);
+                Assert.IsFalse(MusicModelSelectionCatalog.All.Any(c => c.Id is "regrind" or "mothersuperior" or "yue2-lora"));
                 Capture(host, language + "-cards");
                 cards.Localize(l.T);
-                Assert.HasCount(6, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
+                Assert.HasCount(9, ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray());
                 var ace = ScenarioNavigationTests.LogicalDescendants(cards).OfType<Button>()
                     .Single(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Open.ace-step");
                 host.UpdateLayout();
@@ -109,7 +119,29 @@ public sealed class MusicExamplesTests
                 var position = ace.TransformToAncestor((Visual)scroll.Content).Transform(new Point());
                 scroll.ScrollToVerticalOffset(Math.Max(0, position.Y - 20));
                 Capture(host, language + "-ace-cards");
+                var diff = ScenarioNavigationTests.LogicalDescendants(cards).OfType<Button>()
+                    .Single(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Open.diffrhythm");
+                host.UpdateLayout();
+                position = diff.TransformToAncestor((Visual)scroll.Content).Transform(new Point());
+                scroll.ScrollToVerticalOffset(Math.Max(0, position.Y - 20));
+                Capture(host, language + "-diffrhythm-cards");
+                host.UpdateLayout();
+                var currentPlayers = ScenarioNavigationTests.LogicalDescendants(cards).OfType<MusicExamplePlayerControl>().ToArray();
+                var russian = currentPlayers.Single(p => AutomationProperties.GetAutomationId(p) == "Music.Examples.Player.diffrhythm2-ru");
+                var english = currentPlayers.Single(p => AutomationProperties.GetAutomationId(p) == "Music.Examples.Player.diffrhythm2-en");
+                var chinese = currentPlayers.Single(p => AutomationProperties.GetAutomationId(p) == "Music.Examples.Player.diffrhythm2-zh");
+                var ruPosition = russian.TransformToAncestor(host).Transform(new Point());
+                var enPosition = english.TransformToAncestor(host).Transform(new Point());
+                var zhPosition = chinese.TransformToAncestor(host).Transform(new Point());
+                Assert.IsTrue(ruPosition.X < enPosition.X, "Russian example must be inside the description card.");
+                Assert.AreEqual(enPosition.X, zhPosition.X, .1);
+                Assert.IsTrue(enPosition.Y > zhPosition.Y);
+                Assert.IsTrue(russian.ActualWidth > english.ActualWidth);
+                var diffRow = (Grid)((FrameworkElement)((FrameworkElement)diff.Parent).Parent).Parent;
+                Assert.IsTrue(diffRow.ActualHeight < 600, "Card must fit the two-example layout without the former empty height.");
                 var labels = ScenarioNavigationTests.LogicalDescendants(cards).OfType<TextBlock>().Select(t => t.Text).ToArray();
+                CollectionAssert.Contains(labels, l.T("Music.Models.diffrhythm.Memory"));
+                Assert.AreNotEqual("Music.Models.diffrhythm.Memory", l.T("Music.Models.diffrhythm.Memory"));
                 foreach (var key in new[] { "Description", "Pros", "Cons", "Memory" })
                     CollectionAssert.Contains(labels, l.T("Music.Models.ace-step.xl-turbo." + key));
             });
@@ -128,6 +160,38 @@ public sealed class MusicExamplesTests
             }
             var tag = ScenarioNavigationCatalog.GetTag("music_examples"); Assert.AreNotEqual(tag.DescriptionKey, l.T(tag.DescriptionKey));
         });
+    }
+    [TestMethod]
+    public async Task DiffExamplesRestoreThreeLanguagesWithoutCloudComparisons()
+    {
+        var examples = MusicExamples.ForVariation(MusicDiffRhythmCatalog.Variation, false);
+        Assert.HasCount(3, examples);
+        Assert.HasCount(0, MusicExamples.ForVariation(MusicDiffRhythmCatalog.Variation, true));
+        CollectionAssert.AreEqual(new[] { "Китайский", "Английский", "Русский" }, examples.Select(e => e.Title).ToArray());
+        foreach (var (id, word, seed) in new[] { ("diffrhythm2-zh", "深夜", 1701830214d),
+            ("diffrhythm2-en", "LOPATA", 354945099d), ("diffrhythm2-ru", "ЛОПАТА", 765688443d) }) {
+            var example = examples.Single(e => e.Id == id);
+            var metadata = await MusicExamples.ReadAsync(example, default);
+            var restored = metadata.Restore();
+            StringAssert.Contains(restored.Lyrics, word);
+            Assert.AreEqual(metadata.Lyrics, restored.Lyrics);
+            Assert.AreEqual(MusicDiffRhythmCatalog.Variation, restored.Variation);
+            Assert.AreEqual(seed, restored.Expert.Get("seed"));
+            Assert.AreEqual(16d, restored.Expert.Get("steps"));
+            Assert.AreEqual(1.3, restored.Expert.Get("cfg"));
+            Assert.AreEqual(1d, restored.Expert.Get("experimental_ru"));
+            await ScenarioNavigationTests.Sta(() => {
+                using var files = new Files();
+                using var view = new MusicWorkspaceControl(new MusicProjects(Path.Combine(files.Root, "projects")),
+                    new MusicGenerationJobs(Path.Combine(files.Root, "jobs")), new(Path.Combine(files.Root, "output.json")));
+                view.Tracks.SetOutputFolder(files.Root); var project = view.Projects.Current.Id;
+                view.Projects.ApplyExample(restored);
+                Assert.AreEqual(project, view.Projects.Current.Id);
+                Assert.AreEqual(files.Root, view.Tracks.OutputFolder);
+                Assert.AreEqual(restored.Lyrics, view.Editor.Lyrics);
+                Assert.IsTrue(restored.Expert.SameAs(view.Generation.ExpertSettings));
+            });
+        }
     }
     [TestMethod]
     public async Task AceExampleRestoresNumbersTextAndAutomaticDurationWithoutChangingProject()

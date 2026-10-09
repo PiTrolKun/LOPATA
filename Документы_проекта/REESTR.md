@@ -1226,3 +1226,22 @@ verification-stats.json, ace-payload-verified.json; [протокол](Рели�
 09.10.2026: итоговая 0.4.31-dev, принято пользователем. Из discovery ACE
 убраны плановые XL/SFT/Turbo/Community; поставляемые зависимости/лицензии
 сохранены. Полный установщик не пересобирается; готовится файловый beta.
+# 09.10.2026 — DiffRhythm 2, 0.4.32-dev
+
+Новая модельная ветка музыкального сценария: штатный API ASLP-lab Space,
+исходники `0563fcec4bdf42ca33f6e76ebe9949429d07bf00`; sampler/BigVGAN сохранены.
+Модель `music-diffrhythm2`, companions `music-diffrhythm2-companions`,
+runtime `runtime-music-diffrhythm2`. 97 pinned wheels и источник MuQ/Jieba,
+13 651 извлечённый файл; общий managed Torch 2.10. Русский frontend eSpeak
+экспериментальный, явно разрешён пользователем; Windows lazy voice bootstrap
+не меняет используемые EN/ZH фонемы. MuQ/MuLan weights CC BY-NC 4.0,
+остальные оригинальные notices сохранены; недоступный LangSegment fork
+не объявлен независимо проверенным. Все 125 прежних лицензий/terms сохранены.
+173 профильных теста проходят, 4 прежних opt-in проверки пропущены.
+CPU import/probe и RU/EN/ZH frontend проверены; CUDA/XPU runtime-маршруты
+реализованы, песня и физическое освобождение VRAM ещё не испытаны.
+[Паспорт](DiffRhythm2_паспорт.md), [активное ТЗ](../ТЗ/Архив/2026-10-09_DiffRhythm2_официальное_подключение.md).
+
+09.10.2026: DiffRhythm 2 принят пользователем; ТЗ архивирован. CUDA песни и
+освобождение собственного worker проверены на RTX 4090. Замер 5,9 ГиБ VRAM /
+10,6 ГиБ RAM включая загрузку. CPU/XPU генерация физически не испытана.

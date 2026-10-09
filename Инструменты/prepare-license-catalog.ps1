@@ -1,8 +1,24 @@
-param([switch]$RefreshTexts)
+param([switch]$RefreshTexts, [string]$AppendEntries = '')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 $dest=Join-Path $root 'Исходники/AIHub/Licenses'
 New-Item -ItemType Directory -Force "$dest/texts" | Out-Null
+if ($AppendEntries) {
+ # Add optional model terms without regenerating the historical basic catalog
+ # or invalidating acknowledgements for unrelated hardware runtimes.
+ $existing = @(Get-Content "$dest/catalog.json" -Raw | ConvertFrom-Json)
+ $additions = @(Get-Content -LiteralPath $AppendEntries -Raw | ConvertFrom-Json)
+ foreach ($entry in $additions) {
+  if ($entry.Basic) { throw 'AppendEntries is for optional components only.' }
+  if ($existing.Id -contains $entry.Id) { throw "License entry already exists: $($entry.Id)" }
+  $terms = $entry.License + $entry.Ru + $entry.En
+  foreach ($file in $entry.Texts) { $terms += [IO.File]::ReadAllText((Join-Path $dest $file)) }
+  $entry.Terms = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($terms)))
+ }
+ ConvertTo-Json -InputObject @($existing + $additions) -Depth 8 | Set-Content "$dest/catalog.json" -Encoding utf8
+ Write-Host "Appended $($additions.Count) optional license entries; existing terms preserved."
+ return
+}
 $snapshot=Get-Content (Join-Path $root 'Документы_проекта/Лицензии/каталоги_2026-09-05.json') -Raw | ConvertFrom-Json
 $nugetRows=Import-Csv (Join-Path $root 'Документы_проекта/Лицензии/nuget_2026-09-05.csv')
 $entries=[Collections.Generic.List[object]]::new()
@@ -135,7 +151,7 @@ foreach($pair in @(@('builtin.dotnet','microsoft.netcore.app.runtime.win-x64'),@
   }
  }
 }
-foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','hardware-runtime-entries.json')){
+foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','music-diffrhythm-entries.json','hardware-runtime-entries.json')){
  $scenarioEntries=Join-Path $dest $entryFile
  if(Test-Path $scenarioEntries){
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }

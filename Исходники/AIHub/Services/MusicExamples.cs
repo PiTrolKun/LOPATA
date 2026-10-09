@@ -12,6 +12,8 @@ public sealed record MusicExample(string Id, string File, string Title, bool Clo
 {
     public string Variation { get; init; } = MusicComponentCatalog.ModelId;
     public string Pair { get; init; } = "";
+    public string TitleKey { get; init; } = "";
+    public string DisplayTitle(Func<string, string> localize) => TitleKey.Length > 0 ? localize(TitleKey) : Title;
     public string Path => System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "MusicExamples", File);
 }
 
@@ -45,7 +47,7 @@ public sealed record MusicExampleMetadata(Dictionary<string, string> Tags, strin
         expert.Validate();
         var duration = Required("LOPATA_DURATION_REQUEST_SECONDS");
         var snapshot = new MusicProjectSnapshot {
-            Model = MusicAceCatalog.IsAce(variation) ? MusicAceCatalog.ModelName : MusicExpertCatalog.Model,
+            Model = MusicModelVariants.Family(variation),
             Variation = variation, ModelRevision = MusicModelVariants.Revision(variation),
             Lyrics = Lyrics.Length > 0 ? Lyrics : throw new InvalidDataException("Missing lyrics."),
             Title = Tags.GetValueOrDefault("title", ""), Artist = Tags.GetValueOrDefault("artist", ""),
@@ -64,7 +66,7 @@ public static class MusicExamples
     public static IReadOnlyList<MusicExample> ForVariation(string variation, bool cloud)
     {
         var local = All.Where(e => !e.Cloud && e.Variation == variation).ToArray();
-        return cloud ? local.Select(e => All.Single(c => c.Cloud && c.Pair == e.Pair)).ToArray() : local;
+        return cloud ? local.Where(e => e.Pair.Length > 0).Select(e => All.Single(c => c.Cloud && c.Pair == e.Pair)).ToArray() : local;
     }
     private static IReadOnlyList<MusicExample> Load()
     {
