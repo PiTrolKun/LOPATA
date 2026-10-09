@@ -65,7 +65,7 @@ OutputBaseFilename=LOPATA_Setup_{#AppVersion}
 #endif
 SetupIconFile={#SetupIconFile}
 UninstallDisplayIcon={app}\{#AppExeName}
-Compression=lzma2
+Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 LicenseFile={#PublishDir}\Licenses\installer.txt
