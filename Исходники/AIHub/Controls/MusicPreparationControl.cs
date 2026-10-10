@@ -35,6 +35,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     private bool _applySelection;
     private string? _preparedHardware;
     public event Action? WorkspaceChanged;
+    public event Action<MusicWorkspaceControl>? PoetryRequested;
     public bool CanChangeModel => IsWorkspace && !IsBusy && _workspace?.Session.CanChangeModel == true;
     public void ShowModelMenu(Button anchor)
     {
@@ -126,6 +127,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     {
         if (_workspace is not null) return;
         _workspace = _createWorkspace();
+        _workspace.Generation.OpenPoetry = () => PoetryRequested?.Invoke(_workspace);
         _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };
         _workspace.Session.StateChanged += () => WorkspaceChanged?.Invoke();
     }

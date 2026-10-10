@@ -8,6 +8,10 @@ public sealed record MusicTokenizerMetadata(string[] Tokens, string[] Merges, in
 {
     // Only metadata is read. Tensor data and the inference runtime are not loaded.
     public static MusicTokenizerMetadata Read(string path, CancellationToken cancellation = default)
+        => ReadMetadata(path, cancellation, false);
+    internal static MusicTokenizerMetadata ReadQwenPreview(string path)
+        => ReadMetadata(path, default, true);
+    private static MusicTokenizerMetadata ReadMetadata(string path, CancellationToken cancellation, bool qwenPreview)
     {
         using var stream = File.OpenRead(path);
         using var reader = new BinaryReader(stream, new UTF8Encoding(false, true));
@@ -17,7 +21,7 @@ public sealed record MusicTokenizerMetadata(string[] Tokens, string[] Merges, in
         var entries = reader.ReadUInt64();
         if (entries > 100_000) throw new InvalidDataException("Invalid GGUF metadata count.");
         string[]? tokens = null, merges = null;
-        string? config = null, architecture = null;
+        string? config = null, architecture = null, pre = null;
         for (ulong i = 0; i < entries; i++)
         {
             cancellation.ThrowIfCancellationRequested();
@@ -26,12 +30,19 @@ public sealed record MusicTokenizerMetadata(string[] Tokens, string[] Merges, in
             switch (key)
             {
                 case "general.architecture": architecture = StringValue(type); break;
+                case "tokenizer.ggml.pre": pre = StringValue(type); break;
                 case "yue2.config_json": config = StringValue(type); break;
                 case "tokenizer.ggml.tokens": tokens = StringArray(type); break;
                 case "tokenizer.ggml.merges": merges = StringArray(type); break;
                 default: Skip(type, 0); break;
             }
             if (stream.Position > 64 * 1024 * 1024) throw new InvalidDataException("GGUF metadata is too large.");
+        }
+        if (qwenPreview)
+        {
+            if (architecture is not ("qwen2" or "qwen3") || pre != "qwen2" || tokens is null || merges is null)
+                throw new InvalidDataException("Unsupported Qwen preview tokenizer.");
+            return new(tokens, merges, 0);
         }
         if (architecture != "yue2" || tokens is null || merges is null || config is null)
             throw new InvalidDataException("YuE2 tokenizer metadata is missing.");

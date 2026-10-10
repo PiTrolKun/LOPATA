@@ -342,7 +342,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         }
         catch
         {
-            Stop();
+            await ModelProcessRetirement.StopAsync(_process, Stop);
             throw;
         }
         finally

@@ -6,6 +6,7 @@ public partial class MainWindow
 {
     private async Task StopBackgroundForExitAsync()
     {
+        if (_musicPoetryWindow?.SaveForExit() == false) throw new System.IO.IOException("Songwriting session was not saved.");
         // Confirm the durable record before canceling. A failed write must leave the
         // application open, rather than silently promising a resumable exit.
         if (!LiteraryPage.CheckpointBackgroundState()) throw new System.IO.IOException("Literary checkpoint was not confirmed.");

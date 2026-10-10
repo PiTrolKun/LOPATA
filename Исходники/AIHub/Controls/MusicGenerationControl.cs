@@ -33,6 +33,7 @@ public sealed class MusicGenerationControl : UserControl
     private readonly MusicOutputPreferences _outputPreferences;
     private readonly ComboBox _count = new() { Width = 65, MinHeight = 30 }, _duration = new() { Width = 190, MinHeight = 30 };
     private readonly Button _start, _cancel, _poetry, _expert, _recipes;
+    private readonly MusicPoetryButtonIndicator _poetryIndicator;
     private MusicExpertSettings _expertSettings = new();
     private Exception? _expertLoadError;
     private ModelExpertWindow? _expertWindow;
@@ -57,6 +58,7 @@ public sealed class MusicGenerationControl : UserControl
     public Func<Task>? StartPause { get; set; }
     public Func<Task>? Cancel { get; set; }
     public event Action? OptionsChanged;
+    public Action? OpenPoetry { get; set; }
     public MusicGenerationOptions Options => new(_title.Text.Trim(), (int)(_count.SelectedItem ?? 1),
         _duration.SelectedIndex <= 0 ? null : (int?)((ComboBoxItem)_duration.SelectedItem).Tag)
         { Artist = _artistInput.Input.Text.Trim(), Comment = _commentInput.Input.Text, Output = _output.Settings };
@@ -104,8 +106,9 @@ public sealed class MusicGenerationControl : UserControl
         _cancel.HorizontalAlignment = HorizontalAlignment.Center; Grid.SetColumn(actions, 1); top.Children.Add(actions);
         var lower = new Grid(); lower.ColumnDefinitions.Add(new()); lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        _poetry = MusicAudioUi.IconButton("PoetryChat", "M2,3 H22 V16 H10 L5,21 V16 H2 Z M9,12 L16,5 L19,8 L12,15 H9 Z", () => { });
-        _poetry.Width = _poetry.Height = 42; _poetry.IsEnabled = false;
+        _poetry = MusicAudioUi.IconButton("PoetryChat", "M2,3 H22 V16 H10 L5,21 V16 H2 Z M9,12 L16,5 L19,8 L12,15 H9 Z", () => OpenPoetry?.Invoke());
+        _poetryIndicator = new(_poetry);
+        _poetry.Width = _poetry.Height = 42;
         _poetry.HorizontalAlignment = HorizontalAlignment.Left; lower.Children.Add(_poetry);
         _expert = MusicAudioUi.IconButton("Expert", "M12,2 L14,5 L17,5 L19,7 L19,10 L22,12 L19,14 L19,17 L17,19 L14,19 L12,22 L10,19 L7,19 L5,17 L5,14 L2,12 L5,10 L5,7 L7,5 L10,5 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12", OpenExpert);
         _recipes = MusicAudioUi.IconButton("Recipes", "M3,3 H11 L12,5 L13,3 H21 V20 H13 L12,22 L11,20 H3 Z M12,5 V22 M6,7 H9 M6,11 H9 M15,7 H18 M15,11 H18", Tuning.OpenRecipes);
@@ -141,6 +144,7 @@ public sealed class MusicGenerationControl : UserControl
         Content = root; UpdateState(false, false, false, false);
     }
     public void SetHardware(string text) => _hardware.Text = text;
+    public void SetPoetryState(bool open, bool working) => _poetryIndicator.SetState(open, working);
     public void SetOptions(MusicGenerationOptions options)
     {
         _title.Text = options.Title; _artistInput.Input.Text = options.Artist; _commentInput.Input.Text = options.Comment;
@@ -180,6 +184,7 @@ public sealed class MusicGenerationControl : UserControl
     }
     public void UpdateState(bool canStart, bool busy, bool paused, bool runtimeReady, bool commandsDisabled = false)
     {
+        _poetry.IsEnabled = OpenPoetry is not null;
         _busy = busy; _paused = paused; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused;
         _expert.IsEnabled = !busy && !paused && !commandsDisabled;
         _recipes.IsEnabled = !busy && !paused && !commandsDisabled;

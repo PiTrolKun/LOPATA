@@ -16,6 +16,7 @@ namespace AIHub.Controls;
 /// <summary>Auxiliary private conversation: closing cancels the current reply; no shared session archive.</summary>
 public sealed class FinancialDiscussionWindow : Window
 {
+    private IDisposable? _auxiliaryLease;
     private readonly FinancialRunStore _store;
     private readonly FinancialInput _source;
     private readonly DebugModelInfo _model;
@@ -174,6 +175,7 @@ public sealed class FinancialDiscussionWindow : Window
         _status.Text = L("Working"); Availability();
         try
         {
+            _auxiliaryLease = _background?.BeginAuxiliary();
             Save(); await ApplicationBackgroundOperations.RetireModelsAsync();
             var request = FinancialDiscussionPrompts.Conversation(_snapshot, _state, text, _source.Language);
             var raw = await _runtime.GenerateConversationAsync(_model, request.System, request.Messages, 4096, cancellation.Token);
@@ -200,11 +202,11 @@ public sealed class FinancialDiscussionWindow : Window
         catch { _status.Text = L("Failed"); }
         finally
         {
-            try { _runtime.Stop(); } catch { _status.Text = L("Failed"); }
-            _operation = null; Availability();
+            try { await _runtime.RetireAsync(); } catch { _status.Text = L("Failed"); }
+            _operation = null; _auxiliaryLease?.Dispose(); _auxiliaryLease = null; Availability();
         }
     }
-    private void BackgroundChanged() => Dispatcher.BeginInvoke(() => { if (_background is { IsRunning: true }) _operation?.Cancel(); Availability(); });
+    private void BackgroundChanged() => Dispatcher.BeginInvoke(() => { if (_auxiliaryLease is null && _background is { IsRunning: true }) _operation?.Cancel(); Availability(); });
     private async void ClosingWindow(object? sender, CancelEventArgs e)
     {
         if (_closing) { e.Cancel = IsWorking; return; }

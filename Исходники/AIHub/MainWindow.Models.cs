@@ -113,6 +113,7 @@ public partial class MainWindow
 
     private bool IsManagedModelActive(string modelArtifactId)
     {
+        if (_musicPoetryWindow?.IsWorking == true) return true;
         if (MusicPage.UsesArtifact(modelArtifactId)) return true;
         if (GenerationPage.UsesArtifact(modelArtifactId)) return true;
         if (ImageUtilityPage.UsesArtifact(modelArtifactId)) return true;

@@ -19,6 +19,7 @@ public sealed class LiteraryFreeChatWindow : Window
     private readonly Button _send = new(), _stop = new(), _clear = new();
     private readonly TextBlock _status = LiteraryUi.Text("");
     private CancellationTokenSource? _operation;
+    private readonly BackgroundOperationController? _background = ApplicationBackgroundOperations.Current;
     private bool _closing;
     public bool IsWorking => _operation is not null;
     public LiteraryFreeChatWindow(LiteraryChatRuntime runtime, Func<string,string> l, string language)
@@ -45,18 +46,23 @@ public sealed class LiteraryFreeChatWindow : Window
                 System.Windows.Input.ModifierKeys.None or System.Windows.Input.ModifierKeys.Control)
             { e.Handled=true; if (!e.IsRepeat && _send.IsEnabled) await SendAsync(); }
         };
-        Closing += OnClosing; Closed += (_,_) => { _conversation.Clear(); _history.Clear(); _input.Clear(); }; Availability();
+        Closing += OnClosing; Closed += (_,_) => { if (_background is not null) _background.Changed -= BackgroundChanged; _conversation.Clear(); _history.Clear(); _input.Clear(); };
+        if (_background is not null) _background.Changed += BackgroundChanged;
+        Availability();
     }
     private void Availability()
-    { _send.IsEnabled = !IsWorking && !string.IsNullOrWhiteSpace(_input.Text); _stop.IsEnabled = IsWorking; _clear.IsEnabled = !IsWorking; _input.IsReadOnly = IsWorking; }
+    { _send.IsEnabled = !IsWorking && _background?.IsRunning != true && _background?.HasPending != true && !string.IsNullOrWhiteSpace(_input.Text); _stop.IsEnabled = IsWorking; _clear.IsEnabled = !IsWorking; _input.IsReadOnly = IsWorking; }
+    private void BackgroundChanged() => Dispatcher.BeginInvoke(new Action(Availability));
     private async Task SendAsync()
     {
-        if (IsWorking || string.IsNullOrWhiteSpace(_input.Text)) return;
+        if (!_send.IsEnabled || IsWorking || string.IsNullOrWhiteSpace(_input.Text)) return;
         var text = _input.Text; var raw = new StringBuilder(); var previous = _history.Text;
-        using var cancellation = new CancellationTokenSource(); _operation = cancellation;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(ApplicationBackgroundOperations.ExitToken); _operation = cancellation;
+        IDisposable? lease = null;
         _status.Text = _l(_runtime.IsBusy ? "Studio.Queued" : "Paragraph.Working"); Availability();
         try
         {
+            lease = _background?.BeginAuxiliary();
             var request = _conversation.Concat([new ImageAnalysisHiddenMessage { Role="user",Content=text }]).ToArray();
             var prefix = previous + "\n\n" + _l("Studio.Role.User") + ":\n" + text + "\n\n" + _l("Studio.Model") + ":\n";
             var result = await _runtime.FreeChatAsync(request,new InlineProgress<ModelStreamChunk>(chunk=>Dispatcher.Invoke(()=>
@@ -68,7 +74,7 @@ public sealed class LiteraryFreeChatWindow : Window
         catch (OperationCanceledException) { _status.Text = _l("Paragraph.Cancelled"); }
         catch (ImageAnalysisContextExhaustedException ex) { _status.Text = LiteraryContextBudgetMessage.Format(ex, _l); }
         catch (Exception) { _status.Text = _l("Paragraph.Failure"); }
-        finally { _operation = null; Availability(); }
+        finally { _operation = null; lease?.Dispose(); Availability(); }
     }
     private async void OnClosing(object? sender, CancelEventArgs e)
     {

@@ -13,13 +13,14 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     private CancellationTokenSource? _attempt;
     private TaskCompletionSource? _paused, _resume;
     private bool _pauseRequested, _running;
+    private bool _auxiliaryRunning;
     private bool _loadFailed;
     private TaskCompletionSource _idle = CompletedSource();
     private BackgroundOperationState? _state;
     private readonly Stopwatch _elapsed = new();
     private double _previousElapsed;
     public BackgroundOperationState? State { get { lock (_gate) return _state; } }
-    public bool IsRunning { get { lock (_gate) return _running; } }
+    public bool IsRunning { get { lock (_gate) return _running || _auxiliaryRunning; } }
     internal bool IsInOperationScope { get { lock (_gate) return _running && _scope.Value is not null && _scope.Value == _state?.Id; } }
     public bool HasPending { get { lock (_gate) return _state is not null && !IsFinal(_state.Phase); } }
     public bool CanRestore { get { lock (_gate) return _state is not null && _restorers.ContainsKey(_state.Kind); } }
@@ -29,6 +30,28 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     private static TaskCompletionSource CompletedSource()
     { var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); source.SetResult(); return source; }
     public Task WaitForIdleAsync() { lock (_gate) return _idle.Task; }
+
+    /// <summary>Non-durable auxiliary windows still share the application model exclusion gate.</summary>
+    public IDisposable BeginAuxiliary()
+    {
+        lock (_gate)
+        {
+            if (_running || _auxiliaryRunning || _loadFailed || _state is not null && !IsFinal(_state.Phase))
+                throw new InvalidOperationException("Music.Poetry.OtherOperation");
+            _auxiliaryRunning = true; _idle = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+        NotifyChanged(); return new AuxiliaryLease(this);
+    }
+    private sealed class AuxiliaryLease(BackgroundOperationController owner) : IDisposable
+    {
+        private BackgroundOperationController? _owner = owner;
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _owner, null) is not { } controller) return;
+            lock (controller._gate) { controller._auxiliaryRunning = false; controller._idle.TrySetResult(); }
+            controller.NotifyChanged();
+        }
+    }
 
     public void CheckpointForExit()
     {
@@ -50,7 +73,7 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     {
         lock (_gate)
         {
-            if (_running) throw new InvalidOperationException("Cannot load over a running operation.");
+            if (_running || _auxiliaryRunning) throw new InvalidOperationException("Cannot load over a running operation.");
             try { _state = store.Load(); _loadFailed = false; }
             catch { _loadFailed = true; throw; }
             if (_state is { NeedsAttention: true, Notice: not null, Notices.Count: 0 })
@@ -76,7 +99,7 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         if (IsInOperationScope) return await execute(lifetime);
         lock (_gate)
         {
-            if (_running) throw new InvalidOperationException("Another model operation is active.");
+            if (_running || _auxiliaryRunning) throw new InvalidOperationException("Another model operation is active.");
             if (_loadFailed) throw new InvalidOperationException("A damaged background checkpoint requires review before starting a new operation.");
             if (_state is { Phase: not (BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled) }
                 && _state.Id != input.Id) throw new InvalidOperationException("Resume or discard the pending operation first.");

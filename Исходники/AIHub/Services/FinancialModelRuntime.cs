@@ -26,13 +26,13 @@ public sealed class FinancialModelRuntime : IDisposable
     public Task<string> GenerateAsync(DebugModelInfo model, string system, string prompt, int maxTokens, CancellationToken token) =>
         GenerateConversationAsync(model, system, [new("user", prompt)], maxTokens, token, exploratory: false);
 
-    public async Task<string> GenerateConversationAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory = true)
+    public async Task<string> GenerateConversationAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory = true, Action<string>? truncated = null)
     {
-        try { return await GenerateConversationCoreAsync(model, system, messages, maxTokens, token, exploratory); }
-        catch (OperationCanceledException) { Stop(); throw; }
+        try { return await GenerateConversationCoreAsync(model, system, messages, maxTokens, token, exploratory, truncated); }
+        catch (OperationCanceledException) { await RetireAsync(); throw; }
     }
 
-    private async Task<string> GenerateConversationCoreAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory)
+    private async Task<string> GenerateConversationCoreAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory, Action<string>? truncated)
     {
         if (!File.Exists(model.Path)) throw new BackgroundOperationWaitingException("Finance.ModelMissing");
         // Thinking BIN models spend the same generation budget on reasoning and the final answer.
@@ -55,7 +55,7 @@ public sealed class FinancialModelRuntime : IDisposable
             using var counts = JsonDocument.Parse(await countResponse.Content.ReadAsStringAsync(token));
             if (counts.RootElement.GetProperty("tokens").GetArrayLength() + maxTokens + 128 > CoreContextRuntimeLimits.CurrentBackendContextLimit)
                 throw new BackgroundOperationWaitingException("Finance.ContextTooSmall");
-            return ParseResponse(await _llama.GeneratePrivateJsonAsync(model, requestJson, token), generationBudget);
+            return ParseResponse(await _llama.GeneratePrivateJsonAsync(model, requestJson, token), generationBudget, truncated);
         }
         else
         {
@@ -65,7 +65,7 @@ public sealed class FinancialModelRuntime : IDisposable
         using var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
         using var response = await _http.PostAsync(endpoint + "/v1/chat/completions", content, token);
         response.EnsureSuccessStatusCode();
-        return ParseResponse(await response.Content.ReadAsStringAsync(token), generationBudget);
+        return ParseResponse(await response.Content.ReadAsStringAsync(token), generationBudget, truncated);
     }
     internal static string RequestJson(string format, string system, string prompt, int generationBudget) =>
         RequestJson(format, system, [new("user", prompt)], generationBudget, exploratory: false);
@@ -89,16 +89,16 @@ public sealed class FinancialModelRuntime : IDisposable
         return JsonSerializer.Serialize(body);
     }
 
-    public static string ParseResponse(string body, int? generationBudget = null)
+    public static string ParseResponse(string body, int? generationBudget = null, Action<string>? truncated = null)
     {
         using var json = JsonDocument.Parse(body);
         var choice = json.RootElement.GetProperty("choices")[0];
         if (choice.TryGetProperty("finish_reason", out var reason) && reason.GetString() == "length")
-            throw new BackgroundOperationWaitingException("Finance.ResponseTruncated");
+        { truncated?.Invoke(ImageAnalysisKimiRequestBuilder.ParseResponseContent(body)); throw new BackgroundOperationWaitingException("Finance.ResponseTruncated"); }
         // chatllm v24 always reports 'stop', including token exhaustion (server.nim).
         if (generationBudget.HasValue && json.RootElement.TryGetProperty("usage", out var usage) &&
             usage.TryGetProperty("completion_tokens", out var count) && count.TryGetInt32(out var generated) && generated >= generationBudget.Value)
-            throw new BackgroundOperationWaitingException("Finance.ResponseTruncated");
+        { truncated?.Invoke(ImageAnalysisKimiRequestBuilder.ParseResponseContent(body)); throw new BackgroundOperationWaitingException("Finance.ResponseTruncated"); }
         try { return ImageAnalysisKimiRequestBuilder.ParseResponseContent(body); }
         catch (InvalidDataException) { throw new BackgroundOperationWaitingException("Finance.InvalidModelReply"); }
     }
@@ -130,8 +130,9 @@ public sealed class FinancialModelRuntime : IDisposable
             }
             throw new TimeoutException();
         }
-        catch { Stop(); throw; }
+        catch { await RetireAsync(); throw; }
     }
     public void Stop() { _llama.Stop(); if (_process is not null) { if (!_process.HasExited) _process.Kill(true); _process.Dispose(); _process = null; } _path = null; }
+    internal async Task RetireAsync() { await _llama.RetirePoetryAsync(); await ModelProcessRetirement.StopAsync(_process, Stop); }
     public void Dispose() { Stop(); _llama.Dispose(); _http.Dispose(); }
 }
