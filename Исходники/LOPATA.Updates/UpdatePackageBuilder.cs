@@ -36,7 +36,9 @@ public static class UpdatePackageBuilder
                     1024 * 1024, FileOptions.Asynchronous | FileOptions.SequentialScan);
                 var size = stream.Length;
                 var sha256 = Convert.ToHexStringLower(await SHA256.HashDataAsync(stream, token));
-                var bucket = size >= 8 * 1024 * 1024
+                var bootstrapLicense = root == "app" && (relative.StartsWith("Licenses/", StringComparison.Ordinal)
+                    || relative == BootstrapPreparation.ProtocolFile);
+                var bucket = bootstrapLicense ? "app-bootstrap-licenses" : size >= 8 * 1024 * 1024
                     ? "large-" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(root + "/" + relative)))[..16]
                     : root + "-small-" + (SHA256.HashData(Encoding.UTF8.GetBytes(relative))[0] % 32).ToString("d2");
                 files.Add(new(root, relative, size, sha256, bucket));

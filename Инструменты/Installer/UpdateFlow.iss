@@ -1,3 +1,4 @@
+#include "WizardLayout.iss"
 var
   UpdateDirectionPage: TInputOptionWizardPage;
   AutostartPage: TInputOptionWizardPage;
@@ -18,8 +19,9 @@ begin
     CustomMessage('UpdateDirectionTitle'), CustomMessage('UpdateDirectionDescription'),
     CustomMessage('UpdateDirectionHelp'), True, False);
   UpdateDirectionPage.Add(CustomMessage('UpdateStable'));
-  UpdateDirectionPage.Add(CustomMessage('UpdateBeta'));
+  UpdateDirectionPage.Add(WrappedBetaCaption());
   UpdateDirectionPage.SelectedValueIndex := -1;
+  FitOptionPage(UpdateDirectionPage);
   { Interactive installation never preselects a branch, including a reinstall. }
   if WizardSilent and HasExplicitStandDirection() then
   begin
@@ -31,6 +33,8 @@ begin
     CustomMessage('AutostartHelp'), False, False);
   AutostartPage.Add(CustomMessage('AutostartChoice'));
   AutostartPage.Values[0] := False;
+  FitOptionPage(AutostartPage);
+  FitWizardButtons();
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;

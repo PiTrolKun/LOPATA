@@ -14,7 +14,8 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
     public const string Repository = "PiTrolKun/LOPATA";
     public const string FileManifestName = "lopata-files.json";
 
-    public async Task<UpdateOffer?> CheckAsync(string currentVersion, UpdateDelivery delivery, CancellationToken token = default)
+    public async Task<UpdateOffer?> CheckAsync(string currentVersion, UpdateDelivery delivery, CancellationToken token = default,
+        bool requireSetup = false)
     {
         var current = UpdateManifest.NumericVersion(currentVersion.EndsWith("-dev", StringComparison.Ordinal)
             ? currentVersion[..^4] : currentVersion);
@@ -49,6 +50,7 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
                 envelope = SignedManifest.Read(bytes);
                 files = envelope.Verify(publicKeys);
                 if (files.Version != version) throw new InvalidDataException("Release tag and signed manifest differ.");
+                if (requireSetup && !files.Files.Any(f => f.Root == "app" && f.Path == BootstrapPreparation.ProtocolFile)) continue;
             }
             InstallerArtifact? artifact = null;
             if (delivery == UpdateDelivery.FullInstaller)

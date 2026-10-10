@@ -4,10 +4,27 @@ param(
     [string]$NotesPath,
     [string]$PreviousManifestPath,
     [string]$HistoryPath,
+    [switch]$ExplicitFullInstaller,
+    [switch]$GenerationRelease,
     [string]$StandDataRoot
 )
 
 $ErrorActionPreference = 'Stop'
+if (!$StandDataRoot -and !$ExplicitFullInstaller -and !$GenerationRelease) {
+    throw 'Use build-mini-installer.ps1. Full offline setup requires an explicit separate request (-ExplicitFullInstaller) or a first-number generation release (-GenerationRelease).'
+}
+if ($GenerationRelease) {
+    $generation = [int](([IO.File]::ReadAllText((Join-Path (Split-Path -Parent $PSScriptRoot) 'VERSION')).Trim() -split '\.')[0])
+    $feed = & gh api 'repos/PiTrolKun/LOPATA/releases?per_page=100' --paginate --slurp
+    if ($LASTEXITCODE) { throw 'Cannot verify the previous offline generation.' }
+    $releasedGenerations = @($feed | Out-String | ConvertFrom-Json | ForEach-Object { $_ } | ForEach-Object { $_ } |
+        Where-Object { !$_.draft -and $_.tag_name -match '^v\d+\.\d+\.\d+(-beta)?$' -and
+            @($_.assets | Where-Object { $_.name -match '^LOPATA_Setup_\d+\.\d+\.\d+(-beta)?\.exe$' }).Count } |
+        ForEach-Object { [int]($_.tag_name.Substring(1) -split '\.')[0] })
+    if ($releasedGenerations.Count -and $generation -le ($releasedGenerations | Measure-Object -Maximum).Maximum) {
+        throw 'GenerationRelease requires an actual increase of the first version number.'
+    }
+}
 if ($PublicBeta -and $SkipPublish) { throw 'Public beta requires a fresh dotnet publish; SkipPublish is only for internal builds.' }
 
 function Write-Step {

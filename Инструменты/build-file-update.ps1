@@ -18,6 +18,10 @@ New-Item -ItemType Directory -Path $out -Force | Out-Null
 $packaging = Join-Path $out 'build-inputs'
 New-Item -ItemType Directory -Path $packaging -Force | Out-Null
 $roots = [ordered]@{ app = (Resolve-Path -LiteralPath $PublishDir).Path }
+foreach ($required in @('Updater/LOPATA.Updater.exe', 'Licenses/installer.txt', 'Licenses/installer-receipt.json', 'Installer/bootstrap-v1.txt')) {
+    if (!(Test-Path -LiteralPath (Join-Path $roots.app $required))) { throw "Fresh installation payload is incomplete: $required" }
+}
+if ([IO.File]::ReadAllText((Join-Path $roots.app 'Installer/bootstrap-v1.txt')).Trim() -ne '1') { throw 'Unsupported bootstrap protocol.' }
 $payloadVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $PublishDir 'AIHub.dll')).ProductVersion
 if ($payloadVersion -ne $Version) { throw "Application payload version differs from target version: $payloadVersion / $Version" }
 if ((Test-Path -LiteralPath (Join-Path $PublishDir 'lopata-stand-build.marker')) -and !$StandBuild) {

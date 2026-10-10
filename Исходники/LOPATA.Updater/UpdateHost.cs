@@ -13,29 +13,49 @@ internal sealed class UpdateHost(Action<string> status)
         var worker = args.Contains("--worker", StringComparer.Ordinal);
         args = args.Where(a => a != "--worker").ToArray();
         var mode = args.FirstOrDefault() ?? "--launch";
-        if (mode is "--register" or "--install")
+        if (mode is "--register" or "--install" or "--setup")
         {
-            if (args.Length != 5) throw new ArgumentException("Registration requires application, two backend roots, and signed manifest.");
+            if (args.Length != (mode == "--setup" ? 6 : 5)) throw new ArgumentException("Registration requires application, two backend roots, and signed manifest.");
             var installation = new InstalledUpdateState(Path.GetFullPath(args[1]), Path.GetFullPath(args[2]), Path.GetFullPath(args[3]));
             var signed = SignedManifest.Read(await File.ReadAllBytesAsync(args[4]));
-            if (mode == "--install")
+            if (mode is "--install" or "--setup")
             {
                 EnsureNotRunning(installation);
+                if (mode == "--setup" && InstalledUpdateState.Read() is { } registered &&
+                    (!SameRoot(registered.AppDirectory, installation.AppDirectory) ||
+                     !SameRoot(registered.LlamaDirectory, installation.LlamaDirectory) ||
+                     !SameRoot(registered.ChatLlmDirectory, installation.ChatLlmDirectory)))
+                    throw new IOException("Choose the registered installation directory before updating LOPATA.");
                 using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
                 var total = signed.Verify(Keys).Packages.Sum(p => p.Size);
+                var transferWatch = Stopwatch.StartNew();
                 var completed = new Dictionary<string, long>(StringComparer.Ordinal);
+                var received = new Dictionary<string, long>(StringComparer.Ordinal);
+                long networkBytes = 0;
                 var progress = new Progress<UpdateTransferProgress>(p =>
                 {
                     lock (completed)
                     {
                         completed[p.Package] = Math.Max(completed.GetValueOrDefault(p.Package), p.StoredBytes);
+                        if (p.Stage == "downloading")
+                        {
+                            if (received.TryGetValue(p.Package, out var before)) networkBytes += Math.Max(0, p.StoredBytes - before);
+                            received[p.Package] = p.StoredBytes;
+                        }
                         status(HostText.Get("UpdateHost.Downloading") + " " + (completed.Values.Sum() / 1048576d).ToString("F1")
-                            + " / " + (total / 1048576d).ToString("F1") + " MB");
+                            + " / " + (total / 1048576d).ToString("F1") + " MB; "
+                            + (networkBytes / 1048576d / Math.Max(transferWatch.Elapsed.TotalSeconds, .1)).ToString("F1") + " MB/s; " + p.Stage);
                     }
                 });
-                await new FreshInstallation(http, Keys) { MaximumParallelConnections = DownloadConnections() }
-                    .InstallAsync(installation.Roots(), installation.StateDirectory,
-                    installation.CacheDirectory, installation.StageDirectory(signed.Verify(Keys).Version), signed, progress, token);
+                if (mode == "--setup")
+                    await new SetupInstallation(http, Keys) { MaximumParallelConnections = UpdateDownloadSettings.Normalize(int.Parse(args[5])) }
+                        .InstallAsync(installation.Roots(), installation.StateDirectory, installation.CacheDirectory,
+                            installation.StageDirectory(signed.Verify(Keys).Version), signed, progress, token,
+                            plannedBytes: bytes => total = bytes);
+                else
+                    await new FreshInstallation(http, Keys) { MaximumParallelConnections = DownloadConnections() }
+                        .InstallAsync(installation.Roots(), installation.StateDirectory,
+                        installation.CacheDirectory, installation.StageDirectory(signed.Verify(Keys).Version), signed, progress, token);
             }
             await new UpdateTransaction(installation.Roots(), Keys, installation.StateDirectory).RegisterInstalledAsync(signed, token);
             installation.Save();
@@ -122,6 +142,8 @@ internal sealed class UpdateHost(Action<string> status)
     }
 
     private static int DownloadConnections() => UpdateDownloadSettings.Read(Path.Combine(InstalledUpdateState.UserDataDirectory, "settings.json"));
+    private static bool SameRoot(string left, string right) => string.Equals(Path.GetFullPath(left).TrimEnd('\\'),
+        Path.GetFullPath(right).TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
 
     private static async Task WaitForCallerAsync(string[] args)
     {

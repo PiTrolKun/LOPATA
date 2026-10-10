@@ -3,7 +3,7 @@ setlocal
 
 set "LOPATA_ROOT=%~dp0"
 
-echo LOPATA: build test installer.
+echo LOPATA: build universal mini installer.
 echo.
 
 where pwsh >nul 2>nul
@@ -12,7 +12,7 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-pwsh -NoProfile -ExecutionPolicy Bypass -Command "$root=$env:LOPATA_ROOT; $script=Get-ChildItem -LiteralPath $root -Directory | ForEach-Object { Join-Path $_.FullName 'build-installer.ps1' } | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1; if (-not $script) { Write-Host 'build-installer.ps1 not found.'; exit 1 }; & $script -PublicBeta"
+pwsh -NoProfile -ExecutionPolicy Bypass -Command "$root=$env:LOPATA_ROOT; $script=Get-ChildItem -LiteralPath $root -Directory | ForEach-Object { Join-Path $_.FullName 'build-mini-installer.ps1' } | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1; if (-not $script) { Write-Host 'build-mini-installer.ps1 not found.'; exit 1 }; & $script"
 set "EXIT_CODE=%ERRORLEVEL%"
 
 echo.

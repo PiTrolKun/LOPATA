@@ -11,8 +11,9 @@ public static class UpdateReleaseKeys
     {
         using var stream = typeof(UpdateReleaseKeys).Assembly.GetManifestResourceStream("Lopata.UpdateReleaseKeys")
             ?? throw new InvalidDataException("Missing embedded release verification keys.");
-        var keys = JsonSerializer.Deserialize<Dictionary<string, string>>(stream)
-            ?? throw new InvalidDataException("Invalid release verification keys.");
+        using var document = JsonDocument.Parse(stream);
+        var keys = document.RootElement.EnumerateObject().ToDictionary(p => p.Name,
+            p => p.Value.GetString() ?? throw new InvalidDataException("Invalid release verification key."));
         return new ReadOnlyDictionary<string, string>(keys);
     }
 }

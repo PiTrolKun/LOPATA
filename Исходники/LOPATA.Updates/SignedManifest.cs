@@ -11,7 +11,7 @@ public sealed record SignedManifest(string KeyId, string Payload, string Signatu
     {
         manifest.Validate();
         if (key.KeySize != 256) throw new InvalidDataException("Expected a P-256 signing key.");
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(manifest, UpdateManifest.JsonOptions);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(manifest, UpdateJsonContext.Default.UpdateManifest);
         return new(keyId, Convert.ToBase64String(bytes), Convert.ToBase64String(
             key.SignData(bytes, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation)));
     }
@@ -31,7 +31,7 @@ public sealed record SignedManifest(string KeyId, string Payload, string Signatu
                 || !key.VerifyData(bytes, signature, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation))
                 throw new InvalidDataException("Manifest signature verification failed.");
             RejectDuplicateProperties(bytes);
-            var manifest = JsonSerializer.Deserialize<UpdateManifest>(bytes, UpdateManifest.JsonOptions)
+            var manifest = JsonSerializer.Deserialize(bytes, UpdateJsonContext.Default.UpdateManifest)
                 ?? throw new InvalidDataException("Empty manifest.");
             manifest.Validate();
             return manifest;
@@ -46,7 +46,7 @@ public sealed record SignedManifest(string KeyId, string Payload, string Signatu
     {
         if (bytes.Length > MaximumEnvelopeBytes) throw new InvalidDataException("Manifest is too large.");
         RejectDuplicateProperties(bytes);
-        return JsonSerializer.Deserialize<SignedManifest>(bytes, UpdateManifest.JsonOptions)
+        return JsonSerializer.Deserialize(bytes, UpdateJsonContext.Default.SignedManifest)
             ?? throw new InvalidDataException("Empty signed manifest.");
     }
 

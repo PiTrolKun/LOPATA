@@ -45,11 +45,22 @@ public sealed class CatalogTests
         Assert.IsFalse(fixture.Requests.Any(u => u.EndsWith(".zip")));
     }
 
+    [TestMethod]
+    public async Task UniversalInstallerSelectsLatestCompatibleSignedPublishedRelease()
+    {
+        using var fixture = new CatalogFixture { SetupCompatible = true };
+        var offer = await new PublishedUpdateCatalog(fixture.Http, fixture.Keys)
+            .CheckAsync("0.0.0", UpdateDelivery.FilePatch, requireSetup: true);
+        Assert.AreEqual("0.2.43-beta", offer!.Version, "A newer incompatible protocol must not select an unsupported engine.");
+        Assert.IsFalse(fixture.Requests.Any(u => u.EndsWith(".zip")));
+    }
+
     private sealed class CatalogFixture : HttpMessageHandler
     {
         private readonly ECDsa _key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         public HttpClient Http { get; }
         public bool Corrupt;
+        public bool SetupCompatible;
         public List<string> Requests { get; } = [];
         public IReadOnlyDictionary<string, string> Keys => new Dictionary<string, string> { ["test"] = _key.ExportSubjectPublicKeyInfoPem() };
         public CatalogFixture() => Http = new HttpClient(this, false);
@@ -74,6 +85,9 @@ public sealed class CatalogTests
             {
                 var version = url.Contains("v0.2.44-beta") ? "0.2.44-beta" : "0.2.43-beta";
                 var manifest = UpdateFixture.Manifest(version, UpdateFixture.Entry("AIHub.exe", "binary"));
+                if (SetupCompatible && version == "0.2.43-beta")
+                    manifest = UpdateFixture.Manifest(version, UpdateFixture.Entry("AIHub.exe", "binary"),
+                        UpdateFixture.Entry(BootstrapPreparation.ProtocolFile, "1"));
                 if (version == "0.2.44-beta") manifest = manifest with { Notes = [new("0.2.43-beta", DateTimeOffset.UtcNow, "First"), .. manifest.Notes] };
                 var signed = SignedManifest.Sign(manifest, "test", _key);
                 if (Corrupt) signed = signed with { Signature = Convert.ToBase64String(new byte[64]) };

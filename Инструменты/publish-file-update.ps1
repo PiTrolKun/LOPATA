@@ -1,5 +1,6 @@
 param(
     [Parameter(Mandatory)][string]$PackageDirectory,
+    [string]$MiniInstallerDirectory,
     [switch]$Publish,
     [switch]$ResumeDraft
 )
@@ -21,6 +22,25 @@ if ($receipt.schemaVersion -ne 1 -or $receipt.sourceDirty -ne $false -or
     throw 'A file update must come from clean committed sources and an unchanged signed build.'
 }
 $bundle = & (Join-Path $PSScriptRoot 'get-update-bundle.ps1') -ManifestPath $manifestPath -Version $receipt.version -SourceCommit $receipt.sourceCommit
+foreach ($required in @('Updater/LOPATA.Updater.exe', 'Licenses/installer.txt', 'Licenses/installer-receipt.json', 'Installer/bootstrap-v1.txt')) {
+    if (@($bundle.Manifest.files | Where-Object { $_.root -eq 'app' -and $_.path -eq $required }).Count -ne 1) {
+        throw "The release cannot support a fresh mini installation: $required"
+    }
+}
+$assets = @($bundle.Assets)
+if ($MiniInstallerDirectory) {
+    $miniFolder = (Resolve-Path -LiteralPath $MiniInstallerDirectory).Path
+    $mini = Get-Content -LiteralPath (Join-Path $miniFolder 'mini-installer.build.json') -Raw | ConvertFrom-Json
+    $miniExe = Get-Item -LiteralPath (Join-Path $miniFolder 'LOPATA_Setup.exe')
+    if ($mini.schemaVersion -ne 1 -or $mini.bootstrapProtocol -ne 1 -or $mini.standBuild -ne $false -or
+        $mini.sourceDirty -ne $false -or $mini.sourceCommit -ne $receipt.sourceCommit -or
+        $mini.fileName -ne $miniExe.Name -or $mini.size -ne $miniExe.Length -or $miniExe.Length -gt 10000000 -or
+        $mini.sha256 -ne (Get-FileHash -LiteralPath $miniExe.FullName).Hash.ToLowerInvariant()) {
+        throw 'The mini installer must be a verified clean production build from the release source commit.'
+    }
+    $assets += $miniExe.FullName
+    $assets += Join-Path $miniFolder 'mini-installer.build.json'
+}
 $version = $receipt.version; $tag = "v$version"
 $notes = @($bundle.Manifest.notes | Where-Object version -eq $version)
 if ($notes.Count -ne 1) { throw 'Current release notes are missing.' }
@@ -31,7 +51,7 @@ $releases = Invoke-UpdateGitHub @('api', "repos/$repo/releases?per_page=100", '-
 $existing = $releases | Where-Object tag_name -eq $tag | Select-Object -First 1
 if ($existing -and (!$ResumeDraft -or !$existing.draft)) { throw 'The version already exists; only an explicitly resumed draft may be continued.' }
 if ($ResumeDraft -and (!$existing -or $existing.target_commitish -ne $receipt.sourceCommit)) { throw 'The draft does not match the source commit.' }
-Write-Host "File update ${version}: $($bundle.Assets.Count) assets; source $($receipt.sourceCommit)"
+Write-Host "File update ${version}: $($assets.Count) assets; source $($receipt.sourceCommit)"
 if (!$Publish) { Write-Host 'Preview only. No GitHub changes.'; return }
 $commit = Invoke-UpdateGitHub @('api', "repos/$repo/commits/$($receipt.sourceCommit)", '--jq', '.sha')
 if ($commit -ne $receipt.sourceCommit) { throw 'The exact source commit must be available on GitHub.' }
@@ -56,7 +76,7 @@ if (!$existing) {
 $id = Invoke-UpdateGitHub @('release', 'view', $tag, '--repo', $repo, '--json', 'databaseId', '--jq', '.databaseId')
 if ($id -notmatch '^\d+$') { throw 'Cannot identify the draft.' }
 $draft = Invoke-UpdateGitHub @('api', "repos/$repo/releases/$id") | Out-String | ConvertFrom-Json
-foreach ($path in $bundle.Assets) {
+foreach ($path in $assets) {
     $name = [IO.Path]::GetFileName($path)
     $asset = @($draft.assets | Where-Object name -eq $name)
     if ($asset.Count) {
@@ -67,7 +87,7 @@ foreach ($path in $bundle.Assets) {
     else { Invoke-UpdateGitHub @('release', 'upload', $tag, $path, '--repo', $repo) }
 }
 $draft = Invoke-UpdateGitHub @('api', "repos/$repo/releases/$id") | Out-String | ConvertFrom-Json
-foreach ($path in $bundle.Assets) {
+foreach ($path in $assets) {
     $file = Get-Item -LiteralPath $path
     $asset = @($draft.assets | Where-Object name -eq $file.Name)
     if ($asset.Count -ne 1 -or $asset[0].size -ne $file.Length -or
