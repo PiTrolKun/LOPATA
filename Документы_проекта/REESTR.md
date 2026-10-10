@@ -1297,3 +1297,10 @@ DiffRhythm: 139 исходников, всего 128 лицензионных з
 Посторонние изменения сохранены. Подтверждения: _tmp/release-0.4.36,
 release-verified.json, verification-stats.json, diff-payload-verified.json,
 archive-completeness.json. Backup: _backups/20261009_diffrhythm_publication/files.json.
+## 10.10.2026 — значок сообщества ВК в справке
+
+Статический UI-ресурс: геометрия VK из Simple Icons, CC0-1.0.
+Источник: https://github.com/simple-icons/simple-icons/blob/a844e581a1874bcb2729cef99ab10b36b24fe9ca/icons/vk.svg.
+Оригинальная лицензия включена в `Licenses/texts/simple-icons-CC0.txt`.
+Встроенный WPF-вектор с прозрачным фоном; отдельная библиотека не добавлена.
+Назначение — ссылка на https://vk.ru/lopata_ai_localhub в окне «О программе и справка».

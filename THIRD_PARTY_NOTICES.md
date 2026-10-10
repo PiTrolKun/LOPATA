@@ -556,3 +556,11 @@ ship as Licenses/texts/heartmula-*; dependency terms apply independently.
 The Windows adapter uses eager execution, device-aware release and soundfile WAV
 writing, preserving the author sampler and codec. See the model passport for test
 coverage and limitations. The shared managed Torch runtime has its own terms.
+
+## VK community icon
+
+The VK icon in the About window is adapted from Simple Icons, CC0-1.0.
+Source: https://github.com/simple-icons/simple-icons/blob/a844e581a1874bcb2729cef99ab10b36b24fe9ca/icons/vk.svg
+Original license: `Исходники/AIHub/Licenses/texts/simple-icons-CC0.txt` (bundled as `Licenses/texts/simple-icons-CC0.txt`).
+Checked: 2026-10-10. Only the VK icon geometry is used; no Simple Icons library is included.
+VK is a trademark of its respective owner. This icon identifies a link to the LOPATA community.

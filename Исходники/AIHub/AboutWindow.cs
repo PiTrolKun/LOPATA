@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Automation;
+using System.Windows.Media;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
@@ -35,6 +37,23 @@ public sealed class AboutWindow : Window
         var links = new WrapPanel { Margin = new Thickness(0, 0, 0, 16) };
         panel.Children.Add(links);
         AddButton("About.Author", () => OpenLink("https://github.com/PiTrolKun"), "https://github.com/PiTrolKun");
+        // VK geometry from Simple Icons (CC0); original terms are bundled in Licenses/texts.
+        var vkIcon = new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse("m9.489.004.729-.003h3.564l.73.003.914.01.433.007.418.011.403.014.388.016.374.021.36.025.345.03.333.033c1.74.196 2.933.616 3.833 1.516.9.9 1.32 2.092 1.516 3.833l.034.333.029.346.025.36.02.373.025.588.012.41.013.644.009.915.004.98-.001 3.313-.003.73-.01.914-.007.433-.011.418-.014.403-.016.388-.021.374-.025.36-.03.345-.033.333c-.196 1.74-.616 2.933-1.516 3.833-.9.9-2.092 1.32-3.833 1.516l-.333.034-.346.029-.36.025-.373.02-.588.025-.41.012-.644.013-.915.009-.98.004-3.313-.001-.73-.003-.914-.01-.433-.007-.418-.011-.403-.014-.388-.016-.374-.021-.36-.025-.345-.03-.333-.033c-1.74-.196-2.933-.616-3.833-1.516-.9-.9-1.32-2.092-1.516-3.833l-.034-.333-.029-.346-.025-.36-.02-.373-.025-.588-.012-.41-.013-.644-.009-.915-.004-.98.001-3.313.003-.73.01-.914.007-.433.011-.418.014-.403.016-.388.021-.374.025-.36.03-.345.033-.333c.196-1.74.616-2.933 1.516-3.833.9-.9 2.092-1.32 3.833-1.516l.333-.034.346-.029.36-.025.373-.02.588-.025.41-.012.644-.013.915-.009ZM6.79 7.3H4.05c.13 6.24 3.25 9.99 8.72 9.99h.31v-3.57c2.01.2 3.53 1.67 4.14 3.57h2.84c-.78-2.84-2.83-4.41-4.11-5.01 1.28-.74 3.08-2.54 3.51-4.98h-2.58c-.56 1.98-2.22 3.78-3.8 3.95V7.3H10.5v6.92c-1.6-.4-3.62-2.34-3.71-6.92Z"),
+            Width = 24, Height = 24, Stretch = Stretch.Uniform,
+            Fill = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 119, 255))
+        };
+        const string vkUrl = "https://vk.ru/lopata_ai_localhub";
+        var vkButton = new Button { Content = vkIcon, Width = 44, MinWidth = 44,
+            Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 8),
+            ToolTip = text("About.VkCommunity") + "\n" + vkUrl };
+        vkButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+        AutomationProperties.SetName(vkButton, text("About.VkCommunity"));
+        AutomationProperties.SetAutomationId(vkButton, "About.VkCommunity");
+        AutomationProperties.SetHelpText(vkButton, vkUrl);
+        vkButton.Click += (_, _) => OpenLink(vkUrl);
+        links.Children.Add(vkButton);
         AddButton("About.Repository", () => OpenLink("https://github.com/PiTrolKun/LOPATA"), "https://github.com/PiTrolKun/LOPATA");
         AddButton("Updates.Check", updates);
         foreach (var key in new[] { "Intro", "Choice", "Control" }) panel.Children.Add(Paragraph("About." + key));

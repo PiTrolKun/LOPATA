@@ -1304,6 +1304,7 @@
   "About.Guide.Updates": "Open updates here or in Settings. Stable searches for a full installer; Beta searches for file updates in the shared version stream. Read accumulated changes and download size, download, then choose Update now or At next launch. Closing the window does not authorize installation. Automatic checks mark an available version, with a green dot in the tray. Save important work before updating.",
   "About.Title": "About and help",
   "About.Author": "Author — PiTrolKun",
+  "About.VkCommunity": "LOPATA community on VK",
   "About.Repository": "Project repository",
   "About.More": "More about the project’s ideas",
   "About.Close": "Close",
