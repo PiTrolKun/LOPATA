@@ -252,6 +252,7 @@ public sealed class ApplicationUpdateWindow : Window
             if (_closed || operation.IsCancellationRequested || !ReferenceEquals(_operation, operation) || !_downloading) return;
             _progress.Value = p.TotalBytes == 0 ? 0 : Math.Clamp(p.DownloadedBytes * 100d / p.TotalBytes, 0, 100);
             _status.Text = p.Stage is "verifying" or "extracting" ? _text("Updates.Verifying")
+                : p.Stage == "retrying" ? _text("Updates.RetryingDownload")
                 : $"{_text("Updates.Downloading")} {_progress.Value:F0}%";
         });
         try
@@ -263,8 +264,16 @@ public sealed class ApplicationUpdateWindow : Window
             verified = _ready is not null;
         }
         catch (OperationCanceledException) { _status.Text = _text("Updates.Paused"); }
-        catch (InvalidDataException) { _status.Text = _text("Updates.InvalidFile"); }
-        catch (Exception) { _status.Text = _text("Updates.DownloadFailed"); }
+        catch (InvalidDataException error)
+        {
+            ApplicationUpdateDiagnostics.RecordFailure(_update?.Version, error);
+            _status.Text = _text("Updates.InvalidFile");
+        }
+        catch (Exception error)
+        {
+            ApplicationUpdateDiagnostics.RecordFailure(_update?.Version, error);
+            _status.Text = _text("Updates.DownloadFailed");
+        }
         finally { operation.Dispose(); _operation = null; _downloading = false; _progress.Visibility = Visibility.Collapsed; RefreshButtons(); }
         if (verified && !_closed) await ApplyTimingAsync(nextLaunch);
     }

@@ -1369,6 +1369,7 @@
   "Updates.CheckFailed": "Could not check for updates. Check your internet connection and try again later.",
   "Updates.Downloading": "Downloading update…",
   "Updates.Verifying": "Verifying update files…",
+  "Updates.RetryingDownload": "The connection was interrupted or the server is not responding. Retrying; downloaded parts are retained…",
   "Updates.Ready": "The update is downloaded and verified. Click Install update to choose a time. Closing this window does not start installation.",
   "Updates.Paused": "Download paused. Downloaded data is saved for resuming.",
   "Updates.InvalidFile": "The update file failed verification. Please download it again.",

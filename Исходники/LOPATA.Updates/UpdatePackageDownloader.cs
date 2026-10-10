@@ -8,6 +8,7 @@ public sealed record UpdateTransferProgress(string Package, long StoredBytes, lo
 public sealed class UpdatePackageDownloader(HttpClient http, string cacheDirectory, long segmentBytes = 8L * 1024 * 1024)
 {
     public int MaximumParallelConnections { get; set; }
+    public TimeSpan NetworkIdleTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
     public async Task<string> DownloadAsync(UpdateManifest manifest, UpdatePackage package,
         IProgress<UpdateTransferProgress>? progress = null, CancellationToken token = default)
@@ -45,6 +46,24 @@ public sealed class UpdatePackageDownloader(HttpClient http, string cacheDirecto
     private async Task<string> DownloadCoreAsync(UpdateManifest manifest, UpdatePackage package,
         UpdateDownloadConnections connections, IProgress<UpdateTransferProgress>? progress, CancellationToken token)
     {
+        if (NetworkIdleTimeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(NetworkIdleTimeout));
+        for (var attempt = 0; ; attempt++)
+        {
+            try { return await DownloadAttemptAsync(manifest, package, connections, progress, token); }
+            catch (Exception error) when (attempt < 2 && !token.IsCancellationRequested
+                && (error is UpdateNetworkException || error is HttpRequestException
+                    { StatusCode: null or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests
+                        or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout }))
+            {
+                progress?.Report(new(package.Id, 0, package.Size, "retrying"));
+                await Task.Delay(TimeSpan.FromSeconds(attempt + 1), token);
+            }
+        }
+    }
+
+    private async Task<string> DownloadAttemptAsync(UpdateManifest manifest, UpdatePackage package,
+        UpdateDownloadConnections connections, IProgress<UpdateTransferProgress>? progress, CancellationToken token)
+    {
         manifest.Validate();
         if (!manifest.Packages.Contains(package)) throw new InvalidDataException("Unknown update package.");
         var path = SafeUpdatePath.Resolve(cacheDirectory, package.Id);
@@ -68,7 +87,9 @@ public sealed class UpdatePackageDownloader(HttpClient http, string cacheDirecto
         if (new DriveInfo(Path.GetPathRoot(Path.GetFullPath(cacheDirectory))!).AvailableFreeSpace
             < 2 * package.Size - offset + 16L * 1024 * 1024)
             throw new IOException("Insufficient disk space for package download.");
-        var ranges = new UpdateRangeDownload(http, connections, Math.Max(1, segmentBytes));
+        progress?.Report(new(package.Id, offset, package.Size, "connecting"));
+        var network = new UpdateHttpTransfer(http, NetworkIdleTimeout);
+        var ranges = new UpdateRangeDownload(network, connections, Math.Max(1, segmentBytes));
         if (offset < package.Size && !await ranges.TryDownloadAsync(package, partial, progress, token))
         {
             using var connection = await connections.EnterAsync(token);
@@ -76,7 +97,7 @@ public sealed class UpdatePackageDownloader(HttpClient http, string cacheDirecto
             request.Headers.UserAgent.ParseAdd("LOPATA-FileUpdater/1.0");
             request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("identity"));
             if (offset > 0) request.Headers.Range = new RangeHeaderValue(offset, null);
-            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+            using var response = await network.SendAsync(request, token);
             response.EnsureSuccessStatusCode();
             if (response.Content.Headers.ContentEncoding.Any(e => e != "identity"))
                 throw new InvalidDataException("Encoded package response cannot be resumed safely.");
@@ -98,7 +119,7 @@ public sealed class UpdatePackageDownloader(HttpClient http, string cacheDirecto
                 output.Position = offset;
                 var buffer = new byte[1024 * 1024];
                 int read;
-                while ((read = await input.ReadAsync(buffer, token)) != 0)
+                while ((read = await network.ReadAsync(input, buffer, token)) != 0)
                 {
                     if (output.Position + read > package.Size) throw new InvalidDataException("Package response exceeds declared size.");
                     await output.WriteAsync(buffer.AsMemory(0, read), token);

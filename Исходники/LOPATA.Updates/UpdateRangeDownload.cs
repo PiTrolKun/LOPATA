@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 namespace Lopata.Updates;
 
 /// <summary>Fixed ranges survive cancellation and changes to the connection preference.</summary>
-internal sealed class UpdateRangeDownload(HttpClient http, UpdateDownloadConnections connections, long segmentBytes)
+internal sealed class UpdateRangeDownload(UpdateHttpTransfer network, UpdateDownloadConnections connections, long segmentBytes)
 {
     private const int BufferSize = 1024 * 1024;
 
@@ -16,7 +16,7 @@ internal sealed class UpdateRangeDownload(HttpClient http, UpdateDownloadConnect
         if (package.Size <= segmentBytes || (connections.Count == 1 && !Directory.Exists(folder))) return false;
         using (await connections.EnterAsync(token))
         using (var request = Request(package.Url, 0, 0))
-        using (var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token))
+        using (var response = await network.SendAsync(request, token))
         {
             response.EnsureSuccessStatusCode();
             if (response.StatusCode == HttpStatusCode.OK) return false;
@@ -67,7 +67,7 @@ internal sealed class UpdateRangeDownload(HttpClient http, UpdateDownloadConnect
                 if (existing == length) return;
                 using var lease = await connections.EnterAsync(ct);
                 using var request = Request(package.Url, start + existing, end);
-                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+                using var response = await network.SendAsync(request, ct);
                 response.EnsureSuccessStatusCode();
                 Validate(response, start + existing, end, package.Size);
                 var path = PartPath(folder, start);
@@ -79,7 +79,7 @@ internal sealed class UpdateRangeDownload(HttpClient http, UpdateDownloadConnect
                 await using var input = await response.Content.ReadAsStreamAsync(ct);
                 var buffer = new byte[BufferSize];
                 int read;
-                while ((read = await input.ReadAsync(buffer, ct)) != 0)
+                while ((read = await network.ReadAsync(input, buffer, ct)) != 0)
                 {
                     if (output.Position + read > length) throw new InvalidDataException("Range exceeds its declared size.");
                     await output.WriteAsync(buffer.AsMemory(0, read), ct);

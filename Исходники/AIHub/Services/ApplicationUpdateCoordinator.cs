@@ -78,14 +78,11 @@ public sealed class ApplicationUpdateCoordinator
         else
         {
             var plan = await PlanAsync(offer, token);
-            var completed = new Dictionary<string, long>(StringComparer.Ordinal);
+            var completed = new UpdateBatchProgress(plan.Packages);
             var transfer = new Progress<UpdateTransferProgress>(p =>
             {
-                lock (completed)
-                {
-                    completed[p.Package] = Math.Max(completed.GetValueOrDefault(p.Package), p.StoredBytes);
-                    progress?.Report(new("application-update", p.Package, completed.Values.Sum(), plan.DownloadBytes, 0, p.Stage));
-                }
+                var batch = completed.Accept(p);
+                progress?.Report(new("application-update", p.Package, batch.Bytes, plan.DownloadBytes, 0, batch.Stage));
             });
             await Task.Run(() => new FileUpdatePreparation(_http, UpdateReleaseKeys.Trusted)
                 { MaximumParallelConnections = connections }
