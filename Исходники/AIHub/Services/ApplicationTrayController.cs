@@ -14,6 +14,7 @@ public sealed class ApplicationTrayController : IDisposable
     private readonly ToolStripMenuItem _operation = new();
     private readonly ToolStripMenuItem _result = new();
     private ToolStripMenuItem? _captureFolder, _captureMonitor, _captureStop;
+    private ToolStripMenuItem? _publisher;
     private readonly ToolStripSeparator _operationSeparator = new();
     private Icon? _markedImage;
     private BackgroundOperationPhase? _phase;
@@ -65,6 +66,7 @@ public sealed class ApplicationTrayController : IDisposable
         if (_captureFolder is not null) _captureFolder.Text = _text("Capture.OpenFolder");
         if (_captureMonitor is not null) _captureMonitor.Text = _text("Capture.TrayScreenshot");
         if (_captureStop is not null) _captureStop.Text = _text("Capture.Stop");
+        if (_publisher is not null) _publisher.Text = _text("Publisher.Title");
         _operation.Visible = _operationSeparator.Visible = _phase.HasValue;
         _operation.Enabled = _phase != BackgroundOperationPhase.Pausing;
         _operation.Text = _countdown is int seconds ? string.Format(_text("Tray.Countdown"), TimeSpan.FromSeconds(seconds).ToString(@"mm\:ss"))
@@ -84,6 +86,13 @@ public sealed class ApplicationTrayController : IDisposable
         { _captureStop = new() { Visible = false, Text = _text("Capture.Stop") }; _captureStop.Click += (_, _) => stop(); _menu.Items.Insert(5, _captureStop); }
     }
     public void SetCaptureRecording(bool recording) { if (_captureStop is not null) _captureStop.Visible = recording; }
+
+    public void AddPublisherCommand(Action open)
+    {
+        if (_disposed || _publisher is not null) return;
+        _publisher = new ToolStripMenuItem(_text("Publisher.Title"));
+        _publisher.Click += (_, _) => open(); _menu.Items.Insert(3, _publisher);
+    }
 
     public void SetAttention(bool result, bool update)
     {

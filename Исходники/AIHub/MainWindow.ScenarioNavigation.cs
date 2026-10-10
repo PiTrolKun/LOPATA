@@ -23,6 +23,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.Publisher:
+                    OpenPublisherScenario();
+                    break;
                 case ScenarioNavigationCatalog.Music:
                     OpenMusicScenario();
                     break;

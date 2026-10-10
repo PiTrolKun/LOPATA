@@ -26,6 +26,8 @@ public partial class MainWindow
             () => OnUi(ViewBackgroundResult));
         _applicationTray?.AddCaptureCommands(() => OnUi(OpenCaptureFolder),
             () => OnUi(() => _ = TakeScreenshotAsync(AIHub.Models.CaptureSource.Monitor)), () => OnUi(StopCaptureRecording));
+        InitializePublisher();
+        _applicationTray?.AddPublisherCommand(() => OnUi(() => { RestoreFromTray(); OpenPublisherScenario(); }));
         DesktopAttentionNotification.Notify = (title, message) => _applicationTray?.Notify(title, message, warning: true) == true;
     }
 
@@ -103,6 +105,8 @@ public partial class MainWindow
 
     private void DisposeApplicationTray()
     {
+        _publisherWindow?.Close();
+        _ = StopPublisherAsync();
         System.Windows.Application.Current.SessionEnding -= ApplicationSessionEnding;
         _applicationTray?.Dispose(); _applicationTray = null;
         DesktopAttentionNotification.Notify = null;

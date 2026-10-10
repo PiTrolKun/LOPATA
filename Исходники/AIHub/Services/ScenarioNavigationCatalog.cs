@@ -25,6 +25,7 @@ public static class ScenarioNavigationCatalog
     public const string ImageGeneration = "image_generation";
     public const string ImageUtility = "image_utility";
     public const string Music = "music";
+    public const string Publisher = "github_vk_publisher";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -32,6 +33,9 @@ public static class ScenarioNavigationCatalog
         Node(Analysis, ScenarioNavigationKind.Direction, null, "Navigation.Analysis", "Navigation.AnalysisHint", "analyze"),
         Node(Experiments, ScenarioNavigationKind.Direction, null, "Navigation.Experiments", "Navigation.ExperimentsHint", "experiment"),
         Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools"),
+        Node("utilities_publishing", ScenarioNavigationKind.Group, Utilities, "Publisher.Group", "Publisher.Description", "tools"),
+        Node(Publisher, ScenarioNavigationKind.Scenario, "utilities_publishing", "Publisher.Title", "Publisher.Description", "tools",
+            tags: ["github_releases", "vk_publishing", "publishing_queue"], related: []),
         Node("utilities_capture", ScenarioNavigationKind.Group, Utilities, "Capture.Group", "", "tools"),
         Node(Capture, ScenarioNavigationKind.Scenario, "utilities_capture", "Capture.Title", "Capture.Description", "analyze",
             tags: ["screenshot", "screen_capture", "gif_capture", "video_capture"], related: []),
@@ -81,7 +85,8 @@ public static class ScenarioNavigationCatalog
         Tag("screenshot", Capture), Tag("screen_capture", Capture), Tag("gif_capture", Capture), Tag("video_capture", Capture),
         Tag("image_generation", ImageGeneration), Tag("image_variation", ImageGeneration),
         Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", "utilities_images"),
-        Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility)
+        Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility),
+        Tag("github_releases", Publisher), Tag("vk_publishing", Publisher), Tag("publishing_queue", Publisher)
     ]);
 
     public static ScenarioNavigationTag GetTag(string id) => CloudTags.First(tag => tag.Id == id);

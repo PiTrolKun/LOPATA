@@ -54,7 +54,7 @@ public sealed class AboutWindow : Window
         AutomationProperties.SetHelpText(vkButton, vkUrl);
         vkButton.Click += (_, _) => OpenLink(vkUrl);
         links.Children.Add(vkButton);
-        AddButton("About.Repository", () => OpenLink("https://github.com/PiTrolKun/LOPATA"), "https://github.com/PiTrolKun/LOPATA");
+        AddButton("About.Repository", () => OpenLink("https://github.com/PiTrolKun/LOPATA/releases"), "https://github.com/PiTrolKun/LOPATA/releases");
         AddButton("Updates.Check", updates);
         foreach (var key in new[] { "Intro", "Choice", "Control" }) panel.Children.Add(Paragraph("About." + key));
         var guideHeading = Paragraph("About.GuideTitle");
