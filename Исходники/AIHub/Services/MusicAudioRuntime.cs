@@ -28,9 +28,9 @@ public sealed class MusicAudioRuntime(string directory)
             if (!hash.Equals(entry.GetProperty("Sha256").GetString(), StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Audio runtime checksum mismatch: " + name);
         }
     }
-    public async Task<string> RunAsync(bool probe, IEnumerable<string> arguments, CancellationToken token)
+    public async Task<string> RunAsync(bool probe, IEnumerable<string> arguments, CancellationToken token, TimeSpan? timeoutLimit = null)
     {
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token); timeout.CancelAfter(TimeSpan.FromMinutes(5));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token); timeout.CancelAfter(timeoutLimit ?? TimeSpan.FromMinutes(5));
         var start = new ProcessStartInfo(Path.Combine(directory, probe ? "ffprobe.exe" : "ffmpeg.exe")) {
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true,
             StandardErrorEncoding = Encoding.UTF8, StandardOutputEncoding = Encoding.UTF8, WorkingDirectory = directory };

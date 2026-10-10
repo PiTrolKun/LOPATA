@@ -26,7 +26,7 @@ internal static class ApplicationUpdateStartup
         // Older installed launchers do not forward file arguments, and a prepared full installer
         // cannot preserve this request. The verified installed application accepts it directly.
         // Ordinary launches retain the complete update/recovery route.
-        if (IsImageShellLaunch(args)) return false;
+        if (IsImageShellLaunch(args) || AudioShellRequest.ParseArguments(args) is not null) return false;
         var start = Launcher("--launch");
         if (args.Contains("--background", StringComparer.Ordinal)) start.ArgumentList.Add("--background");
         AddWaitForThisProcess(start);

@@ -467,7 +467,7 @@ public partial class MainWindow : Window
             _appSettings.CoreAutonomy.MaximumIndependentSearchSeconds);
         if (!_appSettings.LanguageWasChosen)
         {
-            if (App.ImageShellLaunch) IsVisibleChanged += DeferredStartupLanguageChoice;
+            if (App.ImageShellLaunch || App.AudioShellLaunch) IsVisibleChanged += DeferredStartupLanguageChoice;
             else ChooseStartupLanguage();
         }
 

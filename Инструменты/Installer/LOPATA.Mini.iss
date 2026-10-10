@@ -310,6 +310,22 @@ begin
     if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and (Marker = 'AIHub.ImageShellIntegration.v1') and
       RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Executable', Executable) and
       (CompareText(Executable, ExpandConstant('{app}\AIHub.exe')) = 0) then RegDeleteKeyIncludingSubkeys(HKCU, MenuKey);
+    MenuKey := 'Software\Classes\SystemFileAssociations\.mp3\shell\LOPATA';
+    if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and (Marker = 'AIHub.AudioShellIntegration.v1') and
+      RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Executable', Executable) and
+      (CompareText(Executable, ExpandConstant('{app}\AIHub.exe')) = 0) then RegDeleteKeyIncludingSubkeys(HKCU, MenuKey);
+    MenuKey := 'Software\Classes\SystemFileAssociations\.opus\shell\LOPATA';
+    if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and (Marker = 'AIHub.AudioShellIntegration.v1') and
+      RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Executable', Executable) and
+      (CompareText(Executable, ExpandConstant('{app}\AIHub.exe')) = 0) then RegDeleteKeyIncludingSubkeys(HKCU, MenuKey);
+    MenuKey := 'Software\Classes\SystemFileAssociations\.flac\shell\LOPATA';
+    if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and (Marker = 'AIHub.AudioShellIntegration.v1') and
+      RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Executable', Executable) and
+      (CompareText(Executable, ExpandConstant('{app}\AIHub.exe')) = 0) then RegDeleteKeyIncludingSubkeys(HKCU, MenuKey);
+    MenuKey := 'Software\Classes\SystemFileAssociations\.wav\shell\LOPATA';
+    if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and (Marker = 'AIHub.AudioShellIntegration.v1') and
+      RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Executable', Executable) and
+      (CompareText(Executable, ExpandConstant('{app}\AIHub.exe')) = 0) then RegDeleteKeyIncludingSubkeys(HKCU, MenuKey);
   end;
 #endif
 end;

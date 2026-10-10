@@ -16,6 +16,11 @@ public partial class MainWindow
         if (Assembly.GetEntryAssembly()?.GetName().Name != typeof(MainWindow).Assembly.GetName().Name) return null;
         return Environment.ProcessPath is { Length: > 0 } executable ? new ImageShellIntegration(executable) : null;
     }
+    private AudioShellIntegration? AudioShellRegistration()
+    {
+        if (Assembly.GetEntryAssembly()?.GetName().Name != typeof(MainWindow).Assembly.GetName().Name) return null;
+        return Environment.ProcessPath is { Length: > 0 } executable ? new AudioShellIntegration(executable) : null;
+    }
     private void ApplyImageShellIntegration()
     {
         _imageShellIntegrationInitialized = true;
@@ -23,6 +28,8 @@ public partial class MainWindow
         {
             ImageShellRegistration()?.Apply(_appSettings.Behavior.ImageShellIntegrationEnabled,
                 L("WindowsIntegration.Menu"), L("WindowsIntegration.WebP"), L("WindowsIntegration.Upscale2"));
+            AudioShellRegistration()?.Apply(_appSettings.Behavior.ImageShellIntegrationEnabled,
+                L("WindowsIntegration.Menu"), L("AudioShell.Title"));
             _imageShellIntegrationLanguage = _appSettings.LanguageCode;
         }
         catch (Exception error)
@@ -39,13 +46,18 @@ public partial class MainWindow
         try
         {
             registration?.Apply(enabled, L("WindowsIntegration.Menu"), L("WindowsIntegration.WebP"), L("WindowsIntegration.Upscale2"));
+            AudioShellRegistration()?.Apply(enabled, L("WindowsIntegration.Menu"), L("AudioShell.Title"));
             _appSettings.Behavior.ImageShellIntegrationEnabled = enabled;
             _appSettingsStore.Save(_appSettings);
         }
         catch (Exception error)
         {
             _appSettings.Behavior.ImageShellIntegrationEnabled = previous;
-            try { registration?.Apply(previous, L("WindowsIntegration.Menu"), L("WindowsIntegration.WebP"), L("WindowsIntegration.Upscale2")); }
+            try
+            {
+                registration?.Apply(previous, L("WindowsIntegration.Menu"), L("WindowsIntegration.WebP"), L("WindowsIntegration.Upscale2"));
+                AudioShellRegistration()?.Apply(previous, L("WindowsIntegration.Menu"), L("AudioShell.Title"));
+            }
             catch (Exception restoreError) { OwnedProcessRegistry.Log("image_shell_restore_failed", "WindowsIntegration", detail: restoreError.GetType().Name); }
             OwnedProcessRegistry.Log("image_shell_setting_failed", "WindowsIntegration", detail: error.GetType().Name);
             _refreshingSettingsWorkspace = true;
