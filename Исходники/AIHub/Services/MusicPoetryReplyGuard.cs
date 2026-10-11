@@ -9,9 +9,17 @@ public static class MusicPoetryReplyGuard
 
     public static Result Check(MusicPoetrySession before, MusicPoetryReply reply, bool assemble = false)
     {
+        if (reply.Parameters is not null)
+        {
+            var filtered = MusicPoetryBrief.Filter(reply.Parameters);
+            if (!string.IsNullOrWhiteSpace(reply.Parameters) && string.IsNullOrWhiteSpace(filtered))
+                return new(reply, [], "Music.Poetry.Missing.parameters");
+            reply = reply with { Parameters = filtered };
+        }
         var changes = new List<string>();
         if (reply.Song is not null && !Equivalent(before.Lyrics, reply.Song)) changes.Add("song");
-        if (reply.Parameters is not null && !Equivalent(before.Parameters.Text, reply.Parameters)) changes.Add("parameters");
+        if (reply.Parameters is not null && !Equivalent(MusicPoetryBrief.Parse(before.Parameters.Text).ToText(),
+            MusicPoetryBrief.Parse(reply.Parameters).ToText())) changes.Add("parameters");
         if (reply.Variation is not null && before.Parameters.Variation != reply.Variation) changes.Add("variation");
         foreach (var action in reply.Actions ?? [])
             if (!changes.Contains(action)) return new(reply, changes.ToArray(), "Music.Poetry.Missing." + action);

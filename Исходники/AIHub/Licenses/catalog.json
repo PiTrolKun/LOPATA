@@ -2630,5 +2630,22 @@
     ],
     "Ru": "Закреплённый официальный конвейер и веса; условия Apache-2.0 заявлены авторами. Библиотеки скачиваются отдельно, их оригинальные уведомления сохранены. Адаптер Windows: eager вместо torch.compile, освобождение памяти по устройству и запись WAV через soundfile. Сэмплер и декодер авторские. Качество русского и расход памяти требуют практического теста.",
     "En": "Pinned official pipeline and weights; the authors declare Apache-2.0. Libraries are downloaded separately with original notices retained. Windows adapter: eager instead of torch.compile, device-aware release and soundfile WAV writing. The author sampler and codec remain unchanged. Russian quality and memory use need practical testing."
+  },
+  {
+    "Id": "sm54/Qwen3.6-27B-Q4_K_M-GGUF",
+    "Name": "sm54/Qwen3.6-27B-Q4_K_M-GGUF · Sandbox executor and songwriting chat",
+    "Version": "GGUF Q4_K_M; SHA256 2ac61afbc9c600899ab57fe6333116179b9b08a6230c9bcaca5afd62ad75b7d7",
+    "Author": "Qwen; GGUF conversion by sm54",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/sm54/Qwen3.6-27B-Q4_K_M-GGUF",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "8122F857097CC95D4EE558D2498CFC2C050230202DE90B71D6E77EAA43BEFF56",
+    "Ru": "Модель исполнителя Песочницы, также используемая в песенном чате. Карточка репозитория sm54 декларирует Apache-2.0; полный текст лицензии сохранён локально. Сведения о лицензии предоставлены поставщиком; отдельная проверка всех вложенных частей не завершена. Весов модели в поставке ЛОПАТЫ нет. Согласие на эту редакцию условий общее для обоих сценариев.",
+    "En": "Sandbox executor model also used in songwriting chat. The sm54 repository card declares Apache-2.0; the full license text is retained locally. License information is provided by the supplier; separate review of every bundled part is not complete. Model weights are not bundled with LOPATA. Acknowledgement of this revision is shared by both scenarios."
   }
 ]

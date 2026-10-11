@@ -24,13 +24,11 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
         Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false)
     {
         if (!File.Exists(model.Path)) throw new FileNotFoundException("Music.Poetry.ModelMissing");
+        if (!MusicPoetryModelCatalog.IsCompatible(model)) throw new InvalidDataException("Music.Poetry.ModelUnsupported");
         try
         {
-            var licenses = new ManagedModelLibraryStore().LoadAll().Where(card => card.Files.Any(file =>
-                Path.GetFullPath(Path.Combine(card.InstallDirectory, file.RelativePath)).Equals(Path.GetFullPath(model.Path), StringComparison.OrdinalIgnoreCase)))
-                .Select(card => card.ModelArtifactId).ToList();
-            if (model.IsCoreModel) licenses.Add(ManagedModelCatalog.CoreArtifactId);
-            await ComponentLicenseGate.EnsureAsync(licenses.Distinct(StringComparer.Ordinal).ToArray(), token);
+            // Library inventory IDs are not license IDs; use the same component as the original scenario.
+            await ComponentLicenseGate.EnsureAsync(MusicPoetryModelCatalog.Find(model)!.LicenseId, token);
             var estimated = model.Format.Equals("chatllm", StringComparison.OrdinalIgnoreCase);
             var capacity = estimated ? 8192 : Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit,
                 (await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token)).ModelContextTokens);
@@ -63,8 +61,5 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
         finally { await _llama.RetirePoetryAsync(); await _bin.RetireAsync(); }
     }
     public void Dispose() { _llama.Dispose(); _bin.Dispose(); }
-    public static IReadOnlyList<DebugModelInfo> Discover(StorageSettings settings) => FinancialModelDiscovery.Discover(settings)
-        .Where(m => !new[] { "yue2", "vocoder", "flux", "diffusion", "stable-diffusion" }
-            .Any(word => Path.GetFileName(m.Path).Contains(word, StringComparison.OrdinalIgnoreCase)))
-        .ToArray();
+    public static IReadOnlyList<DebugModelInfo> Discover(StorageSettings settings) => MusicPoetryModelCatalog.Discover(settings);
 }

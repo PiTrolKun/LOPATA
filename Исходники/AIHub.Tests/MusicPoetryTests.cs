@@ -244,6 +244,62 @@ public sealed class MusicPoetryTests
         Assert.ThrowsExactly<BackgroundOperationWaitingException>(() => FinancialModelRuntime.ParseResponse(response, 4096));
     }
     [TestMethod]
+    public Task EmbeddedChatPreservesOneSessionAndUsesVisibleDialogOwner() => ScenarioNavigationTests.Sta(() =>
+    {
+        var reads = 0;
+        var w = new MusicPoetryWindow(() => { reads++; return new() { Lyrics = "Original song" }; },
+            new(), UserContext(), key => key, "ru", Store, new FakeRuntime());
+        var holder = new ContentControl(); var host = new Window { Content = holder, Width = 1000, Height = 650 };
+        host.Resources["UiBodyFontSize"] = w.Resources["UiBodyFontSize"] = 14d;
+        host.Resources["PanelBrush"] = w.Resources["PanelBrush"] = Brushes.DarkSlateGray;
+        host.Resources["TextPrimaryBrush"] = w.Resources["TextPrimaryBrush"] = Brushes.White;
+        host.Resources["LineBrush"] = w.Resources["LineBrush"] = Brushes.SlateGray;
+        var previousContext = SynchronizationContext.Current;
+        SynchronizationContext.SetSynchronizationContext(new System.Windows.Threading.DispatcherSynchronizationContext(host.Dispatcher));
+        try
+        {
+            w.PresentIn(holder); host.Show(); host.UpdateLayout(); Pump();
+            Assert.IsFalse(w.IsVisible); Assert.IsNull(w.Content);
+            var lyrics = Field<System.Windows.Controls.TextBox>(w, "_lyrics");
+            Assert.AreSame(host, Window.GetWindow(lyrics));
+            lyrics.Text = "My edited poem";
+            Call(w, "OpenSessions");
+            var manager = Field<Window>(w, "_sessionManager"); Assert.AreSame(host, manager.Owner);
+            manager.UpdateLayout(); Pump();
+            var managerElements = ScenarioNavigationTests.LogicalDescendants(manager).ToArray();
+            managerElements.OfType<System.Windows.Controls.ListBox>().Single().SelectedIndex = 0;
+            managerElements.OfType<System.Windows.Controls.Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Music.Poetry.OpenSession")
+                .RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+            var deadline = DateTime.UtcNow.AddSeconds(5);
+            while (manager.IsVisible && DateTime.UtcNow < deadline)
+                Pump();
+            Assert.IsFalse(manager.IsVisible, "Saved session must open in the embedded editor: " + Field<TextBlock>(w, "_status").Text);
+            Call(w, "ModelMenu"); deadline = DateTime.UtcNow.AddSeconds(5);
+            while (Field<MusicPoetryModelWindow>(w, "_modelSelector") is null && DateTime.UtcNow < deadline)
+                Pump();
+            var picker = Field<MusicPoetryModelWindow>(w, "_modelSelector"); Assert.IsNotNull(picker);
+            Assert.AreSame(host, picker.Owner); picker.Close();
+            Call(w, "ShowText", "Help", "Copyable help", "Protocol");
+            var help = host.OwnedWindows.Cast<Window>().Single(); Assert.AreSame(host, help.Owner); help.Close();
+            var session = Field<MusicPoetrySession>(w, "_session"); var id = session.Id;
+            w.PresentAsWindow(); w.UpdateLayout();
+            Assert.IsTrue(w.IsVisible); Assert.IsNull(holder.Content); Assert.AreSame(w, Window.GetWindow(lyrics));
+            w.PresentIn(holder); host.UpdateLayout();
+            Assert.IsFalse(w.IsVisible); Assert.AreSame(host, Window.GetWindow(lyrics));
+            Assert.AreEqual(1, reads); Assert.AreEqual(id, session.Id); Assert.AreEqual("My edited poem", lyrics.Text);
+            w.Close(); Assert.IsNull(holder.Content);
+            Assert.AreEqual("My edited poem", Store.Load(id).Lyrics);
+        }
+        finally { w.Close(); host.Close(); SynchronizationContext.SetSynchronizationContext(previousContext); }
+        void Pump()
+        {
+            var frame = new System.Windows.Threading.DispatcherFrame();
+            host.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, new Action(() => frame.Continue = false));
+            System.Windows.Threading.Dispatcher.PushFrame(frame);
+        }
+    });
+
+    [TestMethod]
     public Task WindowCopiesSeedOnceCommitsActivityRoutesReplyAndPreservesOnError() => ScenarioNavigationTests.Sta(() =>
     {
         var snapshot = new MusicProjectSnapshot { Lyrics = "Imported song", Title = "Imported title" };
@@ -361,13 +417,18 @@ public sealed class MusicPoetryTests
             Assert.IsFalse(elements.OfType<TextBlock>().Any(t => t.Text.StartsWith("Music.Poetry.")), lang);
             var lyrics = Field<System.Windows.Controls.TextBox>(w, "_lyrics"); var input = Field<System.Windows.Controls.TextBox>(w, "_input");
             Assert.IsTrue(SpellCheck.GetIsEnabled(lyrics)); Assert.IsTrue(SpellCheck.GetIsEnabled(input));
-            Assert.IsTrue(lyrics.ActualWidth >= 180); Assert.IsTrue(Field<System.Windows.Controls.TextBox>(w, "_parameters").ActualWidth >= 180);
+            Assert.IsTrue(lyrics.ActualWidth >= 180); Assert.IsTrue(Field<MusicPoetryBriefControl>(w, "_brief").Music.ActualWidth >= 160);
+            Assert.IsFalse(Field<MusicPoetryBriefControl>(w, "_brief").Guidance.IsExpanded);
             var send = elements.Single(e => AutomationProperties.GetAutomationId(e) == "Music.Poetry.Send");
             var location = send.TranslatePoint(new(0, 0), w); Assert.IsTrue(location.Y + send.ActualHeight < w.ActualHeight);
             var folder = Path.Combine(Path.GetTempPath(), "lopata-poetry-ui"); Directory.CreateDirectory(folder);
             var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)(w.ActualWidth * 1.5), (int)(w.ActualHeight * 1.5), 144, 144, PixelFormats.Pbgra32); bitmap.Render(w);
             var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder(); encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
             using (var file = File.Create(Path.Combine(folder, lang + "-" + dark + ".png"))) encoder.Save(file);
+            w.Width = 1380; w.Height = 870; w.UpdateLayout();
+            var full = new System.Windows.Media.Imaging.RenderTargetBitmap(2070, 1305, 144, 144, PixelFormats.Pbgra32); full.Render(w);
+            var fullEncoder = new System.Windows.Media.Imaging.PngBitmapEncoder(); fullEncoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(full));
+            using (var file = File.Create(Path.Combine(folder, "full-" + lang + "-" + dark + ".png"))) fullEncoder.Save(file);
             w.Close();
         }
     });
@@ -415,6 +476,125 @@ public sealed class MusicPoetryTests
         Assert.IsFalse(fake.Assemble); Assert.AreEqual("A message",s.Messages.Last(m => m.Role == "user").Text); w.Close();
     });
 
+    [TestMethod]
+    public Task ModelSelectionShowsReviewsWrapsInBothThemesAndChangesOnlyOnSelection() => ScenarioNavigationTests.Sta(() =>
+    {
+        foreach (var lang in new[] { "ru", "en" }) foreach (var dark in new[] { false, true })
+        {
+            var localization = new LocalizationService(); localization.Load(lang);
+            var owner = new MusicPoetryWindow(() => new() { Lyrics = "Keep this poem" }, new(), UserContext(), localization.T, lang, Store, new FakeRuntime());
+            Brush Color(string value) => new SolidColorBrush((System.Windows.Media.Color)ColorConverter.ConvertFromString(value));
+            owner.Resources["WindowBackgroundBrush"] = Color(dark ? "#111827" : "#F3F3F3");
+            owner.Resources["PanelBrush"] = Color(dark ? "#172033" : "#FFFFFF");
+            owner.Resources["InputBrush"] = owner.Resources["WindowBackgroundBrush"];
+            owner.Resources["TextPrimaryBrush"] = Color(dark ? "#F8FAFC" : "#1F1F1F");
+            owner.Resources["TextSecondaryBrush"] = Color(dark ? "#AAB4C4" : "#5D6470");
+            owner.Resources["LineBrush"] = Color(dark ? "#2D374B" : "#DADDE3");
+            owner.Resources["AccentBrush"] = Color("#2563EB");
+            owner.Resources["SecondaryButtonBackgroundBrush"] = Color(dark ? "#111827" : "#F8F8F8");
+            owner.Resources["UiBodyFontSize"] = 20d;
+            owner.Show();
+            var choices = MusicPoetryModelCatalog.All.Select(candidate => new MusicPoetryModelChoice(candidate,
+                candidate.Id == "beta" ? null : new DebugModelInfo { Name = candidate.FileName, Path = candidate.FileName, Format = "gguf" })).ToArray();
+            DebugModelInfo? selected = null;
+            var preferences = new MusicPoetryPreferences(Path.Combine(_root, lang + dark + "-preferences.json"));
+            preferences.SetFavorite("core");
+            var picker = new MusicPoetryModelWindow(choices, choices[0].Model!.Path, localization.T, model => selected = model, preferences)
+            { Owner = owner, Resources = owner.Resources, Width = 480, Height = 400 };
+            try
+            {
+                picker.Show(); picker.UpdateLayout();
+                var elements = ScenarioNavigationTests.LogicalDescendants(picker).OfType<FrameworkElement>().ToArray();
+                Assert.IsFalse(elements.OfType<TextBlock>().Any(text => text.Text.StartsWith("Music.Poetry.")), lang);
+                Assert.IsTrue(elements.OfType<TextBlock>().Any(text => text.Text.Contains("5/10")));
+                Assert.IsTrue(elements.OfType<TextBlock>().All(text => text.TextWrapping == TextWrapping.Wrap));
+                var buttons = elements.OfType<Button>().ToDictionary(button => AutomationProperties.GetAutomationId(button));
+                Assert.IsFalse(buttons["Music.Poetry.SelectModel.core"].IsEnabled);
+                Assert.IsFalse(buttons.ContainsKey("Music.Poetry.SelectModel.beta"));
+                Assert.IsTrue(elements.OfType<TextBlock>().Any(text => text.Text.Contains("6/10")));
+                Assert.IsTrue(elements.OfType<TextBlock>().Any(text => text.Text.Contains(lang == "ru" ? "6,5/10" : "6.5/10")));
+                Assert.IsFalse(buttons.ContainsKey("Music.Poetry.SelectModel.alpha"));
+                Assert.IsTrue(buttons["Music.Poetry.SelectModel.gamma"].IsEnabled);
+                var sections = elements.OfType<Expander>().ToDictionary(section => AutomationProperties.GetAutomationId(section));
+                Assert.IsTrue(sections["Music.Poetry.ModelCard.core"].IsExpanded);
+                Assert.AreEqual(1, sections.Values.Count(section => section.IsExpanded));
+                Assert.IsFalse(elements.OfType<TextBlock>().Any(text => text.Text == localization.T("Music.Poetry.Selection.Verified")));
+                Assert.IsFalse(elements.OfType<TextBlock>().Any(text => text.Text == localization.T("Music.Poetry.Selection.Purpose.Gamma")));
+                buttons["Music.Poetry.SelectModel.Favorite.gamma"].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.IsNull(selected); Assert.AreEqual("gamma", preferences.Load().FavoriteId);
+                Assert.IsFalse(sections["Music.Poetry.ModelCard.core"].IsExpanded);
+                Assert.IsTrue(sections["Music.Poetry.ModelCard.gamma"].IsExpanded);
+                var scroll = elements.OfType<ScrollViewer>().Single();
+                Assert.IsTrue(scroll.ScrollableHeight > 0); Assert.AreEqual(0d, scroll.ScrollableWidth);
+                buttons["Music.Poetry.SelectModel.gamma"].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.AreEqual(choices.Single(choice => choice.Candidate.Id == "gamma").Model, selected);
+                var close = buttons["Music.Poetry.SelectModel.Close"];
+                var point = close.TranslatePoint(new(), picker);
+                Assert.IsTrue(point.Y + close.ActualHeight < picker.ActualHeight);
+                owner.Resources["UiBodyFontSize"] = 14d; picker.Width = 850; picker.Height = 710; picker.UpdateLayout();
+                var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(1275, 1065, 144, 144, PixelFormats.Pbgra32); bitmap.Render(picker);
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder(); encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                var folder = Path.Combine(Path.GetTempPath(), "lopata-poetry-selection-ui"); Directory.CreateDirectory(folder);
+                using (var file = File.Create(Path.Combine(folder, lang + "-" + dark + ".png"))) encoder.Save(file);
+                selected = null; close.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.IsNull(selected);
+                Assert.AreEqual("Keep this poem", Field<MusicPoetrySession>(owner, "_session").Lyrics);
+            }
+            finally { picker.Close(); owner.Close(); }
+        }
+    });
+
+    [TestMethod]
+    public Task NewSessionPreservesSelectedOrMissingModelAndSavesOldPoem() => ScenarioNavigationTests.Sta(() =>
+    {
+        foreach (var missing in new[] { false, true })
+        {
+            var fake = new FakeRuntime();
+            var window = new MusicPoetryWindow(() => new(), new(), UserContext(), key => key, "ru", Store, fake);
+            try
+            {
+                var old = Field<MusicPoetrySession>(window, "_session");
+                var selected = new DebugModelInfo { Name = "Selected Beta", Path = "selected-beta.gguf", Format = "gguf" };
+                window.GetType().GetField("_model", BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .SetValue(window, missing ? null : selected);
+                old.ModelPath = selected.Path; old.ModelName = selected.Name;
+                Field<TextBox>(window, "_lyrics").Text = "Keep the old poem";
+                old.Messages.Add(new("user", "Old discussion", "old-turn"));
+                Call(window, "NewSession");
+                var current = Field<MusicPoetrySession>(window, "_session");
+                Assert.AreNotEqual(old.Id, current.Id);
+                Assert.AreEqual(selected.Path, current.ModelPath);
+                Assert.AreEqual(selected.Name, current.ModelName);
+                Assert.AreSame(missing ? null : selected, Field<DebugModelInfo?>(window, "_model"));
+                Assert.AreEqual("", current.Lyrics); Assert.HasCount(0, current.Messages);
+                Assert.HasCount(0, current.LyricsSteps);
+                var saved = Store.Load(old.Id);
+                Assert.AreEqual("Keep the old poem", saved.Lyrics);
+                Assert.AreEqual(selected.Path, saved.ModelPath);
+                Assert.IsTrue(saved.Messages.Any(message => message.Text == "Old discussion"));
+                Assert.IsFalse(Store.List().Any(entry => entry.Id == current.Id));
+                Assert.AreEqual(0, fake.Calls);
+            }
+            finally { window.Close(); }
+        }
+    });
+
+    [TestMethod]
+    public Task InstalledBetaShowsUserReview() => ScenarioNavigationTests.Sta(() =>
+    {
+        var localization = new LocalizationService(); localization.Load("ru");
+        var beta = MusicPoetryModelCatalog.All.Single(candidate => candidate.Id == "beta");
+        var picker = new MusicPoetryModelWindow([new(beta, new() { Name = beta.FileName, Path = beta.FileName })],
+            null, localization.T, _ => { }, new(Path.Combine(_root, "beta-preferences.json")));
+        try
+        {
+            var elements = ScenarioNavigationTests.LogicalDescendants(picker).OfType<FrameworkElement>().ToArray();
+            Assert.IsTrue(elements.OfType<TextBlock>().Any(text => text.Text == localization.T("Music.Poetry.Selection.Review.Beta")));
+            Assert.IsTrue(elements.OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button)
+                == "Music.Poetry.SelectModel.beta").IsEnabled);
+        }
+        finally { picker.Close(); }
+    });
+
     private sealed class FakeRuntime : IMusicPoetryRuntime
     {
         public string Reply = "{\"chat\":\"Here is a variant.\",\"song\":\"[Verse]\\nGenerated song\",\"parameters\":null,\"variation\":null,\"actions\":[\"song\"]}";
@@ -456,6 +636,7 @@ public sealed class MusicPoetryTests
     public void GuardAllowsDiscussionAndDoesNotInventChangesForRepeatedAssembly()
     {
         var s = Session("Saved lyrics");
+        s.Parameters = new(s.Parameters.Variation, "Rock");
         var discussion = MusicPoetryReplyGuard.Check(s, MusicPoetryProtocol.Parse(Routed("Let's try a blues mood.", null, null)));
         Assert.IsNull(discussion.Error); Assert.AreEqual(0, discussion.Changes.Length);
         var repeated = MusicPoetryReplyGuard.Check(s, MusicPoetryProtocol.Parse(Routed("", s.Lyrics, s.Parameters.Text), true), true);

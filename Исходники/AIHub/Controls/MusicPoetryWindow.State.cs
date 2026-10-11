@@ -9,7 +9,7 @@ namespace AIHub.Controls;
 
 public sealed partial class MusicPoetryWindow
 {
-    public bool SaveForExit() { Capture(); CommitZone(); return Persist(); }
+    public bool SaveForExit() { Capture(); CommitZone(); return _modelSelector?.SaveForExit() != false && Persist(); }
     private void Capture()
     {
         if (_loading) return;
@@ -44,6 +44,7 @@ public sealed partial class MusicPoetryWindow
     {
         _loading = true;
         try { _lyrics.Text = _session.Lyrics; _parameters.Text = _session.Parameters.Text;
+            _brief.LoadText(_session.Parameters.Text);
             _target.SelectedValue = _session.Parameters.Variation; _input.Text = _session.Draft;
             _guidance.Text = MusicPoetryProtocol.Guidance(_session.Parameters.Variation, _l); }
         finally { _loading = false; }
@@ -118,11 +119,14 @@ public sealed partial class MusicPoetryWindow
             && (!string.IsNullOrWhiteSpace(_input.Text) || !string.IsNullOrWhiteSpace(_lyrics.Text) || _session.Messages.Any(m => m.Role == "user"));
         _assemble.ToolTip = occupied && !IsWorking ? L("OtherOperation") : L("AssemblyHint");
         _models.IsEnabled = _sessions.IsEnabled = _new.IsEnabled = !IsWorking;
+        if (_modelSelector is not null) _modelSelector.IsEnabled = !IsWorking;
         _lyrics.IsReadOnly = _parameters.IsReadOnly = _input.IsReadOnly = IsWorking; _target.IsEnabled = !IsWorking;
+        _brief.SetReadOnly(IsWorking);
         _partial.IsEnabled = !string.IsNullOrWhiteSpace(_session.PartialReply) || _session.IncompleteReplies.Count > 0; Steps();
     }
     private void ClosingWindow(object? sender, CancelEventArgs e)
     {
+        if (_modelSelector?.SaveForExit() == false) { e.Cancel = true; return; }
         Capture(); CommitZone();
         if (!Persist()) { e.Cancel = true; return; } // keep the only live copy accessible on a disk failure
         if (IsWorking) { e.Cancel = true; _closing = true; _operation?.Cancel(); _status.Text = L("Stopping"); }

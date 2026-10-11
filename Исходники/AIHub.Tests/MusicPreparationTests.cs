@@ -11,6 +11,36 @@ namespace AIHub.Tests;
 public sealed class MusicPreparationTests
 {
     [TestMethod]
+    public Task DirectPoetryEntryNeedsNeitherMusicStorageNorWorkspace() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new Preparation();
+        using var control = new MusicPreparationControl(fake, () => throw new AssertFailedException("Unexpected music workspace"));
+        control.Configure(key => key, new StorageSettings(), 1);
+        Func<MusicProjectSnapshot>? seed = null;
+        control.DirectPoetryRequested += () => seed = control.CapturePoetrySeed;
+        var button = ScenarioNavigationTests.LogicalDescendants(control).OfType<System.Windows.Controls.Button>()
+            .Single(b => AutomationProperties.GetAutomationId(b) == "Music.Models.Poetry");
+        button.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+        Assert.IsNotNull(seed); var snapshot = seed(); snapshot.Validate();
+        Assert.AreEqual("", snapshot.Lyrics); Assert.AreEqual(MusicStudioRuntime.Variation, snapshot.Variation);
+        Assert.AreEqual(0, fake.Checks); Assert.AreEqual(0, fake.Preparations); Assert.IsTrue(control.IsModelSelection);
+        var storePath = Path.Combine(Path.GetTempPath(), "lopata-direct-poetry-" + Guid.NewGuid().ToString("N"));
+        var poetry = new MusicPoetryWindow(control.CapturePoetrySeed, new(),
+            new UserContextService(new UserProfileStore(), new IpLocationService()), key => key, "ru", new MusicPoetrySessions(storePath));
+        poetry.Closed += (_, _) => control.LeavePoetry(poetry);
+        try
+        {
+            control.ShowPoetry(poetry); Assert.IsFalse(poetry.IsVisible); Assert.IsTrue(control.Content is DockPanel);
+            Assert.IsTrue(control.GoBack()); Assert.IsTrue(control.Content is MusicModelSelectionControl);
+            Assert.IsTrue(control.IsModelSelection); Assert.AreEqual(0, fake.Checks); Assert.AreEqual(0, fake.Preparations);
+        }
+        finally
+        {
+            poetry.Close();
+            if (Directory.Exists(storePath)) Directory.Delete(storePath, true);
+        }
+    });
+    [TestMethod]
     public void ComponentsHavePinnedDownloadsLicensesAndCanonicalNavigation()
     {
         var cards = MusicComponentCatalog.CreateCards(Path.Combine(Path.GetTempPath(), "music-manifest"));
@@ -147,6 +177,7 @@ public sealed class MusicPreparationTests
         control.ContinueAsync().GetAwaiter().GetResult();
         var workspace = (MusicWorkspaceControl)control.Content;
         workspace.Editor.Lyrics = "Сохранённый текст";
+        Assert.AreEqual("Сохранённый текст", control.CapturePoetrySeed().Lyrics);
         Assert.IsTrue(control.GoBack()); Assert.IsTrue(control.GoBack());
         Assert.IsFalse(control.CanContinue);
         control.SelectModelAsync("yue2", "studio-q8").GetAwaiter().GetResult();
@@ -265,8 +296,10 @@ public sealed class MusicPreparationTests
         public bool Decline { get; set; }
         public Action? OnPrepare { get; set; }
         public int Preparations { get; private set; }
+        public int Checks { get; private set; }
         public Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
         {
+            Checks++;
             var cards = MusicModelVariants.Cards(root, Variation);
             foreach (var c in cards) c.Status = Complete ? ManagedModelStatuses.Installed : ManagedModelStatuses.Corrupted;
             return Task.FromResult(cards);

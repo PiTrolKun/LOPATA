@@ -25,8 +25,8 @@ public sealed partial class MusicPoetryWindow : Window
     private readonly BackgroundOperationController? _background;
     private MusicPoetrySession _session;
     private DebugModelInfo? _model;
-    private DebugModelInfo? _coreModel;
     private readonly TextBox _lyrics = Area("Lyrics"), _parameters = Area("Parameters"), _input = Area("Input"), _guidance = Area("Guidance", true);
+    private readonly MusicPoetryBriefControl _brief;
     private readonly RichTextBox _chat = new() { IsReadOnly = true, IsDocumentEnabled = false, BorderThickness = new(0), VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     private readonly ComboBox _target = new() { MinHeight = 32, Margin = new(0, 4, 0, 8) };
     private readonly TextBlock _status = Label(""), _lyricsStep = Label(""), _parameterStep = Label("");
@@ -37,6 +37,7 @@ public sealed partial class MusicPoetryWindow : Window
     private MusicPoetryTokenPreview? _tokenPreview;
     private int _previewVersion;
     private Window? _sessionManager;
+    private MusicPoetryModelWindow? _modelSelector;
     private readonly DispatcherTimer _save = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private CancellationTokenSource? _operation;
     private bool _loading, _closing, _saveFailed;
@@ -46,21 +47,25 @@ public sealed partial class MusicPoetryWindow : Window
     public event Action? WorkingChanged;
 
     public MusicPoetryWindow(Func<MusicProjectSnapshot> seed, StorageSettings storage, UserContextService context,
-        Func<string, string> localize, string language, MusicPoetrySessions? store = null, IMusicPoetryRuntime? runtime = null)
+        Func<string, string> localize, string language, MusicPoetrySessions? store = null, IMusicPoetryRuntime? runtime = null,
+        MusicPoetryPreferences? preferences = null, Func<IReadOnlyList<MusicPoetryModelChoice>>? modelChoices = null)
     {
         _seed = seed; _storage = storage; _l = localize; _store = store ?? MusicPoetrySessions.Default;
         _runtime = runtime ?? new MusicPoetryRuntime(context); _background = ApplicationBackgroundOperations.Current;
+        _preferences = preferences ?? MusicPoetryPreferences.Default;
+        _modelChoices = modelChoices ?? (() => MusicPoetryModelCatalog.Choices(_storage));
         _session = MusicPoetryProtocol.Create(seed(), localize);
         Title = L("Title"); Width = 1380; Height = 870; MinWidth = 900; MinHeight = 500;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         if (System.Windows.Application.Current?.MainWindow is { } main) Resources.MergedDictionaries.Add(main.Resources);
         SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
+        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/MusicPoetryBriefResources.xaml", UriKind.Relative) });
         LiterarySpellChecking.ApplyMenuTheme(Resources);
         SetResourceReference(FontSizeProperty, "UiBodyFontSize"); UseLayoutRounding = true;
         _target.SetResourceReference(StyleProperty, typeof(ComboBox));
         _target.ItemTemplate = new DataTemplate { VisualTree = TargetTemplate() };
-        var root = new DockPanel { Margin = new(12) }; Content = root;
+        var root = new DockPanel { Margin = new(12) }; _view = root; Content = root;
         var header = new WrapPanel { Margin = new(0, 0, 0, 12), HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
         DockPanel.SetDock(header, Dock.Top); root.Children.Add(header);
         _sessions = Action(header, "Sessions", OpenSessions);
@@ -103,9 +108,12 @@ public sealed partial class MusicPoetryWindow : Window
         var targetTitle = Label(L("Target")); DockPanel.SetDock(targetTitle, Dock.Top); data.Children.Add(targetTitle);
         _target.ItemsSource = MusicPoetryProtocol.Variations.Select(id => new Target(id, MusicModelVariants.Name(id))).ToArray();
         _target.SelectedValuePath = "Id"; DockPanel.SetDock(_target, Dock.Top); data.Children.Add(_target);
-        var guides = new DockPanel(); var guideTitle = Label(L("Guidance")); DockPanel.SetDock(guideTitle, Dock.Top); guides.Children.Add(guideTitle);
-        _guidance.MinHeight = 0; _guidance.Height = 115; guides.Children.Add(_guidance); DockPanel.SetDock(guides, Dock.Bottom); data.Children.Add(guides);
-        data.Children.Add(_parameters); Add(Card(data), 4);
+        _brief = new MusicPoetryBriefControl(localize, _guidance);
+        _brief.Focused += () => Activity("parameters");
+        _brief.Changed += () => _parameters.Text = _brief.ExportText();
+        _parameters.TextChanged += (_, _) => { if (!_brief.IsEditing) _brief.LoadText(_parameters.Text); };
+        data.Children.Add(new ScrollViewer { Content = _brief, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled }); Add(Card(data), 4);
         LiterarySpellChecking.Enable(_lyrics, language); LiterarySpellChecking.Enable(_input, language);
         foreach (var (input, zone) in new[] { (_lyrics, "song"), (_parameters, "parameters"), (_input, "chat") })
         {
@@ -117,14 +125,13 @@ public sealed partial class MusicPoetryWindow : Window
         _input.PreviewKeyDown += InputKeyDown;
         _save.Tick += (_, _) => { _save.Stop(); Persist(); };
         Closing += ClosingWindow;
-        Closed += (_, _) => { ++_previewVersion; _save.Stop(); if (_background is not null) _background.Changed -= BackgroundChanged; _runtime.Dispose(); };
+        Closed += (_, _) => { _viewClosed = true; CancelModelEntry(); ++_previewVersion; _save.Stop(); _modelSelector?.Close(); _sessionManager?.Close();
+            DetachView();
+            if (_background is not null) _background.Changed -= BackgroundChanged; _runtime.Dispose(); };
         if (_background is not null) _background.Changed += BackgroundChanged;
-        Loaded += async (_, _) => { try { var models = await Task.Run(() => MusicPoetryRuntime.Discover(_storage));
-                _coreModel = models.FirstOrDefault(m => m.IsCoreModel);
-                if (_model is null) _model = string.IsNullOrEmpty(_session.ModelPath) ? models.FirstOrDefault(m => m.IsCoreModel)
-                    : models.FirstOrDefault(m => m.Path.Equals(_session.ModelPath, StringComparison.OrdinalIgnoreCase));
-                ModelCaption(); Recount(); if (_model is null) _status.Text = L("ModelMissing"); }
-            catch (Exception ex) { _status.Text = L("ModelMissing") + " " + ex.Message; } Availability(); };
+        root.Loaded += (_, _) => BeginModelEntry();
+        root.Unloaded += (_, _) => CancelModelEntry();
+        root.IsVisibleChanged += (_, e) => { if (e.NewValue is false) { CancelModelEntry(); _modelSelector?.Close(); } };
         LoadSession(); Persist();
         void Add(UIElement child, int column) { Grid.SetColumn(child, column); columns.Children.Add(child); }
         void Splitter(int column) { var s = new GridSplitter { Width = 8, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,

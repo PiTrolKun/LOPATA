@@ -17,6 +17,36 @@ namespace AIHub.Tests;
 public sealed class MusicExamplesTests
 {
     [TestMethod]
+    public Task SubscenarioHeaderRemainsFixedAndDirectEntryDoesNotSelectMusicModel() => ScenarioNavigationTests.Sta(() =>
+    {
+        foreach (var language in new[] { "ru", "en" }) foreach (var dark in new[] { true, false })
+        {
+            var l = new LocalizationService(); l.Load(language);
+            using var cards = new MusicModelSelectionControl(); cards.Localize(l.T);
+            var direct = 0; var music = 0;
+            cards.PoetryRequested += () => direct++;
+            cards.OpenRequested += (_, _) => { music++; return Task.CompletedTask; };
+            var host = new Window { Content = cards, Width = 1000, Height = 650 }; Theme(host, dark);
+            Modal(host, () =>
+            {
+                var elements = ScenarioNavigationTests.LogicalDescendants(cards).OfType<FrameworkElement>().ToArray();
+                var header = elements.OfType<Border>().Single(e => AutomationProperties.GetAutomationId(e) == "Music.Models.Subscenarios");
+                var scroll = elements.OfType<ScrollViewer>().Single(e => AutomationProperties.GetAutomationId(e) == "Music.Models.List");
+                var poetry = elements.OfType<Button>().Single(e => AutomationProperties.GetAutomationId(e) == "Music.Models.Poetry");
+                Assert.IsFalse(ScenarioNavigationTests.LogicalDescendants(scroll).Contains(header));
+                Assert.AreEqual(l.T("Music.Models.Poetry"), poetry.Content);
+                var before = header.TranslatePoint(new(), host);
+                scroll.ScrollToEnd(); host.UpdateLayout();
+                Assert.IsGreaterThan(0d, scroll.VerticalOffset);
+                Assert.AreEqual(before, header.TranslatePoint(new(), host));
+                Assert.IsTrue(poetry.IsVisible); Assert.IsTrue(poetry.ActualWidth > 100);
+                poetry.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.AreEqual(1, direct); Assert.AreEqual(0, music);
+                Capture(host, "subscenarios-" + language + "-" + dark);
+            });
+        }
+    });
+    [TestMethod]
     public async Task HeartMuLaOpusKeepsStreamCommentsSettingsAndHasNoCloudComparison()
     {
         var example = MusicExamples.ForVariation(MusicHeartMuLaCatalog.Variation, false).Single();
@@ -40,7 +70,7 @@ public sealed class MusicExamplesTests
             Modal(host, () => {
                 var title = elements.OfType<Button>().Single(e => AutomationProperties.GetAutomationId(e) == "Music.Models.Open.heartmula");
                 host.UpdateLayout();
-                var scroll = (ScrollViewer)cards.Content;
+                var scroll = ScenarioNavigationTests.LogicalDescendants(cards).OfType<ScrollViewer>().Single(s => AutomationProperties.GetAutomationId(s) == "Music.Models.List");
                 var position = title.TransformToAncestor((Visual)scroll.Content).Transform(new Point());
                 scroll.ScrollToVerticalOffset(Math.Max(0, position.Y - 20));
                 Capture(host, "ru-heartmula-card");
@@ -153,7 +183,7 @@ public sealed class MusicExamplesTests
                 var ace = ScenarioNavigationTests.LogicalDescendants(cards).OfType<Button>()
                     .Single(c => AutomationProperties.GetAutomationId(c) == "Music.Models.Open.ace-step");
                 host.UpdateLayout();
-                var scroll = (ScrollViewer)cards.Content;
+                var scroll = ScenarioNavigationTests.LogicalDescendants(cards).OfType<ScrollViewer>().Single(s => AutomationProperties.GetAutomationId(s) == "Music.Models.List");
                 var position = ace.TransformToAncestor((Visual)scroll.Content).Transform(new Point());
                 scroll.ScrollToVerticalOffset(Math.Max(0, position.Y - 20));
                 Capture(host, language + "-ace-cards");

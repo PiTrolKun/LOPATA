@@ -12,16 +12,22 @@ public sealed partial class MusicPoetryWindow
     private void NewSession()
     {
         if (IsWorking) return;
+        CancelModelEntry();
         Capture(); CommitZone(); if (!Persist()) return;
-        _session = MusicPoetryProtocol.Create(_seed(), _l); _model = _coreModel; ModelCaption(); LoadSession(); Persist();
+        var modelPath = _session.ModelPath;
+        var modelName = _session.ModelName;
+        _session = MusicPoetryProtocol.Create(_seed(), _l);
+        _session.ModelPath = modelPath; _session.ModelName = modelName;
+        ModelCaption(); LoadSession(); Persist();
     }
     private void OpenSessions()
     {
         if (IsWorking) return;
+        CancelModelEntry();
         if (_sessionManager is not null) { _sessionManager.Activate(); return; }
         Capture(); CommitZone(); if (!Persist()) return;
         var root = new DockPanel { Margin = new(12) };
-        var window = new Window { Title = L("Sessions"), Owner = this, Width = 760, Height = 500, MinWidth = 450, MinHeight = 250,
+        var window = new Window { Title = L("Sessions"), Owner = DialogOwner, Width = 760, Height = 500, MinWidth = 450, MinHeight = 250,
             Content = root, Resources = Resources, WindowStartupLocation = WindowStartupLocation.CenterOwner };
         _sessionManager = window; window.Closed += (_, _) => _sessionManager = null;
         window.SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");
@@ -53,7 +59,7 @@ public sealed partial class MusicPoetryWindow
             try {
                 var session = _store.Load(row.Id);
                 var models = await Task.Run(() => MusicPoetryRuntime.Discover(_storage));
-                if (IsWorking || !IsLoaded || !window.IsLoaded || !ReferenceEquals(previous, _session)) return;
+                if (IsWorking || !_view.IsLoaded || _viewClosed || !window.IsLoaded || !ReferenceEquals(previous, _session)) return;
                 Capture(); CommitZone(); if (!Persist()) return;
                 _session = session; _model = models.FirstOrDefault(m => m.Path.Equals(session.ModelPath, StringComparison.OrdinalIgnoreCase));
                 if (_model is null && string.IsNullOrEmpty(session.ModelPath)) _model = models.FirstOrDefault(m => m.IsCoreModel);

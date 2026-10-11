@@ -16,6 +16,7 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
     private Func<string, string> _l = key => key;
     private readonly List<MusicExamplePlayerControl> _players = [];
     public event Func<string, string, Task>? OpenRequested;
+    public event Action? PoetryRequested;
     public event Func<MusicProjectSnapshot, Task>? ExampleRequested;
     public Func<bool> CanApplyExample { get; set; } = () => true;
     public Func<string, bool> CanRemoveModel { get; set; } = _ => false;
@@ -27,13 +28,33 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
     {
         DisposePlayers();
         _l = localize;
-        var panel = new StackPanel { Margin = new(24), MaxWidth = 1560, HorizontalAlignment = HorizontalAlignment.Stretch };
-        panel.Children.Add(Text(_l("Music.Models.Title"), true));
-        panel.Children.Add(Text(_l("Music.Models.Hint")));
+        var root = new Grid { Margin = new(24), MaxWidth = 1560, HorizontalAlignment = HorizontalAlignment.Stretch };
+        root.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        root.RowDefinitions.Add(new() { Height = GridLength.Auto });
+        root.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        var heading = new StackPanel();
+        heading.Children.Add(Text(_l("Music.Models.Title"), true));
+        heading.Children.Add(Text(_l("Music.Models.Hint"))); root.Children.Add(heading);
+        var actions = new WrapPanel { VerticalAlignment = VerticalAlignment.Center };
+        var label = Text(_l("Music.Models.Subscenarios")); label.Margin = new(0, 8, 20, 8); actions.Children.Add(label);
+        var poetry = new Button { Content = _l("Music.Models.Poetry"), ToolTip = _l("Music.Models.PoetryHint"),
+            Padding = new(14, 8, 14, 8), Margin = new(0, 4, 8, 4) };
+        poetry.SetResourceReference(StyleProperty, "SettingsActionButtonStyle");
+        AutomationProperties.SetAutomationId(poetry, "Music.Models.Poetry");
+        poetry.Click += (_, _) => { PauseExamples(); PoetryRequested?.Invoke(); }; actions.Children.Add(poetry);
+        var subscenarios = new Border { Child = actions, Padding = new(14, 6, 14, 6), Margin = new(0, 8, 0, 10),
+            CornerRadius = new(10), BorderThickness = new(1),
+            BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(80, 133, 119)) };
+        subscenarios.SetResourceReference(BackgroundProperty, "PanelBrush");
+        AutomationProperties.SetAutomationId(subscenarios, "Music.Models.Subscenarios");
+        Grid.SetRow(subscenarios, 1); root.Children.Add(subscenarios);
+        var panel = new StackPanel();
         foreach (var model in MusicModelSelectionCatalog.All) panel.Children.Add(Card(model));
-        Content = new ScrollViewer { Content = panel, Margin = new(0, 0, 0, 6), ClipToBounds = true,
+        var scroll = new ScrollViewer { Content = panel, Margin = new(0, 0, 0, 6), ClipToBounds = true,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        AutomationProperties.SetAutomationId(scroll, "Music.Models.List");
+        Grid.SetRow(scroll, 2); root.Children.Add(scroll); Content = root;
     }
 
     private Grid Card(MusicModelCandidate model)

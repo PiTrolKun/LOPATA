@@ -7,24 +7,27 @@ namespace AIHub;
 public partial class MainWindow
 {
     private MusicPoetryWindow? _musicPoetryWindow;
-    private void OpenMusicPoetry(MusicWorkspaceControl workspace)
+    private MusicPoetryWindow GetMusicPoetry()
     {
-        if (_musicPoetryWindow is not null)
-        {
-            if (_musicPoetryWindow.WindowState == WindowState.Minimized) _musicPoetryWindow.WindowState = WindowState.Normal;
-            _musicPoetryWindow.Show(); _musicPoetryWindow.Activate(); return;
-        }
-        var window = new MusicPoetryWindow(() => workspace.Projects.Capture(), _storageSettings,
+        if (_musicPoetryWindow is not null) return _musicPoetryWindow;
+        var window = new MusicPoetryWindow(MusicPage.CapturePoetrySeed, _storageSettings,
             _userContextService, L, _localizationService.CurrentLanguageCode);
         _musicPoetryWindow = window;
-        void RefreshPoetry() => workspace.Generation.SetPoetryState(true, window.IsWorking);
+        void RefreshPoetry() => MusicPage.SetPoetryState(true, window.IsWorking);
         window.WorkingChanged += RefreshPoetry;
         window.Closed += (_, _) => {
             window.WorkingChanged -= RefreshPoetry;
-            _musicPoetryWindow = null; workspace.Generation.SetPoetryState(false, false);
+            _musicPoetryWindow = null; MusicPage.LeavePoetry(window); MusicPage.SetPoetryState(false, false);
         };
-        window.Show();
-        RefreshPoetry();
+        RefreshPoetry(); return window;
+    }
+    private void OpenMusicPoetry(MusicWorkspaceControl workspace)
+    {
+        var poetry = GetMusicPoetry(); MusicPage.LeavePoetry(poetry); poetry.PresentAsWindow();
+    }
+    private void OpenMusicPoetryDirect()
+    {
+        MusicPage.ShowPoetry(GetMusicPoetry());
     }
     private void ConfigureMusic()
     {
@@ -44,6 +47,7 @@ public partial class MainWindow
         MusicPage.CanRemoveModel = CanRemoveMusicModel;
         MusicPage.RemoveModelRequested += RemoveMusicModelAsync;
         MusicPage.PoetryRequested += OpenMusicPoetry;
+        MusicPage.DirectPoetryRequested += OpenMusicPoetryDirect;
         foreach (var page in new FrameworkElement[] { ScenarioNavigationPage, FinancialPage, CapturePage, GenerationPage, ImageUtilityPage })
             page.IsVisibleChanged += (_, _) => { if (page.IsVisible) MusicPage.Visibility = Visibility.Collapsed; };
         Closed += (_, _) => { _musicPoetryWindow?.Close(); MusicPage.Dispose(); };

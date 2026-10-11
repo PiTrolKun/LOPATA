@@ -79,6 +79,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
         { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
         AutomationProperties.SetAutomationId(this, "Music.Page");
         _models.OpenRequested += SelectModelAsync;
+        _models.PoetryRequested += () => DirectPoetryRequested?.Invoke();
         _models.CanApplyExample = () => !IsBusy && !PendingMusicOperation && _workspace?.Session.HasPendingOrRunning != true;
         _models.ExampleRequested += ApplyExampleAsync;
         _models.CanRemoveModel = variation => CanRemoveModel?.Invoke(variation) == true;
@@ -127,6 +128,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     {
         if (_workspace is not null) return;
         _workspace = _createWorkspace();
+        _workspace.Generation.SetPoetryState(_poetryOpen, _poetryWorking);
         _workspace.Generation.OpenPoetry = () => PoetryRequested?.Invoke(_workspace);
         _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };
         _workspace.Session.StateChanged += () => WorkspaceChanged?.Invoke();
@@ -160,6 +162,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     public Task ContinueAsync() => CanContinue ? RunAsync(true, false, true) : Task.CompletedTask;
     public bool GoBack()
     {
+        if (_embeddedPoetry is not null) { _embeddedPoetry.Close(); return true; }
         if (IsBusy) { _cancel?.Cancel(); return true; }
         if (!IsWorkspace) { if (IsModelSelection) return false; _pendingExample = null; IsModelSelection = true; Render(); return true; }
         IsWorkspace = false; Render(); return true;
@@ -265,6 +268,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     {
         if (_disposed) return;
         WorkspaceChanged?.Invoke();
+        if (_embeddedPoetry is not null) return;
         if (IsModelSelection) { _models.Localize(_l); Content = _models; return; }
         if (IsWorkspace)
         {

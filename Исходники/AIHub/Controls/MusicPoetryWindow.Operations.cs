@@ -4,8 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using AIHub.Models;
 using AIHub.Services;
-using MenuItem = System.Windows.Controls.MenuItem;
-using ContextMenu = System.Windows.Controls.ContextMenu;
 
 namespace AIHub.Controls;
 
@@ -22,6 +20,7 @@ public sealed partial class MusicPoetryWindow
     private async Task SendCoreAsync(bool assemble)
     {
         if (!(assemble ? _assemble.IsEnabled : _send.IsEnabled) || _model is null || IsWorking) return;
+        CancelModelEntry();
         Capture(); CommitZone();
         if (!Persist()) return;
         IDisposable? lease = null; string? raw = null; var turn = Guid.NewGuid().ToString("N"); var currentAttempt = 0;
@@ -100,27 +99,21 @@ public sealed partial class MusicPoetryWindow
     private async void ModelMenu()
     {
         if (IsWorking) return;
+        CancelModelEntry();
+        var entryVersion = _modelEntryVersion;
+        if (_modelSelector is not null) { _modelSelector.Activate(); return; }
         _models.IsEnabled = false;
         try
         {
-            var available = await Task.Run(() => MusicPoetryRuntime.Discover(_storage));
-            if (IsWorking || !IsLoaded) return;
-            var menu = new ContextMenu { PlacementTarget = _models, Style = (Style)FindResource("Spelling.ContextMenu") };
-            foreach (var model in available)
-            {
-                var item = new MenuItem { Header = model.Name + (model.IsCoreModel ? " · " + L("Core") : ""),
-                    Style = (Style)FindResource("Spelling.MenuItem"), IsCheckable = true, IsChecked = model.Path.Equals(_model?.Path, StringComparison.OrdinalIgnoreCase) };
-                if (item.IsChecked) item.Icon = "✓";
-                item.Click += (_, _) => SelectModel(model); menu.Items.Add(item);
-            }
-            if (menu.Items.Count == 0) menu.Items.Add(new MenuItem { Header = L("ModelMissing"), IsEnabled = false });
-            _models.ContextMenu = menu; menu.IsOpen = true;
+            var available = await Task.Run(_modelChoices);
+            if (entryVersion == _modelEntryVersion) OpenModelPicker(available);
         }
         catch (Exception ex) { _status.Text = L("Error") + " " + ex.Message; }
         finally { Availability(); }
     }
     private void SelectModel(DebugModelInfo model)
     {
+        CancelModelEntry();
         if (IsWorking || _model?.Path == model.Path) return;
         Capture(); CommitZone();
         var previous = _model?.Name ?? _session.ModelName;
@@ -149,7 +142,7 @@ public sealed partial class MusicPoetryWindow
     private void ShowText(string title, string text, string id)
     {
         var area = Area(id, true); area.Text = text;
-        var window = new Window { Owner = this, Title = title, Width = 750, Height = 550, MinWidth = 350, MinHeight = 250,
+        var window = new Window { Owner = DialogOwner, Title = title, Width = 750, Height = 550, MinWidth = 350, MinHeight = 250,
             Content = area, Resources = Resources, WindowStartupLocation = WindowStartupLocation.CenterOwner };
         window.SetResourceReference(BackgroundProperty, "WindowBackgroundBrush"); window.Show();
     }
