@@ -53,6 +53,8 @@
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Expander">
             <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
+                <Grid>
+                    <Border x:Name="LiteraryTint" Background="#249C7ABB" CornerRadius="11" Margin="-16" Visibility="Collapsed" IsHitTestVisible="False" />
                 <StackPanel>
                     <ToggleButton x:Name="HeaderSite" HorizontalContentAlignment="Stretch" Foreground="{TemplateBinding Foreground}"
                                   IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
@@ -72,8 +74,12 @@
                     </ToggleButton>
                     <ContentPresenter x:Name="Body" Visibility="Collapsed" Margin="0,12,0,0" />
                 </StackPanel>
+                </Grid>
             </Border>
-            <ControlTemplate.Triggers><Trigger Property="IsExpanded" Value="True"><Setter TargetName="Body" Property="Visibility" Value="Visible" /></Trigger></ControlTemplate.Triggers>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsExpanded" Value="True"><Setter TargetName="Body" Property="Visibility" Value="Visible" /></Trigger>
+                <Trigger Property="Tag" Value="LiteraryBasis"><Setter TargetName="LiteraryTint" Property="Visibility" Value="Visible" /></Trigger>
+            </ControlTemplate.Triggers>
         </ControlTemplate></Setter.Value></Setter>
     </Style>
     <Style TargetType="CheckBox">

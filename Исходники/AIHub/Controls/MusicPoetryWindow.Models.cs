@@ -9,6 +9,7 @@ public sealed partial class MusicPoetryWindow
     private CancellationTokenSource? _modelEntry;
     private Task _modelEntryTask = Task.CompletedTask;
     private int _modelEntryVersion;
+    public bool IsModelDownloadActive => _modelSelector?.IsDownloading == true || _modelSelector?.IsRemoving == true;
 
     private void CancelModelEntry() { ++_modelEntryVersion; _modelEntry?.Cancel(); _modelEntry?.Dispose(); _modelEntry = null; }
 
@@ -63,7 +64,24 @@ public sealed partial class MusicPoetryWindow
             if (IsWorking) return;
             if (!MusicPoetryModelCatalog.IsCompatible(model)) { _status.Text = L("ModelUnsupported"); return; }
             SelectModel(model); _modelSelector?.Close();
-        }, _preferences) { Owner = DialogOwner, Resources = Resources };
+        }, _preferences, async (candidate, progress, token) => {
+            using var lease = _background?.BeginAuxiliary();
+            return await MusicPoetryProfileInstallation.DownloadAsync(candidate, _storage, progress, token);
+        }, candidate => {
+            if (IsWorking || _background?.IsRunning == true || _background?.HasPending == true)
+                throw new InvalidOperationException("Music.Poetry.Selection.RemoveBlocked");
+            using var lease = _background?.BeginAuxiliary();
+            try {
+                return new MusicPoetryProfileRemoval(new ManagedModelLibraryStore(), new DelegateModelUsageGuard(_ => IsWorking))
+                    .Remove(candidate, _storage);
+            }
+            finally {
+                if (_model is not null && !System.IO.File.Exists(_model.Path)) {
+                    _model = null; ModelCaption(); Recount(); _status.Text = L("ModelMissing"); Persist();
+                }
+                Availability();
+            }
+        }, candidate => MusicPoetryProfileRemoval.HasFiles(candidate, _storage)) { Owner = DialogOwner, Resources = Resources };
         _modelSelector = window; window.Closed += (_, _) => _modelSelector = null;
         window.Show();
     }

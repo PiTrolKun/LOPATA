@@ -44,7 +44,7 @@ public sealed partial class MusicPoetryWindow
     {
         _loading = true;
         try { _lyrics.Text = _session.Lyrics; _parameters.Text = _session.Parameters.Text;
-            _brief.LoadText(_session.Parameters.Text);
+            _brief.LoadText(MusicPoetryBrief.RemoveRepeatedSong(_session.Parameters.Text, _session.Lyrics));
             _target.SelectedValue = _session.Parameters.Variation; _input.Text = _session.Draft;
             _guidance.Text = MusicPoetryProtocol.Guidance(_session.Parameters.Variation, _l); }
         finally { _loading = false; }
@@ -84,11 +84,11 @@ public sealed partial class MusicPoetryWindow
     {
         if (IsWorking) return;
         // Live draft estimate is labelled as such; GGUF requests replace it with the actual tokenizer count.
-        var messages = _session.Messages.Where(m => m.Role is "user" or "assistant").ToList();
+        var messages = MusicPoetryModelMessages.Select(_session).ToList();
         if (_session.Draft.Length > 0) messages.Add(new("user", _session.Draft, "draft"));
         var system = MusicPoetryProtocol.System(_session, _guidance.Text);
         var tokens = PreviewCount(system, messages);
-        foreach (var m in _session.Messages) m.InContext = m.Role is "user" or "assistant";
+        MusicPoetryModelMessages.Mark(_session, messages);
         while (messages.Count > 0 && tokens + Math.Min(4096, _capacity / 3) + 128 > _capacity)
         {
             var oldest = messages[0].TurnId;

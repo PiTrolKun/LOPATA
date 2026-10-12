@@ -47,6 +47,8 @@ public sealed partial class MusicPoetryWindow
                 token.ThrowIfCancellationRequested();
                 MusicPoetryReplyGuard.Result checkedReply;
                 try { checkedReply = MusicPoetryReplyGuard.Check(_session, MusicPoetryProtocol.Parse(raw, assemble), assemble); }
+                catch (InvalidDataException ex) when (ex.Message == "Music.Poetry.TargetReadOnly")
+                { checkedReply = new(new("", null, null, null, []), [], ex.Message); }
                 catch (Exception ex) when (ex is InvalidDataException or JsonException)
                 { _session.ReplyAttempts.Add(new(turn, DateTimeOffset.UtcNow, attempt, raw, "invalid", [])); throw; }
                 _session.ReplyAttempts.Add(new(turn, DateTimeOffset.UtcNow, attempt, raw, checkedReply.Error ?? "applied", checkedReply.Changes));
@@ -95,7 +97,8 @@ public sealed partial class MusicPoetryWindow
     private void SaveRejected(string raw)
     { _session.PartialReply = raw; _session.IncompleteReplies.Add(new(DateTimeOffset.UtcNow, raw)); }
     private void ProgramMessage(string role, string text, string turn) =>
-        _session.Messages.Add(new(role, text, turn) { InContext = true, IsProgrammatic = true });
+        _session.Messages.Add(new(role, text, turn) { InContext = true, IsProgrammatic = true,
+            ContextRevision = MusicPoetryProtocol.ContextRevision });
     private async void ModelMenu()
     {
         if (IsWorking) return;

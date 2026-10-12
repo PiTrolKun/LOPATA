@@ -10,6 +10,7 @@ public sealed partial class LlamaServerRuntimeService
 {
     private readonly SemaphoreSlim _completionGate = new(1, 1);
     private Task _stderrPumpTask = Task.CompletedTask;
+    private Task _stdoutPumpTask = Task.CompletedTask;
 
     private Task<StructuredChatResult> CompleteAsync(DebugModelInfo model, ChatCompletionRequest request,
         Action<string> log, IProgress<ModelStreamChunk>? progress, CancellationToken token) =>
@@ -29,7 +30,7 @@ public sealed partial class LlamaServerRuntimeService
         {
             using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
             return await reader.ReadToEndAsync(cancellation);
-        }, _ => { }, null, token);
+        }, text => _poetryJournal?.Record("inference", text), null, token);
 
     private async Task<T> CompletePayloadAsync<T>(DebugModelInfo model, string json,
         Func<Stream, IProgress<ModelStreamChunk>?, CancellationToken, Task<T>> readResponse,
@@ -84,8 +85,9 @@ public sealed partial class LlamaServerRuntimeService
                     }
                 },
                 () => _selectedRuntime?.UsesGpu == true, () => _hardwareStartupFailure,
-                () => visibleOutput, () => ModelProcessRetirement.StopAsync(_process, Stop),
-                () => EnsureStartedAsync(model, log, token, forceCpuFallback: true), log, token);
+                () => visibleOutput, () => _poetryJournal is null ? ModelProcessRetirement.StopAsync(_process, Stop) : RetirePoetryAsync(),
+                () => EnsureStartedAsync(model, log, token, forceCpuFallback: true), log, token,
+                _poetryJournal is null ? null : "GPU inference failed. Retrying the same request once through the next placement stage after retirement.");
         }
         finally { _completionGate.Release(); }
     }

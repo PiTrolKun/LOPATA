@@ -3,12 +3,12 @@ using System.Net.Http;
 
 namespace AIHub.Services;
 
-/// <summary>Retry only a proven hardware failure, in a fresh CPU process, before any visible output.</summary>
+/// <summary>Retry only a proven hardware failure in a fresh placement, before any visible output.</summary>
 internal static class NativeInferenceRecovery
 {
     internal static async Task<T> ExecuteAsync<T>(Func<Task<T>> attempt, Func<bool> usesGpu,
         Func<bool> hardwareFailure, Func<bool> hasVisibleOutput, Func<Task> retire,
-        Func<Task> restartCpu, Action<string> log, CancellationToken token)
+        Func<Task> restartCpu, Action<string> log, CancellationToken token, string? retryDescription = null)
     {
         try { return await attempt(); }
         catch (Exception) when (token.IsCancellationRequested)
@@ -23,7 +23,7 @@ internal static class NativeInferenceRecovery
             await retire();
             token.ThrowIfCancellationRequested();
             if (hasVisibleOutput()) throw;
-            log("GPU inference failed. Retrying the same request once on CPU after process retirement.");
+            log(retryDescription ?? "GPU inference failed. Retrying the same request once on CPU after process retirement.");
             try
             {
                 await restartCpu();

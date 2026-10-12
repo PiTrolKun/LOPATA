@@ -64,6 +64,66 @@ public sealed class LlamaDenseMemoryPolicyTests
     }
 
     [TestMethod]
+    [DataRow(4u)]
+    [DataRow(5u)]
+    [DataRow(10u)]
+    public void GemmaLayerHeadArraysKeepDifferentLocalAndGlobalHeads(uint elementType)
+    {
+        using var stream = GemmaHeader(elementType, [16, 16, 16, 16, 16, 4]);
+        var model = LiteraryModelMemoryMetadata.Read(stream);
+        CollectionAssert.AreEqual(new[] { 16, 16, 16, 16, 16, 4 }, model.KvHeadCounts!.ToArray());
+        Assert.AreEqual(32, model.HeadCount); Assert.AreEqual(16, model.KvHeadCount);
+        // The existing full-context budget remains conservative; do not collapse to layer 0.
+        Assert.AreEqual(1024L * 84 * 1024 * 2, LlamaDenseMemoryPolicy.KvBytes(model, 1024));
+    }
+
+    [TestMethod]
+    [DataRow(5u, -1)]
+    [DataRow(5u, 1000001)]
+    [DataRow(10u, 1000001)]
+    [DataRow(6u, 16)]
+    public void InvalidLayerArrayTypesAndValuesRemainRejected(uint elementType, int headCount)
+    {
+        using var stream = GemmaHeader(elementType, [headCount, 16, 16, 16, 16, 4]);
+        Assert.ThrowsExactly<InvalidDataException>(() => LiteraryModelMemoryMetadata.Read(stream));
+    }
+
+    private static MemoryStream GemmaHeader(uint elementType, int[] heads)
+    {
+        var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            void Text(string value) { var bytes = System.Text.Encoding.UTF8.GetBytes(value); writer.Write((ulong)bytes.Length); writer.Write(bytes); }
+            void Number(string key, uint value) { Text("gemma4." + key); writer.Write(4u); writer.Write(value); }
+            writer.Write(0x46554747u); writer.Write(3u); writer.Write(0ul); writer.Write(8ul);
+            Text("general.architecture"); writer.Write(8u); Text("gemma4");
+            Number("block_count", 6); Number("context_length", 262144); Number("embedding_length", 5376);
+            Number("attention.head_count", 32); Number("attention.key_length", 512); Number("attention.value_length", 512);
+            Text("gemma4.attention.head_count_kv"); writer.Write(9u); writer.Write(elementType); writer.Write((ulong)heads.Length);
+            foreach (var value in heads)
+                if (elementType == 10) writer.Write((ulong)value);
+                else if (elementType == 6) writer.Write((float)value);
+                else writer.Write(value);
+        }
+        stream.Position = 0; return stream;
+    }
+
+    [TestMethod]
+    public void GemmaSwaBudgetFollowsPinnedNativeWindowAndBatchPadding()
+    {
+        var model = Qwen() with { Architecture = "gemma4", BlockCount = 6, KeyLength = 512, ValueLength = 512,
+            KeyLengthSwa = 256, ValueLengthSwa = 256, SlidingWindow = 1024,
+            KvHeadCounts = new[] { 16, 16, 16, 16, 16, 4 },
+            SlidingWindowPattern = new[] { true, true, true, true, true, false } };
+        Assert.AreEqual(1536L * 80 * 512 * 2 + 32768L * 4 * 1024 * 2, LlamaDenseMemoryPolicy.KvBytes(model, 32768));
+        Assert.AreEqual(256L * (80 * 512 + 4 * 1024) * 2, LlamaDenseMemoryPolicy.KvBytes(model, 256));
+        Assert.ThrowsExactly<InvalidDataException>(() => LlamaDenseMemoryPolicy.KvBytes(model with { KeyLength = 0 }, 32768));
+        Assert.ThrowsExactly<InvalidDataException>(() => LlamaDenseMemoryPolicy.KvBytes(model with { SlidingWindow = 0 }, 32768));
+        Assert.ThrowsExactly<InvalidDataException>(() => LlamaDenseMemoryPolicy.KvBytes(model with { SlidingWindowPattern = new[] { true } }, 32768));
+        Assert.ThrowsExactly<InvalidDataException>(() => LlamaDenseMemoryPolicy.KvBytes(model with { SharedKvLayers = 7 }, 32768));
+    }
+
+    [TestMethod]
     public void FullContextKvAndCpuReserveCountSeparatelyFromWeights()
     {
         var model = Qwen(); var gib = LlamaDenseMemoryPolicy.GiB;

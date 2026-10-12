@@ -2647,5 +2647,141 @@
     "Terms": "8122F857097CC95D4EE558D2498CFC2C050230202DE90B71D6E77EAA43BEFF56",
     "Ru": "Модель исполнителя Песочницы, также используемая в песенном чате. Карточка репозитория sm54 декларирует Apache-2.0; полный текст лицензии сохранён локально. Сведения о лицензии предоставлены поставщиком; отдельная проверка всех вложенных частей не завершена. Весов модели в поставке ЛОПАТЫ нет. Согласие на эту редакцию условий общее для обоих сценариев.",
     "En": "Sandbox executor model also used in songwriting chat. The sm54 repository card declares Apache-2.0; the full license text is retained locally. License information is provided by the supplier; separate review of every bundled part is not complete. Model weights are not bundled with LOPATA. Acknowledgement of this revision is shared by both scenarios."
+  },
+  {
+    "Id": "model-poetry-lyrical",
+    "Name": "Lyrical MT Qwen2.5 · 3B",
+    "Version": "85b4e6b711d999674264622dc549e0f8df26574e; gguf",
+    "Author": "AlekseyCalvin",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/AlekseyCalvin/Lyrical_MT_ru2en_var1_Qwen25_3B_ORPO_r128ft-Q4_K_M-GGUF",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
+    "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "model-poetry-kaine",
+    "Name": "KAINE Qwen3.5 · 4B",
+    "Version": "551991a575c1d4221ca0f0cfca74037d26268411; gguf",
+    "Author": "kaineone",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/kaineone/Qwen3.5-4B-abliterated-GGUF",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
+    "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "model-poetry-key2poetry",
+    "Name": "Key2Poetry · ruGPT3 Large",
+    "Version": "0ed47fb598aeed422007bc5f3e97cf0d4f37c801; transformers",
+    "Author": "AnyaSchen",
+    "License": "License not declared by fine-tune author",
+    "Source": "https://huggingface.co/AnyaSchen/rugpt3-large-key2poetry",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/poetry-key2-license-notice.txt"
+    ],
+    "Terms": "30734725266EFABF65481F52D505E744DA037193DD00B28E400D9DF9C054281D",
+    "Ru": "Автор Key2Poetry не указал лицензию дообученного файла. Условия весов и обучающих текстов не подтверждены. Ознакомьтесь с карточкой и этим ограничением перед самостоятельным скачиванием. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "The Key2Poetry author did not specify a license for the fine-tuned file. Terms for the weights and training texts are unconfirmed. Review the model card and this limitation before downloading. Weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "model-poetry-abliterated",
+    "Name": "Qwen3.5 Abliterated · 9B",
+    "Version": "b52ba3767bde3e4f905474d15038497abe8c8cf3; gguf",
+    "Author": "Abiray",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/Abiray/Qwen3.5-9B-abliterated-GGUF",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
+    "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "model-poetry-katarau",
+    "Name": "Katarau · 9B",
+    "Version": "621d15fea7e8f26a1f4d6b22797df7fdfa776761; gguf",
+    "Author": "mradermacher",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/mradermacher/Katarau-9B-ru-RP-nsfw-GGUF",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
+    "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "model-poetry-hydra",
+    "Name": "Hydra · Mistral Nemo 12B",
+    "Version": "7a11c680fccfda789be8201e41e5d2ed6c3c95e8; gguf",
+    "Author": "limloop",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/limloop/MN-12B-Hydra-RP-RU-GGUF",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
+    "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "model-poetry-runeweaver",
+    "Name": "Runeweaver · Mistral Nemo 12B",
+    "Version": "84fa96954eef3eec4e92433e133c5bb1c774fc22; gguf",
+    "Author": "limloop",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/limloop/MN-12B-Runeweaver-RP-RU-GGUF",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
+    "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "model-poetry-gemma-poetry",
+    "Name": "Gemma 4 Russian Poetry · 31B",
+    "Version": "f25b0f358692c4f1dc99c4dde1310ae04dad9027; gguf",
+    "Author": "godmode",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/godmode/gemma4-31b-russian-poetry",
+    "Checked": "2026-10-12",
+    "Basic": false,
+    "Delivery": "download",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
+    "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
+    "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
   }
 ]

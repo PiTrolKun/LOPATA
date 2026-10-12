@@ -1,0 +1,4 @@
+Key2Poetry license notice — 2026-10-12
+
+The fine-tune repository AnyaSchen/rugpt3-large-key2poetry does not declare a license. The card for the referenced upstream ai-forever/rugpt3large_based_on_gpt2 also does not declare a license. No license for these weights is inferred from the software libraries used to run them.
+Sources: https://huggingface.co/AnyaSchen/rugpt3-large-key2poetry and https://huggingface.co/ai-forever/rugpt3large_based_on_gpt2

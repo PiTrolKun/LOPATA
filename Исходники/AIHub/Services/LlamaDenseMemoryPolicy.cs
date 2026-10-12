@@ -12,7 +12,7 @@ internal static class LlamaDenseMemoryPolicy
         if (context <= 0 || context > model.ModelContextTokens)
             throw new InvalidDataException("Requested context is outside the model's native capacity.");
         if (model.Architecture is not ("llama" or "qwen2" or "qwen3" or "qwen2moe" or "qwen3moe" or "qwen35" or "qwen35moe"
-            or "phi2" or "phi3" or "gemma" or "gemma2" or "gemma3" or "starcoder2" or "gpt2"
+            or "phi2" or "phi3" or "gemma" or "gemma2" or "gemma3" or "gemma4" or "starcoder2" or "gpt2"
             or "falcon" or "gptneox" or "stablelm" or "olmo" or "olmo2" or "deci")
             || model.BlockCount is <= 0 or > 4096
             || model.HeadCount <= 0 || model.KvHeadCount < 0 || model.KvHeadCount == 0 && model.Architecture != "deci" || model.EmbeddingLength <= 0
@@ -43,7 +43,7 @@ internal static class LlamaDenseMemoryPolicy
             var state = checked((long)model.SsmStateSize * model.SsmInnerSize);
             recurrentBytes = checked((conv + state) * recurrentLayers * 4);
         }
-        long kvHeads = 0;
+        long kvBytes = 0;
         if (model.HeadCounts is not null && model.HeadCounts.Count != model.BlockCount
             || model.KvHeadCounts is not null && model.KvHeadCounts.Count != model.BlockCount)
             throw new InvalidDataException("Invalid per-layer attention dimension count.");
@@ -54,9 +54,25 @@ internal static class LlamaDenseMemoryPolicy
             if (heads < 0 || cached < 0 || cached > heads || heads > 1_000_000
                 || model.Architecture != "deci" && (heads == 0 || cached == 0))
                 throw new InvalidDataException("Invalid per-layer attention dimensions.");
-            kvHeads = checked(kvHeads + cached);
+            var layerContext = padded; var layerKey = key; var layerValue = value;
+            if (model.Architecture == "gemma4" && model.SlidingWindowPattern is { } pattern)
+            {
+                if (pattern.Count != model.BlockCount || model.SlidingWindow <= 0
+                    || model.KeyLength <= 0 || model.ValueLength <= 0 || model.KeyLengthSwa <= 0
+                    || model.ValueLengthSwa <= 0 || model.SharedKvLayers > model.BlockCount)
+                    throw new InvalidDataException("Incomplete Gemma SWA dimensions.");
+                if (pattern[layer])
+                {
+                    // Pinned b9442 defaults: one sequence, ubatch512, swa-full=false, F16 K/V.
+                    layerContext = Math.Min(padded, checked(((model.SlidingWindow + 512L + 255) / 256) * 256));
+                    layerKey = model.KeyLengthSwa; layerValue = model.ValueLengthSwa;
+                }
+                else { layerKey = model.KeyLength; layerValue = model.ValueLength; }
+                // Shared layers are counted too: a safe upper bound, never a guessed reuse map.
+            }
+            kvBytes = checked(kvBytes + layerContext * cached * (layerKey + (long)layerValue) * 2);
         }
-        return checked(padded * kvHeads * (key + (long)value) * 2 + recurrentBytes);
+        return checked(kvBytes + recurrentBytes);
     }
 
     internal static long GpuRequired(LiteraryModelMemoryMetadata model, int context) =>

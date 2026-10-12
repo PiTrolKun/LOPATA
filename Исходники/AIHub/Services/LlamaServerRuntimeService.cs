@@ -39,8 +39,10 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
 
     public LlamaServerRuntimeService(UserContextService userContextService) : this(userContextService, false) { }
 
-    internal LlamaServerRuntimeService(UserContextService userContextService, bool forceCpu, HttpMessageHandler? handler = null)
+    internal LlamaServerRuntimeService(UserContextService userContextService, bool forceCpu, HttpMessageHandler? handler = null,
+        LlamaPlacementPreferences? placementPreferences = null)
     {
+        _placementPreferences = placementPreferences ?? LlamaPlacementPreferences.Default;
         _httpClient = handler is null ? new HttpClient() : new HttpClient(handler);
         _httpClient.Timeout = Timeout.InfiniteTimeSpan;
         _forceCpu = forceCpu;
@@ -321,9 +323,14 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
 
             await ModelProcessRetirement.StopAsync(_process, Stop);
             var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), cancellationToken);
+            if (_poetryJournal is not null)
+            {
+                await StartPoetryPlacementAsync(model, memory, log, cancellationToken, forceCpuFallback);
+                return;
+            }
             var selection = await LlamaRuntimeSelector.SelectAsync(LlamaDenseMemoryPolicy.GpuRequired(memory,
-                CoreContextRuntimeLimits.CurrentBackendContextLimit), _forceCpu || forceCpuFallback, log, cancellationToken);
-            if (!selection.UsesGpu) LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, CoreContextRuntimeLimits.CurrentBackendContextLimit);
+                    RequestedContextTokens), _forceCpu || forceCpuFallback, log, cancellationToken);
+            if (!selection.UsesGpu) LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens);
             StartProcess(model, selection, log);
             try
             {
@@ -335,7 +342,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 log($"Full GPU model startup failed ({ex.Message}). Retrying with CPU/RAM fallback.");
                 await ModelProcessRetirement.StopAsync(_process, Stop);
                 var cpu = await LlamaRuntimeSelector.SelectAsync(0, true, log, cancellationToken);
-                LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, CoreContextRuntimeLimits.CurrentBackendContextLimit);
+                LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens);
                 StartProcess(model, cpu, log);
                 await WaitForHealthAsync(log, cancellationToken);
             }
@@ -379,7 +386,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         AddArgument(startInfo, "--port");
         AddArgument(startInfo, _port.ToString(System.Globalization.CultureInfo.InvariantCulture));
         AddArgument(startInfo, "--ctx-size");
-        AddArgument(startInfo, CoreContextRuntimeLimits.CurrentBackendContextLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        AddArgument(startInfo, RequestedContextTokens.ToString(System.Globalization.CultureInfo.InvariantCulture));
         AddArgument(startInfo, "--n-gpu-layers");
         AddArgument(startInfo, gpuLayers.ToString(System.Globalization.CultureInfo.InvariantCulture));
         AddArgument(startInfo, "--device");
@@ -390,10 +397,22 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         AddArgument(startInfo, "--reasoning");
         AddArgument(startInfo, "off");
         AddArgument(startInfo, "--no-webui");
+        if (_poetryJournal is not null)
+        {
+            // Keep placement/context under our staged policy; native auto-fit can silently change both.
+            AddArgument(startInfo, "--fit"); AddArgument(startInfo, "off");
+            AddArgument(startInfo, "--ubatch-size"); AddArgument(startInfo, "512");
+            AddArgument(startInfo, "--cache-type-k"); AddArgument(startInfo, "f16");
+            AddArgument(startInfo, "--cache-type-v"); AddArgument(startInfo, "f16");
+            AddArgument(startInfo, "--log-verbosity"); AddArgument(startInfo, "4");
+        }
 
         _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
         log($"Starting llama-server: {Path.GetFileName(model.Path)} on {Endpoint}; gpu-layers={gpuLayers}");
         OwnedProcessRegistry.Shared.Start(_process, "LlamaServerRuntimeService");
+        _poetryJournal?.Record("launch", new { pid = _process.Id, executable = startInfo.FileName,
+            arguments = startInfo.ArgumentList.ToArray(), backend = selection.Bundle.Backend,
+            selection.DeviceId, gpuLayers, context = RequestedContextTokens });
         log(RuntimeResourceDiagnostics.DescribeLaunch(
             "AI HUB core / llama-server",
             _process,
@@ -401,15 +420,21 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 ? $"GPU preferred; gpuLayers={gpuLayers}; llama.cpp/driver may use shared system memory"
                 : "CPU/RAM",
             model.Path));
-        _ = PumpOutputAsync(_process.StandardOutput, log);
+        _stdoutPumpTask = PumpOutputAsync(_process.StandardOutput, log, line => _poetryJournal?.Capture("stdout", line));
         var started = _process;
         _stderrPumpTask = PumpOutputAsync(_process.StandardError, log, line =>
         {
-            if (ReferenceEquals(_process, started) && IsHardwareAllocationFailure(line)) _hardwareStartupFailure = true;
+            _poetryJournal?.Capture("stderr", line);
+            if (ReferenceEquals(_process, started))
+            {
+                _poetryAllocation?.Observe(line);
+                if (IsHardwareAllocationFailure(line)) _hardwareStartupFailure = true;
+            }
         });
     }
 
-    private async Task WaitForHealthAsync(Action<string> log, CancellationToken cancellationToken)
+    private async Task WaitForHealthAsync(Action<string> log, CancellationToken cancellationToken,
+        Func<CancellationToken, Task>? sampleMemory = null)
     {
         var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
         while (DateTimeOffset.UtcNow < deadline)
@@ -424,12 +449,16 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
             {
                 throw new InvalidOperationException($"llama-server exited with code {_process.ExitCode}.");
             }
+            if (sampleMemory is not null) await sampleMemory(cancellationToken);
 
             try
             {
-                using var response = await _httpClient.GetAsync($"{Endpoint}/health", cancellationToken);
+                using var healthTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                healthTimeout.CancelAfter(TimeSpan.FromSeconds(1));
+                using var response = await _httpClient.GetAsync($"{Endpoint}/health", healthTimeout.Token);
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
+                    if (sampleMemory is not null) await sampleMemory(cancellationToken);
                     log($"llama-server health OK: {Endpoint}");
                     log(RuntimeResourceDiagnostics.DescribeSnapshot(
                         "AI HUB core / llama-server",
@@ -447,7 +476,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 // Retry until the startup deadline.
             }
 
-            await Task.Delay(1000, cancellationToken);
+            await Task.Delay(sampleMemory is null ? 1000 : 250, cancellationToken);
         }
 
         throw new TimeoutException("llama-server health check timed out.");

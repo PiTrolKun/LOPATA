@@ -20,6 +20,12 @@ internal sealed record LiteraryModelMemoryMetadata(string Architecture, int Bloc
     public int SsmStateSize { get; init; }
     public int SsmGroupCount { get; init; }
     public int FullAttentionInterval { get; init; }
+    public int SlidingWindow { get; init; }
+    public IReadOnlyList<bool>? SlidingWindowPattern { get; init; }
+    public int SharedKvLayers { get; init; }
+    public long TensorDirectoryOffset { get; init; }
+    public ulong TensorCount { get; init; }
+    public int Alignment { get; init; } = 32;
     // The two-layer policy was validated for the installed dense hybrid Qwen backend.
     public bool SupportsRamReserve => Architecture == "qwen35" && BlockCount is >= 4 and <= 4096
         && PredictionLayers >= 0 && PredictionLayers < BlockCount - 2 && ModelContextTokens > 512;
@@ -37,12 +43,13 @@ internal sealed record LiteraryModelMemoryMetadata(string Architecture, int Bloc
         using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
         if (!stream.CanSeek || reader.ReadUInt32() != 0x46554747 || reader.ReadUInt32() is < 2 or > 3)
             throw new InvalidDataException("Invalid GGUF header for memory planning.");
-        _ = reader.ReadUInt64();
+        var tensorCount = reader.ReadUInt64();
         var count = reader.ReadUInt64();
         if (count > 10000) throw new InvalidDataException("Unreasonable GGUF metadata count.");
         string? architecture = null;
         var values = new Dictionary<string, ulong>(StringComparer.Ordinal);
         var arrays = new Dictionary<string, int[]>(StringComparer.Ordinal);
+        var patterns = new Dictionary<string, bool[]>(StringComparer.Ordinal);
         for (ulong index = 0; index < count; index++)
         {
             var key = ReadString(reader, 65536);
@@ -52,7 +59,27 @@ internal sealed record LiteraryModelMemoryMetadata(string Architecture, int Bloc
                 if (type != 8 || architecture is not null) throw new InvalidDataException("Invalid GGUF architecture.");
                 architecture = ReadString(reader, 128);
             }
-            else if (key.EndsWith(".block_count", StringComparison.Ordinal)
+            else if (key.EndsWith(".attention.sliding_window_pattern", StringComparison.Ordinal))
+            {
+                if (values.ContainsKey(key) || patterns.ContainsKey(key)) throw new InvalidDataException("Duplicate SWA pattern.");
+                // Older architectures encode a scalar interval instead of per-layer flags.
+                if (type is 4 or 10) values.Add(key, type == 4 ? reader.ReadUInt32() : reader.ReadUInt64());
+                else
+                {
+                    if (type != 9) throw new InvalidDataException("Invalid SWA pattern.");
+                    var element = reader.ReadUInt32(); var length = reader.ReadUInt64();
+                    if (element is not (4 or 7) || length is 0 or > 4096) throw new InvalidDataException("Invalid SWA pattern.");
+                    var pattern = new bool[(int)length];
+                    for (var layer = 0; layer < pattern.Length; layer++)
+                    {
+                        var value = element == 7 ? reader.ReadByte() : reader.ReadUInt32();
+                        if (value > 1) throw new InvalidDataException("Invalid SWA flag.");
+                        pattern[layer] = value == 1;
+                    }
+                    patterns.Add(key, pattern);
+                }
+            }
+            else if (key == "general.alignment" || key.EndsWith(".block_count", StringComparison.Ordinal)
                 || key.EndsWith(".context_length", StringComparison.Ordinal)
                 || key.EndsWith(".nextn_predict_layers", StringComparison.Ordinal))
             {
@@ -75,7 +102,9 @@ internal sealed record LiteraryModelMemoryMetadata(string Architecture, int Bloc
                 || key.EndsWith(".ssm.inner_size", StringComparison.Ordinal)
                 || key.EndsWith(".ssm.state_size", StringComparison.Ordinal)
                 || key.EndsWith(".ssm.group_count", StringComparison.Ordinal)
-                || key.EndsWith(".full_attention_interval", StringComparison.Ordinal))
+                || key.EndsWith(".full_attention_interval", StringComparison.Ordinal)
+                || key.EndsWith(".attention.sliding_window", StringComparison.Ordinal)
+                || key.EndsWith(".attention.shared_kv_layers", StringComparison.Ordinal))
             {
                 if (values.ContainsKey(key) || arrays.ContainsKey(key))
                     throw new InvalidDataException("Duplicate GGUF memory metadata.");
@@ -88,12 +117,16 @@ internal sealed record LiteraryModelMemoryMetadata(string Architecture, int Bloc
                     || key.EndsWith(".attention.head_count_kv", StringComparison.Ordinal)))
                 {
                     var element = reader.ReadUInt32(); var length = reader.ReadUInt64();
-                    if (element is not (4 or 10) || length is 0 or > 4096)
+                    // GGUF writers may use signed INT32 arrays for positive head counts;
+                    // b9442 accepts both INT32 and UINT32 in get_arr.
+                    if (element is not (4 or 5 or 10) || length is 0 or > 4096)
                         throw new InvalidDataException("Invalid per-layer attention dimensions.");
                     var dimensions = new int[(int)length];
                     for (var layer = 0; layer < dimensions.Length; layer++)
                     {
-                        var value = element == 4 ? reader.ReadUInt32() : reader.ReadUInt64();
+                        var signed = element == 5 ? reader.ReadInt32() : 0;
+                        if (signed < 0) throw new InvalidDataException("Negative per-layer attention dimension.");
+                        var value = element == 5 ? (ulong)signed : element == 4 ? reader.ReadUInt32() : reader.ReadUInt64();
                         if (value > 1_000_000) throw new InvalidDataException("Unreasonable per-layer attention dimension.");
                         dimensions[layer] = (int)value;
                     }
@@ -113,6 +146,9 @@ internal sealed record LiteraryModelMemoryMetadata(string Architecture, int Bloc
         if (prediction >= blocks) throw new InvalidDataException("Invalid GGUF prediction-layer count.");
         if (arrays.Any(pair => pair.Value.Length != (int)blocks))
             throw new InvalidDataException("Per-layer attention dimension count differs from block count.");
+        if (patterns.Any(pair => pair.Value.Length != (int)blocks)) throw new InvalidDataException("SWA pattern count differs from block count.");
+        var alignment = values.GetValueOrDefault("general.alignment", 32ul);
+        if (alignment is 0 or > 4096 || (alignment & (alignment - 1)) != 0) throw new InvalidDataException("Invalid GGUF alignment.");
         int Dimension(string suffix) => values.TryGetValue(architecture + suffix, out var value)
             && value is > 0 and <= 1_000_000 ? (int)value : 0;
         int[]? Layers(string suffix) => arrays.GetValueOrDefault(architecture + suffix);
@@ -132,7 +168,10 @@ internal sealed record LiteraryModelMemoryMetadata(string Architecture, int Bloc
             KeyLengthSwa = Dimension(".attention.key_length_swa"), ValueLengthSwa = Dimension(".attention.value_length_swa"),
             SsmConvKernel = Dimension(".ssm.conv_kernel"), SsmInnerSize = Dimension(".ssm.inner_size"),
             SsmStateSize = Dimension(".ssm.state_size"), SsmGroupCount = Dimension(".ssm.group_count"),
-            FullAttentionInterval = Dimension(".full_attention_interval")
+            FullAttentionInterval = Dimension(".full_attention_interval"), SlidingWindow = Dimension(".attention.sliding_window"),
+            SlidingWindowPattern = patterns.GetValueOrDefault(architecture + ".attention.sliding_window_pattern"),
+            SharedKvLayers = Dimension(".attention.shared_kv_layers"), TensorCount = tensorCount,
+            TensorDirectoryOffset = stream.Position, Alignment = (int)alignment
         };
     }
 

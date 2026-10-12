@@ -11,9 +11,10 @@ public sealed record LlamaRuntimeBundle(string Directory, string Backend, IReadO
 
 public sealed record LlamaRuntimeSelection(LlamaRuntimeBundle Bundle, RuntimeDevice? Device)
 {
+    public int? GpuLayerOverride { get; init; }
     public bool UsesGpu => Device is not null;
     public string DeviceId => Device?.Id ?? "none";
-    public int GpuLayers => UsesGpu ? 99 : 0;
+    public int GpuLayers => UsesGpu ? GpuLayerOverride ?? 99 : 0;
 }
 
 /// <summary>Each launch captures its own bundle and ordinal. Running processes are never switched by global state.</summary>

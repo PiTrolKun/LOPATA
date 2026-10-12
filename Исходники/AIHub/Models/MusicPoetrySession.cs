@@ -9,6 +9,7 @@ public sealed record MusicPoetryMessage(string Role, string Text, string TurnId)
 {
     public bool InContext { get; set; }
     public bool IsProgrammatic { get; set; }
+    public int ContextRevision { get; set; }
 }
 
 public sealed class MusicPoetrySession
@@ -62,11 +63,13 @@ public sealed class MusicPoetrySession
     }
     public void Apply(MusicPoetryReply reply)
     {
+        if (reply.Variation is not null || reply.Actions?.Contains("variation") == true)
+            throw new System.IO.InvalidDataException("Music.Poetry.TargetReadOnly");
         if (reply.Song is { } song) { CommitLyrics(); Lyrics = song; CommitLyrics(); }
-        if (reply.Parameters is not null || reply.Variation is not null)
+        if (reply.Parameters is not null)
         {
             CommitParameters();
-            Parameters = new(reply.Variation ?? Parameters.Variation, reply.Parameters ?? Parameters.Text);
+            Parameters = new(Parameters.Variation, reply.Parameters);
             CommitParameters();
         }
         PartialReply = "";

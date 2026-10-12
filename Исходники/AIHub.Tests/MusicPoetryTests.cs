@@ -152,7 +152,7 @@ public sealed class MusicPoetryTests
         s.NavigateLyrics(-1); s.Lyrics = "B edited"; s.NavigateLyrics(-1);
         Assert.AreEqual("A", s.Lyrics); CollectionAssert.AreEqual(new[] { "A", "B", "C", "B edited" }, s.LyricsSteps);
         Assert.AreEqual("p1", s.Parameters.Text); s.NavigateParameters(-1); Assert.AreEqual(p0, s.Parameters);
-        s.Apply(new("Discuss", "Model song", "model parameters", MusicDiffRhythmCatalog.Variation));
+        s.Apply(new("Discuss", "Model song", "model parameters", null));
         Assert.AreEqual("Model song", s.Lyrics); Assert.AreEqual("model parameters", s.Parameters.Text);
         Assert.IsTrue(s.LyricsSteps.Contains("C")); Assert.IsTrue(s.ParameterSteps.Any(p => p.Text == "p1"));
         Store.Save(s); Assert.AreEqual(s.LyricsCursor, Store.Load(s.Id).LyricsCursor);
@@ -192,9 +192,9 @@ public sealed class MusicPoetryTests
     public void ProtocolRoutesSongWithTagsAndRejectsBrokenOrUnknownFields()
     {
         var s = Session(); var song = "[Verse: MALE]\nРаз, два\n[Chorus]\nПрипев";
-        var reply = MusicPoetryProtocol.Parse(JsonSerializer.Serialize(new { chat = "Вот вариант.", song, parameters = "Style: rock", variation = MusicAceCatalog.Variation, actions = new[] { "song", "parameters", "variation" } }));
+        var reply = MusicPoetryProtocol.Parse(JsonSerializer.Serialize(new { chat = "Вот вариант.", song, parameters = "Style: rock", variation = (string?)null, actions = new[] { "song", "parameters" } }));
         s.Apply(reply); Assert.AreEqual(song, s.Lyrics); Assert.AreEqual("Вот вариант.", reply.Chat);
-        Assert.AreEqual(MusicAceCatalog.Variation, s.Parameters.Variation);
+        Assert.AreEqual(MusicStudioRuntime.Variation, s.Parameters.Variation);
         var original = s.Lyrics;
         Assert.Throws<JsonException>(() => MusicPoetryProtocol.Parse("{\"song\":\"partial"));
         Assert.ThrowsExactly<InvalidDataException>(() => MusicPoetryProtocol.Parse("{\"chat\":\"x\",\"song\":null,\"parameters\":null,\"variation\":\"unknown\"}"));
@@ -627,8 +627,8 @@ public sealed class MusicPoetryTests
             MusicPoetryProtocol.Parse(Routed("Done", "Old lyrics\nLine two", null))).Error);
         Assert.AreEqual("Music.Poetry.NoResult", MusicPoetryReplyGuard.Check(s,
             MusicPoetryProtocol.Parse(Routed("", null, null))).Error);
-        Assert.AreEqual("Music.Poetry.UndeclaredAction", MusicPoetryReplyGuard.Check(s,
-            MusicPoetryProtocol.Parse(Routed("", "New lyrics", null))).Error);
+        var undeclared = MusicPoetryReplyGuard.Check(s, MusicPoetryProtocol.Parse(Routed("", "New lyrics", null)));
+        Assert.IsNull(undeclared.Error); CollectionAssert.AreEqual(new[] { "song" }, undeclared.Changes);
         Assert.AreEqual("Old lyrics\nLine two", s.Lyrics);
     }
 
@@ -646,6 +646,30 @@ public sealed class MusicPoetryTests
         foreach (var actions in new[] { new[] { "shell" }, new[] { "song", "song" } })
             Assert.ThrowsExactly<InvalidDataException>(() => MusicPoetryProtocol.Parse(Routed("", "New", null, actions)));
     }
+
+    [TestMethod]
+    public Task IncompleteLegacyActionsApplyBothRealFieldsWithoutARepairAndRouteTheBrief() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new FakeRuntime { Reply = Routed("Отличная идея!", "[Verse]\nНовая песня",
+            "[Idea] Тема: Кот\n[Structure] Два куплета\n[Music] Жанр: Блюз", "song") };
+        var l = new LocalizationService(); l.Load("ru");
+        var w = new MusicPoetryWindow(() => new() { Lyrics = "Old poem" }, new(), UserContext(), l.T, "ru", Store, fake);
+        try
+        {
+            Model(w); Field<TextBox>(w, "_input").Text = "Давай улучшим песню для блюза";
+            ((Task)Call(w, "SendAsync")!).GetAwaiter().GetResult();
+            var session = Field<MusicPoetrySession>(w, "_session");
+            Assert.AreEqual(1, fake.Calls); Assert.AreEqual("[Verse]\nНовая песня", session.Lyrics);
+            var panel = Field<MusicPoetryBriefControl>(w, "_brief");
+            Assert.AreEqual("Тема: Кот", panel.Idea.Text); Assert.AreEqual("Два куплета", panel.Structure.Text);
+            Assert.AreEqual("Жанр: Блюз", panel.Music.Text);
+            CollectionAssert.AreEqual(new[] { "song", "parameters" }, session.ReplyAttempts.Single().Changes);
+            Assert.AreEqual(0, session.IncompleteReplies.Count);
+            var saved = Store.Load(session.Id); Assert.AreEqual(session.Lyrics, saved.Lyrics);
+            Assert.AreEqual(session.Parameters.Variation, saved.Parameters.Variation);
+        }
+        finally { w.Close(); }
+    });
 
     [TestMethod]
     public Task FailedClaimIsRepairedOnceAndOnlyVerifiedResultsEnterEditors() => ScenarioNavigationTests.Sta(() =>
@@ -670,6 +694,34 @@ public sealed class MusicPoetryTests
         Assert.AreEqual(1, s.IncompleteReplies.Count);
         var restored = Store.Load(s.Id); Assert.AreEqual(2, restored.ReplyAttempts.Count); Assert.AreEqual(s.ReplyAttempts[0].Raw, restored.ReplyAttempts[0].Raw);
         w.Close();
+    });
+
+    [TestMethod]
+    public Task EngineSwitchIsBlockedThenRepairCanUpdateOnlyTheGenrePanel() => ScenarioNavigationTests.Sta(() =>
+    {
+        var fake = new FakeRuntime();
+        fake.Replies.Enqueue(JsonSerializer.Serialize(new { chat = "Switched", song = "Do not apply",
+            parameters = "Do not apply", variation = MusicAceCatalog.Variation, actions = new[] { "variation" } }));
+        fake.Replies.Enqueue(Routed("", null, "[Music]\nЖанр: Upbeat Folk", "parameters"));
+        var l = new LocalizationService(); l.Load("ru");
+        var w = new MusicPoetryWindow(() => new() { Lyrics = "Keep original lyrics" }, new(), UserContext(), l.T, "ru", Store, fake);
+        try
+        {
+            Model(w); var s = Field<MusicPoetrySession>(w, "_session");
+            Field<TextBox>(w, "_input").Text = "Замени жанр на Upbeat Folk";
+            ((Task)Call(w, "SendAsync")!).GetAwaiter().GetResult();
+            Assert.AreEqual(2, fake.Calls);
+            Assert.AreEqual("Music.Poetry.TargetReadOnly", s.ReplyAttempts[0].Outcome);
+            Assert.AreEqual("applied", s.ReplyAttempts[1].Outcome);
+            Assert.AreEqual(MusicStudioRuntime.Variation, s.Parameters.Variation);
+            Assert.AreEqual("Keep original lyrics", s.Lyrics);
+            Assert.AreEqual("Жанр: Upbeat Folk", Field<MusicPoetryBriefControl>(w, "_brief").Music.Text);
+            var repair = s.Messages.Single(m => m.IsProgrammatic && m.Role == "user");
+            Assert.AreEqual(MusicPoetryProtocol.ContextRevision, repair.ContextRevision);
+            Assert.IsFalse(repair.Text.Contains(MusicAceCatalog.Variation));
+            Assert.AreEqual(repair.ContextRevision, Store.Load(s.Id).Messages.Single(m => m.IsProgrammatic && m.Role == "user").ContextRevision);
+        }
+        finally { w.Close(); }
     });
 
     [TestMethod]
@@ -767,7 +819,8 @@ public sealed class MusicPoetryTests
             result = MusicPoetryReplyGuard.Check(s, MusicPoetryProtocol.Parse(raw));
             await File.WriteAllTextAsync(Path.Combine(folder, "check-" + attempt + ".json"), JsonSerializer.Serialize(result));
             if (result.Error is null) break;
-            s.Messages.Add(new("user", string.Format(l.T("Music.Poetry.RepairRequest"), l.T(result.Error)), s.Messages[^1].TurnId) { IsProgrammatic = true });
+            s.Messages.Add(new("user", string.Format(l.T("Music.Poetry.RepairRequest"), l.T(result.Error)), s.Messages[^1].TurnId)
+                { IsProgrammatic = true, ContextRevision = MusicPoetryProtocol.ContextRevision });
         }
         if (result!.Error is null)
         {

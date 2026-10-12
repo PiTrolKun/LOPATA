@@ -23,6 +23,19 @@ public sealed class MusicPoetryBriefTests
     }
     private const string Legacy = "Название: Кот\nКомментарий: Смешной рассказ\nЖелаемая длительность: Автоматически\nВарианты: 3\nФормат: Opus\nПожелания: blues, guitar\nБез хора: Нет\nТекущие настройки музыкального движка:\ncot = 0\nsteps = 32\nseed = -1\nabc_sampling.temperature = 0.7\nsemantic_sampling.max_tokens = 9000\nКомпозиция и исполнение:\n{\"Profile\":\"YuE\",\"Pins\":[],\"X\":0}\nМоя особая просьба: припев шёпотом";
 
+    [TestMethod] public void InlineExplicitHeadingsRouteMusicWithoutLosingTheBrief()
+    {
+        var text = "[Idea]: Кот учится говорить\n[Structure]: Куплет и припев [Music]: Heavy Metal, guitar";
+        var brief = MusicPoetryBrief.Parse(text);
+        Assert.AreEqual("Кот учится говорить", brief.Idea);
+        Assert.AreEqual("Куплет и припев", brief.Structure);
+        Assert.AreEqual("Heavy Metal, guitar", brief.Music);
+        Assert.AreEqual(brief, MusicPoetryBrief.Parse(brief.ToText()));
+        var literal = MusicPoetryBrief.Parse("[Idea]: Обсудить тег [Music] и образ [Moon]: ночь");
+        Assert.AreEqual("Обсудить тег [Music] и образ [Moon]: ночь", literal.Idea);
+        Assert.AreEqual("", literal.Music);
+    }
+
     [TestMethod] public void LegacyTechnicalNoiseIsExcludedButFreeWishesAndOriginalTextSurvive()
     {
         var brief = MusicPoetryBrief.Parse(Legacy);

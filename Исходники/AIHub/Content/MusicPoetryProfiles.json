@@ -1,0 +1,159 @@
+[
+  {
+    "id": "kaine",
+    "displayName": "KAINE Qwen3.5 · 4B",
+    "repositoryId": "kaineone/Qwen3.5-4B-abliterated-GGUF",
+    "revision": "551991a575c1d4221ca0f0cfca74037d26268411",
+    "architecture": "qwen35",
+    "format": "gguf",
+    "parameterCount": 4000000000,
+    "reviewKey": "Kaine",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "relativePath": "KAINE-Qwen3.5-4B-abliterated.Q4_K_M.gguf",
+        "sourceUrl": "https://huggingface.co/kaineone/Qwen3.5-4B-abliterated-GGUF/resolve/551991a575c1d4221ca0f0cfca74037d26268411/KAINE-Qwen3.5-4B-abliterated.Q4_K_M.gguf",
+        "sizeBytes": 2783446336,
+        "sha256": "6505da672f3e1a5946bc7c4675328a06f79280b470b9fe6db63833a3df2e1d43",
+        "purpose": "main_model"
+      }
+    ],
+    "temperature": 0.7,
+    "topP": 0.8,
+    "topK": 20,
+    "minP": 0,
+    "repeatPenalty": 1.0,
+    "presencePenalty": 1.5
+  },
+  {
+    "id": "abliterated",
+    "displayName": "Qwen3.5 Abliterated · 9B",
+    "repositoryId": "Abiray/Qwen3.5-9B-abliterated-GGUF",
+    "revision": "b52ba3767bde3e4f905474d15038497abe8c8cf3",
+    "architecture": "qwen35",
+    "format": "gguf",
+    "parameterCount": 9000000000,
+    "reviewKey": "Abliterated",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "relativePath": "Qwen3.5-9B-abliterated-Q4_K_M.gguf",
+        "sourceUrl": "https://huggingface.co/Abiray/Qwen3.5-9B-abliterated-GGUF/resolve/b52ba3767bde3e4f905474d15038497abe8c8cf3/Qwen3.5-9B-abliterated-Q4_K_M.gguf",
+        "sizeBytes": 5627044704,
+        "sha256": "bdefbc456a4a49ac5e6d1df40de2d64626e9bb95ab2997e6b8daea687cedf20f",
+        "purpose": "main_model"
+      }
+    ],
+    "temperature": 0.7,
+    "topP": 0.8,
+    "topK": 20,
+    "minP": 0,
+    "repeatPenalty": 1.0,
+    "presencePenalty": 1.5
+  },
+  {
+    "id": "katarau",
+    "displayName": "Katarau · 9B",
+    "repositoryId": "mradermacher/Katarau-9B-ru-RP-nsfw-GGUF",
+    "revision": "621d15fea7e8f26a1f4d6b22797df7fdfa776761",
+    "architecture": "qwen35",
+    "format": "gguf",
+    "parameterCount": 9000000000,
+    "reviewKey": "Katarau",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "relativePath": "Katarau-9B-ru-RP-nsfw.Q4_K_M.gguf",
+        "sourceUrl": "https://huggingface.co/mradermacher/Katarau-9B-ru-RP-nsfw-GGUF/resolve/621d15fea7e8f26a1f4d6b22797df7fdfa776761/Katarau-9B-ru-RP-nsfw.Q4_K_M.gguf",
+        "sizeBytes": 5629102432,
+        "sha256": "521bcbd1430bfcc72bb583fd45ea7247f549e353720c08f79d8ae530dc3e0864",
+        "purpose": "main_model"
+      }
+    ],
+    "temperature": 0.65,
+    "topP": 0.95,
+    "topK": 40,
+    "minP": 0.05,
+    "repeatPenalty": 1.05,
+    "presencePenalty": 0
+  },
+  {
+    "id": "hydra",
+    "displayName": "Hydra · Mistral Nemo 12B",
+    "repositoryId": "limloop/MN-12B-Hydra-RP-RU-GGUF",
+    "revision": "7a11c680fccfda789be8201e41e5d2ed6c3c95e8",
+    "architecture": "llama",
+    "format": "gguf",
+    "parameterCount": 12000000000,
+    "reviewKey": "Hydra",
+    "specializationKey": "LiteraryBasis",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "relativePath": "MN-12B-Hydra-RP-RU.Q4_K_M.gguf",
+        "sourceUrl": "https://huggingface.co/limloop/MN-12B-Hydra-RP-RU-GGUF/resolve/7a11c680fccfda789be8201e41e5d2ed6c3c95e8/MN-12B-Hydra-RP-RU.Q4_K_M.gguf",
+        "sizeBytes": 7477218912,
+        "sha256": "5170aee1ad06c0b4005b0cc796eca5e2f405d68a8a80631b8cac9cdb70056a3d",
+        "purpose": "main_model"
+      }
+    ],
+    "temperature": 0.7,
+    "topP": 0.95,
+    "topK": 40,
+    "minP": 0,
+    "repeatPenalty": 1.0,
+    "presencePenalty": 0
+  },
+  {
+    "id": "runeweaver",
+    "displayName": "Runeweaver · Mistral Nemo 12B",
+    "repositoryId": "limloop/MN-12B-Runeweaver-RP-RU-GGUF",
+    "revision": "84fa96954eef3eec4e92433e133c5bb1c774fc22",
+    "architecture": "llama",
+    "format": "gguf",
+    "parameterCount": 12000000000,
+    "reviewKey": "Runeweaver",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "relativePath": "MN-12B-Runeweaver-RP-RU.Q4_K_M.gguf",
+        "sourceUrl": "https://huggingface.co/limloop/MN-12B-Runeweaver-RP-RU-GGUF/resolve/84fa96954eef3eec4e92433e133c5bb1c774fc22/MN-12B-Runeweaver-RP-RU.Q4_K_M.gguf",
+        "sizeBytes": 7477218976,
+        "sha256": "75b3107399b2f813b7ae0b98758e65aa5694b4de38b7576636e661c98506a565",
+        "purpose": "main_model"
+      }
+    ],
+    "temperature": 0.8,
+    "topP": 0.95,
+    "topK": 40,
+    "minP": 0,
+    "repeatPenalty": 1.05,
+    "presencePenalty": 0
+  },
+  {
+    "id": "gemma-poetry",
+    "displayName": "Gemma 4 Russian Poetry · 31B",
+    "repositoryId": "godmode/gemma4-31b-russian-poetry",
+    "revision": "f25b0f358692c4f1dc99c4dde1310ae04dad9027",
+    "architecture": "gemma4",
+    "format": "gguf",
+    "parameterCount": 31000000000,
+    "reviewKey": "GemmaPoetry",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "relativePath": "gemma4_rap_q4_k_m.gguf",
+        "sourceUrl": "https://huggingface.co/godmode/gemma4-31b-russian-poetry/resolve/f25b0f358692c4f1dc99c4dde1310ae04dad9027/gemma4_rap_q4_k_m.gguf",
+        "sizeBytes": 18687061504,
+        "sha256": "e3449d9bf787544fc718eb49a4a3e3444bcd4ba6df067b03477952a9a4973b2f",
+        "purpose": "main_model"
+      }
+    ],
+    "temperature": 1.0,
+    "topP": 0.95,
+    "topK": 64,
+    "minP": 0,
+    "repeatPenalty": 1.2,
+    "presencePenalty": 0
+  }
+]

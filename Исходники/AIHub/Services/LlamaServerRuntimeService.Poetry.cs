@@ -7,7 +7,29 @@ namespace AIHub.Services;
 
 public sealed partial class LlamaServerRuntimeService
 {
-    internal Task RetirePoetryAsync() => ModelProcessRetirement.StopAsync(_process, Stop);
+    private int? _poetryContextTokens;
+    private LlamaStartupJournal? _poetryJournal;
+    private LlamaStartupPlacement? _poetryPlacement;
+    private bool _poetryCanResize;
+    private int RequestedContextTokens => _poetryContextTokens ?? CoreContextRuntimeLimits.CurrentBackendContextLimit;
+    internal async Task<int> PreparePoetryAsync(DebugModelInfo model, CancellationToken token)
+    {
+        var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token);
+        var capacity = Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);
+        await RetirePoetryAsync();
+        _poetryContextTokens = capacity;
+        _poetryJournal = new(); _poetryCanResize = true;
+        _poetryJournal.Record("begin", new { model = model.Name, model.Path, capacity });
+        try { await PrepareAsync(model, text => _poetryJournal.Record("runtime", text), token); }
+        finally { _poetryCanResize = false; }
+        return RequestedContextTokens;
+    }
+    internal async Task RetirePoetryAsync()
+    {
+        await ModelProcessRetirement.StopAsync(_process, Stop);
+        await Task.WhenAll(_stderrPumpTask, _stdoutPumpTask);
+        _poetryJournal?.Record("retired", null);
+    }
     internal async Task<int> CountPoetryAsync(string system, IReadOnlyList<MusicPoetryMessage> messages, CancellationToken token)
     {
         using var template = new StringContent(JsonSerializer.Serialize(new {

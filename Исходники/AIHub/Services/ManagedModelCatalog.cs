@@ -44,7 +44,8 @@ public static partial class ManagedModelCatalog
             CreateKokoroEnglish(modelsRoot),
             CreateKokoroRussian(modelsRoot),
             .. ImageGenerationCatalog.CreateCards(modelsRoot),
-            .. MusicComponentCatalog.CreateCards(modelsRoot)
+            .. MusicComponentCatalog.CreateCards(modelsRoot),
+            .. MusicPoetryProfileCatalog.Cards(modelsRoot)
         ];
     }
 

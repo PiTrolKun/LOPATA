@@ -22,7 +22,7 @@ public sealed class MusicPoetryModelSelectionTests
     [TestMethod]
     public void CatalogRequiresExactCandidateArchitectureAndUsableMetadata()
     {
-        foreach (var candidate in MusicPoetryModelCatalog.All)
+        foreach (var candidate in MusicPoetryModelCatalog.All.Where(c => c.Format == "gguf"))
             Assert.IsTrue(MusicPoetryModelCatalog.IsCompatible(Write(candidate.FileName, candidate.Architecture)));
         Assert.IsFalse(MusicPoetryModelCatalog.IsCompatible(Write("Krea-2-Turbo-Q6_K.gguf", "krea2")));
         Assert.IsFalse(MusicPoetryModelCatalog.IsCompatible(Write("Qwen3VL-4B-Instruct-Q4_K_M.gguf", "qwen3vl")));

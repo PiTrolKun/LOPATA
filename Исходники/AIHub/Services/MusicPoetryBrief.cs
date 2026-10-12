@@ -31,24 +31,20 @@ public sealed record MusicPoetryBrief(string Idea, string Structure, string Musi
         return new(string.Join("\n", idea), string.Join("\n", structure), string.Join("\n", music));
     }
 
-    public static MusicPoetryBrief Parse(string text)
+    public static MusicPoetryBrief Parse(string text) => MusicPoetryBriefParser.Parse(Filter(text));
+
+    // Remove only an exact trailing copy of a known song, never interpret new verse text as an edit.
+    internal static string RemoveRepeatedSong(string text, params string?[] songs)
     {
-        var parts = new[] { new List<string>(), new List<string>(), new List<string>() }; var topic = 2;
-        foreach (var line in Filter(text).Split('\n'))
+        var normalized = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Trim();
+        foreach (var song in songs.Where(song => !string.IsNullOrWhiteSpace(song)))
         {
-            var value = line.Trim();
-            var heading = value.TrimEnd(':').ToLowerInvariant();
-            var section = heading switch {
-                "[idea]" or "идея песни" or "song idea" => 0,
-                "[structure]" or "текст и структура" or "lyrics and structure" => 1,
-                "[music]" or "музыка и исполнение" or "music and performance" or "музыкальные параметры" or "musical parameters" => 2,
-                _ => -1 };
-            if (section >= 0) { topic = section; continue; }
-            var routed = Regex.IsMatch(value, @"^(Название|Исполнитель|Комментарий|Title|Artist|Comment|Music\.Output\.(Title|Artist|Comment))\s*:", RegexOptions.IgnoreCase) ? 0
-                : Regex.IsMatch(value, @"^(Язык|Рифма|Структура|Language|Rhyme|Structure|vocal_language)\s*[:=]", RegexOptions.IgnoreCase) ? 1 : topic;
-            parts[routed].Add(line);
+            var copy = song!.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Trim();
+            if (normalized.Equals(copy, StringComparison.Ordinal)) return "";
+            if (normalized.EndsWith("\n" + copy, StringComparison.Ordinal))
+                return normalized[..^(copy.Length + 1)].TrimEnd();
         }
-        return new(string.Join("\n", parts[0]).Trim(), string.Join("\n", parts[1]).Trim(), string.Join("\n", parts[2]).Trim());
+        return text;
     }
 
     // Only known service fields are removed; arbitrary free-form wishes stay intact.

@@ -11,16 +11,22 @@ using Orientation = System.Windows.Controls.Orientation;
 namespace AIHub.Controls;
 
 /// <summary>Songwriting selection with visible provenance and separate user/technical assessments.</summary>
-public sealed class MusicPoetryModelWindow : Window
+public sealed partial class MusicPoetryModelWindow : Window
 {
     private readonly Dictionary<string, string> _dirtyComments = [];
     private readonly DispatcherTimer _saveComments = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private readonly Func<bool> _flushComments;
-    public bool SaveForExit() => _flushComments();
+    public bool SaveForExit() { _downloadCancel?.Cancel(); return _flushComments(); }
     public MusicPoetryModelWindow(IReadOnlyList<MusicPoetryModelChoice> choices, string? currentPath,
-        Func<string, string> localize, Action<DebugModelInfo> select, MusicPoetryPreferences? preferences = null)
+        Func<string, string> localize, Action<DebugModelInfo> select, MusicPoetryPreferences? preferences = null,
+        Func<MusicPoetryModelCandidate, IProgress<ManagedModelDownloadProgress>, CancellationToken, Task<DebugModelInfo>>? download = null,
+        Func<MusicPoetryModelCandidate, long>? remove = null, Func<MusicPoetryModelCandidate, bool>? hasFiles = null)
     {
         string L(string key) => localize("Music.Poetry.Selection." + key);
+        _download = download; _downloadLocalize = L;
+        _remove = remove; _hasFiles = hasFiles;
+        _selectedPath = currentPath;
+        _localizeDownloadError = message => message.StartsWith("Music.", StringComparison.Ordinal) ? localize(message) : message;
         Title = L("Title"); Width = 850; Height = 710; MinWidth = 480; MinHeight = 320;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         UseLayoutRounding = true; SetResourceReference(FontSizeProperty, "UiBodyFontSize");
@@ -31,6 +37,10 @@ public sealed class MusicPoetryModelWindow : Window
         DockPanel.SetDock(header, Dock.Top); root.Children.Add(header);
         var footer = new DockPanel();
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
+        var downloadFooter = new StackPanel(); DockPanel.SetDock(downloadFooter, Dock.Bottom); root.Children.Add(downloadFooter);
+        _downloadStatus.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
+        _downloadStatus.TextWrapping = TextWrapping.Wrap;
+        downloadFooter.Children.Add(_downloadStatus); downloadFooter.Children.Add(_downloadProgress);
         var close = MakeButton(L("Close"), "Close"); close.Click += (_, _) => Close();
         DockPanel.SetDock(close, Dock.Right); footer.Children.Add(close);
         var status = Text(""); status.Margin = new(0, 4, 12, 0); footer.Children.Add(status);
@@ -51,14 +61,27 @@ public sealed class MusicPoetryModelWindow : Window
             && (!choice.Candidate.InstalledOnly || choice.Model is not null)))
         {
             var candidate = choice.Candidate;
+            var available = choice.Model;
             var current = choice.Model is not null && choice.Model.Path.Equals(currentPath, StringComparison.OrdinalIgnoreCase);
             var body = new StackPanel();
-            var name = Text((candidate.Id == "executor" ? "sm54/Qwen3.6-27B-Q4_K_M-GGUF" : candidate.FileName)
+            var name = Text(candidate.DisplayName ?? (candidate.Id == "executor" ? "sm54/Qwen3.6-27B-Q4_K_M-GGUF" : candidate.FileName)
                 + (candidate.Id == "core" ? " · " + L("Core") : ""));
             name.FontWeight = FontWeights.SemiBold; name.FontSize = 18; name.Margin = new(0, 0, 52, 0);
+            var cardHeader = new StackPanel(); cardHeader.Children.Add(name);
+            if (candidate.SpecializationKey is { } specialization)
+            {
+                var label = Text(localize("Music.Poetry.Specialization." + specialization), true);
+                label.Margin = new(0, 0, 52, 0);
+                AutomationProperties.SetAutomationId(label, "Music.Poetry.Specialization." + candidate.Id);
+                cardHeader.Children.Add(label);
+            }
             if (candidate.Id == "core") body.Children.Add(Text(L("Purpose.Core"), true));
-            body.Children.Add(Text(L("Review." + candidate.ReviewKey)));
-            if (choice.Model is null) body.Children.Add(Text(L("Unavailable"), true));
+            body.Children.Add(Text(candidate.DownloadBytes > 0 ? localize("Music.Poetry.Profile." + candidate.ReviewKey) : L("Review." + candidate.ReviewKey)));
+            if (candidate.DownloadBytes > 0) body.Children.Add(Text(string.Format(L("DownloadSize"),
+                FormatDownloadSize(candidate.DownloadBytes)), true));
+            var unavailable = Text(L(candidate.DownloadBytes > 0 ? "ProfileUnavailable" : "Unavailable"), true);
+            unavailable.Visibility = choice.Model is null ? Visibility.Visible : Visibility.Collapsed;
+            body.Children.Add(unavailable);
             body.Children.Add(Text(L("Comment"), true));
             var comment = new System.Windows.Controls.TextBox { Text = state.Comments.GetValueOrDefault(candidate.Id, ""),
                 AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 65, MaxHeight = 160,
@@ -74,13 +97,45 @@ public sealed class MusicPoetryModelWindow : Window
             var button = MakeButton(L(current ? "Current" : "Select"), candidate.Id);
             button.IsEnabled = choice.Model is not null && !current;
             button.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
-            button.Click += (_, _) => { if (choice.Model is not null) select(choice.Model); };
-            body.Children.Add(button);
-            var expander = new Expander { Header = name, Content = body, IsExpanded = favorite == candidate.Id };
+            button.Click += (_, _) => { if (available is not null && !IsDownloading) { select(available); RefreshSelection(available.Path); } };
+            _modelActions.Add(button);
+            var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
+            Button? downloadButton = null;
+            if (candidate.DownloadBytes > 0 && download is not null)
+            {
+                downloadButton = MakeButton(L("Download"), "Download." + candidate.Id);
+                downloadButton.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
+                downloadButton.Visibility = available is null ? Visibility.Visible : Visibility.Collapsed;
+                downloadButton.Click += async (_, _) => await DownloadAsync(candidate, downloadButton, model => {
+                    available = model; installed.Add(candidate.Id); unavailable.Visibility = Visibility.Collapsed;
+                    button.Content = L("Select"); button.IsEnabled = true; downloadButton.Visibility = Visibility.Collapsed;
+                    RefreshStars(); RefreshRemoveButtons(); RefreshSelection(_selectedPath);
+                });
+                _downloadButtons.Add(downloadButton); actions.Children.Add(downloadButton);
+            }
+            if (MusicPoetryProfileCatalog.Find(candidate.Id) is not null && remove is not null)
+            {
+                var removeButton = MakeButton("🗑", "Remove." + candidate.Id);
+                removeButton.ToolTip = localize("Music.Models.Remove.Action");
+                AutomationProperties.SetName(removeButton, (string)removeButton.ToolTip);
+                removeButton.Margin = new(8, 4, 8, 0); _modelActions.Add(removeButton);
+                removeButton.Click += (_, _) => RemoveProfile(candidate, localize, () => {
+                    if (available?.Path.Equals(_selectedPath, StringComparison.OrdinalIgnoreCase) == true) _selectedPath = null;
+                    available = null; installed.Remove(candidate.Id); unavailable.Visibility = Visibility.Visible;
+                    button.Content = L("Select"); button.IsEnabled = false;
+                    if (downloadButton is not null) downloadButton.Visibility = Visibility.Visible;
+                    if (favorite == candidate.Id) { store.SetFavorite(null); favorite = null; }
+                    RefreshStars(); RefreshSelection(_selectedPath);
+                });
+                _removeButtons.Add((candidate, removeButton)); actions.Children.Add(removeButton);
+            }
+            actions.Children.Add(button); body.Children.Add(actions);
+            var expander = new Expander { Header = cardHeader, Content = body, IsExpanded = favorite == candidate.Id,
+                Tag = candidate.SpecializationKey };
             expander.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
             AutomationProperties.SetAutomationId(expander, "Music.Poetry.ModelCard." + candidate.Id);
             expanders[candidate.Id] = expander;
-            var card = new Grid { Margin = new(0, 0, 0, 12) }; card.Children.Add(expander);
+            var card = new Grid(); card.Children.Add(expander);
             var star = MakeButton("☆", "Favorite." + candidate.Id);
             star.Width = star.Height = 36; star.Padding = new(0); star.FontSize = 24;
             star.HorizontalAlignment = System.Windows.HorizontalAlignment.Right; star.VerticalAlignment = VerticalAlignment.Top;
@@ -95,12 +150,18 @@ public sealed class MusicPoetryModelWindow : Window
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 { status.Text = L("PreferencesError") + " " + ex.Message; }
             };
-            stars[candidate.Id] = star; card.Children.Add(star); cards.Children.Add(card);
+            stars[candidate.Id] = star; card.Children.Add(star);
+            var frame = new Border { Child = card, CornerRadius = new(12), Margin = new(0, 0, 0, 12), BorderThickness = new(2) };
+            AutomationProperties.SetAutomationId(frame, "Music.Poetry.SelectedCard." + candidate.Id);
+            _selectionCards.Add((frame, name, button, expander, () => available)); cards.Children.Add(frame);
         }
-        RefreshStars();
+        RefreshStars(); RefreshRemoveButtons(); RefreshSelection(currentPath);
         _flushComments = SaveComments;
         _saveComments.Tick += (_, _) => SaveComments();
-        Closing += (_, e) => { if (!SaveComments()) e.Cancel = true; };
+        Closing += (_, e) => {
+            if (!SaveComments()) { e.Cancel = true; return; }
+            if (IsDownloading) { _closeAfterDownload = true; _downloadCancel?.Cancel(); e.Cancel = true; }
+        };
         Closed += (_, _) => _saveComments.Stop();
         bool SaveComments()
         {

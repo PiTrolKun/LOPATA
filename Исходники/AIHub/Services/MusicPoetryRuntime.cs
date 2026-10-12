@@ -32,8 +32,8 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
             var estimated = model.Format.Equals("chatllm", StringComparison.OrdinalIgnoreCase);
             var capacity = estimated ? 8192 : Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit,
                 (await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token)).ModelContextTokens);
+            if (!estimated) capacity = await _llama.PreparePoetryAsync(model, token);
             var reserve = estimated ? 4096 : Math.Min(4096, capacity / 3);
-            if (!estimated) await _llama.PrepareAsync(model, _ => { }, token);
             var context = await MusicPoetryContextWindow.BuildAsync(request, guidance, capacity, reserve,
                 estimated ? (system, messages) => Task.FromResult(MusicPoetryContextWindow.Estimate(system, messages))
                     : (system, messages) => _llama.CountPoetryAsync(system, messages, token), estimated);
@@ -44,10 +44,14 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
                 truncated: content => throw new MusicPoetryIncompleteReply(content));
                 return binReply;
             }
+            var profile = MusicPoetryProfileCatalog.Find(MusicPoetryModelCatalog.Find(model)!.Id);
             var payload = JsonSerializer.Serialize(new {
                 model = "local", messages = new[] { new { role = "system", content = context.System } }
                     .Concat(context.Messages.Select(m => new { role = m.Role, content = m.Text })).ToArray(),
-                max_tokens = reserve, temperature = .8, top_p = .95, stream = false, cache_prompt = false,
+                max_tokens = reserve, temperature = profile?.Temperature ?? .8, top_p = profile?.TopP ?? .95,
+                top_k = profile?.TopK ?? 40, min_p = profile?.MinP ?? 0,
+                repeat_penalty = profile?.RepeatPenalty ?? 1, presence_penalty = profile?.PresencePenalty ?? 0,
+                stream = false, cache_prompt = false,
                 chat_template_kwargs = new { enable_thinking = false }, response_format = assemble ? MusicPoetryProtocol.AssemblySchema : MusicPoetryProtocol.Schema
             });
             var response = await _llama.GeneratePrivateJsonAsync(model, payload, token);
