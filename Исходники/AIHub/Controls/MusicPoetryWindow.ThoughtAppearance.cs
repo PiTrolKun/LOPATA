@@ -37,6 +37,7 @@ public sealed partial class MusicPoetryWindow
 
     private void OpenThoughtScale()
     {
+        CloseCreativity();
         if (!_reasoning.IsEnabled || _viewClosed || !_view.IsVisible) return;
         if (_thoughtScalePopup?.IsOpen == true) { CloseThoughtScale(); return; }
         _reasoning.ContextMenu?.SetCurrentValue(ContextMenu.IsOpenProperty, false);

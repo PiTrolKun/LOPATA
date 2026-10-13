@@ -8,7 +8,7 @@ public interface IMusicPoetryRuntime : IDisposable
     Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
         Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null,
         Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null,
-        MusicPoetryReasoningPreference? reasoningPreference = null);
+        MusicPoetryReasoningPreference? reasoningPreference = null, double? temperature = null);
 }
 
 public sealed class MusicPoetryIncompleteReply(string reply) : IOException("Music.Poetry.Truncated")
@@ -24,11 +24,12 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
     public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
         Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null,
         Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null,
-        MusicPoetryReasoningPreference? reasoningPreference = null)
+        MusicPoetryReasoningPreference? reasoningPreference = null, double? temperature = null)
     {
         if (!File.Exists(model.Path)) throw new FileNotFoundException("Music.Poetry.ModelMissing");
         if (!MusicPoetryModelCatalog.IsCompatible(model)) throw new InvalidDataException("Music.Poetry.ModelUnsupported");
         var reasoning = MusicPoetryReasoning.Resolve(model, reasoningMode, reasoningPreference);
+        var creativity = MusicPoetryCreativity.Resolve(model, temperature);
         try
         {
             // Library inventory IDs are not license IDs; use the same component as the original scenario.
@@ -50,7 +51,7 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
                 return binReply;
             }
             var streaming = reasoning.Enabled && reasoningProgress is not null;
-            var payload = MusicPoetryGeneration.Payload(model, context, reserve, reasoning, assemble, streaming);
+            var payload = MusicPoetryGeneration.Payload(model, context, reserve, reasoning, assemble, streaming, creativity);
             if (streaming)
             {
                 var result = await _llama.GeneratePoetryStreamAsync(model, payload, reasoningProgress!, token);

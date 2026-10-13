@@ -139,14 +139,16 @@ public sealed partial class MusicPoetryWindow
     private void Availability()
     {
         var occupied = _background?.IsRunning == true || _background?.HasPending == true;
-        _send.IsEnabled = !IsWorking && !occupied && _model is not null && !string.IsNullOrWhiteSpace(_input.Text) && !_saveFailed && !_reasoningFailed;
+        _send.IsEnabled = !IsWorking && !occupied && _model is not null && !string.IsNullOrWhiteSpace(_input.Text) && !_saveFailed && !_reasoningFailed && !_creativityFailed;
         _send.ToolTip = occupied && !IsWorking ? L("OtherOperation") : L("Send");
-        _assemble.IsEnabled = !IsWorking && !occupied && _model is not null && !_saveFailed && !_reasoningFailed
+        _assemble.IsEnabled = !IsWorking && !occupied && _model is not null && !_saveFailed && !_reasoningFailed && !_creativityFailed
             && (!string.IsNullOrWhiteSpace(_input.Text) || !string.IsNullOrWhiteSpace(_lyrics.Text) || _session.Messages.Any(m => m.Role == "user"));
         _assemble.ToolTip = occupied && !IsWorking ? L("OtherOperation") : L("AssemblyHint");
         _models.IsEnabled = _sessions.IsEnabled = _new.IsEnabled = !IsWorking;
         // Display scale remains available while generation runs; the mode menu is separately guarded.
         _reasoning.IsEnabled = MusicPoetryReasoning.Supports(_model);
+        _creativity.IsEnabled = !IsWorking && !occupied && MusicPoetryCreativity.ModelId(_model) is not null;
+        if (!_creativity.IsEnabled) CloseCreativity();
         if (IsWorking || occupied) _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false);
         if (!_reasoning.IsEnabled) _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false);
         if (_modelSelector is not null) _modelSelector.IsEnabled = !IsWorking;

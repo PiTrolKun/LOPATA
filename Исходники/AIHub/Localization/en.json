@@ -4887,5 +4887,11 @@
   "Music.Poetry.ReasoningPreserve": "Include previous thoughts",
   "Music.Poetry.Selection.ReasoningBadgeFixed": "Thinking is supported: on/off with a fixed {0} token limit. The icon shows the model capability regardless of the current choice.",
   "Music.Poetry.Selection.ReasoningBadgeExtended": "Thinking is supported: on/off. II means two limit steps: 2048 or 4096 tokens. Previous thoughts can be included. This is not a quality rating.",
-  "Music.Poetry.Selection.ReasoningBadgeEffort": "Two effort levels: medium and xhigh."
+  "Music.Poetry.Selection.ReasoningBadgeEffort": "Two effort levels: medium and xhigh.",
+  "Music.Poetry.Creativity": "Creativity level",
+  "Music.Poetry.CreativityShort": "Creativity",
+  "Music.Poetry.CreativityHint": "Lower values make replies more predictable; higher values add variety. Quality depends on the model and task. Your choice is saved separately for each model.",
+  "Music.Poetry.CreativityInputHint": "From 0.1 to 2. Enter a number and press Enter or Apply.",
+  "Music.Poetry.CreativityInvalid": "Enter a number from 0.1 to 2. A comma or period is accepted.",
+  "Music.Poetry.Creativity.Apply": "Apply"
 }

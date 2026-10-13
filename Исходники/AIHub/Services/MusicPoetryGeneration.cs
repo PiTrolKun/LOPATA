@@ -7,12 +7,12 @@ namespace AIHub.Services;
 internal static class MusicPoetryGeneration
 {
     internal static string Payload(DebugModelInfo model, MusicPoetryContext context, int reserve,
-        MusicPoetryReasoningOptions reasoning, bool assemble, bool stream = false)
+        MusicPoetryReasoningOptions reasoning, bool assemble, bool stream = false, double? temperature = null)
     {
         var profile = MusicPoetryProfileCatalog.Find(MusicPoetryModelCatalog.Find(model)!.Id);
         return JsonSerializer.Serialize(new {
             model = "local", messages = MusicPoetryReasoningHistory.Messages(context.System, context.Messages),
-            max_tokens = reserve, temperature = profile?.Temperature ?? .8, top_p = profile?.TopP ?? .95,
+            max_tokens = reserve, temperature = MusicPoetryCreativity.Resolve(model, temperature), top_p = profile?.TopP ?? .95,
             top_k = profile?.TopK ?? 40, min_p = profile?.MinP ?? 0,
             repeat_penalty = profile?.RepeatPenalty ?? 1, presence_penalty = profile?.PresencePenalty ?? 0,
             stream, cache_prompt = false,

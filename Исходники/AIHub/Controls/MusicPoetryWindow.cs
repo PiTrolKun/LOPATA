@@ -34,7 +34,7 @@ public sealed partial class MusicPoetryWindow : Window
     private readonly TextBlock _status = Label(""), _lyricsStep = Label(""), _parameterStep = Label("");
     private readonly System.Windows.Controls.ProgressBar _memory = new() { Width = 200, Height = 10, Minimum = 0, Maximum = 100 };
     private readonly TextBlock _memoryIcon = Label("🧠");
-    private readonly Button _send, _assemble, _reasoning, _models, _sessions, _new, _partial, _lyricsPrevious, _lyricsNext, _parameterPrevious, _parameterNext;
+    private readonly Button _send, _assemble, _reasoning, _creativity, _models, _sessions, _new, _partial, _lyricsPrevious, _lyricsNext, _parameterPrevious, _parameterNext;
     private readonly TextBlock _memoryCount = Label("");
     private MusicPoetryTokenPreview? _tokenPreview;
     private int _previewVersion;
@@ -100,6 +100,8 @@ public sealed partial class MusicPoetryWindow : Window
         resizeInput.SetResourceReference(BackgroundProperty, "LineBrush"); Grid.SetRow(resizeInput, 1); conversation.Children.Add(resizeInput);
         var entry = new DockPanel(); var entryActions = new WrapPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
         DockPanel.SetDock(entryActions, Dock.Bottom); entry.Children.Add(entryActions);
+        _creativity = Action(entryActions, "Creativity", OpenCreativity);
+        _creativity.IsEnabled = false;
         _reasoning = new Button { Content = L("Reasoning"), ToolTip = L("ReasoningUnavailable"),
             IsEnabled = false, Margin = new(3), Padding = new(8, 5, 8, 5), MinWidth = 32 };
         _reasoning.SetResourceReference(StyleProperty, "SettingsActionButtonStyle");
@@ -143,15 +145,17 @@ public sealed partial class MusicPoetryWindow : Window
         Closing += ClosingWindow;
         Closed += (_, _) => { _viewClosed = true; CancelModelEntry(); ++_previewVersion; _save.Stop(); _modelSelector?.Close(); _sessionManager?.Close();
             CloseThoughtScale();
+            CloseCreativity();
             ++_thoughtVersion; FinishThoughtAttempt(false);
             _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false);
             DetachView();
             if (_background is not null) _background.Changed -= BackgroundChanged; _runtime.Dispose(); };
         if (_background is not null) _background.Changed += BackgroundChanged;
         root.Loaded += (_, _) => BeginModelEntry();
-        root.Unloaded += (_, _) => { CancelModelEntry(); CloseThoughtScale(); _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false); };
+        root.Unloaded += (_, _) => { CancelModelEntry(); CloseThoughtScale(); CloseCreativity(); _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false); };
         root.IsVisibleChanged += (_, e) => { if (e.NewValue is false) { CancelModelEntry(); _modelSelector?.Close();
             CloseThoughtScale();
+            CloseCreativity();
             _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false); } };
         LoadSession(); Persist();
         void Add(UIElement child, int column) { Grid.SetColumn(child, column); columns.Children.Add(child); }

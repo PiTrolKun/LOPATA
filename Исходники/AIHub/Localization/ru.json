@@ -4887,5 +4887,11 @@
   "Music.Poetry.ReasoningPreserve": "Возвращать прошлые мысли",
   "Music.Poetry.Selection.ReasoningBadgeFixed": "Мышление подключено: вкл/выкл, фиксированный лимит {0} токенов. Значок показывает возможность модели, независимо от текущего выбора.",
   "Music.Poetry.Selection.ReasoningBadgeExtended": "Мышление подключено: вкл/выкл. II — две ступени лимита: 2048 или 4096 токенов. Доступен возврат прошлых мыслей. Обозначение не является оценкой качества.",
-  "Music.Poetry.Selection.ReasoningBadgeEffort": "Два уровня усилия: medium и xhigh."
+  "Music.Poetry.Selection.ReasoningBadgeEffort": "Два уровня усилия: medium и xhigh.",
+  "Music.Poetry.Creativity": "Уровень креативности",
+  "Music.Poetry.CreativityShort": "Креативность",
+  "Music.Poetry.CreativityHint": "Меньше — более предсказуемые ответы, больше — больше разнообразия. Качество зависит от модели и задачи. Выбор сохраняется отдельно для каждой модели.",
+  "Music.Poetry.CreativityInputHint": "От 0,1 до 2. Введите число и нажмите Enter или «Применить».",
+  "Music.Poetry.CreativityInvalid": "Введите число от 0,1 до 2. Можно использовать запятую или точку.",
+  "Music.Poetry.Creativity.Apply": "Применить"
 }

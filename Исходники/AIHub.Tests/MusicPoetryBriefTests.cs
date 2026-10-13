@@ -131,7 +131,7 @@ public sealed class MusicPoetryBriefTests
     private sealed class NoGeneration : IMusicPoetryRuntime
     {
         public Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-            Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null) => throw new AssertFailedException("Unexpected generation");
+            Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null, double? temperature = null) => throw new AssertFailedException("Unexpected generation");
         public void Dispose() { }
     }
 }

@@ -231,7 +231,7 @@ public sealed class MusicPoetryThoughtUiTests
         internal List<string?> Languages { get; } = [];
         public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
             Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null,
-            Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
+            Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null, double? temperature = null)
         {
             Languages.Add(interfaceLanguage);
             ready(new("system", request.Messages.ToArray(), 100, 32768, false)); Progress = reasoningProgress;
@@ -249,7 +249,7 @@ public sealed class MusicPoetryThoughtUiTests
         private int _attempt;
         public Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
             Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null,
-            Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
+            Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null, double? temperature = null)
         {
             ++_attempt; ready(new("system", request.Messages.ToArray(), 100, 32768, false));
             reasoningProgress?.Invoke(new("attempt " + _attempt)); reasoningProgress?.Invoke(new("", true));

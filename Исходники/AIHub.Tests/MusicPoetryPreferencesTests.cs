@@ -527,7 +527,7 @@ public sealed class MusicPoetryPreferencesTests
     {
         public int Calls;
         public Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
+            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null, double? temperature = null)
         { Calls++; throw new AssertFailedException("Choosing a model must not run generation."); }
         public void Dispose() { }
     }
@@ -537,7 +537,7 @@ public sealed class MusicPoetryPreferencesTests
         public string? ReasoningMode;
         public MusicPoetryReasoningPreference? ReasoningPreference;
         public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
+            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null, double? temperature = null)
         { Calls++; ReasoningMode = reasoningMode; ReasoningPreference = reasoningPreference; await Task.Delay(Timeout.Infinite, token); return ""; }
         public void Dispose() { }
     }

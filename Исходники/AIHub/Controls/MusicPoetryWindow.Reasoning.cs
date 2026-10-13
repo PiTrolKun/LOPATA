@@ -60,6 +60,7 @@ public sealed partial class MusicPoetryWindow
 
     private void ReasoningMenu()
     {
+        CloseCreativity();
         CloseThoughtScale();
         if (!_reasoning.IsEnabled || _model is null || IsWorking || _background?.IsRunning == true || _background?.HasPending == true) return;
         var modelPath = _model.Path;

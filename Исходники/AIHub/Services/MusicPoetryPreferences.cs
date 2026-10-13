@@ -9,6 +9,7 @@ public sealed record MusicPoetryPreferenceState
     public string? FavoriteId { get; init; }
     public Dictionary<string, string> Comments { get; init; } = [];
     public Dictionary<string, MusicPoetryReasoningPreference> Reasoning { get; init; } = [];
+    public Dictionary<string, double> Creativity { get; init; } = [];
     public int ThoughtFontIncreasePercent { get; init; } = MusicPoetryThoughtAppearance.DefaultIncrease;
     [JsonExtensionData] public Dictionary<string, JsonElement>? Additional { get; init; }
 }
@@ -28,8 +29,9 @@ public sealed class MusicPoetryPreferences(string path)
                 ?? throw new InvalidDataException("Empty poetry preferences.");
             if (state.Comments is null || state.Comments.Any(pair => pair.Value is null)
                 || state.Reasoning is null || state.Reasoning.Any(pair => pair.Value is null || pair.Value.ModeId is null)
+                || state.Creativity is null || state.Creativity.Any(pair => !MusicPoetryCreativity.IsValid(pair.Value))
                 || !MusicPoetryThoughtAppearance.IsValid(state.ThoughtFontIncreasePercent))
-                throw new InvalidDataException("Invalid poetry comments.");
+                throw new InvalidDataException("Invalid poetry preferences.");
             return state with { FavoriteId = MusicPoetryModelCatalog.All.Any(candidate => candidate.Id == state.FavoriteId)
                 ? state.FavoriteId : null };
         }
@@ -61,6 +63,15 @@ public sealed class MusicPoetryPreferences(string path)
         var state = Load();
         state.Reasoning.TryGetValue(modelId, out var previous);
         state.Reasoning[modelId] = (previous ?? new()) with { ModeId = modeId };
+        Save(state);
+    }
+
+    public void SetCreativity(string modelId, double value)
+    {
+        _ = MusicPoetryCreativity.Default(modelId);
+        if (!MusicPoetryCreativity.IsValid(value)) throw new ArgumentOutOfRangeException(nameof(value));
+        var state = Load();
+        state.Creativity[modelId] = value;
         Save(state);
     }
 
