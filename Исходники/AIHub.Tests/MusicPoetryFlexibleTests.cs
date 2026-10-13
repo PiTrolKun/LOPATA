@@ -85,7 +85,7 @@ public sealed class MusicPoetryFlexibleTests
         before.Parameters = new(before.Parameters.Variation, brief + "\n\n" + poem);
         var original = before.Parameters.Text;
         var prompt = MusicPoetryProtocol.System(before, "Guidance");
-        using var workspace = JsonDocument.Parse(prompt[(MusicPoetryProtocol.Instructions.Length + 1)..]);
+        using var workspace = JsonDocument.Parse(prompt[(prompt.IndexOf('\n') + 1)..]);
         Assert.AreEqual(brief, workspace.RootElement.GetProperty("parameters").GetString());
         Assert.AreEqual(original, before.Parameters.Text);
         var unknownVerse = "[Verse 1]\nИной текст";

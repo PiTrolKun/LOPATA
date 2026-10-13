@@ -85,7 +85,7 @@ public sealed partial class LlamaServerRuntimeService
                     }
                 },
                 () => _selectedRuntime?.UsesGpu == true, () => _hardwareStartupFailure,
-                () => visibleOutput, () => _poetryJournal is null ? ModelProcessRetirement.StopAsync(_process, Stop) : RetirePoetryAsync(),
+                () => visibleOutput, () => _poetryJournal is null ? ModelProcessRetirement.StopAsync(_process, Stop) : RetirePoetryForRecoveryAsync(),
                 () => EnsureStartedAsync(model, log, token, forceCpuFallback: true), log, token,
                 _poetryJournal is null ? null : "GPU inference failed. Retrying the same request once through the next placement stage after retirement.");
         }

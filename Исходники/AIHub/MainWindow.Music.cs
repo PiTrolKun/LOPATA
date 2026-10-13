@@ -11,7 +11,8 @@ public partial class MainWindow
     {
         if (_musicPoetryWindow is not null) return _musicPoetryWindow;
         var window = new MusicPoetryWindow(MusicPage.CapturePoetrySeed, _storageSettings,
-            _userContextService, L, _localizationService.CurrentLanguageCode);
+            _userContextService, L, _localizationService.CurrentLanguageCode,
+            interfaceLanguage: () => _localizationService.CurrentLanguageCode);
         _musicPoetryWindow = window;
         void RefreshPoetry() => MusicPage.SetPoetryState(true, window.IsWorking);
         window.WorkingChanged += RefreshPoetry;

@@ -1,5 +1,4 @@
 using System.IO;
-using System.Text.Json;
 using AIHub.Models;
 
 namespace AIHub.Services;
@@ -7,7 +6,9 @@ namespace AIHub.Services;
 public interface IMusicPoetryRuntime : IDisposable
 {
     Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-        Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false);
+        Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null,
+        Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null,
+        MusicPoetryReasoningPreference? reasoningPreference = null);
 }
 
 public sealed class MusicPoetryIncompleteReply(string reply) : IOException("Music.Poetry.Truncated")
@@ -21,10 +22,13 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
     private readonly LlamaServerRuntimeService _llama = new(userContext);
     private readonly FinancialModelRuntime _bin = new(userContext);
     public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-        Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false)
+        Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null,
+        Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null,
+        MusicPoetryReasoningPreference? reasoningPreference = null)
     {
         if (!File.Exists(model.Path)) throw new FileNotFoundException("Music.Poetry.ModelMissing");
         if (!MusicPoetryModelCatalog.IsCompatible(model)) throw new InvalidDataException("Music.Poetry.ModelUnsupported");
+        var reasoning = MusicPoetryReasoning.Resolve(model, reasoningMode, reasoningPreference);
         try
         {
             // Library inventory IDs are not license IDs; use the same component as the original scenario.
@@ -32,11 +36,12 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
             var estimated = model.Format.Equals("chatllm", StringComparison.OrdinalIgnoreCase);
             var capacity = estimated ? 8192 : Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit,
                 (await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token)).ModelContextTokens);
-            if (!estimated) capacity = await _llama.PreparePoetryAsync(model, token);
-            var reserve = estimated ? 4096 : Math.Min(4096, capacity / 3);
+            if (!estimated) capacity = await _llama.PreparePoetryAsync(model, token, reasoningMode, reasoningPreference);
+            var reserve = estimated ? 4096 : reasoning.ReplyReserve(capacity);
             var context = await MusicPoetryContextWindow.BuildAsync(request, guidance, capacity, reserve,
                 estimated ? (system, messages) => Task.FromResult(MusicPoetryContextWindow.Estimate(system, messages))
-                    : (system, messages) => _llama.CountPoetryAsync(system, messages, token), estimated);
+                    : (system, messages) => _llama.CountPoetryAsync(system, messages, token), estimated, interfaceLanguage,
+                reasoning, MusicPoetryReasoning.ModelId(model));
             contextReady(context);
             if (estimated) {
                 var binReply = await _bin.GenerateConversationAsync(model, context.System,
@@ -44,23 +49,15 @@ public sealed class MusicPoetryRuntime(UserContextService userContext) : IMusicP
                 truncated: content => throw new MusicPoetryIncompleteReply(content));
                 return binReply;
             }
-            var profile = MusicPoetryProfileCatalog.Find(MusicPoetryModelCatalog.Find(model)!.Id);
-            var payload = JsonSerializer.Serialize(new {
-                model = "local", messages = new[] { new { role = "system", content = context.System } }
-                    .Concat(context.Messages.Select(m => new { role = m.Role, content = m.Text })).ToArray(),
-                max_tokens = reserve, temperature = profile?.Temperature ?? .8, top_p = profile?.TopP ?? .95,
-                top_k = profile?.TopK ?? 40, min_p = profile?.MinP ?? 0,
-                repeat_penalty = profile?.RepeatPenalty ?? 1, presence_penalty = profile?.PresencePenalty ?? 0,
-                stream = false, cache_prompt = false,
-                chat_template_kwargs = new { enable_thinking = false }, response_format = assemble ? MusicPoetryProtocol.AssemblySchema : MusicPoetryProtocol.Schema
-            });
+            var streaming = reasoning.Enabled && reasoningProgress is not null;
+            var payload = MusicPoetryGeneration.Payload(model, context, reserve, reasoning, assemble, streaming);
+            if (streaming)
+            {
+                var result = await _llama.GeneratePoetryStreamAsync(model, payload, reasoningProgress!, token);
+                return MusicPoetryGeneration.Finish(result.Content, result.FinishReason);
+            }
             var response = await _llama.GeneratePrivateJsonAsync(model, payload, token);
-            using var doc = JsonDocument.Parse(response);
-            var choice = doc.RootElement.GetProperty("choices")[0];
-            var content = choice.GetProperty("message").GetProperty("content").GetString()
-                ?? throw new InvalidDataException("Music.Poetry.InvalidReply");
-            if (choice.GetProperty("finish_reason").GetString() == "length") throw new MusicPoetryIncompleteReply(content);
-            return content;
+            return MusicPoetryGeneration.Answer(response);
         }
         finally { await _llama.RetirePoetryAsync(); await _bin.RetireAsync(); }
     }

@@ -18,6 +18,7 @@ namespace AIHub.Controls;
 public sealed partial class MusicPoetryWindow : Window
 {
     private readonly Func<string, string> _l;
+    private readonly Func<string> _interfaceLanguage;
     private readonly Func<MusicProjectSnapshot> _seed;
     private readonly StorageSettings _storage;
     private readonly MusicPoetrySessions _store;
@@ -27,12 +28,13 @@ public sealed partial class MusicPoetryWindow : Window
     private DebugModelInfo? _model;
     private readonly TextBox _lyrics = Area("Lyrics"), _parameters = Area("Parameters"), _input = Area("Input"), _guidance = Area("Guidance", true);
     private readonly MusicPoetryBriefControl _brief;
-    private readonly RichTextBox _chat = new() { IsReadOnly = true, IsDocumentEnabled = false, BorderThickness = new(0), VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+    private readonly RichTextBox _chat = new() { IsReadOnly = true, IsDocumentEnabled = true, IsUndoEnabled = false,
+        BorderThickness = new(0), VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     private readonly ComboBox _target = new() { MinHeight = 32, Margin = new(0, 4, 0, 8) };
     private readonly TextBlock _status = Label(""), _lyricsStep = Label(""), _parameterStep = Label("");
     private readonly System.Windows.Controls.ProgressBar _memory = new() { Width = 200, Height = 10, Minimum = 0, Maximum = 100 };
     private readonly TextBlock _memoryIcon = Label("🧠");
-    private readonly Button _send, _assemble, _models, _sessions, _new, _partial, _lyricsPrevious, _lyricsNext, _parameterPrevious, _parameterNext;
+    private readonly Button _send, _assemble, _reasoning, _models, _sessions, _new, _partial, _lyricsPrevious, _lyricsNext, _parameterPrevious, _parameterNext;
     private readonly TextBlock _memoryCount = Label("");
     private MusicPoetryTokenPreview? _tokenPreview;
     private int _previewVersion;
@@ -48,9 +50,11 @@ public sealed partial class MusicPoetryWindow : Window
 
     public MusicPoetryWindow(Func<MusicProjectSnapshot> seed, StorageSettings storage, UserContextService context,
         Func<string, string> localize, string language, MusicPoetrySessions? store = null, IMusicPoetryRuntime? runtime = null,
-        MusicPoetryPreferences? preferences = null, Func<IReadOnlyList<MusicPoetryModelChoice>>? modelChoices = null)
+        MusicPoetryPreferences? preferences = null, Func<IReadOnlyList<MusicPoetryModelChoice>>? modelChoices = null,
+        Func<string>? interfaceLanguage = null)
     {
         _seed = seed; _storage = storage; _l = localize; _store = store ?? MusicPoetrySessions.Default;
+        _interfaceLanguage = interfaceLanguage ?? (() => language);
         _runtime = runtime ?? new MusicPoetryRuntime(context); _background = ApplicationBackgroundOperations.Current;
         _preferences = preferences ?? MusicPoetryPreferences.Default;
         _modelChoices = modelChoices ?? (() => MusicPoetryModelCatalog.Choices(_storage));
@@ -61,6 +65,7 @@ public sealed partial class MusicPoetryWindow : Window
         SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/MusicPoetryBriefResources.xaml", UriKind.Relative) });
+        Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/MusicPoetryThoughtResources.xaml", UriKind.Relative) });
         LiterarySpellChecking.ApplyMenuTheme(Resources);
         SetResourceReference(FontSizeProperty, "UiBodyFontSize"); UseLayoutRounding = true;
         _target.SetResourceReference(StyleProperty, typeof(ComboBox));
@@ -72,7 +77,7 @@ public sealed partial class MusicPoetryWindow : Window
         _new = Action(header, "New", NewSession);
         _partial = Action(header, "Partial", ViewPartial);
         _models = Action(header, "Models", ModelMenu); _models.Content = "ИИ±";
-        Action(header, "Help", () => ShowText(L("Help"), MusicPoetryProtocol.Instructions, "Protocol"));
+        Action(header, "Help", () => ShowText(L("Help"), MusicPoetryProtocol.System(_session, _guidance.Text, _interfaceLanguage()), "Protocol"));
         var footer = new DockPanel { Margin = new(0, 10, 0, 0) }; DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
         var meter = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
         meter.Children.Add(_memoryIcon); meter.Children.Add(_memoryCount); meter.Children.Add(_memory); DockPanel.SetDock(meter, Dock.Right); footer.Children.Add(meter); footer.Children.Add(_status);
@@ -89,10 +94,21 @@ public sealed partial class MusicPoetryWindow : Window
         conversation.RowDefinitions.Add(new() { Height = new(145), MinHeight = 90 });
         _chat.SetResourceReference(BackgroundProperty, "PanelBrush"); _chat.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
         AutomationProperties.SetAutomationId(_chat, "Music.Poetry.Chat"); conversation.Children.Add(_chat);
+        _chatViewport = new(_chat, () => _chatBlocks);
+        _chat.SizeChanged += (_, _) => ResizeThoughts();
         var resizeInput = new GridSplitter { Height = 8, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch, ResizeDirection = GridResizeDirection.Rows };
         resizeInput.SetResourceReference(BackgroundProperty, "LineBrush"); Grid.SetRow(resizeInput, 1); conversation.Children.Add(resizeInput);
         var entry = new DockPanel(); var entryActions = new WrapPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
         DockPanel.SetDock(entryActions, Dock.Bottom); entry.Children.Add(entryActions);
+        _reasoning = new Button { Content = L("Reasoning"), ToolTip = L("ReasoningUnavailable"),
+            IsEnabled = false, Margin = new(3), Padding = new(8, 5, 8, 5), MinWidth = 32 };
+        _reasoning.SetResourceReference(StyleProperty, "SettingsActionButtonStyle");
+        AutomationProperties.SetAutomationId(_reasoning, "Music.Poetry.Reasoning");
+        AutomationProperties.SetName(_reasoning, L("Reasoning"));
+        AutomationProperties.SetHelpText(_reasoning, L("ReasoningUnavailable"));
+        _reasoning.Click += (_, _) => ReasoningMenu();
+        InitializeThoughtAppearance();
+        ToolTipService.SetShowOnDisabled(_reasoning, true); entryActions.Children.Add(_reasoning);
         _assemble = Action(entryActions, "Assemble", () => _ = SendCoreAsync(true));
         var composer = new Grid(); composer.Children.Add(_input);
         _input.AcceptsReturn = false; _input.AcceptsTab = false; _input.Padding = new(8, 8, 54, 8);
@@ -126,12 +142,17 @@ public sealed partial class MusicPoetryWindow : Window
         _save.Tick += (_, _) => { _save.Stop(); Persist(); };
         Closing += ClosingWindow;
         Closed += (_, _) => { _viewClosed = true; CancelModelEntry(); ++_previewVersion; _save.Stop(); _modelSelector?.Close(); _sessionManager?.Close();
+            CloseThoughtScale();
+            ++_thoughtVersion; FinishThoughtAttempt(false);
+            _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false);
             DetachView();
             if (_background is not null) _background.Changed -= BackgroundChanged; _runtime.Dispose(); };
         if (_background is not null) _background.Changed += BackgroundChanged;
         root.Loaded += (_, _) => BeginModelEntry();
-        root.Unloaded += (_, _) => CancelModelEntry();
-        root.IsVisibleChanged += (_, e) => { if (e.NewValue is false) { CancelModelEntry(); _modelSelector?.Close(); } };
+        root.Unloaded += (_, _) => { CancelModelEntry(); CloseThoughtScale(); _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false); };
+        root.IsVisibleChanged += (_, e) => { if (e.NewValue is false) { CancelModelEntry(); _modelSelector?.Close();
+            CloseThoughtScale();
+            _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false); } };
         LoadSession(); Persist();
         void Add(UIElement child, int column) { Grid.SetColumn(child, column); columns.Children.Add(child); }
         void Splitter(int column) { var s = new GridSplitter { Width = 8, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch,

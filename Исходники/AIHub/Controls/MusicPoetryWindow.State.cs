@@ -68,28 +68,54 @@ public sealed partial class MusicPoetryWindow
     }
     private void RenderChat()
     {
-        var document = new FlowDocument { PagePadding = new(5), FontSize = 14 };
-        foreach (var message in _session.Messages)
+        if (_renderedSession != _session.Id)
+        { _renderedSession = _session.Id; _chatViewport?.Reset(); }
+        _chatViewport?.Change(() => {
+        var containers = _chatBlocks.Where(b => b.Key.StartsWith("thought:", StringComparison.Ordinal))
+            .ToDictionary(b => b.Key, b => (BlockUIContainer)b.Block);
+        var keep = _session.Thoughts.Select(t => t.Id).ToHashSet(StringComparer.Ordinal);
+        foreach (var id in _thoughtViews.Keys.Where(id => !keep.Contains(id)).ToArray()) _thoughtViews.Remove(id);
+        var thoughts = _session.Thoughts.ToLookup(t => t.AnchorMessage);
+        var desired = new List<(string Key, Block Block)>();
+        for (var index = 0; index < _session.Messages.Count; index++)
         {
+            var message = _session.Messages[index];
             var name = L(message.IsProgrammatic ? "Program" : message.Role == "user" ? "User" : message.Role == "assistant" ? "Assistant" : "Notice");
             var paragraph = new Paragraph { Margin = new(0, 0, 0, 12) };
             paragraph.Inlines.Add(new Bold(new Run(name + ": "))); paragraph.Inlines.Add(new Run(message.Text));
             paragraph.SetResourceReference(TextElement.ForegroundProperty,
                 message.InContext ? "TextPrimaryBrush" : "TextSecondaryBrush");
-            paragraph.ToolTip = L(message.InContext ? "Visible" : "Archived"); document.Blocks.Add(paragraph);
+            paragraph.ToolTip = L(message.InContext ? "Visible" : "Archived");
+            desired.Add(("message:" + index, paragraph));
+            foreach (var thought in thoughts[index])
+            {
+                var key = "thought:" + thought.Id;
+                var view = ThoughtView(thought);
+                var block = containers.GetValueOrDefault(key) ?? new BlockUIContainer(view.Element) { Margin = new(0, 0, 0, 12) };
+                desired.Add((key, block));
+            }
         }
-        _chat.Document = document; _chat.ScrollToEnd();
+        _chat.BeginChange();
+        try
+        {
+            _chat.Document.FontSize = 14; _chat.Document.PagePadding = new(5);
+            _chat.Document.Blocks.Clear();
+            foreach (var item in desired) _chat.Document.Blocks.Add(item.Block);
+            _chatBlocks.Clear(); _chatBlocks.AddRange(desired);
+        }
+        finally { _chat.EndChange(); }
+        });
     }
     private void Recount()
     {
         if (IsWorking) return;
         // Live draft estimate is labelled as such; GGUF requests replace it with the actual tokenizer count.
-        var messages = MusicPoetryModelMessages.Select(_session).ToList();
+        var messages = MusicPoetryReasoningHistory.Select(_session, _reasoningOptions, MusicPoetryReasoning.ModelId(_model)).ToList();
         if (_session.Draft.Length > 0) messages.Add(new("user", _session.Draft, "draft"));
-        var system = MusicPoetryProtocol.System(_session, _guidance.Text);
+        var system = MusicPoetryProtocol.System(_session, _guidance.Text, _interfaceLanguage());
         var tokens = PreviewCount(system, messages);
         MusicPoetryModelMessages.Mark(_session, messages);
-        while (messages.Count > 0 && tokens + Math.Min(4096, _capacity / 3) + 128 > _capacity)
+        while (messages.Count > 0 && tokens + (long)ReplyReserve() + 128 > _capacity)
         {
             var oldest = messages[0].TurnId;
             if (oldest == messages[^1].TurnId) break;
@@ -106,19 +132,23 @@ public sealed partial class MusicPoetryWindow
         _memory.Value = Math.Clamp(100d * tokens / Math.Max(1, _capacity), 0, 100);
         _memoryCount.Text = $"{(estimated ? "≈" : "")}{tokens:N0} / {_capacity:N0}";
         var label = !estimated ? "Exact" : _tokenPreview?.UsesTokenizer == true ? "TokenPreview" : "Estimated";
-        var reserve = _model?.Format.Equals("chatllm", StringComparison.OrdinalIgnoreCase) == true ? 4096 : Math.Min(4096, _capacity / 3);
+        var reserve = ReplyReserve();
         _memory.ToolTip = _memoryIcon.ToolTip = _memoryCount.ToolTip = $"{L(label)}: {tokens:N0}/{_capacity:N0}. {L("ReplyReserve")}: {reserve:N0}. {L("ContextHint")}";
     }
     private void BackgroundChanged() => Dispatcher.BeginInvoke(new Action(Availability));
     private void Availability()
     {
         var occupied = _background?.IsRunning == true || _background?.HasPending == true;
-        _send.IsEnabled = !IsWorking && !occupied && _model is not null && !string.IsNullOrWhiteSpace(_input.Text) && !_saveFailed;
+        _send.IsEnabled = !IsWorking && !occupied && _model is not null && !string.IsNullOrWhiteSpace(_input.Text) && !_saveFailed && !_reasoningFailed;
         _send.ToolTip = occupied && !IsWorking ? L("OtherOperation") : L("Send");
-        _assemble.IsEnabled = !IsWorking && !occupied && _model is not null && !_saveFailed
+        _assemble.IsEnabled = !IsWorking && !occupied && _model is not null && !_saveFailed && !_reasoningFailed
             && (!string.IsNullOrWhiteSpace(_input.Text) || !string.IsNullOrWhiteSpace(_lyrics.Text) || _session.Messages.Any(m => m.Role == "user"));
         _assemble.ToolTip = occupied && !IsWorking ? L("OtherOperation") : L("AssemblyHint");
         _models.IsEnabled = _sessions.IsEnabled = _new.IsEnabled = !IsWorking;
+        // Display scale remains available while generation runs; the mode menu is separately guarded.
+        _reasoning.IsEnabled = MusicPoetryReasoning.Supports(_model);
+        if (IsWorking || occupied) _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false);
+        if (!_reasoning.IsEnabled) _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false);
         if (_modelSelector is not null) _modelSelector.IsEnabled = !IsWorking;
         _lyrics.IsReadOnly = _parameters.IsReadOnly = _input.IsReadOnly = IsWorking; _target.IsEnabled = !IsWorking;
         _brief.SetReadOnly(IsWorking);

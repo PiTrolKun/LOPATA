@@ -70,6 +70,8 @@ public sealed class MusicPoetrySessions(string directory)
             ?? throw new InvalidDataException("Empty poetry session.");
         Validate(s);
         if (s.Id != id || !s.Persistent) throw new InvalidDataException("Poetry session identity mismatch.");
+        foreach (var thought in s.Thoughts.Where(t => t.State == MusicPoetryThought.Active))
+        { thought.State = MusicPoetryThought.Interrupted; thought.Expanded = false; }
         return s;
     }
     internal static void Validate(MusicPoetrySession s)
@@ -81,7 +83,12 @@ public sealed class MusicPoetrySessions(string directory)
             || s.ReplyAttempts is null || s.ReplyAttempts.Any(a => a is null || a.TurnId is null || a.Raw is null
                 || a.Outcome is null || a.Attempt is < 1 or > 2 || a.Changes is null
                 || a.Changes.Any(c => c is not ("song" or "parameters" or "variation")))
-            || s.LyricsSteps is null || s.ParameterSteps is null || s.Messages is null
+            || s.LyricsSteps is null || s.ParameterSteps is null || s.Messages is null || s.Thoughts is null
+            || s.Thoughts.Any(t => t is null || !Guid.TryParseExact(t.Id, "N", out _) || t.Text is null || t.TurnId is null
+                || t.Attempt is < 1 or > 2 || t.AnchorMessage < 0 || t.AnchorMessage >= (s.Messages?.Count ?? 0)
+                || s.Messages![t.AnchorMessage]?.TurnId != t.TurnId
+                || t.State is not (MusicPoetryThought.Active or MusicPoetryThought.Completed or MusicPoetryThought.Interrupted))
+            || s.Thoughts.Select(t => t.Id).Distinct(StringComparer.Ordinal).Count() != s.Thoughts.Count
             || s.LyricsSteps.Any(t => t is null) || s.ParameterSteps.Any(p => p is null || p.Text is null || !MusicPoetryProtocol.Variations.Contains(p.Variation))
             || s.LyricsCursor < -1 || s.LyricsCursor >= s.LyricsSteps.Count || s.ParameterCursor < -1 || s.ParameterCursor >= s.ParameterSteps.Count
             || s.Messages.Any(m => m is null || m.Role is not ("user" or "assistant" or "notice") || m.Text is null || m.TurnId is null))

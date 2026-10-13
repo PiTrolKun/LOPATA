@@ -29,6 +29,23 @@ public sealed class MusicPoetryPreferencesTests
         Directory.Delete(resolved, true);
     }
 
+    [TestMethod] public void ThoughtFontPersistsIndependentlyOfModeNotesAndFutureFields()
+    {
+        Assert.AreEqual(200, Preferences.Load().ThoughtFontIncreasePercent);
+        File.WriteAllText(Path.Combine(_root, "preferences.json"), "{\"FutureField\":{\"keep\":true}}");
+        Preferences.SetThoughtFontIncrease(0); Preferences.SetReasoning("core", "off");
+        Preferences.SetComments(new Dictionary<string, string> { ["core"] = "note" }); Preferences.SetFavorite("core");
+        var fresh = new MusicPoetryPreferences(Path.Combine(_root, "preferences.json"));
+        Assert.AreEqual(0, fresh.Load().ThoughtFontIncreasePercent);
+        fresh.SetThoughtFontIncrease(400); Preferences.SetReasoning("core", "on");
+        var state = fresh.Load(); Assert.AreEqual(400, state.ThoughtFontIncreasePercent);
+        Assert.AreEqual("note", state.Comments["core"]); Assert.AreEqual("core", state.FavoriteId);
+        Assert.IsTrue(state.Additional!["FutureField"].GetProperty("keep").GetBoolean());
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => fresh.SetThoughtFontIncrease(-1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => fresh.SetThoughtFontIncrease(401));
+        Assert.AreEqual(400, fresh.Load().ThoughtFontIncreasePercent);
+    }
+
     [TestMethod] public void OneFavoriteAndCommentsSurviveFreshStoreWithoutErasingEachOther()
     {
         Preferences.SetFavorite("core"); Preferences.SetComments(new Dictionary<string, string> { ["core"] = "Мой кот\nЁлка ★", ["executor"] = "Slow but better" });
@@ -180,18 +197,281 @@ public sealed class MusicPoetryPreferencesTests
         try
         {
             editor.Show(); PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null);
+            Call(editor, "SetReasoning", "off");
             var work = (Task)editor.GetType().GetMethod("SendCoreAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(editor, [true])!;
             PumpUntil(() => runtime.Calls > 0); PumpFor(1150);
             Assert.IsTrue(editor.IsWorking); Assert.IsNull(Get<Window?>(editor, "_modelSelector"));
+            Assert.AreEqual("off", runtime.ReasoningMode);
+            Assert.IsTrue(Get<Button>(editor, "_reasoning").IsEnabled);
+            Click(Get<Button>(editor, "_reasoning"));
+            Assert.IsFalse(Get<Button>(editor, "_reasoning").ContextMenu?.IsOpen == true);
+            Call(editor, "SetReasoning", "on"); Assert.AreEqual("off", Preferences.Load().Reasoning["core"].ModeId);
             editor.Close(); PumpUntil(() => work.IsCompleted); Assert.IsFalse(editor.IsWorking);
             Assert.AreEqual("Keep poem", Get<MusicPoetrySession>(editor, "_session").Lyrics);
         }
         finally { editor.Close(); }
     });
 
+    [TestMethod] public void SavedOffSurvivesNotesStarsAndFutureFieldsWithoutBeingReplacedByDefault()
+    {
+        var path = Path.Combine(_root, "preferences.json");
+        File.WriteAllText(path, """
+            {"FavoriteId":"core","Comments":{},"FutureRoot":{"keep":true},"Reasoning":{
+                "core":{"ModeId":"off","FutureToggle":true},"future-model":{"ModeId":"sixth","OtherToggle":false}}}
+            """);
+        Preferences.SetFavorite("executor"); Preferences.SetComments(new Dictionary<string, string> { ["core"] = "note" });
+        Assert.AreEqual("off", Preferences.Load().Reasoning["core"].ModeId);
+        Preferences.SetReasoning("core", "on"); Preferences.SetReasoning("core", "off");
+        var state = Preferences.Load(); Assert.AreEqual("off", state.Reasoning["core"].ModeId);
+        Assert.IsTrue(state.Reasoning["core"].Additional!["FutureToggle"].GetBoolean());
+        Assert.AreEqual("sixth", state.Reasoning["future-model"].ModeId);
+        Assert.IsTrue(state.Additional!["FutureRoot"].GetProperty("keep").GetBoolean());
+        Assert.ThrowsExactly<ArgumentException>(() => Preferences.SetReasoning("instruct", "on"));
+    }
+
+    [TestMethod] public Task ConnectedModesStayIndependentAcrossModelSwitchesAndFreshWindow() => Sta(() =>
+    {
+        var ids = new[] { "core", "profile-kaine", "profile-abliterated", "beta" };
+        var choices = Choices(ids); Preferences.SetFavorite("core");
+        var expected = new Dictionary<string, string> { ["core"] = "off", ["profile-kaine"] = "on",
+            ["profile-abliterated"] = "off", ["beta"] = "on" };
+        var editor = Editor(choices, new NoGeneration());
+        try
+        {
+            editor.Show(); PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null);
+            foreach (var choice in choices)
+            {
+                Call(editor, "SelectModel", choice.Model!);
+                Assert.IsTrue(Get<Button>(editor, "_reasoning").IsEnabled);
+                Assert.IsTrue(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled);
+                Call(editor, "SetReasoning", expected[choice.Candidate.Id]);
+            }
+            foreach (var choice in choices.Reverse())
+            {
+                Call(editor, "SelectModel", choice.Model!);
+                var selected = Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions");
+                Assert.AreEqual(expected[choice.Candidate.Id] == "on", selected.Enabled);
+                Assert.AreEqual(selected.Enabled ? 2048 : 0, selected.Budget);
+            }
+        }
+        finally { editor.Close(); }
+        var fresh = new MusicPoetryPreferences(Path.Combine(_root, "preferences.json"));
+        foreach (var id in ids) Assert.AreEqual(expected[id], fresh.Load().Reasoning[id].ModeId);
+        var reopened = Editor(choices, new NoGeneration());
+        try
+        {
+            reopened.Show(); PumpUntil(() => Get<DebugModelInfo?>(reopened, "_model") is not null);
+            foreach (var choice in choices)
+            {
+                Call(reopened, "SelectModel", choice.Model!);
+                Assert.AreEqual(expected[choice.Candidate.Id] == "on", Get<MusicPoetryReasoningOptions>(reopened, "_reasoningOptions").Enabled);
+            }
+        }
+        finally { reopened.Close(); }
+    });
+
+    [TestMethod] public Task CoreToggleRestoresAcrossModelsAndNewWindowAndFailedSaveKeepsLiveChoice() => Sta(() =>
+    {
+        var choices = Choices("core", "instruct"); Preferences.SetFavorite("core");
+        var editor = Editor(choices, new NoGeneration());
+        try
+        {
+            editor.Show(); PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null);
+            Assert.IsTrue(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled);
+            var button = Get<Button>(editor, "_reasoning"); Click(button);
+            Assert.AreEqual(2, button.ContextMenu.Items.Count);
+            Assert.IsTrue(((MenuItem)button.ContextMenu.Items[0]).IsChecked);
+            button.ContextMenu.IsOpen = false;
+            Call(editor, "SetReasoning", "off");
+            Assert.IsFalse(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled);
+            Call(editor, "SelectModel", choices[1].Model!); Assert.IsFalse(button.IsEnabled);
+            Call(editor, "SelectModel", choices[0].Model!);
+            Assert.IsTrue(button.IsEnabled); Assert.IsFalse(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled);
+            var file = Path.Combine(_root, "preferences.json"); var held = file + ".held";
+            File.Move(file, held); Directory.CreateDirectory(file);
+            try { Call(editor, "SetReasoning", "on"); Assert.IsFalse(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled); }
+            finally { Directory.Delete(file); File.Move(held, file); }
+        }
+        finally { editor.Close(); }
+        var reopened = Editor(choices, new NoGeneration());
+        try { reopened.Show(); PumpUntil(() => Get<DebugModelInfo?>(reopened, "_model") is not null);
+            Assert.IsFalse(Get<MusicPoetryReasoningOptions>(reopened, "_reasoningOptions").Enabled); }
+        finally { reopened.Close(); }
+    });
+
+    [TestMethod]
+    [DataRow("core")]
+    [DataRow("profile-kaine")]
+    [DataRow("profile-abliterated")]
+    [DataRow("beta")]
+    public Task UnknownSavedChoiceBlocksSendingUntilUserSelectsSupportedMode(string modelId) => Sta(() =>
+    {
+        var file = Path.Combine(_root, "preferences.json");
+        File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(new { FavoriteId = modelId,
+            Reasoning = new Dictionary<string, object> { [modelId] = new { ModeId = "future" } } }));
+        var editor = Editor(Choices(modelId), new NoGeneration());
+        try { editor.Show(); PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null);
+            Get<TextBox>(editor, "_input").Text = "request";
+            Assert.IsFalse(Get<Button>(editor, "_send").IsEnabled); Assert.IsTrue(Get<Button>(editor, "_reasoning").IsEnabled);
+            Assert.AreEqual("future", Preferences.Load().Reasoning[modelId].ModeId);
+            Call(editor, "SetReasoning", "off"); Assert.IsTrue(Get<Button>(editor, "_send").IsEnabled);
+            Assert.AreEqual("off", Preferences.Load().Reasoning[modelId].ModeId); }
+        finally { editor.Close(); }
+    });
+
+    [TestMethod]
+    [DataRow("core")]
+    [DataRow("profile-kaine")]
+    [DataRow("profile-abliterated")]
+    [DataRow("beta")]
+    [DataRow("gamma")]
+    [DataRow("executor")]
+    public Task ConnectedMenuFitsBothThemesLanguagesAndNarrowComposer(string modelId) => Sta(() =>
+    {
+        Preferences.SetFavorite(modelId); var choices = Choices(modelId);
+        foreach (var language in new[] { "ru", "en" }) foreach (var dark in new[] { false, true })
+        {
+            var l = new LocalizationService(); l.Load(language);
+            var editor = new MusicPoetryWindow(() => new(), new(), new(new UserProfileStore(), new IpLocationService()),
+                l.T, language, new(Path.Combine(_root, "ui-sessions")), new NoGeneration(), Preferences, () => choices);
+            try
+            {
+                foreach (var key in new[] { "WindowBackgroundBrush", "PanelBrush", "InputBrush" })
+                    editor.Resources[key] = dark ? System.Windows.Media.Brushes.Black : System.Windows.Media.Brushes.White;
+                editor.Resources["TextPrimaryBrush"] = dark ? System.Windows.Media.Brushes.White : System.Windows.Media.Brushes.Black;
+                editor.Resources["TextSecondaryBrush"] = editor.Resources["LineBrush"] = System.Windows.Media.Brushes.Gray;
+                editor.Resources["AccentBrush"] = editor.Resources["StepBadgeBrush"] = System.Windows.Media.Brushes.RoyalBlue;
+                editor.Resources["SecondaryButtonBackgroundBrush"] = dark ? System.Windows.Media.Brushes.DarkSlateGray : System.Windows.Media.Brushes.WhiteSmoke;
+                editor.Resources["UiBodyFontSize"] = 16d;
+                editor.Width = 900; editor.Height = 500; editor.Show();
+                PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null); editor.UpdateLayout();
+                var button = Get<Button>(editor, "_reasoning"); Click(button); PumpFor(50);
+                Assert.IsTrue(button.ContextMenu.IsOpen);
+                Assert.AreEqual(modelId == "gamma" ? 8 : modelId == "executor" ? 6 : 2, button.ContextMenu.Items.Count);
+                Assert.IsTrue(((MenuItem)button.ContextMenu.Items[0]).IsChecked);
+                Assert.IsFalse(button.Content.ToString()!.StartsWith("Music.Poetry."));
+                var location = button.TranslatePoint(new(), editor);
+                Assert.IsTrue(location.X >= 0 && location.X + button.ActualWidth <= editor.ActualWidth);
+                Assert.IsTrue(location.Y + button.ActualHeight < editor.ActualHeight);
+                var output = Path.Combine(Path.GetTempPath(), "lopata-poetry-reasoning-ui"); Directory.CreateDirectory(output);
+                Render(editor, Path.Combine(output, modelId + "-" + language + "-" + dark + "-narrow.png"));
+                Render(button.ContextMenu, Path.Combine(output, modelId + "-" + language + "-" + dark + "-menu.png"));
+                editor.Hide(); Assert.IsFalse(button.ContextMenu.IsOpen);
+                editor.Show(); PumpUntil(() => button.IsEnabled);
+                Assert.IsTrue(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled);
+                Call(editor, "SetReasoning", "off");
+                Assert.IsTrue(button.Content.ToString()!.Contains(l.T("Music.Poetry.ReasoningOff")));
+                editor.Width = 1380; editor.Height = 870; editor.UpdateLayout();
+                Render(editor, Path.Combine(output, modelId + "-" + language + "-" + dark + "-wide-off.png"));
+                Call(editor, "SetReasoning", "on");
+            }
+            finally { editor.Close(); }
+        }
+        static void Render(FrameworkElement element, string path)
+        {
+            element.UpdateLayout();
+            var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth * 1.5),
+                (int)Math.Ceiling(element.ActualHeight * 1.5), 144, 144, System.Windows.Media.PixelFormats.Pbgra32);
+            bitmap.Render(element); var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+            encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+            using var file = File.Create(path); encoder.Save(file);
+        }
+    });
+
+    [TestMethod] public Task AdvancedStateSurvivesOffSwitchesAndRestartAndUnknownBudgetNeedsExplicitRecovery() => Sta(() =>
+    {
+        var choices = Choices("gamma", "executor"); Preferences.SetFavorite("gamma");
+        Preferences.SetReasoningOptions("gamma", new() { ModeId = "on", Budget = 4096, Effort = "xhigh", PreserveThoughts = false });
+        var editor = Editor(choices, new NoGeneration());
+        try
+        {
+            editor.Show(); PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null);
+            Assert.AreEqual(4096, Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Budget);
+            Call(editor, "SetReasoning", "off"); Call(editor, "SetReasoning", "on");
+            var restored = Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions");
+            Assert.AreEqual("xhigh", restored.Effort); Assert.IsFalse(restored.PreserveThoughts);
+            Call(editor, "SelectModel", choices[1].Model!);
+            Assert.IsTrue(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").PreserveThoughts);
+            Assert.AreEqual(2048, Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Budget);
+            Call(editor, "SelectModel", choices[0].Model!);
+            var file = Path.Combine(_root, "preferences.json"); var held = file + ".held";
+            File.Move(file, held); Directory.CreateDirectory(file);
+            try { Call(editor, "SetReasoningOptions", new MusicPoetryReasoningPreference { ModeId = "on", Budget = 2048 });
+                Assert.AreEqual(4096, Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Budget); }
+            finally { Directory.Delete(file); File.Move(held, file); }
+        }
+        finally { editor.Close(); }
+        var reopened = Editor(choices, new NoGeneration());
+        try { reopened.Show(); PumpUntil(() => Get<DebugModelInfo?>(reopened, "_model") is not null);
+            Assert.AreEqual(4096, Get<MusicPoetryReasoningOptions>(reopened, "_reasoningOptions").Budget);
+            Assert.IsFalse(Get<MusicPoetryReasoningOptions>(reopened, "_reasoningOptions").PreserveThoughts); }
+        finally { reopened.Close(); }
+        File.WriteAllText(Path.Combine(_root, "preferences.json"), """{"FavoriteId":"gamma","Reasoning":{"gamma":{"ModeId":"on","Budget":8192}}}""");
+        var blocked = Editor(choices, new NoGeneration());
+        try { blocked.Show(); PumpUntil(() => Get<DebugModelInfo?>(blocked, "_model") is not null);
+            Get<TextBox>(blocked, "_input").Text = "request"; Assert.IsFalse(Get<Button>(blocked, "_send").IsEnabled);
+            Assert.AreEqual(8192, Preferences.Load().Reasoning["gamma"].Budget);
+            Call(blocked, "SetReasoningOptions", new MusicPoetryReasoningPreference { ModeId = "on", Budget = 2048 });
+            Assert.IsTrue(Get<Button>(blocked, "_send").IsEnabled); }
+        finally { blocked.Close(); }
+    });
+
+    [TestMethod]
+    [DataRow("gamma")]
+    [DataRow("executor")]
+    public Task AdvancedMenuSavesExplicitChoicesAndBusyRequestKeepsOneSnapshot(string modelId) => Sta(() =>
+    {
+        Preferences.SetFavorite(modelId); var runtime = new HoldingRuntime();
+        var editor = Editor(Choices(modelId), runtime); Task? work = null;
+        try
+        {
+            editor.Show(); PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null);
+            Pick("Budget.4096");
+            if (modelId == "gamma") Pick("Effort.xhigh");
+            Pick("Preserve");
+            var preference = Preferences.Load().Reasoning[modelId];
+            Assert.AreEqual(4096, preference.Budget); Assert.IsFalse(preference.PreserveThoughts!.Value);
+            if (modelId == "gamma") Assert.AreEqual("xhigh", preference.Effort);
+            Call(editor, "SetReasoning", "off"); Click(Get<Button>(editor, "_reasoning"));
+            Assert.IsFalse(Item("Budget.4096").IsEnabled); Assert.IsFalse(Item("Preserve").IsEnabled);
+            Get<Button>(editor, "_reasoning").ContextMenu.IsOpen = false; Call(editor, "SetReasoning", "on");
+            Assert.IsFalse(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").PreserveThoughts);
+            work = (Task)editor.GetType().GetMethod("SendCoreAsync", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(editor, [true])!;
+            PumpUntil(() => runtime.Calls > 0);
+            Call(editor, "SetReasoningOptions", preference with { Budget = 2048, PreserveThoughts = true });
+            Assert.AreEqual(4096, Preferences.Load().Reasoning[modelId].Budget);
+            Assert.IsFalse(Preferences.Load().Reasoning[modelId].PreserveThoughts!.Value);
+            Assert.AreEqual(4096, runtime.ReasoningPreference!.Budget);
+            Assert.IsFalse(runtime.ReasoningPreference.PreserveThoughts!.Value);
+        }
+        finally { editor.Close(); if (work is not null) PumpUntil(() => work.IsCompleted); }
+        MenuItem Item(string suffix) => Get<Button>(editor, "_reasoning").ContextMenu.Items.OfType<MenuItem>()
+            .Single(i => AutomationProperties.GetAutomationId(i) == "Music.Poetry.Reasoning." + suffix);
+        void Pick(string suffix)
+        {
+            Click(Get<Button>(editor, "_reasoning"));
+            Item(suffix).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        }
+    });
+
+    [TestMethod] public void AdvancedPreferenceUpdatePreservesUnknownFieldsAndIndependentModelChoices()
+    {
+        File.WriteAllText(Path.Combine(_root, "preferences.json"), """
+            {"FavoriteId":"gamma","Comments":{"gamma":"note"},"FutureRoot":true,"Reasoning":{
+            "gamma":{"ModeId":"off","FutureToggle":true},"executor":{"ModeId":"off","Budget":2048}}}
+            """);
+        Preferences.SetReasoningOptions("gamma", new() { ModeId = "on", Budget = 4096, Effort = "xhigh", PreserveThoughts = false });
+        Preferences.SetReasoning("gamma", "off"); Preferences.SetReasoning("gamma", "on");
+        var fresh = new MusicPoetryPreferences(Path.Combine(_root, "preferences.json")).Load();
+        Assert.IsTrue(fresh.Reasoning["gamma"].Additional!["FutureToggle"].GetBoolean());
+        Assert.IsTrue(fresh.Additional!["FutureRoot"].GetBoolean()); Assert.AreEqual("note", fresh.Comments["gamma"]);
+        Assert.AreEqual("off", fresh.Reasoning["executor"].ModeId); Assert.AreEqual(4096, fresh.Reasoning["gamma"].Budget);
+        Assert.IsFalse(fresh.Reasoning["gamma"].PreserveThoughts!.Value);
+    }
+
     private MusicPoetryWindow Editor(MusicPoetryModelChoice[] choices, IMusicPoetryRuntime runtime) => new(() => new() { Lyrics = "Keep poem" }, new(),
         new(new UserProfileStore(), new IpLocationService()), key => key, "en", new(Path.Combine(_root, "sessions")), runtime, Preferences, () => choices);
-    private MusicPoetryModelChoice[] Choices() => new[] { "core", "executor" }.Select(id =>
+    private MusicPoetryModelChoice[] Choices(params string[] ids) => (ids.Length == 0 ? new[] { "core", "executor" } : ids).Select(id =>
     {
         var candidate = MusicPoetryModelCatalog.All.Single(model => model.Id == id); var path = Path.Combine(_root, candidate.FileName);
         using (var file = File.Create(path)) using (var writer = new BinaryWriter(file, Encoding.UTF8))
@@ -221,16 +501,18 @@ public sealed class MusicPoetryPreferencesTests
     {
         public int Calls;
         public Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false)
+            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
         { Calls++; throw new AssertFailedException("Choosing a model must not run generation."); }
         public void Dispose() { }
     }
     private sealed class HoldingRuntime : IMusicPoetryRuntime
     {
         public int Calls;
+        public string? ReasoningMode;
+        public MusicPoetryReasoningPreference? ReasoningPreference;
         public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false)
-        { Calls++; await Task.Delay(Timeout.Infinite, token); return ""; }
+            Action<MusicPoetryContext> contextReady, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
+        { Calls++; ReasoningMode = reasoningMode; ReasoningPreference = reasoningPreference; await Task.Delay(Timeout.Infinite, token); return ""; }
         public void Dispose() { }
     }
 }

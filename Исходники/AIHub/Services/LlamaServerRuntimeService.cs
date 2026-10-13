@@ -395,10 +395,13 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         AddArgument(startInfo, "1");
         AddArgument(startInfo, "--jinja");
         AddArgument(startInfo, "--reasoning");
-        AddArgument(startInfo, "off");
+        AddArgument(startInfo, _poetryReasoning.Enabled ? "on" : "off");
         AddArgument(startInfo, "--no-webui");
         if (_poetryJournal is not null)
         {
+            AddArgument(startInfo, "--reasoning-format"); AddArgument(startInfo, "deepseek");
+            AddArgument(startInfo, "--reasoning-budget");
+            AddArgument(startInfo, _poetryReasoning.Budget.ToString(System.Globalization.CultureInfo.InvariantCulture));
             // Keep placement/context under our staged policy; native auto-fit can silently change both.
             AddArgument(startInfo, "--fit"); AddArgument(startInfo, "off");
             AddArgument(startInfo, "--ubatch-size"); AddArgument(startInfo, "512");

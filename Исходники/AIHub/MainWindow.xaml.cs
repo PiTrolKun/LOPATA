@@ -218,6 +218,7 @@ public partial class MainWindow : Window
         SetBrush("TextPrimaryBrush", _isDarkTheme ? "#F8FAFC" : "#1F1F1F");
         SetBrush("ChatUserTextBrush", _isDarkTheme ? "#93C5FD" : "#1D4ED8");
         SetBrush("TextSecondaryBrush", _isDarkTheme ? "#AAB4C4" : "#5D6470");
+        SetBrush("PoetryThoughtActiveBrush", _isDarkTheme ? "#B6D8C3" : "#3F6851");
         SetBrush("StepBadgeBrush", _isDarkTheme ? "#1E3A5F" : "#EAF1FF");
         SetBrush("SecondaryButtonBackgroundBrush", _isDarkTheme ? "#111827" : "#F8F8F8");
         Controls.LiterarySpellChecking.ApplyMenuTheme(Resources);

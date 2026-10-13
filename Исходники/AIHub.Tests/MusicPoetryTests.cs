@@ -39,7 +39,7 @@ public sealed class MusicPoetryTests
         var prompt = MusicPoetryProtocol.System(s, "Русская памятка");
         StringAssert.Contains(prompt, "Чёрный кот"); StringAssert.Contains(prompt, "Блюз и гитара");
         Assert.IsFalse(prompt.Contains("\\u04", StringComparison.OrdinalIgnoreCase));
-        using var workspace = JsonDocument.Parse(prompt[(MusicPoetryProtocol.Instructions.Length + 1)..]);
+        using var workspace = JsonDocument.Parse(prompt[(prompt.IndexOf('\n') + 1)..]);
         Assert.AreEqual(song, workspace.RootElement.GetProperty("song").GetString());
         var transport = JsonSerializer.Serialize(new { content = prompt });
         using var envelope = JsonDocument.Parse(transport);
@@ -601,7 +601,7 @@ public sealed class MusicPoetryTests
         public int Calls; public bool Assemble; public MusicPoetrySession? Request;
         public Queue<string> Replies = new();
         public Action<MusicPoetrySession>? BeforeReply;
-        public Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance, Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false)
+        public Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance, Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
         { Calls++; Assemble = assemble; Request = JsonSerializer.Deserialize<MusicPoetrySession>(JsonSerializer.Serialize(request));
             BeforeReply?.Invoke(request);
             ready(new(MusicPoetryProtocol.System(request, guidance), request.Messages.ToArray(), 500, 32768, false));
@@ -783,7 +783,7 @@ public sealed class MusicPoetryTests
     {
         public int Calls;
         public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-            Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false)
+            Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
         {
             if (++Calls == 1) return Routed("I edited it", null, null, "song");
             await Task.Delay(Timeout.Infinite, token); return "";
@@ -837,7 +837,7 @@ public sealed class MusicPoetryTests
     }
     private sealed class HoldingRuntime : IMusicPoetryRuntime
     {
-        public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance, Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false)
+        public async Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance, Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null)
         { await Task.Delay(Timeout.Infinite, token); return ""; }
         public void Dispose() { }
     }

@@ -10,7 +10,8 @@ public sealed class MusicPoetryTokenPreview(int capacity, IMusicTokenizer? token
     public bool UsesTokenizer => tokenizer is not null;
     public int Count(string system, IReadOnlyList<MusicPoetryMessage> messages) => tokenizer is null
         ? MusicPoetryContextWindow.Estimate(system, messages)
-        : checked(tokenizer.Count(system) + messages.Sum(m => tokenizer.Count(m.Text) + 16) + 32);
+        : checked(tokenizer.Count(system) + messages.Sum(m => tokenizer.Count(m.Text)
+            + (m.ReasoningText is null ? 0 : tokenizer.Count(m.ReasoningText)) + 16) + 32);
 
     public static MusicPoetryTokenPreview Load(DebugModelInfo model)
     {

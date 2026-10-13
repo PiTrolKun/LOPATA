@@ -21,6 +21,8 @@ public sealed partial class MusicPoetryWindow
     {
         if (!(assemble ? _assemble.IsEnabled : _send.IsEnabled) || _model is null || IsWorking) return;
         CancelModelEntry();
+        var interfaceLanguage = _interfaceLanguage();
+        var reasoningPreference = _reasoningPreference; // Freeze once for both the initial request and repair.
         Capture(); CommitZone();
         if (!Persist()) return;
         IDisposable? lease = null; string? raw = null; var turn = Guid.NewGuid().ToString("N"); var currentAttempt = 0;
@@ -40,10 +42,14 @@ public sealed partial class MusicPoetryWindow
             {
                 currentAttempt = attempt;
                 raw = null;
+                BeginThoughtAttempt(turn, attempt);
+                try {
                 raw = await _runtime.GenerateAsync(_model, _session, _guidance.Text, context => {
                     _capacity = context.Capacity; Meter(context.Tokens, context.Estimated); RenderChat();
                     _status.Text = L(attempt == 1 ? "Generating" : "Repairing");
-                }, token, assemble);
+                }, token, assemble, _reasoningMode, _thoughtDispatcher!.Report, interfaceLanguage, reasoningPreference);
+                }
+                finally { FinishThoughtAttempt(!string.IsNullOrWhiteSpace(raw)); }
                 token.ThrowIfCancellationRequested();
                 MusicPoetryReplyGuard.Result checkedReply;
                 try { checkedReply = MusicPoetryReplyGuard.Check(_session, MusicPoetryProtocol.Parse(raw, assemble), assemble); }
@@ -126,6 +132,7 @@ public sealed partial class MusicPoetryWindow
     }
     private void ModelCaption()
     {
+        LoadReasoning();
         if (_model is not null) { _session.ModelPath = _model.Path; _session.ModelName = _model.Name; }
         _capacity = _model?.Format.Equals("chatllm", StringComparison.OrdinalIgnoreCase) == true ? 8192 : CoreContextRuntimeLimits.CurrentBackendContextLimit;
         _models.ToolTip = L("Models") + ": " + (_model?.Name ?? L("ModelMissing"));

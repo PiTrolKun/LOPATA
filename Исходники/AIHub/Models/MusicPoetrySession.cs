@@ -7,6 +7,8 @@ public sealed record MusicPoetryPartial(DateTimeOffset At, string Text);
 public sealed record MusicPoetryAttempt(string TurnId, DateTimeOffset At, int Attempt, string Raw, string Outcome, string[] Changes);
 public sealed record MusicPoetryMessage(string Role, string Text, string TurnId)
 {
+    [System.Text.Json.Serialization.JsonIgnore] public string? ReasoningText { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore] public MusicPoetryMessage? ContextSource { get; init; }
     public bool InContext { get; set; }
     public bool IsProgrammatic { get; set; }
     public int ContextRevision { get; set; }
@@ -32,6 +34,7 @@ public sealed class MusicPoetrySession
     public int LyricsCursor { get; set; } = -1;
     public int ParameterCursor { get; set; } = -1;
     public List<MusicPoetryMessage> Messages { get; set; } = [];
+    public List<MusicPoetryThought> Thoughts { get; set; } = [];
 
     public void RememberText()
     {

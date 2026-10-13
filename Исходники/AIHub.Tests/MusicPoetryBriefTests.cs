@@ -43,7 +43,7 @@ public sealed class MusicPoetryBriefTests
         StringAssert.Contains(brief.Music, "Моя особая просьба: припев шёпотом");
         var session = MusicPoetryProtocol.Create(new() { Lyrics = "Keep song" }, key => key);
         session.Parameters = new(session.Parameters.Variation, Legacy);
-        using var workspace = JsonDocument.Parse(MusicPoetryProtocol.System(session, "[Verse]")[(MusicPoetryProtocol.Instructions.Length + 1)..]);
+        using var workspace = JsonDocument.Parse(MusicPoetryProtocol.System(session, "[Verse]").Split('\n', 2)[1]);
         var text = workspace.RootElement.GetProperty("parameters").GetString()!;
         foreach (var forbidden in new[] { "cot =", "seed =", "steps =", "abc_sampling", "semantic_sampling", "Profile", "Opus", "Автоматически", "Варианты", "Без хора: Нет" })
             Assert.IsFalse(text.Contains(forbidden), forbidden);
@@ -131,7 +131,7 @@ public sealed class MusicPoetryBriefTests
     private sealed class NoGeneration : IMusicPoetryRuntime
     {
         public Task<string> GenerateAsync(DebugModelInfo model, MusicPoetrySession request, string guidance,
-            Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false) => throw new AssertFailedException("Unexpected generation");
+            Action<MusicPoetryContext> ready, CancellationToken token, bool assemble = false, string? reasoningMode = null, Action<MusicPoetryStreamUpdate>? reasoningProgress = null, string? interfaceLanguage = null, MusicPoetryReasoningPreference? reasoningPreference = null) => throw new AssertFailedException("Unexpected generation");
         public void Dispose() { }
     }
 }

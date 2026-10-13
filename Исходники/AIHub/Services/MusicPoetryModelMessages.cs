@@ -21,7 +21,7 @@ internal static class MusicPoetryModelMessages
 
     public static void Mark(MusicPoetrySession session, IReadOnlyList<MusicPoetryMessage> included)
     {
-        var references = new HashSet<MusicPoetryMessage>(included, ReferenceEqualityComparer.Instance);
+        var references = new HashSet<MusicPoetryMessage>(included.Select(m => m.ContextSource ?? m), ReferenceEqualityComparer.Instance);
         foreach (var message in session.Messages) message.InContext = references.Contains(message);
     }
 }
