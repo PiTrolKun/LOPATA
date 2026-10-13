@@ -67,6 +67,7 @@ public sealed partial class MusicPoetryModelWindow : Window
             var name = Text(candidate.DisplayName ?? (candidate.Id == "executor" ? "sm54/Qwen3.6-27B-Q4_K_M-GGUF" : candidate.FileName)
                 + (candidate.Id == "core" ? " · " + L("Core") : ""));
             name.FontWeight = FontWeights.SemiBold; name.FontSize = 18; name.Margin = new(0, 0, 52, 0);
+            AddReasoningBadge(name, candidate.Id, localize);
             var cardHeader = new StackPanel(); cardHeader.Children.Add(name);
             if (candidate.SpecializationKey is { } specialization)
             {

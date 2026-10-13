@@ -231,10 +231,10 @@ public sealed class MusicPoetryPreferencesTests
 
     [TestMethod] public Task ConnectedModesStayIndependentAcrossModelSwitchesAndFreshWindow() => Sta(() =>
     {
-        var ids = new[] { "core", "profile-kaine", "profile-abliterated", "beta" };
+        var ids = new[] { "core", "profile-kaine", "profile-abliterated", "beta", "profile-gemma-poetry" };
         var choices = Choices(ids); Preferences.SetFavorite("core");
         var expected = new Dictionary<string, string> { ["core"] = "off", ["profile-kaine"] = "on",
-            ["profile-abliterated"] = "off", ["beta"] = "on" };
+            ["profile-abliterated"] = "off", ["beta"] = "on", ["profile-gemma-poetry"] = "off" };
         var editor = Editor(choices, new NoGeneration());
         try
         {
@@ -244,6 +244,8 @@ public sealed class MusicPoetryPreferencesTests
                 Call(editor, "SelectModel", choice.Model!);
                 Assert.IsTrue(Get<Button>(editor, "_reasoning").IsEnabled);
                 Assert.IsTrue(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled);
+                Assert.AreEqual(choice.Candidate.Id == "profile-gemma-poetry" ? 4096 : 2048,
+                    Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Budget);
                 Call(editor, "SetReasoning", expected[choice.Candidate.Id]);
             }
             foreach (var choice in choices.Reverse())
@@ -251,7 +253,7 @@ public sealed class MusicPoetryPreferencesTests
                 Call(editor, "SelectModel", choice.Model!);
                 var selected = Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions");
                 Assert.AreEqual(expected[choice.Candidate.Id] == "on", selected.Enabled);
-                Assert.AreEqual(selected.Enabled ? 2048 : 0, selected.Budget);
+                Assert.AreEqual(selected.Enabled ? choice.Candidate.Id == "profile-gemma-poetry" ? 4096 : 2048 : 0, selected.Budget);
             }
         }
         finally { editor.Close(); }
@@ -268,6 +270,30 @@ public sealed class MusicPoetryPreferencesTests
             }
         }
         finally { reopened.Close(); }
+    });
+
+    [TestMethod] public Task GemmaMenuOnlyExposesToggleAndShowsItsActualFixedBudget() => Sta(() =>
+    {
+        var choices = Choices("profile-gemma-poetry"); Preferences.SetFavorite("profile-gemma-poetry");
+        var editor = new MusicPoetryWindow(() => new() { Lyrics = "Keep poem" }, new(),
+            new(new UserProfileStore(), new IpLocationService()),
+            key => key == "Music.Poetry.ReasoningCoreHint" ? "Budget {0}" : key,
+            "en", new(Path.Combine(_root, "sessions")), new NoGeneration(), Preferences, () => choices);
+        try
+        {
+            editor.Show(); PumpUntil(() => Get<DebugModelInfo?>(editor, "_model") is not null);
+            var button = Get<Button>(editor, "_reasoning");
+            Assert.IsTrue(button.ToolTip.ToString()!.Contains("4096"));
+            Click(button);
+            var items = button.ContextMenu.Items.OfType<MenuItem>().ToArray();
+            CollectionAssert.AreEqual(new[] { "Music.Poetry.Reasoning.on", "Music.Poetry.Reasoning.off" },
+                items.Select(AutomationProperties.GetAutomationId).ToArray());
+            items[1].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Assert.IsFalse(Get<MusicPoetryReasoningOptions>(editor, "_reasoningOptions").Enabled);
+            Assert.IsTrue(button.ToolTip.ToString()!.Contains("4096"));
+            Assert.AreEqual("off", Preferences.Load().Reasoning["profile-gemma-poetry"].ModeId);
+        }
+        finally { editor.Close(); }
     });
 
     [TestMethod] public Task CoreToggleRestoresAcrossModelsAndNewWindowAndFailedSaveKeepsLiveChoice() => Sta(() =>

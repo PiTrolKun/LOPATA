@@ -48,6 +48,8 @@ public sealed partial class MusicPoetryWindow
         var hint = _reasoningFailed ? L("ReasoningChoiceUnavailable")
             : L(supported ? MusicPoetryReasoning.Extended(MusicPoetryReasoning.ModelId(_model)) ? "ReasoningExtendedHint"
                 : "ReasoningCoreHint" : "ReasoningUnavailable");
+        if (supported && !_reasoningFailed && !MusicPoetryReasoning.Extended(MusicPoetryReasoning.ModelId(_model)))
+            hint = string.Format(hint, MusicPoetryReasoning.DefaultBudget(MusicPoetryReasoning.ModelId(_model)));
         if (supported && !_reasoningFailed && MusicPoetryReasoning.Extended(MusicPoetryReasoning.ModelId(_model)))
             hint += "\n" + string.Format(L("ReasoningBudgetValue"), _reasoningPreference.Budget ?? 2048)
                 + (_reasoningOptions.Effort is null ? "" : " · " + L("ReasoningEffort") + ": " + _reasoningOptions.Effort);

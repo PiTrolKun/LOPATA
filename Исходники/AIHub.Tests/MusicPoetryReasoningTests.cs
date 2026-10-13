@@ -17,13 +17,14 @@ public sealed class MusicPoetryReasoningTests
     [TestMethod]
     public void TestedModelsDefaultOnButExplicitOffAndUnsupportedModelsNeverInheritIt()
     {
-        var connected = new[] { "core", "profile-kaine", "profile-abliterated", "beta", "gamma", "executor" };
+        var connected = new[] { "core", "profile-kaine", "profile-abliterated", "beta", "gamma", "executor", "profile-gemma-poetry" };
         foreach (var id in connected)
         {
             var model = Model(id);
             Assert.AreEqual(id, MusicPoetryReasoning.ModelId(model));
             var on = MusicPoetryReasoning.Resolve(model);
-            Assert.IsTrue(on.Enabled); Assert.AreEqual(2048, on.Budget); Assert.AreEqual(6144, on.ReplyReserve(32768));
+            var expectedBudget = id == "profile-gemma-poetry" ? 4096 : 2048;
+            Assert.IsTrue(on.Enabled); Assert.AreEqual(expectedBudget, on.Budget); Assert.AreEqual(expectedBudget + 4096, on.ReplyReserve(32768));
             var off = MusicPoetryReasoning.Resolve(model, "off");
             Assert.IsFalse(off.Enabled); Assert.AreEqual(0, off.Budget); Assert.AreEqual(4096, off.ReplyReserve(32768));
             var error = Assert.ThrowsExactly<InvalidDataException>(() => MusicPoetryReasoning.Resolve(model, "future-level"));
@@ -41,6 +42,7 @@ public sealed class MusicPoetryReasoningTests
     [DataRow("beta")]
     [DataRow("gamma")]
     [DataRow("executor")]
+    [DataRow("profile-gemma-poetry")]
     public void BothRequestKindsReserveThoughtAndKeepTheirSchemaSamplingAndMessages(string modelId)
     {
         var model = Model(modelId);
@@ -50,7 +52,7 @@ public sealed class MusicPoetryReasoningTests
             var on = MusicPoetryReasoning.Resolve(model, "on"); var off = MusicPoetryReasoning.Resolve(model, "off");
             using var a = JsonDocument.Parse(MusicPoetryGeneration.Payload(model, context, on.ReplyReserve(context.Capacity), on, assembly));
             using var b = JsonDocument.Parse(MusicPoetryGeneration.Payload(model, context, off.ReplyReserve(context.Capacity), off, assembly));
-            Assert.AreEqual(6144, a.RootElement.GetProperty("max_tokens").GetInt32());
+            Assert.AreEqual(modelId == "profile-gemma-poetry" ? 8192 : 6144, a.RootElement.GetProperty("max_tokens").GetInt32());
             Assert.AreEqual(4096, b.RootElement.GetProperty("max_tokens").GetInt32());
             Assert.IsTrue(a.RootElement.GetProperty("chat_template_kwargs").GetProperty("enable_thinking").GetBoolean());
             Assert.IsFalse(b.RootElement.GetProperty("chat_template_kwargs").GetProperty("enable_thinking").GetBoolean());
@@ -59,6 +61,29 @@ public sealed class MusicPoetryReasoningTests
             Assert.AreEqual(JsonSerializer.Serialize(assembly ? MusicPoetryProtocol.AssemblySchema : MusicPoetryProtocol.Schema),
                 a.RootElement.GetProperty("response_format").GetRawText());
         }
+    }
+
+    [TestMethod]
+    public void GemmaHasFixed4096WithoutEffortOrPreviousThoughtProjection()
+    {
+        const string id = "profile-gemma-poetry";
+        Assert.IsFalse(MusicPoetryReasoning.Extended(id));
+        var options = MusicPoetryReasoning.Resolve(Model(id), preference: new() { ModeId = "on", Budget = 4096 });
+        Assert.AreEqual(4096, options.Budget); Assert.IsNull(options.Effort);
+        Assert.IsFalse(options.PreserveThoughts); Assert.IsFalse(options.HistoryControl);
+        CollectionAssert.AreEqual(new[] { "enable_thinking" }, options.TemplateOptions().Keys.ToArray());
+        foreach (var invalid in new MusicPoetryReasoningPreference[] {
+            new() { ModeId = "on", Budget = 2048 }, new() { ModeId = "off", Budget = 8192 },
+            new() { ModeId = "on", Effort = "medium" }, new() { ModeId = "on", PreserveThoughts = true } })
+            Assert.ThrowsExactly<InvalidDataException>(() => MusicPoetryReasoning.Resolve(Model(id), preference: invalid));
+        var session = MusicPoetryProtocol.Create(new(), key => key);
+        session.Messages.AddRange([new("user", "old", "old"), new("assistant", "chat", "old"), new("user", "next", "new")]);
+        session.ReplyAttempts.Add(new("old", DateTimeOffset.UtcNow, 1, "{\"chat\":\"chat\",\"song\":null,\"parameters\":null}", "applied", []));
+        session.Thoughts.Add(new() { TurnId = "old", Attempt = 1, ModelId = id, State = MusicPoetryThought.Completed, Text = "GEMMA_PRIVATE_THOUGHT" });
+        var selected = MusicPoetryReasoningHistory.Select(session, options, id);
+        Assert.IsTrue(selected.All(message => message.ReasoningText is null));
+        Assert.IsFalse(JsonSerializer.Serialize(MusicPoetryReasoningHistory.Messages("system", selected)).Contains("GEMMA_PRIVATE_THOUGHT"));
+        Assert.AreEqual("GEMMA_PRIVATE_THOUGHT", session.Thoughts[0].Text);
     }
 
     [TestMethod]

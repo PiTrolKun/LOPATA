@@ -32,9 +32,11 @@ public sealed record MusicPoetryReasoningOptions(bool Enabled, int Budget, strin
 public static class MusicPoetryReasoning
 {
     public const int CoreBudget = 2048;
+    public const int GemmaBudget = 4096;
     public const string DefaultMode = "on";
-    public static bool SupportsId(string? modelId) => modelId is "core" or "profile-kaine" or "profile-abliterated" or "beta" or "gamma" or "executor";
+    public static bool SupportsId(string? modelId) => modelId is "core" or "profile-kaine" or "profile-abliterated" or "beta" or "gamma" or "executor" or "profile-gemma-poetry";
     public static bool Extended(string? modelId) => modelId is "gamma" or "executor";
+    public static int DefaultBudget(string? modelId) => modelId == "profile-gemma-poetry" ? GemmaBudget : CoreBudget;
     public static string? ModelId(DebugModelInfo? model)
     {
         var id = model is null ? null : MusicPoetryModelCatalog.Find(model)?.Id;
@@ -50,9 +52,9 @@ public static class MusicPoetryReasoning
     {
         if (!SupportsId(id) || preference.ModeId is not ("on" or "off"))
             throw new InvalidDataException("Music.Poetry.ReasoningChoiceUnavailable");
-        var budget = preference.Budget ?? CoreBudget;
+        var budget = preference.Budget ?? DefaultBudget(id);
         var effort = id == "gamma" ? preference.Effort ?? "medium" : null;
-        if (budget != CoreBudget && (!Extended(id) || budget != 4096)
+        if (budget != DefaultBudget(id) && (!Extended(id) || budget != 4096)
             || id == "gamma" && effort is not ("medium" or "xhigh")
             || id != "gamma" && preference.Effort is not null
             || !Extended(id) && preference.PreserveThoughts is not null)
