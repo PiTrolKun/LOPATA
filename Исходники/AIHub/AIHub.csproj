@@ -94,6 +94,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Tools\giga-manifest.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
+    <Content Include="Tools\music-lyrics-components.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\yue2-bf16-models.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Tools\python-hardware-cpu-lock.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Tools\python-hardware-cu126-lock.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>

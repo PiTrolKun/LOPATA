@@ -2783,5 +2783,178 @@
     "Terms": "CFA50A6A5BF15E329410CA983ED2AB66DA497FA06A00A3B873D98E0E6E24F4E3",
     "Ru": "Сведения о лицензии Apache-2.0 заявлены автором карточки. Полный текст сохранён локально. Проверка всех обучающих материалов и вложенных частей отдельно не завершена. Веса не входят в поставку ЛОПАТЫ.",
     "En": "Apache-2.0 is declared by the model-card author. Full text is retained locally. Separate review of all training materials and bundled parts is incomplete. Model weights are not bundled with LOPATA."
+  },
+  {
+    "Id": "runtime.gigaam",
+    "Name": "GigaAM · source",
+    "Version": "7447938d791c4f3e643386ee22c33777004293a5",
+    "Author": "Original upstream authors; see license texts",
+    "License": "MIT",
+    "Source": "https://codeload.github.com/salute-developers/GigaAM/zip/7447938d791c4f3e643386ee22c33777004293a5",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "39B6CD4E73DCA3A72F9073B9A36CB53124870C6F9BB86CF979E85256EBDEE9C4",
+    "Texts": [
+      "texts/gigaam-source-049190ae925d-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.hydra",
+    "Name": "GigaAM · hydra",
+    "Version": "1.3.2",
+    "Author": "Original upstream authors; see license texts",
+    "License": "MIT",
+    "Source": "https://files.pythonhosted.org/packages/c6/50/e0edd38dcd63fb26a8547f13d28f7a008bc4a3fd4eb4ff030673f22ad41a/hydra_core-1.3.2-py3-none-any.whl",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "FFD48BDF601B54F084E27B581CFA2CF65F045A095DF174F0024CC518C47A072E",
+    "Texts": [
+      "texts/gigaam-hydra-1e4273ffa3e5-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.omegaconf",
+    "Name": "GigaAM · omegaconf",
+    "Version": "2.3.0",
+    "Author": "Original upstream authors; see license texts",
+    "License": "BSD-3-Clause",
+    "Source": "https://files.pythonhosted.org/packages/e3/94/1843518e420fa3ed6919835845df698c7e27e183cb997394e4a670973a65/omegaconf-2.3.0-py3-none-any.whl",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "8F7DC4B637D098C215430AE16AE840B1C603E3B26E7807DD70D387D74D7ED373",
+    "Texts": [
+      "texts/gigaam-omegaconf-162b48ec9897-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.antlr",
+    "Name": "GigaAM · antlr",
+    "Version": "4.9.3",
+    "Author": "Original upstream authors; see license texts",
+    "License": "BSD-3-Clause",
+    "Source": "https://files.pythonhosted.org/packages/3e/38/7859ff46355f76f8d19459005ca000b6e7012f2f1ca597746cbcd1fbfe5e/antlr4-python3-runtime-4.9.3.tar.gz",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "236D1B4C25A9677FE5F68D3442B41D5D02A01324E01ED28047FFCF235E14B310",
+    "Texts": [
+      "texts/gigaam-antlr4-4.9.3-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.soundfile",
+    "Name": "GigaAM · soundfile",
+    "Version": "0.13.1",
+    "Author": "Original upstream authors; see license texts",
+    "License": "BSD-3-Clause; libsndfile LGPL-2.1-or-later",
+    "Source": "https://files.pythonhosted.org/packages/14/e9/6b761de83277f2f02ded7e7ea6f07828ec78e4b229b80e4ca55dd205b9dc/soundfile-0.13.1-py2.py3-none-win_amd64.whl",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "37DB1DB2C841153CF5C75428A05B9904AAA45D66ED9C3806031FAFB5BA8D7DE9",
+    "Texts": [
+      "texts/gigaam-soundfile-907fe2fe3c7e-COPYING.txt",
+      "texts/gigaam-soundfile-afe9b6150883-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.cffi",
+    "Name": "GigaAM · cffi",
+    "Version": "2.0.0",
+    "Author": "Original upstream authors; see license texts",
+    "License": "MIT",
+    "Source": "https://files.pythonhosted.org/packages/f8/ed/13bd4418627013bec4ed6e54283b1959cf6db888048c7cf4b4c3b5b36002/cffi-2.0.0-cp312-cp312-win_amd64.whl",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "F6686D47839E2BEC0305EBFEF6C220362C141706F380D7F36848CE1617D80CB5",
+    "Texts": [
+      "texts/gigaam-cffi-1c528a58e013-AUTHORS.txt",
+      "texts/gigaam-cffi-55b796d7e529-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.pycparser",
+    "Name": "GigaAM · pycparser",
+    "Version": "2.23",
+    "Author": "Original upstream authors; see license texts",
+    "License": "BSD-3-Clause",
+    "Source": "https://files.pythonhosted.org/packages/a0/e3/59cd50310fc9b59512193629e1984c1f95e5c8ae6e5d8c69532ccc65a7fe/pycparser-2.23-py3-none-any.whl",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "897652532FC730512D871DB4A9D5EB297055CC052F72C0D24542AB746DDDDA58",
+    "Texts": [
+      "texts/gigaam-pycparser-3227e48a0334-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.sentencepiece",
+    "Name": "GigaAM · sentencepiece",
+    "Version": "0.2.1",
+    "Author": "Original upstream authors; see license texts",
+    "License": "Apache-2.0",
+    "Source": "https://files.pythonhosted.org/packages/2d/81/92df5673c067148c2545b1bfe49adfd775bcc3a169a047f5a0e6575ddaca/sentencepiece-0.2.1-cp312-cp312-win_amd64.whl",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "2E56B01133BF27C2F946779B9F7DA18DB83451F1700377907A5A41BC9F78C191",
+    "Texts": [
+      "texts/gigaam-sentencepiece-0.2.1-LICENSE.txt",
+      "texts/gigaam-sentencepiece-0.2.1-protobuf-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "runtime.gigaam.torchaudio",
+    "Name": "GigaAM · torchaudio",
+    "Version": "2.10.0+cpu",
+    "Author": "Original upstream authors; see license texts",
+    "License": "BSD-2-Clause",
+    "Source": "https://download.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp312-cp312-win_amd64.whl",
+    "Checked": "2026-10-14",
+    "Ru": "Общий локальный компонент синхронизации строк песни для всех музыкальных моделей. Используется закреплённый оригинальный пакет без изменения; лицензии и уведомления авторов сохранены. Передача аудио в сеть не требуется.",
+    "En": "Shared local song-line alignment component for every music model. Uses a pinned original unmodified package; upstream licenses and notices are preserved. No network audio transfer is required.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "7E36737412624BE5BF160A6FF5DF84590F6EE61D3CD9C4719F7E160CF7E9ECE8",
+    "Texts": [
+      "texts/gigaam-torchaudio-ce15e030c850-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "model.gigaam.v3-ctc",
+    "Name": "GigaAM v3 CTC acoustic weights",
+    "Version": "v3-ctc-a20a9b5b8ed9",
+    "Author": "GigaChat Team",
+    "License": "MIT",
+    "Source": "https://github.com/salute-developers/GigaAM/tree/7447938d791c4f3e643386ee22c33777004293a5",
+    "Checked": "2026-10-14",
+    "Ru": "GigaAM v3 CTC: оригинальная акустическая модель GigaChat Team под MIT для локальной синхронизации русского текста песни. Входит в подготовку каждой музыкальной модели; не меняет лицензии самих генераторов. Английское выравнивание этой версией не подтверждено.",
+    "En": "GigaAM v3 CTC: original GigaChat Team acoustic model under MIT for local Russian song-line alignment. Included in preparation of every music model; does not change the generators' own licenses. English alignment is not verified with this version.",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "265EDEA3C0CED38521FF56861895F4196825ED963539866C8345D4830D66AEAD",
+    "Texts": [
+      "texts/gigaam-source-049190ae925d-LICENSE.txt"
+    ]
   }
 ]

@@ -21,6 +21,8 @@ public sealed record MusicGenerationVariant(int LanguageSeed, int SoundSeed, str
     public string? UsedRuntimePack { get; init; }
     public string? ExecutionReceipt { get; init; }
     public bool Completed { get; init; }
+    // Null preserves legacy jobs. Pending audio exists durably but is not yet exposed in the scenario.
+    public MusicKaraokeReadiness? KaraokeReadiness { get; init; }
 }
 public sealed record MusicGenerationJob(string Id, string ModelsRoot, string OutputFolder, string Title,
     string Style, string Lyrics, int DurationSeconds, DateTime CreatedAt, MusicGenerationVariant[] Variants)
@@ -51,9 +53,11 @@ public sealed class MusicGenerationJobs(string directory)
         : throw new InvalidDataException("Invalid music job identifier.");
     public MusicGenerationJob Load(string id)
     {
+        lock (MusicLyricsTimingStore.Gate(Folder(id))) {
         var job = JsonSerializer.Deserialize<MusicGenerationJob>(File.ReadAllText(Path.Combine(Folder(id), "job.json")))
             ?? throw new InvalidDataException("Missing music job.");
-        Validate(job); if (job.Id != id) throw new InvalidDataException("Music job identity mismatch."); return job;
+        Validate(job); if (job.Id != id) throw new InvalidDataException("Music job identity mismatch."); return MusicLyricsTimingStore.Recover(this, job);
+        }
     }
     public void Save(MusicGenerationJob job)
     {
@@ -100,16 +104,38 @@ public sealed class MusicGenerationJobs(string directory)
             : (int)(((long)settings.Integer(key) + index) % ((long)int.MaxValue + 1));
     }
     public string StagePath(string id, string suffix) => Path.Combine(Folder(id), Guid.NewGuid().ToString("N") + suffix);
+    public MusicGenerationJob SetKaraokeReadiness(string id, int index, MusicKaraokeReadiness readiness)
+    {
+        lock (MusicLyricsTimingStore.Gate(Folder(id))) {
+            var job = Load(id);
+            if (index < 0 || index >= job.Variants.Length) throw new ArgumentOutOfRangeException(nameof(index));
+            var variants = job.Variants.ToArray(); variants[index] = variants[index] with { KaraokeReadiness = readiness };
+            job = job with { Variants = variants }; Save(job); return job;
+        }
+    }
+    public async Task<IReadOnlyList<MusicTrack>> CancelPendingKaraokeAsync(string id, CancellationToken token)
+    {
+        var job = Load(id); var ready = new List<MusicTrack>();
+        for (var index = 0; index < job.Variants.Length; index++) {
+            if (!job.Variants[index].Completed) continue;
+            job = await MusicOutputPublisher.VerifyCompletedAsync(this, id, index, token);
+            if (job.Variants[index].KaraokeReadiness == MusicKaraokeReadiness.Pending)
+                job = SetKaraokeReadiness(id, index, MusicKaraokeReadiness.Unavailable);
+            ready.Add(Track(job, job.Variants[index], index));
+        }
+        return ready;
+    }
+    public static bool ResultVisible(MusicGenerationVariant variant) => variant.Completed && variant.KaraokeReadiness != MusicKaraokeReadiness.Pending;
     public IReadOnlyList<MusicTrack> Tracks(string id)
     {
         var job = Load(id);
-        return job.Variants.Select((v, i) => (v, i)).Where(p => p.v.Completed && File.Exists(p.v.ResultPath))
+        return job.Variants.Select((v, i) => (v, i)).Where(p => ResultVisible(p.v) && File.Exists(p.v.ResultPath))
             .Select(p => Track(job, p.v, p.i)).ToArray();
     }
     public static MusicTrack Track(MusicGenerationJob job, MusicGenerationVariant variant, int index) =>
         new(variant.ResultPath, Path.GetFileName(variant.ResultPath), variant.DurationSeconds is { } seconds ? TimeSpan.FromSeconds(seconds)
             : MusicWaveFile.ReadDuration(variant.ResultPath), job.CreatedAt)
-        { JobId = job.Id, Variant = index, AdditionalPath = variant.AdditionalPath };
+        { JobId = job.Id, Variant = index, AdditionalPath = variant.AdditionalPath, KaraokeReadiness = variant.KaraokeReadiness };
     private void Validate(MusicGenerationJob job)
     {
         if (job.Expert is null) throw new InvalidDataException("Missing music settings snapshot.");
@@ -134,6 +160,8 @@ public sealed class MusicGenerationJobs(string directory)
             throw new InvalidDataException("Unsupported music job.");
         foreach (var v in job.Variants)
         {
+            if (v.KaraokeReadiness is { } readiness && (!Enum.IsDefined(readiness) ||
+                readiness != MusicKaraokeReadiness.Pending && !v.Completed)) throw new InvalidDataException("Invalid karaoke readiness.");
             if ((bf16 || ace || diff || heart) && v.LanguageSeed != v.SoundSeed) throw new InvalidDataException("This model requires one seed for all stages.");
             if (job.Output is null && (v.AdditionalPath is not null || v.AdditionalHash is not null)) throw new InvalidDataException("Unexpected duplicate in legacy music job.");
             if (v.LanguageSeed < 0 || v.SoundSeed < 0 || Path.GetDirectoryName(Path.GetFullPath(v.ResultPath)) != job.OutputFolder)

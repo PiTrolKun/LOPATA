@@ -51,7 +51,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
                 try {
                     _preparation.Variation = id;
                     var checkedCards = await _preparation.CheckAsync(_root, null, ApplicationBackgroundOperations.ExitToken);
-                    if (!checkedCards.All(c => c.Status == ManagedModelStatuses.Installed)) throw new System.IO.IOException(_l("Music.Preparation.Missing"));
+                    if (!checkedCards.All(c => c.Status == ManagedModelStatuses.Installed) || !_preparation.LyricsComponentsReady) throw new System.IO.IOException(_l("Music.Preparation.Missing"));
                     var hardware = id == MusicModelVariants.Bf16 ? await MusicBf16Worker.ProbeAsync(_root, ApplicationBackgroundOperations.ExitToken,
                         line => _workspace!.Status.AppendLog(line)) : null;
                     _workspace!.Projects.SwitchModel(id, hardware); _variation = id; _cards = checkedCards;
@@ -67,7 +67,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
         menu.Items.Add(all);
         anchor.ContextMenu = menu; menu.IsOpen = true;
     }
-    public bool CanContinue => _ready && !IsModelSelection && !IsBusy && !_disposed;
+    public bool CanContinue => _ready && _preparation.LyricsComponentsReady && !IsModelSelection && !IsBusy && !_disposed;
     public MusicPreparationControl() : this(new MusicPreparationService()) { }
     public MusicPreparationControl(IMusicPreparation preparation) : this(preparation, () => new MusicWorkspaceControl()) { }
     internal MusicPreparationControl(IMusicPreparation preparation, Func<MusicWorkspaceControl> createWorkspace)
@@ -102,7 +102,8 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     { _outputFolder = folder; _saveOutputFolder = save; _workspace?.ConfigureOutput(folder, save); }
     public void DownloadConnections(int connections) => _preparation.MaximumParallelConnections = connections;
     public bool UsesArtifact(string id) => (IsBusy && !_removingModel || PendingMusicOperation || _workspace?.Session.HasPendingOrRunning == true) &&
-        (MusicComponentCatalog.ComponentIds.Contains(id) || MusicModelVariants.Components(MusicModelVariants.Bf16).Contains(id)
+        (ComponentCatalog.ResolveDependencies([MusicLyricsComponentCatalog.ModelId]).Any(entry => entry.Id == id)
+            || MusicComponentCatalog.ComponentIds.Contains(id) || MusicModelVariants.Components(MusicModelVariants.Bf16).Contains(id)
             || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id) || MusicAceCatalog.Components.Contains(id) || MusicDiffRhythmCatalog.Components.Contains(id) || MusicHeartMuLaCatalog.Components.Contains(id));
     public Task OpenAsync() { if (IsBusy) return Task.CompletedTask; if (ShowPendingWorkspace()) return Task.CompletedTask; IsWorkspace = false; IsModelSelection = true; Render(); return Task.CompletedTask; }
     public Task SelectModelAsync(string modelId, string variantId)
@@ -155,6 +156,8 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     }
     public Task ResumeGenerationAsync(BackgroundOperationState state, CancellationToken token)
     { ShowWorkspace(); return _workspace!.Session.ResumeAsync(state, token); }
+    public Task ResumeLyricsSyncAsync(BackgroundOperationState state, CancellationToken token)
+    { ShowWorkspace(); return _workspace!.LyricsPlayback.ResumeAsync(state, token); }
     public void ViewGenerationResult(string id)
     { ShowWorkspace(); _workspace!.Session.ViewResult(id); }
     public Task CheckAsync() => RunAsync(false, false, false);
@@ -198,7 +201,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
             OwnedProcessRegistry.Log("music_ui_preparation", "Music.Preparation", detail:
                 $"variation={_variation}; stage={(open && MusicModelVariants.ExternalPipeline(_variation) ? "worker-verifies" : "files")}; elapsedMs={filesWatch.ElapsedMilliseconds}");
             operation.Token.ThrowIfCancellationRequested();
-            _ready = _cards.Count == MusicModelVariants.Cards(_root, _variation).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
+            _ready = _preparation.LyricsComponentsReady && _cards.Count == MusicModelVariants.Cards(_root, _variation).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             _statusKey = _ready ? "Music.Preparation.Ready" : "Music.Preparation.Missing";
             if (open && _ready && _variation == MusicModelVariants.Bf16)
                 _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
@@ -206,17 +209,17 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
             if (open && _ready && MusicHeartMuLaCatalog.IsHeart(_variation)) {
                 var receipt = await MusicHeartMuLaWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
                 _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
-                _ready = _cards.Count == MusicHeartMuLaCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
+                _ready = _preparation.LyricsComponentsReady && _cards.Count == MusicHeartMuLaCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             }
             if (open && _ready && MusicDiffRhythmCatalog.IsDiff(_variation)) {
                 var receipt = await MusicDiffRhythmWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
                 _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
-                _ready = _cards.Count == MusicDiffRhythmCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
+                _ready = _preparation.LyricsComponentsReady && _cards.Count == MusicDiffRhythmCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             }
             if (open && _ready && MusicAceCatalog.IsAce(_variation)) {
                 var receipt = await MusicAceWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
                 _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
-                _ready = _cards.Count == MusicAceCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
+                _ready = _preparation.LyricsComponentsReady && _cards.Count == MusicAceCatalog.Cards(_root).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             }
             operation.Token.ThrowIfCancellationRequested();
             if (open && _ready && !_disposed && !ShowPendingWorkspace()) {
@@ -291,6 +294,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
             panel.Children.Add(Text(card.DisplayName + " · " + $"{card.TotalBytes / 1e9:0.00} GB" + " — " +
                 _l(current?.Status == ManagedModelStatuses.Installed ? "Music.Available" : "Music.Missing")));
         }
+        panel.Children.Add(Text("GigaAM v3 · CTC · " + _l(_preparation.LyricsComponentsReady ? "Music.Available" : "Music.Missing")));
         panel.Children.Add(Text(_l("Music.Preparation.LicenseHint")));
         _status = Text(_l(_statusKey) + (_statusKey == "Music.Error" ? " " + ErrorText : ""));
         panel.Children.Add(_status);

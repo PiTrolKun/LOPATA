@@ -32,7 +32,7 @@ public sealed class BackgroundOperationStore(string path)
         state = state with { Notices = publicNotices,
             Notice = state.Notice?.Private == true ? publicNotices.LastOrDefault() : state.Notice,
             NeedsAttention = publicNotices.Length > 0 || state.NeedsAttention && state.Notice?.Private != true };
-        if (state.Private && state.Phase is BackgroundOperationPhase.Completed or BackgroundOperationPhase.Canceled)
+        if (state.Private && state.Phase is BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled)
         {
             Lopata.Updates.SafeUpdatePath.RejectLinks(path);
             // Keep unread PUBLIC results across restart without persisting the private run's fact or path.

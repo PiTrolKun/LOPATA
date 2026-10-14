@@ -27,8 +27,18 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
     private MusicTrack? _track;
     private string _errorKey = "", _outputFolder = "";
     private bool _refreshing, _disposed;
+    private bool _previouslyPlaying, _playbackEnded, _surfaceActive = true;
+    private bool _lyricsPending, _waitingPlay, _lyricsUnavailable;
     public event Action? PlaybackChanged;
+    public event Action? PositionChanged;
+    public event Action? PlaybackSeeked;
+    public event Action<MusicTrack?>? TrackChanged;
     public bool IsPlaying => _audio.IsPlaying;
+    public MusicTrack? CurrentTrack => _track;
+    public TimeSpan PlaybackPosition => _audio.IsReady && !_disposed ? _audio.Position : TimeSpan.Zero;
+    public bool CanHighlightPlayback => !_disposed && _surfaceActive && !_playbackEnded && _errorKey.Length == 0 &&
+        _track is { IsExample: false } && _audio.IsReady && _audio.Duration > TimeSpan.Zero &&
+        _audio.Position >= TimeSpan.Zero && _audio.Position < _audio.Duration;
     private Func<MusicTrack, bool>? _canRepeat;
     private Action<MusicTrack>? _requestRepeat;
     public void ConfigureRepeat(Func<MusicTrack, bool> canRepeat, Action<MusicTrack> request)
@@ -38,7 +48,7 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
     public MusicPlayerControl(IMusicAudioPlayer audio)
     {
         _audio = audio; AutomationProperties.SetAutomationId(this, "Music.Audio.Player");
-        var root = new StackPanel { Margin = new(12, 8, 12, 8) };
+        var root = new StackPanel { Margin = new(12, 4, 12, 4) };
         _title.FontWeight = FontWeights.SemiBold; root.Children.Add(_title);
         var tools = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         _speaker = MusicAudioUi.IconButton("Volume", "M2,9 H6 L12,4 V20 L6,15 H2 Z M16,7 C22,10 22,14 16,17", () => _volumePopup!.IsOpen = !_volumePopup.IsOpen);
@@ -52,7 +62,7 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
         _volume.Value = audio.Volume; _volume.ValueChanged += (_, _) => _audio.Volume = _volume.Value;
         AutomationProperties.SetAutomationId(_volume, "Music.Audio.VolumeSlider");
         var playback = new Grid(); playback.ColumnDefinitions.Add(new() { Width = new(54) }); playback.ColumnDefinitions.Add(new());
-        _play = MusicAudioUi.IconButton("Play", "M7,3 L21,12 L7,21 Z", () => { _audio.Toggle(); Refresh(); });
+        _play = MusicAudioUi.IconButton("Play", "M7,3 L21,12 L7,21 Z", RequestPlayback);
         _play.Width = _play.Height = 46; _play.Content = MusicAudioUi.Icon("M7,3 L21,12 L7,21 Z");
         var buttonBorder = new FrameworkElementFactory(typeof(Border)); buttonBorder.SetValue(Border.CornerRadiusProperty, new CornerRadius(99));
         buttonBorder.SetResourceReference(BackgroundProperty, "AccentBrush");
@@ -61,20 +71,43 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
         _play.Template = new ControlTemplate(typeof(Button)) { VisualTree = buttonBorder };
         playback.Children.Add(_play); Grid.SetColumn(_seek, 1); playback.Children.Add(_seek); root.Children.Add(playback);
         _time.Margin = new(54, 2, 0, 0); root.Children.Add(_time); _status.Margin = new(0, 4, 0, 0); root.Children.Add(_status);
-        _seek.ValueChanged += (_, _) => { if (_refreshing) return; _audio.Seek(TimeSpan.FromSeconds(_seek.Value)); RefreshTime(); };
+        _status.TextWrapping = TextWrapping.Wrap;
+        _status.TextTrimming = TextTrimming.None;
+        AutomationProperties.SetAutomationId(_status, "Music.Audio.Readiness");
+        _seek.ValueChanged += (_, _) => { if (_refreshing) return; _playbackEnded = false; _audio.Seek(TimeSpan.FromSeconds(_seek.Value)); PlaybackSeeked?.Invoke(); RefreshTime(); };
         AutomationProperties.SetAutomationId(_seek, "Music.Audio.Seek");
         _audio.Changed += AudioChanged; _audio.Failed += Failed;
         _clock.Tick += Tick;
-        Loaded += (_, _) => { if (!_disposed) _clock.Start(); };
-        Unloaded += (_, _) => { _clock.Stop(); _volumePopup.IsOpen = false; _audio.Pause(); };
+        Loaded += (_, _) => { if (!_disposed) { _surfaceActive = true; _clock.Start(); RefreshTime(); } };
+        Unloaded += (_, _) => { _surfaceActive = false; _clock.Stop(); _volumePopup.IsOpen = false; Pause(); PositionChanged?.Invoke(); };
         Content = root; Refresh();
     }
     public void ConfigureFolder(string folder) => _outputFolder = folder;
-    public void Pause() { if (!_disposed) _audio.Pause(); }
+    public void Pause() { if (!_disposed) { _waitingPlay = false; _audio.Pause(); Refresh(); } }
+    public void SetLyricsPreparation(MusicTrack track, bool pending, bool unavailable = false)
+    {
+        if (_disposed || _track != track) return;
+        _lyricsPending = pending; _lyricsUnavailable = unavailable;
+        if (!pending && _waitingPlay) {
+            _waitingPlay = false;
+            if (_surfaceActive && _errorKey.Length == 0 && File.Exists(track.Path) && !_audio.IsPlaying) _audio.Toggle();
+        }
+        Refresh();
+    }
+    private void RequestPlayback()
+    {
+        if (_disposed || _track is null || _errorKey.Length > 0) return;
+        if (_lyricsPending) _waitingPlay = !_waitingPlay;
+        else _audio.Toggle();
+        Refresh();
+    }
     public void Select(MusicTrack track, bool play = false)
     {
-        _track = track; _errorKey = ""; _audio.Open(track.Path);
-        if (play && !track.IsExample) _audio.Toggle(); Refresh();
+        if (_disposed) return;
+        _track = track; _errorKey = ""; _previouslyPlaying = _playbackEnded = false;
+        _lyricsPending = _waitingPlay = _lyricsUnavailable = false;
+        TrackChanged?.Invoke(track); _audio.Open(track.Path);
+        if (play && !track.IsExample) RequestPlayback(); Refresh();
     }
     public void Localize(Func<string, string> localize)
     {
@@ -82,32 +115,39 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
         MusicAudioUi.Label(_repeat, _l("Music.Audio.Repeat"));
         AutomationProperties.SetName(_seek, _l("Music.Audio.Seek")); AutomationProperties.SetName(_volume, _l("Music.Audio.Volume")); Refresh();
     }
-    private void AudioChanged() { Refresh(); PlaybackChanged?.Invoke(); }
-    public void Clear() { _track = null; _errorKey = ""; _audio.Open(null); Refresh(); }
-    private void Failed(string key) { _errorKey = key; Refresh(); }
+    private void AudioChanged() {
+        if (_audio.IsPlaying) _playbackEnded = false;
+        else if (_previouslyPlaying && _audio.Position == TimeSpan.Zero) _playbackEnded = true;
+        _previouslyPlaying = _audio.IsPlaying; Refresh(); PlaybackChanged?.Invoke();
+    }
+    public void Clear() { _track = null; _errorKey = ""; _lyricsPending = _waitingPlay = _lyricsUnavailable = false; TrackChanged?.Invoke(null); _audio.Open(null); Refresh(); }
+    private void Failed(string key) { _waitingPlay = false; _errorKey = key; Refresh(); }
     private void Tick(object? sender, EventArgs e) => RefreshTime();
     private void Refresh()
     {
         if (_disposed) return;
         _title.Text = _track is null ? _l("Music.Audio.NoTrack") : _track.IsExample ? _l(_track.Title) : _track.Title; _title.ToolTip = _title.Text;
-        _status.Text = _errorKey.Length > 0 ? _l(_errorKey) : _track?.IsExample == true ? _l("Music.Audio.ExampleHint") : "";
+        _status.Text = _errorKey.Length > 0 ? _l(_errorKey) : _track?.IsExample == true ? _l("Music.Audio.ExampleHint") :
+            _lyricsPending ? _l(_waitingPlay ? "Music.Audio.SyncWaitingPlay" : "Music.Audio.SyncPending") :
+            _lyricsUnavailable ? _l("Music.Audio.KaraokeUnavailable") : "";
         var hasFile = _track is { IsExample: false } && File.Exists(_track.Path);
         _save.IsEnabled = hasFile; _play.IsEnabled = hasFile && _errorKey.Length == 0;
         RefreshRepeat();
         _play.Opacity = _play.IsEnabled ? 1 : .45;
-        _play.Content = MusicAudioUi.Icon(_audio.IsPlaying ? "M7,3 V21 M17,3 V21" : "M7,3 L21,12 L7,21 Z");
-        MusicAudioUi.Label(_play, _l(_audio.IsPlaying ? "Music.Audio.Pause" : "Music.Audio.Play"));
+        _play.Content = MusicAudioUi.Icon(_audio.IsPlaying || _waitingPlay ? "M7,3 V21 M17,3 V21" : "M7,3 L21,12 L7,21 Z");
+        MusicAudioUi.Label(_play, _l(_waitingPlay ? "Music.Audio.CancelWaitingPlay" : _audio.IsPlaying ? "Music.Audio.Pause" : "Music.Audio.Play"));
         _seek.IsEnabled = _track is not null && _audio.IsReady; RefreshTime();
     }
     private void RefreshTime()
     {
         if (_disposed) return;
         _refreshing = true;
-        if (_track is null) { _seek.Value = 0; _time.Text = "00:00 / 00:00"; _refreshing = false; return; }
+        if (_track is null) { _seek.Value = 0; _time.Text = "00:00 / 00:00"; _refreshing = false; PositionChanged?.Invoke(); return; }
         _seek.Maximum = Math.Max(1, (_audio.IsReady ? _audio.Duration : _track?.Duration ?? TimeSpan.Zero).TotalSeconds);
         _seek.Value = _audio.IsReady ? _audio.Position.TotalSeconds : 0;
         _refreshing = false;
         _time.Text = MusicAudioUi.Time(_audio.Position) + " / " + MusicAudioUi.Time(_audio.IsReady ? _audio.Duration : _track?.Duration ?? TimeSpan.Zero);
+        PositionChanged?.Invoke();
     }
     private void Save()
     {
@@ -125,7 +165,10 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
     }
     public void Dispose()
     {
-        if (_disposed) return; _disposed = true; _clock.Stop(); _clock.Tick -= Tick; _volumePopup.IsOpen = false;
+        if (_disposed) return; _disposed = true; _waitingPlay = false; _clock.Stop(); _clock.Tick -= Tick; _volumePopup.IsOpen = false;
         _audio.Changed -= AudioChanged; _audio.Failed -= Failed; _audio.Dispose();
+        PositionChanged?.Invoke(); PositionChanged = null;
+        PlaybackSeeked = null;
+        TrackChanged = null;
     }
 }

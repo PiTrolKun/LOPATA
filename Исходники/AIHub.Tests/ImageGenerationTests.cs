@@ -95,7 +95,8 @@ public sealed class ImageGenerationTests
     {
         var request = Request();
         var worker = new Worker(request.Prompt) { Invalid = true };
-        await Assert.ThrowsAsync<InvalidDataException>(() => new ImageGenerationRuntime(worker).RunAsync(request, [], null, CancellationToken.None));
+        var error = await Assert.ThrowsAsync<BackgroundOperationFailedException>(() => new ImageGenerationRuntime(worker).RunAsync(request, [], null, CancellationToken.None));
+        Assert.AreEqual("Generation.InvalidImage", error.Message);
         Assert.IsFalse(File.Exists(ImageGenerationSessionStore.ResultPath(request, 0)));
         Assert.HasCount(0, ImageGenerationSessionStore.Load(request.SessionDirectory).Turns[0].Results);
     }

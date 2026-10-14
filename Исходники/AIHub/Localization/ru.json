@@ -4893,5 +4893,14 @@
   "Music.Poetry.CreativityHint": "Меньше — более предсказуемые ответы, больше — больше разнообразия. Качество зависит от модели и задачи. Выбор сохраняется отдельно для каждой модели.",
   "Music.Poetry.CreativityInputHint": "От 0,1 до 2. Введите число и нажмите Enter или «Применить».",
   "Music.Poetry.CreativityInvalid": "Введите число от 0,1 до 2. Можно использовать запятую или точку.",
-  "Music.Poetry.Creativity.Apply": "Применить"
+  "Music.Poetry.Creativity.Apply": "Применить",
+  "Music.Status.Synchronizing": "Синхронизация текста песни",
+  "Music.LyricsSync.Title": "Синхронизация текста песни",
+  "Music.Audio.SyncPending": "Синхронизация текста песни ещё не завершена.",
+  "Music.Audio.SyncWaitingPlay": "Синхронизация ещё не завершена. Воспроизведение начнётся автоматически.",
+  "Music.Audio.CancelWaitingPlay": "Отменить ожидающее воспроизведение",
+  "Music.LyricsSync.Unavailable": "Не удалось получить достоверную разметку текста. Песня доступна для обычного прослушивания.",
+  "Music.Audio.KaraokeUnavailable": "Караоке недоступно",
+  "Cloud.Tag.music_lyrics_sync": "Подсветка текста песни",
+  "Cloud.Description.music_lyrics_sync": "Автоматическая временная разметка конкретной записи и подсветка исполняемых строк в музыкальном редакторе. Изменённый текст не подсвечивается."
 }

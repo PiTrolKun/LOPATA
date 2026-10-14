@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Threading;
 using AIHub.Services;
 using TextBox = System.Windows.Controls.TextBox;
@@ -14,6 +15,8 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     private readonly TextBlock _title = new(), _context = new(), _weight = new(), _characters = new(), _hint = new();
     private readonly DispatcherTimer _debounce;
     private readonly TextBox _editor;
+    private MusicLyricsPlaybackAdorner? _playbackHighlight;
+    private MusicLyricsPlaybackScroll? _playbackScroll;
     private Func<string, string> _l = key => key;
     private IMusicTokenizer? _tokenizer;
     private CancellationTokenSource? _loadCancel, _countCancel;
@@ -26,7 +29,16 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     public bool CanGenerate => !_disposed && (_ace ? _instrumental || !string.IsNullOrWhiteSpace(_editor.Text) : MusicTextBudget.CanStart(Usage, _counting, _editor.Text, _instrumental));
     public event EventHandler? ValidityChanged;
     public event EventHandler? SelectionChanged;
+    public event EventHandler? LyricsChanged;
     public string Lyrics { get => _editor.Text; set => _editor.Text = value; }
+    public void SetPlaybackHighlight(int start, int length, bool playing = true)
+    {
+        if (_disposed) return;
+        _playbackHighlight?.SetRange(start, length);
+        _playbackScroll?.Follow(start, length, playing);
+    }
+    public void ResumePlaybackFollow() => _playbackScroll?.Resume();
+    public void ClearPlaybackHighlight() { _playbackHighlight?.SetRange(0, 0); _playbackScroll?.Clear(); }
     public MusicTextSelection CaptureSelection() => new(_editor.Text, _editor.SelectionStart, _editor.SelectionLength);
     public bool ApplyEdit(MusicTextSelection source, MusicTextEdit? edit)
     {
@@ -61,7 +73,11 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         _editor.SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
         _editor.SetResourceReference(TextBox.CaretBrushProperty, "TextPrimaryBrush");
         AutomationProperties.SetAutomationId(_editor, "Music.Lyrics");
-        Grid.SetRow(_editor, 1); grid.Children.Add(_editor);
+        var editorLayer = new AdornerDecorator { Child = _editor };
+        Grid.SetRow(editorLayer, 1); grid.Children.Add(editorLayer);
+        _playbackHighlight = new MusicLyricsPlaybackAdorner(_editor);
+        editorLayer.AdornerLayer.Add(_playbackHighlight);
+        _playbackScroll = new MusicLyricsPlaybackScroll(_editor);
         var footer = new StackPanel { Margin = new(0, 10, 0, 0) };
         foreach (var text in new[] { _context, _weight, _characters, _hint })
         {
@@ -74,7 +90,9 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         Grid.SetRow(footer, 2); grid.Children.Add(footer); Content = grid;
         _debounce = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) { Interval = TimeSpan.FromMilliseconds(180) };
         _debounce.Tick += DebounceTick;
-        _editor.TextChanged += (_, _) => InvalidateCounts();
+        _editor.TextChanged += (_, _) => {
+            ClearPlaybackHighlight(); InvalidateCounts(); LyricsChanged?.Invoke(this, EventArgs.Empty);
+        };
         _editor.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
         UpdateLabels();
     }
@@ -189,5 +207,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     {
         if (_disposed) return;
         _disposed = true; _debounce.Stop(); _debounce.Tick -= DebounceTick; _loadCancel?.Cancel(); _countCancel?.Cancel();
+        _playbackHighlight?.Dispose(); _playbackHighlight = null;
+        _playbackScroll?.Dispose(); _playbackScroll = null;
     }
 }

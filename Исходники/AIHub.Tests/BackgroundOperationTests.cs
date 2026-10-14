@@ -119,6 +119,44 @@ public sealed class BackgroundOperationTests
     }
 
     [TestMethod]
+    public async Task TerminalExecutorFailureReleasesGateAndRetainsInputsAcrossRestart()
+    {
+        var controller = new BackgroundOperationController(Store); var input = Input(); var releases = 0;
+        await Assert.ThrowsAsync<BackgroundOperationFailedException>(() => controller.RunAsync<int>(input, _ => {
+            controller.SaveCheckpoint("first output published");
+            throw new BackgroundOperationFailedException("Generation.RuntimeError");
+        }, () => { releases++; return Task.CompletedTask; }, default));
+        Assert.AreEqual(1, releases); Assert.IsFalse(controller.HasPending); Assert.IsFalse(controller.IsRunning);
+        var restored = new BackgroundOperationController(Store); restored.Load();
+        Assert.AreEqual(BackgroundOperationPhase.Failed, restored.State!.Phase); Assert.IsFalse(restored.HasPending);
+        Assert.AreEqual(input.Id, restored.State.Id); Assert.IsTrue(JsonElement.DeepEquals(input.Input, restored.State.Input));
+        Assert.AreEqual("first output published", restored.State.Checkpoint!.Value.GetString());
+        using (restored.BeginAuxiliary()) { Assert.IsTrue(restored.IsRunning); }
+        Assert.AreEqual(42, await restored.RunAsync(Input(), _ => Task.FromResult(42), () => Task.CompletedTask, default));
+    }
+
+    [TestMethod]
+    public async Task PrivateTerminalFailureDoesNotPersistTheFinishedPrivateRun()
+    {
+        var controller = new BackgroundOperationController(Store);
+        await Assert.ThrowsAsync<BackgroundOperationFailedException>(() => controller.RunAsync<int>(Input() with { Private = true },
+            _ => throw new BackgroundOperationFailedException("Generation.RuntimeError"), () => Task.CompletedTask, default));
+        Assert.AreEqual(BackgroundOperationPhase.Failed, controller.State!.Phase);
+        Assert.IsNull(Store.Load()); Assert.IsFalse(controller.HasPending);
+        Assert.IsFalse(Directory.Exists(Path.Combine(_folder, "Results")));
+    }
+
+    [TestMethod]
+    public async Task UnconfirmedRetirementDoesNotReleaseTheModelGate()
+    {
+        var controller = new BackgroundOperationController(Store);
+        await Assert.ThrowsAsync<BackgroundOperationFailedException>(() => controller.RunAsync<int>(Input(),
+            _ => throw new BackgroundOperationFailedException("Generation.RuntimeError"),
+            () => throw new IOException("retirement failed"), default));
+        Assert.IsTrue(controller.HasPending); Assert.IsTrue(controller.State!.RequiresDecision);
+    }
+
+    [TestMethod]
     public async Task RefusedRequestCanBeResolvedWithoutDiscardingAnotherPendingTask()
     {
         var controller = new BackgroundOperationController(Store); var input = Input();

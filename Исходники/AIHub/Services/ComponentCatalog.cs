@@ -379,7 +379,7 @@ public static class ComponentCatalog
             [".log", ".cs", ".js", ".ts", ".py", ".cpp", ".h", ".sql"])
     ];
 
-    public static IReadOnlyList<ComponentCatalogEntry> All { get; } = [.. Entries, .. HardwareRuntimeCatalog.Components];
+    public static IReadOnlyList<ComponentCatalogEntry> All { get; } = [.. Entries, .. HardwareRuntimeCatalog.Components, .. MusicLyricsComponentCatalog.Entries];
 
     public static IReadOnlyList<ComponentCatalogEntry> Processing => All
         .Where(entry => entry.Kind == ComponentKinds.Processing)

@@ -34,6 +34,8 @@ public partial class MainWindow
         RegisterImageShellBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeGenerationAsync(state, token); });
+        _backgroundOperations.Register(MusicLyricsSynchronization.BackgroundKind, (state, token) =>
+        { ConfigureMusic(); return MusicPage.ResumeLyricsSyncAsync(state, token); });
         _backgroundOperations.Changed += () =>
         { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -42,7 +44,10 @@ public partial class MainWindow
             _applicationTray?.Notify(L("Tray.ResultReady"), notice.Title, onOpen: ViewBackgroundResult);
             RefreshBackgroundTray();
         });
-        try { _backgroundOperations.Load(); }
+        try {
+            _backgroundOperations.Load(); ImageGenerationFailureRecovery.Recover(_backgroundOperations);
+            MusicDiffRhythmFailureRecovery.Recover(_backgroundOperations, MusicGenerationJobs.Default);
+        }
         catch (Exception error)
         {
             OwnedProcessRegistry.Log("background_restore_failed", "Application", detail: error.GetType().Name);
@@ -149,7 +154,7 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
-            if (notice.Kind == MusicGenerationRunner.BackgroundKind && notice.Project is not null)
+            if (notice.Kind is MusicGenerationRunner.BackgroundKind or MusicLyricsSynchronization.BackgroundKind && notice.Project is not null)
             {
                 RestoreFromTray(); OpenMusicScenario(false); MusicPage.ViewGenerationResult(notice.Project);
                 _backgroundOperations!.Acknowledge(notice.Id); return;

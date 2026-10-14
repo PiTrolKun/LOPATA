@@ -12,15 +12,18 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public MusicLyricsEditor Editor { get; } = new();
     public MusicWishesControl Wishes { get; } = new();
     public MusicTextActionsControl TextActions { get; }
-    public MusicPlayerControl Player { get; } = new();
+    public MusicPlayerControl Player { get; }
     public MusicTracksControl Tracks { get; } = new();
     public MusicStatusControl Status { get; } = new();
     public MusicGenerationControl Generation { get; }
     public MusicGenerationSession Session { get; }
     public MusicProjectController Projects { get; }
+    public MusicLyricsPlaybackController LyricsPlayback { get; }
     private bool _outputConfigured;
-    public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null)
+    public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null,
+        IMusicLyricsSynchronization? synchronizeLyrics = null, IMusicAudioPlayer? audioPlayer = null)
     {
+        Player = audioPlayer is null ? new() : new(audioPlayer);
         Generation = new(outputPreferences);
         AutomationProperties.SetAutomationId(this, "Music.Workspace");
         var grid = new Grid { Margin = new(8) };
@@ -60,6 +63,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Add(Card(Generation), 4, 1, 2);
         Content = grid;
         Session = new(this, jobs);
+        LyricsPlayback = new(this, jobs ?? MusicGenerationJobs.Default, synchronizeLyrics);
         double MaximumWidth() => Math.Max(250, grid.ActualWidth - 140 - 12 - 220 - 260);
         void Add(UIElement element, int column, int row, int rowSpan = 1, int columnSpan = 1)
         { Grid.SetColumn(element, column); Grid.SetRow(element, row); Grid.SetRowSpan(element, rowSpan); Grid.SetColumnSpan(element, columnSpan); grid.Children.Add(element); }
@@ -74,6 +78,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Status.Localize(localize);
         Generation.Localize(localize);
         Projects.Localize(localize);
+        LyricsPlayback.Localize(localize);
         var grid = (Grid)Content;
         var divider = (Thumb)grid.Children[1]; divider.ToolTip = localize("Music.Editor.Resize");
         AutomationProperties.SetName(divider, localize("Music.Editor.Resize"));
@@ -86,6 +91,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public void ConfigureOutput(string folder, Action<string> save)
     { if (_outputConfigured) return; _outputConfigured = true;
         Tracks.ConfigureFolder(folder, save); Player.ConfigureFolder(folder); Projects.RememberDefaults(); }
-    public void ConfigureGeneration(string modelsRoot, Func<string, string> localize) => Session.Configure(modelsRoot, localize);
-    public void Dispose() { Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
+    public void ConfigureGeneration(string modelsRoot, Func<string, string> localize)
+    { Session.Configure(modelsRoot, localize); LyricsPlayback.Configure(localize); }
+    public void Dispose() { LyricsPlayback.Dispose(); Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
 }

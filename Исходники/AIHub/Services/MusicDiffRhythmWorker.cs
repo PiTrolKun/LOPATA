@@ -31,7 +31,12 @@ public sealed class MusicDiffRhythmWorker : IMusicYueWorker
     }
     private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token)
     {
-        request.Validate(); var payload = MusicDiffRhythmRequest.Build(request);
+        Dictionary<string, object?> payload;
+        try { payload = MusicDiffRhythmRequest.Build(request); }
+        catch (Exception error) when (error is InvalidDataException or ArgumentOutOfRangeException) {
+            // Preparation has not begun: retrying the same input cannot change validation.
+            throw new AIHub.Models.BackgroundOperationFailedException(error.Message);
+        }
         if (File.Exists(output)) throw new IOException("Music output already exists.");
         Log?.Invoke("[Load] DiffRhythm 2 · official API");
         var preparation = Stopwatch.StartNew();

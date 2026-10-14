@@ -90,6 +90,31 @@ public sealed class MusicAudioTests
     });
 
     [TestMethod]
+    public Task HiddenPlayerRestoresPausedHighlightButDoesNotReviveAnEndedTrack() => ScenarioNavigationTests.Sta(() =>
+    {
+        var audio = new FakeAudio(); using var player = new MusicPlayerControl(audio);
+        var file = Path.GetTempFileName();
+        try
+        {
+            player.Select(new(file, "First.wav", TimeSpan.FromSeconds(120), DateTime.Now));
+            audio.Seek(TimeSpan.FromSeconds(85)); Assert.IsTrue(player.CanHighlightPlayback);
+            var updates = 0; player.PositionChanged += () => updates++;
+            player.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
+            Assert.IsFalse(player.CanHighlightPlayback); Assert.IsFalse(audio.IsPlaying);
+            var hiddenUpdates = updates;
+            player.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+            Assert.IsTrue(player.CanHighlightPlayback); Assert.AreEqual(TimeSpan.FromSeconds(85), player.PlaybackPosition);
+            Assert.IsTrue(hiddenUpdates > 0 && updates > hiddenUpdates, "Hiding and showing must both refresh highlighting.");
+            Assert.IsFalse(audio.IsPlaying, "Showing the page must not autoplay.");
+            audio.Toggle(); audio.Complete(); Assert.IsFalse(player.CanHighlightPlayback);
+            player.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
+            player.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+            Assert.IsFalse(player.CanHighlightPlayback, "An ended track must stay ended after rehosting.");
+        }
+        finally { File.Delete(file); }
+    });
+
+    [TestMethod]
     public Task FirstRealTrackIsSelectedAndSelectionSurvivesLocalizing() => ScenarioNavigationTests.Sta(() =>
     {
         var tracks = new MusicTracksControl(); var l = new LocalizationService(); l.Load("ru"); tracks.Localize(l.T);
@@ -200,6 +225,7 @@ public sealed class MusicAudioTests
         public void Open(string? path) { IsReady = path is not null; IsPlaying = false; Position = TimeSpan.Zero; Changed?.Invoke(); }
         public void Toggle() { IsPlaying = !IsPlaying; Changed?.Invoke(); } public void Pause() { IsPlaying = false; Changed?.Invoke(); }
         public void Seek(TimeSpan position) => Position = position;
+        public void Complete() { IsPlaying = false; Position = TimeSpan.Zero; Changed?.Invoke(); }
         public void Dispose() { }
     }
 }

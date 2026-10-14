@@ -224,7 +224,7 @@ public sealed class MusicGenerationSession : IDisposable
         _worker.Log += NativeLog; if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
         if (_worker is MusicStudioWorker studio) studio.HardwareChanged += HardwareChanged;
         _cancel = CancellationTokenSource.CreateLinkedTokenSource(token); RefreshButtons();
-        var runner = new MusicGenerationRunner(_jobs, _worker);
+        var runner = new MusicGenerationRunner(_jobs, _worker, synchronizeLyrics: _view.LyricsPlayback.SynchronizeGeneratedAsync);
         runner.Stage += stage => _view.Status.Telemetry.Report(_telemetry, stage);
         runner.TrackReady += track => _view.Dispatcher.Invoke(() => { var present = _view.Tracks.HasTrack(track.Path!); _view.Tracks.AddTrack(track);
             if (!present) _view.Status.AppendLog(_l("Music.Audio.Saved") + ": " + track.Title); });
@@ -238,17 +238,22 @@ public sealed class MusicGenerationSession : IDisposable
                 await ApplicationBackgroundOperations.RetireModelsAsync();
                 await runner.RunAsync(id, attempt); return id;
             }, _cancel.Token, restored);
-            var completed = _jobs.Load(id).Variants.All(v => v.Completed);
+            var completed = _jobs.Load(id).Variants.All(MusicGenerationJobs.ResultVisible);
             Outcome(job, completed ? MusicProjectOutcome.Completed : MusicProjectOutcome.Paused);
             _view.Status.Telemetry.Report(_telemetry, completed ? MusicGenerationStage.Completed : MusicGenerationStage.Paused);
         }
         catch (OperationCanceledException)
         {
-            Outcome(job, ApplicationBackgroundOperations.ExitToken.IsCancellationRequested ? MusicProjectOutcome.Paused : MusicProjectOutcome.Cancelled);
-            if (!ApplicationBackgroundOperations.ExitToken.IsCancellationRequested && _controller is { IsRunning: false, State.Kind: MusicGenerationRunner.BackgroundKind })
+            var explicitCancel = _cancelRequested && !ApplicationBackgroundOperations.ExitToken.IsCancellationRequested;
+            if (explicitCancel) {
+                _view.LyricsPlayback.GenerationCanceled(job);
+                await PublishCanceledKaraokeAsync(id);
+            }
+            var settled = _jobs.Load(id).Variants.All(MusicGenerationJobs.ResultVisible);
+            Outcome(job, settled ? MusicProjectOutcome.Completed : explicitCancel ? MusicProjectOutcome.Cancelled : MusicProjectOutcome.Paused);
+            if (explicitCancel && _controller is { IsRunning: false, State.Kind: MusicGenerationRunner.BackgroundKind })
                 _controller.DiscardPending(_controller.State!.Id);
-            _view.Status.Telemetry.Report(_telemetry, ApplicationBackgroundOperations.ExitToken.IsCancellationRequested
-                ? MusicGenerationStage.Paused : MusicGenerationStage.Cancelled);
+            _view.Status.Telemetry.Report(_telemetry, settled ? MusicGenerationStage.Completed : explicitCancel ? MusicGenerationStage.Cancelled : MusicGenerationStage.Paused);
         }
         catch (Exception error) { Outcome(job, MusicProjectOutcome.Failed, error.Message); ReportFailure(error); }
         finally { _cancel.Dispose(); _cancel = null; _working = false; _cancelRequested = false; if (!_disposed) RefreshButtons(); }
@@ -256,15 +261,25 @@ public sealed class MusicGenerationSession : IDisposable
     public void ViewResult(string id)
     { var job = _jobs.Load(id); if (job.ProjectId is not null && !HasPendingOrRunning) _view.Projects.Open(job.ProjectId);
         else foreach (var track in _jobs.Tracks(id)) _view.Tracks.AddTrack(track); }
-    private Task CancelAsync()
+    private async Task CancelAsync()
     {
-        if (_controller?.State?.Kind != MusicGenerationRunner.BackgroundKind && !_working) return Task.CompletedTask;
+        if (_controller?.State?.Kind != MusicGenerationRunner.BackgroundKind && !_working) return;
         if (_cancel is not null) { _cancelRequested = true; RefreshButtons(); _cancel.Cancel(); }
         else if (_controller is { IsRunning: false, State: { } state }) {
-            Outcome(_jobs.Load(state.Input.GetProperty("JobId").GetString()!), MusicProjectOutcome.Cancelled);
+            var job = _jobs.Load(state.Input.GetProperty("JobId").GetString()!);
+            _view.LyricsPlayback.GenerationCanceled(job);
+            await PublishCanceledKaraokeAsync(job.Id); job = _jobs.Load(job.Id);
+            Outcome(job, job.Variants.All(MusicGenerationJobs.ResultVisible) ? MusicProjectOutcome.Completed : MusicProjectOutcome.Cancelled);
             _controller.DiscardPending(state.Id);
         }
-        return Task.CompletedTask;
+    }
+    private async Task PublishCanceledKaraokeAsync(string id)
+    {
+        var tracks = await _jobs.CancelPendingKaraokeAsync(id, CancellationToken.None);
+        await _view.Dispatcher.InvokeAsync(() => {
+            if (_disposed) return;
+            foreach (var track in tracks) _view.Tracks.AddTrack(track);
+        });
     }
     private void ControllerChanged()
     {
@@ -280,7 +295,7 @@ public sealed class MusicGenerationSession : IDisposable
                 var outcome = state.Phase == BackgroundOperationPhase.Paused ? MusicProjectOutcome.Paused : MusicProjectOutcome.Running;
                 var id = identifier.GetString();
                 if (id is not null && _view.Projects.Current.Steps.Any(s => s.JobId == id && s.Outcome != outcome))
-                    Outcome(_jobs.Load(id), outcome);
+                    { var job = _jobs.Load(id); Outcome(job, job.Variants.All(MusicGenerationJobs.ResultVisible) ? MusicProjectOutcome.Completed : outcome); }
             }
             RefreshButtons();
         });

@@ -480,6 +480,10 @@ public sealed partial class ComponentManager
 
     private static void ExtractArchiveSafely(string archivePath, string destination)
     {
+        if (archivePath.EndsWith(".tar.gz",StringComparison.OrdinalIgnoreCase)) {
+            ComponentTarGzipExtractor.Extract(archivePath,destination,MaximumExtractedBytes,MaximumArchiveEntries);
+            return;
+        }
         using var archive = ArchiveFactory.Open(archivePath);
         var destinationRoot = Path.GetFullPath(destination) + Path.DirectorySeparatorChar;
         long extractedBytes = 0;

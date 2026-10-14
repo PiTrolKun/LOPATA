@@ -5,7 +5,8 @@ using AIHub.Models;
 
 namespace AIHub.Services;
 
-public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWorker worker, IMusicAudioEncoder? encoder = null)
+public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWorker worker, IMusicAudioEncoder? encoder = null,
+    Func<MusicGenerationJob, int, CancellationToken, Task>? synchronizeLyrics = null)
 {
     public const string BackgroundKind = "music.generate";
     public event Action<MusicGenerationStage>? Stage;
@@ -19,6 +20,9 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
             token.ThrowIfCancellationRequested(); var variant = job.Variants[i];
             if (!variant.Completed)
             {
+                if (variant.KaraokeReadiness != MusicKaraokeReadiness.Pending) {
+                    variant = variant with { KaraokeReadiness = MusicKaraokeReadiness.Pending }; Save(variant);
+                }
                 var elapsed = Stopwatch.StartNew();
                 var previousSeconds = variant.GenerationSeconds ?? 0;
                 try {
@@ -70,15 +74,44 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                 variant = variant with { Completed = true }; Save(variant);
                 if (job.Output is not null && variant.AudioFile is { } nativeAudio && File.Exists(nativeAudio)) File.Delete(nativeAudio);
             }
-            await MatchHashAsync(variant.ResultPath, variant.ResultHash ?? variant.AudioHash!, token);
-            if (variant.AdditionalPath is { } additional) await MatchHashAsync(additional, variant.AdditionalHash!, token);
-            TrackReady?.Invoke(MusicGenerationJobs.Track(job, variant, i));
+            job = await MusicOutputPublisher.VerifyCompletedAsync(jobs, id, i, token);
+            variant = job.Variants[i];
             void Save(MusicGenerationVariant updated)
             {
-                var variants = job.Variants.ToArray(); variants[i] = updated; job = job with { Variants = variants }; jobs.Save(job);
+                MusicGenerationVariant[] variants;
+                lock (MusicLyricsTimingStore.Gate(jobs.Folder(id))) {
+                    var latest = jobs.Load(id); variants = latest.Variants.ToArray(); variants[i] = updated;
+                    job = latest with { Variants = variants }; jobs.Save(job);
+                }
                 if (ApplicationBackgroundOperations.Current is { IsInOperationScope: true } controller)
                     controller.SaveCheckpoint(new { JobId = id, Completed = variants.Count(v => v.Completed) });
             }
+        }
+        // Audio receipts are durable. Expose each new result only after its karaoke preparation settles.
+        for (var i = 0; i < job.Variants.Length; i++) {
+            token.ThrowIfCancellationRequested(); job = jobs.Load(id);
+            if (job.Variants[i].KaraokeReadiness is null or MusicKaraokeReadiness.Pending) {
+                Stage?.Invoke(MusicGenerationStage.Synchronizing);
+                try {
+                    if (job.Wishes?.Instrumental == true || string.IsNullOrWhiteSpace(job.Lyrics))
+                        job = jobs.SetKaraokeReadiness(id, i, MusicKaraokeReadiness.Ready);
+                    else if (synchronizeLyrics is not null) await synchronizeLyrics(job, i, token);
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception error) {
+                    OwnedProcessRegistry.Log("music_karaoke_preparation_failed", "Music.LyricsAlignment", detail: error.GetType().Name);
+                    job = jobs.SetKaraokeReadiness(id, i, MusicKaraokeReadiness.Unavailable);
+                }
+                job = jobs.Load(id);
+                if (job.Variants[i].KaraokeReadiness == MusicKaraokeReadiness.Pending)
+                    job = jobs.SetKaraokeReadiness(id, i, MusicKaraokeReadiness.Unavailable);
+            }
+            token.ThrowIfCancellationRequested();
+            job = await MusicOutputPublisher.VerifyCompletedAsync(jobs, id, i, token);
+            if (MusicGenerationJobs.ResultVisible(job.Variants[i])) TrackReady?.Invoke(MusicGenerationJobs.Track(job, job.Variants[i], i));
+            if (ApplicationBackgroundOperations.Current is { IsInOperationScope: true } controller)
+                controller.SaveCheckpoint(new { JobId = id, Completed = job.Variants.Count(v => v.Completed),
+                    KaraokeSettled = job.Variants.Count(MusicGenerationJobs.ResultVisible) });
         }
     }
     private static async Task<string> HashAsync(string path, CancellationToken token)

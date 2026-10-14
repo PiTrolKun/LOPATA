@@ -52,7 +52,7 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
             result = (retry.ExitCode, result.Log + "\nCPU retry:\n" + retry.Log);
         }
         await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_" + index + ".runtime.log"), result.Log, token);
-        if (result.ExitCode != 0) throw new InvalidOperationException("Generation.RuntimeError");
+        if (result.ExitCode != 0) throw new BackgroundOperationFailedException("Generation.RuntimeError");
     }
 
     internal static ProcessStartInfo ManagedCommand(ImageGenerationRequest request, int index,
@@ -126,7 +126,7 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
                 if (File.Exists(partial)) File.Delete(partial);
                 await _worker.GenerateAsync(request, i, cards, promptFile, partial, token);
                 token.ThrowIfCancellationRequested();
-                if (!IsValidImage(partial, request)) throw new InvalidDataException("Generation.InvalidImage");
+                if (!IsValidImage(partial, request)) throw new BackgroundOperationFailedException("Generation.InvalidImage");
                 if (request.Metadata is not null)
                 {
                     var metadata = ImageGenerationMetadata.Create(request, i, DateTimeOffset.Now);

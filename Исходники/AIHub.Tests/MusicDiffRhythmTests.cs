@@ -13,6 +13,47 @@ namespace AIHub.Tests;
 public sealed class MusicDiffRhythmTests
 {
     [TestMethod]
+    public void SharedSongBriefIsMovedToStyleAndFinalChorusIsAdaptedWithoutEditingOriginal()
+    {
+        var original = "\r\n[Nostalgic ballad, warm baritone, soft piano]\r\n\r\n[Verse 1]\r\nКот уснул.\r\n[Final Chorus]\r\nНаступил покой.";
+        var request = new MusicYueRequest("slow tempo", original, 42, 42, 240) { Expert = MusicDiffRhythmCatalog.Defaults() };
+        var payload = MusicDiffRhythmRequest.Build(request);
+        Assert.AreEqual(original, payload["original_lyrics"]);
+        Assert.AreEqual("slow tempo", payload["original_style"]);
+        Assert.AreEqual("Nostalgic ballad, warm baritone, soft piano, slow tempo", payload["style"]);
+        StringAssert.Contains((string)payload["lyrics"]!, "[verse]\nКот уснул.\n[chorus]\nНаступил покой.");
+        Assert.IsFalse(((string)payload["lyrics"]!).Contains("Nostalgic"));
+        var section = MusicDiffRhythmRequest.Build(request with { Lyrics = "[Verse 1: MALE, warm, quiet]\nКот уснул." });
+        Assert.AreEqual("[verse]\nКот уснул.", section["lyrics"]);
+        Assert.AreEqual("slow tempo", section["style"]);
+        Assert.Throws<InvalidDataException>(() => MusicDiffRhythmRequest.Build(request with { Lyrics = "[Unknown]\nСлова" }));
+        Assert.Throws<InvalidDataException>(() => MusicDiffRhythmRequest.Build(request with { Lyrics = "[Verse]\nКот\n[Unknown, cue, instruction]" }));
+    }
+
+    [TestMethod]
+    public async Task InvalidInputFailsBeforePreparationAndReleasesTheBackgroundGate()
+    {
+        using var files = new MusicProjectTests.Files();
+        var store = new BackgroundOperationStore(Path.Combine(files.Root, "operation.json"));
+        var controller = new BackgroundOperationController(store);
+        var worker = new MusicDiffRhythmWorker(); var logCount = 0; worker.Log += _ => logCount++;
+        var request = new MusicYueRequest("rock", "[Unknown]\nКот", 42, 42, 120) { Expert = MusicDiffRhythmCatalog.Defaults() };
+        var state = new BackgroundOperationState { Kind = MusicGenerationRunner.BackgroundKind, Title = "song",
+            Input = JsonSerializer.SerializeToElement(new { JobId = "test" }) };
+        var retired = false;
+        await Assert.ThrowsAsync<BackgroundOperationFailedException>(() => controller.RunAsync(state, async token => {
+            await worker.SynthesizeAsync(Path.Combine(files.Root, "a", "b", "model"), "decoder", request,
+                Path.Combine(files.Root, "request.json"), Path.Combine(files.Root, "song.wav"), token);
+            return "done";
+        }, () => { retired = true; return Task.CompletedTask; }, default));
+        Assert.AreEqual(0, logCount); Assert.IsTrue(retired);
+        Assert.IsFalse(File.Exists(Path.Combine(files.Root, "request.json")));
+        Assert.AreEqual(BackgroundOperationPhase.Failed, controller.State!.Phase);
+        Assert.IsFalse(controller.HasPending); controller.Load(); Assert.IsFalse(controller.HasPending);
+        using (controller.BeginAuxiliary()) { }
+    }
+
+    [TestMethod]
     public void RequestPreservesRussianOriginalAndSeparatesStyleAndSections()
     {
         var request = new MusicYueRequest("doom metal; duet", "[Verse 1: MALE]\nЛАПАТА роет!\n[Chorus]\nЁж поёт.", 7, 7, 120) {

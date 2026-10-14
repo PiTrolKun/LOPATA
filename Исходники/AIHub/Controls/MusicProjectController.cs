@@ -20,6 +20,8 @@ public sealed class MusicProjectController
     public MusicProject Current { get; private set; }
     public bool Busy { get; private set; }
     public MusicHistoryMode Mode { get; private set; }
+    public string? DisplayedLyricsJobId { get; private set; }
+    public event Action? LyricsContextChanged;
     public Button ManageButton { get; }
     public MusicHistoryControl History { get; }
     public MusicProjectController(MusicWorkspaceControl view, MusicProjects store, MusicGenerationJobs jobs)
@@ -50,10 +52,11 @@ public sealed class MusicProjectController
     public void Navigate(int delta)
     {
         if (!CanNavigate(delta)) return;
-        _cursor += delta; Apply(Current.Steps[_cursor].Snapshot, Mode == MusicHistoryMode.Text, Mode == MusicHistoryMode.Settings);
+        _cursor += delta; Apply(Current.Steps[_cursor].Snapshot, Mode == MusicHistoryMode.Text, Mode == MusicHistoryMode.Settings,
+            lyricsJobId: Current.Steps[_cursor].JobId);
         History.Refresh();
     }
-    private void Apply(MusicProjectSnapshot snapshot, bool lyrics, bool settings, bool restoreBank = false)
+    private void Apply(MusicProjectSnapshot snapshot, bool lyrics, bool settings, bool restoreBank = false, string? lyricsJobId = null)
     {
         if (settings) {
             if (snapshot.Model != (MusicModelVariants.Family(snapshot.Variation)) || !MusicModelVariants.Supported(snapshot.Variation)
@@ -69,7 +72,7 @@ public sealed class MusicProjectController
             _view.Wishes.Apply(snapshot.Wishes.ToPreferences()); _view.Tracks.SetOutputFolder(snapshot.OutputFolder);
             _view.Session.ModelChanged();
         }
-        if (lyrics) _view.Editor.Lyrics = snapshot.Lyrics;
+        if (lyrics) { DisplayedLyricsJobId = lyricsJobId; _view.Editor.Lyrics = snapshot.Lyrics; LyricsContextChanged?.Invoke(); }
     }
     public void Fix()
     {
@@ -96,7 +99,7 @@ public sealed class MusicProjectController
             || project.Saved.ModelRevision != MusicModelVariants.Revision(project.Saved.Variation)) throw new InvalidDataException("Unsupported music project model.");
         _modelSettings.Clear();
         Current = project; _cursor = project.Steps.Length - 1; _view.Player.Clear(); _view.Tracks.ClearTracks();
-        Apply(project.Saved, true, true, true); LoadTracks(); History.Refresh();
+        Apply(project.Saved, true, true, true, project.Steps.LastOrDefault()?.JobId); LoadTracks(); History.Refresh();
     }
     private void LoadTracks()
     {
@@ -106,8 +109,10 @@ public sealed class MusicProjectController
                 foreach (var track in _jobs.Tracks(step.JobId)) _view.Tracks.AddTrack(track);
                 var active = ApplicationBackgroundOperations.Current is { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind } controller
                     && controller.State!.Input.TryGetProperty("JobId", out var savedId) && savedId.GetString() == step.JobId;
-                if (job.Variants.All(v => v.Completed) && step.Outcome != MusicProjectOutcome.Completed)
+                if (job.Variants.All(MusicGenerationJobs.ResultVisible) && step.Outcome != MusicProjectOutcome.Completed)
                     Current = _store.SetOutcome(Current.Id, step.JobId, MusicProjectOutcome.Completed);
+                else if (job.Variants.Any(v => v.KaraokeReadiness == MusicKaraokeReadiness.Pending) && step.Outcome == MusicProjectOutcome.Completed)
+                    Current = _store.SetOutcome(Current.Id, step.JobId, active ? MusicProjectOutcome.Paused : MusicProjectOutcome.Interrupted);
                 else if (!active && step.Outcome is MusicProjectOutcome.Pending or MusicProjectOutcome.Running or MusicProjectOutcome.Paused)
                     Current = _store.SetOutcome(Current.Id, step.JobId, MusicProjectOutcome.Interrupted);
             }
@@ -122,6 +127,7 @@ public sealed class MusicProjectController
         var linked = job with { ProjectId = Current.Id, ProjectName = Name(Current), ProjectStep = Current.Steps.Single(s => s.JobId == job.Id).Number };
         try { _jobs.Save(linked); }
         catch (Exception error) { Current = _store.SetOutcome(Current.Id, job.Id, MusicProjectOutcome.Failed, error.Message); throw; }
+        DisplayedLyricsJobId = job.Id; LyricsContextChanged?.Invoke();
         History.Refresh(); return linked;
     }
     public void SwitchModel(string variation, string? verifiedHardware = null)
@@ -150,10 +156,10 @@ public sealed class MusicProjectController
         if (job.ProjectId is { } id) {
             Current = _store.Load(id); _cursor = Array.FindIndex(Current.Steps, s => s.JobId == job.Id);
             if (_cursor < 0) throw new InvalidDataException("Music project request link is missing.");
-            _view.Player.Clear(); _view.Tracks.ClearTracks(); Apply(Current.Steps[_cursor].Snapshot, true, true);
+            _view.Player.Clear(); _view.Tracks.ClearTracks(); Apply(Current.Steps[_cursor].Snapshot, true, true, lyricsJobId: job.Id);
             LoadTracks();
         }
-        else Apply(MusicProjectSnapshot.FromJob(job), true, true);
+        else Apply(MusicProjectSnapshot.FromJob(job), true, true, lyricsJobId: job.Id);
         History.Refresh(); return job;
     }
     public void Outcome(MusicGenerationJob job, MusicProjectOutcome outcome, string message = "")

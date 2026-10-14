@@ -176,10 +176,22 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         }
         catch (Exception error)
         {
+            var terminal = error is BackgroundOperationFailedException;
+            if (terminal) {
+                try { await releaseModels(); }
+                catch (Exception releaseError) {
+                    terminal = false; // Do not advertise a free model gate when retirement was not confirmed.
+                    OwnedProcessRegistry.Log("background_failure_retirement_failed", "Application", detail: releaseError.GetType().Name);
+                }
+            }
             lock (_gate)
             {
-                try { Persist(_state! with { Phase = BackgroundOperationPhase.Waiting, RequiresDecision = true,
-                    Detail = error is BackgroundOperationWaitingException ? error.Message : error.GetType().Name, ElapsedSeconds = Elapsed }); }
+                try { Persist(_state! with {
+                    Phase = terminal ? BackgroundOperationPhase.Failed : BackgroundOperationPhase.Waiting,
+                    RequiresDecision = !terminal,
+                    UserPaused = terminal ? false : _state!.UserPaused,
+                    Detail = error is BackgroundOperationWaitingException or BackgroundOperationFailedException ? error.Message : error.GetType().Name,
+                    ElapsedSeconds = Elapsed }); }
                 catch (Exception saveError) { OwnedProcessRegistry.Log("background_checkpoint_failed", "Application", detail: saveError.GetType().Name); }
                 _paused?.TrySetException(error);
             }
@@ -298,5 +310,16 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
             if (_state is not null && !IsFinal(_state.Phase)) Persist(_state with { Phase = BackgroundOperationPhase.Canceled, UserPaused = false });
         }
         NotifyChanged();
+    }
+
+    /// <summary>Startup recovery of a positively identified executor failure; never cancels a live or explicitly paused task.</summary>
+    public bool FailWaiting(string expectedId, string reason)
+    {
+        lock (_gate) {
+            if (_running || _auxiliaryRunning || _state?.Id != expectedId ||
+                _state is not { Phase: BackgroundOperationPhase.Waiting, RequiresDecision: true, UserPaused: false }) return false;
+            Persist(_state with { Phase = BackgroundOperationPhase.Failed, RequiresDecision = false, Detail = reason });
+        }
+        NotifyChanged(); return true;
     }
 }

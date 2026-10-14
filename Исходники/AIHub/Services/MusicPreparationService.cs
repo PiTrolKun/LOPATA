@@ -4,6 +4,7 @@ namespace AIHub.Services;
 
 public interface IMusicPreparation : IDisposable
 {
+    bool LyricsComponentsReady => true;
     string Variation { get => MusicComponentCatalog.ModelId; set { } }
     int MaximumParallelConnections { get; set; }
     Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root,
@@ -14,6 +15,8 @@ public interface IMusicPreparation : IDisposable
 
 public sealed class MusicPreparationService : IMusicPreparation
 {
+    public bool LyricsComponentsReady => _lyricsVerified && MusicLyricsComponentCatalog.IsAvailable(new ComponentManager());
+    private bool _lyricsVerified;
     public string Variation { get; set; } = MusicComponentCatalog.ModelId;
     private readonly ManagedModelLibraryStore _store;
     private readonly ManagedModelAcquisitionService _downloads;
@@ -31,6 +34,12 @@ public sealed class MusicPreparationService : IMusicPreparation
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        _lyricsVerified = false;
+        if (MusicLyricsComponentCatalog.IsAvailable(new ComponentManager()))
+        {
+            try { await MusicLyricsComponentCatalog.VerifyAsync(new ComponentManager(), token); _lyricsVerified = true; }
+            catch (System.IO.IOException) { /* The preparation page offers a repair download. Execution never bypasses verification. */ }
+        }
         if (Variation == MusicStudioRuntime.Variation) await MusicStudioRuntime.VerifyAsync(token);
         if (MusicDiffRhythmCatalog.IsDiff(Variation)) await MusicDiffRhythmSource.VerifyAsync(token);
         if (MusicAceCatalog.IsAce(Variation)) await MusicAceSource.VerifyAsync(token);
@@ -48,6 +57,11 @@ public sealed class MusicPreparationService : IMusicPreparation
     {
         var cards = Register(root);
         await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(Variation), token);
+        _lyricsVerified = false;
+        await MusicLyricsComponentCatalog.PrepareAsync(download, new Progress<ComponentDownloadProgress>(p => progress?.Report(
+            new(p.ComponentId, ComponentCatalog.Find(p.ComponentId)?.Name ?? p.ComponentId,
+                p.DownloadedBytes, p.TotalBytes, p.BytesPerSecond, p.Stage))), token);
+        _lyricsVerified = true;
         if (MusicDiffRhythmCatalog.IsDiff(Variation)) await MusicDiffRhythmSource.VerifyAsync(token);
         if (MusicAceCatalog.IsAce(Variation)) await MusicAceSource.VerifyAsync(token);
         if (Variation == MusicStudioRuntime.Variation) await MusicStudioRuntime.VerifyAsync(token);

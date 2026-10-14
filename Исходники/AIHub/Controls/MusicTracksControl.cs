@@ -59,11 +59,25 @@ public sealed class MusicTracksControl : UserControl
     public void AddTrack(MusicTrack track)
     {
         if (track.IsExample || !File.Exists(track.Path)) throw new ArgumentException("A completed audio file is required.", nameof(track));
+        if (track.KaraokeReadiness == MusicKaraokeReadiness.Pending) throw new ArgumentException("Karaoke preparation is still pending.", nameof(track));
         if (_tracks.Any(t => string.Equals(t.Path, track.Path, StringComparison.OrdinalIgnoreCase))) return;
         _tracks.Insert(0, track); Rebuild(track);
         Selected?.Invoke(track, false);
     }
     public void SetPlaying(bool playing) { _playing = playing; UpdateSelection(); }
+    /// <summary>Refresh durable preparation status without selecting or reopening the playing file.</summary>
+    public void RefreshKaraokeReadiness(string jobId, int variant, MusicKaraokeReadiness readiness)
+    {
+        var selected = SelectedTrack; var changed = false;
+        for (var i = 0; i < _tracks.Count; i++) {
+            var original = _tracks[i];
+            if (original.JobId != jobId || original.Variant != variant || original.KaraokeReadiness == readiness) continue;
+            var updated = original with { KaraokeReadiness = readiness };
+            _tracks[i] = updated; changed = true;
+            if (selected == original) selected = updated;
+        }
+        if (changed) Rebuild(selected);
+    }
     public void ClearTracks() { _tracks.Clear(); _playing = false; _message.Visibility = Visibility.Collapsed; Rebuild(); }
     public void SetOutputFolder(string folder) { OutputFolder = folder; UpdateFolder(); FolderChanged?.Invoke(folder); }
     private void Rebuild(MusicTrack? select = null)
@@ -79,6 +93,12 @@ public sealed class MusicTracksControl : UserControl
             title.Text = track.IsExample ? _l(track.Title) : track.Title; title.ToolTip = title.Text; labels.Children.Add(title);
             var detail = MusicAudioUi.Text(11); detail.Margin = new(0, 4, 0, 0);
             detail.Text = MusicAudioUi.Time(track.Duration) + " · " + track.CreatedAt.ToString("dd.MM.yyyy HH:mm"); labels.Children.Add(detail);
+            if (track.KaraokeUnavailable) {
+                var warning = MusicAudioUi.Text(11); warning.Text = _l("Music.Audio.KaraokeUnavailable");
+                warning.Margin = new(0, 4, 0, 0); warning.TextWrapping = TextWrapping.Wrap;
+                warning.FontWeight = FontWeights.SemiBold;
+                AutomationProperties.SetAutomationId(warning, "Music.Audio.KaraokeUnavailable"); labels.Children.Add(warning);
+            }
             if (track.AdditionalPath is { } extra) {
                 var formats = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
                 foreach (var path in new[] { track.Path!, extra }) {

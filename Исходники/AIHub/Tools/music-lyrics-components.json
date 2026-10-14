@@ -1,0 +1,2492 @@
+[
+  {
+    "id": "runtime.gigaam",
+    "name": "source",
+    "version": "7447938d791c4f3e643386ee22c33777004293a5",
+    "url": "https://codeload.github.com/salute-developers/GigaAM/zip/7447938d791c4f3e643386ee22c33777004293a5",
+    "file": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5.zip",
+    "sha256": "17c9a57a8c76659feb112b4a6299391757d137fc50e5375d5613c46c379f3653",
+    "size": 626844,
+    "installedSize": 1055978,
+    "health": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/__init__.py",
+    "importRoot": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5",
+    "license": "MIT",
+    "files": [
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/.github/workflows/gigaam.yml",
+        "sha256": "9a9f43520cfc26b187f9aaf095236595e87f2f40ac699dad71e2d0f02761e2b8",
+        "size": 3638
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/.gitignore",
+        "sha256": "71a14d1e53509556140e7dc849c4d9d1d909f826df4f43c5b6575deab2a73d3c",
+        "size": 137
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/assets/gigaam_scheme.svg",
+        "sha256": "a4fadf2aeeefdae09da0e413fcc5d9b848f9dbd56643c6e5f475fb6be2a72625",
+        "size": 30297
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/assets/sbs_results.png",
+        "sha256": "b53adb7823c8db1b97463f819ed62d9363a700f1a66902031cf51c1e3bf0087f",
+        "size": 653039
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/colab_example.ipynb",
+        "sha256": "819c80cbc23841e00da5b23e055817de55f31eb6e17a423378204cb3fe4bc343",
+        "size": 27765
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/evaluation.md",
+        "sha256": "d12d3aff55e0ea0f2540e3c198dd59f3ffc9b09c40e2b6b41d75ef4e5bebc457",
+        "size": 8314
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/__init__.py",
+        "sha256": "9d772461e35b9b3caf2f94fd5343261f732395c409f7a7957fa2bf03704b5a5c",
+        "size": 8812
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/decoder.py",
+        "sha256": "fe6b82f8ea48e5a4628414601a160cb62398216ed3d9a9703bb06c0d721795a4",
+        "size": 5129
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/decoding.py",
+        "sha256": "0f77d20748cf27a4fb5f60bd8d0b30a219fd40faf19144788b09d9b76c32bd84",
+        "size": 6836
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/encoder.py",
+        "sha256": "1eac8600faf1b842899c0944b8ebb9d60b41dd6f35d826c41514765dbf18cd3d",
+        "size": 22946
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/model.py",
+        "sha256": "38b79ada59e2a8764f3bf64fe10cd44198ab95a2168915f4c521416ea6331236",
+        "size": 11820
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/onnx_utils.py",
+        "sha256": "5830d6d5bfc34675b9a97a9ee90ed15c63d4996c43bf352167f78c1ea74acd51",
+        "size": 10977
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/preprocess.py",
+        "sha256": "d4cd47b7c07664c0aab682148155a1fb2eab4829a91730cb14b1c75dddfcc22f",
+        "size": 2991
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/timestamps_utils.py",
+        "sha256": "9c2f590107508c36c11ae98d45c1a4f757decd7e19c0329509f29a7e6c527c70",
+        "size": 1520
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/types.py",
+        "sha256": "ea6e9f83993f927fce7f73fd7d97fb78d0735ef6429954f7d1502b7a051af765",
+        "size": 1353
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/utils.py",
+        "sha256": "a6366d63c304b162202bf97a3c2da05a453741c475ab3bf160fc0428957282f9",
+        "size": 14044
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/gigaam/vad_utils.py",
+        "sha256": "b5fdb0589eceda795161bee9721b841d41354608057e4a2718fe2debb513cbf5",
+        "size": 4574
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/LICENSE",
+        "sha256": "f00de6715714c7a63d08639cdbfaa40224eefc407302614bd19f1a8b98c875aa",
+        "size": 1070
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/pyproject.toml",
+        "sha256": "4b3fc1537350c7e0275f88e5f25972eb03068530b9673d4abcc7aafe66db753f",
+        "size": 1508
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/README.md",
+        "sha256": "85ca55c71f4c4119e52611430e9d28e2b03791a0b09c3275a43e13473357eb2e",
+        "size": 10586
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/README_ru.md",
+        "sha256": "909d332334a87116de33c9a139d6cddebf79c6a811e307ee256eca606cd07aed",
+        "size": 14172
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_batching.py",
+        "sha256": "f85f6ddf365ad0dbd02fffa64bd13fe293237662bf54c0293ae38af2843f86b3",
+        "size": 5910
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_loading.py",
+        "sha256": "24b5f59b9dcae6bd9574596e26fde6c6fe87e54659e0e8a6cbb945151b234814",
+        "size": 3601
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_longform.py",
+        "sha256": "77e40a1b7f955ee2c62e943f85e3d2590ec2a8130c1a92dc2fdff48f3fd68bcd",
+        "size": 10585
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_normalize.py",
+        "sha256": "0f6195a7465456bf922a7baf41fa71cc7b00593c0fc232f683346a923858cddb",
+        "size": 2650
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_onnx.py",
+        "sha256": "0148353cf5690a94bfedfd09b21f1429db4090e0a20b5ead32c3fb74a9cfb17d",
+        "size": 2718
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_reading.py",
+        "sha256": "0923734cf3d67617ab75158d24ac2e4281f8924b08e9a895dd084b51b9ee47b1",
+        "size": 1399
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_timestamps.py",
+        "sha256": "c4e25e6d4d468d8b636ecf0e6bcae11eae9aa4e71d8093d5e97ea45484d15fb8",
+        "size": 10204
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/tests/test_training.py",
+        "sha256": "81de2b3e72796fa24b5b92166f0630b98aec5005f9f95a9b4c6bbff6977b8206",
+        "size": 9292
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/train_utils/eval.py",
+        "sha256": "e7b6512a3efdb8cfe6504abafceca328a6bf17d018f739006a98217dfbb27030",
+        "size": 3227
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/train_utils/example.ipynb",
+        "sha256": "512e556f8f88ffcc24f3a411bff91ff2aff68c92778b82f8650970a7aeb27341",
+        "size": 85542
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/train_utils/module.py",
+        "sha256": "d33cddd7c8def089e477dbcae640f9e3ff10a67a89a703ea67c1914da2aba201",
+        "size": 11554
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/train_utils/README.md",
+        "sha256": "1a8ba7c84471b99a6acf4b22b638ed04f7a3015ac83378408a00db9ffe376135",
+        "size": 7898
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/train_utils/ssl_finetune.py",
+        "sha256": "1b1bb60e679075263843704d635a6af2e70b43cbd9cb089460423a1148b8108f",
+        "size": 6193
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/train_utils/train.py",
+        "sha256": "aa55843fc59c4bca057f1e67cae3ee7cb3392cc679b05e61606a2bbeef9bde01",
+        "size": 10039
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/train_utils/utils.py",
+        "sha256": "c12570762f821122e0b6695cf878fd7bed8a753aed51b313f7e6b075f2c7c123",
+        "size": 11243
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/Dockerfile",
+        "sha256": "6cdce3c86a7f1522d1c2849124a61bb0e75392e864626617ae4df3de07f31540",
+        "size": 254
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/README.md",
+        "sha256": "04047da90e5a532f91e52e4d4698943962a51d96fe6cd307368d1af09710150c",
+        "size": 3381
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/ctc_encoder_onnx/config.pbtxt",
+        "sha256": "e0380e567568ecee93e8f00ff6ec3937288874a095526e61f8315f17ae5f0d3d",
+        "size": 516
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/ctc_encoder_trt/config.pbtxt",
+        "sha256": "57ae45bd459ad8e390b8cf14edd6c04ef1694e77e82be8a31a586f58efd9c3af",
+        "size": 438
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/ctc_postprocessing/1/model.py",
+        "sha256": "315117373a8afd78e4573fa1a66165aef5742789143a3fbe33f7d1e3d9a121d0",
+        "size": 2054
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/ctc_postprocessing/config.pbtxt",
+        "sha256": "5a5b4ad0eda9b91fb916dbd665d1bbd5af33bca6dc363289c9664201ef1c796c",
+        "size": 347
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_ctc_onnx/1/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_ctc_onnx/config.pbtxt",
+        "sha256": "6e5aba35739f6e14287a4068afa618a8b848d4b0a9efb9598604b527b12921c3",
+        "size": 1547
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_ctc_trt/1/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_ctc_trt/config.pbtxt",
+        "sha256": "e6e2705b73711b9a0401e9eb148cf7f0c67e54e2a1fbe1af3f416bf2757384ad",
+        "size": 1545
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_encoder_onnx/config.pbtxt",
+        "sha256": "0e7faab0e1b26b26b7869a03334767b1456e5fe45f4eb9635e71e66115bfca52",
+        "size": 510
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_encoder_trt/config.pbtxt",
+        "sha256": "ab700c5a01cded02b28f9d3dfc9e27016afde66f6d3d6351266be04ca1b72b88",
+        "size": 432
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_rnnt_onnx/1/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_rnnt_onnx/config.pbtxt",
+        "sha256": "6c635b597c7713bc40ae7f0d063454cba8c48fd483fbb40a01f948a665eaf798",
+        "size": 1519
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_rnnt_trt/1/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/gigaam_rnnt_trt/config.pbtxt",
+        "sha256": "defc8097f703ac84ea46412d4bbe5a4ec482ee2586e24ebb21e887aa0d7155f2",
+        "size": 1517
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/preprocessing/1/model.py",
+        "sha256": "53b510b24afb3aa7b5940e30c309a665d71a04e4a3f6e9ea3bfbda5e8592d5a0",
+        "size": 2927
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/preprocessing/config.pbtxt",
+        "sha256": "15db619e1910a7346b5397d4990b799baca5a4680742f6c0c017de11352bbc8f",
+        "size": 421
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/rnnt_postprocessing/1/model.py",
+        "sha256": "bf887595e37c797a57433d63f432cd40ad5f399cb99f4bc74c04aac87554efe9",
+        "size": 3353
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/repos/rnnt_postprocessing/config.pbtxt",
+        "sha256": "3178d2d3b13bf3a263f251156ec13c16323810200543f48d5baa85f032ce1f6a",
+        "size": 347
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/run_client.py",
+        "sha256": "bafac77ca83266f8bdf0cbc2bfba4ceaba815eded69de25b4990f9578b5ee2dc",
+        "size": 2919
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/run_convert_onnx.py",
+        "sha256": "e3526af06547fcd1d461332d1682e5a2c3bc5f8e598d04aa8639ced83c29e683",
+        "size": 5209
+      },
+      {
+        "path": "GigaAM-7447938d791c4f3e643386ee22c33777004293a5/triton_scripts/run_convert_trt.sh",
+        "sha256": "867b875a0f94e8b2573eb63de1d5933de077916bfdaddbdc7acb9e7fa0360e67",
+        "size": 3159
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.hydra",
+    "name": "hydra",
+    "version": "1.3.2",
+    "url": "https://files.pythonhosted.org/packages/c6/50/e0edd38dcd63fb26a8547f13d28f7a008bc4a3fd4eb4ff030673f22ad41a/hydra_core-1.3.2-py3-none-any.whl",
+    "file": "hydra_core-1.3.2-py3-none-any.whl",
+    "sha256": "fa0238a9e31df3373b35b0bfb672c34cc92718d21f81311d8996a16de1141d8b",
+    "size": 154547,
+    "installedSize": 502003,
+    "health": "hydra/__init__.py",
+    "importRoot": "",
+    "license": "MIT",
+    "files": [
+      {
+        "path": "hydra/__init__.py",
+        "sha256": "45f5e3eddb9789e08b9dc061bc03fe74aff28815fb00fd5ce4e4f5649e26cea4",
+        "size": 586
+      },
+      {
+        "path": "hydra/_internal/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/_internal/callbacks.py",
+        "sha256": "f288a1bf0fd0823978eb6c2f0bee7523298c943c3ddaf277dba59486721f947f",
+        "size": 2310
+      },
+      {
+        "path": "hydra/_internal/config_loader_impl.py",
+        "sha256": "a5fa78f868536549908f7dc8bdda9b9654c450301de359a86c1d1a3bb4b80229",
+        "size": 23925
+      },
+      {
+        "path": "hydra/_internal/config_repository.py",
+        "sha256": "c45671b3e3ab37d1164fd8089c73bed91588aafd950f4d89ef8bad7a4b5e12c5",
+        "size": 13541
+      },
+      {
+        "path": "hydra/_internal/config_search_path_impl.py",
+        "sha256": "119372c9de1bba98e3e8166445c1ba49ffe51eb63a07ead9c12f46832d7fecb5",
+        "size": 3565
+      },
+      {
+        "path": "hydra/_internal/core_plugins/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/_internal/core_plugins/bash_completion.py",
+        "sha256": "09ab75b5680dc8ed970b1da1989f5c713ee28260179d9779b52d0a8ddfb206e2",
+        "size": 2957
+      },
+      {
+        "path": "hydra/_internal/core_plugins/basic_launcher.py",
+        "sha256": "a706be164ca0ba88ebec484bf6b4ccf892922c0489fd50f0a2ce3f5be395bb1f",
+        "size": 2755
+      },
+      {
+        "path": "hydra/_internal/core_plugins/basic_sweeper.py",
+        "sha256": "d3c2ba80ab606f95ce4ad738460674422d70d9e3b843f0c32059b24218128a07",
+        "size": 6580
+      },
+      {
+        "path": "hydra/_internal/core_plugins/file_config_source.py",
+        "sha256": "0d71662e4b22b32fa550ad4557cae4930c3b0bc0a4498de0ca623a0d546d5f7c",
+        "size": 2317
+      },
+      {
+        "path": "hydra/_internal/core_plugins/fish_completion.py",
+        "sha256": "fa4a0504244366e51da9aff8b17eab35c1c0a3c7b85432cec90981b4c1d8a483",
+        "size": 2395
+      },
+      {
+        "path": "hydra/_internal/core_plugins/importlib_resources_config_source.py",
+        "sha256": "d6134f27f071e7aaaa694864f76f7b8a38b96ce91d8d40ce60be39ec63a6832c",
+        "size": 3686
+      },
+      {
+        "path": "hydra/_internal/core_plugins/structured_config_source.py",
+        "sha256": "45f9e7d8940422b039256913d96b6930b025f315d529577fa1a51dba89a2a69c",
+        "size": 2348
+      },
+      {
+        "path": "hydra/_internal/core_plugins/zsh_completion.py",
+        "sha256": "43225881fb748858b9a02300ebb6f5d0dd6fd033b32f2a4823980f8c803e6b90",
+        "size": 1564
+      },
+      {
+        "path": "hydra/_internal/defaults_list.py",
+        "sha256": "3fcb748602dac5e4ca3b254911981d49d722de88d7860825fff69ab0d544bc5d",
+        "size": 27080
+      },
+      {
+        "path": "hydra/_internal/deprecation_warning.py",
+        "sha256": "2e7a6a1e4c5377e9c2a25e1946c4ac216be6c374265d6d3ae3443a007efa1262",
+        "size": 435
+      },
+      {
+        "path": "hydra/_internal/grammar/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/_internal/grammar/functions.py",
+        "sha256": "aaa1f43d480a0ac4dbb9c541f87689bab9bb9287e1a8a857498c0c703eb9858d",
+        "size": 2657
+      },
+      {
+        "path": "hydra/_internal/grammar/grammar_functions.py",
+        "sha256": "4e6e35197b155515ebeedf0f34096fb6e1cf5137583d7577daad3805f15d84e8",
+        "size": 11797
+      },
+      {
+        "path": "hydra/_internal/grammar/utils.py",
+        "sha256": "c808ea9915e1b9bfd3c9414bc113d674832acef101220897ee633e32729a4650",
+        "size": 2133
+      },
+      {
+        "path": "hydra/_internal/hydra.py",
+        "sha256": "74b19980c8eb9feebc9ab17fc81720a1a0a76586ee1d459daf86709382c34f80",
+        "size": 24147
+      },
+      {
+        "path": "hydra/_internal/instantiate/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/_internal/instantiate/_instantiate2.py",
+        "sha256": "9e4d4d947bfee4ce2e2df26e9ccff6b0f222b61e5f4c82096f93e5fa2ae0bff3",
+        "size": 14582
+      },
+      {
+        "path": "hydra/_internal/sources_registry.py",
+        "sha256": "6b8adb1457498d458d25ea8ca92abb5c3238800e1fe2a72f678d27b1ebf7ceba",
+        "size": 1298
+      },
+      {
+        "path": "hydra/_internal/utils.py",
+        "sha256": "7d7bfffc8a85ea71f23b82037dd62b023809c3cc946f4fca52ec18b7c007451b",
+        "size": 22368
+      },
+      {
+        "path": "hydra/compose.py",
+        "sha256": "975c85dd3345737fbb83351834ed431ba37630ef211b9627d226efdb64fcb008",
+        "size": 2105
+      },
+      {
+        "path": "hydra/conf/__init__.py",
+        "sha256": "4896acfaff5ddc52c1e0ca18dbf6608b1407d33da1ad364235c274482e16e6c0",
+        "size": 5367
+      },
+      {
+        "path": "hydra/conf/hydra/env/default.yaml",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "hydra/conf/hydra/help/default.yaml",
+        "sha256": "0140f594fa8b7ddcb6af9dcf093147354ba8c31f6324c2116c2e2582f1c26c7f",
+        "size": 849
+      },
+      {
+        "path": "hydra/conf/hydra/hydra_help/default.yaml",
+        "sha256": "cdefe766d4589cbf4d6cab3256e64f3253a8a41080fca840e047f4cb3ce1fd6a",
+        "size": 642
+      },
+      {
+        "path": "hydra/conf/hydra/hydra_logging/default.yaml",
+        "sha256": "31e3809547979b0beefc2ba18d0f55c4014c8dea290e6f3ff6b6b6be9f81dc10",
+        "size": 306
+      },
+      {
+        "path": "hydra/conf/hydra/hydra_logging/disabled.yaml",
+        "sha256": "9917f423bd3da7b3829a6d32e504f130ac10ba62b5dcc6be3785664d77bfcaee",
+        "size": 63
+      },
+      {
+        "path": "hydra/conf/hydra/hydra_logging/hydra_debug.yaml",
+        "sha256": "c40da81d968ab2b86378cabbc352963a719d41e221031ca1fea14efec3d9f014",
+        "size": 453
+      },
+      {
+        "path": "hydra/conf/hydra/hydra_logging/none.yaml",
+        "sha256": "812091b71176f03077fa079d9b5cde93b92237c93268d603fe6ead44951aa25e",
+        "size": 54
+      },
+      {
+        "path": "hydra/conf/hydra/job_logging/default.yaml",
+        "sha256": "edf5b4354defc88295e876ed88bb822c24f482d937cbe41783006c08f5b6a280",
+        "size": 477
+      },
+      {
+        "path": "hydra/conf/hydra/job_logging/disabled.yaml",
+        "sha256": "9917f423bd3da7b3829a6d32e504f130ac10ba62b5dcc6be3785664d77bfcaee",
+        "size": 63
+      },
+      {
+        "path": "hydra/conf/hydra/job_logging/none.yaml",
+        "sha256": "812091b71176f03077fa079d9b5cde93b92237c93268d603fe6ead44951aa25e",
+        "size": 54
+      },
+      {
+        "path": "hydra/conf/hydra/job_logging/stdout.yaml",
+        "sha256": "ee11c5a7fa0c1f1acc2882c16dcd9f2724a5ffbcb6bbff516c47a7b53b36cd16",
+        "size": 280
+      },
+      {
+        "path": "hydra/conf/hydra/output/default.yaml",
+        "sha256": "ade7ae498c41cb4fe8aa7cd433db1250b540ce36fca7b22cc4904751c731b43f",
+        "size": 152
+      },
+      {
+        "path": "hydra/core/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/core/config_loader.py",
+        "sha256": "4da778c67530162960636e9e0f25b6b9f2937c7dee9c005047265fdc61e55407",
+        "size": 1577
+      },
+      {
+        "path": "hydra/core/config_search_path.py",
+        "sha256": "5467d2525653b84d57ccc1684e5ba4e937e54568a5302db7edcdc722e0d96b95",
+        "size": 2070
+      },
+      {
+        "path": "hydra/core/config_store.py",
+        "sha256": "8eb89c132eac06ff887cec41aefe286311d1d407e5f5a01f8a2a9db5ca0568dd",
+        "size": 4609
+      },
+      {
+        "path": "hydra/core/default_element.py",
+        "sha256": "7569c729553b2fd0b69f4b907afae0a579c65c6de718faf0f32140085ba3cab0",
+        "size": 18196
+      },
+      {
+        "path": "hydra/core/global_hydra.py",
+        "sha256": "8846a9f98164c4d8646e3baee6f1259bbfa75a9026c81f71f18938db4605b0e7",
+        "size": 1324
+      },
+      {
+        "path": "hydra/core/hydra_config.py",
+        "sha256": "1fa9073ebb06f02bb277c7f8befad686a4b84535b545c2bea5d494a1d3c99cf2",
+        "size": 1561
+      },
+      {
+        "path": "hydra/core/object_type.py",
+        "sha256": "bac370ddb0bd76163470d09182377457caca91ad8ab30043ba449618cf6e5609",
+        "size": 166
+      },
+      {
+        "path": "hydra/core/override_parser/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/core/override_parser/overrides_parser.py",
+        "sha256": "9caf24f1a0f39c0eb3a3359d4a287c28824de6a29425a7452ee5bc4aa42f7a7a",
+        "size": 4720
+      },
+      {
+        "path": "hydra/core/override_parser/overrides_visitor.py",
+        "sha256": "333dcb25f51431a779a0360fbc9e2291ddd517683a4b0a56175f87927c405143",
+        "size": 15505
+      },
+      {
+        "path": "hydra/core/override_parser/types.py",
+        "sha256": "d589f5835b5aa7abb0e0d752af89f0303c28aa44374c2054932cb5064e8210b7",
+        "size": 15969
+      },
+      {
+        "path": "hydra/core/plugins.py",
+        "sha256": "bb0346f00fbaf2b0075326cedab3e29a79a7f78253454e05c5fad00204b7bebd",
+        "size": 10390
+      },
+      {
+        "path": "hydra/core/singleton.py",
+        "sha256": "24555d927919e7b43dd5c95f9ef3548ce2f493ce64b0e5df4e0168cc18dbc139",
+        "size": 1338
+      },
+      {
+        "path": "hydra/core/utils.py",
+        "sha256": "bdeb45521f6301af997f1f977ad8a808a7120dfee3938989915498f2c8cc38d8",
+        "size": 10502
+      },
+      {
+        "path": "hydra/errors.py",
+        "sha256": "51462c0949e6aeea315c9e2b7446731048469663b45e99a2b4f579dab5a00a3e",
+        "size": 1071
+      },
+      {
+        "path": "hydra/experimental/__init__.py",
+        "sha256": "2d7b229d67d287a356720e72918961dfdc3a60fe0ad1e4cbeba7a7c9be66b31e",
+        "size": 293
+      },
+      {
+        "path": "hydra/experimental/callback.py",
+        "sha256": "0bcd4d995224aceff1fc7c7a70ff469360616b579951971416a43b8798ede4bc",
+        "size": 2378
+      },
+      {
+        "path": "hydra/experimental/callbacks.py",
+        "sha256": "84d7891c3e8ff7b442b96292761d8f40cff44409d3029592ebee62b511295906",
+        "size": 2336
+      },
+      {
+        "path": "hydra/experimental/compose.py",
+        "sha256": "d51f3e446a11f128612fa5c53a04a3b6862c330d97df1f7d7ceb04475dc9b296",
+        "size": 845
+      },
+      {
+        "path": "hydra/experimental/initialize.py",
+        "sha256": "a912601eade7cb9ddf5b2320d96451b3a99354c26f7a1fae0da7cd3ad77eb0a1",
+        "size": 4280
+      },
+      {
+        "path": "hydra/extra/pytest_plugin.py",
+        "sha256": "5f0766292fd76adf0f82d5dc646b0b1020bf295d7b4a5581e47223832b44c254",
+        "size": 2612
+      },
+      {
+        "path": "hydra/grammar/.gitignore",
+        "sha256": "26f6d14043cba2d6a5cfd8eaf5e721e4e0b37a13ea3753be84aa61eebe57d17f",
+        "size": 21
+      },
+      {
+        "path": "hydra/grammar/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/grammar/gen/.gitignore",
+        "sha256": "bdd48ccea6b18f8688edc1f9395de3bcd655df3a0e4827c7a25a0ec359a37358",
+        "size": 15
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideLexer.interp",
+        "sha256": "08007f8040b540d2bc6763d6b957ea76d276241f14a210db154f6020e0a0262f",
+        "size": 14138
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideLexer.py",
+        "sha256": "427a56ab2e48c2f544c23ea550cb4240d397ed34c0c72b8889588842971bde7e",
+        "size": 16474
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideLexer.tokens",
+        "sha256": "0026608370a4270910c65fe7d2ce9dff7ad153391b1c472145fec51dadb16684",
+        "size": 289
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideParser.interp",
+        "sha256": "5f0dcee0f56c0441bbdb50b97d91db45a3435d862736e70c7d8067961ea78a92",
+        "size": 5685
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideParser.py",
+        "sha256": "114a65e033914a46ffb8e938d32212a2d360ce6f4f0667380f7eca70ebab98f5",
+        "size": 50516
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideParser.tokens",
+        "sha256": "0026608370a4270910c65fe7d2ce9dff7ad153391b1c472145fec51dadb16684",
+        "size": 289
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideParserListener.py",
+        "sha256": "79b5f1cc4580dd857767a76e30c6f83a58c23924a9476806856ced73c20bfa23",
+        "size": 4476
+      },
+      {
+        "path": "hydra/grammar/gen/OverrideParserVisitor.py",
+        "sha256": "37a19af8f34ae4a334b3d60b3d73b4ee4d1d0a4fb6af9914314ce1d2e941a5e3",
+        "size": 2834
+      },
+      {
+        "path": "hydra/grammar/OverrideLexer.g4",
+        "sha256": "48b7f812b950a8b86ea987319b5f9cb0875cbbeeb46ef5714a9899e445679446",
+        "size": 2825
+      },
+      {
+        "path": "hydra/grammar/OverrideParser.g4",
+        "sha256": "dffa79412959f0a9682c629079c0b4feb6651467bab7771f2d0cfe10c1f0881f",
+        "size": 3115
+      },
+      {
+        "path": "hydra/initialize.py",
+        "sha256": "1e007cee39b2349c0899d190d71cb0fc1d73fc777c42c230114156381832e90e",
+        "size": 6035
+      },
+      {
+        "path": "hydra/main.py",
+        "sha256": "b7afd160fce7fa7ae9ffa45a7b7755c4e35756ee0e56034db52f6ad8e28b70e0",
+        "size": 3999
+      },
+      {
+        "path": "hydra/plugins/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/plugins/completion_plugin.py",
+        "sha256": "ff55638a622e034403266fcb23df12a0e3e98bf2fa39a77c9633f91516c053e2",
+        "size": 11275
+      },
+      {
+        "path": "hydra/plugins/config_source.py",
+        "sha256": "5b513ad1ff89d7c7bfdbd1ba3d5df63fe325580638dfcb9919b8cc9101ccb474",
+        "size": 5109
+      },
+      {
+        "path": "hydra/plugins/launcher.py",
+        "sha256": "bf5a23ad798a986ebd95bb9b0a9a5ea49b7a5110c9c059e13b88134d9ba8e813",
+        "size": 974
+      },
+      {
+        "path": "hydra/plugins/plugin.py",
+        "sha256": "793bf368bc6524299b31bae83fd675bbcc313566b8474a8f006a8bce1e9633b3",
+        "size": 120
+      },
+      {
+        "path": "hydra/plugins/search_path_plugin.py",
+        "sha256": "6e7efc534731a8fd90654902876dcb6ed474ac3b617b09bc88e0867efe60705f",
+        "size": 333
+      },
+      {
+        "path": "hydra/plugins/sweeper.py",
+        "sha256": "27a7d51296e2883c4708b69d2d7d700d7df8f38a316280efd2ad09bfd4cd7da6",
+        "size": 2108
+      },
+      {
+        "path": "hydra/py.typed",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "hydra/test_utils/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/test_utils/a_module.py",
+        "sha256": "4074908e3e7904fde0d2ecfb1124c6367fe9e93262ad87457abf176e1e4ce968",
+        "size": 228
+      },
+      {
+        "path": "hydra/test_utils/completion.py",
+        "sha256": "72d832500a0b44a434e41acdc1e7b106f03ef5a7884eed47ad4140b5f22b0a2d",
+        "size": 344
+      },
+      {
+        "path": "hydra/test_utils/config_source_common_tests.py",
+        "sha256": "cd68b729a5a1109efa12737ee50eaa8aea0dbea5293392e56f3be038923560b9",
+        "size": 10900
+      },
+      {
+        "path": "hydra/test_utils/configs/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/test_utils/configs/accessing_hydra_config.yaml",
+        "sha256": "7fcc853818552772348606b6b83c62fb11e4ed052a22e628ceb38892bbe1e06f",
+        "size": 92
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test/additional_searchpath.yaml",
+        "sha256": "44671ae083a723683485add6dbdb8c06bc38b8a29a680bbeaf8dd214aa5bdc96",
+        "size": 201
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test/config.yaml",
+        "sha256": "a270fcab03f8e583bab9489a34aeac75062d796b427aeeacb60fc953159ce19b",
+        "size": 276
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test/group/dict.yaml",
+        "sha256": "a161889c315257698d1ecbb2e566a5b5647ed23cc9af93ac815bddc7a031812f",
+        "size": 117
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test/group/list.yaml",
+        "sha256": "dbe3d7ebaed6d59b68df322b12f603e144c7f6312d591e85108b61ba4ca2891b",
+        "size": 106
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test/hydra/launcher/fairtask.yaml",
+        "sha256": "e5dedf96694a6ae796acbc31251ae5cbc87c62ed78cfece6107ea855c50007ac",
+        "size": 44
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test/missing_default.yaml",
+        "sha256": "057347b150afcfdf7b05dd49578de587097360e1839c603b85c039006717324b",
+        "size": 25
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test/test_hydra/launcher/fairtask.yaml",
+        "sha256": "e5dedf96694a6ae796acbc31251ae5cbc87c62ed78cfece6107ea855c50007ac",
+        "size": 44
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test_additional_file/additional_group/file_opt_additional.yaml",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test_additional_file/group/file_opt.yaml",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test_additional_package/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test_additional_package/additional_group/pkg_opt_additional.yaml",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "hydra/test_utils/configs/completion_test_additional_package/group/pkg_opt.yaml",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "hydra/test_utils/configs/compose.yaml",
+        "sha256": "3dbbda80a34905d0fc2bd895e641ddd64d3049850fc5f0a34efe6b964a620306",
+        "size": 66
+      },
+      {
+        "path": "hydra/test_utils/configs/conf.zip",
+        "sha256": "5c471e8fa9f01a1fc65507499622da66dff2be96f1bf8d00947f14332270a4bb",
+        "size": 210
+      },
+      {
+        "path": "hydra/test_utils/configs/config.yaml",
+        "sha256": "8ef48a243e7b5bd7eeb2e0dd796cc6326124b9ed9e07863ccfaed82b84757e8d",
+        "size": 45
+      },
+      {
+        "path": "hydra/test_utils/configs/config.yml",
+        "sha256": "3973b853a9a8ad59959973883f5ff4f5aed56962962caffc8ad045a5d0485cb6",
+        "size": 55
+      },
+      {
+        "path": "hydra/test_utils/configs/custom_resolver.yaml",
+        "sha256": "d6f549a988ee86b2d996359a65289195d50d21c957d3576ea740bec1fc178679",
+        "size": 26
+      },
+      {
+        "path": "hydra/test_utils/configs/db/mysql.yaml",
+        "sha256": "3a1bce2c6175d4bad8a83ec5e211257c90c65ab44088dd8fe45cf379b62f8163",
+        "size": 42
+      },
+      {
+        "path": "hydra/test_utils/configs/db/postgresql.yaml",
+        "sha256": "60bc6b17be820a5e1ecdd0a4c675401f6c474bac3fd7e476a64a3be3c9fb07f7",
+        "size": 70
+      },
+      {
+        "path": "hydra/test_utils/configs/db/validated_mysql.yaml",
+        "sha256": "e2ddf9ec50e2383903ede63562f78db1bba22e997ab4b9e1df3407f6f8870989",
+        "size": 68
+      },
+      {
+        "path": "hydra/test_utils/configs/db/validated_postgresql.yaml",
+        "sha256": "35a3168e9e020bf33611fe678cfd20fb917b76870448d0d127dabae918a0d06f",
+        "size": 101
+      },
+      {
+        "path": "hydra/test_utils/configs/db_conf.yaml",
+        "sha256": "13025b9b7a3dc1f61f3dce56754e9a9e8adc6ad8a410da4c48eacb60c48f7b97",
+        "size": 24
+      },
+      {
+        "path": "hydra/test_utils/configs/defaults_not_list.yaml",
+        "sha256": "4c68a39c62b5906a2c7e22f5d6ae9008168e77587902862a4705b8ae6e2cad8e",
+        "size": 41
+      },
+      {
+        "path": "hydra/test_utils/configs/group1/abc.cde.yaml",
+        "sha256": "dfc3ae3121f434faff18764bc91663fcc290dc487a0e49a2985487ebaff763c1",
+        "size": 28
+      },
+      {
+        "path": "hydra/test_utils/configs/group1/file1.yaml",
+        "sha256": "610b7b788f4284d053c215b3e9368c6a5e7011bac4c18207c7ae55cb5789a0f5",
+        "size": 28
+      },
+      {
+        "path": "hydra/test_utils/configs/group1/file2.yaml",
+        "sha256": "c008eed0c1d8bfb47d22b17832e90c138a6a1aad13b0475d19fbb59a0844384f",
+        "size": 28
+      },
+      {
+        "path": "hydra/test_utils/configs/group2/file1.yaml",
+        "sha256": "d67190a6fd9864f6410118be3c1b01c4cf544838ac1c2f604b789d9b5c715387",
+        "size": 29
+      },
+      {
+        "path": "hydra/test_utils/configs/group2/file2.yaml",
+        "sha256": "0b12540b27d482fbf5dbd27e0ae110a1ba2dd07d18d16f72abf85fedf8dd7129",
+        "size": 29
+      },
+      {
+        "path": "hydra/test_utils/configs/missing-default.yaml",
+        "sha256": "87fb585b67fd147535f78e7be32e275b579370ea9127634d15d5960fbe19b5bf",
+        "size": 25
+      },
+      {
+        "path": "hydra/test_utils/configs/missing-optional-default.yaml",
+        "sha256": "4a71d325e87da29d757334c5088a0c17009c8bd1b75adafa4bed434001eac5bb",
+        "size": 36
+      },
+      {
+        "path": "hydra/test_utils/configs/missing_init_py/.gitignore",
+        "sha256": "902a513dd9774bf8ea61865a3ab734fb16bafa5dcaa958cd45773a8c291dffe4",
+        "size": 12
+      },
+      {
+        "path": "hydra/test_utils/configs/missing_init_py/test.yaml",
+        "sha256": "44fc56826a344eff101605b900c5c1c81f7587bdb9f4c943a1364aaab5aca3e2",
+        "size": 6
+      },
+      {
+        "path": "hydra/test_utils/configs/optional-default.yaml",
+        "sha256": "8f01f73bb5a7e5f4dd0d8a57cc2305c5263c284914d9b24f499dddff02da1776",
+        "size": 37
+      },
+      {
+        "path": "hydra/test_utils/configs/overriding_output_dir.yaml",
+        "sha256": "df496e08e4aeb4aa029d228e7f48b1a149116a0a547a36ec7abcf8547e661209",
+        "size": 27
+      },
+      {
+        "path": "hydra/test_utils/configs/overriding_run_dir.yaml",
+        "sha256": "aa4b2d433201564a8e24597389076eaca78d52c871dd6a09646d775ac560d63b",
+        "size": 27
+      },
+      {
+        "path": "hydra/test_utils/configs/package_tests/__init__.py",
+        "sha256": "9e535c45af09ac24ef8d5631a151f77febafe72a92ad6bfeb2d941f0c4a54e35",
+        "size": 71
+      },
+      {
+        "path": "hydra/test_utils/configs/package_tests/group1/option1.yaml",
+        "sha256": "22fa8b999117ae592e8f46531a8e4dccf19f8b65315ca50098ac7fc559691ede",
+        "size": 41
+      },
+      {
+        "path": "hydra/test_utils/configs/package_tests/group1/option2.yaml",
+        "sha256": "658fb012f66067d9d0c01f28cad35dff4bb3828c6a524eeccdae5fd4f0b844b2",
+        "size": 41
+      },
+      {
+        "path": "hydra/test_utils/configs/package_tests/group2/option1.yaml",
+        "sha256": "98f52187022702c289100d59f656865dc6e2f32dfabcf964a8ff4b4dec50c307",
+        "size": 41
+      },
+      {
+        "path": "hydra/test_utils/configs/package_tests/group2/option2.yaml",
+        "sha256": "2cb04266b3139dfb0014d686dae38e45a1e6f2599b3162ad4f30e94050e435dc",
+        "size": 41
+      },
+      {
+        "path": "hydra/test_utils/configs/package_tests/pkg_override.yaml",
+        "sha256": "2bb51962fad8b8f267bd56c2eae9212435afa107d257ce25de2505597b353ecc",
+        "size": 55
+      },
+      {
+        "path": "hydra/test_utils/configs/package_tests/two_packages_one_group.yaml",
+        "sha256": "0fcab2336d0f5d8bd80b8de5a2461eb7c59d927246fa2b549d87c30fda245912",
+        "size": 60
+      },
+      {
+        "path": "hydra/test_utils/configs/schema_key_error.yaml",
+        "sha256": "0603d5fe8b59f0ec597dc9f7c6f4aab8b19dc4cedfe3829634f2768c573169f5",
+        "size": 56
+      },
+      {
+        "path": "hydra/test_utils/configs/schema_validation_error.yaml",
+        "sha256": "4fad4b52d7a11ad00c53fb78e09f5bb640fabf18c38a474d196712d802861e36",
+        "size": 54
+      },
+      {
+        "path": "hydra/test_utils/configs/some_config.yaml",
+        "sha256": "59fc41113a2cbdb49ba43606bac4f6290936c201ce682a3459a5c1194cd4de82",
+        "size": 38
+      },
+      {
+        "path": "hydra/test_utils/configs/top_level_list/file1.yaml",
+        "sha256": "24f157beb3bb6981726ef92d104c4aa1e7e0e34bb1e84a3b233a020a963dfd53",
+        "size": 4
+      },
+      {
+        "path": "hydra/test_utils/configs/unspecified_mandatory_default.yaml",
+        "sha256": "50e167edbf8c052bf2bae028728deddee1070cc5a24f180ce7e88e1a17157a34",
+        "size": 26
+      },
+      {
+        "path": "hydra/test_utils/example_app.py",
+        "sha256": "11ebe253632e74431eadaf007c6275c10e56c96ab0bba350ec61782af569cc5a",
+        "size": 323
+      },
+      {
+        "path": "hydra/test_utils/launcher_common_tests.py",
+        "sha256": "244f9af5ee90cf3c081301810b19f9d351d33af40e975d39e02ce02fc6ce522c",
+        "size": 23552
+      },
+      {
+        "path": "hydra/test_utils/test_utils.py",
+        "sha256": "8cbfcc5b0de7b8823826b4bf18ea0f1c3d0e15c829c767b3980032d9a483ee15",
+        "size": 15335
+      },
+      {
+        "path": "hydra/types.py",
+        "sha256": "7a4eec11e022683a645669dd8471545d240826754a8b822a51ff89621cbceb16",
+        "size": 2913
+      },
+      {
+        "path": "hydra/utils.py",
+        "sha256": "20820b8394e60198b817f89fe3d7a588b67748ec58f797b2e70290fc33c602cd",
+        "size": 3272
+      },
+      {
+        "path": "hydra/version.py",
+        "sha256": "d3b37f4fc378f332fd54089f6293f7f53d9467f535e6db67972b1d1960caa21e",
+        "size": 2573
+      },
+      {
+        "path": "hydra_core-1.3.2.dist-info/entry_points.txt",
+        "sha256": "ac3c10eb4b78e9f43d824be5b2337e46f41c25d6c352145d4b13c037153fdf61",
+        "size": 52
+      },
+      {
+        "path": "hydra_core-1.3.2.dist-info/LICENSE",
+        "sha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
+        "size": 1086
+      },
+      {
+        "path": "hydra_core-1.3.2.dist-info/METADATA",
+        "sha256": "399046cbf9ae7ebab8dfd009e2b4f748212c710a0e75ca501a72bbb2d456e2e7",
+        "size": 5480
+      },
+      {
+        "path": "hydra_core-1.3.2.dist-info/RECORD",
+        "sha256": "dcdb3558d3cfcd3f9b84782b1f319b9452b133c0e63cb14421427c058f2f4eba",
+        "size": 14310
+      },
+      {
+        "path": "hydra_core-1.3.2.dist-info/top_level.txt",
+        "sha256": "8b3833c8432244bdf18b00e74ca60963b50bd2659c19b23bb6a27da3714c6d02",
+        "size": 6
+      },
+      {
+        "path": "hydra_core-1.3.2.dist-info/WHEEL",
+        "sha256": "db07a93359e4e034b8785a58ad6d534ea3dca0635f1e184efe2e66e1c3a299ba",
+        "size": 92
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.omegaconf",
+    "name": "omegaconf",
+    "version": "2.3.0",
+    "url": "https://files.pythonhosted.org/packages/e3/94/1843518e420fa3ed6919835845df698c7e27e183cb997394e4a670973a65/omegaconf-2.3.0-py3-none-any.whl",
+    "file": "omegaconf-2.3.0-py3-none-any.whl",
+    "sha256": "7b4df175cdb08ba400f45cae3bdcae7ba8365db4d165fc65fd04b050ab63b46b",
+    "size": 79500,
+    "installedSize": 350315,
+    "health": "omegaconf/__init__.py",
+    "importRoot": "",
+    "license": "BSD-3-Clause",
+    "files": [
+      {
+        "path": "omegaconf/__init__.py",
+        "sha256": "9729f08831c414120732aac13771d18742897afcc86a9e8cc942c53643269417",
+        "size": 1170
+      },
+      {
+        "path": "omegaconf/_impl.py",
+        "sha256": "0897dc46df0adb406230c5b9bb7abcc2e43d8407809ae62517172dccf8132204",
+        "size": 2877
+      },
+      {
+        "path": "omegaconf/_utils.py",
+        "sha256": "6f0f09a6b6b407c6241c5af0383ac170a3ef8104f2534a44a6c90b97b0830518",
+        "size": 32564
+      },
+      {
+        "path": "omegaconf/base.py",
+        "sha256": "ac75ae2f0f0889ec3f48d2485242d9cb811fc916fad21c92f57f479783ae06fb",
+        "size": 32462
+      },
+      {
+        "path": "omegaconf/basecontainer.py",
+        "sha256": "1562f63d95916fbc0ff801a978deb9d65fee56736166fcf32e3694743949881f",
+        "size": 33318
+      },
+      {
+        "path": "omegaconf/dictconfig.py",
+        "sha256": "20fb543c7a1a934db943e82f0d5a8c752e3ded76fab6372c6b0ac75efe224366",
+        "size": 27855
+      },
+      {
+        "path": "omegaconf/errors.py",
+        "sha256": "79cb5b5fc29dfb914224c4c1221ea3b21aaf0a70a25cc1467c540960621eade4",
+        "size": 3595
+      },
+      {
+        "path": "omegaconf/grammar/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "omegaconf/grammar/gen/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "omegaconf/grammar/gen/OmegaConfGrammarLexer.py",
+        "sha256": "7a8a20d5aa1f3a5b70faeeb5405782599dc0f686babcadad8d3697e30989635e",
+        "size": 21689
+      },
+      {
+        "path": "omegaconf/grammar/gen/OmegaConfGrammarParser.py",
+        "sha256": "5f4b897343a279507f7fdc8a459c3839fc1104f386a22c83323873f0e28fbd9e",
+        "size": 63429
+      },
+      {
+        "path": "omegaconf/grammar/gen/OmegaConfGrammarParserListener.py",
+        "sha256": "9dc89b87e36183af297493dd31aa9e1533fcefac2fa3496926a3d785a3a68d95",
+        "size": 5843
+      },
+      {
+        "path": "omegaconf/grammar/gen/OmegaConfGrammarParserVisitor.py",
+        "sha256": "026be2db8e11b5815e6cd48909b3b0b2a76f416f9081d0ca4e4bb4ad79e40f96",
+        "size": 3617
+      },
+      {
+        "path": "omegaconf/grammar_parser.py",
+        "sha256": "ee0bc81acaadb209797b45ce5a123752be7c168224de205a5ff33c25dcb3a583",
+        "size": 5511
+      },
+      {
+        "path": "omegaconf/grammar_visitor.py",
+        "sha256": "2fa2cea261b6e0670f035f9a63334e98a2eea799188ab1d3bb2a7ce7b57b4fb0",
+        "size": 16055
+      },
+      {
+        "path": "omegaconf/listconfig.py",
+        "sha256": "2f2351ae7f3806a362cfe4e9c2b0c82dab7c1e1955c3033acc5998093500748a",
+        "size": 24671
+      },
+      {
+        "path": "omegaconf/nodes.py",
+        "sha256": "d574480bcb1f128695e0f4ff566ed9ef924cb08737d24293b891c6c99d9a334c",
+        "size": 17479
+      },
+      {
+        "path": "omegaconf/omegaconf.py",
+        "sha256": "8457952f493a3cd46a184ed9529236a7ab1218f91cf4812fb2aaf730d76053fb",
+        "size": 39048
+      },
+      {
+        "path": "omegaconf/py.typed",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "omegaconf/resolvers/__init__.py",
+        "sha256": "cc4fbc589c22a460b67173ead76086033e3d9bcd85d43d5c28cc2e5771284fb9",
+        "size": 60
+      },
+      {
+        "path": "omegaconf/resolvers/oc/__init__.py",
+        "sha256": "80b9e229aa2e0a6926d594d03b34b51798c5942330ede2fe69ee8f85a3313638",
+        "size": 3548
+      },
+      {
+        "path": "omegaconf/resolvers/oc/dict.py",
+        "sha256": "38bee267f68122dee4617c613221714b2b24897fb15c1bc623f0e705b771a95b",
+        "size": 2324
+      },
+      {
+        "path": "omegaconf/version.py",
+        "sha256": "f4ebb03d69acacd44141899e8a97b95e7cb0298e23c3e65006b8dba390b931de",
+        "size": 442
+      },
+      {
+        "path": "omegaconf-2.3.0.dist-info/LICENSE",
+        "sha256": "b31375ed5d5cbe7ec2d0c4c14df8afa7a8e5501bbe25f70b6cbc461685f4b91a",
+        "size": 1518
+      },
+      {
+        "path": "omegaconf-2.3.0.dist-info/METADATA",
+        "sha256": "ab2dcbf0e3e70cc75dca1d894f8953e7de8b651dc2dc28f08f350bfa5787badb",
+        "size": 3865
+      },
+      {
+        "path": "omegaconf-2.3.0.dist-info/RECORD",
+        "sha256": "45b07f79c8f81f159c32efe0e4fb19a61ccdf0da76f5fffd2f9faafb46e617a6",
+        "size": 2647
+      },
+      {
+        "path": "omegaconf-2.3.0.dist-info/top_level.txt",
+        "sha256": "80aa39b2394c9cc2f9afdfa5d5e2d80534b5c59fb102bebb9a505280bf72bd20",
+        "size": 25
+      },
+      {
+        "path": "omegaconf-2.3.0.dist-info/WHEEL",
+        "sha256": "db07a93359e4e034b8785a58ad6d534ea3dca0635f1e184efe2e66e1c3a299ba",
+        "size": 92
+      },
+      {
+        "path": "pydevd_plugins/__init__.py",
+        "sha256": "6f2c80dcf9b142c5829eaa50cc5cb8e21789ab9f703aa1ebe5b4adea49e6e6f6",
+        "size": 180
+      },
+      {
+        "path": "pydevd_plugins/extensions/__init__.py",
+        "sha256": "6f2c80dcf9b142c5829eaa50cc5cb8e21789ab9f703aa1ebe5b4adea49e6e6f6",
+        "size": 180
+      },
+      {
+        "path": "pydevd_plugins/extensions/pydevd_plugin_omegaconf.py",
+        "sha256": "01cd520a788efb6d82b11b0c017845cb2a1548dd91f8c516b0eba39beeb4d409",
+        "size": 4251
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.antlr",
+    "name": "antlr",
+    "version": "4.9.3",
+    "url": "https://files.pythonhosted.org/packages/3e/38/7859ff46355f76f8d19459005ca000b6e7012f2f1ca597746cbcd1fbfe5e/antlr4-python3-runtime-4.9.3.tar.gz",
+    "file": "antlr4-python3-runtime-4.9.3.tar.gz",
+    "sha256": "f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b",
+    "size": 117034,
+    "installedSize": 477312,
+    "health": "antlr4-python3-runtime-4.9.3/src/antlr4/__init__.py",
+    "importRoot": "antlr4-python3-runtime-4.9.3/src",
+    "license": "BSD-3-Clause",
+    "files": [
+      {
+        "path": "antlr4-python3-runtime-4.9.3/bin/pygrun",
+        "sha256": "02d4202c724d47965d015e9d62ad2f243359b840516db9629ce964d4e1150461",
+        "size": 6111
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/MANIFEST.in",
+        "sha256": "0c40080d4ae8d7ec11ff70ad36efd16ab8ffc2a17b8269b975210b8aa399244a",
+        "size": 46
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/PKG-INFO",
+        "sha256": "e429f7ad3decb95a8255138cec6a1f2d681f75ccc4d08cb052d044c85d1c459b",
+        "size": 282
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/README.txt",
+        "sha256": "a7c46d10e83cbf0cde0fb9d0baf284a372e63527018f11b335ad5a25ac79fa6f",
+        "size": 186
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/RELEASE-4.5.txt",
+        "sha256": "7393d6d3a8ad74f95b3b975e0943b2ddf91310161f3ddb24edcc0fd3c930497d",
+        "size": 387
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/setup.cfg",
+        "sha256": "1c473cbaee8da5fc46e7f0158794af5cea4414c34a3cf3f180c2001f5e38bd3e",
+        "size": 38
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/setup.py",
+        "sha256": "00ce3bb1670e8e4961d9ef2414dfa6ac467b52465382841b432578f91733ec67",
+        "size": 527
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/__init__.py",
+        "sha256": "83c506a5f96794c59c0322ed8a17a3ceb8003f5528ddbf468707c8f109d98edc",
+        "size": 1125
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/__init__.py",
+        "sha256": "82c9d076d4c7f085200a2554a507f3871c76a4546f92c5bbe928f0224ddf6129",
+        "size": 28
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATN.py",
+        "sha256": "2d813c913f83f05a547797e93adc8e2eabd72c591449af374d5168c210960226",
+        "size": 5789
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATNConfig.py",
+        "sha256": "b4d7480bafc6af15e5947071de7a405b20e1e8aae884b64357f5f23ebc9d44c6",
+        "size": 6565
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATNConfigSet.py",
+        "sha256": "a91cd5b0178caa4dadc631b70eb1a9b7017a55bda11c2e70dee9a448bd06349c",
+        "size": 8312
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATNDeserializationOptions.py",
+        "sha256": "95457f6c65ba9b18fbb76d1eb1d6b962ff97f66f94ff1d7ed3168b89f85720fa",
+        "size": 1010
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATNDeserializer.py",
+        "sha256": "6982c30ed43ec32a3780877a03ec03d44dd09a97eb3d9957c63e3f2039be9946",
+        "size": 22252
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATNSimulator.py",
+        "sha256": "98373e1b7185de449eaa97c60da6d438b27458b553aa26f166592f5d06260519",
+        "size": 2298
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATNState.py",
+        "sha256": "35b9dd212594c050c5fefb817db4e2659f063c7a106ba51776a6c3fb28c913b7",
+        "size": 7663
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ATNType.py",
+        "sha256": "c60bfc00c554eed734ed4ef7fe14539b502267b32f1a1a1a3f97d388eaeb0868",
+        "size": 422
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/LexerAction.py",
+        "sha256": "294789c0a7a405c8749b5a6848fb241c887ed7975c2801b8951ef396af7cb737",
+        "size": 10014
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/LexerActionExecutor.py",
+        "sha256": "eeb960d7b4c77302ecb939a1ecdb0bad36d11f80d3ae6f2a21d5bdff6df90847",
+        "size": 6420
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/LexerATNSimulator.py",
+        "sha256": "9185d1c14bc7a6d49153c4ff2bda52ac694293d632a5678794072382bcb5555a",
+        "size": 25465
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/ParserATNSimulator.py",
+        "sha256": "20a0b3b032dcce744e495a2353e75a03280aaf7b2f9740e62b90e19149650126",
+        "size": 80365
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/PredictionMode.py",
+        "sha256": "8bc07b3142c0eeffaa6d778263fc69eac822db590733a9326ea22b1baad2aeba",
+        "size": 22486
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/SemanticContext.py",
+        "sha256": "76cd1398ce2a7a76f42cdfab976169fcdff107de7d69b37aec8d7d105eabb3ca",
+        "size": 10495
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/atn/Transition.py",
+        "sha256": "640b041696b923f9fecf10fa53e0dab8ce7fdf78c52bae71dcf5aeebe356d110",
+        "size": 8762
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/BufferedTokenStream.py",
+        "sha256": "fc1c26cce1f54ceeb22f6c82fd9694ce4821abcc3373450f1df2375299d95303",
+        "size": 10780
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/CommonTokenFactory.py",
+        "sha256": "4efd7ace0fe9583d43bf722986cc45bbc9f059d2de5d872a27c082e721f08c7f",
+        "size": 2110
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/CommonTokenStream.py",
+        "sha256": "34d2475f0460dbf667e3a6612720f166dbd9cec3d685be898d76bb063338e5e8",
+        "size": 2770
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/dfa/__init__.py",
+        "sha256": "82c9d076d4c7f085200a2554a507f3871c76a4546f92c5bbe928f0224ddf6129",
+        "size": 28
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/dfa/DFA.py",
+        "sha256": "c1e221d2e6917da90fd76985bc7a3b534b6a3b718e355dfe9c7164736c64f991",
+        "size": 5388
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/dfa/DFASerializer.py",
+        "sha256": "d6cb7f1cef39c972d8cbb8089d3127933b6003a6a6e024fec917a1fa66b3a7d1",
+        "size": 2518
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/dfa/DFAState.py",
+        "sha256": "47b27029fd06b4012cf49fcc0ff63458a72ecddb740555f5b28c3ebaff721587",
+        "size": 5583
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/error/__init__.py",
+        "sha256": "82c9d076d4c7f085200a2554a507f3871c76a4546f92c5bbe928f0224ddf6129",
+        "size": 28
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/error/DiagnosticErrorListener.py",
+        "sha256": "1304b60ff3b1e829af09ad7a34f27db9de1060f1e694f5edebe59d9f58792a0f",
+        "size": 4430
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/error/ErrorListener.py",
+        "sha256": "c8ffcc0e0ba89780a3d3fa443f2373787defe19bd48d6e62c038e16135401db1",
+        "size": 2722
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/error/Errors.py",
+        "sha256": "8652a781c9417d77640e20329a162cbe1d8e09796f98733691397f035be0a7ec",
+        "size": 6759
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/error/ErrorStrategy.py",
+        "sha256": "d2687314be7b6559e32a41abb5a76d6bddd99b7357745f875b5d03543d3b557b",
+        "size": 30391
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/FileStream.py",
+        "sha256": "f9947ffa397f21ff4820160b20d230950ae54d29aee64d5550a0dcde27bb591e",
+        "size": 868
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/InputStream.py",
+        "sha256": "b208231368c41af4a0426c45bea79eb93dda39581c1f9b52ee63326d6f30292e",
+        "size": 2334
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/IntervalSet.py",
+        "sha256": "09dd162a177f9186e22d82a40cd9dc812335f4602e4bb39a4ce0b8fb962e6ece",
+        "size": 5965
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/Lexer.py",
+        "sha256": "0bbda1a9ac9f9329a9c5be3a01c4a784f0fd915674aae5a06e81b16ba81c21c8",
+        "size": 11542
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/ListTokenSource.py",
+        "sha256": "21f7cb328ed84270ff0a32abcabae03564a4d2ae5049877ba6e672c9493bbce9",
+        "size": 5356
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/LL1Analyzer.py",
+        "sha256": "a0906f3bbfd2f1c0256ff0f8a963717762252b4a8fe246bea1ea03c71d7a099e",
+        "size": 7752
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/Parser.py",
+        "sha256": "176436e73d3efff2877dadf9e0a4210eedd9395ccb15f6a0decda2c49e1d97fa",
+        "size": 22883
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/ParserInterpreter.py",
+        "sha256": "f9053d927e31dd6090f8b480f7d476df51e889c4ea6a488767928cef697e848a",
+        "size": 7206
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/ParserRuleContext.py",
+        "sha256": "c0701574ec4c00ee63914aa5a135d5ce7ff16272618876efbee859a6d874645f",
+        "size": 6762
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/PredictionContext.py",
+        "sha256": "71be0a23a106a52eec47327c52f3c4931a6120d66e5a1ca267de7be76837a6b2",
+        "size": 22977
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/Recognizer.py",
+        "sha256": "be6280b528c8811f4b42be58cee2b93a63d958c277c7af4eb95650fc54f34071",
+        "size": 5383
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/RuleContext.py",
+        "sha256": "1a2be246fda4fda97520181d24e104a03d2884969577efe1e53fc23c6fc1b268",
+        "size": 8099
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/StdinStream.py",
+        "sha256": "30c487e3337c4fa8bf9eefb7fd394dfb71389cf3386f92a02b8193ea7fc55100",
+        "size": 303
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/Token.py",
+        "sha256": "3ad58269be14b79d97fe72cb000fbcc78665eb1685e9310dfb4d37dee6a8684a",
+        "size": 5206
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/TokenStreamRewriter.py",
+        "sha256": "72e12b413ad7c02ff492a56fdccb135866529be135572d72cc0fb748e84a77fb",
+        "size": 10324
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/Chunk.py",
+        "sha256": "a022198e894babdc64c6d54344e103c5f50682775c127b035b479498b33b1a99",
+        "size": 695
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/ParseTreeMatch.py",
+        "sha256": "0dce86556494aa820015751a519a94c0252565f4dc8146c62c6ccd7fa43142f1",
+        "size": 4485
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/ParseTreePattern.py",
+        "sha256": "01204d6903918777fb7fc2a715e6490b6c96145c78b90971bc2d98e7989f858d",
+        "size": 2825
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/ParseTreePatternMatcher.py",
+        "sha256": "1ed13dca2d54aebd903cb18b24306faf4971bfa6e3ba3f421e5fb87256a149ef",
+        "size": 16388
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/RuleTagToken.py",
+        "sha256": "9f8cd7726aeb7ec1b297dd698f965871cfc278a3213ebbd8914769a60301a5b6",
+        "size": 2022
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/TokenTagToken.py",
+        "sha256": "4b7a370c985fccbe64a42971b0ac88f8897ec6fbae650881008b0b08a163447a",
+        "size": 1576
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/Tree.py",
+        "sha256": "648ed4ff923104b9bf22b9df24eb5bd760423c85b2cdf799b4b9e11ca555648c",
+        "size": 5572
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/tree/Trees.py",
+        "sha256": "26d43b7185a62b023d4c804feb2f572208e5352e26623bf7011c0e7f059ce558",
+        "size": 3968
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/Utils.py",
+        "sha256": "3b283c0890912f54eb17f41207f2cb955756381e25a1570a3a014d4fe89c3bb7",
+        "size": 931
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/xpath/__init__.py",
+        "sha256": "82c9d076d4c7f085200a2554a507f3871c76a4546f92c5bbe928f0224ddf6129",
+        "size": 28
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4/xpath/XPath.py",
+        "sha256": "3bdb38f840ef2db01b632b4ffdb69ef59da484b974880b51ccf02d55bb9650ce",
+        "size": 13015
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4_python3_runtime.egg-info/dependency_links.txt",
+        "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "size": 1
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4_python3_runtime.egg-info/PKG-INFO",
+        "sha256": "e429f7ad3decb95a8255138cec6a1f2d681f75ccc4d08cb052d044c85d1c459b",
+        "size": 282
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4_python3_runtime.egg-info/requires.txt",
+        "sha256": "8fcd1d96b48b64e6c60bf1f3296fdd7c9849ab03a4d291c046541009b24574b4",
+        "size": 34
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4_python3_runtime.egg-info/SOURCES.txt",
+        "sha256": "2fc22be0f30a6f4c49a5b066f2bb663644dbf53c029aa488db8bc02fab7692c8",
+        "size": 1968
+      },
+      {
+        "path": "antlr4-python3-runtime-4.9.3/src/antlr4_python3_runtime.egg-info/top_level.txt",
+        "sha256": "3aca19b21f5b6f7d308176f6cc1523743c18838e8c7d5f9155903a3e4f29701d",
+        "size": 7
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.soundfile",
+    "name": "soundfile",
+    "version": "0.13.1",
+    "url": "https://files.pythonhosted.org/packages/14/e9/6b761de83277f2f02ded7e7ea6f07828ec78e4b229b80e4ca55dd205b9dc/soundfile-0.13.1-py2.py3-none-win_amd64.whl",
+    "file": "soundfile-0.13.1-py2.py3-none-win_amd64.whl",
+    "sha256": "1e70a05a0626524a69e9f0f4dd2ec174b4e9567f4d8b6c11d38b5c289be36ee9",
+    "size": 1019162,
+    "installedSize": 2481234,
+    "health": "soundfile.py",
+    "importRoot": "",
+    "license": "BSD-3-Clause; libsndfile LGPL-2.1-or-later",
+    "files": [
+      {
+        "path": "_soundfile.py",
+        "sha256": "b5d8fbeb52efee81689fd4105c04e2b878b820b920d88ffeb3156bbb197b3266",
+        "size": 5914
+      },
+      {
+        "path": "_soundfile_data/__init__.py",
+        "sha256": "3723e81d0145341d5ae3c67a745373192a70c7f672ad028f76c95129339aafe9",
+        "size": 125
+      },
+      {
+        "path": "_soundfile_data/COPYING",
+        "sha256": "ad01ea5cd2755f6048383c8d54c88459cd6fcb17757c5c8892f8c5ea060f6140",
+        "size": 26518
+      },
+      {
+        "path": "_soundfile_data/libsndfile_x64.dll",
+        "sha256": "22518c16f9d13eda5ae5adf999c4740d7d16cc2d6b178b36dd4ac2f759a38559",
+        "size": 2364416
+      },
+      {
+        "path": "soundfile-0.13.1.dist-info/LICENSE",
+        "sha256": "0dd2e411fed553ba891845077e5a32c5b726d1bbc46ff31a2118ae1ccf816752",
+        "size": 1512
+      },
+      {
+        "path": "soundfile-0.13.1.dist-info/METADATA",
+        "sha256": "0e4254c32f48852e0789e265aee10208a9bb778113ae8c5420d680393b7d32a1",
+        "size": 16925
+      },
+      {
+        "path": "soundfile-0.13.1.dist-info/RECORD",
+        "sha256": "2b594fb53e9d27d4cde7aac41a7ff61e31c4ff2cd1e2d7653118f2c40917ebe9",
+        "size": 801
+      },
+      {
+        "path": "soundfile-0.13.1.dist-info/top_level.txt",
+        "sha256": "4e3ff456de030489194444eede1545b6d7efdfdbfcbc71b71f6fa7811d450b89",
+        "size": 37
+      },
+      {
+        "path": "soundfile-0.13.1.dist-info/WHEEL",
+        "sha256": "022707bbcd63608854e4e6ee90529464e3a29f37600cdc05d397cf5bda032f06",
+        "size": 122
+      },
+      {
+        "path": "soundfile.py",
+        "sha256": "e349c3858d6a0481fe8078d7a0132603261e7bef2b0facfb9596aeb44c51c563",
+        "size": 64864
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.cffi",
+    "name": "cffi",
+    "version": "2.0.0",
+    "url": "https://files.pythonhosted.org/packages/f8/ed/13bd4418627013bec4ed6e54283b1959cf6db888048c7cf4b4c3b5b36002/cffi-2.0.0-cp312-cp312-win_amd64.whl",
+    "file": "cffi-2.0.0-cp312-cp312-win_amd64.whl",
+    "sha256": "da68248800ad6320861f129cd9c1bf96ca849a2771a59e0344e88681905916f5",
+    "size": 183557,
+    "installedSize": 563390,
+    "health": "cffi/__init__.py",
+    "importRoot": "",
+    "license": "MIT",
+    "files": [
+      {
+        "path": "_cffi_backend.cp312-win_amd64.pyd",
+        "sha256": "53de34afc3939d81bf2498b77425c52e2c3f3164f8cfe2543d3acc8f24134488",
+        "size": 181248
+      },
+      {
+        "path": "cffi/__init__.py",
+        "sha256": "fa4b0143b31f0f356f6c1955fdfb5805602612a7c0f3a963233331cda65e0252",
+        "size": 511
+      },
+      {
+        "path": "cffi/_cffi_errors.h",
+        "sha256": "cd05edeee47f9bc8145be7c8da1260d0aa129091705eff111949040d9d7bedd4",
+        "size": 3908
+      },
+      {
+        "path": "cffi/_cffi_include.h",
+        "sha256": "131866826f6acc75b35a2be37d37b40fb5e9e2b3d4915c5d36ec0684c4cccdbc",
+        "size": 15055
+      },
+      {
+        "path": "cffi/_embedding.h",
+        "sha256": "022df71476e513b5d2a47382a7c90f716c0de7ff41575e0ebcdd0955ae884e9c",
+        "size": 18786
+      },
+      {
+        "path": "cffi/_imp_emulation.py",
+        "sha256": "4714441bccc06c8d913c6070c3dd2eff97e2f2c59d6a1a5d8a93a83f3929ec2d",
+        "size": 2960
+      },
+      {
+        "path": "cffi/_shimmed_dist_utils.py",
+        "sha256": "0638f6c26f3265bbc5bd6131e4011f9aa6aa6726458587e8c8b2d01e45d9b9aa",
+        "size": 2230
+      },
+      {
+        "path": "cffi/api.py",
+        "sha256": "6a506fea1650923a66669941a6175a467da53cef7e08e46cfccee2c5a6ef6562",
+        "size": 42169
+      },
+      {
+        "path": "cffi/backend_ctypes.py",
+        "sha256": "879648ccb73a0455579c6c9cf713ea656512eea1b2ef21520ea5deebc49af33e",
+        "size": 42454
+      },
+      {
+        "path": "cffi/cffi_opcode.py",
+        "sha256": "243579974474fce69d057fee13bc4f3d362d31d9a9a7c23d51877a6afeda8835",
+        "size": 5731
+      },
+      {
+        "path": "cffi/commontypes.py",
+        "sha256": "ecdeb33ed08596fc57316847574f29b148dd6082b65e0b0ddf2a39760b9afefe",
+        "size": 2805
+      },
+      {
+        "path": "cffi/cparser.py",
+        "sha256": "4144df9a52fe68ef8c611f1b14696f0141dcdfa390afb5d82ded162e41858d1a",
+        "size": 44790
+      },
+      {
+        "path": "cffi/error.py",
+        "sha256": "bfac53892e14d24bc3732e21fc10d1a39bf7f5942e8fe20c4582efe444dd759b",
+        "size": 877
+      },
+      {
+        "path": "cffi/ffiplatform.py",
+        "sha256": "6afc458dd8a460626812d9893bb7b0566c06fd511597a119fd668d859602aafe",
+        "size": 3584
+      },
+      {
+        "path": "cffi/lock.py",
+        "sha256": "97d4d37703083298ba8c39091a742013d72f4c847b0809ed209afc1061edde96",
+        "size": 747
+      },
+      {
+        "path": "cffi/model.py",
+        "sha256": "5b7d14150644ef78cbe4cc7937cd584fbeeeb365b68898d39b45d87e7c33d5c8",
+        "size": 21797
+      },
+      {
+        "path": "cffi/parse_c_type.h",
+        "sha256": "39dc107f033d92dababe5081e377b11509b10c1b63d8c04d74af0b625d79b63c",
+        "size": 5976
+      },
+      {
+        "path": "cffi/pkgconfig.py",
+        "sha256": "2cfd70eef996be62b0caa2da535676e3714e58635032b80c519aef805b8e95ca",
+        "size": 4374
+      },
+      {
+        "path": "cffi/recompiler.py",
+        "sha256": "efc27a94c1043b28173668cdf7e7ce1453b78fb796fa21714abc5fbd06f9e1b6",
+        "size": 65509
+      },
+      {
+        "path": "cffi/setuptools_ext.py",
+        "sha256": "d2b0b0049d56ec51d6b6230a7cd5ec4924fcf15f145ebba2e687971650cd2c6f",
+        "size": 9411
+      },
+      {
+        "path": "cffi/vengine_cpy.py",
+        "sha256": "a3240a0f6de4a44d1a0a150a03c260d1eef6ddfa0f898ccb60475bf89d0c88db",
+        "size": 43881
+      },
+      {
+        "path": "cffi/vengine_gen.py",
+        "sha256": "0d494422b0e25629f53e7867d6c7e86a69d2e4d2ea7c970e76146879235e2518",
+        "size": 26939
+      },
+      {
+        "path": "cffi/verifier.py",
+        "sha256": "a17f23a5aa21836426dda1dcce789d01dbeb566e4de2c4181b46b7128e66225e",
+        "size": 11182
+      },
+      {
+        "path": "cffi-2.0.0.dist-info/entry_points.txt",
+        "sha256": "cba8d3c67c9eb8b9cbf9725c0eff2e30bde7eb0c98886460f0c4e9fd0189f47a",
+        "size": 75
+      },
+      {
+        "path": "cffi-2.0.0.dist-info/licenses/AUTHORS",
+        "sha256": "2a67a60bbfb33759d67d645ff131b8e6d6bc4cafc232d751fcac3eda4d314cc8",
+        "size": 208
+      },
+      {
+        "path": "cffi-2.0.0.dist-info/licenses/LICENSE",
+        "sha256": "5ba24ddc57067f9249add644c3afc41a5d6dc37e23433ef759d95df370b0af63",
+        "size": 1123
+      },
+      {
+        "path": "cffi-2.0.0.dist-info/METADATA",
+        "sha256": "6444fa102f91029ef6f6d5b5a3860997ad71f6caead0ed00fed678377322dee7",
+        "size": 2627
+      },
+      {
+        "path": "cffi-2.0.0.dist-info/RECORD",
+        "sha256": "536d513db5b4ab2e7e3d5b93f99ea1b78296fd8261b356ce2f6fc9626e0789a7",
+        "size": 2313
+      },
+      {
+        "path": "cffi-2.0.0.dist-info/top_level.txt",
+        "sha256": "ac4ed6477ad97cd2b1588f7e8e7ea1b0708097b303901f859ae41bc568c57a14",
+        "size": 19
+      },
+      {
+        "path": "cffi-2.0.0.dist-info/WHEEL",
+        "sha256": "f143fdc7da6e588d0fd55fddecada831306a7de2cd9b6d424f367f3edaf43575",
+        "size": 101
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.pycparser",
+    "name": "pycparser",
+    "version": "2.23",
+    "url": "https://files.pythonhosted.org/packages/a0/e3/59cd50310fc9b59512193629e1984c1f95e5c8ae6e5d8c69532ccc65a7fe/pycparser-2.23-py3-none-any.whl",
+    "file": "pycparser-2.23-py3-none-any.whl",
+    "sha256": "e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934",
+    "size": 118140,
+    "installedSize": 617104,
+    "health": "pycparser/__init__.py",
+    "importRoot": "",
+    "license": "BSD-3-Clause",
+    "files": [
+      {
+        "path": "pycparser/__init__.py",
+        "sha256": "150165e57bb15d98981eb06e37510494dd423a547c93868249d1bb87b6bbccbc",
+        "size": 2918
+      },
+      {
+        "path": "pycparser/_ast_gen.py",
+        "sha256": "d094559c35be270fb7223565a3c8def6b6c0729e8aa3bb681c09c1e738bb8744",
+        "size": 10555
+      },
+      {
+        "path": "pycparser/_build_tables.py",
+        "sha256": "e1dfd4908c49e187c74d59fac41cc1039db00e8eeac60d41e9a64025825ab3d4",
+        "size": 1087
+      },
+      {
+        "path": "pycparser/_c_ast.cfg",
+        "sha256": "95de5ecc4f72cc82452150147f0edecc94a5322e275ca342cdf9aa8cec904cda",
+        "size": 4255
+      },
+      {
+        "path": "pycparser/ast_transforms.py",
+        "sha256": "193318954816997779c09572a2f5d8d6acf302a8f1cc2a55560d3aeb874a181b",
+        "size": 5691
+      },
+      {
+        "path": "pycparser/c_ast.py",
+        "sha256": "1d678eadf61d098d2ee57698844d62eb4b95c84df231675cc73102517f83a89c",
+        "size": 31445
+      },
+      {
+        "path": "pycparser/c_generator.py",
+        "sha256": "5d62b7a0633f7950f977f25f809c453bde58eaf50c7d18bca68bf91508c71f6b",
+        "size": 17790
+      },
+      {
+        "path": "pycparser/c_lexer.py",
+        "sha256": "6eaecb00b043530e39d8a4f727b4331e3daa3280ae8065a321334f583ef288e1",
+        "size": 17728
+      },
+      {
+        "path": "pycparser/c_parser.py",
+        "sha256": "ba3419ef2e9075e77d879483ae1b604a51f0d2f49855aff288cb56f599ec7b36",
+        "size": 75462
+      },
+      {
+        "path": "pycparser/lextab.py",
+        "sha256": "78b877b299cf02ba4028254010ad4908e8145f42fdc2b25d7ce4cbcb0f2c2d11",
+        "size": 8776
+      },
+      {
+        "path": "pycparser/ply/__init__.py",
+        "sha256": "ab8b3ce90c11b1845adb42fdb9e4b17e1fa13e28697ed0630cebd86b6fd24b66",
+        "size": 102
+      },
+      {
+        "path": "pycparser/ply/cpp.py",
+        "sha256": "52d0b7ca54d6a79ff530a03e3cb0aec0a411f3348e9e51ae18621dce3f314bdf",
+        "size": 33282
+      },
+      {
+        "path": "pycparser/ply/ctokens.py",
+        "sha256": "30a92c9cde344de84f86055fc422618e3fc18cbf78ddaa6b78004a633f9b9746",
+        "size": 3177
+      },
+      {
+        "path": "pycparser/ply/lex.py",
+        "sha256": "ac2322d328e56668c7e523578ff61db3557148391a1b6b614bbdf9d58bdf37e2",
+        "size": 42926
+      },
+      {
+        "path": "pycparser/ply/yacc.py",
+        "sha256": "79ab520e444b811afa5f7fa1a0393f49042fd3ae51d0174bd8aedf439e028153",
+        "size": 137323
+      },
+      {
+        "path": "pycparser/ply/ygen.py",
+        "sha256": "d8960d798b6b3f3d49ccb48b3b77781ac4bccc953c8d8fc8fc2475548f605ab0",
+        "size": 2251
+      },
+      {
+        "path": "pycparser/plyparser.py",
+        "sha256": "f2d2cea04cad71aa6f5abaf525f09fec3a20fb0ba506d4b562b0ecf12ec97cca",
+        "size": 4875
+      },
+      {
+        "path": "pycparser/yacctab.py",
+        "sha256": "a2f5f8a505bbb236d17fc73e1b1a54e89eb9a6a5460206d4fc6fd8b96e4d3c73",
+        "size": 213007
+      },
+      {
+        "path": "pycparser-2.23.dist-info/LICENSE",
+        "sha256": "0c846399369ea76ddd7b5c44fe6d16497415fcf015f5cbb508c24bf98b81c5b1",
+        "size": 1543
+      },
+      {
+        "path": "pycparser-2.23.dist-info/METADATA",
+        "sha256": "a2c9a11ccc5ade7e6c3f0bf959e529cb23e79bbe9ea215d8199c8a1a659b3c57",
+        "size": 993
+      },
+      {
+        "path": "pycparser-2.23.dist-info/RECORD",
+        "sha256": "1610e6b74e7dbe1ceb3bf52aceb7c0904b9dfa1d909adc7641b9999cf8a56e1e",
+        "size": 1816
+      },
+      {
+        "path": "pycparser-2.23.dist-info/top_level.txt",
+        "sha256": "73e94f712ef82fff0aa07ec813a3d0179a1fca2ad140d57856191b48520f7963",
+        "size": 10
+      },
+      {
+        "path": "pycparser-2.23.dist-info/WHEEL",
+        "sha256": "a2241587fe4f9d033413780f762cf4f5608d9b08870cc6867abfde96a0777283",
+        "size": 92
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.sentencepiece",
+    "name": "sentencepiece",
+    "version": "0.2.1",
+    "url": "https://files.pythonhosted.org/packages/2d/81/92df5673c067148c2545b1bfe49adfd775bcc3a169a047f5a0e6575ddaca/sentencepiece-0.2.1-cp312-cp312-win_amd64.whl",
+    "file": "sentencepiece-0.2.1-cp312-cp312-win_amd64.whl",
+    "sha256": "4cdc7c36234fda305e85c32949c5211faaf8dd886096c7cea289ddc12a2d02de",
+    "size": 1054671,
+    "installedSize": 2522140,
+    "health": "sentencepiece/__init__.py",
+    "importRoot": "",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "path": "sentencepiece/__init__.py",
+        "sha256": "5fd32b7c347fd8d039f5e78e969c3700edaf5ad60a36e2ddba02a820d1bdd76b",
+        "size": 50652
+      },
+      {
+        "path": "sentencepiece/_sentencepiece.cp312-win_amd64.pyd",
+        "sha256": "f1069eaa45cfa5d6d81f7b46876b80860fe9147d28d84c7057ed952e84b064e5",
+        "size": 1010688
+      },
+      {
+        "path": "sentencepiece/_version.py",
+        "sha256": "575d19f21c6548664433c92d54b0c4f08017f22be85dd66907d84b5c545ef7a8",
+        "size": 23
+      },
+      {
+        "path": "sentencepiece/package_data/nfkc.bin",
+        "sha256": "52f11028ff8a7df3e009d94a8b6a54d4a8a17132efb4ccc1c9a0a41e432bd91e",
+        "size": 240008
+      },
+      {
+        "path": "sentencepiece/package_data/nfkc_cf.bin",
+        "sha256": "60833ec11201446659c3549c183b18f024c4007628cc6b3a4e91ae007697b826",
+        "size": 247028
+      },
+      {
+        "path": "sentencepiece/package_data/nmt_nfkc.bin",
+        "sha256": "79372c41389c2b9b29bc171017ab5400e352debd686b02670a42bec709015074",
+        "size": 240007
+      },
+      {
+        "path": "sentencepiece/package_data/nmt_nfkc_cf.bin",
+        "sha256": "22c292c76f503795f30c85d79d30a7f572fff4f49e00392d2d60f4f93e941a1e",
+        "size": 247027
+      },
+      {
+        "path": "sentencepiece/sentencepiece.i",
+        "sha256": "f6965b148e94b39d4ee37e5ee70bec224730dd6f9c1043e3eafbf21b2f427bac",
+        "size": 74660
+      },
+      {
+        "path": "sentencepiece/sentencepiece_model_pb2.py",
+        "sha256": "ecf0c5f9f5cf113e9464f6fe2fb6f7f03fbb7b5d077d4d76eecfc1442a692181",
+        "size": 6301
+      },
+      {
+        "path": "sentencepiece/sentencepiece_pb2.py",
+        "sha256": "7e7c2a97735eb0aad11d11c0d5fecbac103dc15d8d483183c0c372c63b01d816",
+        "size": 1783
+      },
+      {
+        "path": "sentencepiece/sentencepiece_wrap.cxx",
+        "sha256": "9f2a5a4f724891929c2d4c94b20a3f6c519f520ea4233dc675cd3e4b56e5cd35",
+        "size": 392122
+      },
+      {
+        "path": "sentencepiece-0.2.1.dist-info/METADATA",
+        "sha256": "3de0de19c0bf383a6946bc0494b5c428e7216cb7d94a4607db4cb430f5e23abb",
+        "size": 10254
+      },
+      {
+        "path": "sentencepiece-0.2.1.dist-info/RECORD",
+        "sha256": "e4df88589be0fd6ab131634bb0fa6b5af84831c5677fae4be3ea40b5dba25ddb",
+        "size": 1356
+      },
+      {
+        "path": "sentencepiece-0.2.1.dist-info/top_level.txt",
+        "sha256": "3485d52a6b2afb1759e4a44e3071d5d2090b0377ef6cd4dbd60d4ab6089814e9",
+        "size": 130
+      },
+      {
+        "path": "sentencepiece-0.2.1.dist-info/WHEEL",
+        "sha256": "f143fdc7da6e588d0fd55fddecada831306a7de2cd9b6d424f367f3edaf43575",
+        "size": 101
+      }
+    ]
+  },
+  {
+    "id": "runtime.gigaam.torchaudio",
+    "name": "torchaudio",
+    "version": "2.10.0+cpu",
+    "url": "https://download.pytorch.org/whl/cpu/torchaudio-2.10.0%2Bcpu-cp312-cp312-win_amd64.whl",
+    "file": "torchaudio-2.10.0+cpu-cp312-cp312-win_amd64.whl",
+    "sha256": "32707736ef079a673433ca36c227c135375602b74d41ee21ff18d1e75caee0b0",
+    "size": 473210,
+    "installedSize": 2045467,
+    "health": "torchaudio/__init__.py",
+    "importRoot": "",
+    "license": "BSD-2-Clause",
+    "files": [
+      {
+        "path": "torchaudio/__init__.py",
+        "sha256": "fb25996556e5580d3a1d0e1c512f2c46c69266e82a69cab0d00eef4042f18d81",
+        "size": 8082
+      },
+      {
+        "path": "torchaudio/_extension/__init__.py",
+        "sha256": "362a13deaa6c0e292d19d0114e8a6001de22a7e30131753a7e875b1362730db9",
+        "size": 1418
+      },
+      {
+        "path": "torchaudio/_extension/utils.py",
+        "sha256": "910fcfc8b4e836e3e32ca3906bffad4f52e9168c1c190d25a5cbb3ad13eb99bf",
+        "size": 5059
+      },
+      {
+        "path": "torchaudio/_internal/__init__.py",
+        "sha256": "f3472925f4d2f3defb618ad4deae69e0344018092a109ae61bd2eada1103a68a",
+        "size": 251
+      },
+      {
+        "path": "torchaudio/_internal/module_utils.py",
+        "sha256": "fac95dfa55a6cda0282d3497ce4da4a215e9cc6885829c404c1f9356a57e89a4",
+        "size": 2493
+      },
+      {
+        "path": "torchaudio/_torchcodec.py",
+        "sha256": "dac6a27c0d01761135d996f9d6f812eb3af0b04d62afb9a6be6275945396b4b2",
+        "size": 13764
+      },
+      {
+        "path": "torchaudio/compliance/__init__.py",
+        "sha256": "24d1fff9d4d05669b9e58c1c54cb95bd460559d5e11a7e02ffff52f0852c3685",
+        "size": 53
+      },
+      {
+        "path": "torchaudio/compliance/kaldi.py",
+        "sha256": "6d2eea2604b793c14ad5190c88d1283f7ab4c618de57f57844743d8e8feba8e3",
+        "size": 37479
+      },
+      {
+        "path": "torchaudio/datasets/__init__.py",
+        "sha256": "85d1e5766dcece840b6c8d241e3f2d2f1ab00e1ccc7de76ad3fb759002bb3918",
+        "size": 1218
+      },
+      {
+        "path": "torchaudio/datasets/cmuarctic.py",
+        "sha256": "64bda218bc4d6cab7449a85324699bbac79faf6a94172c362eb97c91db8bb38c",
+        "size": 7239
+      },
+      {
+        "path": "torchaudio/datasets/cmudict.py",
+        "sha256": "ffdbd3cfbffc04556b707780eb5ffe8765cb3a5e88b1d582a6d90c5b388e5bb5",
+        "size": 6176
+      },
+      {
+        "path": "torchaudio/datasets/commonvoice.py",
+        "sha256": "39c167fa71b861f048cf4608a47f75c47f6b1646bcc85266af1cb8bc56640b82",
+        "size": 2849
+      },
+      {
+        "path": "torchaudio/datasets/dr_vctk.py",
+        "sha256": "0327fce69ac336bd4b7164386f2b1559d4553ebcb62402e3bfa32dabeea20696",
+        "size": 4498
+      },
+      {
+        "path": "torchaudio/datasets/fluentcommands.py",
+        "sha256": "2a7987d58dbc9393e1a905fa795fbbe4cab04d1c621d251472f02c6be2bde78b",
+        "size": 3353
+      },
+      {
+        "path": "torchaudio/datasets/gtzan.py",
+        "sha256": "92ddb92f2f6a0c6ba28955e0b17852d39b468ba95a461464a3cd7e050e2c67ec",
+        "size": 25475
+      },
+      {
+        "path": "torchaudio/datasets/iemocap.py",
+        "sha256": "64c306fc5a5c59c30711b86e4584506945a2fc3a1e823c42ae75720a0e441151",
+        "size": 5077
+      },
+      {
+        "path": "torchaudio/datasets/librilight_limited.py",
+        "sha256": "8b06419522952eb5f3859bdaaa3b954463ba733c57e1fa5dcddf3059ee5f7964",
+        "size": 4290
+      },
+      {
+        "path": "torchaudio/datasets/librimix.py",
+        "sha256": "027704ebbd403a5d387513ec6a33595be671c48fcfc00dac8c17ed74183843e9",
+        "size": 5249
+      },
+      {
+        "path": "torchaudio/datasets/librispeech.py",
+        "sha256": "cacefaf48d14cc6d3b5049b267f283c004e1e32734f21154b826b22bcb582068",
+        "size": 6482
+      },
+      {
+        "path": "torchaudio/datasets/librispeech_biasing.py",
+        "sha256": "2841a995153fc2981bd15aab4feb78da4bed0bb960e2e32cb19728b15bef3e18",
+        "size": 7147
+      },
+      {
+        "path": "torchaudio/datasets/libritts.py",
+        "sha256": "f75129d8cab73b24ab7b6e469e25c12e64734f010f88a98c6aa5e7ce2ae7d316",
+        "size": 6038
+      },
+      {
+        "path": "torchaudio/datasets/ljspeech.py",
+        "sha256": "974f41481407efa23e2e1624211174bb5f2d4e2fb8cb2b1a178823d864996b1c",
+        "size": 3601
+      },
+      {
+        "path": "torchaudio/datasets/musdb_hq.py",
+        "sha256": "15594ab061011e24f9d32f462ecc27b76405a61d8f8e223ac82cb5331886e9ff",
+        "size": 5214
+      },
+      {
+        "path": "torchaudio/datasets/quesst14.py",
+        "sha256": "df2e87dd3de0efc8e40ea71af23391401395899847d51865b1fb98f0727639c5",
+        "size": 4591
+      },
+      {
+        "path": "torchaudio/datasets/snips.py",
+        "sha256": "9b055ce4ab1b3253d027cedec988239d0e52e04157a10be6d7774ed2b5e926e1",
+        "size": 5165
+      },
+      {
+        "path": "torchaudio/datasets/speechcommands.py",
+        "sha256": "ff09ab2928847b408e3bbba4d09557ca9066371bb4bab9dc787b8543accc3a4d",
+        "size": 7664
+      },
+      {
+        "path": "torchaudio/datasets/tedlium.py",
+        "sha256": "51065469e52a9859ed656707f475cea46796eadb02706f356cf8d7dbf096c5b8",
+        "size": 8916
+      },
+      {
+        "path": "torchaudio/datasets/utils.py",
+        "sha256": "9a9838b748458ad4468fd3b0ecc5f008534a1939d5b04ad52e9c5fb1b3fb144f",
+        "size": 1757
+      },
+      {
+        "path": "torchaudio/datasets/vctk.py",
+        "sha256": "bcdfd5cf14cbc875b5d48febcdfccc540de1e495bdd7b15a5373429d1fb370bd",
+        "size": 5842
+      },
+      {
+        "path": "torchaudio/datasets/voxceleb1.py",
+        "sha256": "2656246f260e0055058462d42dede582e7003567ff1bba86ab0e3b623897d883",
+        "size": 12034
+      },
+      {
+        "path": "torchaudio/datasets/yesno.py",
+        "sha256": "0778513546b3bc1f15f12c0e52543396207dbc8f6032497d48497e759e0f11ac",
+        "size": 3115
+      },
+      {
+        "path": "torchaudio/functional/__init__.py",
+        "sha256": "73e940269428c6c002838347f7391543364e26d816cd48073e46d8bea9e3c4d0",
+        "size": 2448
+      },
+      {
+        "path": "torchaudio/functional/_alignment.py",
+        "sha256": "3f67a14d9ec8c2e30559536aae16237358a604a3729300b4dc3eeebdb8310420",
+        "size": 4867
+      },
+      {
+        "path": "torchaudio/functional/filtering.py",
+        "sha256": "a6251b5649c13817482eb77533d6f393603d5020a7e2acca5cd120bfb2180fb4",
+        "size": 64010
+      },
+      {
+        "path": "torchaudio/functional/functional.py",
+        "sha256": "c8d18a429a2427f5abb3fe92cbd28484746046107f71f9457138b6177b27c3b1",
+        "size": 97019
+      },
+      {
+        "path": "torchaudio/lib/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "torchaudio/lib/_torchaudio.pyd",
+        "sha256": "cde0eb63f15609c82f360199df75673c131d5f0f846c262fef9bc56a58d43ec0",
+        "size": 616448
+      },
+      {
+        "path": "torchaudio/lib/libtorchaudio.pyd",
+        "sha256": "a447b2d42d5df938591f26d3c2b666e657a8b954233d08be2e524aad162b364d",
+        "size": 372224
+      },
+      {
+        "path": "torchaudio/models/__init__.py",
+        "sha256": "1a2dd442fc63c132d6f707ca945e363b756ea7bd1dd1b936c7ead94bcf404b02",
+        "size": 2080
+      },
+      {
+        "path": "torchaudio/models/_hdemucs.py",
+        "sha256": "8a9023efdeb93cefd6119a90c16d689bd8108fdd1485039e53a1d4dcba6fcf0a",
+        "size": 39250
+      },
+      {
+        "path": "torchaudio/models/conformer.py",
+        "sha256": "815ace61e2643e555a5fee1e6695733547bfaf793b83563a35a690f0964ffabe",
+        "size": 10361
+      },
+      {
+        "path": "torchaudio/models/conv_tasnet.py",
+        "sha256": "0fb635d2c3b32ded3783281f37527947bdd220790819540e92a290e8d8b7a3fb",
+        "size": 12870
+      },
+      {
+        "path": "torchaudio/models/decoder/__init__.py",
+        "sha256": "58c878b9d37c08617e4af80de8905748d323859aa6d5eb7b17232bb24e95e913",
+        "size": 1252
+      },
+      {
+        "path": "torchaudio/models/decoder/_ctc_decoder.py",
+        "sha256": "ccab0e74f36b527eefd9026696e0b790ea7dd1141a3f70929904aeadcd67005c",
+        "size": 20654
+      },
+      {
+        "path": "torchaudio/models/decoder/_cuda_ctc_decoder.py",
+        "sha256": "e0929c41a93829ee88774109103244c75c8b4d729b269203362bbb4127b78165",
+        "size": 7373
+      },
+      {
+        "path": "torchaudio/models/deepspeech.py",
+        "sha256": "9d561cdb1c16a453ba82ee4247499ba8b880cc99fc9407c771d70ff768b6da6a",
+        "size": 2830
+      },
+      {
+        "path": "torchaudio/models/emformer.py",
+        "sha256": "59b69e65cacf14e38b9f88a0ab0784d007ee17f490669aa0ed73c612197b0bc7",
+        "size": 38650
+      },
+      {
+        "path": "torchaudio/models/rnnt.py",
+        "sha256": "3cd26965ddef1fac11abc4c47f85253ed5476ed7bdc0e27e6d1304ba0ea0a74f",
+        "size": 36357
+      },
+      {
+        "path": "torchaudio/models/rnnt_decoder.py",
+        "sha256": "08104c66186ae4181ac74ff7a774990fe3acdd2d4b14707dd684e05440f86e66",
+        "size": 13178
+      },
+      {
+        "path": "torchaudio/models/squim/__init__.py",
+        "sha256": "790a31f243ef88eb612ae969cd9bcf2b46bae8d1d6ecccd813868e17bbdafe45",
+        "size": 357
+      },
+      {
+        "path": "torchaudio/models/squim/objective.py",
+        "sha256": "14262ed22d8e5d8ddee99f813b6a7eadceab5343efa49674800f823d9640f5fc",
+        "size": 12607
+      },
+      {
+        "path": "torchaudio/models/squim/subjective.py",
+        "sha256": "d7f80af4ede7beb8e28a4a4fe3a21db0ccca76e493b7dd642a4940ebdc10aa2c",
+        "size": 5947
+      },
+      {
+        "path": "torchaudio/models/tacotron2.py",
+        "sha256": "999e652d26bbe68a9cd21824737b089b9fe02be92786d817ddd9a0f7ea0b41aa",
+        "size": 46960
+      },
+      {
+        "path": "torchaudio/models/wav2letter.py",
+        "sha256": "a1eb71a47e511b44da75807be483a660eae7ada68fbd295c48da5165bd8513f0",
+        "size": 3350
+      },
+      {
+        "path": "torchaudio/models/wav2vec2/__init__.py",
+        "sha256": "8f915d4057ee229748298c2830ba29e016bbd061a84be94aeb5b54fa8346e708",
+        "size": 972
+      },
+      {
+        "path": "torchaudio/models/wav2vec2/components.py",
+        "sha256": "1339ae19ce6a1d53eb1c21aa6151d3bdd8ea3f6802ac17e71d2a132bd1ac675c",
+        "size": 48244
+      },
+      {
+        "path": "torchaudio/models/wav2vec2/model.py",
+        "sha256": "90fe902ac1753e395ec9432168f8f2762d29091cb8186500ad1581cdf0c999d1",
+        "size": 61671
+      },
+      {
+        "path": "torchaudio/models/wav2vec2/utils/__init__.py",
+        "sha256": "d5ea3068e10a45ba7b25a8c536ffebe3b44426a9cc99789dba44bb32bc29ff94",
+        "size": 188
+      },
+      {
+        "path": "torchaudio/models/wav2vec2/utils/import_fairseq.py",
+        "sha256": "b28ed3fa8b43342b1352dcc9454145196c9dd1c696977458fd46c53312780c91",
+        "size": 9411
+      },
+      {
+        "path": "torchaudio/models/wav2vec2/utils/import_huggingface.py",
+        "sha256": "34c2ba62b0080df3b0f23d6d57edd74f0c7f9b06c91ef83c95d4eb016473b483",
+        "size": 6080
+      },
+      {
+        "path": "torchaudio/models/wav2vec2/wavlm_attention.py",
+        "sha256": "89875ef60aec6ff45a12cf3b148e72932377cf4231d6996aa6c30dbda9008963",
+        "size": 11058
+      },
+      {
+        "path": "torchaudio/models/wavernn.py",
+        "sha256": "2d180bdfa8c0e96cc8d4f033058e8fe76a023064933ab69707c7c4824c294b1c",
+        "size": 15855
+      },
+      {
+        "path": "torchaudio/pipelines/__init__.py",
+        "sha256": "a0cc0ebbed53fee8099a175aa08e4dac20eb5001aba433a52503bc87e6cb016e",
+        "size": 2847
+      },
+      {
+        "path": "torchaudio/pipelines/_source_separation_pipeline.py",
+        "sha256": "b6d1ea8dcc029823d62e3d18783b136b5f977adbb28cf0d9f43d9d784dc59a40",
+        "size": 4334
+      },
+      {
+        "path": "torchaudio/pipelines/_squim_pipeline.py",
+        "sha256": "79876b2955d4aeedd575fa5a0e730de6a0ae28736f78477f8f01aab5e995f65b",
+        "size": 6438
+      },
+      {
+        "path": "torchaudio/pipelines/_tts/__init__.py",
+        "sha256": "58a739734e9bfccf4cbc4a212598212495802fbbd7bdfc11224772f39502874e",
+        "size": 442
+      },
+      {
+        "path": "torchaudio/pipelines/_tts/impl.py",
+        "sha256": "c30ad3c9310491ec36d809f307f66495aa46680b2d2525016b0840edb39c1973",
+        "size": 15759
+      },
+      {
+        "path": "torchaudio/pipelines/_tts/interface.py",
+        "sha256": "cb5994d38e3a572da11e90b032a459b75508e195e5f82e2d269f761329701e1d",
+        "size": 10479
+      },
+      {
+        "path": "torchaudio/pipelines/_tts/utils.py",
+        "sha256": "b6e8840397aaa01360b78e93c4603b94e12a9636ee1022f4fa973fb92728d31a",
+        "size": 5040
+      },
+      {
+        "path": "torchaudio/pipelines/_wav2vec2/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "torchaudio/pipelines/_wav2vec2/aligner.py",
+        "sha256": "1ce72d84582ea7ded0331f595c29a4bfa8ddc3fcf17514fe7bf4a295712e8cd5",
+        "size": 2796
+      },
+      {
+        "path": "torchaudio/pipelines/_wav2vec2/impl.py",
+        "sha256": "23a86d368e16b792cfc57f59f2b9b16ab144f0164e641505214f53f64d64d8fa",
+        "size": 67260
+      },
+      {
+        "path": "torchaudio/pipelines/_wav2vec2/utils.py",
+        "sha256": "0956b07d799519663c9a3fbfeabe0a3bdd3b06917aed601558710787270521a3",
+        "size": 7317
+      },
+      {
+        "path": "torchaudio/pipelines/rnnt_pipeline.py",
+        "sha256": "d7a38c37fe326354c428b5a3aa4cc548c281c884f12e86e3e97d6e93bf29c102",
+        "size": 14133
+      },
+      {
+        "path": "torchaudio/transforms/__init__.py",
+        "sha256": "1115860f9d891e82a5918815d1ed2f1fbeb39997ea9dca9cd4f6e64929f41ff7",
+        "size": 1343
+      },
+      {
+        "path": "torchaudio/transforms/_multi_channel.py",
+        "sha256": "32eb30edd4eedb91cd8ca78870a1d40eea819a3fc60b67b74da6a4a8971f7d6f",
+        "size": 22688
+      },
+      {
+        "path": "torchaudio/transforms/_transforms.py",
+        "sha256": "419a3eda077da4ac07be366e6a6d7c876271967e9285d8bff72f2e5727a7335b",
+        "size": 89055
+      },
+      {
+        "path": "torchaudio/utils/__init__.py",
+        "sha256": "c8d316223a0677af053f157a3e10dd8ced6845e9a533440f26cbbf93a8956864",
+        "size": 74
+      },
+      {
+        "path": "torchaudio/utils/download.py",
+        "sha256": "adfff24b5f22ee7e0961b206a568967348a97b8b06bf746f8afbfaa740da6605",
+        "size": 2972
+      },
+      {
+        "path": "torchaudio/version.py",
+        "sha256": "33bac1c6c26052a06d3ddfc5fa593520e8fad9c233af64608f03c1df0c6e9ed2",
+        "size": 86
+      },
+      {
+        "path": "torchaudio-2.10.0+cpu.dist-info/licenses/LICENSE",
+        "sha256": "32638e179931bfe551eabf67b0e67a13b483e166b58dd7263634ab7f89f396f5",
+        "size": 1363
+      },
+      {
+        "path": "torchaudio-2.10.0+cpu.dist-info/METADATA",
+        "sha256": "382ac34d01a9824daf38b3188bdc962b6ca203d1ab842345e6240ae273166d9e",
+        "size": 7050
+      },
+      {
+        "path": "torchaudio-2.10.0+cpu.dist-info/RECORD",
+        "sha256": "e8af14c5d44ed433cb6b86f373770d9eb6e88d49265b46de45a569174fa8056e",
+        "size": 7719
+      },
+      {
+        "path": "torchaudio-2.10.0+cpu.dist-info/top_level.txt",
+        "sha256": "98f296308456596d89c1b24deb045c91e3758296e38627daa4017467db7b48ca",
+        "size": 11
+      },
+      {
+        "path": "torchaudio-2.10.0+cpu.dist-info/WHEEL",
+        "sha256": "f143fdc7da6e588d0fd55fddecada831306a7de2cd9b6d424f367f3edaf43575",
+        "size": 101
+      }
+    ]
+  }
+]

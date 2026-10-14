@@ -3,13 +3,13 @@ using System.Globalization;
 
 namespace AIHub.Services;
 
-public enum MusicGenerationStage { Idle, Loading, Planning, Sequence, Sound, Encoding, Completed, Cancelled, Error, Paused }
+public enum MusicGenerationStage { Idle, Loading, Planning, Sequence, Sound, Encoding, Completed, Cancelled, Error, Paused, Synchronizing }
 
 public sealed record MusicGenerationSnapshot(Guid Operation, MusicGenerationStage Stage,
     double? Percent, bool Estimated, TimeSpan Elapsed)
 {
     public bool Active => Stage is MusicGenerationStage.Loading or MusicGenerationStage.Planning
-        or MusicGenerationStage.Sequence or MusicGenerationStage.Sound or MusicGenerationStage.Encoding;
+        or MusicGenerationStage.Sequence or MusicGenerationStage.Sound or MusicGenerationStage.Encoding or MusicGenerationStage.Synchronizing;
 }
 
 // Presentation telemetry only. The future executor owns the shared background operation.

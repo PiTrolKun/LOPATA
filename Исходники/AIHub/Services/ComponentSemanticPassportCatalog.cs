@@ -138,7 +138,7 @@ public static class ComponentSemanticPassportCatalog
     public static ComponentSemanticPassport Get(ComponentCatalogEntry entry) =>
         Passports.TryGetValue(entry.Id, out var passport)
             ? passport
-            : new ComponentSemanticPassport(entry.Description, entry.Description);
+            : MusicLyricsComponentCatalog.Passport(entry.Id) ?? new ComponentSemanticPassport(entry.Description, entry.Description);
 
     public static string GetDescription(ComponentCatalogEntry entry, string languageCode)
     {
@@ -149,7 +149,7 @@ public static class ComponentSemanticPassportCatalog
     }
 
     public static bool HasPassport(string componentId) =>
-        Passports.ContainsKey(componentId);
+        Passports.ContainsKey(componentId) || MusicLyricsComponentCatalog.Passport(componentId) is not null;
 }
 
 public sealed record ComponentSemanticPassport(string Ru, string En);

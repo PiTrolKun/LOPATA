@@ -4893,5 +4893,14 @@
   "Music.Poetry.CreativityHint": "Lower values make replies more predictable; higher values add variety. Quality depends on the model and task. Your choice is saved separately for each model.",
   "Music.Poetry.CreativityInputHint": "From 0.1 to 2. Enter a number and press Enter or Apply.",
   "Music.Poetry.CreativityInvalid": "Enter a number from 0.1 to 2. A comma or period is accepted.",
-  "Music.Poetry.Creativity.Apply": "Apply"
+  "Music.Poetry.Creativity.Apply": "Apply",
+  "Music.Status.Synchronizing": "Synchronizing song lyrics",
+  "Music.LyricsSync.Title": "Synchronizing song lyrics",
+  "Music.Audio.SyncPending": "Song lyric synchronization is not finished yet.",
+  "Music.Audio.SyncWaitingPlay": "Synchronization is not finished yet. Playback will start automatically.",
+  "Music.Audio.CancelWaitingPlay": "Cancel queued playback",
+  "Music.LyricsSync.Unavailable": "Reliable lyric timings are unavailable. The song remains available for normal playback.",
+  "Music.Audio.KaraokeUnavailable": "Karaoke unavailable",
+  "Cloud.Tag.music_lyrics_sync": "Synchronized song lyrics",
+  "Cloud.Description.music_lyrics_sync": "Automatic timing data for a particular recording and highlighting of sung lines in the music editor. Edited lyrics are not highlighted."
 }
