@@ -77,7 +77,7 @@ public sealed partial class MusicPoetryWindow : Window
         _new = Action(header, "New", NewSession);
         _partial = Action(header, "Partial", ViewPartial);
         _models = Action(header, "Models", ModelMenu); _models.Content = "ИИ±";
-        Action(header, "Help", () => ShowText(L("Help"), MusicPoetryProtocol.System(_session, _guidance.Text, _interfaceLanguage()), "Protocol"));
+        Action(header, "Help", () => ShowText(L("Help"), DisplayedSystem(), "Protocol"));
         var footer = new DockPanel { Margin = new(0, 10, 0, 0) }; DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
         var meter = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
         meter.Children.Add(_memoryIcon); meter.Children.Add(_memoryCount); meter.Children.Add(_memory); DockPanel.SetDock(meter, Dock.Right); footer.Children.Add(meter); footer.Children.Add(_status);
@@ -100,6 +100,7 @@ public sealed partial class MusicPoetryWindow : Window
         resizeInput.SetResourceReference(BackgroundProperty, "LineBrush"); Grid.SetRow(resizeInput, 1); conversation.Children.Add(resizeInput);
         var entry = new DockPanel(); var entryActions = new WrapPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
         DockPanel.SetDock(entryActions, Dock.Bottom); entry.Children.Add(entryActions);
+        InitializeSearch(entryActions, context);
         _creativity = Action(entryActions, "Creativity", OpenCreativity);
         _creativity.IsEnabled = false;
         _reasoning = new Button { Content = L("Reasoning"), ToolTip = L("ReasoningUnavailable"),
@@ -145,7 +146,7 @@ public sealed partial class MusicPoetryWindow : Window
         Closing += ClosingWindow;
         Closed += (_, _) => { _viewClosed = true; CancelModelEntry(); ++_previewVersion; _save.Stop(); _modelSelector?.Close(); _sessionManager?.Close();
             CloseThoughtScale();
-            CloseCreativity();
+            CloseCreativity(); CloseSearch();
             ++_thoughtVersion; FinishThoughtAttempt(false);
             _reasoning.ContextMenu?.SetCurrentValue(System.Windows.Controls.ContextMenu.IsOpenProperty, false);
             DetachView();

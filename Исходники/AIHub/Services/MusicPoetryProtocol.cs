@@ -106,20 +106,25 @@ public static class MusicPoetryProtocol
         JsonSerializer.Serialize(new { interfaceLanguage = LocalizationService.NormalizeLanguageCode(interfaceLanguage),
             target = MusicModelVariants.Name(session.Parameters.Variation), targetId = session.Parameters.Variation,
             song = session.Lyrics, parameters = MusicPoetryBrief.Filter(
-                MusicPoetryBrief.RemoveRepeatedSong(session.Parameters.Text, session.Lyrics)), guidance }, WorkspaceJson);
+                MusicPoetryBrief.RemoveRepeatedSong(session.Parameters.Text, session.Lyrics)), guidance,
+            userDisplayName = session.UserDisplayName }, WorkspaceJson);
     public static string Guidance(string variation, Func<string, string> l) => l("Music.Poetry.Guide." +
         (MusicAceCatalog.IsAce(variation) ? "Ace" : MusicDiffRhythmCatalog.IsDiff(variation) ? "Diff" : MusicHeartMuLaCatalog.IsHeart(variation) ? "Heart" : "Yue"));
 }
 
-public sealed record MusicPoetryContext(string System, MusicPoetryMessage[] Messages, int Tokens, int Capacity, bool Estimated);
+public sealed record MusicPoetryContext(string System, MusicPoetryMessage[] Messages, int Tokens, int Capacity, bool Estimated,
+    bool SearchQuestion = false);
 public static class MusicPoetryContextWindow
 {
     public static async Task<MusicPoetryContext> BuildAsync(MusicPoetrySession session, string guidance, int capacity,
         int reserve, Func<string, IReadOnlyList<MusicPoetryMessage>, Task<int>> count, bool estimated, string? interfaceLanguage = null,
         MusicPoetryReasoningOptions? reasoning = null, string? modelId = null)
     {
-        var system = MusicPoetryProtocol.System(session, guidance, interfaceLanguage);
-        var messages = MusicPoetryReasoningHistory.Select(session, reasoning ?? MusicPoetryReasoningOptions.Disabled, modelId).ToList();
+        var system = session.SearchRequest is null ? MusicPoetryProtocol.System(session, guidance, interfaceLanguage)
+            : MusicPoetrySearchProtocol.System(session, interfaceLanguage);
+        var messages = (session.SearchRequest is null
+            ? MusicPoetryReasoningHistory.Select(session, reasoning ?? MusicPoetryReasoningOptions.Disabled, modelId)
+            : MusicPoetrySearchProtocol.Messages(session)).ToList();
         if (messages.Count == 0) throw new InvalidDataException("No chat request.");
         var tokens = await count(system, messages);
         while (tokens + (long)reserve + 128 > capacity)
@@ -131,7 +136,7 @@ public static class MusicPoetryContextWindow
             tokens = await count(system, messages);
         }
         MusicPoetryModelMessages.Mark(session, messages);
-        return new(system, messages.ToArray(), tokens, capacity, estimated);
+        return new(system, messages.ToArray(), tokens, capacity, estimated, session.SearchRequest?.Preparing == true);
     }
     // Conservative byte ceiling for backends without a tokenizer endpoint; never labelled exact.
     public static int Estimate(string system, IReadOnlyList<MusicPoetryMessage> messages) => checked(

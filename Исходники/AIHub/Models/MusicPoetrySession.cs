@@ -35,6 +35,10 @@ public sealed class MusicPoetrySession
     public int ParameterCursor { get; set; } = -1;
     public List<MusicPoetryMessage> Messages { get; set; } = [];
     public List<MusicPoetryThought> Thoughts { get; set; } = [];
+    public List<MusicPoetrySearchExchange> SearchExchanges { get; set; } = [];
+    public string AliceChatUrl { get; set; } = "";
+    [System.Text.Json.Serialization.JsonIgnore] public MusicPoetrySearchRequest? SearchRequest { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore] public string UserDisplayName { get; set; } = "";
 
     public void RememberText()
     {

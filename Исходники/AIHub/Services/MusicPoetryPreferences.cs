@@ -11,6 +11,8 @@ public sealed record MusicPoetryPreferenceState
     public Dictionary<string, MusicPoetryReasoningPreference> Reasoning { get; init; } = [];
     public Dictionary<string, double> Creativity { get; init; } = [];
     public int ThoughtFontIncreasePercent { get; init; } = MusicPoetryThoughtAppearance.DefaultIncrease;
+    public bool AliceGuestAcknowledged { get; init; }
+    public bool AlicePreviouslySignedIn { get; init; }
     [JsonExtensionData] public Dictionary<string, JsonElement>? Additional { get; init; }
 }
 
@@ -104,4 +106,7 @@ public sealed class MusicPoetryPreferences(string path)
         if (!MusicPoetryThoughtAppearance.IsValid(percent)) throw new ArgumentOutOfRangeException(nameof(percent));
         Save(Load() with { ThoughtFontIncreasePercent = percent });
     }
+
+    public void AcknowledgeAliceGuest() => Save(Load() with { AliceGuestAcknowledged = true });
+    public void RememberAliceSignIn(bool signedIn) => Save(Load() with { AlicePreviouslySignedIn = signedIn });
 }

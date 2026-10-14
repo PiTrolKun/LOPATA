@@ -2956,5 +2956,38 @@
     "Texts": [
       "texts/gigaam-source-049190ae925d-LICENSE.txt"
     ]
+  },
+  {
+    "Id": "nuget.Microsoft.Web.WebView2",
+    "Name": "Microsoft WebView2 SDK",
+    "Version": "1.0.4258.31",
+    "Author": "Microsoft",
+    "License": "BSD-3-Clause (SDK); separate Microsoft terms for WebView2 Runtime",
+    "Source": "https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.4258.31",
+    "Checked": "2026-10-15",
+    "Ru": "Встроенная библиотека для браузерного окна музыкального чата. Поставляются оригинальные LICENSE.txt и NOTICE.txt пакета SDK. Отдельный WebView2 Runtime устанавливается по условиям Microsoft через существующий компонент viewer.webview2. Подключение не делает внешний сайт или ответы Алисы частью локальной модели.",
+    "En": "Bundled SDK for the song-chat browser window. Original SDK LICENSE.txt and NOTICE.txt are included. The separate WebView2 Runtime is installed under Microsoft terms through the existing viewer.webview2 component. This does not make Alice or her answers part of a local model.",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Terms": "AFE0720984990072FED82462713FB04000EA5810D8B0B5B4B70A521FCFC9C963",
+    "Texts": [
+      "texts/WebView2-SDK-LICENSE.txt",
+      "texts/WebView2-SDK-NOTICE.txt"
+    ]
+  },
+  {
+    "Id": "service.alice-chat",
+    "Name": "Alice AI browser chat",
+    "Version": "terms-2026-09-10",
+    "Author": "Yandex",
+    "License": "Alice AI service terms and incorporated Yandex agreements",
+    "Source": "https://yandex.ru/legal/alice_chat/ru/",
+    "Checked": "2026-10-15",
+    "Ru": "Внешний облачный сервис через штатный сайт alice.yandex.ru. При включении поиска запрос и текущий текст песни отправляются Яндексу; правая панель и профиль пользователя не передаются автоматически. Вход необязателен. Соблюдайте актуальные условия, ограничения и права третьих лиц. Бесплатный контент ограничен личным некоммерческим использованием (п.3.1); условия платной опции отличаются. Не обходятся средства защиты. Управление через WebView2 не объявляется специально одобренным Яндексом. Ни аккаунт, ни подписка автоматически не создаются; облачная доступность не гарантируется.",
+    "En": "External cloud service through alice.yandex.ru. When search is enabled, the request and current lyrics are sent to Yandex; right-panel and profile data are not automatically shared. Sign-in is optional. Follow current service restrictions and third-party rights. Free content is limited to personal noncommercial use (section 3.1); paid-option terms differ. No protection bypass. WebView2 automation is not represented as specifically approved by Yandex. No account or subscription is created automatically; availability is not guaranteed.",
+    "Basic": false,
+    "Delivery": "external-service",
+    "Terms": "C534E850A45E13E14779E74B02F16C1A4DB151E25DC4A43E8000572F910B72A9",
+    "Texts": []
   }
 ]

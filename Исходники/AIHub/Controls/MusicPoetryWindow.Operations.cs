@@ -25,6 +25,8 @@ public sealed partial class MusicPoetryWindow
         var interfaceLanguage = _interfaceLanguage();
         var reasoningPreference = _reasoningPreference; // Freeze once for both the initial request and repair.
         var creativity = _creativityValue;
+        var search = _searchEnabled && !assemble;
+        _session.UserDisplayName = _profileContext.DisplayName;
         Capture(); CommitZone();
         if (!Persist()) return;
         IDisposable? lease = null; string? raw = null; var turn = Guid.NewGuid().ToString("N"); var currentAttempt = 0;
@@ -40,6 +42,7 @@ public sealed partial class MusicPoetryWindow
             if (!Persist()) return;
             Availability(); RenderChat(); _status.Text = L("Preparing");
             await ApplicationBackgroundOperations.RetireModelsAsync(); token.ThrowIfCancellationRequested();
+            if (search) await PrepareSearchAsync(turn, interfaceLanguage, reasoningPreference, creativity, token);
             for (var attempt = 1; attempt <= 2; attempt++)
             {
                 currentAttempt = attempt;
@@ -54,7 +57,11 @@ public sealed partial class MusicPoetryWindow
                 finally { FinishThoughtAttempt(!string.IsNullOrWhiteSpace(raw)); }
                 token.ThrowIfCancellationRequested();
                 MusicPoetryReplyGuard.Result checkedReply;
-                try { checkedReply = MusicPoetryReplyGuard.Check(_session, MusicPoetryProtocol.Parse(raw, assemble), assemble); }
+                try {
+                    var parsed = MusicPoetryProtocol.Parse(raw, assemble);
+                    if (search && parsed.Parameters is not null) throw new InvalidDataException("Music.Poetry.Search.ParametersReadOnly");
+                    checkedReply = MusicPoetryReplyGuard.Check(_session, parsed, assemble);
+                }
                 catch (InvalidDataException ex) when (ex.Message == "Music.Poetry.TargetReadOnly")
                 { checkedReply = new(new("", null, null, null, []), [], ex.Message); }
                 catch (Exception ex) when (ex is InvalidDataException or JsonException)
@@ -78,6 +85,7 @@ public sealed partial class MusicPoetryWindow
                 var receipt = checkedReply.Changes.Length > 0 ? string.Join(" ", checkedReply.Changes.Select(c => L("Updated." + c)))
                     : L(assemble ? "UnchangedAssembly" : "DiscussionOnly");
                 ProgramMessage("assistant", receipt, turn);
+                if (search) _session.SearchExchanges.Last(e => e.TurnId == turn).State = "completed";
                 LoadSession(); _status.Text = receipt; Persist(); break;
             }
         }
@@ -96,6 +104,10 @@ public sealed partial class MusicPoetryWindow
         }
         finally
         {
+            _session.SearchRequest = null;
+            var exchange = _session.SearchExchanges.LastOrDefault(e => e.TurnId == turn);
+            if (exchange is not null && exchange.State is not ("completed" or "error" or "interrupted"))
+                exchange.State = "interrupted";
             _loading = false; _operation?.Dispose(); _operation = null; lease?.Dispose();
             WorkingChanged?.Invoke();
             Recount(); Availability(); Persist();

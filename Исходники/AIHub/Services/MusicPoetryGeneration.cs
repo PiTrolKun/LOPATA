@@ -17,7 +17,8 @@ internal static class MusicPoetryGeneration
             repeat_penalty = profile?.RepeatPenalty ?? 1, presence_penalty = profile?.PresencePenalty ?? 0,
             stream, cache_prompt = false,
             chat_template_kwargs = reasoning.TemplateOptions(), reasoning_format = "deepseek",
-            response_format = assemble ? MusicPoetryProtocol.AssemblySchema : MusicPoetryProtocol.Schema
+            response_format = context.SearchQuestion ? MusicPoetrySearchProtocol.QuestionSchema
+                : assemble ? MusicPoetryProtocol.AssemblySchema : MusicPoetryProtocol.Schema
         });
     }
 

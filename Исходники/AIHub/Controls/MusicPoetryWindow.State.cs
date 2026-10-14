@@ -42,6 +42,10 @@ public sealed partial class MusicPoetryWindow
     }
     private void LoadSession()
     {
+        _session.SearchExchanges ??= [];
+        if (!IsWorking)
+            foreach (var exchange in _session.SearchExchanges.Where(e => e.State is "preparing" or "ready" or "sent" or "received"))
+                exchange.State = "interrupted";
         _loading = true;
         try { _lyrics.Text = _session.Lyrics; _parameters.Text = _session.Parameters.Text;
             _brief.LoadText(MusicPoetryBrief.RemoveRepeatedSong(_session.Parameters.Text, _session.Lyrics));
@@ -69,7 +73,7 @@ public sealed partial class MusicPoetryWindow
     private void RenderChat()
     {
         if (_renderedSession != _session.Id)
-        { _renderedSession = _session.Id; _chatViewport?.Reset(); }
+        { _renderedSession = _session.Id; _chatViewport?.Reset(); _searchViews.Clear(); }
         _chatViewport?.Change(() => {
         var containers = _chatBlocks.Where(b => b.Key.StartsWith("thought:", StringComparison.Ordinal))
             .ToDictionary(b => b.Key, b => (BlockUIContainer)b.Block);
@@ -80,13 +84,16 @@ public sealed partial class MusicPoetryWindow
         for (var index = 0; index < _session.Messages.Count; index++)
         {
             var message = _session.Messages[index];
-            var name = L(message.IsProgrammatic ? "Program" : message.Role == "user" ? "User" : message.Role == "assistant" ? "Assistant" : "Notice");
+            var name = message.Role == "user" && !message.IsProgrammatic && !string.IsNullOrWhiteSpace(_profileContext.DisplayName)
+                ? _profileContext.DisplayName : L(message.IsProgrammatic ? "Program" : message.Role == "user" ? "User" : message.Role == "assistant" ? "Assistant" : "Notice");
             var paragraph = new Paragraph { Margin = new(0, 0, 0, 12) };
             paragraph.Inlines.Add(new Bold(new Run(name + ": "))); paragraph.Inlines.Add(new Run(message.Text));
             paragraph.SetResourceReference(TextElement.ForegroundProperty,
                 message.InContext ? "TextPrimaryBrush" : "TextSecondaryBrush");
             paragraph.ToolTip = L(message.InContext ? "Visible" : "Archived");
             desired.Add(("message:" + index, paragraph));
+            if (message.Role == "user" && !message.IsProgrammatic)
+                foreach (var exchange in _session.SearchExchanges.Where(e => e.TurnId == message.TurnId)) desired.Add(SearchJournal(exchange));
             foreach (var thought in thoughts[index])
             {
                 var key = "thought:" + thought.Id;
@@ -110,9 +117,13 @@ public sealed partial class MusicPoetryWindow
     {
         if (IsWorking) return;
         // Live draft estimate is labelled as such; GGUF requests replace it with the actual tokenizer count.
-        var messages = MusicPoetryReasoningHistory.Select(_session, _reasoningOptions, MusicPoetryReasoning.ModelId(_model)).ToList();
+        _session.UserDisplayName = _profileContext.DisplayName;
+        var messages = (_searchEnabled ? MusicPoetrySearchProtocol.Messages(_session)
+            : MusicPoetryReasoningHistory.Select(_session, _reasoningOptions, MusicPoetryReasoning.ModelId(_model))).ToList();
         if (_session.Draft.Length > 0) messages.Add(new("user", _session.Draft, "draft"));
-        var system = MusicPoetryProtocol.System(_session, _guidance.Text, _interfaceLanguage());
+        var previewSession = _searchEnabled ? new MusicPoetrySession { Lyrics = _session.Lyrics, UserDisplayName = _session.UserDisplayName, SearchRequest = new(true) } : _session;
+        var system = _searchEnabled ? MusicPoetrySearchProtocol.System(previewSession, _interfaceLanguage())
+            : MusicPoetryProtocol.System(_session, _guidance.Text, _interfaceLanguage());
         var tokens = PreviewCount(system, messages);
         MusicPoetryModelMessages.Mark(_session, messages);
         while (messages.Count > 0 && tokens + (long)ReplyReserve() + 128 > _capacity)

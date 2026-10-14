@@ -105,6 +105,8 @@ public sealed class UserContextService
         }
     }
 
+    public string DisplayName => GetProfile().DisplayName?.Trim() ?? "";
+
     private UserProfile GetProfile()
     {
         _profile ??= _profileStore.LoadOrCreate();
