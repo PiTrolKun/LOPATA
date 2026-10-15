@@ -1,0 +1,40 @@
+[
+  {
+    "Id": "model.giga-embeddings-3b",
+    "Name": "Giga-Embeddings-instruct-3B-0826",
+    "Version": "b71168088212f0a13688514e4fc288a86106c4e4",
+    "Author": "ai-sage/Giga-Embeddings-instruct-3B-0826",
+    "License": "MIT",
+    "Source": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/tree/b71168088212f0a13688514e4fc288a86106c4e4",
+    "Checked": "2026-10-15",
+    "Ru": "Исходная карточка закреплённой редакции декларирует MIT. Отдельного LICENSE/NOTICE в репозитории на дату проверки нет; сохранены оригинальная карточка, стандартный MIT как справочный текст и пояснение. Не выдумывается Copyright владельца весов. Весовые файлы скачиваются отдельно по запросу. Готовность файлов не означает проверку запуска или качества обработки книг.",
+    "En": "The pinned upstream model card declares MIT. No separate LICENSE/NOTICE is present in the repository as of the check date; the original card, standard MIT reference and explanatory notice are retained. No weight copyright holder is invented. Weights are downloaded separately on request. File readiness does not confirm runtime compatibility or book-processing quality.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "",
+    "Texts": [
+      "texts/RagBooks-embedding-README.md",
+      "texts/RagBooks-MIT-reference.txt",
+      "texts/RagBooks-NOTICE.txt"
+    ]
+  },
+  {
+    "Id": "model.gigachat31-10b-q4km",
+    "Name": "GigaChat3.1-10B-A1.8B Q4_K_M",
+    "Version": "97045b260251cfa86f5ad25638fa2dd074153446",
+    "Author": "ai-sage/GigaChat3.1-10B-A1.8B-GGUF",
+    "License": "MIT",
+    "Source": "https://huggingface.co/ai-sage/GigaChat3.1-10B-A1.8B-GGUF/tree/97045b260251cfa86f5ad25638fa2dd074153446",
+    "Checked": "2026-10-15",
+    "Ru": "Исходная карточка закреплённой редакции декларирует MIT. Отдельного LICENSE/NOTICE в репозитории на дату проверки нет; сохранены оригинальная карточка, стандартный MIT как справочный текст и пояснение. Не выдумывается Copyright владельца весов. Весовые файлы скачиваются отдельно по запросу. Готовность файлов не означает проверку запуска или качества обработки книг.",
+    "En": "The pinned upstream model card declares MIT. No separate LICENSE/NOTICE is present in the repository as of the check date; the original card, standard MIT reference and explanatory notice are retained. No weight copyright holder is invented. Weights are downloaded separately on request. File readiness does not confirm runtime compatibility or book-processing quality.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "",
+    "Texts": [
+      "texts/RagBooks-chat-README.md",
+      "texts/RagBooks-MIT-reference.txt",
+      "texts/RagBooks-NOTICE.txt"
+    ]
+  }
+]

@@ -36,6 +36,7 @@ public partial class MainWindow
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                if (!await Dispatcher.InvokeAsync(() => IsVisible)) throw new AIHub.Models.BackgroundOperationWaitingException("licenses.save_error");
                 await Dispatcher.InvokeAsync(() => MessageBox.Show(this, L("licenses.save_error"), L("licenses.title")));
                 throw new OperationCanceledException("Could not save component acknowledgement.", ex, token);
             }
@@ -49,6 +50,7 @@ public partial class MainWindow
 
     private bool ShowComponentLicenses(IReadOnlyList<ComponentLicenseEntry> entries, bool accept)
     {
+        if (accept) Controls.BackgroundUserDecision.RequireVisible(this);
         var russian = _localizationService.CurrentLanguageCode == "ru";
         string Describe(ComponentLicenseEntry entry)
         {
@@ -64,7 +66,8 @@ public partial class MainWindow
             if (entry.Texts.Length == 0) content.AppendLine(L("licenses.source_only"));
             return content.ToString();
         }
-        var window = new Window { Owner = this, Title = L("licenses.title"), Width = 820, Height = 620,
+        var window = new Window { Owner = System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive) ?? this,
+            Title = L("licenses.title"), Width = 820, Height = 620,
             MinWidth = 500, MinHeight = 350, WindowStartupLocation = WindowStartupLocation.CenterOwner };
         window.SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");
         var panel = new DockPanel { Margin = new Thickness(18) };

@@ -62,7 +62,7 @@ public sealed partial class MusicPoetryWindow
     {
         CloseCreativity();
         CloseThoughtScale();
-        if (!_reasoning.IsEnabled || _model is null || IsWorking || _background?.IsRunning == true || _background?.HasPending == true) return;
+        if (!_reasoning.IsEnabled || _model is null || IsWorking || _background?.IsRunning == true || _background?.BlocksNewWork == true) return;
         var modelPath = _model.Path;
         var menu = new ContextMenu { PlacementTarget = _reasoning, Placement = PlacementMode.Top,
             Resources = Resources };
@@ -121,7 +121,7 @@ public sealed partial class MusicPoetryWindow
 
     private void SetReasoning(string mode)
     {
-        if (!_reasoning.IsEnabled || IsWorking || _background?.IsRunning == true || _background?.HasPending == true
+        if (!_reasoning.IsEnabled || IsWorking || _background?.IsRunning == true || _background?.BlocksNewWork == true
             || !MusicPoetryReasoning.Supports(_model)) return;
         try
         {
@@ -138,7 +138,7 @@ public sealed partial class MusicPoetryWindow
 
     private void SetReasoningOptions(MusicPoetryReasoningPreference preference)
     {
-        if (!_reasoning.IsEnabled || IsWorking || _background?.IsRunning == true || _background?.HasPending == true
+        if (!_reasoning.IsEnabled || IsWorking || _background?.IsRunning == true || _background?.BlocksNewWork == true
             || !MusicPoetryReasoning.Supports(_model)) return;
         try
         {

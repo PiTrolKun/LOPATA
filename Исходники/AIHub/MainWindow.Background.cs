@@ -31,6 +31,7 @@ public partial class MainWindow
         RegisterFinancialBackgroundOperation();
         RegisterImageGenerationBackgroundOperation();
         RegisterImageUtilityBackgroundOperation();
+        RegisterRagBookBackgroundOperation();
         RegisterImageShellBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeGenerationAsync(state, token); });
@@ -99,7 +100,29 @@ public partial class MainWindow
         var state = _backgroundOperations?.State;
         _applicationTray?.SetOperation(_backgroundOperations?.HasPending == true ? state?.Phase : null,
             _backgroundCountdown.IsActive ? _backgroundCountdown.Remaining(DateTimeOffset.UtcNow) : null);
+        _applicationTray?.SetPausedOperations(_backgroundOperations?.PausedOperations ?? [], _backgroundOperations?.BlocksNewWork == true,
+            id => Dispatcher.BeginInvoke(() => ResumePausedOperation(id)));
         _applicationTray?.SetAttention(state?.NeedsAttention == true, ApplicationUpdateNotice.Visibility == System.Windows.Visibility.Visible || _availableUpdate is not null);
+        var books = state?.Kind is RagBookAcquisitionWork.Kind or RagBookPreparation.Kind ? state
+            : _backgroundOperations?.FindOperation(RagBookPreparation.Kind) ?? _backgroundOperations?.FindOperation(RagBookAcquisitionWork.Kind);
+        _applicationTray?.SetRagBooksStatus(books is not null ? L("RagBooks.State." + books.Phase) : null);
+        NotifyRagBooksWaiting();
+    }
+
+    private async void ResumePausedOperation(string id)
+    {
+        try
+        {
+            _backgroundCountdown.Cancel();
+            var job = _backgroundOperations?.PausedOperations.FirstOrDefault(state => state.Id == id);
+            if (job is null) return;
+            if (job.Kind is RagBookPreparation.Kind or RagBookAcquisitionWork.Kind) RevealRagBooksPage(job.Kind == RagBookAcquisitionWork.Kind);
+            else RestoreFromTray();
+            await _backgroundOperations!.ResumeAsync(id, _backgroundLifetime.Token);
+        }
+        catch (OperationCanceledException) when (_backgroundLifetime.IsCancellationRequested) { }
+        catch (Exception error) { ReportBackgroundFailure(error); }
+        finally { RefreshBackgroundTray(); }
     }
 
     private async Task ChangeBackgroundOperationAsync()
@@ -122,6 +145,13 @@ public partial class MainWindow
         {
             if (_backgroundOperations is null) return;
             var state = _backgroundOperations.State;
+            if (state?.Kind is RagBookAcquisitionWork.Kind or RagBookPreparation.Kind)
+            {
+                if (state.RequiresDecision) RevealRagBooksPage(state.Kind == RagBookAcquisitionWork.Kind);
+                if (_backgroundOperations.HasLiveOperation(state.Id)) await _backgroundOperations.ResumeAsync(_backgroundLifetime.Token);
+                else QueueRagBooksResume();
+                return; // Observe restored work separately so the tray remains able to pause it.
+            }
             if (state is { RequiresDecision: true } && state.Kind is ImageBackgroundWork.Kind or ImageBatchBackgroundKind
                 or ImageSpeechBackgroundKind or ImagePreparationBackgroundKind or SandboxCoreBackgroundKind or ExecutorWorkflowService.BackgroundKind)
                 RestoreFromTray();
@@ -154,6 +184,10 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind is RagBookAcquisitionWork.Kind or RagBookPreparation.Kind)
+            {
+                RevealRagBooksPage(notice.Kind == RagBookAcquisitionWork.Kind); _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
             if (notice.Kind is MusicGenerationRunner.BackgroundKind or MusicLyricsSynchronization.BackgroundKind && notice.Project is not null)
             {
                 RestoreFromTray(); OpenMusicScenario(false); MusicPage.ViewGenerationResult(notice.Project);

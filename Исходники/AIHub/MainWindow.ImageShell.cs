@@ -33,11 +33,11 @@ public partial class MainWindow
     private async Task PumpImageShellAsync()
     {
         if (!_applicationReady || _imageShellPumping || _backgroundLifetime.IsCancellationRequested
-            || _backgroundOperations?.HasPending == true) return;
+            || _backgroundOperations?.BlocksNewWork == true) return;
         _imageShellPumping = true;
         try
         {
-            while (!_backgroundLifetime.IsCancellationRequested && _backgroundOperations?.HasPending != true)
+            while (!_backgroundLifetime.IsCancellationRequested && _backgroundOperations?.BlocksNewWork != true)
             {
                 var job = _imageShellInbox.Pending().FirstOrDefault();
                 if (job is null) break;

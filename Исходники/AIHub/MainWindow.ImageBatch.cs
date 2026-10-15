@@ -227,8 +227,8 @@ public partial class MainWindow
     }
     private void CleanupBatchInputs()
     {
-        if (ApplicationBackgroundOperations.Current?.HasPending == true
-            && ApplicationBackgroundOperations.Current.State?.Kind == ImageBatchBackgroundKind) return;
+        if (ApplicationBackgroundOperations.Current?.FindOperation(ImageBatchBackgroundKind) is { Phase: not
+            (BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled) }) return;
         if (_batchJob is null) return;
         foreach (var item in _batchJob.Items.Where(i => i.File.StorageKind == ImageAssetKinds.Temporary)) _imageAssets?.DeleteTemporary(item.File.SourcePath);
     }

@@ -2069,6 +2069,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <controls:ScenarioNavigationControl x:Name="ScenarioNavigationPage" Grid.Row="0" />
+            <ContentControl x:Name="RagBooksPageHost" Grid.Row="0" Visibility="Collapsed" />
             <controls:MusicPreparationControl x:Name="MusicPage" Grid.Row="0" Visibility="Collapsed" />
                 <controls:FinancialScenarioControl x:Name="FinancialPage" Grid.Row="0" Visibility="Collapsed" />
                 <controls:ImageGenerationControl x:Name="GenerationPage" Grid.Row="0" Visibility="Collapsed" />

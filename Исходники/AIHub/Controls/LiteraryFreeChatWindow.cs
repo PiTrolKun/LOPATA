@@ -51,7 +51,7 @@ public sealed class LiteraryFreeChatWindow : Window
         Availability();
     }
     private void Availability()
-    { _send.IsEnabled = !IsWorking && _background?.IsRunning != true && _background?.HasPending != true && !string.IsNullOrWhiteSpace(_input.Text); _stop.IsEnabled = IsWorking; _clear.IsEnabled = !IsWorking; _input.IsReadOnly = IsWorking; }
+    { _send.IsEnabled = !IsWorking && _background?.IsRunning != true && _background?.BlocksNewWork != true && !string.IsNullOrWhiteSpace(_input.Text); _stop.IsEnabled = IsWorking; _clear.IsEnabled = !IsWorking; _input.IsReadOnly = IsWorking; }
     private void BackgroundChanged() => Dispatcher.BeginInvoke(new Action(Availability));
     private async Task SendAsync()
     {

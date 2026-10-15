@@ -68,7 +68,7 @@ public sealed partial class MusicPoetryWindow
             using var lease = _background?.BeginAuxiliary();
             return await MusicPoetryProfileInstallation.DownloadAsync(candidate, _storage, progress, token);
         }, candidate => {
-            if (IsWorking || _background?.IsRunning == true || _background?.HasPending == true)
+            if (IsWorking || _background?.IsRunning == true || _background?.BlocksNewWork == true)
                 throw new InvalidOperationException("Music.Poetry.Selection.RemoveBlocked");
             using var lease = _background?.BeginAuxiliary();
             try {

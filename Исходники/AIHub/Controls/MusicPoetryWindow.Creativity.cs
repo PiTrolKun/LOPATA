@@ -92,7 +92,7 @@ public sealed partial class MusicPoetryWindow
         popup.IsOpen = true; slider.Focus();
 
         bool Current() => popup.IsOpen && _creativity.IsEnabled && _model?.Path == modelPath
-            && !IsWorking && _background?.IsRunning != true && _background?.HasPending != true;
+            && !IsWorking && _background?.IsRunning != true && _background?.BlocksNewWork != true;
         void ApplyInput()
         {
             if (!Current()) return;

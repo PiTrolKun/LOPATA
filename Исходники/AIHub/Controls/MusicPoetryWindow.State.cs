@@ -149,7 +149,7 @@ public sealed partial class MusicPoetryWindow
     private void BackgroundChanged() => Dispatcher.BeginInvoke(new Action(Availability));
     private void Availability()
     {
-        var occupied = _background?.IsRunning == true || _background?.HasPending == true;
+        var occupied = _background?.IsRunning == true || _background?.BlocksNewWork == true;
         _send.IsEnabled = !IsWorking && !occupied && _model is not null && !string.IsNullOrWhiteSpace(_input.Text) && !_saveFailed && !_reasoningFailed && !_creativityFailed;
         _send.ToolTip = occupied && !IsWorking ? L("OtherOperation") : L("Send");
         _assemble.IsEnabled = !IsWorking && !occupied && _model is not null && !_saveFailed && !_reasoningFailed && !_creativityFailed

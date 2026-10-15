@@ -15,6 +15,9 @@ public sealed class ApplicationTrayController : IDisposable
     private readonly ToolStripMenuItem _result = new();
     private ToolStripMenuItem? _captureFolder, _captureMonitor, _captureStop;
     private ToolStripMenuItem? _publisher;
+    private ToolStripMenuItem? _ragBooks;
+    private ToolStripMenuItem? _pausedJobs;
+    private string? _ragBooksStatus;
     private readonly ToolStripSeparator _operationSeparator = new();
     private Icon? _markedImage;
     private BackgroundOperationPhase? _phase;
@@ -67,6 +70,7 @@ public sealed class ApplicationTrayController : IDisposable
         if (_captureMonitor is not null) _captureMonitor.Text = _text("Capture.TrayScreenshot");
         if (_captureStop is not null) _captureStop.Text = _text("Capture.Stop");
         if (_publisher is not null) _publisher.Text = _text("Publisher.Title");
+        if (_ragBooks is not null) _ragBooks.Text = _text("RagBooks.Title") + (string.IsNullOrEmpty(_ragBooksStatus) ? "" : " · " + _ragBooksStatus);
         _operation.Visible = _operationSeparator.Visible = _phase.HasValue;
         _operation.Enabled = _phase != BackgroundOperationPhase.Pausing;
         _operation.Text = _countdown is int seconds ? string.Format(_text("Tray.Countdown"), TimeSpan.FromSeconds(seconds).ToString(@"mm\:ss"))
@@ -75,6 +79,23 @@ public sealed class ApplicationTrayController : IDisposable
 
     public void SetOperation(BackgroundOperationPhase? phase, int? countdown = null)
     { _phase = phase; _countdown = countdown; RefreshLocalization(); }
+
+    public void SetPausedOperations(IReadOnlyList<BackgroundOperationState> jobs, bool blocked, Action<string> resume)
+    {
+        if (_disposed) return;
+        if (_pausedJobs is null) { _pausedJobs = new(); _menu.Items.Insert(_menu.Items.IndexOf(_operation) + 1, _pausedJobs); }
+        _pausedJobs.Text = _text("Tray.PausedTasks") + $" ({jobs.Count})";
+        _pausedJobs.Visible = jobs.Count > 0; _pausedJobs.Enabled = !blocked;
+        var signature = string.Join("|", jobs.Select(job => job.Id + ":" + job.Title));
+        if (Equals(_pausedJobs.Tag, signature)) return;
+        foreach (var item in _pausedJobs.DropDownItems.Cast<ToolStripItem>().ToArray()) item.Dispose();
+        _pausedJobs.DropDownItems.Clear(); _pausedJobs.Tag = signature;
+        foreach (var job in jobs)
+        {
+            var item = new ToolStripMenuItem(job.Title); var id = job.Id;
+            item.Click += (_, _) => resume(id); _pausedJobs.DropDownItems.Add(item);
+        }
+    }
 
     public void AddCaptureCommands(Action folder, Action screenshot, Action? stop = null)
     {
@@ -116,6 +137,19 @@ public sealed class ApplicationTrayController : IDisposable
         }
         _icon.Icon = next ?? _image; _markedImage?.Dispose(); _markedImage = next;
         _attention = attention;
+    }
+
+    public void AddRagBooksCommand(Action open)
+    {
+        if (_disposed || _ragBooks is not null) return;
+        _ragBooks = new ToolStripMenuItem(_text("RagBooks.Title"));
+        _ragBooks.Click += (_, _) => open(); _menu.Items.Insert(3, _ragBooks);
+    }
+
+    public void SetRagBooksStatus(string? status)
+    {
+        if (_ragBooksStatus == status) return;
+        _ragBooksStatus = status; RefreshLocalization();
     }
 
     public bool Notify(string title, string message, bool warning = false, Action? onOpen = null)

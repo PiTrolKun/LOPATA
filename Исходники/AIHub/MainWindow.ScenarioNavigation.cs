@@ -16,6 +16,7 @@ public partial class MainWindow
             GenerationPage.Visibility = Visibility.Collapsed;
             ImageUtilityPage.Visibility = Visibility.Collapsed;
             MusicPage.Visibility = Visibility.Collapsed;
+            RagBooksPageHost.Visibility = Visibility.Collapsed;
             if (id != ScenarioNavigationCatalog.Finance)
             {
                 FinancialPage.Visibility = Visibility.Collapsed;
@@ -23,6 +24,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.RagBooks:
+                    OpenRagBooksScenario();
+                    break;
                 case ScenarioNavigationCatalog.Publisher:
                     OpenPublisherScenario();
                     break;
@@ -57,6 +61,7 @@ public partial class MainWindow
     private void RefreshScenarioNavigationState()
     {
         if (WorkStartPage.Visibility != Visibility.Visible) return;
+        if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (MusicPage.Visibility == Visibility.Visible || FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible || GenerationPage.Visibility == Visibility.Visible || ImageUtilityPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.IsSandboxLanding) RefreshPreviousSessions();
         StatusText.Text = L(ScenarioNavigationPage.IsSandboxLanding

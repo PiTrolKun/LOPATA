@@ -30,14 +30,14 @@ public sealed class MusicGenerationSession : IDisposable
         if (_controller is not null) _controller.Changed += ControllerChanged;
         _worker.Log += NativeLog;
         if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
-        _view.Player.ConfigureRepeat(track => _ready && !_working && !_starting && _controller?.IsRunning != true && _controller?.HasPending != true && CanRepeat(track),
+        _view.Player.ConfigureRepeat(track => _ready && !_working && !_starting && _controller?.IsRunning != true && _controller?.BlocksNewWork != true && CanRepeat(track),
             track => { _ = RepeatAsync(track); });
     }
     public void Configure(string modelsRoot, Func<string, string> localize)
     {
         _modelsRoot = modelsRoot; _l = localize; RefreshBudget();
         if (MusicHeartMuLaCatalog.NoCircle(_view.Generation.Variation)) EnableDiffStart();
-        else if (!_checking && !_working && _controller?.HasPending != true && (MusicModelVariants.ExternalPipeline(_view.Generation.Variation) ||
+        else if (!_checking && !_working && _controller?.BlocksNewWork != true && (MusicModelVariants.ExternalPipeline(_view.Generation.Variation) ||
             File.Exists(Path.Combine(MusicYueRuntime.DirectoryPath, "manifest.json")))) _ = CheckRuntimeAsync();
         RefreshButtons();
     }
@@ -101,7 +101,7 @@ public sealed class MusicGenerationSession : IDisposable
                 : MusicModelVariants.Family(_view.Generation.Variation) + " · " + verifiedHardware);
             RefreshButtons(); return;
         }
-        if (string.IsNullOrWhiteSpace(_modelsRoot) || _controller?.HasPending == true) { RefreshButtons(); return; }
+        if (string.IsNullOrWhiteSpace(_modelsRoot) || _controller?.BlocksNewWork == true) { RefreshButtons(); return; }
         var variation = _view.Generation.Variation;
         if (MusicModelVariants.ExternalPipeline(variation)) {
             if (verifiedHardware is not null) { ++_modelCheck; _checking = false; _ready = true; _view.Generation.SetHardware(MusicModelVariants.Family(variation) + " · " + verifiedHardware); RefreshButtons(); }
@@ -129,7 +129,7 @@ public sealed class MusicGenerationSession : IDisposable
     public bool HasPendingOrRunning => _working || _controller is { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind };
     public bool CanChangeModel => !_starting && !_working &&
         (_controller?.IsRunning != true || _controller.State?.Phase == BackgroundOperationPhase.Paused) &&
-        (_controller?.HasPending != true || _controller.State?.Phase == BackgroundOperationPhase.Paused);
+        (_controller?.BlocksNewWork != true || _controller.State?.Phase == BackgroundOperationPhase.Paused);
     private void RefreshBudget()
     {
         if (_disposed) return;
@@ -146,7 +146,7 @@ public sealed class MusicGenerationSession : IDisposable
         MusicGenerationJob? submitted = null;
         try
         {
-            if (_controller is { HasPending: true })
+            if (_controller is { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind } || _controller?.BlocksNewWork == true)
             {
                 if (_controller.State?.Kind != MusicGenerationRunner.BackgroundKind) { _view.Status.AppendLog(_l("Music.Generation.OtherOperation")); return; }
                 if (_controller.State.Phase == BackgroundOperationPhase.Running) await _controller.PauseAsync();
@@ -168,7 +168,7 @@ public sealed class MusicGenerationSession : IDisposable
     }
     private async Task RepeatAsync(MusicTrack track)
     {
-        if (_working || _starting || _controller?.IsRunning == true || _controller?.HasPending == true || track.JobId is null) return;
+        if (_working || _starting || _controller?.IsRunning == true || _controller?.BlocksNewWork == true || track.JobId is null) return;
         MusicGenerationJob? submitted = null;
         try
         {
@@ -307,7 +307,7 @@ public sealed class MusicGenerationSession : IDisposable
         var paused = own && state!.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Countdown;
         var busy = _working && !paused || own && state!.Phase is BackgroundOperationPhase.Running or BackgroundOperationPhase.Pausing;
         _view.Projects.SetBusy(_starting || _working || own);
-        _view.Generation.UpdateState(_view.Editor.CanGenerate && _controller?.IsRunning != true && _controller?.HasPending != true && !_starting, busy, paused, _ready,
+        _view.Generation.UpdateState(_view.Editor.CanGenerate && _controller?.IsRunning != true && _controller?.BlocksNewWork != true && !_starting, busy, paused, _ready,
             _starting || _cancelRequested || own && state!.Phase == BackgroundOperationPhase.Pausing);
         _view.Player.RefreshRepeat();
         StateChanged?.Invoke();

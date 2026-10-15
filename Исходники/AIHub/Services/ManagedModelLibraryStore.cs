@@ -224,8 +224,11 @@ public sealed class ManagedModelLibraryStore
 
     private string GetEntryPath(string modelArtifactId)
     {
+        // Catalog IDs may be namespaced (model.name). Empty segments forbid '.', '..',
+        // leading/trailing dots; the segment alphabet still rejects separators and ADS.
         if (string.IsNullOrWhiteSpace(modelArtifactId)
-            || modelArtifactId.Any(character => !char.IsLetterOrDigit(character) && character is not '-' and not '_'))
+            || modelArtifactId.Split('.').Any(segment => segment.Length == 0
+                || segment.Any(character => !char.IsLetterOrDigit(character) && character is not '-' and not '_')))
         {
             throw new InvalidDataException("Model artifact ID contains unsafe characters.");
         }

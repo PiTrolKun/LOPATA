@@ -6,8 +6,28 @@ using AIHub.Models;
 namespace AIHub.Services;
 
 /// <summary>Keep the last stable checkpoint if a write or validation fails.</summary>
-public sealed class BackgroundOperationStore(string path)
+public sealed class BackgroundOperationStore(string path, bool archiveResults = true)
 {
+    internal DateTime LastWriteUtc => File.Exists(path) ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
+    internal BackgroundOperationStore Operation(string id)
+    {
+        if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Invalid operation ID.");
+        return new(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "Jobs", id + ".json"), false);
+    }
+    internal IReadOnlyList<BackgroundOperationState> LoadOperations()
+    {
+        var directory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "Jobs");
+        Lopata.Updates.SafeUpdatePath.RejectLinks(directory);
+        if (!Directory.Exists(directory)) return [];
+        var result = new List<BackgroundOperationState>();
+        foreach (var file in Directory.EnumerateFiles(directory, "*.json"))
+        {
+            var state = new BackgroundOperationStore(file, false).Load()!;
+            if (Path.GetFileNameWithoutExtension(file) != state.Id) throw new InvalidDataException("Background job identity mismatch.");
+            result.Add(state);
+        }
+        return result;
+    }
     public static readonly JsonSerializerOptions Options = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true,
@@ -46,7 +66,7 @@ public sealed class BackgroundOperationStore(string path)
             if (File.Exists(path)) File.Delete(path);
             return;
         }
-        if (state.Phase == BackgroundOperationPhase.Completed)
+        if (archiveResults && state.Phase == BackgroundOperationPhase.Completed)
             SaveAtomic(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "Results", state.Id + ".json"), state);
         SaveAtomic(path, state);
     }

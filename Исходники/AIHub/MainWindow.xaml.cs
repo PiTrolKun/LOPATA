@@ -621,6 +621,7 @@ public partial class MainWindow : Window
         FillProfileFromReminderButton.Content = L("Profile.FillProfile");
 
         ScenarioNavigationPage.Configure(L);
+        _ragBooksPage?.RefreshLocalization();
         FinancialPage.Localize(L, _appSettings.LanguageCode);
         RefreshCaptureLocalization();
         GenerationPage.Localize(L, _localizationService.CurrentLanguageCode);
@@ -1306,6 +1307,7 @@ public partial class MainWindow : Window
 
     private void BackFromWorkStartButton_Click(object sender, RoutedEventArgs e)
     {
+        if (TryGoBackRagBooks()) return;
         if (MusicPage.Visibility == Visibility.Visible)
         {
             if (MusicPage.GoBack()) return;

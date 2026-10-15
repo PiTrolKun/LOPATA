@@ -6,6 +6,7 @@ public partial class MainWindow
 {
     private async Task StopBackgroundForExitAsync()
     {
+        CheckpointRagBooks();
         if (_musicPoetryWindow?.SaveForExit() == false) throw new System.IO.IOException("Songwriting session was not saved.");
         // Confirm the durable record before canceling. A failed write must leave the
         // application open, rather than silently promising a resumable exit.
@@ -22,7 +23,7 @@ public partial class MainWindow
         catch (AggregateException error)
         { OwnedProcessRegistry.Log("background_cancel_callback_failed", "Application", detail: error.GetType().Name); }
         if (_backgroundOperations is not null)
-            await _backgroundOperations.WaitForIdleAsync().WaitAsync(TimeSpan.FromSeconds(30));
+            await _backgroundOperations.WaitForAllIdleAsync().WaitAsync(TimeSpan.FromSeconds(30));
         await ApplicationBackgroundOperations.RetireModelsAsync();
     }
 }

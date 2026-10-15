@@ -26,13 +26,17 @@ public static class ScenarioNavigationCatalog
     public const string ImageUtility = "image_utility";
     public const string Music = "music";
     public const string Publisher = "github_vk_publisher";
+    public const string RagBooks = "rag_book_preparation";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
         Node(Creation, ScenarioNavigationKind.Direction, null, "Navigation.Creation", "Navigation.CreationHint", "create"),
         Node(Analysis, ScenarioNavigationKind.Direction, null, "Navigation.Analysis", "Navigation.AnalysisHint", "analyze"),
         Node(Experiments, ScenarioNavigationKind.Direction, null, "Navigation.Experiments", "Navigation.ExperimentsHint", "experiment"),
-        Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell"]),
+        Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause"]),
+        Node("utilities_knowledge", ScenarioNavigationKind.Group, Utilities, "RagBooks.Group", "", "tools"),
+        Node(RagBooks, ScenarioNavigationKind.Scenario, "utilities_knowledge", "RagBooks.Title", "RagBooks.Description", "tools",
+            tags: ["rag_books", "rag_lexicon", "stress_tables"], related: []),
         Node("utilities_publishing", ScenarioNavigationKind.Group, Utilities, "Publisher.Group", "Publisher.Description", "tools"),
         Node(Publisher, ScenarioNavigationKind.Scenario, "utilities_publishing", "Publisher.Title", "Publisher.Description", "tools",
             tags: ["github_releases", "vk_publishing", "publishing_queue"], related: []),
@@ -88,7 +92,7 @@ public static class ScenarioNavigationCatalog
         Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", "utilities_images"),
         Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility),
         Tag("github_releases", Publisher), Tag("vk_publishing", Publisher), Tag("publishing_queue", Publisher),
-        Tag("audio_convert", Utilities), Tag("audio_shell", Utilities)
+        Tag("audio_convert", Utilities), Tag("audio_shell", Utilities), Tag("rag_books", RagBooks), Tag("rag_lexicon", RagBooks), Tag("stress_tables", RagBooks), Tag("background_pause", Utilities)
     ]);
 
     public static ScenarioNavigationTag GetTag(string id) => CloudTags.First(tag => tag.Id == id);

@@ -5,7 +5,7 @@ using AIHub.Models;
 namespace AIHub.Services;
 
 /// <summary>One logical operation; adapters own its checkpoints, replay and model retirement.</summary>
-public sealed class BackgroundOperationController(BackgroundOperationStore store)
+internal sealed class BackgroundOperationExecution(BackgroundOperationStore store)
 {
     private readonly object _gate = new();
     private readonly AsyncLocal<string?> _scope = new();
@@ -42,9 +42,9 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         }
         NotifyChanged(); return new AuxiliaryLease(this);
     }
-    private sealed class AuxiliaryLease(BackgroundOperationController owner) : IDisposable
+    private sealed class AuxiliaryLease(BackgroundOperationExecution owner) : IDisposable
     {
-        private BackgroundOperationController? _owner = owner;
+        private BackgroundOperationExecution? _owner = owner;
         public void Dispose()
         {
             if (Interlocked.Exchange(ref _owner, null) is not { } controller) return;

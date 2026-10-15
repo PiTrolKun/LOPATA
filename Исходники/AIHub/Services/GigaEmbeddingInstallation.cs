@@ -65,9 +65,9 @@ public static class GigaEmbeddingInstallation
         var args = arguments.ToArray();
         var deviceIndex = Array.IndexOf(args, "--device");
         if (deviceIndex == args.Length - 1 && deviceIndex >= 0) throw new ArgumentException("Missing Python device policy.", nameof(arguments));
-        var runtime = await ManagedPythonRuntime.ResolveAsync(deviceIndex >= 0 ? args[deviceIndex + 1] : "cpu", ct);
+        var runtime = await ManagedPythonRuntime.ResolveAsync(deviceIndex >= 0 ? args[deviceIndex + 1] : "cpu", ct, log: onLine);
         if (deviceIndex >= 0) args[deviceIndex + 1] = runtime.Device;
-        var info = new ProcessStartInfo(runtime.Python) { WorkingDirectory = Path.GetDirectoryName(runtime.Python)!, UseShellExecute = false,
+        var info = new ProcessStartInfo(runtime.Python) { WorkingDirectory = Path.GetDirectoryName(runtime.Python)!, UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true };
         foreach (var key in info.Environment.Keys.Where(key => key.StartsWith("PYTHON", StringComparison.OrdinalIgnoreCase)).ToArray())
             info.Environment.Remove(key);

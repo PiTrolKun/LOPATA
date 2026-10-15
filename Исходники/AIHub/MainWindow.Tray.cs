@@ -28,6 +28,7 @@ public partial class MainWindow
             () => OnUi(() => _ = TakeScreenshotAsync(AIHub.Models.CaptureSource.Monitor)), () => OnUi(StopCaptureRecording));
         InitializePublisher();
         _applicationTray?.AddPublisherCommand(() => OnUi(() => { RestoreFromTray(); OpenPublisherScenario(); }));
+        _applicationTray?.AddRagBooksCommand(() => OnUi(() => RevealRagBooksPage(_backgroundOperations?.State?.Kind == RagBookAcquisitionWork.Kind)));
         DesktopAttentionNotification.Notify = (title, message) => _applicationTray?.Notify(title, message, warning: true) == true;
     }
 
@@ -41,6 +42,7 @@ public partial class MainWindow
         }
         try
         {
+            CheckpointRagBooks();
             if (!LiteraryPage.CheckpointBackgroundState()) throw new System.IO.IOException("Literary checkpoint was not confirmed.");
             _backgroundOperations?.CheckpointForExit();
             SaveActiveSessionCheckpoint(strict: true); SaveCurrentWindowPlacement();

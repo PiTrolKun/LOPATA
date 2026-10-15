@@ -1,0 +1,5 @@
+LOPATA book preparation: model provenance, checked 2026-10-15.
+The original pinned model README files declare license: mit. The repositories do not provide a separate LICENSE/NOTICE file. RagBooks-MIT-reference.txt is a standard license reference, including its template placeholder; it is not a fabricated upstream copyright notice. Original upstream notices, if introduced by a later revision, must be reviewed and retained before updating the manifest.
+Giga-Embeddings: https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/tree/b71168088212f0a13688514e4fc288a86106c4e4
+GigaChat GGUF: https://huggingface.co/ai-sage/GigaChat3.1-10B-A1.8B-GGUF/tree/97045b260251cfa86f5ad25638fa2dd074153446
+The shared Python/llama.cpp components and Qwen core have separate license entries. No OCR runtime is selected or licensed by these model entries. No model quality or execution compatibility certification is implied.

@@ -1,0 +1,128 @@
+[
+  {
+    "ModelArtifactId": "model.giga-embeddings-3b",
+    "DisplayName": "Giga-Embeddings-instruct-3B-0826",
+    "RepositoryId": "ai-sage/Giga-Embeddings-instruct-3B-0826",
+    "Revision": "b71168088212f0a13688514e4fc288a86106c4e4",
+    "Role": "embedding",
+    "Format": "safetensors",
+    "Architecture": "qwen3",
+    "Quantization": "BF16",
+    "ParameterCount": 3000000000,
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "1_Pooling/config.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/1_Pooling/config.json",
+        "SizeBytes": 298,
+        "Sha256": "671db15d3af6da48c524984391a79a34097c01253f52fdf2c011d8c9bee20188",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "2_Normalize/config.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/2_Normalize/config.json",
+        "SizeBytes": 3,
+        "Sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "README.md",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/README.md",
+        "SizeBytes": 26769,
+        "Sha256": "795a596528025d03e342e6b3a92f413a347c639c5b66e2ac49e24918d31ed14b",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "config.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/config.json",
+        "SizeBytes": 1757,
+        "Sha256": "c97518709921dda9a03309fc90cd53b1fa2d837c8e0afd73e8b32a80dd2ebb82",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "config_sentence_transformers.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/config_sentence_transformers.json",
+        "SizeBytes": 223,
+        "Sha256": "63ab8ab57df89362caafa22dd7d82d8642b8a6fb18e617387618b7ec33a8ef98",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "configuration_qwen3_bidirectional.py",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/configuration_qwen3_bidirectional.py",
+        "SizeBytes": 150,
+        "Sha256": "96e135d1ca3ae77d456b7bbc4973d74277b495f3e664e0c12855f2d642e14b5d",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "model.safetensors",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/model.safetensors",
+        "SizeBytes": 6301256584,
+        "Sha256": "de8519bef7ee360043970b0081088c5294e2a9196ad2d0570a33c4f51bb2e134",
+        "Purpose": "model_weights"
+      },
+      {
+        "RelativePath": "modeling_qwen3_bidirectional.py",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/modeling_qwen3_bidirectional.py",
+        "SizeBytes": 4671,
+        "Sha256": "59faa9c3360453700d45697753355f0c70fb19e5768674ffd74d84f1d38775e9",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "modules.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/modules.json",
+        "SizeBytes": 350,
+        "Sha256": "21ddb3037a55ebf4549eb5c1dc44c3f28f10b56ec7f1335c92fd90e5b30d88ac",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "sentence_bert_config.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/sentence_bert_config.json",
+        "SizeBytes": 55,
+        "Sha256": "23aa234ef6021d513cdf56947c07aaa6977000d85dcd1fd423f650b3382a39ca",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "tokenizer.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/tokenizer.json",
+        "SizeBytes": 10728163,
+        "Sha256": "6fb1280bd7fd529f425929b5df823a5a44485cd7fa9679d1ec1acaac4962e8ca",
+        "Purpose": "model_configuration"
+      },
+      {
+        "RelativePath": "tokenizer_config.json",
+        "SourceUrl": "https://huggingface.co/ai-sage/Giga-Embeddings-instruct-3B-0826/resolve/b71168088212f0a13688514e4fc288a86106c4e4/tokenizer_config.json",
+        "SizeBytes": 211,
+        "Sha256": "843eeba481465c1485a5b5f24bd24d6c12c4e502c16f093c3ab6a0f058c2c5f2",
+        "Purpose": "model_configuration"
+      }
+    ]
+  },
+  {
+    "ModelArtifactId": "model.gigachat31-10b-q4km",
+    "DisplayName": "GigaChat3.1-10B-A1.8B Q4_K_M",
+    "RepositoryId": "ai-sage/GigaChat3.1-10B-A1.8B-GGUF",
+    "Revision": "97045b260251cfa86f5ad25638fa2dd074153446",
+    "Role": "tool",
+    "Format": "GGUF",
+    "Architecture": "gigachat3",
+    "Quantization": "Q4_K_M",
+    "ParameterCount": 10000000000,
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "GigaChat3.1-10B-A1.8B-q4_K_M.gguf",
+        "SourceUrl": "https://huggingface.co/ai-sage/GigaChat3.1-10B-A1.8B-GGUF/resolve/97045b260251cfa86f5ad25638fa2dd074153446/GigaChat3.1-10B-A1.8B-q4_K_M.gguf",
+        "SizeBytes": 6474702976,
+        "Sha256": "68a8732fb5cee04f83ebffd7924e15c534d4442c5a43d2ba9e2041fe310b8deb",
+        "Purpose": "model_weights"
+      },
+      {
+        "RelativePath": "README.md",
+        "SourceUrl": "https://huggingface.co/ai-sage/GigaChat3.1-10B-A1.8B-GGUF/resolve/97045b260251cfa86f5ad25638fa2dd074153446/README.md",
+        "SizeBytes": 8377,
+        "Sha256": "3692ad51d65a6ba71acc7fff22b7edc8748d4442fd3bfc40fd7a1ab39aabea52",
+        "Purpose": "model_configuration"
+      }
+    ]
+  }
+]
