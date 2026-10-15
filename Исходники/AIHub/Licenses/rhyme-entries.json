@@ -1,0 +1,29 @@
+[
+  {
+    "Id": "data.rhyme-ru-en",
+    "Name": "LOPATA Rhyme RU/EN",
+    "Version": "2026.10.15",
+    "Author": "LOPATA and attributed source authors",
+    "License": "CC-BY-SA-4.0; MIT; CMUdict; WordNet; Public Domain (see per-source notices)",
+    "Source": "https://github.com/PiTrolKun/LOPATA/releases/tag/rag-rhyme-ru-en-2026.10.15",
+    "Checked": "2026-10-15",
+    "Ru": "Подготовленная библиотека рифмы RU/EN. Условия относятся к отдельным источникам, полный состав и атрибуция приложены. Перераспространение словарных и книжных материалов требует соблюдения их лицензий; библиотека не меняет GPL приложения. Скачивается отдельно, контрольная сумма закреплена.",
+    "En": "Prepared RU/EN rhyme library. Terms apply per source; full notices and attribution are included. Redistribution of lexical and book material requires compliance with its source licenses; this library does not change the application GPL. Downloaded separately using a pinned checksum.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "EB1EA8AD9C3A5CAE68448EB0D7940ABC185649D375454ED467DEF2FC26E393C9",
+    "Texts": [
+      "texts/Rhyme/28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5.txt",
+      "texts/Rhyme/5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6.txt",
+      "texts/Rhyme/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+      "texts/Rhyme/7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297.txt",
+      "texts/Rhyme/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+      "texts/Rhyme/ATTRIBUTION.md",
+      "texts/Rhyme/bd4ce8e44170a5f9f481310ca85c51de3c4f851a65e679b40e603b143bd3542a.txt",
+      "texts/Rhyme/CC-BY-SA-4.0.txt",
+      "texts/Rhyme/CODE_LICENSE.txt",
+      "texts/Rhyme/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+      "texts/Rhyme/LICENSE.md"
+    ]
+  }
+]

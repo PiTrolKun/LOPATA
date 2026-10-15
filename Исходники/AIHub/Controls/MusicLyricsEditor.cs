@@ -17,6 +17,8 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     private readonly TextBox _editor;
     private MusicLyricsPlaybackAdorner? _playbackHighlight;
     private MusicLyricsPlaybackScroll? _playbackScroll;
+    private MusicRhymeAdorner? _rhyme;
+    public void SetRhymeAnalysis(AIHub.Models.MusicRhymeAnalysis? analysis, string color) => _rhyme?.Set(analysis, color);
     private Func<string, string> _l = key => key;
     private IMusicTokenizer? _tokenizer;
     private CancellationTokenSource? _loadCancel, _countCancel;
@@ -77,6 +79,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         Grid.SetRow(editorLayer, 1); grid.Children.Add(editorLayer);
         _playbackHighlight = new MusicLyricsPlaybackAdorner(_editor);
         editorLayer.AdornerLayer.Add(_playbackHighlight);
+        _rhyme = new(_editor); editorLayer.AdornerLayer.Add(_rhyme);
         _playbackScroll = new MusicLyricsPlaybackScroll(_editor);
         var footer = new StackPanel { Margin = new(0, 10, 0, 0) };
         foreach (var text in new[] { _context, _weight, _characters, _hint })
@@ -209,5 +212,6 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         _disposed = true; _debounce.Stop(); _debounce.Tick -= DebounceTick; _loadCancel?.Cancel(); _countCancel?.Cancel();
         _playbackHighlight?.Dispose(); _playbackHighlight = null;
         _playbackScroll?.Dispose(); _playbackScroll = null;
+        _rhyme?.Dispose(); _rhyme = null;
     }
 }

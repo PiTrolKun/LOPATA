@@ -41,11 +41,12 @@ public sealed class MusicProjectController
         var options = _view.Generation.Options;
         var expert = _view.Generation.ExpertSettings; _modelSettings[expert.Variation] = expert.Snapshot();
         return new() { Model = MusicModelVariants.Family(expert.Variation), Variation = expert.Variation, ModelRevision = MusicModelVariants.Revision(expert.Variation),
-            ModelSettings = _modelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Lyrics = _view.Editor.Lyrics, Title = options.Title, Artist = options.Artist, Comment = options.Comment,
+            ModelSettings = _modelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Lyrics = _view.Editor.Lyrics,
+            RhymeSteps = Current.Saved.RhymeSteps.Select(s => s.Snapshot()).ToArray(), Title = options.Title, Artist = options.Artist, Comment = options.Comment,
             Variants = options.Variants, DurationSeconds = options.DurationSeconds, OutputFolder = _view.Tracks.OutputFolder,
             Expert = _view.Generation.ExpertSettings, Output = options.Output, Wishes = MusicWishSnapshot.Capture(_view.Wishes.State) };
     }
-    public void RememberDefaults() => _initial ??= Capture().Snapshot();
+    public void RememberDefaults() => _initial ??= (Capture() with { RhymeSteps = [] }).Snapshot();
     public void SetBusy(bool busy) { Busy = busy; History.Refresh(); }
     public void CycleMode() { if (Busy) return; Mode = (MusicHistoryMode)(((int)Mode + 1) % 3); History.Refresh(); }
     public bool CanNavigate(int delta) => !Busy && Mode != MusicHistoryMode.Off && _cursor + delta >= 0 && _cursor + delta < Current.Steps.Length;
@@ -72,7 +73,7 @@ public sealed class MusicProjectController
             _view.Wishes.Apply(snapshot.Wishes.ToPreferences()); _view.Tracks.SetOutputFolder(snapshot.OutputFolder);
             _view.Session.ModelChanged();
         }
-        if (lyrics) { DisplayedLyricsJobId = lyricsJobId; _view.Editor.Lyrics = snapshot.Lyrics; LyricsContextChanged?.Invoke(); }
+        if (lyrics) { DisplayedLyricsJobId = lyricsJobId; _view.Editor.Lyrics = snapshot.Lyrics; _view.Rhyme.Restore(snapshot.RhymeSteps); LyricsContextChanged?.Invoke(); }
     }
     public void Fix()
     {
@@ -92,6 +93,13 @@ public sealed class MusicProjectController
         _view.Player.Clear(); _view.Tracks.ClearTracks(); Apply(_initial!, true, true, true); History.Refresh();
     }
     public IReadOnlyList<MusicProject> List() => _store.List();
+    internal void RestoreRhymeDraft(MusicRhymeRequest request)
+    {
+        request.Validate(); if (Current.Id == request.ProjectId) return;
+        if (_store.List().Any(p => p.Id == request.ProjectId)) Open(request.ProjectId);
+        else { Current = Current with { Id = request.ProjectId }; _cursor = -1; }
+        DisplayedLyricsJobId = null; _view.Editor.Lyrics = request.Source; LyricsContextChanged?.Invoke(); History.Refresh();
+    }
     public void Open(string id)
     {
         EnsureIdle(); var project = _store.Load(id); project.Saved.Validate();
@@ -123,6 +131,7 @@ public sealed class MusicProjectController
     }
     public MusicGenerationJob Record(MusicGenerationJob job, MusicProjectSnapshot snapshot)
     {
+        snapshot = snapshot with { RhymeSteps = _view.Rhyme.SnapshotHistory() };
         Current = _store.AddRequest(Named(), job.Id, snapshot); _cursor = Current.Steps.Length - 1;
         var linked = job with { ProjectId = Current.Id, ProjectName = Name(Current), ProjectStep = Current.Steps.Single(s => s.JobId == job.Id).Number };
         try { _jobs.Save(linked); }

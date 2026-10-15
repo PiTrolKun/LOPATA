@@ -120,7 +120,8 @@ public sealed class MusicLyricsPlaybackController : IDisposable
             _view.Player.SetLyricsPreparation(track, pending: false, unavailable: true);
             return;
         }
-        if (_syncing || _background?.IsRunning == true || _background?.BlocksNewWork == true) { _deferred = true; return; }
+        if (_syncing || _background?.IsRunning == true || _background?.BlocksNewWork == true || _background?.HasPending == true)
+        { _deferred = true; return; }
         _deferred = false; _ = AnalyzeSelectedAsync(track);
     }
 
@@ -238,7 +239,8 @@ public sealed class MusicLyricsPlaybackController : IDisposable
         _view.Dispatcher.BeginInvoke(() => {
             if (_disposed) return;
             Refresh();
-            if (_deferred && _background?.IsRunning != true && _background?.BlocksNewWork != true && _selection is { } track)
+            if (_deferred && _background?.IsRunning != true && _background?.BlocksNewWork != true
+                && _background?.HasPending != true && _selection is { } track)
                 ReadSelected(track);
         });
     }

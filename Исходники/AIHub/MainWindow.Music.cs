@@ -39,6 +39,7 @@ public partial class MainWindow
             catch { _appSettings.MusicOutputFolder = previous; throw; }
         });
         MusicPage.Configure(L, _storageSettings, _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0);
+        MusicPage.ConfigureRhyme(_storageSettings, () => new MusicRhymeModel(_userContextService));
     }
 
     private void InitializeMusicPreparation()

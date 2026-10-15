@@ -18,6 +18,8 @@ public sealed class MusicTextActionsControl : UserControl
     private readonly UniformGrid _panel = new() { Rows = 6, Columns = 1, Margin = new(2), VerticalAlignment = VerticalAlignment.Top };
     private Func<string, string> _l = key => key;
     private string _brackets = "[]";
+    public Button RhymeButton => _buttons["Rhyme"];
+    public event Action? RhymeRequested;
     public MusicTextActionsControl(MusicLyricsEditor editor, Func<IReadOnlyList<MusicPerformer>> performers)
     {
         _editor = editor; _performers = performers;
@@ -25,7 +27,7 @@ public sealed class MusicTextActionsControl : UserControl
         foreach (var action in new[] { "Accent", "Performer", "Section", "Delivery", "Cue", "Rhyme" })
         {
             var button = new Button { Content = Icon(action), Margin = new(1, 2, 1, 2), Padding = new(4),
-                MinHeight = 0, MinWidth = 0, MaxHeight = 44, IsEnabled = action != "Rhyme" };
+                MinHeight = 0, MinWidth = 0, MaxHeight = 44 };
             AutomationProperties.SetAutomationId(button, "Music.Text." + action);
             ToolTipService.SetShowOnDisabled(button, true);
             button.Click += (_, _) => Execute(action); _buttons.Add(action, button); _panel.Children.Add(button);
@@ -69,7 +71,7 @@ public sealed class MusicTextActionsControl : UserControl
     {
         var source = _editor.CaptureSelection();
         if (action == "Accent") { _editor.ApplyEdit(source, MusicTextEdits.Accent(source)); return; }
-        if (action == "Rhyme") return;
+        if (action == "Rhyme") { RhymeRequested?.Invoke(); return; }
         var window = new MusicTextMarkerWindow(_l, action, _performers(), _brackets) { Owner = Window.GetWindow(this) };
         if (window.ShowDialog() != true || window.AcceptedMarkers is null) return;
         if (action == "Performer") _brackets = window.SelectedBrackets;

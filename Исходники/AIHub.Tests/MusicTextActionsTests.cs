@@ -146,7 +146,7 @@ public sealed class MusicTextActionsTests
         Assert.AreEqual(0, Desc<ScrollViewer>(actions).Count());
         var buttons = Desc<Button>(actions).ToArray(); Assert.AreEqual(6, buttons.Length);
         Assert.IsTrue(buttons.All(x => x.Content is Viewbox && !string.IsNullOrWhiteSpace(AutomationProperties.GetName(x))));
-        Assert.IsFalse(buttons.Single(x => AutomationProperties.GetAutomationId(x) == "Music.Text.Rhyme").IsEnabled);
+        Assert.IsTrue(buttons.Single(x => AutomationProperties.GetAutomationId(x) == "Music.Text.Rhyme").IsEnabled);
         var box = Desc<TextBox>(workspace.Editor).Single(); workspace.Editor.Lyrics = "о"; box.Select(0, 1);
         var host = new Window { Content = workspace, Width = 1200, Height = 760 }; Theme(host, true);
         host.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });

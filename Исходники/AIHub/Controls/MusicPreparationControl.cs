@@ -129,6 +129,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     {
         if (_workspace is not null) return;
         _workspace = _createWorkspace();
+        ConfigureWorkspaceRhyme();
         _workspace.Generation.SetPoetryState(_poetryOpen, _poetryWorking);
         _workspace.Generation.OpenPoetry = () => PoetryRequested?.Invoke(_workspace);
         _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };

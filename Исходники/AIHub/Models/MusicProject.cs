@@ -8,6 +8,7 @@ public enum MusicProjectOutcome { Pending, Running, Paused, Completed, Cancelled
 public sealed record MusicProjectSnapshot
 {
     public string Lyrics { get; init; } = "";
+    public MusicRhymeStep[] RhymeSteps { get; init; } = [];
     public string Model { get; init; } = MusicExpertCatalog.Model;
     public string Variation { get; init; } = MusicComponentCatalog.ModelId;
     public string ModelRevision { get; init; } = MusicComponentCatalog.Revision;
@@ -22,7 +23,7 @@ public sealed record MusicProjectSnapshot
     public MusicOutputSettings Output { get; init; } = new();
     public MusicWishSnapshot Wishes { get; init; } = MusicWishSnapshot.Capture(new());
     public MusicProjectSnapshot Snapshot() => this with { Expert = Expert.Snapshot(), Wishes = Wishes.Snapshot(),
-        ModelSettings = ModelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()) };
+        ModelSettings = ModelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), RhymeSteps = RhymeSteps.Select(s => s.Snapshot()).ToArray() };
     public void Validate()
     {
         if (Lyrics is null || Title is null || Artist is null || Comment is null || string.IsNullOrWhiteSpace(Model)
@@ -31,6 +32,8 @@ public sealed record MusicProjectSnapshot
             || Expert is null || Output is null || Wishes is null || Wishes.Selections is null || Wishes.Performers is null)
             throw new System.IO.InvalidDataException("Invalid music project snapshot.");
         Expert.Validate(); Output.Validate();
+        if (RhymeSteps is null || RhymeSteps.Length > 500) throw new System.IO.InvalidDataException("Music.Rhyme.InvalidInput");
+        foreach (var step in RhymeSteps) step.Validate();
         if (Expert.Variation != Variation || ModelSettings is null || ModelSettings.Count > 100)
             throw new System.IO.InvalidDataException("Invalid project model settings.");
         foreach (var pair in ModelSettings) {

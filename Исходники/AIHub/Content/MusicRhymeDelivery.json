@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "lopata-rhyme-ru-en",
+  "release": "2026.10.15",
+  "tag": "rag-rhyme-ru-en-2026.10.15",
+  "install_relative": "Runtime/RAG/rhyme-ru-en",
+  "url": "https://github.com/PiTrolKun/LOPATA/releases/download/rag-rhyme-ru-en-2026.10.15/lopata-rhyme-ru-en-2026.10.15.zip",
+  "filename": "lopata-rhyme-ru-en-2026.10.15.zip",
+  "bytes": 367515727,
+  "sha256": "0262569fb4911628cdeac7fdf0d1996dbed2eef2c07d1cc9bee3957f6985b788",
+  "corpus_sha256": "80c88cad75ec8964112c2e9f9e53557fea6ba56263d8bfb09598463a03a8fc7c",
+  "unpacked_bytes": 2424344489,
+  "book_chunks": 72,
+  "lexical_records": 4074180
+}
