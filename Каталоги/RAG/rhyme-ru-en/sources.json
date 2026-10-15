@@ -1,0 +1,1449 @@
+{
+  "schema": 1,
+  "release": "2026.10.15",
+  "books": [
+    {
+      "id": "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919",
+      "title": "Письмо о правилах российского стихотворства",
+      "author": "Михаил Васильевич Ломоносов",
+      "edition": "Полное собрание сочинений, Санкт-Петербург, 1803, том 1, с. 11–22",
+      "source_url": "https://ru.wikisource.org/wiki/Письмо_о_правилах_российского_стихотворства_(Ломоносов)/ПСС_1803_(ДО)",
+      "revision_url": "https://ru.wikisource.org/w/index.php?oldid=2199910",
+      "history_url": "https://ru.wikisource.org/wiki/Письмо_о_правилах_российского_стихотворства_(Ломоносов)/ПСС_1803_(ДО)?action=history",
+      "license": "CC-BY-SA-4.0 electronic transcription; public-domain historical author text",
+      "attribution": "М. В. Ломоносов; электронная транскрипция — участники Викитеки, история по ссылке источника.",
+      "modifications": "TXT extracted from prp-pages-output; navigation, styles, reference markers and separate notes removed; horizontal whitespace normalized; paragraph/verse breaks retained. No modernization or spelling corrections.",
+      "chunks": 20
+    },
+    {
+      "id": "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1",
+      "title": "Стихотворная техника Пушкина — отобранная проза",
+      "author": "Валерий Яковлевич Брюсов",
+      "edition": "1915; Wikisource revision 5706413",
+      "source_url": "https://ru.wikisource.org/w/index.php?oldid=5706413&title=%D0%A1%D1%82%D0%B8%D1%85%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA%D0%B0_%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_%28%D0%91%D1%80%D1%8E%D1%81%D0%BE%D0%B2%29",
+      "history_url": "https://ru.wikisource.org/w/index.php?title=Стихотворная_техника_Пушкина_(Брюсов)&action=history",
+      "license": "CC-BY-SA-4.0 electronic edition/adaptation; public-domain historical author text",
+      "attribution": "В. Я. Брюсов; электронная редакция — участники Викитеки, revision 5706413.",
+      "modifications": "Selective prose edition, not full article; HTML-to-TXT, exact wording, static admission and sampled semantic review. Verse blocks and metric schemes excluded in selected edition.",
+      "chunks": 44
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "title": "A Practical Guide to English Versification",
+      "author": "Tom Hood (1835–1874); historical appendices",
+      "edition": "1877",
+      "source_url": "https://www.gutenberg.org/ebooks/51873",
+      "license": "Public-domain historical text; detached content under PG policy 1.C",
+      "attribution": "Tom Hood, A Practical Guide to English Versification (1877). Electronic transcription: Jonathan Ingram, readbueno and the Online Distributed Proofreading Team.",
+      "modifications": "Eight explicitly selected prose chunks only; headers, electronic service wrapper, advertisements, third-party verse examples, metric tables and other unreviewed chunks omitted. Text and vectors of retained chunks unchanged.",
+      "chunks": 8
+    }
+  ],
+  "lexical_sources": [
+    {
+      "adapter": "cmudict",
+      "adapter_revision": 1,
+      "attribution": "Carnegie Mellon University, CMU Pronouncing Dictionary; copyright, conditions and disclaimer retained.",
+      "id": "cmudict",
+      "license": "LicenseRef-CMUdict",
+      "license_files": [
+        {
+          "path": "licenses/bd4ce8e44170a5f9f481310ca85c51de3c4f851a65e679b40e603b143bd3542a.txt",
+          "sha256": "bd4ce8e44170a5f9f481310ca85c51de3c4f851a65e679b40e603b143bd3542a"
+        }
+      ],
+      "revision": "74790861f652b15e4ac49015a90074ad62a27690",
+      "sha256": "81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22",
+      "source_url": "https://raw.githubusercontent.com/cmusphinx/cmudict/74790861f652b15e4ac49015a90074ad62a27690/cmudict.dict",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 135158
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-adj.all",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "74cb28a34abd50294a3329b497d9b0142282eaa22610b5ebeae9368dae646038",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/adj.all.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 14493
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-adj.pert",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "8f20c40d08855ef1193146c9f8cf6762e2a2e7ed878823ed8367da48732f19bc",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/adj.pert.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 3666
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-adj.ppl",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "1d01d4de301407c7bf1dcbde1c02e01ad22fef1a9be086d3812afeddf162f684",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/adj.ppl.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 60
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-adv.all",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "9d92cbcb348927c16baa2246b6a389fc6ed9833892a78287bcf5b387ea11f44b",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/adv.all.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 3615
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.act",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "c5ea061734ae4687ca1505e32e75f61936ec84c2a05eaa751f451702c8699291",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.act.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 6567
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.animal",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "b6c220576edb727d7c7a24aba106d22876537396a90e4f27c8d8625b7b8bc693",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.animal.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 4646
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.artifact",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "29873f01b589096f73d48d73f4e6877ffc6f633e8b025a3806eb1f60a95a6cae",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.artifact.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 11986
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.attribute",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "d827a1494144bc96ef6e973cac0b2ccc8980d1a192622c44fa46ed08f4db6157",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.attribute.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 3329
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.body",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "0d55c9384b12b1b102630a8dbf53c4aded7d4109fe6fe9058f11aa3c75d3b3d7",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.body.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 2037
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.cognition",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "eed8353e69e0a9073d2b3a2918119c94bff04e878d4af15e375cefd0f606d9a6",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.cognition.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 3153
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.communication",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "7053932585a7e05d38a2b04139e17800bca7fed8049e1e9f3f8e478a2734c23e",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.communication.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 5718
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.event",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "c56af56ed053eebaa915332a163b7eafd4f78a4bb653b6a855b90aaddf239ea3",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.event.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 1078
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.feeling",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "d724dae673d897e92a80cf9707a70b0cb240ff247bc34742b9810cb927b20321",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.feeling.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 432
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.food",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "e374e23600a13cbfe76c6ea583186bfe80995f4e3502c9aaf0f90ab007b891b7",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.food.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 2670
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.group",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "4c5052b8dd31f1924f46899e8789d6fa916637d1451113c39ccded95c9d80a4e",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.group.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 2578
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.location",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "0ece490f18f3669715723e7608ec0e30b6852945938f84b03b1d5ed1dbd88562",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.location.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 875
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.motive",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "dfd14947d951ae0979831bae3ee623cc149bcccec8b2da3dd1cf703b148ad707",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.motive.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 41
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.object",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "52351adcad28a13686080448a6d232148bb6f399426b0b9c9734aee12e8affd8",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.object.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 809
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.person",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "7d2ce4bebd1cc762a5d4f4d6cf7aee228e5c795ed07263d575fea0b820780c48",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.person.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 7849
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.phenomenon",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "9cf0fce44885a8a4382424b5068dc9e9c867fa5d88296233a5322360630f80d3",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.phenomenon.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 653
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.plant",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "69671bcf9de09e39cb46b5fafec69233278d17f4b4dbe093fb57d3deacc6a283",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.plant.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 5590
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.possession",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "45bddb173490da62d868572ee1bc077f7f86b943d83fbadfd472aac4df8ebd1e",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.possession.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 1119
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.process",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "fb9458286c21cf28fd1db2ce06cbba8124e9eb6e6504ae5d1ebadd5da1ed9271",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.process.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 799
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.quantity",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "7ee10508243f6b88938a638064d2baa341b2944dc72ddafac2417ff04eb23c29",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.quantity.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 1340
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.relation",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "4be123e8ef3a971ca5eb76e3a3b1e62c2b53b5c269d7d74817b74450c7e4df24",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.relation.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 455
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.shape",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "376059c0b62e14395a91ea0f50ac17b93021c0d2b6a6795329eb3832f624761a",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.shape.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 367
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.state",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "3cb8cebbf3f812229c085d3f61608c3cca4e97a5c69e9bebb9c3e546a8411312",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.state.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 3594
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.substance",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "5b7e47570a15012e7a43430a56a218a1ac7be81913bb094143a39b40387ed62f",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.substance.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 3143
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.time",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "d1bba4e668251c117cd0a9d82e32b74f26d0cb46075ab6f3a4a5b177138570bc",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.time.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 993
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-noun.tops",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "2a082f37969c4ae0ef3590b31f73c05d915aba7ffdc1242e54a061bf8f9a9301",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/noun.Tops.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 51
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.body",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "6e085e60a4527222f9a96e27e082e0e282ca790af8a38bc4a45c9addbefb0fc6",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.body.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 550
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.change",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "126bb92adc1be69c4cf33e9ac1a5a492f6785971d23c527f5d8e0db51a980702",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.change.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 2389
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.cognition",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "f8908eedf07920a8489aa2462ce2ec7a83c0ecff1fb48f4456aec100f8c97d37",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.cognition.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 696
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.communication",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "04a1531082705497ab51316d54dec360273ea896b195dfd2143b99d08d327541",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.communication.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 1565
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.competition",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "3bdd97919eddbcf4493999d46b981fe4be088beb3a06e49fd1f95de82f91d824",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.competition.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 460
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.consumption",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "005042d49b86fd740ec776144b9bfff4e5236c4f856bc89d2cd8b810d0755b07",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.consumption.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 246
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.contact",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "379ce11e6877c4c87adc1219bc41cf1bb0d31fb5b64fdb294b1b48140b858041",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.contact.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 2203
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.creation",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "50824d97ffdcecae07f9269f6422f3b781d3a97fb28ec668da0a4a8865dbcd56",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.creation.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 697
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.emotion",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "84f5ff45f040634682982263ae314c3bf3673d3031709ac9ba51660cde547ab2",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.emotion.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 345
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.motion",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "29f0859977bede750239f911afb356885b50597afe9e161e2fc3f584ad86f095",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.motion.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 1410
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.perception",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "405bc502fd98b268d8c9326567b7935f246415e29fb47c522140892a674a82d3",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.perception.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 463
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.possession",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "8a614afadc3f2f8ca7fa62447e60a583e901fbf54caf6c96c3d43e7d5ea2a861",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.possession.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 847
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.social",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "d0bc7620c30305592d0f8cf77e4119ab1cf12fcee93f4269341df017acdb4895",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.social.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 1112
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.stative",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "04a7c3cc3f4d3b1585b11fa00c6574f4162063328f5f652b867e3a48ff35d346",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.stative.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 758
+    },
+    {
+      "adapter": "wordnet",
+      "adapter_revision": 1,
+      "attribution": "Open English WordNet contributors and Princeton University WordNet; definitions, members and relations extracted; examples omitted.",
+      "id": "english-wordnet-verb.weather",
+      "license": "CC-BY-4.0 AND LicenseRef-WordNet",
+      "license_files": [
+        {
+          "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+          "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+        },
+        {
+          "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+          "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+        },
+        {
+          "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+          "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+        }
+      ],
+      "revision": "bff3181fe5c810dcd157cba0eed60322a6e0aaed",
+      "sha256": "50853e0c2c60dae522b6e078cb39fa226d8026f8a7b350f0efe172ce6f9b3b47",
+      "source_url": "https://raw.githubusercontent.com/globalwordnet/english-wordnet/bff3181fe5c810dcd157cba0eed60322a6e0aaed/src/yaml/verb.weather.yaml",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 80
+    },
+    {
+      "adapter": "kaikki-ru",
+      "adapter_revision": 1,
+      "attribution": "Russian Wiktionary contributors; Kaikki.org / Tatu Ylonen and Wiktextract; dump 2026-10-01. Lexical fields extracted, examples/quotations/media omitted; per-entry article and history retained.",
+      "id": "kaikki-ru",
+      "license": "CC-BY-SA-4.0",
+      "license_files": [
+        {
+          "path": "licenses/28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5.txt",
+          "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+        }
+      ],
+      "revision": "dump 2026-10-01; Sat, 03 Oct 2026 08:28:22 GMT",
+      "sha256": "8d13661ba146a7cd7a7177c898eb22812a006840a3401a0af0e10a252a9818b7",
+      "source_url": "https://kaikki.org/dictionary/downloads/ru/ru-extract.jsonl.gz",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 471861
+    },
+    {
+      "adapter": "openrussian",
+      "adapter_revision": 2,
+      "attribution": "OpenRussian / Badestrand russian-dictionary contributors, 2021 snapshot; lexical tables transformed; sentences omitted.",
+      "id": "openrussian-adjectives",
+      "license": "CC-BY-SA-4.0",
+      "license_files": [
+        {
+          "path": "licenses/7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297.txt",
+          "sha256": "7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297"
+        }
+      ],
+      "revision": "50e210c4803237779cb562bc1abcea529066031c",
+      "sha256": "89ab5d10dcd2f21f6b485de704aef372f32251468e3aa96f18b21e259f26b80a",
+      "source_url": "https://raw.githubusercontent.com/Badestrand/russian-dictionary/50e210c4803237779cb562bc1abcea529066031c/adjectives.csv",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 11938
+    },
+    {
+      "adapter": "openrussian",
+      "adapter_revision": 2,
+      "attribution": "OpenRussian / Badestrand russian-dictionary contributors, 2021 snapshot; lexical tables transformed; sentences omitted.",
+      "id": "openrussian-nouns",
+      "license": "CC-BY-SA-4.0",
+      "license_files": [
+        {
+          "path": "licenses/7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297.txt",
+          "sha256": "7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297"
+        }
+      ],
+      "revision": "50e210c4803237779cb562bc1abcea529066031c",
+      "sha256": "c388f9e6dde51932832be8d7e9afdbe9f0acee72fcf70677f0fe25ea61293c84",
+      "source_url": "https://raw.githubusercontent.com/Badestrand/russian-dictionary/50e210c4803237779cb562bc1abcea529066031c/nouns.csv",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 26977
+    },
+    {
+      "adapter": "openrussian",
+      "adapter_revision": 2,
+      "attribution": "OpenRussian / Badestrand russian-dictionary contributors, 2021 snapshot; lexical tables transformed; sentences omitted.",
+      "id": "openrussian-others",
+      "license": "CC-BY-SA-4.0",
+      "license_files": [
+        {
+          "path": "licenses/7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297.txt",
+          "sha256": "7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297"
+        }
+      ],
+      "revision": "50e210c4803237779cb562bc1abcea529066031c",
+      "sha256": "9f22a16b17fc9a564298112168b667fced11aafb254ccebf5b7544fc37cdaa92",
+      "source_url": "https://raw.githubusercontent.com/Badestrand/russian-dictionary/50e210c4803237779cb562bc1abcea529066031c/others.csv",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 5029
+    },
+    {
+      "adapter": "openrussian",
+      "adapter_revision": 2,
+      "attribution": "OpenRussian / Badestrand russian-dictionary contributors, 2021 snapshot; lexical tables transformed; sentences omitted.",
+      "id": "openrussian-verbs",
+      "license": "CC-BY-SA-4.0",
+      "license_files": [
+        {
+          "path": "licenses/7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297.txt",
+          "sha256": "7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297"
+        }
+      ],
+      "revision": "50e210c4803237779cb562bc1abcea529066031c",
+      "sha256": "8659de6799b949fb35f080b08088fb7d347ed300490954ebb380a31642646e1d",
+      "source_url": "https://raw.githubusercontent.com/Badestrand/russian-dictionary/50e210c4803237779cb562bc1abcea529066031c/verbs.csv",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 14871
+    },
+    {
+      "adapter": "ruaccent.accents",
+      "adapter_revision": 1,
+      "attribution": "Denis Petrov 2026, RUAccent; source variants retained; stress markers converted for display. Neural accents_nn excluded.",
+      "id": "ruaccent-accents",
+      "license": "MIT",
+      "license_files": [
+        {
+          "path": "licenses/5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6.txt",
+          "sha256": "5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6"
+        }
+      ],
+      "revision": "b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855",
+      "sha256": "aa460ebba90de00fbbf3d41d121961f605b98667e45efb7920f127473b15515e",
+      "source_url": "https://huggingface.co/ruaccent/accentuator/resolve/b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855/dictionary/accents.json.gz",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 3194878
+    },
+    {
+      "adapter": "ruaccent.omographs",
+      "adapter_revision": 1,
+      "attribution": "Denis Petrov 2026, RUAccent; source variants retained; stress markers converted for display. Neural accents_nn excluded.",
+      "id": "ruaccent-omographs",
+      "license": "MIT",
+      "license_files": [
+        {
+          "path": "licenses/5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6.txt",
+          "sha256": "5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6"
+        }
+      ],
+      "revision": "b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855",
+      "sha256": "04a9e81c68d65f65ba493fe0110f99e79087548c2beeec3032e2b66e28706f36",
+      "source_url": "https://huggingface.co/ruaccent/accentuator/resolve/b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855/dictionary/omographs.json.gz",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 19736
+    },
+    {
+      "adapter": "ruaccent.yo_homographs",
+      "adapter_revision": 1,
+      "attribution": "Denis Petrov 2026, RUAccent; source variants retained; stress markers converted for display. Neural accents_nn excluded.",
+      "id": "ruaccent-yo_homographs",
+      "license": "MIT",
+      "license_files": [
+        {
+          "path": "licenses/5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6.txt",
+          "sha256": "5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6"
+        }
+      ],
+      "revision": "b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855",
+      "sha256": "c4ee777bbbab87f9eac838f370ad92974e079d02b21903e480c54b5f0c8c60d1",
+      "source_url": "https://huggingface.co/ruaccent/accentuator/resolve/b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855/dictionary/yo_homographs.json.gz",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 637
+    },
+    {
+      "adapter": "ruaccent.yo_words",
+      "adapter_revision": 1,
+      "attribution": "Denis Petrov 2026, RUAccent; source variants retained; stress markers converted for display. Neural accents_nn excluded.",
+      "id": "ruaccent-yo_words",
+      "license": "MIT",
+      "license_files": [
+        {
+          "path": "licenses/5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6.txt",
+          "sha256": "5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6"
+        }
+      ],
+      "revision": "b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855",
+      "sha256": "a19fa89a964a0691d9fe4ee384783e3934904891843d8f59a1c480d67947a82a",
+      "source_url": "https://huggingface.co/ruaccent/accentuator/resolve/b78ae5ea1e62beaf138bed1865cd8c3b0b5ca855/dictionary/yo_words.json.gz",
+      "source_snapshot_bundled": false,
+      "modifications": "Parsed selected lexical fields into SQLite, built normalized lookup/FTS5; malformed/unsupported records excluded; no model-generated corrections. Upstream attribution/licence retained.",
+      "records": 85568
+    }
+  ]
+}

@@ -1,0 +1,2547 @@
+{
+  "schema": 1,
+  "release": "2026.10.15",
+  "input_book_database_sha256": "a177aa8c2b8fbacbd42e63861372d4f6959eb4b4880025d74f5d933ebebcb67d",
+  "input_lexicon_database_sha256": "aadfad5e8b2c6a21d913abf23fa4b811c299b466330c37d88a56708cbc3bf82a",
+  "policy": "Public conservative subset only. Preserve accepted text, source IDs, offsets and vector bytes. All lexical records retained. Exclude unclear scan and unreviewed historical examples/wrapper.",
+  "accepted_chunk_ids": [
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:0",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:76",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:1141",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:1260",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:1957",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:2795",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:3233",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:5096",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:5114",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:5340",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:6369",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:7120",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:9964",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:10997",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:11262",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:12078",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:12842",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:13734",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:13842",
+    "64f27813844bd5ce6ce281eaf664654855eaf290a54752c3d83bc6406c255919:1:14603",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:44897",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:45952",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:200729",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:266734",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:306741",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:309656",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:310831",
+    "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:311906",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:0",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:926",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:2368",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:3204",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:4149",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:5075",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:6036",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:6583",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:7438",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:8446",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:9314",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:10366",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:11240",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:12348",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:13240",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:13622",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:14499",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:15476",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:16325",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:17464",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:18183",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:19439",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:20268",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:21492",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:22893",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:22977",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:24164",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:24404",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:25656",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:26767",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:27840",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:29078",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:29648",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:30543",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:31278",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:32284",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:33322",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:34260",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:35731",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:36709",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:37817",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:39296",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:40059",
+    "dfdd6547a8d71d6cf0502bb43f08b5a8d98e087a7c9f563e630f13e7280dbfe1:1:40941"
+  ],
+  "excluded_chunks": [
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:0",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1245,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:1245",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 99,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:1361",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 977,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:2341",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1029,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:3373",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1300,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:4676",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 676,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:5355",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 823,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:6181",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1350,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:7534",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1226,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:8763",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1279,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:10042",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 118,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:10169",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1200,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:11369",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 140,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:11518",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 680,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:12210",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1457,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:13667",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 353,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:14023",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1413,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:15439",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1176,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:16618",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1270,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:17893",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1128,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:19026",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 933,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:19962",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1411,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:21378",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1085,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:22468",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 963,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:23455",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1140,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:24595",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 156,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:24754",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 969,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:25728",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 933,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:26661",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 91,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:26762",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1124,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:27899",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 930,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:28834",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1216,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:30050",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 138,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:30191",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1035,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:31226",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 241,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:31470",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 929,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:32399",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 370,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:32786",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 895,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:33686",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1040,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:34731",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1179,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:35915",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1089,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:37007",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1318,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:38330",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1249,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:39584",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 942,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:40531",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1299,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:41835",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1269,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:43109",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1016,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:44128",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 764,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:46461",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1122,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:47586",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1216,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:48807",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 954,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:49766",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1290,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:51084",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 867,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:51956",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1441,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:53397",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 31,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:53453",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1308,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:54761",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 142,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:54921",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1332,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:56257",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1404,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:57661",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 46,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:57712",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 711,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:58428",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1385,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:59813",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 137,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:59968",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1141,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:61109",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 362,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:61487",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1561,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:63068",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1385,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:64472",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1481,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:65972",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1308,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:67294",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1415,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:68722",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1147,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:69869",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 308,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:70180",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1377,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:71570",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1351,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:72927",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1323,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:74255",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 442,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:74702",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1123,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:75830",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 622,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:76457",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1260,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:77722",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1334,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:79071",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 950,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:80026",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1204,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:81260",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1316,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:82581",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 767,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:83353",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1438,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:84796",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1381,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:86180",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 685,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:86870",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 898,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:87773",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1286,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:89064",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1322,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:90391",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1210,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:91606",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1089,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:92700",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1206,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:93911",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 965,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:94881",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1092,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:95978",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1143,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:97126",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1223,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:98354",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1312,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:99666",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 98,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:99769",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1209,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:100981",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1183,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:102167",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1013,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:103183",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 973,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:104159",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 663,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:104825",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 933,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:105761",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1019,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:106824",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 996,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:107828",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1026,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:108854",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 64,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:108954",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 693,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:109650",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1064,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:110717",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1006,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:111726",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 912,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:112641",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1173,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:113817",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1005,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:114825",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 792,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:115620",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1011,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:116634",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1012,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:117689",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1055,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:118747",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 918,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:119668",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 815,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:120486",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1190,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:121676",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 790,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:122503",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1092,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:123604",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1087,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:124691",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 56,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:124750",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 995,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:125748",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1093,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:126844",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1032,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:127885",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1041,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:128926",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 58,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:128999",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1129,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:130128",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 8,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:130139",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1162,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:131304",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 944,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:132251",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 988,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:133239",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 39,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:133297",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1072,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:134386",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1006,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:135434",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 880,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:136317",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 876,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:137196",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 909,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:138108",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1231,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:139339",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 373,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:139748",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1121,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:140869",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 14,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:140920",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1073,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:141996",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 150,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:142149",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1154,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:143303",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 212,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:143547",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1102,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:144649",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 63,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:144715",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1073,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:145791",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1189,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:146988",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1081,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:148069",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 94,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:148197",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 966,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:149166",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1124,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:150290",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 9,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:150302",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1070,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:151416",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1081,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:152541",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1110,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:153654",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 916,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:154570",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 218,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:154824",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1053,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:155877",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 68,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:155981",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1066,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:157090",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 829,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:157919",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 302,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:158258",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1062,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:159323",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 791,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:160114",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 384,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:160536",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1049,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:161588",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1009,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:162597",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 109,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:162709",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1018,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:163727",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 131,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:163861",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1127,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:164991",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1072,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:166107",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1063,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:167173",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1118,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:168294",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1003,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:169300",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1004,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:170307",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 970,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:171280",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 847,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:172130",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1055,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:173230",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 766,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:173999",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1119,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:175121",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1029,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:176193",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1131,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:177324",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 58,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:177385",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1050,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:178435",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 102,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:178540",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1036,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:179579",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 688,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:180270",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 990,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:181263",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1108,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:182374",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 877,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:183254",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1093,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:184355",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 945,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:185300",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 191,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:185527",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1084,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:186654",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1110,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:187767",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1132,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:188908",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1065,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:189973",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 56,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:190032",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 367,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:190402",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 788,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:191193",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 992,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:192185",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 73,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:192261",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1097,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:193358",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 83,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:193478",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 901,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:194384",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1084,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:195468",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 303,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:195790",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 96,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:195889",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1148,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:197037",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1164,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:198204",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 510,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:198717",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1315,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:200035",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 689,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:202135",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 214,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:202354",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1434,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:203788",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 141,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:203954",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1120,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:205079",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 901,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:205983",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1392,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:207375",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 115,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:207508",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1321,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:208852",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1440,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:210295",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1281,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:211595",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1388,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:213006",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 971,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:213980",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1041,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:215026",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1370,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:216396",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 155,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:216556",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1400,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:217976",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1079,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:219055",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 396,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:219454",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1278,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:220735",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1308,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:222048",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1355,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:223403",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 84,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:223501",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 569,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:224073",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1407,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:225483",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1155,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:226641",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1439,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:228085",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1377,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:229462",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 32,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:229499",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1457,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:230966",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1322,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:232298",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1276,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:233586",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1286,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:234875",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1334,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:236228",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 935,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:237166",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1428,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:238594",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 93,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:238690",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1344,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:240037",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1484,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:241539",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1331,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:242870",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 84,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:242973",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1442,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:244420",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1280,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:245700",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 116,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:245821",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1458,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:247279",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 750,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:248032",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1233,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:249270",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 888,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:250161",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1154,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:251315",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 115,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:251450",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 987,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:252440",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 864,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:253304",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 302,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:253609",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1158,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:254770",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 303,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:255078",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1185,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:256263",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 280,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:256546",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 825,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:257374",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1199,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:258573",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 183,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:258761",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 972,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:259733",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 845,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:260578",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 54,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:260637",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1170,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:261807",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 191,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:262008",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 846,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:262859",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1271,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:264147",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1214,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:265366",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1368,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:267174",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 388,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:267565",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1338,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:268903",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 350,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:269258",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1184,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:270447",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1049,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:271501",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1304,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:272810",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1394,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:274209",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1226,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:275438",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1426,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:276867",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 801,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:277673",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1208,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:278893",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1288,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:280186",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1316,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:281505",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1278,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:282788",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1162,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:283953",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1088,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:285041",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 70,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:285114",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1161,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:286278",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1381,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:287659",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 37,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:287711",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1128,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:288842",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1236,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:290081",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1234,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:291315",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 147,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:291467",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1277,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:292749",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1254,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:294014",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1307,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:295326",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1386,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:296712",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 119,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:296834",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1420,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:298259",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1132,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:299396",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1132,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:300531",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1222,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:301753",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 148,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:301906",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1168,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:303079",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 907,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:303986",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 286,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:304279",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1040,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:305319",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 100,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:305424",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1244,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:306668",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 68,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:307128",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1189,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:308317",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 93,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:308423",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1179,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:309602",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 51,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:312953",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 153,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:313109",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1155,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:314272",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1077,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:315349",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 188,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:315571",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1171,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:316742",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 174,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:316919",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1145,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:318067",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1077,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:319147",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1257,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:320407",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 768,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:321180",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1210,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:322390",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 196,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:322601",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1057,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:323663",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1321,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:324997",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1118,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:326132",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1436,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:327586",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1229,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:328818",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1356,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:330181",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1203,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:331394",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1063,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:332474",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1308,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:333787",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1302,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:335094",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1275,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:336374",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1091,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:337480",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1082,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:338562",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 263,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:338837",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1042,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:339884",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1148,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:341047",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1334,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:342384",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1266,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:343655",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1106,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:344776",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1327,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:346106",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 909,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:347020",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1295,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:348322",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1316,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:349650",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 929,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:350587",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1254,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:351846",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 568,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:352426",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1345,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:353771",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1203,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:354974",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 152,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:355131",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1146,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:356280",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1268,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:357551",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1239,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:358793",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1206,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:359999",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 132,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:360165",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1052,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:361220",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1058,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:362281",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1325,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:363609",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1133,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:364745",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1453,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:366198",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 193,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:366394",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1502,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:367901",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1292,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:369196",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1367,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:370570",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1568,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:372149",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1141,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:373293",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 821,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:374117",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1473,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:375590",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 113,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:375706",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1060,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:376769",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1418,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:378187",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 82,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:378272",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 1662,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183:1:379937",
+      "source_id": "8bcaa133c50cfc50f96d1c4868c3ac9eea082a32f3c83d85fff66e045289a183",
+      "characters": 980,
+      "reason": "outside_explicit_reviewed_prose_selection"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:15:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 244,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:28:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 152,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:70:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 164,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:79:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 126,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:100:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 123,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:101:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 81,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:104:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 169,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:126:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 226,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:131:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 227,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:132:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 351,
+      "reason": "unreadable_scan"
+    },
+    {
+      "id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873:133:0",
+      "source_id": "fb429dd89913c64954ca3e21b2eeae581d87feaa3c66d6ea1384a060d6c39873",
+      "characters": 142,
+      "reason": "unreadable_scan"
+    }
+  ],
+  "exclusion_reasons": {
+    "outside_explicit_reviewed_prose_selection": 399,
+    "unreadable_scan": 11
+  }
+}

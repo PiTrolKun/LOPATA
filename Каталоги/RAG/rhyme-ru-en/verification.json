@@ -1,0 +1,31 @@
+{
+  "verified": true,
+  "id": "lopata-rhyme-ru-en",
+  "release": "2026.10.15",
+  "book_chunks": 72,
+  "lexical_records": 4074180,
+  "entries": {
+    "records": 4074180,
+    "sha256": "2060582af05325a325c6f049833469ac28160ca60bac25e07501da4287ff04ea"
+  },
+  "lookup": {
+    "records": 7415084,
+    "sha256": "3ab5c0293a88d138279328a037b02a889d7c87771c0f48aee67bd3265186bf9d"
+  },
+  "accepted_text_offsets_vectors_identical": true,
+  "lookups": {
+    "замок": 8,
+    "мука": 8,
+    "все": 13,
+    "read": 14,
+    "lead": 33,
+    "люди": 4,
+    "кошка": 6,
+    "entity": 3
+  },
+  "absolute_local_paths_absent": true,
+  "negative_checks": 2,
+  "existing_csharp_reader": "PublishedStressAndPronunciationRetainContextAcrossSources: 1 passed, 0 failed",
+  "existing_book_reader": "rag_books.current: compatible 2048D protocol",
+  "application_version_unchanged": "0.5.55-dev"
+}

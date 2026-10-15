@@ -18,6 +18,11 @@
 LICENSE text eol=lf
 VERSION text eol=lf
 
+# Corpus passports and original licences are SHA256 byte contracts.
+# Only upstream licence whitespace is exempt; authored source/docs retain checks.
+Каталоги/RAG/rhyme-ru-en/** -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+Каталоги/RAG/rhyme-ru-en/licenses/** -whitespace
+
 # Official ACE source and license bytes are pinned by SHA256.
 Runtime/MusicAce/** -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/ace-*.txt -text -eol -whitespace

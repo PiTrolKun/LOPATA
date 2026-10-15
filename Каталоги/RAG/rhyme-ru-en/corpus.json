@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "id": "lopata-rhyme-ru-en",
+  "release": "2026.10.15",
+  "install_relative": "Runtime/RAG/rhyme-ru-en",
+  "book_chunks": 72,
+  "lexical_records": 4074180,
+  "layers": [
+    {
+      "layer": "books",
+      "version": "4e3f0b3aa8db4c119047dacc69044b74",
+      "database_sha256": "e26a32bea6a9795b12a124c955196ef684659348682328d63f0820724a475802"
+    },
+    {
+      "layer": "lexicon",
+      "version": "818d2383f33b40cba27e2e8a9788cd73",
+      "database_sha256": "d96263b1a491ca18c5183b7b05e45d4d670a7fa0e8b79b818c2ee9298d58d350"
+    }
+  ],
+  "files": [
+    {
+      "path": "ATTRIBUTION.md",
+      "bytes": 32735,
+      "sha256": "4c6daac53dab0465dc8065f833c2c118d37412503f6a69977bcd614c7deea4de"
+    },
+    {
+      "path": "curation.json",
+      "bytes": 121012,
+      "sha256": "d7cd9f7a75816eb4ac73517e7428a3b1df1886b91a86dd8452702a751bc4ec83"
+    },
+    {
+      "path": "current.json",
+      "bytes": 145,
+      "sha256": "d6e37ab1719e4771281c8a4564bd9074895805352e46c45c17f0b4a08d19a749"
+    },
+    {
+      "path": "lexicon/current.json",
+      "bytes": 145,
+      "sha256": "ee2aea29e5953d4343f866e5f2c85df610504e4b8649d63f2ef1916e87d569fa"
+    },
+    {
+      "path": "lexicon/versions/818d2383f33b40cba27e2e8a9788cd73/lexicon.sqlite",
+      "bytes": 2423050240,
+      "sha256": "d96263b1a491ca18c5183b7b05e45d4d670a7fa0e8b79b818c2ee9298d58d350"
+    },
+    {
+      "path": "lexicon/versions/818d2383f33b40cba27e2e8a9788cd73/manifest.json",
+      "bytes": 86304,
+      "sha256": "3b93bb9f69e3e54b790ede1994838a3603c8bceded66d1683875ca9bb268e1ac"
+    },
+    {
+      "path": "lexicon/versions/818d2383f33b40cba27e2e8a9788cd73/SOURCE_NOTICE.txt",
+      "bytes": 32735,
+      "sha256": "4c6daac53dab0465dc8065f833c2c118d37412503f6a69977bcd614c7deea4de"
+    },
+    {
+      "path": "LICENSE.md",
+      "bytes": 2208,
+      "sha256": "ea1c4c71f681b16f79a61ce53b543e5c36b2adc0149c6c0e37fed9a390fb139b"
+    },
+    {
+      "path": "licenses/28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5.txt",
+      "bytes": 20138,
+      "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+    },
+    {
+      "path": "licenses/5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6.txt",
+      "bytes": 1060,
+      "sha256": "5ccb796d1fa25aeec0cc7d3ada4915963cec3b7cacfa2cb39ce00c65761e7ad6"
+    },
+    {
+      "path": "licenses/672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb.txt",
+      "bytes": 19863,
+      "sha256": "672cc8b5663e8dc74c4b07a9dcf477193853575b119908fd3dc0aeeb60a9dbbb"
+    },
+    {
+      "path": "licenses/7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297.txt",
+      "bytes": 20131,
+      "sha256": "7abe19ec9bb73b36141b999b861d24ad855e808bafe0f81e84cce28556f6c297"
+    },
+    {
+      "path": "licenses/8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea.txt",
+      "bytes": 1118,
+      "sha256": "8dfea9ec45d6030ffdb95d207b2dd496e640f4fe1035de8a0ce1f35834bf03ea"
+    },
+    {
+      "path": "licenses/bd4ce8e44170a5f9f481310ca85c51de3c4f851a65e679b40e603b143bd3542a.txt",
+      "bytes": 1754,
+      "sha256": "bd4ce8e44170a5f9f481310ca85c51de3c4f851a65e679b40e603b143bd3542a"
+    },
+    {
+      "path": "licenses/CC-BY-SA-4.0.txt",
+      "bytes": 18642,
+      "sha256": "0b5d577a1cb3fd5df9665c45e19776127fcf725688452128e35ade6360963db4"
+    },
+    {
+      "path": "licenses/CODE_LICENSE.txt",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "licenses/df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904.txt",
+      "bytes": 1740,
+      "sha256": "df30ec18fbabcdaf031b79ea026d3e6b959010cffe6dd7be9ac137822175b904"
+    },
+    {
+      "path": "read_library.py",
+      "bytes": 4815,
+      "sha256": "3f288e830ab8b4f9a83789929cc8195ff9777e783ee0af8f84508d7ed06b8a93"
+    },
+    {
+      "path": "README.md",
+      "bytes": 13657,
+      "sha256": "b94326e03c981e6a2e706b1ced4a83753a63dc093a4b25477955e14644bdff74"
+    },
+    {
+      "path": "release-review.json",
+      "bytes": 6824,
+      "sha256": "6ad43cd3947ef7a6bf2d62156e1e7169743b8718581ef3e83309f78d4384018f"
+    },
+    {
+      "path": "sources.json",
+      "bytes": 85600,
+      "sha256": "bbd0158540aa477d97e6c9fed5ed37af283af7116708bad9ae3ba1442af53507"
+    },
+    {
+      "path": "versions/4e3f0b3aa8db4c119047dacc69044b74/library.sqlite",
+      "bytes": 782336,
+      "sha256": "e26a32bea6a9795b12a124c955196ef684659348682328d63f0820724a475802"
+    },
+    {
+      "path": "versions/4e3f0b3aa8db4c119047dacc69044b74/manifest.json",
+      "bytes": 1284,
+      "sha256": "8af2faed4bd4069a3c0cac9ec0b7e6c8899c051a64cbb2ef23b8e63d7d9e75bc"
+    }
+  ]
+}
