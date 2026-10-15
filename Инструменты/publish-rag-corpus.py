@@ -46,7 +46,7 @@ def main():
     remote = json.loads(gh('api', f'repos/{args.repo}/commits/{args.commit}'))
     if remote['sha'] != args.commit:
         raise ValueError('Source commit is not present remotely')
-    probe = subprocess.run(['gh','api',f'repos/{args.repo}/releases/tags/{tag}'], capture_output=True)
+    probe = subprocess.run(['gh','release','view',tag,'--repo',args.repo,'--json','databaseId'], capture_output=True)
     if probe.returncode:
         # A network/auth failure must never be mistaken for a missing release.
         releases = json.loads(gh('api', f'repos/{args.repo}/releases?per_page=100'))
@@ -55,7 +55,10 @@ def main():
         gh('release','create',tag,'--repo',args.repo,'--target',args.commit,'--draft','--prerelease',
            '--latest=false','--title','LOPATA Rhyme RU/EN 2026.10.15 — RAG dataset',
            '--notes-file',str(args.directory/'release-notes.md'))
-    release = json.loads(gh('api', f'repos/{args.repo}/releases/tags/{tag}'))
+    # GitHub's releases/tags endpoint does not reliably resolve unpublished drafts.
+    release_id = json.loads(gh('release','view',tag,'--repo',args.repo,'--json','databaseId'))['databaseId']
+    endpoint = f'repos/{args.repo}/releases/{release_id}'
+    release = json.loads(gh('api', endpoint))
     if not release['draft']:
         raise ValueError('Public releases cannot be replaced')
     ref = json.loads(gh('api', f'repos/{args.repo}/git/ref/tags/{tag}'))
@@ -72,7 +75,7 @@ def main():
             print('Uploading '+path.name, flush=True)
             gh('release','upload',tag,str(path),'--repo',args.repo)
     def verify_assets():
-        result=json.loads(gh('api', f'repos/{args.repo}/releases/tags/{tag}'))
+        result=json.loads(gh('api', endpoint))
         if len(result['assets']) != len(expected):
             raise ValueError('Asset count mismatch')
         for item in result['assets']:

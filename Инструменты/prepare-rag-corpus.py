@@ -67,7 +67,7 @@ def main():
         raise ValueError('Duplicate reviewed chunk')
     destination.mkdir(parents=True)
     for path in catalog.rglob('*'):
-        if path.is_file() and path.name not in {'delivery.json', 'verification.json'}:
+        if path.is_file() and path.name not in {'corpus.json', 'delivery.json', 'verification.json', 'publication.json'}:
             target = destination / path.relative_to(catalog)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, target)

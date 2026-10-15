@@ -1,0 +1,35 @@
+{
+  "url": "https://github.com/PiTrolKun/LOPATA/releases/tag/rag-rhyme-ru-en-2026.10.15",
+  "id": 413703219,
+  "commit": "0c8272854331f00ad318e756fd59e00695bf6e6a",
+  "tag": "rag-rhyme-ru-en-2026.10.15",
+  "draft": false,
+  "prerelease": true,
+  "assets": {
+    "lopata-rhyme-ru-en-2026.10.15.zip": {
+      "size": 367515727,
+      "digest": "sha256:0262569fb4911628cdeac7fdf0d1996dbed2eef2c07d1cc9bee3957f6985b788"
+    },
+    "corpus.json": {
+      "size": 4854,
+      "digest": "sha256:80c88cad75ec8964112c2e9f9e53557fea6ba56263d8bfb09598463a03a8fc7c"
+    },
+    "README.md": {
+      "size": 13657,
+      "digest": "sha256:b94326e03c981e6a2e706b1ced4a83753a63dc093a4b25477955e14644bdff74"
+    },
+    "SHA256SUMS.txt": {
+      "size": 423,
+      "digest": "sha256:5229e0afe539ea3e8e6a872a13aedecd8431ec58acca637d95b5e6282e6d6b88"
+    },
+    "verification.json": {
+      "size": 923,
+      "digest": "sha256:b1709fc7d39575b2695006d91bc5241a6d4d6e6224fb214a48ac6db7fbb16825"
+    },
+    "delivery.json": {
+      "size": 628,
+      "digest": "sha256:c7d4110038ab9b511c53b83a8ec706a8356bdd757bc163209048ef8668227299"
+    }
+  },
+  "public_small_asset_downloads_verified": true
+}
