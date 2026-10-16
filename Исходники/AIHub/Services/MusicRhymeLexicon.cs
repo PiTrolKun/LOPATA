@@ -9,11 +9,13 @@ public sealed class MusicRhymeLexicon : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly Dictionary<string, IReadOnlyList<RagLexiconHit>> _cache = new(StringComparer.Ordinal);
+    private readonly MusicRhymeTuning _tuning;
     public string Database { get; }
     public string Hash { get; }
     public int Records { get; }
-    public MusicRhymeLexicon(string library, CancellationToken token)
+    public MusicRhymeLexicon(string library, CancellationToken token, MusicRhymeTuning? tuning = null)
     {
+        _tuning = (tuning ?? new()).Snapshot();
         var (database, manifest) = RagLexiconReader.Open(library, token);
         Database = database; Hash = manifest.GetProperty("database_sha256").GetString()!;
         Records = manifest.GetProperty("records").GetInt32();
@@ -30,9 +32,9 @@ public sealed class MusicRhymeLexicon : IDisposable
             FROM entries e JOIN sources s ON s.id=e.source_id JOIN lookup l ON l.entry_id=e.id
             WHERE l.key=$key ORDER BY CASE s.adapter WHEN 'ruaccent.omographs' THEN 0
             WHEN 'ruaccent.yo_homographs' THEN 1 WHEN 'ruaccent.accents' THEN 2
-            WHEN 'cmudict' THEN 3 WHEN 'openrussian' THEN 4 ELSE 5 END,e.id LIMIT 80
+            WHEN 'cmudict' THEN 3 WHEN 'openrussian' THEN 4 ELSE 5 END,e.id LIMIT $limit
             """;
-        command.Parameters.AddWithValue("$key", key); using var reader = command.ExecuteReader();
+        command.Parameters.AddWithValue("$key", key); command.Parameters.AddWithValue("$limit", _tuning.Integer("search.lexicon_records")); using var reader = command.ExecuteReader();
         var hits = new List<RagLexiconHit>();
         while (reader.Read())
         {
@@ -45,14 +47,14 @@ public sealed class MusicRhymeLexicon : IDisposable
     }
     public string[] Synonyms(string word) => Lookup(word).Where(h => h.Kind == "meaning" && h.Data.TryGetProperty("synonyms", out _))
         .SelectMany(h => h.Data.GetProperty("synonyms").EnumerateArray()).Select(s => s.GetString() ?? "")
-        .Where(s => s.Length is > 0 and < 80 && !s.Contains(' ')).Distinct(StringComparer.OrdinalIgnoreCase).Take(30).ToArray();
+        .Where(s => s.Length > 0 && s.Length <= _tuning.Integer("search.synonym_length") && !s.Contains(' ')).Distinct(StringComparer.OrdinalIgnoreCase).Take(_tuning.Integer("search.synonyms")).ToArray();
     public string Reference(IEnumerable<string> words)
     {
-        var items = words.Distinct(StringComparer.OrdinalIgnoreCase).Take(8).Select(word => new {
-            word, entries = Lookup(word).Where(h => h.Kind is "meaning" or "forms").Take(2).Select(h => new {
-                h.Source, h.License, h.Locator, synonyms = Synonyms(word).Take(8),
-                definitions = h.Data.TryGetProperty("senses", out var senses) ? senses.EnumerateArray().Take(2)
-                    .SelectMany(s => s.GetProperty("glosses").EnumerateArray()).Take(2).Select(s => s.GetString()).ToArray() : []
+        var items = words.Distinct(StringComparer.OrdinalIgnoreCase).Take(_tuning.Integer("rag.reference_words")).Select(word => new {
+            word, entries = Lookup(word).Where(h => h.Kind is "meaning" or "forms").Take(_tuning.Integer("rag.reference_entries")).Select(h => new {
+                h.Source, h.License, h.Locator, synonyms = Synonyms(word).Take(_tuning.Integer("rag.reference_synonyms")),
+                definitions = h.Data.TryGetProperty("senses", out var senses) ? senses.EnumerateArray().Take(_tuning.Integer("rag.reference_definitions"))
+                    .SelectMany(s => s.GetProperty("glosses").EnumerateArray()).Take(_tuning.Integer("rag.reference_definitions")).Select(s => s.GetString()).ToArray() : []
             }).ToArray()
         }).ToArray();
         return JsonSerializer.Serialize(items);

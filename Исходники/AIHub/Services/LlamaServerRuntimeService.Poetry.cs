@@ -8,18 +8,24 @@ namespace AIHub.Services;
 public sealed partial class LlamaServerRuntimeService
 {
     private int? _poetryContextTokens;
+    private int? _poetryRequestedContextTokens;
     private LlamaStartupJournal? _poetryJournal;
     private LlamaStartupPlacement? _poetryPlacement;
     private bool _poetryCanResize;
+    private TimeSpan? _poetryStartupTimeout;
     private MusicPoetryReasoningOptions _poetryReasoning = MusicPoetryReasoningOptions.Disabled;
     private int RequestedContextTokens => _poetryContextTokens ?? CoreContextRuntimeLimits.CurrentBackendContextLimit;
     internal async Task<int> PreparePoetryAsync(DebugModelInfo model, CancellationToken token, string? reasoningMode = null,
-        MusicPoetryReasoningPreference? reasoningPreference = null)
+        MusicPoetryReasoningPreference? reasoningPreference = null, int? requestedContextTokens = null,
+        MusicPoetryReasoningOptions? reasoningOptions = null, TimeSpan? startupTimeout = null)
     {
         var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token);
         var capacity = Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);
+        if (requestedContextTokens is { } requested) capacity = Math.Min(capacity, Math.Max(1024, requested));
         await RetirePoetryAsync();
-        _poetryReasoning = MusicPoetryReasoning.Resolve(model, reasoningMode, reasoningPreference);
+        _poetryReasoning = reasoningOptions ?? MusicPoetryReasoning.Resolve(model, reasoningMode, reasoningPreference);
+        _poetryStartupTimeout = startupTimeout;
+        _poetryRequestedContextTokens = capacity;
         _poetryContextTokens = capacity;
         _poetryJournal = new(); _poetryCanResize = true;
         _poetryJournal.Record("begin", new { model = model.Name, model.Path, capacity,
@@ -35,12 +41,15 @@ public sealed partial class LlamaServerRuntimeService
         await Task.WhenAll(_stderrPumpTask, _stdoutPumpTask);
         _poetryJournal?.Record("retired", null);
         _poetryReasoning = MusicPoetryReasoningOptions.Disabled;
+        _poetryStartupTimeout = null;
     }
     private async Task RetirePoetryForRecoveryAsync()
     {
         var reasoning = _poetryReasoning;
+        var startupTimeout = _poetryStartupTimeout;
         await RetirePoetryAsync();
         _poetryReasoning = reasoning;
+        _poetryStartupTimeout = startupTimeout;
     }
     internal async Task<int> CountPoetryAsync(string system, IReadOnlyList<MusicPoetryMessage> messages, CancellationToken token)
     {

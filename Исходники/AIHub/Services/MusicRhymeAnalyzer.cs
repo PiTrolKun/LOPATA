@@ -22,11 +22,17 @@ public static partial class MusicRhymeAnalyzer
         return (start, end - start);
     }
     public static MusicRhymeAnalysis Analyze(string text, Func<string, IReadOnlyList<RagLexiconHit>> lookup,
-        CancellationToken token = default)
+        CancellationToken token = default, int scopeStart = 0, int? scopeLength = null, MusicRhymeTuning? tuning = null)
     {
+        ArgumentNullException.ThrowIfNull(text);
+        tuning ??= new();
+        var length = scopeLength ?? text.Length - scopeStart;
+        if (scopeStart < 0 || length < 0 || scopeStart > text.Length - length)
+            throw new System.IO.InvalidDataException("Music.Rhyme.InvalidInput");
+        var prepared = MusicRhymeText.Prepare(text);
         var lines = new List<MusicRhymeLine>(); var issues = new List<MusicRhymeIssue>();
         var stanza = 0; var number = 0; var performance = false;
-        foreach (Match match in Regex.Matches(text, @"(?:\A|(?<=\n)|(?<=\r)(?!\n))[^\r\n]*"))
+        foreach (Match match in Regex.Matches(prepared, @"(?:\A|(?<=\n)|(?<=\r)(?!\n))[^\r\n]*"))
         {
             token.ThrowIfCancellationRequested();
             var section = Regex.Match(match.Value, @"^\s*\[([^\]]+)\]");
@@ -52,7 +58,7 @@ public static partial class MusicRhymeAnalyzer
                     syllables += counts[0];
                 }
             }
-            lines.Add(new(++number, match.Index, match.Length, stanza, match.Value, ending.Value,
+            lines.Add(new(++number, match.Index, match.Length, stanza, text.Substring(match.Index, match.Length), ending.Value,
                 match.Index + ending.Index, ru ? "ru" : "en", syllables, readings, performance));
             if (!performance && (readings.Length == 0 || readings.Any(r => r.Uncertain))) issues.Add(new(number, "Uncertain"));
         }
@@ -80,11 +86,11 @@ public static partial class MusicRhymeAnalyzer
             }
             var measured = group.Where(l => l.Syllables is not null).ToArray();
             var common = measured.GroupBy(l => l.Syllables).OrderByDescending(g => g.Count()).FirstOrDefault();
-            if (common?.Count() >= 3)
-                foreach (var line in measured.Where(l => Math.Abs(l.Syllables!.Value - common.Key!.Value) >= 3))
+            if (common?.Count() >= tuning.Integer("analysis.reference_lines"))
+                foreach (var line in measured.Where(l => Math.Abs(l.Syllables!.Value - common.Key!.Value) >= tuning.Integer("analysis.length_difference")))
                     issues.Add(new(line.Number, "Rhythm"));
         }
-        return new(lines.ToArray(), issues.Distinct().ToArray());
+        return MusicRhymeSelection.Select(new(lines.ToArray(), issues.Distinct().ToArray()), scopeStart, length, token, tuning);
 
         void Review(IEnumerable<MusicRhymeLine> block)
         { foreach (var line in block) issues.Add(new(line.Number, "Review")); }

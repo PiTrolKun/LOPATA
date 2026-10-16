@@ -32,6 +32,9 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     public event EventHandler? ValidityChanged;
     public event EventHandler? SelectionChanged;
     public event EventHandler? LyricsChanged;
+    public event EventHandler? EditingFinished;
+    public event EventHandler? EditingStarted;
+    public bool IsEditing => _editor.IsKeyboardFocusWithin;
     public string Lyrics { get => _editor.Text; set => _editor.Text = value; }
     public void SetPlaybackHighlight(int start, int length, bool playing = true)
     {
@@ -97,6 +100,10 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
             ClearPlaybackHighlight(); InvalidateCounts(); LyricsChanged?.Invoke(this, EventArgs.Empty);
         };
         _editor.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
+        _editor.GotKeyboardFocus += (_, _) => EditingStarted?.Invoke(this, EventArgs.Empty);
+        _editor.LostKeyboardFocus += (_, _) => {
+            if (!_editor.IsKeyboardFocusWithin) EditingFinished?.Invoke(this, EventArgs.Empty);
+        };
         UpdateLabels();
     }
 

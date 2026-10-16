@@ -24,9 +24,10 @@ internal sealed class MusicRhymeColumnAnalysis : IDisposable
         editor.TextChanged += Edited; _timer.Tick += async (_, _) => { _timer.Stop(); await AnalyzeAsync(); };
     }
     private void Edited(object sender, TextChangedEventArgs e)
-    { _cancel?.Cancel(); _analysis = null; _timer.Stop(); if (_owner.AutoAnalyze) _timer.Start(); }
+    { _cancel?.Cancel(); _analysis = null; _timer.Stop(); _timer.Interval = TimeSpan.FromMilliseconds(_owner.Options.Tuning.Integer("history.reanalysis_delay")); if (_owner.AutoAnalyze) _timer.Start(); }
     public void Refresh(bool force)
     {
+        _timer.Interval = TimeSpan.FromMilliseconds(_owner.Options.Tuning.Integer("history.reanalysis_delay"));
         _adorner.Set(_analysis, _owner.Color);
         if (!_owner.AutoAnalyze && !force) { _timer.Stop(); _cancel?.Cancel(); }
         if (force) { _timer.Stop(); _timer.Start(); }
@@ -35,11 +36,12 @@ internal sealed class MusicRhymeColumnAnalysis : IDisposable
     {
         if (_disposed || string.IsNullOrWhiteSpace(_editor.Text) || !File.Exists(Path.Combine(MusicRhymeCorpus.DirectoryPath, "corpus.json"))) return;
         using var cancel = new CancellationTokenSource(); _cancel = cancel; var text = _editor.Text;
+        var tuning = _owner.Options.Tuning;
         try
         {
             var analysis = await Task.Run(() => {
-                using var lexicon = new MusicRhymeLexicon(MusicRhymeCorpus.DirectoryPath, cancel.Token);
-                return MusicRhymeAnalyzer.Analyze(text, lexicon.Lookup, cancel.Token);
+                using var lexicon = new MusicRhymeLexicon(MusicRhymeCorpus.DirectoryPath, cancel.Token, tuning);
+                return MusicRhymeAnalyzer.Analyze(text, lexicon.Lookup, cancel.Token, tuning: tuning);
             }, cancel.Token);
             if (!_disposed && !cancel.IsCancellationRequested && text == _editor.Text)
             { _analysis = analysis; _adorner.Set(_analysis, _owner.Color); }

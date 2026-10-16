@@ -437,9 +437,9 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
     }
 
     private async Task WaitForHealthAsync(Action<string> log, CancellationToken cancellationToken,
-        Func<CancellationToken, Task>? sampleMemory = null)
+        Func<CancellationToken, Task>? sampleMemory = null, TimeSpan? startupTimeout = null)
     {
-        var deadline = DateTimeOffset.UtcNow.AddMinutes(5);
+        var deadline = DateTimeOffset.UtcNow + (startupTimeout ?? TimeSpan.FromMinutes(5));
         while (DateTimeOffset.UtcNow < deadline)
         {
             cancellationToken.ThrowIfCancellationRequested();

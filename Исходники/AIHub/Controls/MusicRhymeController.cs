@@ -18,9 +18,10 @@ using ColorConverter = System.Windows.Media.ColorConverter;
 namespace AIHub.Controls;
 
 /// <summary>Owns draft history and visual state; the background service owns the calculation.</summary>
-public sealed class MusicRhymeController : IDisposable
+public sealed partial class MusicRhymeController : IDisposable
 {
     private readonly MusicWorkspaceControl _view;
+    private readonly MusicRhymePreferences _preferences;
     private readonly Dictionary<string, List<MusicRhymeStep>> _drafts = [];
     private readonly DispatcherTimer _pulse = new() { Interval = TimeSpan.FromMilliseconds(600) };
     private readonly DispatcherTimer _debounce = new() { Interval = TimeSpan.FromMilliseconds(650) };
@@ -37,21 +38,29 @@ public sealed class MusicRhymeController : IDisposable
     public event Action? Changed;
     public string Color => _options.Color;
     public bool AutoAnalyze => _options.AutoAnalyze;
+    public MusicRhymeOptions Options => _options.Snapshot();
+    public bool SetCreativeMode(bool enabled) => _options.CreativeMode == enabled || ApplyOptions(_options with { CreativeMode = enabled });
+    public IReadOnlyList<MusicPoetryModelChoice> ModelChoices => _storage is null ? [] : MusicRhymePreferences.Choices(_storage);
     public IReadOnlyList<MusicRhymeStep> History => HistoryFor(_view.Projects.Current.Id);
     public IReadOnlyList<MusicRhymeStep> HistoryFor(string project) => _drafts.GetValueOrDefault(project) ?? [];
-    public MusicRhymeController(MusicWorkspaceControl view)
+    public MusicRhymeController(MusicWorkspaceControl view, MusicRhymePreferences? preferences = null)
     {
-        _view = view;
-        try { _options = MusicRhymePreferences.Default.Load(); } catch (Exception e) { _view.Status.AppendLog(Error(e.Message)); }
+        _view = view; _preferences = preferences ?? MusicRhymePreferences.Default;
+        try { _options = _preferences.Load(); } catch (Exception e) { _view.Status.AppendLog(Error(e.Message)); }
+        UpdateIntervals();
         view.TextActions.RhymeRequested += Click;
         view.TextActions.RhymeButton.ContextMenu = new();
         view.TextActions.RhymeButton.ContextMenuOpening += (_, args) => {
             args.Handled = true; Menu(); view.TextActions.RhymeButton.ContextMenu.IsOpen = true;
         };
         view.Editor.LyricsChanged += TextChanged;
+        view.Editor.EditingFinished += EditingFinished;
+        view.Editor.EditingStarted += EditingStarted;
         view.Projects.LyricsContextChanged += ProjectChanged;
-        _pulse.Tick += (_, _) => { _blink = !_blink; ButtonState(); };
-        _debounce.Tick += async (_, _) => { _debounce.Stop(); await AnalyzeEditsAsync(); };
+        _pulse.Tick += (_, _) => { _blink = !_blink; ButtonState();
+            var paused = IsPaused(_activeProject ?? "");
+            if (paused != _lastPaused) { _lastPaused = paused; Changed?.Invoke(); } };
+        _debounce.Tick += async (_, _) => { _debounce.Stop(); await CheckAfterEditingAsync(); };
         ButtonState();
     }
     public void Configure(StorageSettings storage, Func<IMusicRhymeModel> models) { _storage = storage; _models = models; }
@@ -59,50 +68,16 @@ public sealed class MusicRhymeController : IDisposable
     public string Error(string message) => message.StartsWith("Music.", StringComparison.Ordinal) || message.StartsWith("RagBooks.", StringComparison.Ordinal) ? _l(message) : message;
     private void ProjectChanged()
     {
+        _debounce.Stop(); _analysisCancel?.Cancel();
         var step = History.LastOrDefault(); _visual = step?.Request.Id;
-        _analysis = step?.Request.Source == _view.Editor.Lyrics ? step.Analysis : null;
+        _analysis = step is not null && StillCurrent(step.Request) ? step.Analysis : null;
         _view.Editor.SetRhymeAnalysis(_analysis, _options.Color); Changed?.Invoke(); ButtonState();
     }
     private void TextChanged(object? sender, EventArgs args)
     {
+        _debounce.Stop(); LaunchError = null;
         _analysisCancel?.Cancel(); _analysis = null; _view.Editor.SetRhymeAnalysis(null, _options.Color);
-        if (_options.AutoAnalyze && History.Count > 0) { _debounce.Stop(); _debounce.Start(); }
-    }
-    private async Task AnalyzeEditsAsync()
-    {
-        if (_disposed || !File.Exists(Path.Combine(MusicRhymeCorpus.DirectoryPath, "corpus.json"))) return;
-        var text = _view.Editor.Lyrics; var project = _view.Projects.Current.Id;
-        using var cancel = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token); _analysisCancel = cancel;
-        try
-        {
-            var analysis = await Task.Run(() => { using var lexicon = new MusicRhymeLexicon(MusicRhymeCorpus.DirectoryPath, cancel.Token);
-                return MusicRhymeAnalyzer.Analyze(text, lexicon.Lookup, cancel.Token); }, cancel.Token);
-            if (_view.Editor.Lyrics == text && _view.Projects.Current.Id == project && !cancel.IsCancellationRequested)
-            { _analysis = analysis; _view.Editor.SetRhymeAnalysis(analysis, _options.Color); }
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception e) { _view.Status.AppendLog(Error(e.Message)); }
-        finally { if (_analysisCancel == cancel) _analysisCancel = null; }
-    }
-    private async void Click()
-    {
-        if (_disposed) return;
-        if (_active is not null) { _view.Status.AppendLog(_l("Music.Rhyme.Running")); return; }
-        if (_visual is not null && History.Any(s => s.Request.Id == _visual)) { Open(_visual); return; }
-        try
-        {
-            if (_storage is null || _models is null) throw new InvalidOperationException("Music.Rhyme.Unavailable");
-            if (ApplicationBackgroundOperations.Current?.BlocksNewWork == true) throw new InvalidOperationException("Music.Poetry.OtherOperation");
-            var selection = _view.Editor.CaptureSelection(); var scope = MusicRhymeAnalyzer.Scope(selection, _options.SelectionOnly);
-            var choice = MusicRhymePreferences.Choices(_storage).Single(c => c.Candidate.Id == _options.ModelId);
-            var model = choice.Model ?? throw new InvalidDataException("Music.Poetry.ModelMissing");
-            var root = _storage.Models.Locations.FirstOrDefault()?.Path ?? "";
-            var request = new MusicRhymeRequest(Guid.NewGuid().ToString("N"), _view.Projects.Current.Id, selection.Text,
-                scope.Start, scope.Length, _options.ModelId, model.Path, root, _l("Music.Rhyme.Language"));
-            await RunAsync(new() { Request = request, Original = request.Text }, _lifetime.Token);
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception e) { _view.Status.AppendLog(Error(e.Message)); }
+        ButtonState();
     }
     public async Task ResumeAsync(BackgroundOperationState state, CancellationToken token)
     {
@@ -116,7 +91,11 @@ public sealed class MusicRhymeController : IDisposable
     private async Task RunAsync(MusicRhymeStep step, CancellationToken token, BackgroundOperationState? restored = null)
     {
         if (_active is not null) throw new InvalidOperationException("Music.Rhyme.Running");
+        using var cancel = CancellationTokenSource.CreateLinkedTokenSource(token, _lifetime.Token);
+        var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _runCancel = cancel; _runFinished = finished.Task;
         _active = step.Request.Id; _activeProject = step.Request.ProjectId; _visual = _active;
+        step = Accept(step with { GenerationRequested = true });
         _pulse.Start(); ButtonState();
         try
         {
@@ -125,9 +104,20 @@ public sealed class MusicRhymeController : IDisposable
                 if (!_disposed) _view.Status.AppendLog(_l("Music.Rhyme.Stage." + (p.Stage == "Ready" ? "ReadyWorker" : p.Stage))
                     + (p.Total > 0 ? $" · {p.Done}/{p.Total}" : ""));
             }));
-            await new MusicRhymeWork(_models).RunAsync(step, next => _view.Dispatcher.Invoke(() => Accept(next)), progress, token, restored, _l("Music.Rhyme.Title"));
+            if (WorkRunner is { } execute)
+                await execute(step, next => _view.Dispatcher.Invoke(() => Accept(next)), progress, cancel.Token, restored);
+            else await new MusicRhymeWork(_models).RunAsync(step, next => _view.Dispatcher.Invoke(() => Accept(next)), progress, cancel.Token, restored, _l("Music.Rhyme.Title"));
         }
-        finally { _active = _activeProject = null; _pulse.Stop(); ButtonState(); }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+        {
+            if (!_disposed && !ApplicationBackgroundOperations.ExitToken.IsCancellationRequested)
+            {
+                var current = HistoryFor(step.Request.ProjectId).FirstOrDefault(s => s.Request.Id == step.Request.Id) ?? step;
+                Accept(current with { Stage = "Partial", Error = "Music.Rhyme.Stopped" });
+            }
+            throw;
+        }
+        finally { _active = _activeProject = null; _runCancel = null; _pulse.Stop(); ButtonState(); Changed?.Invoke(); finished.TrySetResult(); }
     }
     internal MusicRhymeStep Accept(MusicRhymeStep incoming)
     {
@@ -136,20 +126,21 @@ public sealed class MusicRhymeController : IDisposable
         if (index >= 0)
         {
             var edited = history[index]; incoming = incoming with {
+                GenerationRequested = edited.GenerationRequested || incoming.GenerationRequested,
                 Original = edited.OriginalEdited ? edited.Original : incoming.Original, OriginalEdited = edited.OriginalEdited,
                 Program = edited.ProgramEdited ? edited.Program : incoming.Program, ProgramEdited = edited.ProgramEdited,
                 Model = edited.ModelEdited ? edited.Model : incoming.Model, ModelEdited = edited.ModelEdited };
             history[index] = incoming;
         }
         else history.Add(incoming);
-        if (_view.Projects.Current.Id == incoming.Request.ProjectId && _view.Editor.Lyrics == incoming.Request.Source)
+        if (StillCurrent(incoming.Request) && (_visual is null || _visual == incoming.Request.Id))
         { _analysis = incoming.Analysis; _view.Editor.SetRhymeAnalysis(_analysis, _options.Color); }
         Changed?.Invoke(); ButtonState(); return incoming;
     }
     public void Edit(string project, string id, int column, string text)
     {
         var history = _drafts.GetValueOrDefault(project); var index = history?.FindIndex(s => s.Request.Id == id) ?? -1;
-        if (index < 0 || text.Length > 400_000) return;
+        if (index < 0 || text.Length > _options.Tuning.Integer("history.column_limit")) return;
         var s = history![index]; history[index] = column switch {
             0 => s with { Original = text, OriginalEdited = true }, 1 => s with { Program = text, ProgramEdited = true },
             2 => s with { Model = text, ModelEdited = true }, _ => s };
@@ -164,17 +155,24 @@ public sealed class MusicRhymeController : IDisposable
     public void Open(string? id = null, string? project = null)
     {
         project ??= _view.Projects.Current.Id;
-        if (HistoryFor(project).Count == 0) return;
         if (_window is not null && _window.Project != project) _window.Close();
         if (_window is null)
         { var host = Window.GetWindow(_view); _window = new(this, project, _l, host?.Resources) { Owner = host }; _window.Closed += (_, _) => _window = null; _window.Show(); }
         _window.Show(id); _window.Activate();
     }
+    public void OpenSettings()
+    {
+        var project = _view.Projects.Current.Id;
+        if (_window is not null && _window.Project != project) _window.Close();
+        if (_window is null)
+        { var host = Window.GetWindow(_view); _window = new(this, project, _l, host?.Resources) { Owner = host }; _window.Closed += (_, _) => _window = null; _window.Show(); }
+        _window.ShowSettings(); _window.Activate();
+    }
     private void ButtonState()
     {
         if (_disposed) return;
         var button = _view.TextActions.RhymeButton;
-        var running = _active is not null && _visual is not null;
+        var running = IsRunning(_view.Projects.Current.Id);
         var paused = running && ApplicationBackgroundOperations.Current?.FindOperation(MusicRhymeWork.Kind)?.Phase
             is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting;
         var ready = History.LastOrDefault(s => s.Request.Id == _visual);
@@ -193,35 +191,19 @@ public sealed class MusicRhymeController : IDisposable
         reset.Click += (_, _) => { _visual = null; _view.Editor.SetRhymeAnalysis(null, _options.Color); ButtonState(); }; menu.Items.Add(reset);
         var history = new MenuItem { Header = _l("Music.Rhyme.History"), IsEnabled = History.Count > 0 };
         history.Click += (_, _) => Open(); menu.Items.Add(history); menu.Items.Add(new Separator());
-        var palette = new StackPanel { Orientation = Orientation.Horizontal };
-        foreach (var color in MusicRhymePreferences.Palette)
-        {
-            var swatch = new Button { Width = 25, Height = 25, Margin = new(2), Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)),
-                BorderThickness = new(color == _options.Color ? 3 : 1), ToolTip = color };
-            AutomationProperties.SetAutomationId(swatch, "Music.Rhyme.Color." + color[1..]);
-            swatch.Click += (_, _) => Save(_options with { Color = color }); palette.Children.Add(swatch);
-        }
-        menu.Items.Add(new MenuItem { Header = palette, StaysOpenOnClick = true });
-        Check("Music.Rhyme.SelectionOnly", _options.SelectionOnly, value => Save(_options with { SelectionOnly = value }));
-        Check("Music.Rhyme.AutoAnalyze", _options.AutoAnalyze, value => Save(_options with { AutoAnalyze = value }));
-        var models = new MenuItem { Header = _l("Music.Rhyme.Model") }; menu.Items.Add(models);
-        if (_storage is not null) foreach (var choice in MusicRhymePreferences.Choices(_storage))
-        {
-            var item = new MenuItem { Header = choice.Candidate.DisplayName ?? choice.Candidate.FileName, IsCheckable = true,
-                IsChecked = choice.Candidate.Id == _options.ModelId, IsEnabled = choice.Model is not null };
-            item.Click += (_, _) => Save(_options with { ModelId = choice.Candidate.Id }); models.Items.Add(item);
-        }
-        var catalog = new MenuItem { Header = _l("Music.Rhyme.ModelCatalog") }; catalog.Click += (_, _) => ShowModelCatalog(); models.Items.Add(new Separator()); models.Items.Add(catalog);
+        var settings = new MenuItem { Header = _l("Music.Rhyme.Settings.Title") };
+        settings.Click += (_, _) => OpenSettings(); menu.Items.Add(settings);
         button.ContextMenu = menu;
-        void Check(string key, bool value, Action<bool> change)
-        { var item = new MenuItem { Header = _l(key), IsCheckable = true, IsChecked = value }; item.Click += (_, _) => change(item.IsChecked); menu.Items.Add(item); }
     }
-    private void ShowModelCatalog()
+    public void ShowModelCatalog(Action<string>? selected = null)
     {
         if (_storage is null) return;
         var choices = MusicRhymePreferences.Choices(_storage);
         var picker = new MusicPoetryModelWindow(choices, choices.FirstOrDefault(c => c.Candidate.Id == _options.ModelId)?.Model?.Path,
-            _l, model => Save(_options with { ModelId = MusicPoetryModelCatalog.Find(model)!.Id }), download: async (candidate, progress, token) => {
+            _l, model => {
+                var id = MusicPoetryModelCatalog.Find(model)!.Id;
+                if (selected is null) Save(_options with { ModelId = id }); else selected(id);
+            }, download: async (candidate, progress, token) => {
                 using var lease = ApplicationBackgroundOperations.Current?.BeginAuxiliary();
                 if (candidate.Id != "core") return await MusicPoetryProfileInstallation.DownloadAsync(candidate, _storage, progress, token);
                 var root = _storage.Models.Locations.FirstOrDefault()?.Path ?? throw new IOException("Music.StorageRequired");
@@ -236,18 +218,26 @@ public sealed class MusicRhymeController : IDisposable
         picker.SetResourceReference(System.Windows.Controls.Control.ForegroundProperty, "TextPrimaryBrush");
         picker.ShowDialog();
     }
-    private void Save(MusicRhymeOptions options)
+    private void Save(MusicRhymeOptions options) => ApplyOptions(options);
+    public bool ApplyOptions(MusicRhymeOptions options)
     {
-        try { MusicRhymePreferences.Default.Save(options); _options = options;
+        try { _preferences.Save(options); _options = options.Snapshot(); UpdateIntervals();
             if (!options.AutoAnalyze) { _debounce.Stop(); _analysisCancel?.Cancel(); }
-            _view.Editor.SetRhymeAnalysis(_analysis, options.Color); Changed?.Invoke(); }
-        catch (Exception e) { _view.Status.AppendLog(Error(e.Message)); }
+            else { _analysisCancel?.Cancel(); _analysis = null; _debounce.Stop(); if (!_view.Editor.IsEditing) _debounce.Start(); }
+            _view.Editor.SetRhymeAnalysis(_analysis, options.Color); Changed?.Invoke(); return true; }
+        catch (Exception e) { _view.Status.AppendLog(Error(e.Message)); return false; }
+    }
+    private void UpdateIntervals()
+    {
+        _debounce.Interval = TimeSpan.FromMilliseconds(_options.Tuning.Integer("history.reanalysis_delay"));
+        _pulse.Interval = TimeSpan.FromMilliseconds(_options.Tuning.Integer("history.pulse_delay"));
     }
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true; _lifetime.Cancel(); _analysisCancel?.Cancel(); _pulse.Stop(); _debounce.Stop(); _window?.Close();
         _view.TextActions.RhymeRequested -= Click; _view.Editor.LyricsChanged -= TextChanged; _view.Projects.LyricsContextChanged -= ProjectChanged;
+        _view.Editor.EditingFinished -= EditingFinished; _view.Editor.EditingStarted -= EditingStarted;
         _lifetime.Dispose();
     }
 }

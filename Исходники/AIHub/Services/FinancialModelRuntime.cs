@@ -32,12 +32,20 @@ public sealed class FinancialModelRuntime : IDisposable
         catch (OperationCanceledException) { await RetireAsync(); throw; }
     }
 
-    private async Task<string> GenerateConversationCoreAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory, Action<string>? truncated)
+    internal async Task<string> GenerateUserOnlyAsync(DebugModelInfo model, string prompt, int maxTokens,
+        CancellationToken token, Action<string>? truncated = null)
+    {
+        try { return await GenerateConversationCoreAsync(model, "", [new("user", prompt)], maxTokens, token,
+            true, truncated, userOnly: true); }
+        catch (OperationCanceledException) { await RetireAsync(); throw; }
+    }
+
+    private async Task<string> GenerateConversationCoreAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory, Action<string>? truncated, bool userOnly = false)
     {
         if (!File.Exists(model.Path)) throw new BackgroundOperationWaitingException("Finance.ModelMissing");
         // Thinking BIN models spend the same generation budget on reasoning and the final answer.
         var generationBudget = model.Format == "chatllm" ? Math.Max(4096, maxTokens) : maxTokens;
-        var requestJson = RequestJson(model.Format, system, messages, generationBudget, exploratory);
+        var requestJson = RequestJsonCore(model.Format, system, messages, generationBudget, exploratory, userOnly);
         string endpoint;
         if (model.Format.Equals("gguf", StringComparison.OrdinalIgnoreCase))
         {
@@ -71,6 +79,13 @@ public sealed class FinancialModelRuntime : IDisposable
         RequestJson(format, system, [new("user", prompt)], generationBudget, exploratory: false);
 
     internal static string RequestJson(string format, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int generationBudget, bool exploratory = true)
+        => RequestJsonCore(format, system, messages, generationBudget, exploratory, false);
+
+    internal static string RequestUserOnlyJson(string format, string prompt, int generationBudget) =>
+        RequestJsonCore(format, "", [new("user", prompt)], generationBudget, true, true);
+
+    private static string RequestJsonCore(string format, string system, IReadOnlyList<FinancialDiscussionMessage> messages,
+        int generationBudget, bool exploratory, bool userOnly)
     {
         if (messages.Count == 0 || messages.Any(m => m.Role is not ("user" or "assistant") || string.IsNullOrWhiteSpace(m.Text)))
             throw new InvalidDataException("Invalid private conversation.");
@@ -80,6 +95,7 @@ public sealed class FinancialModelRuntime : IDisposable
                 .Concat(messages.Select(m => new { role = m.Role, content = m.Text })).ToArray(),
             ["max_tokens"] = generationBudget, ["temperature"] = exploratory ? 0.6 : 0.15, ["stream"] = false, ["cache_prompt"] = false
         };
+        if (userOnly) body["messages"] = messages.Select(m => new { role = m.Role, content = m.Text }).ToArray();
         if (format.Equals("gguf", StringComparison.OrdinalIgnoreCase))
         {
             var thinking = system.Contains("/think", StringComparison.Ordinal);

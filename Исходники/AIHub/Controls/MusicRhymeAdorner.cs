@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using AIHub.Models;
+using AIHub.Services;
 using TextBox = System.Windows.Controls.TextBox;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -28,7 +29,7 @@ public sealed class MusicRhymeAdorner : Adorner, IDisposable
     }
     public void Set(MusicRhymeAnalysis? analysis, string color)
     {
-        var issues = analysis?.Issues.Where(i => i.Kind is "Rhyme" or "Rhythm").Select(i => i.Line).ToHashSet() ?? [];
+        var issues = MusicRhymeEditorial.HighlightedLines(analysis);
         _lines = analysis?.Lines.Where(l => issues.Contains(l.Number)).ToArray() ?? [];
         _brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)); InvalidateVisual();
     }

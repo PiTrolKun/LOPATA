@@ -12,6 +12,7 @@ public sealed partial class LlamaServerRuntimeService
         Action<string> log, CancellationToken token, bool recover)
     {
         var journal = _poetryJournal ?? throw new InvalidOperationException("Startup journal was not initialized.");
+        var startupTimeout = _poetryStartupTimeout;
         // Ask for a compatible device, not proof that an upper-bound full allocation fits.
         var gpu = await LlamaRuntimeSelector.SelectAsync(0, _forceCpu, log, token);
         GpuAdapterMemoryMonitor? monitor = null;
@@ -19,7 +20,7 @@ public sealed partial class LlamaServerRuntimeService
         catch (Exception error) when (error is IOException or System.Runtime.InteropServices.COMException)
         { journal.Record("vram_monitor_unavailable", error.ToString()); }
         using var monitorLifetime = monitor;
-        var requested = Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);
+        var requested = Math.Min(_poetryRequestedContextTokens ?? CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);
         var key = LlamaPlacementPreferences.Key(model.Path, requested, gpu);
         var preferences = _placementPreferences;
         LlamaStartupPlacement? saved = null;
@@ -39,7 +40,7 @@ public sealed partial class LlamaServerRuntimeService
             else initial = new(LlamaPlacementMode.Cpu, 0, RequestedContextTokens);
         }
         journal.Record("preference", new { key, reused = saved is not null && !recover, initial });
-        var successful = await LlamaStagedStartup.RunAsync(initial, Load, Hybrid, RetirePoetryAsync,
+        var successful = await LlamaStagedStartup.RunAsync(initial, Load, Hybrid, RetirePoetryForRecoveryAsync,
             text => journal.Record("transition", text), token);
         _poetryPlacement = successful;
         try { preferences.Save(key, successful); journal.Record("preference_saved", successful); }
@@ -75,7 +76,7 @@ public sealed partial class LlamaServerRuntimeService
             var baseline = selected.UsesGpu ? await CurrentDevice(cancellation) : null;
             _poetryAllocation = baseline is null ? null : new(selected.DeviceId, baseline.TotalBytes - baseline.FreeBytes);
             StartProcess(model, selected, log);
-            await WaitForHealthAsync(log, cancellation, selected.UsesGpu ? Sample : null);
+            await WaitForHealthAsync(log, cancellation, selected.UsesGpu ? Sample : null, startupTimeout);
             var result = placement with { ContextTokens = RequestedContextTokens };
             journal.Record("ready", result);
             return result;

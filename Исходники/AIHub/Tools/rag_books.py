@@ -313,7 +313,11 @@ def run(args):
     started = time.monotonic()
     if args.query:
         folder, manifest = current(args.library)
-        query = read(args.input)["query"]
+        request = read(args.input)
+        query = request["query"]
+        top_k = request.get("top_k", 5)
+        if type(top_k) is not int or not 1 <= top_k <= 50:
+            raise ValueError("Invalid result count")
         value = "Instruct: Given a query, retrieve relevant passages\nQuery: " + query
         if len(tokenizer(value)["input_ids"]) > 512:
             raise ValueError("Query exceeds context")
@@ -329,7 +333,7 @@ def run(args):
                     exact=query.strip().casefold() in text.casefold())
                 hits.append(hit)
                 hits.sort(key=lambda h: (h["exact"], h["score"]), reverse=True)
-                del hits[5:]
+                del hits[top_k:]
         atomic(Path(args.work) / "hits.json", dict(version=manifest["version"], hits=hits, seconds=time.monotonic()-started))
         emit("Ready", len(hits), len(hits), device=device)
         return

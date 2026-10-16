@@ -70,22 +70,88 @@ public static class MusicRhymeIndex
         }
     }
     public static MusicRhymeSuggestion[] Find(string index, MusicRhymeLine line, MusicRhymeLine partner,
-        IReadOnlyList<string> synonyms, CancellationToken token, Func<string, bool>? knownWord = null)
+        IReadOnlyList<string> synonyms, CancellationToken token, Func<string, bool>? knownWord = null, MusicRhymeTuning? tuning = null)
     {
+        token.ThrowIfCancellationRequested();
         using var db = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = index, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString()); db.Open();
+        tuning ??= new();
         var results = new List<MusicRhymeSuggestion>();
-        foreach (var reading in partner.Readings)
+        var original = MusicRhymePhonetics.Clean(line.Ending);
+        var synonymSet = synonyms.Select(MusicRhymePhonetics.Clean).Where(s => s.Length > 0 && s.Length <= tuning.Integer("search.synonym_length"))
+            .Distinct(StringComparer.OrdinalIgnoreCase).Take(tuning.Integer("search.synonyms")).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var reading in partner.Readings.Take(tuning.Integer("search.partner_readings")))
         {
-            token.ThrowIfCancellationRequested(); using var command = db.CreateCommand();
-            command.CommandText = "SELECT word,display,source FROM endings WHERE language=$language AND key=$key AND word<>$word AND abs(syllables-$count)<=1 ORDER BY abs(syllables-$count),abs(length(word)-$length),word LIMIT 160";
-            command.Parameters.AddWithValue("$language", reading.Language); command.Parameters.AddWithValue("$key", reading.Key);
-            command.Parameters.AddWithValue("$word", MusicRhymePhonetics.Clean(line.Ending));
-            command.Parameters.AddWithValue("$count", line.Readings.FirstOrDefault()?.Syllables ?? reading.Syllables);
-            command.Parameters.AddWithValue("$length", MusicRhymePhonetics.Clean(line.Ending).Length);
-            using var reader = command.ExecuteReader();
-            while (reader.Read()) results.Add(new(line.Number, reader.GetString(0), reader.GetString(1), reader.GetString(2), synonyms.Contains(reader.GetString(0), StringComparer.OrdinalIgnoreCase)));
+            if (results.Count >= tuning.Integer("search.raw_rows")) break;
+            var keys = MusicRhymeSound.NeighbourKeys(reading, tuning).Take(tuning.Integer("search.neighbour_keys")).ToArray(); if (keys.Length == 0) continue;
+            var syllables = line.Readings.FirstOrDefault(r => r.Language == reading.Language)?.Syllables ?? reading.Syllables;
+            // Direct indexed synonym lookup comes first: a useful synonym may be far beyond the first alphabetical page.
+            if (synonymSet.Count > 0)
+            {
+                using var command = db.CreateCommand(); token.ThrowIfCancellationRequested();
+                var keyParameters = AddList(command, "$k", keys); var wordParameters = AddList(command, "$s", synonymSet);
+                command.CommandText = $"SELECT word,display,source,key,syllables FROM endings WHERE language=$language AND key IN ({keyParameters}) AND word IN ({wordParameters}) AND abs(syllables-$count)<=$delta LIMIT $limit";
+                command.Parameters.AddWithValue("$language", reading.Language); command.Parameters.AddWithValue("$count", syllables);
+                command.Parameters.AddWithValue("$delta", tuning.Integer("search.word_syllable_difference"));
+                command.Parameters.AddWithValue("$limit", tuning.Integer("search.synonym_rows"));
+                Read(command, reading, line.Number, original, synonymSet, results, token, tuning);
+            }
+            foreach (var key in keys)
+            {
+                if (results.Count >= tuning.Integer("search.raw_rows")) break;
+                token.ThrowIfCancellationRequested(); using var command = db.CreateCommand();
+                // The inner LIMIT bounds rows visited even for vowel-only rhyme keys with very large families.
+                command.CommandText = """
+                    SELECT word,display,source,key,syllables FROM
+                      (SELECT word,display,source,key,syllables FROM endings
+                       WHERE language=$language AND key=$key LIMIT $family)
+                    WHERE word<>$word AND abs(syllables-$count)<=$delta
+                    ORDER BY abs(syllables-$count),abs(length(word)-$length),word LIMIT $limit
+                    """;
+                command.Parameters.AddWithValue("$language", reading.Language); command.Parameters.AddWithValue("$key", key);
+                command.Parameters.AddWithValue("$word", original); command.Parameters.AddWithValue("$count", syllables);
+                command.Parameters.AddWithValue("$family", tuning.Integer("search.family_rows"));
+                command.Parameters.AddWithValue("$delta", tuning.Integer("search.word_syllable_difference"));
+                command.Parameters.AddWithValue("$length", original.Length); command.Parameters.AddWithValue("$limit", key == reading.Key ? tuning.Integer("search.exact_rows") : tuning.Integer("search.near_rows"));
+                Read(command, reading, line.Number, original, synonymSet, results, token, tuning);
+            }
         }
-        return results.DistinctBy(r => r.Word).Where(r => r.Synonym || knownWord is null || knownWord(r.Word))
-            .OrderByDescending(r => r.Synonym).Take(8).ToArray();
+        var known = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        var ranked = results.OrderByDescending(r => r.Synonym).ThenByDescending(r => r.SoundScore)
+            .ThenBy(r => Math.Abs(r.Word.Length - original.Length)).ThenBy(r => r.Word, StringComparer.Ordinal)
+            .DistinctBy(r => r.Word, StringComparer.OrdinalIgnoreCase).ToArray();
+        // Reserve a bounded near page before the callback cap too: four pronunciation families can supply 768 exact words.
+        var candidates = ranked.Where(r => r.Synonym).Concat(ranked.Where(r => !r.Synonym && r.SoundScore < 1).Take(tuning.Integer("search.near_pool")))
+            .Concat(ranked).DistinctBy(r => r.Word, StringComparer.OrdinalIgnoreCase).Take(tuning.Integer("search.candidate_pool"))
+            .Where(r => r.Synonym || knownWord is null || IsKnown(r.Word)).ToArray();
+        // Leave room for slant rhymes even when a large exact family fills the ordinary page.
+        return candidates.Where(r => r.Synonym).Concat(candidates.Where(r => !r.Synonym && r.SoundScore < 1).Take(tuning.Integer("search.near_reserved")))
+            .Concat(candidates).DistinctBy(r => r.Word, StringComparer.OrdinalIgnoreCase).Take(tuning.Integer("search.returned_candidates"))
+            .OrderByDescending(r => r.Synonym).ThenByDescending(r => r.SoundScore).ToArray();
+
+        bool IsKnown(string word)
+        {
+            token.ThrowIfCancellationRequested();
+            if (!known.TryGetValue(word, out var result)) known[word] = result = knownWord!(word);
+            return result;
+        }
+    }
+    private static string AddList(SqliteCommand command, string prefix, IEnumerable<string> values)
+    {
+        var names = new List<string>();
+        foreach (var value in values) { var name = prefix + names.Count; command.Parameters.AddWithValue(name, value); names.Add(name); }
+        return string.Join(",", names);
+    }
+    private static void Read(SqliteCommand command, MusicRhymeReading target, int line, string original,
+        HashSet<string> synonyms, List<MusicRhymeSuggestion> results, CancellationToken token, MusicRhymeTuning tuning)
+    {
+        if (results.Count >= tuning.Integer("search.raw_rows")) return;
+        using var reader = command.ExecuteReader();
+        while (results.Count < tuning.Integer("search.raw_rows") && reader.Read())
+        {
+            token.ThrowIfCancellationRequested(); var word = reader.GetString(0); if (word == original) continue;
+            var candidate = new MusicRhymeReading(word, target.Language, reader.GetString(3), reader.GetInt32(4), reader.GetString(1));
+            var sound = MusicRhymeSound.Similarity(target, candidate, tuning); if (sound < tuning.Number("quality.near_similarity")) continue;
+            results.Add(new(line, word, candidate.Display, reader.GetString(2), synonyms.Contains(word)) { SoundScore = sound });
+        }
     }
 }

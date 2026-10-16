@@ -49,11 +49,12 @@ public static class RagBookWorker
     }
 
     public static async Task<string> SearchAsync(string library, string modelsRoot, string query,
-        IProgress<RagBookProgress> progress, CancellationToken token, string? queryRoot = null)
+        IProgress<RagBookProgress> progress, CancellationToken token, string? queryRoot = null, int maximumHits = 5)
     {
         if (string.IsNullOrWhiteSpace(query) || query.Length > 2000) throw new InvalidDataException("RagBooks.InvalidQuery");
         var work = Path.Combine(queryRoot ?? Path.Combine(library, "queries"), Guid.NewGuid().ToString("N")); Directory.CreateDirectory(work);
-        RagBookPreparation.AtomicJson(Path.Combine(work, "query.json"), new { query });
+        if (maximumHits is < 1 or > 50) throw new InvalidDataException("RagBooks.InvalidQuery");
+        RagBookPreparation.AtomicJson(Path.Combine(work, "query.json"), new { query, top_k = maximumHits });
         using var preparation = new RagBookModelPreparation(modelsRoot, 0);
         var card = await preparation.PrepareAsync(RagBookModels.EmbeddingId, false, new InlineProgress<Models.ManagedModelDownloadProgress>(_ => { }), token);
         if (card.Status != Models.ManagedModelStatuses.Installed) throw new InvalidDataException("RagBooks.FilesMissing");

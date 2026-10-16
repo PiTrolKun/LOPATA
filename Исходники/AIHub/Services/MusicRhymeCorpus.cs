@@ -30,18 +30,32 @@ public static class MusicRhymeCorpus
             await ComponentLicenseGate.EnsureAsync(ComponentId, token);
             var root = DirectoryPath;
             if (!File.Exists(Path.Combine(root, "corpus.json"))) await DownloadAsync(progress, token);
-            var manifest = Resource("MusicRhymeCorpus.json");
-            var stamp = string.Join(";", manifest.GetProperty("files").EnumerateArray().Select(f => {
-                var info = new FileInfo(Contained(root, f.GetProperty("path").GetString()!));
-                return info.Exists ? $"{info.Length}:{info.LastWriteTimeUtc.Ticks}" : "missing";
-            }));
-            var receipt = new FileInfo(Path.Combine(root, "corpus.json"));
-            stamp += $";{receipt.Length}:{receipt.LastWriteTimeUtc.Ticks}";
-            if (_verifiedStamp == stamp) return root;
-            progress.Report(new("Verifying"));
-            await VerifyAsync(root, manifest, token); _verifiedStamp = stamp; return root;
+            return await VerifyInstalledCoreAsync(progress, token);
         }
         finally { Gate.Release(); }
+    }
+    /// <summary>Only checks existing files. Automatic CPU review must never download or open consent UI.</summary>
+    public static async Task<string> VerifyInstalledAsync(IProgress<RagBookProgress> progress, CancellationToken token)
+    {
+        await Gate.WaitAsync(token);
+        try { return await VerifyInstalledCoreAsync(progress, token); }
+        finally { Gate.Release(); }
+    }
+    private static async Task<string> VerifyInstalledCoreAsync(IProgress<RagBookProgress> progress, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var root = DirectoryPath;
+        if (!File.Exists(Path.Combine(root, "corpus.json"))) throw new FileNotFoundException("Music.Rhyme.CorpusInvalid");
+        var manifest = Resource("MusicRhymeCorpus.json");
+        var stamp = string.Join(";", manifest.GetProperty("files").EnumerateArray().Select(f => {
+            var info = new FileInfo(Contained(root, f.GetProperty("path").GetString()!));
+            return info.Exists ? $"{info.Length}:{info.LastWriteTimeUtc.Ticks}" : "missing";
+        }));
+        var receipt = new FileInfo(Path.Combine(root, "corpus.json"));
+        stamp += $";{receipt.Length}:{receipt.LastWriteTimeUtc.Ticks}";
+        if (_verifiedStamp == stamp) return root;
+        progress.Report(new("Verifying"));
+        await VerifyAsync(root, manifest, token); _verifiedStamp = stamp; return root;
     }
     internal static string Contained(string root, string relative)
     {

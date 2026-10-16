@@ -87,6 +87,7 @@
     <EmbeddedResource Include="Content\AliceChatDom.js" LogicalName="AIHub.AliceChatDom" />
     <Resource Include="Assets\lopata_brand.png" />
     <Resource Include="Assets\scenario-calibration.png" />
+    <Resource Include="Assets\music-rhyme-creative.png" />
     <Content Include="Licenses\**\*"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Installer\bootstrap-v1.txt"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Localization\*.json">

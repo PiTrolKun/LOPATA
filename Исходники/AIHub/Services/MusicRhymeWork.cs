@@ -11,12 +11,12 @@ public sealed class MusicRhymeWork(Func<IMusicRhymeModel> models)
     public async Task<MusicRhymeStep> RunAsync(MusicRhymeStep initial, Func<MusicRhymeStep, MusicRhymeStep> changed,
         IProgress<RagBookProgress> progress, CancellationToken token, BackgroundOperationState? restored = null, string? title = null)
     {
-        initial.Validate(); var step = initial;
+        initial.Validate(); var step = initial with { GenerationRequested = true };
         var controller = ApplicationBackgroundOperations.Current;
         var operation = restored ?? new BackgroundOperationState { Kind = Kind, Title = title ?? "Rhyme workshop",
             Project = initial.Request.ProjectId, Private = true, Input = JsonSerializer.SerializeToElement(initial.Request) };
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, ApplicationBackgroundOperations.ExitToken);
-        return controller is null ? await Attempt(token)
+        return controller is null ? await Attempt(lifetime.Token)
             : await controller.RunAsync(operation, Attempt, ApplicationBackgroundOperations.RetireModelsAsync, lifetime.Token);
 
         void Save(MusicRhymeStep next)
@@ -31,33 +31,12 @@ public sealed class MusicRhymeWork(Func<IMusicRhymeModel> models)
                 Save(step);
                 if (step.ModelReady || step.Stage == "Partial") return step;
                 var corpus = await MusicRhymeCorpus.EnsureAsync(progress, attempt);
-                if (step.Analysis is null)
-                {
-                    var analysis = await Task.Run(() => {
-                        using var lexicon = new MusicRhymeLexicon(corpus, attempt);
-                        return MusicRhymeAnalyzer.Analyze(step.Request.Source, lexicon.Lookup, attempt);
-                    }, attempt);
-                    Save(step with { Analysis = analysis, Stage = "Candidates" });
-                }
-                if (!step.ProgramReady)
-                {
-                    var program = await Task.Run(() => {
-                        using var lexicon = new MusicRhymeLexicon(corpus, attempt);
-                        var issues = Issues(step).Where(i => i.Kind == "Rhyme").ToArray();
-                        if (issues.Length == 0) return (Suggestions: Array.Empty<MusicRhymeSuggestion>(), Text: step.Request.Text);
-                        var index = MusicRhymeIndex.Ensure(lexicon, progress, attempt);
-                        var suggestions = issues.SelectMany(i => MusicRhymeIndex.Find(index, step.Analysis!.Lines.Single(l => l.Number == i.Line),
-                            step.Analysis!.Lines.Single(l => l.Number == i.Partner),
-                            lexicon.Synonyms(step.Analysis!.Lines.Single(l => l.Number == i.Line).Ending), attempt,
-                            word => lexicon.Lookup(word).Any(h => h.Source.StartsWith("openrussian-", StringComparison.Ordinal)
-                                || h.Source.StartsWith("english-wordnet-", StringComparison.Ordinal)))).ToArray();
-                        return (Suggestions: suggestions, Text: MusicRhymeProgram.Build(step, suggestions, lexicon.Lookup));
-                    }, attempt);
-                    Save(step with { Suggestions = program.Suggestions, Program = program.Text, ProgramDraft = program.Text, ProgramReady = true, Stage = "Reference" });
-                }
+                step = await MusicRhymeProgramWork.RunAsync(step, next => { Save(next); return step; }, progress, attempt, corpus);
+                step = await MusicRhymeCreativeWork.SummarizeAsync(step, models,
+                    next => { Save(next); return step; }, progress, attempt);
                 if (step.Reference.Length == 0)
                 {
-                    if (EditableLines(step).Count == 0)
+                    if (!step.Request.CreativeMode && MusicRhymeTask.ReplyEditableLines(step).Count == 0)
                     { Save(step with { Model = step.Request.Text, ModelReady = true, ModelSkipped = true, Stage = "Ready" }); return step; }
                     await ApplicationBackgroundOperations.RetireModelsAsync();
                     progress.Report(new("Reference"));
@@ -70,24 +49,32 @@ public sealed class MusicRhymeWork(Func<IMusicRhymeModel> models)
                     string books;
                     try
                     {
-                        books = await RagBookWorker.SearchAsync(corpus, step.Request.ModelsRoot,
-                            MusicRhymeTask.SearchQuery(step), progress, attempt, work);
+                        books = await MusicRhymeModelDeadline.RunOperationAsync(cancellation =>
+                            RagBookWorker.SearchAsync(corpus, step.Request.ModelsRoot,
+                                MusicRhymeTask.SearchQuery(step), progress, cancellation, work,
+                                maximumHits: step.Request.Tuning.Integer("RagRawHits")),
+                            step.Request.Tuning.Integer("RagTimeoutSeconds"), "Music.Rhyme.Settings.SearchTimedOut", attempt);
                     }
                     finally { if (Directory.Exists(work)) Directory.Delete(work, true); }
                     using var hits = JsonDocument.Parse(books);
-                    var selected = hits.RootElement.GetProperty("hits").EnumerateArray().Take(2).Select(h => new {
-                        source = h.GetProperty("source").GetString(), text = h.GetProperty("text").GetString()![..Math.Min(900, h.GetProperty("text").GetString()!.Length)] }).ToArray();
+                    var selected = hits.RootElement.GetProperty("hits").EnumerateArray().Take(step.Request.Tuning.Integer("RagStoredHits")).Select(h => new {
+                        source = h.GetProperty("source").GetString(), text = h.GetProperty("text").GetString()![..Math.Min(step.Request.Tuning.Integer("RagStoredChars"), h.GetProperty("text").GetString()!.Length)] }).ToArray();
                     var lexical = await Task.Run(() => {
-                        using var lexicon = new MusicRhymeLexicon(corpus, attempt);
+                        using var lexicon = new MusicRhymeLexicon(corpus, attempt, tuning: step.Request.Tuning);
                         return lexicon.Reference(Issues(step).Select(i => step.Analysis!.Lines.Single(l => l.Number == i.Line).Ending));
                     }, attempt);
                     using var lexicalDocument = JsonDocument.Parse(lexical);
-                    Save(step with { Reference = JsonSerializer.Serialize(new { books = selected, lexical = lexicalDocument.RootElement }), Stage = "Model" });
+                    var reference = JsonSerializer.Serialize(new { books = selected, lexical = lexicalDocument.RootElement },
+                        new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                    if (reference.Length > 400000) throw new InvalidDataException("Music.Rhyme.ContextFull");
+                    Save(step with { Reference = reference, Stage = "Model" });
                 }
-                var editable = EditableLines(step);
-                if (editable.Count == 0)
+                HashSet<int> editable = step.Request.CreativeMode ? [] : MusicRhymeTask.ReplyEditableLines(step);
+                if (!step.Request.CreativeMode && editable.Count == 0)
                 { Save(step with { Model = step.Request.Text, ModelReady = true, ModelSkipped = true, Stage = "Ready" }); return step; }
-                var prompt = MusicRhymeTask.Prompt(step);
+                var prompt = step.Reply.Length > 0 && step.Prompt.Length > 0 ? step.Prompt
+                    : step.Request.CreativeMode ? MusicRhymeCreativeTask.ComposePrompt(step) : MusicRhymeTask.Prompt(step);
+                if (prompt.Length > 400000) throw new InvalidDataException("Music.Rhyme.ContextFull");
                 Save(step with { Prompt = prompt, Stage = "Model" }); progress.Report(new("Model"));
                 var result = step.Reply;
                 if (result.Length == 0)
@@ -96,16 +83,25 @@ public sealed class MusicRhymeWork(Func<IMusicRhymeModel> models)
                     var model = new DebugModelInfo { Name = Path.GetFileName(step.Request.ModelPath!), Path = step.Request.ModelPath!,
                         Format = Path.GetExtension(step.Request.ModelPath!).Equals(".bin", StringComparison.OrdinalIgnoreCase) ? "chatllm" : "gguf" };
                     using var runtime = models();
-                    result = await runtime.RewriteAsync(model, prompt, attempt);
-                    Save(step with { Model = result, Reply = result });
+                    result = step.Request.CreativeMode
+                        ? await MusicRhymeModelDeadline.RunOperationAsync(
+                            cancellation => runtime.ComposeAsync(model, prompt, step.Request.Tuning, cancellation),
+                            step.Request.Tuning.Integer("GenerationTimeoutSeconds"), "Music.Rhyme.Settings.GenerationTimedOut", attempt)
+                        : await MusicRhymeModelDeadline.RunAsync(runtime, model, prompt, step.Request.Tuning, attempt);
+                    Save(step with { Model = step.Request.CreativeMode ? MusicRhymeCreativeTask.SongFromReply(result) : result, Reply = result });
                 }
-                MusicRhymeReply.Validate(step.Request.Text, result, editable);
+                if (step.Request.CreativeMode)
+                {
+                    result = MusicRhymeCreativeTask.SongFromReply(result);
+                    MusicRhymeCreativeTask.ValidateSong(result, step.Request.Tuning);
+                }
+                else MusicRhymeReply.Validate(step.Request.Text, result, editable, step.Request.Tuning);
                 var remaining = await Task.Run(() => {
-                    using var lexicon = new MusicRhymeLexicon(corpus, attempt);
+                    using var lexicon = new MusicRhymeLexicon(corpus, attempt, tuning: step.Request.Tuning);
                     var complete = step.Request.Source[..step.Request.Start] + result + step.Request.Source[(step.Request.Start + step.Request.Length)..];
-                    var after = MusicRhymeAnalyzer.Analyze(complete, lexicon.Lookup, attempt);
-                    return after.Issues.Any(i => i.Kind is "Rhyme" or "Rhythm" && after.Lines.Any(l => l.Number == i.Line
-                        && l.Start >= step.Request.Start && l.Start < step.Request.Start + result.Length));
+                    var after = MusicRhymeAnalyzer.Analyze(complete, lexicon.Lookup, attempt, step.Request.Start, result.Length, tuning: step.Request.Tuning);
+                    // An opportunity always exists, even in good verse. It is not an unresolved fault.
+                    return after.Fragments.Any(f => f.Kind == "mismatch");
                 }, attempt);
                 var unchanged = MusicRhymeReply.Identical(result, step.Request.Text);
                 Save(step with { Model = result, ModelReady = true, Stage = remaining || unchanged ? "Partial" : "Ready",
@@ -116,9 +112,6 @@ public sealed class MusicRhymeWork(Func<IMusicRhymeModel> models)
             { Save(step with { Stage = "Partial", Error = error.Message }); return step; }
         }
     }
-    public static IEnumerable<MusicRhymeIssue> Issues(MusicRhymeStep step) => step.Analysis!.Issues.Where(i => {
-        var line = step.Analysis.Lines.Single(l => l.Number == i.Line);
-        return line.Start >= step.Request.Start && line.Start < step.Request.Start + step.Request.Length;
-    });
+    public static IEnumerable<MusicRhymeIssue> Issues(MusicRhymeStep step) => MusicRhymeEditorial.Targets(step);
     public static HashSet<int> EditableLines(MusicRhymeStep step) => MusicRhymeTask.EditableLines(step);
 }
