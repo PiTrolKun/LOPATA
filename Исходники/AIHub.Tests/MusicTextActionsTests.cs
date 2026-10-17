@@ -139,12 +139,12 @@ public sealed class MusicTextActionsTests
     });
 
     [TestMethod]
-    public Task ToolbarHasSixIconsWithoutScrollAndFitsShortHeight() => ScenarioNavigationTests.Sta(() =>
+    public Task ToolbarHasSevenIconsWithoutScrollAndFitsShortHeight() => ScenarioNavigationTests.Sta(() =>
     {
         using var workspace = new MusicWorkspaceControl(); var l = new LocalizationService(); l.Load("ru"); workspace.Localize(l.T);
         Theme(workspace, true); var actions = workspace.TextActions;
         Assert.AreEqual(0, Desc<ScrollViewer>(actions).Count());
-        var buttons = Desc<Button>(actions).ToArray(); Assert.AreEqual(6, buttons.Length);
+        var buttons = Desc<Button>(actions).ToArray(); Assert.AreEqual(7, buttons.Length);
         Assert.IsTrue(buttons.All(x => x.Content is Viewbox && !string.IsNullOrWhiteSpace(AutomationProperties.GetName(x))));
         Assert.IsTrue(buttons.Single(x => AutomationProperties.GetAutomationId(x) == "Music.Text.Rhyme").IsEnabled);
         var box = Desc<TextBox>(workspace.Editor).Single(); workspace.Editor.Lyrics = "о"; box.Select(0, 1);

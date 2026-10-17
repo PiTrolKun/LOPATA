@@ -101,7 +101,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     public void ConfigureOutput(string folder, Action<string> save)
     { _outputFolder = folder; _saveOutputFolder = save; _workspace?.ConfigureOutput(folder, save); }
     public void DownloadConnections(int connections) => _preparation.MaximumParallelConnections = connections;
-    public bool UsesArtifact(string id) => (IsBusy && !_removingModel || PendingMusicOperation || _workspace?.Session.HasPendingOrRunning == true) &&
+    public bool UsesArtifact(string id) => CoverUsesArtifact(id) || (IsBusy && !_removingModel || PendingMusicOperation || _workspace?.Session.HasPendingOrRunning == true) &&
         (ComponentCatalog.ResolveDependencies([MusicLyricsComponentCatalog.ModelId]).Any(entry => entry.Id == id)
             || MusicComponentCatalog.ComponentIds.Contains(id) || MusicModelVariants.Components(MusicModelVariants.Bf16).Contains(id)
             || MusicModelVariants.Components(MusicStudioRuntime.Variation).Contains(id) || MusicAceCatalog.Components.Contains(id) || MusicDiffRhythmCatalog.Components.Contains(id) || MusicHeartMuLaCatalog.Components.Contains(id));
@@ -130,6 +130,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
         if (_workspace is not null) return;
         _workspace = _createWorkspace();
         ConfigureWorkspaceRhyme();
+        ConfigureWorkspaceCovers();
         _workspace.Generation.SetPoetryState(_poetryOpen, _poetryWorking);
         _workspace.Generation.OpenPoetry = () => PoetryRequested?.Invoke(_workspace);
         _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };

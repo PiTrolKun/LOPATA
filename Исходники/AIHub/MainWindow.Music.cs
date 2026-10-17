@@ -40,6 +40,7 @@ public partial class MainWindow
         });
         MusicPage.Configure(L, _storageSettings, _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0);
         MusicPage.ConfigureRhyme(_storageSettings, () => new MusicRhymeModel(_userContextService));
+        MusicPage.ConfigureCovers(_storageSettings, () => new MusicRhymeModel(_userContextService));
     }
 
     private void InitializeMusicPreparation()

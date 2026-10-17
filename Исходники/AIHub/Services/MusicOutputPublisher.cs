@@ -44,7 +44,7 @@ public sealed class MusicOutputPublisher(IMusicAudioEncoder encoder)
             await MatchHashAsync(variant.AudioFile!, variant.AudioHash!, token);
             var temporary = destination + "." + Guid.NewGuid().ToString("N") + ".partial";
             try {
-                await encoder.EncodeAsync(variant.AudioFile!, temporary, format, bitrate, metadata, token);
+                await encoder.EncodeAsync(variant.AudioFile!, temporary, format, bitrate, metadata, job.Cover, token);
                 var hash = await HashAsync(temporary, token);
                 variant = additional ? variant with { AdditionalHash = hash } : variant with { ResultHash = hash };
                 save(variant); token.ThrowIfCancellationRequested(); File.Move(temporary, destination, false);

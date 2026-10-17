@@ -15,7 +15,7 @@ namespace AIHub.Controls;
 
 public sealed partial class ImageGenerationControl : UserControl
 {
-    private readonly ImageGenerationInstallation _installation;
+    private readonly IImageGenerationPreparation _installation;
     private readonly ImageGenerationRuntime _runtime;
     private Func<string, string> _l = key => key;
     private string _languageCode = "ru";
@@ -36,8 +36,10 @@ public sealed partial class ImageGenerationControl : UserControl
     public bool CanChangeModel => !_busy && !HasPendingGeneration();
     public void ConfigureOutput(ImageGenerationSettings settings, Action save) { _settings = settings; _saveSettings = save; }
     public void ConfigureMetadata(Func<string?> author) => _metadataAuthor = author;
-    public ImageGenerationControl() : this(new(), new()) { }
+    public ImageGenerationControl() : this(new ImageGenerationInstallation(), new()) { }
     public ImageGenerationControl(ImageGenerationInstallation installation, ImageGenerationRuntime runtime)
+        : this((IImageGenerationPreparation)installation, runtime) { }
+    internal ImageGenerationControl(IImageGenerationPreparation installation, ImageGenerationRuntime runtime)
     {
         _installation = installation; _runtime = runtime;
         Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
@@ -128,6 +130,7 @@ public sealed partial class ImageGenerationControl : UserControl
     private Task CancelAsync()
     {
         _cancel?.Cancel();
+        if (_preparationOnly) return Task.CompletedTask;
         if (ApplicationBackgroundOperations.Current is { IsRunning: false, State: { } state } controller && IsGenerationOperation(state.Kind))
             controller.DiscardPending();
         return Task.CompletedTask;

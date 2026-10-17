@@ -4,7 +4,16 @@ using AIHub.Models;
 
 namespace AIHub.Services;
 
-public sealed class ImageGenerationInstallation : IDisposable
+public interface IImageGenerationPreparation : IDisposable
+{
+    int MaximumParallelConnections { get; set; }
+    bool IsReady(string root, string modelId);
+    IReadOnlyList<ManagedModelArtifactCard> Register(string root, string modelId);
+    Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root, string modelId, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token);
+    Task<IReadOnlyList<ManagedModelArtifactCard>> PrepareAsync(string root, string modelId, bool download, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token);
+}
+
+public sealed class ImageGenerationInstallation : IImageGenerationPreparation
 {
     private readonly ManagedModelLibraryStore _store;
     private readonly ManagedModelAcquisitionService _downloads;

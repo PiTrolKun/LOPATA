@@ -53,13 +53,13 @@ public static class MusicLyricsTimingMetadata
         }
         return text.ToString();
     }
-    private static async Task<byte[]> ReadFile(string path, CancellationToken token)
+    internal static async Task<byte[]> ReadFile(string path, CancellationToken token)
     {
         using var file = File.OpenRead(path);
         if (file.Length is < 12 or > MaximumFileBytes) throw new InvalidDataException("Unsupported timed metadata container size.");
         var bytes = new byte[checked((int)file.Length)]; await file.ReadExactlyAsync(bytes, token); return bytes;
     }
-    private static string PayloadHash(byte[] bytes)
+    internal static string PayloadHash(byte[] bytes)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         if (bytes.AsSpan().StartsWith("fLaC"u8)) {
@@ -90,7 +90,7 @@ public static class MusicLyricsTimingMetadata
         }
         return Convert.ToHexString(hash.GetHashAndReset());
     }
-    private static byte[] Rewrite(byte[] bytes, Dictionary<string, string> values)
+    internal static byte[] Rewrite(byte[] bytes, Dictionary<string, string> values)
     {
         if (bytes.AsSpan().StartsWith("fLaC"u8)) {
             var blocks = Flac(bytes, out var end); var index = blocks.FindIndex(b => b.Kind == 4);
@@ -117,7 +117,7 @@ public static class MusicLyricsTimingMetadata
         var offset = Id3End(bytes); var id3 = AppendId3(bytes[..offset], values);
         using var mp3 = new MemoryStream(); mp3.Write(id3); mp3.Write(bytes.AsSpan(offset)); return mp3.ToArray();
     }
-    private static int Id3End(byte[] bytes)
+    internal static int Id3End(byte[] bytes)
     {
         if (!bytes.AsSpan().StartsWith("ID3"u8)) return 0;
         if (bytes[3] is not (3 or 4) || bytes[5] != 0) throw new InvalidDataException("Unsupported ID3 flags/version; original audio kept intact.");
@@ -153,7 +153,7 @@ public static class MusicLyricsTimingMetadata
         for (var end = 3; end + 1 < body.Length; end += 2) if (body[end] == 0 && body[end + 1] == 0) return Encoding.Unicode.GetString(body.Slice(3, end - 3));
         return null;
     }
-    private static Dictionary<string, string> Tags(byte[] bytes)
+    internal static Dictionary<string, string> Tags(byte[] bytes)
     {
         var tags = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         if (bytes.AsSpan().StartsWith("fLaC"u8)) { foreach (var block in Flac(bytes, out _).Where(b => b.Kind == 4)) ReadComments(block.Body, 0, tags); }
@@ -177,7 +177,7 @@ public static class MusicLyricsTimingMetadata
             pos += length + 10;
         }
     }
-    private static List<(int Kind, byte[] Body)> Flac(byte[] bytes, out int end)
+    internal static List<(int Kind, byte[] Body)> Flac(byte[] bytes, out int end)
     {
         var result = new List<(int, byte[])>(); var pos = 4;
         while (true) { if (pos + 4 > bytes.Length) throw new InvalidDataException("Truncated FLAC block.");
@@ -186,7 +186,7 @@ public static class MusicLyricsTimingMetadata
             result.Add((head & 127, bytes.AsSpan(pos, size).ToArray())); pos += size; if ((head & 128) != 0) break; }
         end = pos; return result;
     }
-    private static List<(string Kind, byte[] Body, byte Pad)> Wave(byte[] bytes)
+    internal static List<(string Kind, byte[] Body, byte Pad)> Wave(byte[] bytes)
     {
         if (!bytes.AsSpan(8, 4).SequenceEqual("WAVE"u8) || BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(4)) != bytes.Length - 8)
             throw new InvalidDataException("Unsupported WAV container.");
@@ -243,7 +243,7 @@ public static class MusicLyricsTimingMetadata
             } }
         if (packet.Length != 0) throw new InvalidDataException("Incomplete Opus packet."); return packets;
     }
-    private static byte[] RewriteOgg(byte[] bytes, Dictionary<string, string> values)
+    internal static byte[] RewriteOgg(byte[] bytes, Dictionary<string, string> values)
     {
         var pages = Ogg(bytes); var packets = OggPackets(pages);
         if (packets.Count < 3 || !packets[0].AsSpan().StartsWith("OpusHead"u8) || !packets[1].AsSpan().StartsWith("OpusTags"u8)) throw new InvalidDataException("Unsupported Ogg codec.");

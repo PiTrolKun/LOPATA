@@ -15,16 +15,18 @@ public sealed class MusicTextActionsControl : UserControl
     private readonly MusicLyricsEditor _editor;
     private readonly Func<IReadOnlyList<MusicPerformer>> _performers;
     private readonly Dictionary<string, Button> _buttons = new(StringComparer.Ordinal);
-    private readonly UniformGrid _panel = new() { Rows = 6, Columns = 1, Margin = new(2), VerticalAlignment = VerticalAlignment.Top };
+    private readonly UniformGrid _panel = new() { Rows = 7, Columns = 1, Margin = new(2), VerticalAlignment = VerticalAlignment.Top };
     private Func<string, string> _l = key => key;
     private string _brackets = "[]";
     public Button RhymeButton => _buttons["Rhyme"];
     public event Action? RhymeRequested;
+    public Button CoverButton => _buttons["Cover"];
+    public event Action? CoverRequested;
     public MusicTextActionsControl(MusicLyricsEditor editor, Func<IReadOnlyList<MusicPerformer>> performers)
     {
         _editor = editor; _performers = performers;
         AutomationProperties.SetAutomationId(this, "Music.Text.Actions");
-        foreach (var action in new[] { "Accent", "Performer", "Section", "Delivery", "Cue", "Rhyme" })
+        foreach (var action in new[] { "Accent", "Performer", "Section", "Delivery", "Cue", "Rhyme", "Cover" })
         {
             var button = new Button { Content = Icon(action), Margin = new(1, 2, 1, 2), Padding = new(4),
                 MinHeight = 0, MinWidth = 0, MaxHeight = 44 };
@@ -49,21 +51,21 @@ public sealed class MusicTextActionsControl : UserControl
     private void ArrangeSlots()
     {
         var available = Math.Max(0, ActualHeight - 4);
-        var rows = Math.Max(6, (int)Math.Floor(available / 48));
-        // Keep the six actions usable in short layouts; only spare space gets empty slots.
+        var rows = Math.Max(7, (int)Math.Floor(available / 48));
+        // Keep all seven actions usable; only spare space gets empty slots.
         while (_panel.Children.Count > rows) _panel.Children.RemoveAt(_panel.Children.Count - 1);
         while (_panel.Children.Count < rows)
         {
             var slot = new Button { IsEnabled = false, Focusable = false, MinHeight = 0, MinWidth = 0,
                 MaxHeight = 44, Margin = new(1, 2, 1, 2), Padding = new(4), Opacity = .45 };
-            AutomationProperties.SetAutomationId(slot, "Music.Text.Reserved." + (_panel.Children.Count - 6));
+            AutomationProperties.SetAutomationId(slot, "Music.Text.Reserved." + (_panel.Children.Count - 7));
             ToolTipService.SetShowOnDisabled(slot, true); _panel.Children.Add(slot);
         }
         _panel.Rows = rows; _panel.Height = available; LabelSlots();
     }
     private void LabelSlots()
     {
-        foreach (var slot in _panel.Children.OfType<Button>().Skip(6))
+        foreach (var slot in _panel.Children.OfType<Button>().Skip(7))
         { slot.ToolTip = _l("Music.Text.Reserved"); AutomationProperties.SetName(slot, _l("Music.Text.Reserved")); }
     }
     private void UpdateAccent() => _buttons["Accent"].IsEnabled = MusicTextEdits.Accent(_editor.CaptureSelection()) is not null;
@@ -72,6 +74,7 @@ public sealed class MusicTextActionsControl : UserControl
         var source = _editor.CaptureSelection();
         if (action == "Accent") { _editor.ApplyEdit(source, MusicTextEdits.Accent(source)); return; }
         if (action == "Rhyme") { RhymeRequested?.Invoke(); return; }
+        if (action == "Cover") { CoverRequested?.Invoke(); return; }
         var window = new MusicTextMarkerWindow(_l, action, _performers(), _brackets) { Owner = Window.GetWindow(this) };
         if (window.ShowDialog() != true || window.AcceptedMarkers is null) return;
         if (action == "Performer") _brackets = window.SelectedBrackets;
@@ -88,6 +91,7 @@ public sealed class MusicTextActionsControl : UserControl
             "Delivery" => "M8,6 A4,4 0 0 1 16,6 V12 A4,4 0 0 1 8,12 Z M5,10 V12 A7,7 0 0 0 19,12 V10 M12,19 V23 M8,23 H16",
             "Cue" => "M3,4 H21 V20 H3 Z M8,8 V16 M12,7 V17 M16,10 V14",
             "Rhyme" => "M3,6 H12 M3,12 H9 M3,18 H14 M18,2 L19,6 L23,7 L19,8 L18,12 L17,8 L13,7 L17,6 Z M17,16 L18,19 L21,20 L18,21 L17,24 L16,21 L13,20 L16,19 Z",
+            "Cover" => "M2,3 H22 V21 H2 Z M3,17 L8,11 L13,16 L17,12 L22,18 M15,7 A2,2 0 1 1 19,7 A2,2 0 1 1 15,7",
             _ => throw new ArgumentOutOfRangeException(nameof(action))
         };
         var path = new System.Windows.Shapes.Path { Data = Geometry.Parse(geometry), Width = 24, Height = 24,

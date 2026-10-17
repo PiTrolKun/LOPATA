@@ -67,6 +67,20 @@ public sealed class MusicLyricsTimingStore(MusicGenerationJobs jobs)
         if (!timing.AudioPayloadHash.Equals(await MusicLyricsTimingMetadata.AudioPayloadHashAsync(audioPath, token), StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Timing cache audio identity mismatch.");
         await AtomicJsonAsync(CachePath(job.Id, index, additional), timing, token);
+        await PublishMetadataCopyAsync(jobId, index, additional,
+            (source, destination, cancellation) => MusicLyricsTimingMetadata.WriteCopyAsync(source, destination, timing, cancellation), token);
+    }
+    internal async Task PublishMetadataCopyAsync(string jobId, int index, bool additional,
+        Func<string, string, CancellationToken, Task> writeCopy, CancellationToken token)
+    {
+        var job = jobs.Load(jobId);
+        if (index < 0 || index >= job.Variants.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        var variant = job.Variants[index];
+        if (!variant.Completed) throw new InvalidDataException("Cannot attach metadata before audio completion.");
+        var audioPath = (additional ? variant.AdditionalPath : variant.ResultPath) ?? throw new InvalidDataException("No audio output.");
+        var known = (additional ? variant.AdditionalHash : variant.ResultHash ?? (job.Output is null ? variant.AudioHash : null))
+            ?? throw new InvalidDataException("Missing original music receipt.");
+        await MusicOutputPublisher.MatchHashAsync(audioPath, known, token);
         await Stage(audioPath, known);
         async Task Stage(string path, string hash)
         {
@@ -75,7 +89,7 @@ public sealed class MusicLyricsTimingStore(MusicGenerationJobs jobs)
             var nonce = Guid.NewGuid().ToString("N"); var temporary = path + ".timing-" + nonce + ".tmp";
             var backup = path + ".timing-" + nonce + ".bak";
             try {
-                await MusicLyricsTimingMetadata.WriteCopyAsync(path, temporary, timing, token);
+                await writeCopy(path, temporary, token);
                 var newHash = await MusicOutputPublisher.HashAsync(temporary, token);
                 await MusicOutputPublisher.MatchHashAsync(path, hash, token);
                 var pending = new Pending(job.Id, index, additional, hash, newHash, Path.GetFileName(temporary), Path.GetFileName(backup));

@@ -12,6 +12,20 @@ public sealed partial class ImageGenerationControl
     private bool _preparationReady, _preparationChecked;
     private IReadOnlyList<ManagedModelArtifactCard> _preparationCards = [];
     private ProgressBar? _preparationProgress;
+    private bool _preparationOnly;
+    public event Action? PreparationCompleted;
+    public Task OpenPreparationOnlyAsync(string modelId)
+    {
+        if (_busy) return Task.CompletedTask;
+        _ = ImageGenerationCatalog.Get(modelId);
+        _preparationOnly = true; _modelId = modelId; _page = 1;
+        _preparationReady = _preparationChecked = false; Render();
+        return CheckPreparationAsync();
+    }
+    private async Task PrepareOnlyDownloadAsync()
+    {
+        if (await PrepareAsync(true) && _preparationOnly) PreparationCompleted?.Invoke();
+    }
 
     private void RenderPreparation()
     {
@@ -33,12 +47,15 @@ public sealed partial class ImageGenerationControl
         var actions = new WrapPanel { Margin = new Thickness(0, 12, 0, 0) };
         if (!_preparationReady && _preparationChecked)
         {
-            var download = Button("Download", () => PrepareAsync(true), "Download", !_busy && !string.IsNullOrWhiteSpace(_modelsRoot));
+            var download = Button("Download", PrepareOnlyDownloadAsync, "Download", !_busy && !string.IsNullOrWhiteSpace(_modelsRoot));
             download.SetResourceReference(StyleProperty, "SettingsPrimaryActionStyle"); actions.Children.Add(download);
         }
         actions.Children.Add(Button("Verify", CheckPreparationAsync, "Verify", !_busy && !string.IsNullOrWhiteSpace(_modelsRoot)));
-        var next = Button("OpenChat", ContinuePreparedAsync, "OpenChat", !_busy && _preparationReady);
-        next.SetResourceReference(StyleProperty, "SettingsPrimaryActionStyle"); actions.Children.Add(next);
+        if (!_preparationOnly)
+        {
+            var next = Button("OpenChat", ContinuePreparedAsync, "OpenChat", !_busy && _preparationReady);
+            next.SetResourceReference(StyleProperty, "SettingsPrimaryActionStyle"); actions.Children.Add(next);
+        }
         if (_busy) actions.Children.Add(Button("Cancel", CancelAsync, "Cancel"));
         panel.Children.Add(actions);
         Content = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
@@ -79,6 +96,7 @@ public sealed partial class ImageGenerationControl
         catch (OperationCanceledException) { Status(L("Canceled")); }
         catch (Exception ex) { Error(ex); }
         finally { _busy = false; _cancel.Dispose(); _cancel = null; Render(); }
+        if (_preparationOnly && _preparationReady && await PrepareAsync(false)) PreparationCompleted?.Invoke();
     }
     private async Task ContinuePreparedAsync()
     {

@@ -19,6 +19,7 @@ public sealed class MusicGenerationSession : IDisposable
     private bool _ready, _starting, _working, _disposed, _checking, _cancelRequested;
     private int _modelCheck;
     public event Action? StateChanged;
+    public event Action<string>? GenerationCompleted;
 
     public MusicGenerationSession(MusicWorkspaceControl view, MusicGenerationJobs? jobs = null)
     {
@@ -158,7 +159,8 @@ public sealed class MusicGenerationSession : IDisposable
             var options = _view.Generation.Options;
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
                 options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
-                wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment, durationAutomatic: options.DurationSeconds is null);
+                wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment, durationAutomatic: options.DurationSeconds is null,
+                cover: _view.Covers.CaptureSelection(options.Artist, options.Title));
             submitted = job = _view.Projects.Record(job, _view.Projects.Capture());
             await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             _starting = false; await RunAsync(job.Id);
@@ -176,7 +178,8 @@ public sealed class MusicGenerationSession : IDisposable
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
             if (MusicModelVariants.WorkspaceVariation(original.Variation) != original.Variation) return;
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
-                original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment, original.DurationAutomatic);
+                original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment, original.DurationAutomatic,
+                _view.Covers.CaptureSelection(original.Artist, original.Title));
             submitted = repeat = _view.Projects.Record(repeat, MusicProjectSnapshot.FromJob(repeat));
             if (original.Output is not null) await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             // Preserve the exact score used by the completed track, alongside its two seeds.
@@ -241,6 +244,7 @@ public sealed class MusicGenerationSession : IDisposable
             var completed = _jobs.Load(id).Variants.All(MusicGenerationJobs.ResultVisible);
             Outcome(job, completed ? MusicProjectOutcome.Completed : MusicProjectOutcome.Paused);
             _view.Status.Telemetry.Report(_telemetry, completed ? MusicGenerationStage.Completed : MusicGenerationStage.Paused);
+            if (completed) GenerationCompleted?.Invoke(id);
         }
         catch (OperationCanceledException)
         {

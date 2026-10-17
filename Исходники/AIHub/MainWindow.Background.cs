@@ -39,6 +39,8 @@ public partial class MainWindow
         { ConfigureMusic(); return MusicPage.ResumeLyricsSyncAsync(state, token); });
         _backgroundOperations.Register(MusicRhymeWork.Kind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeRhymeAsync(state, token); });
+        _backgroundOperations.Register(MusicCoverWork.Kind, (state, token) =>
+        { ConfigureMusic(); return MusicPage.ResumeCoverAsync(state, token); });
         _backgroundOperations.Changed += () =>
         { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -190,6 +192,12 @@ public partial class MainWindow
             {
                 RestoreFromTray(); OpenMusicScenario(false); MusicPage.ViewRhymeResult(notice.Project);
                 _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == MusicCoverWork.Kind)
+            {
+                var result = _backgroundOperations!.LoadResult(notice.Id) ?? _backgroundOperations.State!;
+                RestoreFromTray(); OpenMusicScenario(false); MusicPage.ViewCoverResult(result);
+                _backgroundOperations.Acknowledge(notice.Id); return;
             }
             if (notice.Kind is RagBookAcquisitionWork.Kind or RagBookPreparation.Kind)
             {

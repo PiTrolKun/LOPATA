@@ -16,6 +16,8 @@ public static class MusicSongMetadata
             ["lyrics"] = job.Lyrics, ["LOPATA_STYLE"] = job.Style,
             ["date"] = job.CreatedAt.ToString("O", culture), ["track"] = (index + 1).ToString(culture),
             ["LOPATA_JOB"] = job.Id, ["LOPATA_MODEL"] = MusicModelVariants.Name(job.Variation),
+            [MusicCoverProvenance.ModelTag] = MusicCoverProvenance.Model(job.Cover),
+            [MusicCoverProvenance.SourceTag] = job.Cover is null ? "standard" : "generated",
             ["LOPATA_VARIATION"] = job.Variation, ["LOPATA_DECODER_REVISION"] = job.DecoderRevision,
             ["LOPATA_MODEL_REVISION"] = job.ModelRevision, ["LOPATA_RUNTIME_REVISION"] = job.RuntimeRevision,
             ["LOPATA_RUNTIME_PACK"] = variant.UsedRuntimePack ?? job.RuntimePack, ["LOPATA_VERSION"] = job.AppVersion,

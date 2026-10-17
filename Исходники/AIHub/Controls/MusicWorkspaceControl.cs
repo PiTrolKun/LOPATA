@@ -20,9 +20,10 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public MusicProjectController Projects { get; }
     public MusicLyricsPlaybackController LyricsPlayback { get; }
     public MusicRhymeController Rhyme { get; }
+    public MusicCoverController Covers { get; }
     private bool _outputConfigured;
     public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null,
-        IMusicLyricsSynchronization? synchronizeLyrics = null, IMusicAudioPlayer? audioPlayer = null)
+        IMusicLyricsSynchronization? synchronizeLyrics = null, IMusicAudioPlayer? audioPlayer = null, MusicCoverStore? coverStore = null)
     {
         Player = audioPlayer is null ? new() : new(audioPlayer);
         Generation = new(outputPreferences);
@@ -66,6 +67,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Session = new(this, jobs);
         LyricsPlayback = new(this, jobs ?? MusicGenerationJobs.Default, synchronizeLyrics);
         Rhyme = new(this);
+        Covers = new(this, jobs ?? MusicGenerationJobs.Default, coverStore);
         double MaximumWidth() => Math.Max(250, grid.ActualWidth - 140 - 12 - 220 - 260);
         void Add(UIElement element, int column, int row, int rowSpan = 1, int columnSpan = 1)
         { Grid.SetColumn(element, column); Grid.SetRow(element, row); Grid.SetRowSpan(element, rowSpan); Grid.SetColumnSpan(element, columnSpan); grid.Children.Add(element); }
@@ -82,6 +84,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Projects.Localize(localize);
         LyricsPlayback.Localize(localize);
         Rhyme.Localize(localize);
+        Covers.Localize(localize);
         var grid = (Grid)Content;
         var divider = (Thumb)grid.Children[1]; divider.ToolTip = localize("Music.Editor.Resize");
         AutomationProperties.SetName(divider, localize("Music.Editor.Resize"));
@@ -96,5 +99,5 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Tracks.ConfigureFolder(folder, save); Player.ConfigureFolder(folder); Projects.RememberDefaults(); }
     public void ConfigureGeneration(string modelsRoot, Func<string, string> localize)
     { Session.Configure(modelsRoot, localize); LyricsPlayback.Configure(localize); }
-    public void Dispose() { Rhyme.Dispose(); LyricsPlayback.Dispose(); Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
+    public void Dispose() { Covers.Dispose(); Rhyme.Dispose(); LyricsPlayback.Dispose(); Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
 }

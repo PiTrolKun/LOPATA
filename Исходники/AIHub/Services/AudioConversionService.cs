@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -72,7 +71,7 @@ public sealed class AudioConversionService(MusicAudioRuntime? runtime = null)
                 _ => new[] { "-c:a", "pcm_s16le", "-f", "wav" }
             });
             args.Add(temporary); await _runtime.RunAsync(false, args, token, TimeSpan.FromHours(12));
-            await AttachAsync(temporary, format, info, token);
+            await AudioMetadataWriter.AttachAsync(temporary, format, info.Tags, info.Covers, token);
             var result = await AudioConversionMetadata.ReadAsync(_runtime, temporary, token);
             var rate = format == MusicAudioFormat.Opus ? 48000 : info.SampleRate;
             if (result.Channels != info.Channels || result.SampleRate != rate || Math.Abs(result.Duration - info.Duration) > .15
@@ -126,46 +125,4 @@ public sealed class AudioConversionService(MusicAudioRuntime? runtime = null)
     private static async Task<string> HashAsync(string path, CancellationToken token)
     { await using var file = File.OpenRead(path); return Convert.ToHexString(await SHA256.HashDataAsync(file, token)); }
 
-    private static async Task AttachAsync(string path, MusicAudioFormat format, AudioConversionInfo info, CancellationToken token)
-    {
-        if (format == MusicAudioFormat.Opus) return;
-        var tag = AudioConversionMetadata.Id3(info.Tags, info.Covers);
-        if (format == MusicAudioFormat.Wav)
-        {
-            using var file = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            file.Position = file.Length; file.Write("id3 "u8);
-            var size = new byte[4]; BinaryPrimitives.WriteUInt32LittleEndian(size, checked((uint)tag.Length)); file.Write(size);
-            await file.WriteAsync(tag, token); if ((tag.Length & 1) != 0) file.WriteByte(0);
-            BinaryPrimitives.WriteUInt32LittleEndian(size, checked((uint)(file.Length - 8))); file.Position = 4; file.Write(size); file.Flush(true);
-            return;
-        }
-        var next = path + ".tags";
-        using (var input = File.OpenRead(path))
-        using (var output = new FileStream(next, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-        {
-            if (format == MusicAudioFormat.Mp3) await output.WriteAsync(tag, token);
-            else if (info.Covers.Count > 0)
-            {
-                using var reader = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
-                if (!reader.ReadBytes(4).AsSpan().SequenceEqual("fLaC"u8)) throw new InvalidDataException("AudioShell.InvalidContainer");
-                output.Write("fLaC"u8); bool last;
-                do
-                {
-                    var header = reader.ReadBytes(4); if (header.Length != 4) throw new InvalidDataException("AudioShell.InvalidContainer");
-                    last = (header[0] & 128) != 0; header[0] &= 127; output.Write(header);
-                    var size = (header[1] << 16) | (header[2] << 8) | header[3];
-                    var data = reader.ReadBytes(size); if (data.Length != size) throw new InvalidDataException("AudioShell.InvalidContainer"); output.Write(data);
-                } while (!last);
-                for (var i = 0; i < info.Covers.Count; i++)
-                {
-                    var picture = AudioConversionMetadata.Picture(info.Covers[i]);
-                    if (picture.Length >= 1 << 24) throw new InvalidDataException("AudioShell.MetadataTooLarge");
-                    output.Write([(byte)(6 | (i == info.Covers.Count - 1 ? 128 : 0)), (byte)(picture.Length >> 16), (byte)(picture.Length >> 8), (byte)picture.Length]);
-                    await output.WriteAsync(picture, token);
-                }
-            }
-            await input.CopyToAsync(output, token); output.Flush(true);
-        }
-        File.Move(next, path, true);
-    }
 }

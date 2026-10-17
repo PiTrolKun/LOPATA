@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using AIHub.Models;
 
 namespace AIHub.Services;
 
@@ -9,12 +10,18 @@ public interface IMusicAudioEncoder
 {
     Task EncodeAsync(string source, string destination, MusicAudioFormat format, int bitrate,
         IReadOnlyDictionary<string, string> metadata, CancellationToken token);
+    Task EncodeAsync(string source, string destination, MusicAudioFormat format, int bitrate,
+        IReadOnlyDictionary<string, string> metadata, MusicCoverSelection? cover, CancellationToken token) =>
+        cover is null ? EncodeAsync(source, destination, format, bitrate, metadata, token)
+            : throw new NotSupportedException("This audio encoder does not support selected artwork.");
 }
 public sealed class MusicAudioEncoder(MusicAudioRuntime runtime) : IMusicAudioEncoder
 {
     public static MusicAudioEncoder Default { get; } = new(MusicAudioRuntime.Default);
+    public Task EncodeAsync(string source, string destination, MusicAudioFormat format, int bitrate,
+        IReadOnlyDictionary<string, string> metadata, CancellationToken token) => EncodeAsync(source, destination, format, bitrate, metadata, null, token);
     public async Task EncodeAsync(string source, string destination, MusicAudioFormat format, int bitrate,
-        IReadOnlyDictionary<string, string> metadata, CancellationToken token)
+        IReadOnlyDictionary<string, string> metadata, MusicCoverSelection? selected, CancellationToken token)
     {
         if (!MusicOutputSettings.Bitrates.Contains(bitrate)) throw new InvalidDataException("Invalid bitrate.");
         var expectedDuration = MusicWaveFile.ReadDuration(source);
@@ -22,8 +29,10 @@ public sealed class MusicAudioEncoder(MusicAudioRuntime runtime) : IMusicAudioEn
         var fileMetadata = new Dictionary<string, string>(metadata) { ["LOPATA_ENCODING"] = format +
             (MusicOutputSettings.Lossy(format) ? "; target_kbps=" + bitrate + (format == MusicAudioFormat.Opus ? "; VBR" : "; CBR") : "; lossless PCM16") };
         var tags = destination + ".metadata";
+        var cover = selected is null ? MusicCoverArt.Default : MusicCoverStore.ReadArtwork(selected);
         try {
-            await File.WriteAllTextAsync(tags, MusicSongMetadata.FfMetadata(fileMetadata), new UTF8Encoding(false), token);
+            await File.WriteAllTextAsync(tags, AudioConversionMetadata.Ffmetadata(fileMetadata,
+                format == MusicAudioFormat.Opus ? [cover] : []), new UTF8Encoding(false), token);
             var args = new List<string> { "-nostdin", "-v", "error", "-n", "-i", source };
             var comments = format is MusicAudioFormat.Opus or MusicAudioFormat.Flac;
             if (comments) args.AddRange(["-f", "ffmetadata", "-i", tags]);
@@ -35,8 +44,9 @@ public sealed class MusicAudioEncoder(MusicAudioRuntime runtime) : IMusicAudioEn
                 MusicAudioFormat.Wav => ["-c:a", "pcm_s16le", "-f", "wav"],
                 _ => throw new InvalidDataException("Unknown audio format.") });
             args.Add(destination); await runtime.RunAsync(false, args, token);
-            await MusicId3.AttachAsync(destination, format, fileMetadata, token);
+            await AudioMetadataWriter.AttachAsync(destination, format, fileMetadata, [cover], token);
             await ValidateAsync(destination, format, expectedDuration, token, fileMetadata);
+            await MusicCoverArt.VerifyAsync(runtime, destination, token, cover);
             using var file = new FileStream(destination, FileMode.Open, FileAccess.ReadWrite, FileShare.None); file.Flush(true);
         }
         finally { if (File.Exists(tags)) File.Delete(tags); }
@@ -44,9 +54,9 @@ public sealed class MusicAudioEncoder(MusicAudioRuntime runtime) : IMusicAudioEn
     public async Task ValidateAsync(string path, MusicAudioFormat format, TimeSpan expected, CancellationToken token,
         IReadOnlyDictionary<string, string>? metadata = null)
     {
-        using var info = JsonDocument.Parse(await runtime.RunAsync(true, ["-v", "error", "-show_entries", "stream=codec_name,sample_rate,channels:format=duration:stream_tags:format_tags",
+        using var info = JsonDocument.Parse(await runtime.RunAsync(true, ["-v", "error", "-show_entries", "stream=codec_type,codec_name,sample_rate,channels:format=duration:stream_tags:format_tags",
             "-of", "json", path], token));
-        var stream = info.RootElement.GetProperty("streams").EnumerateArray().Single();
+        var stream = info.RootElement.GetProperty("streams").EnumerateArray().Single(s => s.GetProperty("codec_type").GetString() == "audio");
         var codec = format switch { MusicAudioFormat.Opus => "opus", MusicAudioFormat.Mp3 => "mp3", MusicAudioFormat.Flac => "flac", _ => "pcm_s16le" };
         var seconds = double.Parse(info.RootElement.GetProperty("format").GetProperty("duration").GetString()!, CultureInfo.InvariantCulture);
         if (stream.GetProperty("codec_name").GetString() != codec || stream.GetProperty("channels").GetInt32() != 2 ||
