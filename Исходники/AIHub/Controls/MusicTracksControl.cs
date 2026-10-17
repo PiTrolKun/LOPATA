@@ -26,6 +26,7 @@ public sealed class MusicTracksControl : UserControl
     private bool _playing, _rebuilding;
     public string OutputFolder { get; private set; } = "";
     public MusicTrack? SelectedTrack => (_list.SelectedItem as ListBoxItem)?.Tag as MusicTrack;
+    public IReadOnlyList<MusicTrack> SessionTracks => _tracks.ToArray();
     public bool HasTrack(string path) => _tracks.Any(t => string.Equals(t.Path, path, StringComparison.OrdinalIgnoreCase));
     public event Action<MusicTrack, bool>? Selected;
     public event Action<string>? FolderChanged;

@@ -33,6 +33,7 @@ public partial class MainWindow
         RegisterImageUtilityBackgroundOperation();
         RegisterRagBookBackgroundOperation();
         RegisterImageShellBackgroundOperation();
+        RegisterLyricVideoBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeGenerationAsync(state, token); });
         _backgroundOperations.Register(MusicLyricsSynchronization.BackgroundKind, (state, token) =>
@@ -188,6 +189,12 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind == Services.LyricVideo.ClipWork.Kind && notice.Project is { } clipPath)
+            {
+                RestoreFromTray();
+                _fileViewerService.Open(this, clipPath, _appSettings.FileViewer, _isDarkTheme, _localizationService);
+                _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
             if (notice.Kind == MusicRhymeWork.Kind)
             {
                 RestoreFromTray(); OpenMusicScenario(false); MusicPage.ViewRhymeResult(notice.Project);

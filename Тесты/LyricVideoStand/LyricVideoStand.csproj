@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>LOPATA.LyricVideoStand</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="NAudio.Core" Version="2.3.0" />
+    <Compile Include="../../Исходники/AIHub/Models/MusicTimedLyrics.cs" Link="Shared/MusicTimedLyrics.cs" />
+    <Compile Include="../../Исходники/AIHub/Services/MusicLyricsTimingMetadata.cs" Link="Shared/MusicLyricsTimingMetadata.cs" />
+    <Compile Include="../../Исходники/AIHub/Services/AudioConversionMetadata.cs" Link="Shared/AudioConversionMetadata.cs" />
+    <Compile Include="../../Исходники/AIHub/Services/AudioMetadataArchive.cs" Link="Shared/AudioMetadataArchive.cs" />
+    <Compile Include="../../Исходники/AIHub/Services/PngTextMetadata.cs" Link="Shared/PngTextMetadata.cs" />
+    <Compile Remove="out/**;runs/**" />
+  </ItemGroup>
+</Project>

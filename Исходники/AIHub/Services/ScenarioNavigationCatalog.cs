@@ -28,6 +28,7 @@ public static class ScenarioNavigationCatalog
     public const string Publisher = "github_vk_publisher";
     public const string RagBooks = "rag_book_preparation";
     public const string Metadata = "file_metadata";
+    public const string LyricVideo = "music_video";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -47,6 +48,9 @@ public static class ScenarioNavigationCatalog
         Node(Capture, ScenarioNavigationKind.Scenario, "utilities_capture", "Capture.Title", "Capture.Description", "analyze",
             tags: ["screenshot", "screen_capture", "gif_capture", "video_capture"], related: []),
         Node("utilities_images", ScenarioNavigationKind.Group, Utilities, "Navigation.Images", "", "tools"),
+        Node("utilities_video", ScenarioNavigationKind.Group, Utilities, "LyricVideo.Group", "", "tools"),
+        Node(LyricVideo, ScenarioNavigationKind.Scenario, "utilities_video", "LyricVideo.Title", "LyricVideo.Description", "tools",
+            tags: ["lyric_video", "matrix_rain", "video_rain_text"], related: [Music]),
         Node(ImageUtility, ScenarioNavigationKind.Scenario, "utilities_images", "ImageUtility.Title", "ImageUtility.Description", "tools",
             tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
@@ -74,6 +78,7 @@ public static class ScenarioNavigationCatalog
     // Mechanic labels and canonical entrances share this catalog; no per-page tag lists.
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
+        Tag("lyric_video", LyricVideo), Tag("matrix_rain", LyricVideo), Tag("video_rain_text", LyricVideo),
         Tag("music_preparation", Music),
         Tag("music_poetry", Music), Tag("music_poetry_sessions", Music), Tag("music_poetry_assembly", Music),
         Tag("music_generation", Music), Tag("music_poetry_reasoning", Music), Tag("music_lyrics_sync", Music), Tag("music_poetry_search", Music),

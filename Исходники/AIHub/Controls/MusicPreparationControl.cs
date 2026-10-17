@@ -36,6 +36,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     private string? _preparedHardware;
     public event Action? WorkspaceChanged;
     public event Action<MusicWorkspaceControl>? PoetryRequested;
+    public event Action<MusicWorkspaceControl>? VideoRequested;
     public bool CanChangeModel => IsWorkspace && !IsBusy && _workspace?.Session.CanChangeModel == true;
     public void ShowModelMenu(Button anchor)
     {
@@ -133,6 +134,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
         ConfigureWorkspaceCovers();
         _workspace.Generation.SetPoetryState(_poetryOpen, _poetryWorking);
         _workspace.Generation.OpenPoetry = () => PoetryRequested?.Invoke(_workspace);
+        _workspace.Generation.OpenVideo = () => VideoRequested?.Invoke(_workspace);
         _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };
         _workspace.Session.StateChanged += () => WorkspaceChanged?.Invoke();
     }

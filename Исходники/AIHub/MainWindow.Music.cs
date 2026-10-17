@@ -50,6 +50,7 @@ public partial class MainWindow
         MusicPage.CanRemoveModel = CanRemoveMusicModel;
         MusicPage.RemoveModelRequested += RemoveMusicModelAsync;
         MusicPage.PoetryRequested += OpenMusicPoetry;
+        MusicPage.VideoRequested += OpenMusicLyricVideo;
         MusicPage.DirectPoetryRequested += OpenMusicPoetryDirect;
         foreach (var page in new FrameworkElement[] { ScenarioNavigationPage, FinancialPage, CapturePage, GenerationPage, ImageUtilityPage })
             page.IsVisibleChanged += (_, _) => { if (page.IsVisible) MusicPage.Visibility = Visibility.Collapsed; };

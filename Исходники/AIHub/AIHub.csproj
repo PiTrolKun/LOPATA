@@ -80,7 +80,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Runtime\Capture\FFmpeg-8.1\bundle\**\*" Exclude="..\..\Runtime\Capture\FFmpeg-8.1\bundle\files.json" Link="CaptureRuntime\%(RecursiveDir)%(Filename)%(Extension)">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Resource Include="Assets\AppIcon.ico" />
     <EmbeddedResource Include="Content\LiteraryTips.*.json" WithCulture="false" />

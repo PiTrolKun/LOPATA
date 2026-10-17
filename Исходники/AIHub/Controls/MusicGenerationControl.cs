@@ -32,7 +32,7 @@ public sealed class MusicGenerationControl : UserControl
     private Exception? _outputError;
     private readonly MusicOutputPreferences _outputPreferences;
     private readonly ComboBox _count = new() { Width = 65, MinHeight = 30 }, _duration = new() { Width = 190, MinHeight = 30 };
-    private readonly Button _start, _cancel, _poetry, _expert, _recipes;
+    private readonly Button _start, _cancel, _poetry, _expert, _recipes, _video;
     private readonly MusicPoetryButtonIndicator _poetryIndicator;
     private MusicExpertSettings _expertSettings = new();
     private Exception? _expertLoadError;
@@ -59,6 +59,7 @@ public sealed class MusicGenerationControl : UserControl
     public Func<Task>? Cancel { get; set; }
     public event Action? OptionsChanged;
     public Action? OpenPoetry { get; set; }
+    public Action? OpenVideo { get; set; }
     public MusicGenerationOptions Options => new(_title.Text.Trim(), (int)(_count.SelectedItem ?? 1),
         _duration.SelectedIndex <= 0 ? null : (int?)((ComboBoxItem)_duration.SelectedItem).Tag)
         { Artist = _artistInput.Input.Text.Trim(), Comment = _commentInput.Input.Text, Output = _output.Settings };
@@ -106,14 +107,17 @@ public sealed class MusicGenerationControl : UserControl
         _cancel.HorizontalAlignment = HorizontalAlignment.Center; Grid.SetColumn(actions, 1); top.Children.Add(actions);
         var lower = new Grid(); lower.ColumnDefinitions.Add(new()); lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        lower.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         _poetry = MusicAudioUi.IconButton("PoetryChat", "M2,3 H22 V16 H10 L5,21 V16 H2 Z M9,12 L16,5 L19,8 L12,15 H9 Z", () => OpenPoetry?.Invoke());
         _poetryIndicator = new(_poetry);
         _poetry.Width = _poetry.Height = 42;
         _poetry.HorizontalAlignment = HorizontalAlignment.Left; lower.Children.Add(_poetry);
         _expert = MusicAudioUi.IconButton("Expert", "M12,2 L14,5 L17,5 L19,7 L19,10 L22,12 L19,14 L19,17 L17,19 L14,19 L12,22 L10,19 L7,19 L5,17 L5,14 L2,12 L5,10 L5,7 L7,5 L10,5 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12", OpenExpert);
         _recipes = MusicAudioUi.IconButton("Recipes", "M3,3 H11 L12,5 L13,3 H21 V20 H13 L12,22 L11,20 H3 Z M12,5 V22 M6,7 H9 M6,11 H9 M15,7 H18 M15,11 H18", Tuning.OpenRecipes);
-        _recipes.Width = _recipes.Height = 42; Grid.SetColumn(_recipes, 1); lower.Children.Add(_recipes);
-        _expert.Width = _expert.Height = 42; Grid.SetColumn(_expert, 2); lower.Children.Add(_expert);
+        _video = MusicAudioUi.IconButton("Video", "M3,4 H21 V20 H3 Z M9,8 L16,12 L9,16 Z M3,8 H6 M3,16 H6 M18,8 H21 M18,16 H21", () => OpenVideo?.Invoke());
+        _video.Width = _video.Height = 42; Grid.SetColumn(_video, 1); lower.Children.Add(_video);
+        _recipes.Width = _recipes.Height = 42; Grid.SetColumn(_recipes, 2); lower.Children.Add(_recipes);
+        _expert.Width = _expert.Height = 42; Grid.SetColumn(_expert, 3); lower.Children.Add(_expert);
         var toolbar = new Border { Child = lower, CornerRadius = new(10), BorderThickness = new(1),
             Padding = new(3), Margin = new(0, 12, 0, 0) };
         toolbar.SetResourceReference(Border.BorderBrushProperty, "LineBrush");
@@ -167,6 +171,7 @@ public sealed class MusicGenerationControl : UserControl
 
     public void Localize(Func<string, string> localize)
     {
+        MusicAudioUi.Label(_video, localize("LyricVideo.Title"));
         _l = localize; var selected = _duration.SelectedIndex; _duration.Items.Clear();
         _duration.Items.Add(new ComboBoxItem { Content = L("Automatic"), Tag = 0 });
         foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 })
