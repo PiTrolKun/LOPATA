@@ -24,6 +24,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.Metadata:
+                    OpenMetadataUtility();
+                    break;
                 case ScenarioNavigationCatalog.RagBooks:
                     OpenRagBooksScenario();
                     break;

@@ -1,0 +1,9 @@
+ExifTool 13.59 official Windows x64 bundle. Phil Harvey, Oliver Betz and Strawberry Perl contributors.
+Official homepage: https://exiftool.org/
+Distribution: https://downloads.sourceforge.net/project/exiftool/exiftool-13.59_64.zip
+SHA256: 44b512b25af500724ba579d0a53c8fc5851628b692dd5e5d94ae4a15c2cba9ec
+Verified against https://downloads.sourceforge.net/project/exiftool/checksums-13.59.txt
+ExifTool and Perl use the same terms as Perl (Artistic/GPL alternatives); the Windows package includes GPL-3.0 LICENSE.
+The Windows launcher is CC0-1.0. Preserve all notices in MetadataRuntime and the full Licenses_Strawberry_Perl.zip.
+Unmodified ExifTool Perl sources are included under MetadataRuntime/exiftool_files/lib and exiftool.pl.
+This optional bundled CPU reader/editor requires no system installation, GPU, Python or network access at runtime.

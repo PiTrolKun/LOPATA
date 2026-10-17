@@ -1,3 +1,23 @@
+## 17.10.2026 — metadata.exiftool, 0.5.72-dev
+
+Официальный Windows x64 комплект ExifTool 13.59: локальный CPU-инструмент
+широкого чтения и выборочной записи метаданных. Источник: https://exiftool.org/,
+архив: https://downloads.sourceforge.net/project/exiftool/exiftool-13.59_64.zip.
+SHA256 44b512b25af500724ba579d0a53c8fc5851628b692dd5e5d94ae4a15c2cba9ec
+совпал с официальным checksums-13.59.txt. Все 510 исходных файлов (34 532 543 байта)
+закреплены в metadata-exiftool-files.json; launcher только переименован как в README.
+MSBuild переносит комплект в MetadataRuntime; установка Perl/Python в систему
+не нужна. Рецепт: Инструменты/MetadataRuntime/prepare.ps1 и README.md.
+
+Сохраняются условия Perl/ExifTool, GPL-3.0 LICENSE комплекта, CC0 launcher,
+вложенные уведомления и Licenses_Strawberry_Perl.zip. Полные исходные Perl-модули
+ExifTool присутствуют в комплекте; весь комплект не объявляется MIT или собственной
+разработкой ЛОПАТЫ. Лицензионный gate metadata.exiftool — optional/bundled;
+подтверждение обычное, прежние Terms не перегенерируются. Texts и архив Perl
+сохранены в Licenses/texts. Это runtime-зависимость, Atlas Scout остаётся внешним
+инструментом разработки. Новых моделей/весов/сетевых API нет.
+Музыка, видео и DOCX используют прежние зависимости, описанные в матрице утилиты.
+
 ## 17.10.2026 — выпуск обложек подтверждён
 
 ТЗ принято, архивировано; [0.5.71-beta](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.5.71-beta) опубликован и проверен. Стандартная и генерируемые обложки: Z-Image Turbo; происхождение фиксируется в метаданных рядом с моделью музыки. Ограничения ниже сохраняются.

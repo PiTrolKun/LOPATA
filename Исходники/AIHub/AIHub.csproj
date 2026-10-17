@@ -43,6 +43,8 @@
     </Content>
     <EmbeddedResource Include="Tools\ace-xl-python-files.json" LogicalName="AIHub.AcePythonManifest" />
     <EmbeddedResource Include="Tools\image-generation-manifest.json" LogicalName="AIHub.ImageGenerationManifest" />
+    <EmbeddedResource Include="Tools\metadata-exiftool-files.json" LogicalName="AIHub.MetadataExifToolManifest" />
+    <Content Include="..\..\Runtime\Metadata\ExifTool-13.59\exiftool-13.59_64\**\*" Link="MetadataRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Content\ImageGenerationExamples.json" LogicalName="AIHub.ImageGenerationExamples" />
     <Resource Include="Assets\GenerationExamples\*.png" />
     <Content Include="Assets\MusicExamples\*.mp3;Assets\MusicExamples\*.opus">
@@ -150,5 +152,8 @@
   <Target Name="CheckImageUtilityRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\Backends\chatllm.cpp\v24\win-x64\imagemagick\magick.exe')"
            Text="Bundled ImageMagick 7.1.2-30 runtime is missing. Restore the pinned runtime documented in REESTR.md before building LOPATA." />
+  </Target>
+  <Target Name="CheckMetadataRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\Metadata\ExifTool-13.59\exiftool-13.59_64\exiftool.exe')" Text="Metadata runtime is missing. Run Инструменты/MetadataRuntime/prepare.ps1." />
   </Target>
 </Project>

@@ -1,3 +1,11 @@
+## 2026-10-17 — metadata utility
+
+The optional bundled metadata.exiftool runtime is the official ExifTool 13.59 Windows x64 package.
+The original Perl/ExifTool sources, GPL-3.0 LICENSE, CC0 launcher notice and complete
+Strawberry Perl license archive are retained in MetadataRuntime. Catalog notices and
+the archive are also included in Licenses/texts. See [the pinned recipe](Инструменты/MetadataRuntime/README.md).
+No system installation, GPU or model is required. Existing audio/video helpers keep their own terms.
+
 ## 2026-10-07 — music audio runtime
 
 The separate `music.audio` bundle uses FFmpeg 8.1 LGPL shared libraries,

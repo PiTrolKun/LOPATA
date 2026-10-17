@@ -151,7 +151,7 @@ foreach($pair in @(@('builtin.dotnet','microsoft.netcore.app.runtime.win-x64'),@
   }
  }
 }
-foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','music-diffrhythm-entries.json','hardware-runtime-entries.json','executor-chat-entries.json','poetry-profile-entries.json','rag-book-entries.json','rhyme-entries.json')){
+foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','music-diffrhythm-entries.json','hardware-runtime-entries.json','executor-chat-entries.json','poetry-profile-entries.json','rag-book-entries.json','rhyme-entries.json','metadata-entries.json')){
  $scenarioEntries=Join-Path $dest $entryFile
  if(Test-Path $scenarioEntries){
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
