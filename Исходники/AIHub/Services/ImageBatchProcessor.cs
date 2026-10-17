@@ -35,6 +35,8 @@ public sealed class ImageBatchProcessor(ImageBatchStore store, IImageBatchModel 
                         analysis = await Retry(() => model.AnalyzeAsync(item.File, job.Settings, token), item, job, Report, token);
                         if (string.IsNullOrWhiteSpace(analysis.Details) || string.IsNullOrWhiteSpace(analysis.Summary))
                             throw new InvalidDataException("Invalid saved analysis.");
+                        job.Models = job.Models.Concat(model.Models).Distinct().ToArray();
+                        store.Save(job);
                         store.SaveMaterial(job, item.Id, "analysis", analysis);
                     }
                     if (string.IsNullOrWhiteSpace(analysis.Details) || string.IsNullOrWhiteSpace(analysis.Summary))
@@ -65,7 +67,7 @@ public sealed class ImageBatchProcessor(ImageBatchStore store, IImageBatchModel 
             var sections = job.Items.Where(i => i.Status == "ready")
                 .Select(i => (Item: i, Section: store.Read<ImageBatchSection>(job, i.Id, "final")!)).ToArray();
             if (sections.Length == 0) throw new InvalidDataException("No completed descriptions.");
-            ImageBatchExporter.Save(store.Results(job), sections, job.SingleDocument, job.Settings.LanguageCode);
+            ImageBatchExporter.Save(store.Results(job), sections, job.SingleDocument, job.Settings.LanguageCode, new OutputProvenance { Scenario = "image-description/batch", CreatedUtc = job.Created.ToUniversalTime(), Models = job.Models, ModelScope = "batch participation", ModelHistory = job.Models.Length == 0 ? "unknown" : "recorded-runtime; earlier-history-unknown" });
             job.Status = "completed"; store.Save(job); Report("completed");
         }
         catch (OperationCanceledException) { job.Status = "paused"; store.Save(job); Report("paused"); throw; }
@@ -87,6 +89,8 @@ public sealed class ImageBatchProcessor(ImageBatchStore store, IImageBatchModel 
             }, null, job, report, token, splitOnTimeout: group.Length > 1 && job.BundleId == ImageAnalysisBundleCatalog.HeavyId);
             if (!result.Select(s => s.Id).SequenceEqual(group.Select(i => i.Id))) throw new InvalidDataException("Invalid section order.");
             foreach (var section in result) Validate(section, section.Id);
+            job.Models = job.Models.Concat(model.Models).Distinct().ToArray();
+            store.Save(job);
             foreach (var section in result) store.SaveMaterial(job, section.Id, "final", section);
             foreach (var item in group) { item.Status = "ready"; item.Error = ""; }
         }

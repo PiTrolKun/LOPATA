@@ -13,7 +13,7 @@ namespace AIHub.Services;
 /// <summary>One text-only model and one slot; each logical role rebuilds its own messages.</summary>
 public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRequests
 {
-    private readonly HttpClient _http = new() { Timeout = Timeout.InfiniteTimeSpan };
+    private readonly HttpClient _http;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _queueLock = new();
     private CancellationTokenSource _queueCancellation = new();
@@ -45,6 +45,7 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
     public LiteraryChatRuntime(string? projectDirectory = null, bool preparing = false) : this(projectDirectory, preparing, false) { }
     internal LiteraryChatRuntime(string? projectDirectory, bool preparing, bool forceCpu)
     {
+        _http = new HttpClient(new LiteraryModelHistory.Requests(() => _layout?.Root ?? _preparationRoot)) { Timeout = Timeout.InfiniteTimeSpan };
         _forceCpu = forceCpu;
         ApplicationBackgroundOperations.RegisterModel(this, async runtime =>
         { runtime.Stop(); await runtime.AwaitProcessRetirementAsync(CancellationToken.None); });

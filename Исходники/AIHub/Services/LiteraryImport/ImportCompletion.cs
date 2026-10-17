@@ -92,6 +92,7 @@ public static class ImportCompletion
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }
         if (ImportSession.HashFile(source) != session.State.SourceHash) throw new InvalidDataException("Literary.Import.Corrupt");
+        LiteraryModelHistory.CopyImportFacts(session, entry.ProjectPath);
         ImportBookExporter.Export(entry.ProjectPath, Path.Combine(folder, "book.docx"), language == "ru", ct);
         // Include subsequent human review and current text in each new black-box export.
         foreach (var audit in Directory.EnumerateFiles(Path.Combine(entry.ProjectPath, "Import"), "review-*.json"))
@@ -106,7 +107,7 @@ public static class ImportCompletion
             review = JsonSerializer.Deserialize<ImportReviewFile>(File.ReadAllText(Path.Combine(entry.ProjectPath, "Import", "review.json")), ImportJson.Options) });
         session.State.Stage = session.State.RagStatus.StartsWith("ready", StringComparison.Ordinal)
             && session.State.MemoryStatus.StartsWith("proposals-ready", StringComparison.Ordinal) ? "complete" : "partial-result"; session.Save();
-        try { ImportBlackBox.Export(session, Path.Combine(folder, "import-history.xlsx"), ct); }
+        try { ImportBlackBox.Export(session, Path.Combine(folder, "import-history.xlsx"), ct, entry.ProjectPath); }
         catch { session.State.Stage = "export"; session.Save(); throw; }
     }
     private static string CurrentRevision(string root)

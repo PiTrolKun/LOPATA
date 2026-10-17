@@ -78,6 +78,7 @@ public static class ScreenshotFiles
                     }
                     stream.Flush(true);
                 }
+                OutputImageMetadata.Write(temporary, settings.ImageFormat, image.PixelWidth, image.PixelHeight, OutputProvenance.Capture("screenshot/" + source.ToString().ToLowerInvariant() + "/" + suffix));
                 File.Move(temporary, path); paths.Add(path);
             }
             catch (Exception error) { throw new IOException("Screenshot saving failed: " + error.Message + ". Preserved: " + string.Join("; ", paths), error); }

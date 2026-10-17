@@ -475,7 +475,7 @@ public partial class MainWindow
                 Title = L("ImageAnalysis.Preview.Title"),
                 Markdown = BuildImageAnalysisMarkdown(version),
                 IsFinal = session.Status == ImageAnalysisLiteraryStatuses.Completed
-            }, dialog.FileName);
+            }, dialog.FileName, OutputProvenance.ImageDescription(session));
             if (!session.ExportedFiles.Contains(dialog.FileName, StringComparer.OrdinalIgnoreCase))
             {
                 session.ExportedFiles.Add(dialog.FileName);
@@ -673,6 +673,7 @@ public partial class MainWindow
             ChangeRequest = changeRequest,
             Source = source
         };
+        version.Models = OutputProvenance.SessionModels(session);
         session.Versions.Add(version);
         session.SelectedVersionId = version.VersionId;
     }

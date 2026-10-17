@@ -18,7 +18,11 @@ public sealed class LiteraryProjectReservation : IDisposable
             throw new IOException("Project directory already exists.");
         Directory.CreateDirectory(Root);
         _lease = new FileStream(Path.Combine(Root, ".creation.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-        if (!File.Exists(marker)) LiteraryChapterFiles.Write(marker, "LOPATA literary preparation v2");
+        if (!File.Exists(marker))
+        {
+            try { LiteraryChapterFiles.Write(marker, "LOPATA literary preparation v2"); LiteraryModelHistory.InitializeNewProject(Root); }
+            catch { _lease.Dispose(); throw; }
+        }
         else if (LiteraryChapterFiles.Read(marker) != "LOPATA literary preparation v2")
         { _lease.Dispose(); throw new IOException("Unknown project preparation directory."); }
     }

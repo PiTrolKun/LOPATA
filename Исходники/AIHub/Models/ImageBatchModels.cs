@@ -14,6 +14,7 @@ public sealed class ImageBatchJob
     public bool Started { get; set; }
     public string Status { get; set; } = "draft";
     public string Error { get; set; } = string.Empty;
+    public OutputModelUse[] Models { get; set; } = [];
     public List<ImageBatchItem> Items { get; set; } = [];
 }
 

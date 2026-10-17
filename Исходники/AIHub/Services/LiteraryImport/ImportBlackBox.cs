@@ -11,7 +11,7 @@ namespace AIHub.Services.LiteraryImport;
 
 public static class ImportBlackBox
 {
-    public static void Export(ImportSession session, string destination, CancellationToken ct)
+    public static void Export(ImportSession session, string destination, CancellationToken ct, string? projectRoot = null)
     {
         var artifacts = session.State.Artifacts.ToArray();
         ImportDisk.Require(Path.GetDirectoryName(Path.GetFullPath(destination))!, artifacts.Sum(a => a.Bytes) * 6);
@@ -20,6 +20,9 @@ public static class ImportBlackBox
         {
             using (var document = SpreadsheetDocument.Create(temporary, SpreadsheetDocumentType.Workbook))
             {
+                var facts = LiteraryModelHistory.ForImport(session);
+                if (projectRoot is not null) facts = facts with { Models = facts.Models.Concat(LiteraryModelHistory.Read(projectRoot)).Distinct().ToArray(), ModelScope = "import session and resulting project" };
+                OutputOfficeMetadata.Write(document, facts);
                 var workbook = document.AddWorkbookPart(); workbook.Workbook = new Workbook(new Sheets());
                 WriteSheet(workbook, "Описание", [
                     ["Поле / Field", "Значение / Value"], ["Format", "LOPATA import black box v1"],

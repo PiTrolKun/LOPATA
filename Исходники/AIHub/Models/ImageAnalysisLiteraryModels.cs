@@ -128,6 +128,8 @@ public sealed class ImageAnalysisLiteraryVersion
     public string ChangeRequest { get; set; } = string.Empty;
 
     public string Source { get; set; } = "initial";
+
+    public AIHub.Services.OutputModelUse[] Models { get; set; } = [];
 }
 
 public sealed class ImageAnalysisEventEntry

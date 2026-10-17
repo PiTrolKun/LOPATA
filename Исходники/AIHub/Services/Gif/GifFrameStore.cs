@@ -8,6 +8,7 @@ public sealed record GifFrameEntry(string Name, double Milliseconds, int Width, 
 public sealed class GifManifest
 {
     public int Version { get; set; } = 1;
+    public OutputProvenance? Provenance { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
     public bool Loop { get; set; }
@@ -24,7 +25,7 @@ public sealed class GifFrameStore
     public string DirectoryPath { get; }
     public GifManifest Manifest { get; }
     public GifFrameStore(string directory, bool loop)
-    { DirectoryPath = Path.GetFullPath(directory); Directory.CreateDirectory(DirectoryPath); Manifest = new() { Loop = loop }; SaveManifest(); }
+    { DirectoryPath = Path.GetFullPath(directory); Directory.CreateDirectory(DirectoryPath); Manifest = new() { Loop = loop, Provenance = OutputProvenance.Capture("gif") }; SaveManifest(); }
     private GifFrameStore(string directory, GifManifest manifest) { DirectoryPath = directory; Manifest = manifest; }
     public static GifFrameStore Open(string directory)
     {
@@ -68,7 +69,8 @@ public sealed class GifFrameStore
         {
             using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
-                using var encoder = new GifStreamEncoder(file, Manifest.Width, Manifest.Height, Manifest.Loop);
+                using var encoder = new GifStreamEncoder(file, Manifest.Width, Manifest.Height, Manifest.Loop,
+                    ((Manifest.Provenance ?? new OutputProvenance { Scenario = "screen-capture/gif-recovery; original-creation-unknown" }) with { ExportedUtc = DateTimeOffset.UtcNow }).Json());
                 byte[]? previous = null; var emittedCs = 0;
                 for (var i = 0; i < Manifest.Frames.Count; i++)
                 {

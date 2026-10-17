@@ -6,6 +6,7 @@ namespace AIHub.Services;
 
 public interface IImageBatchModel
 {
+    IReadOnlyList<OutputModelUse> Models => [];
     void Restart();
     Task<ImageBatchAnalysis> AnalyzeAsync(ImageAnalysisFilePassport file, ImageAnalysisLiterarySettings settings, CancellationToken token);
     Task<IReadOnlyList<ImageBatchSection>> FormatAsync(IReadOnlyList<(string Id, ImageBatchAnalysis Analysis)> items,
@@ -15,6 +16,7 @@ public interface IImageBatchModel
 public sealed class ImageBatchModel(IOmniTextRuntime runtime, Action<string> log,
     IProgress<ModelStreamChunk>? stream, Action<string, string> raw) : IImageBatchModel
 {
+    public IReadOnlyList<OutputModelUse> Models => [new(runtime.ModelId, runtime.ModelId, runtime.ModelRevision, "image analysis and description")];
     public void Restart() => runtime.Stop();
     public async Task<ImageBatchAnalysis> AnalyzeAsync(ImageAnalysisFilePassport file, ImageAnalysisLiterarySettings settings, CancellationToken token)
     {

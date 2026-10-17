@@ -20,6 +20,7 @@ public sealed class ImportRagBackend(LiteraryProjectLayout layout) : IImportRagB
             GigaEmbeddingInstallation.RuntimeLicenseId, QdrantOptions.LicenseId], ct);
         // The outer stage owns the initial attempt + three retries. Never multiply nested retries.
         await new GigaSourceEmbedding(retry: false).EmbedAsync(input, vectors, progress, ct);
+        LiteraryModelHistory.Record(layout.Root, LiteraryModelHistory.Embeddings);
         return await LiteraryRagImport.ReplaceAsync(_runtime, id, vectors, progress, ct);
     }
 

@@ -61,6 +61,9 @@ public static class VideoEncoder
             Args("-filter_complex", filters, "-map", "[mixed]", "-c:a", settings.VideoFormat == "webm" ? "libopus" : "aac", "-b:a", "192k");
         }
         else Args("-an");
+        var facts = (manifest.Provenance ?? new OutputProvenance { Scenario = "screen-capture/video-recovery; original-creation-unknown" }) with { ExportedUtc = DateTimeOffset.UtcNow };
+        Args("-metadata", "comment=" + facts.Json(), "-metadata", "encoded_by=LOPATA " + facts.ProgramVersion,
+            "-metadata", "creation_time=" + (facts.CreatedUtc ?? facts.ExportedUtc).ToString("O"));
         Args("-t", Number(duration));
         if (settings.VideoFormat == "mp4") Args("-movflags", "+faststart");
         Args("-f", settings.VideoFormat == "mkv" ? "matroska" : settings.VideoFormat, temporary);

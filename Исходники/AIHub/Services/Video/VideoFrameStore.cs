@@ -11,6 +11,7 @@ public sealed record VideoAudioTrack(string Name, string Format, int Rate, int C
 public sealed class VideoManifest
 {
     public int Version { get; set; } = 1;
+    public OutputProvenance? Provenance { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
     public int MinFrameWidth { get; set; }
@@ -36,7 +37,7 @@ public sealed class VideoFrameStore
     public VideoFrameStore(string directory, ScreenCaptureSettings settings)
     {
         DirectoryPath = Path.GetFullPath(directory); Directory.CreateDirectory(DirectoryPath);
-        Manifest = new() { Settings = settings }; Save();
+        Manifest = new() { Settings = settings, Provenance = OutputProvenance.Capture("video") }; Save();
     }
     private VideoFrameStore(string directory, VideoManifest manifest) { DirectoryPath = directory; Manifest = manifest; }
     public static VideoFrameStore Open(string directory)

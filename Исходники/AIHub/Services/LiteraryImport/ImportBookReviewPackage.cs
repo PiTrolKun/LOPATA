@@ -36,8 +36,9 @@ public static class ImportBookReviewPackage
         }
         session.AddJson("preparation-answers", new ImportPreparationAnswers(session.Root).Values);
         var book = Path.Combine(folder, "book.docx");
+        LiteraryModelHistory.CopyImportFacts(session, entry.ProjectPath);
         ImportBookExporter.Export(entry.ProjectPath, book, language == "ru", ct);
-        ImportBlackBox.Export(session, Path.Combine(folder, "import-history.xlsx"), ct);
+        ImportBlackBox.Export(session, Path.Combine(folder, "import-history.xlsx"), ct, entry.ProjectPath);
         session.State.Stage = confirmed ? "book-confirmed" : "book-review"; session.Save();
         return book;
     }

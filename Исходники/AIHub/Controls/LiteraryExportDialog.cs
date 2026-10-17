@@ -41,7 +41,7 @@ internal static class LiteraryExportDialog
                 if (File.Exists(Path.Combine(directory, "Import", "review.json")))
                     Services.LiteraryImport.ImportBookExporter.Export(directory, save.FileName,
                         LiteraryProjectStore.ReadProject(directory).LanguageCode == "ru", CancellationToken.None);
-                else format.Write(store.Snapshot(), save.FileName);
+                else LiteraryDocxExporter.Export(store.Snapshot(), save.FileName, LiteraryModelHistory.ForProject(directory), LiteraryProjectStore.ReadProject(directory).Author);
             });
             System.Windows.MessageBox.Show(Window.GetWindow(owner), l("Literary.Editor.Exported") + "\n" + save.FileName, l("Literary.Export"));
         }

@@ -24,7 +24,7 @@ public partial class MainWindow
             _sessionAudioPlayer?.HasAudio == true, _sessionAudioPlayer?.IsPlaying == true);
     }
 
-    private void ExportSessionAudio()
+    private async void ExportSessionAudio()
     {
         if (_sessionAudioPlayer?.HasAudio != true) return;
         var picker = new Microsoft.Win32.SaveFileDialog
@@ -33,7 +33,7 @@ public partial class MainWindow
             Title = L("ImageAnalysis.Workspace.Audio.Export")
         };
         if (picker.ShowDialog(this) != true) return;
-        try { _sessionAudioPlayer.Export(picker.FileName); }
+        try { await _sessionAudioPlayer.ExportDescriptionAsync(picker.FileName); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         { ShowHeavySpeechError(ex.Message); }
     }

@@ -45,6 +45,7 @@ public sealed class LiteraryWorkIndex(LiteraryProjectLayout layout, ILiterarySou
                     text = segment.Text, offset = text[..segment.Start].EnumerateRunes().Count(), kind = "project" })));
                 LiteraryChapterFiles.Write(Path.Combine(folder, "pending.json"), JsonSerializer.Serialize(new { revision, partId = source.Id }));
                 await (embedding ?? new GigaSourceEmbedding()).EmbedAsync(input, output, progress, ct);
+                if (embedding is null or GigaSourceEmbedding) LiteraryModelHistory.Record(layout.Root, LiteraryModelHistory.Embeddings);
                 layout.EnsurePresent();
                 if (Revision(LiteraryChapterFiles.Read(path)) != revision || ImportEligibility.Fingerprint(layout.Root, source.Id) != eligibility) throw new IOException("The fixed text changed during indexing.");
                 var collection = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source.Id + revision + eligibility)))[..32].ToLowerInvariant();

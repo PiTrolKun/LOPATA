@@ -546,6 +546,7 @@ public partial class MainWindow
         CancellationToken cancellationToken, ImageBackgroundSpeechOptions? options = null)
     {
         options ??= CaptureBackgroundSpeechOptions();
+        var audioProvenance = OutputProvenance.DescriptionSpeech(_imageAnalysisLiterarySession, "Kokoro");
         if (!GetImageAnalysisKokoroSpeechService().IsModelInstalled(options.Language))
         {
             var message = L("ImageAnalysis.Workspace.Voice.ModelMissing");
@@ -591,7 +592,7 @@ public partial class MainWindow
         if (cachePath is not null && File.Exists(cachePath))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            GetSessionAudioPlayer().Open(cachePath, deleteOnClear: false); playbackStarted(); return true;
+            GetSessionAudioPlayer().Open(cachePath, deleteOnClear: false, provenance: audioProvenance); playbackStarted(); return true;
         }
         var result = await GetImageAnalysisKokoroSpeechService().SpeakAsync(
             options.Language,
@@ -605,7 +606,7 @@ public partial class MainWindow
             if (cachePath is not null) BackgroundSpeechCache.Save(result.AudioPath, cachePath);
             if (cancellationToken.IsCancellationRequested) { System.IO.File.Delete(result.AudioPath); return false; }
             if (cachePath is not null) File.Delete(result.AudioPath);
-            GetSessionAudioPlayer().Open(cachePath ?? result.AudioPath, deleteOnClear: cachePath is null);
+            GetSessionAudioPlayer().Open(cachePath ?? result.AudioPath, deleteOnClear: cachePath is null, provenance: audioProvenance);
             playbackStarted();
         }
         LogImageAnalysisRuntime(

@@ -90,7 +90,7 @@ public sealed partial class LiteraryChatRuntime
                         }
                         initialized = true; usesGpu = onGpu;
                     }
-                    try { return await worker!.ExtractAsync(source, ct); }
+                    try { var result = await worker!.ExtractAsync(source, ct); RecordSpecialist(); return result; }
                     catch (LiteraryJellyWorkerException ex) when (usesGpu && (ex.OutOfMemory || PythonHardwareFailure.IsRecoverable(ex.Message)))
                     {
                         await worker!.DisposeAsync(); worker = null; usesGpu = false;
@@ -98,7 +98,7 @@ public sealed partial class LiteraryChatRuntime
                         using var startup = CancellationTokenSource.CreateLinkedTokenSource(ct); startup.CancelAfter(TimeSpan.FromMinutes(10));
                         worker = await LiteraryJellyWorker.CreateAsync(mode, workerModel!, workerDependencies!, (kind, data) => log.Write(kind, data), "cpu", startup.Token);
                         await worker.ReadAsync(startup.Token); await worker.CallAsync(new { action = "load" }, startup.Token);
-                        return await worker.ExtractAsync(source, ct);
+                        var result = await worker.ExtractAsync(source, ct); RecordSpecialist(); return result;
                     }
                 }
                 catch
@@ -107,6 +107,12 @@ public sealed partial class LiteraryChatRuntime
                     initialized = false;
                     throw;
                 }
+            }
+            void RecordSpecialist()
+            {
+                var manifest = LiteraryJellyInstallation.Manifest(mode);
+                var id = manifest.GetProperty("repository").GetString()!;
+                LiteraryModelHistory.Record(_layout.Root, new(id, id, manifest.GetProperty("revision").GetString()!, "memory extraction"));
             }
             return await action(Extract);
         }

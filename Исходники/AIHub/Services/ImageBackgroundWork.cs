@@ -66,6 +66,7 @@ public sealed class ImageBackgroundWork(ImageAnalysisSessionStore store)
                 if (string.IsNullOrWhiteSpace(text)) throw new InvalidDataException("Empty image description.");
                 version = new() { VersionId = input.ResultVersionId, Number = session.Versions.Count + 1,
                     Text = text, ChangeRequest = input.Request, Source = input.Action == "create" ? "initial" : "revision" };
+                version.Models = OutputProvenance.SessionModels(session);
                 session.Versions.Add(version);
                 session.SelectedVersionId = version.VersionId;
                 session.Status = ImageAnalysisLiteraryStatuses.ResultReady;

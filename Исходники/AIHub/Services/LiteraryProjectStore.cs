@@ -83,6 +83,7 @@ public sealed class LiteraryProjectStore(string indexPath)
                     project.Materials.Add(relative);
                 }
             }
+            LiteraryModelHistory.InitializeNewProject(staging);
             initializeStaging?.Invoke(staging);
             File.WriteAllText(Path.Combine(staging, "project.json"), JsonSerializer.Serialize(project, JsonOptions));
             initializeProject?.Invoke(staging);

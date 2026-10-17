@@ -17,6 +17,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
     private readonly QdrantRuntime _runtime;
     private readonly ILiterarySourceEmbedding _embedding;
     private readonly string _stagingRoot;
+    private readonly string? _projectRoot;
     private bool _committed, _disposed, _collectionAttempted;
     private readonly bool _ownRuntime;
     private string Marker => Path.Combine(DirectoryPath, "pending.json");
@@ -25,6 +26,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
 
     public LiterarySourceIndex(QdrantRuntime? runtime = null, ILiterarySourceEmbedding? embedding = null, string? stagingRoot = null, string? projectRoot = null)
     {
+        _projectRoot = projectRoot;
         _ownRuntime = projectRoot is not null;
         _runtime = runtime ?? (projectRoot is null ? QdrantRuntime.Shared : new QdrantRuntime(new() { DataDirectory = Path.Combine(projectRoot, "Rag", "Qdrant"), ValidateStorage = () => { if (!Directory.Exists(projectRoot) || (!File.Exists(Path.Combine(projectRoot, ".creation")) && !File.Exists(Path.Combine(projectRoot, "project.json")))) throw new IOException("Project preparation no longer exists."); } }));
         _embedding = embedding ?? new GigaSourceEmbedding();
@@ -56,6 +58,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
         await File.WriteAllTextAsync(Path.Combine(DirectoryPath, "sources.json"), JsonSerializer.Serialize(hashes), ct);
         var vectorsPath = Path.Combine(DirectoryPath, "vectors.jsonl");
         await _embedding.EmbedAsync(inputPath, vectorsPath, progress, ct);
+        if (_projectRoot is not null && _embedding is GigaSourceEmbedding) LiteraryModelHistory.Record(_projectRoot, LiteraryModelHistory.Embeddings);
         // The worker has exited; all GPU allocations are released before Qdrant import.
         _collectionAttempted = true;
         PointCount = await LiteraryRagImport.ReplaceAsync(_runtime, Id, vectorsPath, progress, ct);
@@ -83,6 +86,7 @@ public sealed class LiterarySourceIndex : IAsyncDisposable
     {
         if (!Ready) throw new InvalidOperationException("Index is not ready.");
         var folder = Path.Combine(projectStaging, "Rag", "Source"); Directory.CreateDirectory(folder);
+        if (_embedding is GigaSourceEmbedding) LiteraryModelHistory.Record(projectStaging, LiteraryModelHistory.Embeddings);
         foreach (var name in new[] { "text.json", "sources.json", "vectors.jsonl", "manifest.json" })
             File.Copy(Path.Combine(DirectoryPath, name), Path.Combine(folder, name), true);
     }

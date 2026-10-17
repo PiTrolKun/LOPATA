@@ -15,8 +15,9 @@ public static class ImageBatchExporter
     public static string Preview(IEnumerable<(ImageBatchItem Item, ImageBatchSection Section)> sections) =>
         string.Join("\n\n", sections.Select(s => s.Section.Title + "\n" + s.Item.File.DisplayName + "\n\n" + string.Join("\n\n", s.Section.Paragraphs)));
 
-    public static void Save(string directory, IReadOnlyList<(ImageBatchItem Item, ImageBatchSection Section)> sections, bool single, string language)
+    public static void Save(string directory, IReadOnlyList<(ImageBatchItem Item, ImageBatchSection Section)> sections, bool single, string language, OutputProvenance? provenance = null)
     {
+        provenance ??= new OutputProvenance { Scenario = "image-description/batch", ModelHistory = "unknown" };
         Directory.CreateDirectory(directory);
         if (!single)
         {
@@ -26,7 +27,7 @@ public static class ImageBatchExporter
                 var name = string.Concat(Path.GetFileNameWithoutExtension(item.File.DisplayName).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
                 if (name.Length > 70) name = name[..70];
                 ImageBatchStore.WriteText(Path.Combine(directory, $"{item.Position:D4}-{name}-{ImageBatchStore.Key(item.Id)}.md"),
-                    $"# {section.Title}\n\n{item.File.DisplayName}\n\n" + string.Join("\n\n", section.Paragraphs));
+                    $"---\nlopata_provenance: {provenance.Json()}\n---\n\n# {section.Title}\n\n{item.File.DisplayName}\n\n" + string.Join("\n\n", section.Paragraphs));
             }
             return;
         }
@@ -36,6 +37,7 @@ public static class ImageBatchExporter
         {
             using (var document = WordprocessingDocument.Create(temp, WordprocessingDocumentType.Document))
             {
+                OutputOfficeMetadata.Write(document, provenance);
                 var main = document.AddMainDocumentPart();
                 main.Document = new Document(new Body()); var body = main.Document.Body!;
                 bool en = language.StartsWith("en", StringComparison.OrdinalIgnoreCase);

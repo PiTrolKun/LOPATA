@@ -9,7 +9,7 @@ namespace AIHub.Services;
 
 public static partial class ExecutorDocxExporter
 {
-    public static void Export(ExecutorResultSnapshot result, string destinationPath)
+    public static void Export(ExecutorResultSnapshot result, string destinationPath, OutputProvenance? provenance = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
         if (string.IsNullOrWhiteSpace(result.Markdown))
@@ -26,7 +26,7 @@ public static partial class ExecutorDocxExporter
             $".{Path.GetFileName(fullPath)}.{Guid.NewGuid():N}.tmp");
         try
         {
-            WriteDocument(temporaryPath, result.Markdown);
+            WriteDocument(temporaryPath, result.Markdown, provenance);
             File.Move(temporaryPath, fullPath, overwrite: true);
         }
         finally
@@ -38,11 +38,12 @@ public static partial class ExecutorDocxExporter
         }
     }
 
-    private static void WriteDocument(string path, string markdown)
+    private static void WriteDocument(string path, string markdown, OutputProvenance? provenance)
     {
         using var document = WordprocessingDocument.Create(
             path,
             WordprocessingDocumentType.Document);
+        if (provenance is not null) OutputOfficeMetadata.Write(document, provenance);
         var mainPart = document.AddMainDocumentPart();
         AddStyles(mainPart);
         var body = new Body();

@@ -159,6 +159,7 @@ public sealed class LiteraryRagReader(LiteraryEditorSnapshot snapshot)
         {
             LiteraryChapterFiles.Write(input, JsonSerializer.Serialize(new[] { new { text = query } }));
             await new GigaSourceEmbedding("cpu", query: true).EmbedAsync(input, output, new InlineProgress<LiteraryPreparationProgress>(_ => { }), ct);
+            LiteraryModelHistory.Record(_layout.Root, LiteraryModelHistory.Embeddings);
             File.WriteAllText(output + ".ready", GigaEmbeddingInstallation.Revision);
         }
         using var vectorFile = JsonDocument.Parse(File.ReadLines(output).First());

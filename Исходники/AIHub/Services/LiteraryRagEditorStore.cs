@@ -47,6 +47,7 @@ public sealed class LiteraryRagEditorStore(LiteraryProjectLayout layout)
         LiteraryChapterFiles.Write(input,JsonSerializer.Serialize(after));
         await ComponentLicenseGate.EnsureAsync([GigaEmbeddingInstallation.LicenseId,GigaEmbeddingInstallation.RuntimeLicenseId,QdrantOptions.LicenseId],ct);
         await (embedding ?? new GigaSourceEmbedding("cpu")).EmbedAsync(input,vectors,progress,ct);
+        if (embedding is null or GigaSourceEmbedding) LiteraryModelHistory.Record(layout.Root, LiteraryModelHistory.Embeddings);
         var runtime = layout.CreateRuntime();
         try
         {

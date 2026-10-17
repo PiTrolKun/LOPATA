@@ -8,6 +8,9 @@ namespace AIHub.Services;
 public static class LiteraryDocxExporter
 {
     public static void Export(IReadOnlyList<LiteraryExportChapter> chapters, string destination)
+        => Export(chapters, destination, new OutputProvenance { Scenario = "literature/export", ModelHistory = "unknown" });
+
+    public static void Export(IReadOnlyList<LiteraryExportChapter> chapters, string destination, OutputProvenance provenance, string? author = null)
     {
         if (chapters.Count == 0) throw new InvalidOperationException("Literary.Editor.ExportEmpty");
         var path = Path.GetFullPath(destination);
@@ -16,6 +19,7 @@ public static class LiteraryDocxExporter
         {
             using (var doc = WordprocessingDocument.Create(temporary, WordprocessingDocumentType.Document))
             {
+                OutputOfficeMetadata.Write(doc, provenance, author);
                 var main = doc.AddMainDocumentPart(); var body = new Body(); main.Document = new Document(body);
                 foreach (var chapter in chapters.OrderBy(c => c.Number))
                 {

@@ -10,7 +10,7 @@ public sealed class GifStreamEncoder : IDisposable
     private readonly BinaryWriter _writer;
     private readonly int _width, _height;
     private bool _finished;
-    public GifStreamEncoder(Stream stream, int width, int height, bool loop)
+    public GifStreamEncoder(Stream stream, int width, int height, bool loop, string? comment = null)
     {
         if (width is < 1 or > 65535 || height is < 1 or > 65535) throw new ArgumentOutOfRangeException(nameof(width));
         _width = width; _height = height; _writer = new(stream, Encoding.ASCII, leaveOpen: true);
@@ -21,6 +21,15 @@ public sealed class GifStreamEncoder : IDisposable
         for (var i = 0; i < 40; i++) { var grey = (byte)Math.Round(i * 255d / 39); _writer.Write(grey); _writer.Write(grey); _writer.Write(grey); }
         if (loop)
         { _writer.Write(new byte[] { 0x21, 0xFF, 11 }); _writer.Write(Encoding.ASCII.GetBytes("NETSCAPE2.0")); _writer.Write(new byte[] { 3, 1, 0, 0, 0 }); }
+        if (comment is not null) Comment(comment);
+    }
+    public void Comment(string text)
+    {
+        var bytes = Encoding.UTF8.GetBytes(text);
+        _writer.Write(new byte[] { 0x21, 0xFE });
+        for (var offset = 0; offset < bytes.Length; offset += 255)
+        { var count = Math.Min(255, bytes.Length - offset); _writer.Write((byte)count); _writer.Write(bytes, offset, count); }
+        _writer.Write((byte)0);
     }
     public static byte[] Index(GifPixels frame, CancellationToken token = default)
     {

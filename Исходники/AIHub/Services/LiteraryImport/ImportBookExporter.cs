@@ -15,6 +15,7 @@ public static class ImportBookExporter
         {
             using (var document = WordprocessingDocument.Create(temporary, WordprocessingDocumentType.Document))
             {
+                OutputOfficeMetadata.Write(document, LiteraryModelHistory.ForProject(root), LiteraryProjectStore.ReadProject(root).Author);
                 var main = document.AddMainDocumentPart(); main.Document = new Document(new Body());
                 var body = main.Document.Body!;
                 body.Append(new Paragraph(new Run(new Text(russian
