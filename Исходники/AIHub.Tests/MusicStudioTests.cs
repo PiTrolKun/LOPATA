@@ -41,7 +41,7 @@ public sealed class MusicStudioTests
         settings.Values["peak_clip"] = 17;
         var request = new MusicYueRequest("doom metal", "[Verse]\nЛАПАТА — произношение", 123, 456, 30) {
             Expert = settings, Abc = "X:1\nK:C\nCDEF" };
-        using var body = JsonDocument.Parse(JsonSerializer.Serialize(MusicStudioWorker.Request(request, false)));
+        using var body = JsonDocument.Parse(JsonSerializer.Serialize(MusicStudioWorker.Request(request, false, MusicStudioRuntime.Legacy)));
         var root = body.RootElement;
         Assert.AreEqual(request.Lyrics, root.GetProperty("lyrics").GetString());
         Assert.AreEqual(request.Style, root.GetProperty("style").GetString());
@@ -57,6 +57,50 @@ public sealed class MusicStudioTests
         using var plan = JsonDocument.Parse(JsonSerializer.Serialize(MusicStudioWorker.Request(request, true)));
         Assert.IsFalse(plan.RootElement.TryGetProperty("abc", out _));
         Assert.AreEqual(settings.PlanLimit, plan.RootElement.GetProperty("abc_sampling").GetProperty("max_tokens").GetInt32());
+    }
+
+    [TestMethod]
+    public void CurrentRequestPreservesOldDecoderPolicyWithoutSilentlyIgnoringPeakClip()
+    {
+        var settings = MusicModelVariants.Defaults(MusicStudioRuntime.Variation);
+        settings.Values["peak_clip"] = 17;
+        var request = new MusicYueRequest("rock", "Текст", 123, 456, 8) { Expert = settings, Abc = "X:1\nK:C\nCDEF" };
+        using var body = JsonDocument.Parse(JsonSerializer.Serialize(MusicStudioWorker.Request(request, false, MusicStudioRuntime.Current)));
+        var root = body.RootElement;
+        Assert.AreEqual("wav32", root.GetProperty("output_format").GetString());
+        Assert.AreEqual("midpoint", root.GetProperty("solver").GetString());
+        Assert.AreEqual(1, root.GetProperty("companion_scale").GetInt32());
+        Assert.IsFalse(root.GetProperty("lyric_timing").GetBoolean());
+        Assert.IsFalse(root.TryGetProperty("peak_clip", out _), "3.6 must apply peak_clip in its explicit processing stage.");
+        using var ab2 = JsonDocument.Parse(JsonSerializer.Serialize(MusicStudioWorker.Request(request with { Expert = settings with { StudioSolver = "ab2" } }, false, MusicStudioRuntime.Current)));
+        Assert.AreEqual("ab2", ab2.RootElement.GetProperty("solver").GetString());
+        Assert.Throws<InvalidDataException>(() => MusicStudioWorker.Request(request with { Expert = settings with { StudioSolver = "ab2" } }, false, MusicStudioRuntime.Legacy));
+    }
+
+    [TestMethod]
+    public void ExistingSettingsAndJobIdentityRemainOnTheirOriginalContract()
+    {
+        var settings = MusicModelVariants.Defaults(MusicStudioRuntime.Variation);
+        var node = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(settings))!.AsObject();
+        node.Remove("StudioSolver");
+        var old = JsonSerializer.Deserialize<MusicExpertSettings>(node.ToJsonString())!;
+        old.Validate(); Assert.AreEqual("midpoint", old.StudioSolver);
+        var ab2 = old with { StudioSolver = "ab2" }; ab2.Validate();
+        Assert.AreEqual("ab2", ModelExpertPresets.Create("AB2", ab2, "Expert").Settings.StudioSolver);
+        Assert.IsFalse(old.SameAs(ab2));
+        Assert.Throws<InvalidDataException>(() => (old with { StudioSolver = "unknown" }).Validate());
+        using var files = new MusicProjectTests.Files();
+        var jobs = new MusicGenerationJobs(files.Root);
+        var created = jobs.Create(files.Root, files.Root, "Legacy", 1, 8, "rock", "Старый текст", expert: old);
+        var legacy = created with { RuntimeRevision = MusicStudioRuntime.Legacy.Revision, RuntimePack = MusicStudioRuntime.Legacy.Pack };
+        jobs.Save(legacy);
+        var loaded = jobs.Load(legacy.Id);
+        var tags = MusicSongMetadata.Create(loaded, loaded.Variants[0], 0);
+        Assert.AreEqual("001", tags["LOPATA_ENGINE_SET"]);
+        Assert.AreEqual(MusicStudioRuntime.Legacy.EngineRevision, tags["LOPATA_ENGINE_REVISION"]);
+        Assert.AreEqual(MusicStudioRuntime.Legacy.SourceRevision, tags["LOPATA_STUDIO_SOURCE"]);
+        Assert.AreEqual(MusicStudioRuntime.Legacy.Revision, loaded.RuntimeRevision);
+        Assert.Throws<InvalidDataException>(() => jobs.Save(legacy with { RuntimePack = MusicStudioRuntime.Current.Pack }));
     }
 
     [TestMethod]
@@ -164,7 +208,8 @@ public sealed class MusicStudioTests
             var decoder = MusicModelVariants.Artifact(root!, MusicStudioRuntime.Variation, MusicComponentCatalog.DecoderId);
             var settings = MusicModelVariants.Defaults(MusicStudioRuntime.Variation);
             settings.Values["abc_sampling.max_tokens"] = 128; settings.Values["steps"] = 8;
-            var request = new MusicYueRequest("rock", "[Verse]\nНаш тест звучит,\nЛАПАТА говорит.", 12345, 45678, 8) { Expert = settings };
+            var request = new MusicYueRequest("rock", "[Verse]\nНаш тест звучит,\nЛАПАТА говорит.", 12345, 45678, 8) { Expert = settings,
+                StudioRuntimeRevision = MusicStudioRuntime.Current.Revision, StudioRuntimePack = MusicStudioRuntime.Current.Pack };
             var worker = new MusicStudioWorker();
             worker.Log += line => File.AppendAllText(Path.Combine(output!, "technical.log"), line + "\n");
             var plan = Path.Combine(output!, "score.abc");
@@ -174,21 +219,43 @@ public sealed class MusicStudioTests
             await worker.SynthesizeAsync(model, decoder, request, Path.Combine(output!, "synth-request.json"), audio, deadline.Token);
             Assert.IsTrue(MusicWaveFile.ReadDuration(audio) > TimeSpan.Zero);
             Assert.IsNotNull(worker.LastRequestReceipt);
+            using var receipt = JsonDocument.Parse(worker.LastRequestReceipt);
+            Assert.AreEqual("002", receipt.RootElement.GetProperty("engine_set").GetString());
+            Assert.AreEqual(10, receipt.RootElement.GetProperty("processing").GetProperty("request").GetProperty("normalize").GetProperty("peak_clip").GetInt32());
             Assert.Contains("actual=", worker.LastHardware!);
             var job = new MusicGenerationJobs(Path.Combine(output!, "jobs")).Create(root!, output!, "Studio technical",
-                1, request.DurationSeconds, request.Style, request.Lyrics, expert: settings, outputSettings: new());
+                1, request.DurationSeconds, request.Style, request.Lyrics, expert: settings, outputSettings: new()) with {
+                    RuntimeRevision = MusicStudioRuntime.Current.Revision, RuntimePack = MusicStudioRuntime.Current.Pack };
             var variant = job.Variants[0] with { LanguageSeed = request.LanguageSeed, SoundSeed = request.SoundSeed,
                 Hardware = worker.LastHardware, UsedRuntimePack = worker.LastRuntimePack, ExecutionReceipt = worker.LastRequestReceipt };
             var metadata = MusicSongMetadata.Create(job, variant, 0);
             Assert.AreEqual(worker.LastRequestReceipt, metadata["LOPATA_STUDIO_REQUEST"]);
             await MusicAudioEncoder.Default.EncodeAsync(audio, variant.ResultPath, MusicAudioFormat.Opus, 320, metadata, deadline.Token);
+            var ab2Audio = Path.Combine(output!, "ab2.wav");
+            await worker.SynthesizeAsync(model, decoder, request with { Expert = settings with { StudioSolver = "ab2" } },
+                Path.Combine(output!, "ab2-request.json"), ab2Audio, deadline.Token);
+            Assert.IsTrue(MusicWaveFile.ReadDuration(ab2Audio) > TimeSpan.Zero);
+            using var ab2Receipt = JsonDocument.Parse(worker.LastRequestReceipt!);
+            Assert.AreEqual("ab2", ab2Receipt.RootElement.GetProperty("generation_settings").GetProperty("solver").GetString());
             Assert.IsFalse(OwnedProcessRegistry.Shared.GetSnapshot().Any(p => p.Component == "Music.Studio"));
             using var cancelled = CancellationTokenSource.CreateLinkedTokenSource(deadline.Token);
-            worker.Log += line => { if (line.Contains("engine ready", StringComparison.Ordinal)) cancelled.Cancel(); };
+            worker.Log += line => { if (line.Contains("[Studio] job=", StringComparison.Ordinal)) cancelled.Cancel(); };
             await Assert.ThrowsAsync<OperationCanceledException>(() => worker.SynthesizeAsync(model, decoder, request,
                 Path.Combine(output!, "cancel-request.json"), Path.Combine(output!, "cancel.wav"), cancelled.Token));
             Assert.IsFalse(File.Exists(Path.Combine(output!, "cancel.wav")));
             Assert.IsFalse(OwnedProcessRegistry.Shared.GetSnapshot().Any(p => p.Component == "Music.Studio"));
+            // A fresh request succeeds after the private server/process tree was cancelled.
+            await worker.SynthesizeAsync(model, decoder, request, Path.Combine(output!, "recovery-request.json"),
+                Path.Combine(output!, "recovery.wav"), deadline.Token);
+            Assert.IsTrue(MusicWaveFile.ReadDuration(Path.Combine(output!, "recovery.wav")) > TimeSpan.Zero);
+            // Rollback and historical resume use 3.4's own wav16 contract even while 002 remains recommended.
+            await MusicStudioRuntime.VerifyAsync(MusicStudioRuntime.Legacy, deadline.Token);
+            var legacyRequest = request with { StudioRuntimeRevision = MusicStudioRuntime.Legacy.Revision,
+                StudioRuntimePack = MusicStudioRuntime.Legacy.Pack };
+            await worker.SynthesizeAsync(model, decoder, legacyRequest, Path.Combine(output!, "legacy-request.json"),
+                Path.Combine(output!, "legacy.wav"), deadline.Token);
+            Assert.IsTrue(MusicWaveFile.ReadDuration(Path.Combine(output!, "legacy.wav")) > TimeSpan.Zero);
+            Assert.AreEqual(MusicStudioRuntime.Legacy.Pack, worker.LastRuntimePack);
             var engines = Process.GetProcessesByName("yue-server");
             try {
                 var state = engines.Select(p => new { p.Id, p.HasExited }).ToArray();

@@ -1,0 +1,47 @@
+[
+  {
+    "Id": "runtime.llama-engine-002",
+    "Name": "llama.cpp v0.7.0 / b11669 · engine set 002",
+    "Version": "b11669-lopata1",
+    "Author": "ggml, LLVM and third-party authors",
+    "License": "MIT; Apache-2.0 with LLVM exceptions; retained dependency notices",
+    "Source": "https://github.com/ggml-org/llama.cpp/tree/620d2225cc436ab0b001e3200e590e3b286ef9ab",
+    "Checked": "2026-10-18",
+    "Basic": false,
+    "Delivery": "bundled/download",
+    "Texts": ["texts/engine-set-002-llama-NOTICES.txt"],
+    "Ru": "Закреплённые официальные CPU/Vulkan-исполнители v0.7.0, build 11669. В отличие от прежнего набора официальные архивы включают LLVM OpenMP (libomp.dll); его полные условия сохранены. Исходные лицензии и заголовки сторонних частей приложены к каждому исполнителю. Microsoft runtime и Vulkan Loader имеют отдельные карточки. Веса моделей и системные драйверы не входят в этот компонент.",
+    "En": "Pinned official v0.7.0 CPU/Vulkan executors, build 11669. Unlike the previous set, the official archives include LLVM OpenMP (libomp.dll); its complete terms are retained. Original dependency licenses and headers accompany each executor. Microsoft runtime and Vulkan Loader have separate entries. Model weights and system drivers are not part of this component.",
+    "Terms": ""
+  },
+  {
+    "Id": "runtime.sd-engine-002",
+    "Name": "stable-diffusion.cpp master-973 · engine set 002",
+    "Version": "f0aac52-lopata1",
+    "Author": "leejet, GGML and third-party authors",
+    "License": "MIT; BSD; retained dependency notices",
+    "Source": "https://github.com/leejet/stable-diffusion.cpp/tree/f0aac524d3f29140e60ba78f3cfb16d6acea87db",
+    "Checked": "2026-10-18",
+    "Basic": false,
+    "Delivery": "bundled/download",
+    "Texts": ["texts/engine-set-002-sd-NOTICES.txt"],
+    "Ru": "Закреплённые официальные исполнители master-973 для CPU, Vulkan и отдельно CUDA 12. Оригинальные лицензии и заголовки вложенных сторонних частей сохраняются в поставке. Microsoft runtime, Vulkan Loader и NVIDIA CUDA имеют отдельные условия. Веса моделей не заменяются и не входят в набор движков. Наличие библиотеки не доказывает совместимость с любой видеокартой.",
+    "En": "Pinned official master-973 executors for CPU, Vulkan and separate CUDA 12. Original licenses and source-header notices for included dependencies are retained in the payload. Microsoft runtime, Vulkan Loader and NVIDIA CUDA have separate terms. Model weights are unchanged and are not included in an engine set. A library alone does not establish compatibility with every GPU.",
+    "Terms": ""
+  },
+  {
+    "Id": "runtime.sd-cuda128-002",
+    "Name": "NVIDIA CUDA for stable-diffusion.cpp · engine set 002",
+    "Version": "CUDA 12.8.1",
+    "Author": "NVIDIA Corporation",
+    "License": "NVIDIA CUDA EULA; included third-party notices",
+    "Source": "https://github.com/leejet/stable-diffusion.cpp/releases/tag/master-973-f0aac52",
+    "Checked": "2026-10-18",
+    "Basic": false,
+    "Delivery": "bundled/download",
+    "Texts": ["texts/generation-CUDA-EULA.txt"],
+    "Ru": "Неизменённые CUDA-библиотеки из официального архива, совпадающие с ранее проверенной поставкой stable-diffusion.cpp. Условия NVIDIA сохранены полностью. Драйвер и системная CUDA не устанавливаются и не изменяются. Этот исполнитель используется только при обнаружении совместимого CUDA-устройства; CPU и Vulkan остаются отдельными путями.",
+    "En": "Unmodified CUDA libraries from the official archive, matching the previously verified stable-diffusion.cpp distribution. Complete NVIDIA terms are retained. Neither the driver nor system CUDA is installed or changed. This executor is used only when a compatible CUDA device is detected; CPU and Vulkan remain separate paths.",
+    "Terms": ""
+  }
+]

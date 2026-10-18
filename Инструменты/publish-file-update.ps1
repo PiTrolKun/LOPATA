@@ -28,6 +28,10 @@ foreach ($required in @('Updater/LOPATA.Updater.exe', 'Licenses/installer.txt', 
     }
 }
 $assets = @($bundle.Assets)
+$engineAssets = & (Join-Path $PSScriptRoot 'get-engine-set-release-assets.ps1') -PackageDirectory $folder `
+    -Receipt $receipt -TransitionManifest $bundle.Manifest
+$assets = @($assets + @($engineAssets.Assets) | Sort-Object -Unique)
+$reusedPackages = @(@($bundle.Reused) + @($engineAssets.Reused) | Sort-Object url -Unique)
 if ($MiniInstallerDirectory) {
     $miniFolder = (Resolve-Path -LiteralPath $MiniInstallerDirectory).Path
     $mini = Get-Content -LiteralPath (Join-Path $miniFolder 'mini-installer.build.json') -Raw | ConvertFrom-Json
@@ -56,7 +60,7 @@ if (!$Publish) { Write-Host 'Preview only. No GitHub changes.'; return }
 $commit = Invoke-UpdateGitHub @('api', "repos/$repo/commits/$($receipt.sourceCommit)", '--jq', '.sha')
 if ($commit -ne $receipt.sourceCommit) { throw 'The exact source commit must be available on GitHub.' }
 $verifiedReleases = @{}
-foreach ($package in $bundle.Reused) {
+foreach ($package in $reusedPackages) {
     $oldTag = ([uri]$package.url).Segments[-2].TrimEnd('/')
     if (!$verifiedReleases.ContainsKey($oldTag)) {
         $verifiedReleases[$oldTag] = Invoke-UpdateGitHub @('api', "repos/$repo/releases/tags/$oldTag") | Out-String | ConvertFrom-Json

@@ -27,7 +27,9 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                 var previousSeconds = variant.GenerationSeconds ?? 0;
                 try {
                 var request = new MusicYueRequest(job.Style, job.Lyrics, variant.LanguageSeed, variant.SoundSeed, job.DurationSeconds)
-                    { Expert = job.Expert.Snapshot(), Wishes = job.Wishes?.Snapshot(), DurationAutomatic = job.DurationAutomatic };
+                    { Expert = job.Expert.Snapshot(), Wishes = job.Wishes?.Snapshot(), DurationAutomatic = job.DurationAutomatic,
+                        StudioRuntimeRevision = job.Variation == MusicStudioRuntime.Variation ? job.RuntimeRevision : null,
+                        StudioRuntimePack = job.Variation == MusicStudioRuntime.Variation ? job.RuntimePack : null };
                 if (job.Expert.Cot != "off" && variant.PlanHash is null)
                 {
                     var plan = jobs.StagePath(id, ".abc"); Stage?.Invoke(MusicGenerationStage.Loading);

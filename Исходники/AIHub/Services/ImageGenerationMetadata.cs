@@ -12,12 +12,15 @@ public static class ImageGenerationMetadata
 {
     public static string Author(string? name) => string.IsNullOrWhiteSpace(name) ? "LOPATA User" : name.Trim();
 
-    public static IReadOnlyDictionary<string, string> Create(ImageGenerationRequest request, int index, DateTimeOffset createdAt)
+    public static IReadOnlyDictionary<string, string> Create(ImageGenerationRequest request, int index, DateTimeOffset createdAt,
+        ImageGenerationRuntimeReceipt? runtime = null)
     {
         var model = ImageGenerationCatalog.Get(request.ModelId);
         var author = Author(request.Metadata?.Author);
         var title = $"{model.Name} #{request.FirstGenerationNumber + index}";
         var version = typeof(ImageGenerationMetadata).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
+        var producer = EngineSetMetadataIdentity.Producer(version, runtime?.EngineSetId);
+        var engineSetDate = EngineSetMetadataIdentity.Date(runtime?.EngineSetId);
         var seed = request.Seeds[index];
         var keywords = new[] { "LOPATA", "AI", model.Name };
         var size = $"{request.Width}x{request.Height}";
@@ -39,33 +42,38 @@ public static class ImageGenerationMetadata
                 new XElement(dc + "creator", new XElement(rdf + "Seq", new XElement(rdf + "li", author))),
                 Alternative(dc + "description", request.Prompt), Alternative(exif + "UserComment", request.Prompt),
                 new XElement(dc + "subject", new XElement(rdf + "Bag", keywords.Select(k => new XElement(rdf + "li", k)))),
-                new XElement(xmp + "CreatorTool", "LOPATA"),
+                new XElement(xmp + "CreatorTool", producer),
                 new XElement(xmp + "CreateDate", createdAt.ToString("O", CultureInfo.InvariantCulture)),
                 new XElement(exif + "DateTimeOriginal", createdAt.ToString("O", CultureInfo.InvariantCulture)))));
         var structured = JsonSerializer.Serialize(new
         {
             Schema = 1, Author = author, Program = "LOPATA", ProgramVersion = version,
+            EngineSetId = runtime?.EngineSetId, EngineSetDate = engineSetDate,
             Model = model.Name, ModelId = model.Id, GenerationNumber = request.FirstGenerationNumber + index,
             request.Prompt, request.SubmittedAt, CreatedAt = createdAt, Seed = seed, request.Width, request.Height,
             OutputWidth = request.Width, OutputHeight = request.Height, OutputLongestSide = 0, ResizeAlgorithm = "None",
             model.Steps, model.Cfg, model.Sampler, model.ClipSkip,
             FlowShift = model.Id == "krea" ? (double?)1.15 : null,
-            Backend = "stable-diffusion.cpp", ImageGenerationCatalog.Manifest.BackendCommit,
-            DiffusionFlashAttention = true, OffloadToCpu = true, VaeTiling = true,
-            Components = model.Components.Select(id =>
+            Backend = "stable-diffusion.cpp", BackendCommit = runtime?.BackendCommit,
+            Runtime = runtime, RuntimeHistory = runtime is null ? "unknown" : "executed-receipt",
+            DiffusionFlashAttention = true, OffloadToCpu = runtime is null ? (bool?)null : false, VaeTiling = true,
+            // Engine delivery is recorded above from the actual attempt; static model weights stay separate.
+            Components = model.Components.Where(id => id != "generation-runtime").Select(id =>
             {
                 var artifact = ImageGenerationCatalog.Manifest.Artifacts.Single(a => a.Id == id);
                 return new { artifact.Id, artifact.Repository, artifact.Revision,
                     Files = artifact.Files.Select(f => new { f.RelativePath, f.Sha256 }) };
             })
         });
-        return new Dictionary<string, string>(StringComparer.Ordinal)
+        var fields = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["XML:com.adobe.xmp"] = xml.ToString(SaveOptions.DisableFormatting),
             ["Title"] = title, ["Author"] = author, ["Description"] = request.Prompt,
-            ["Software"] = "LOPATA", ["Creation Time"] = createdAt.ToString("O", CultureInfo.InvariantCulture),
+            ["Software"] = producer, ["Creation Time"] = createdAt.ToString("O", CultureInfo.InvariantCulture),
             ["Keywords"] = string.Join("; ", keywords), ["parameters"] = parameters, ["LOPATA"] = structured
         };
+        EngineSetMetadataIdentity.AddTags(fields, runtime?.EngineSetId);
+        return fields;
     }
 
     public static IReadOnlyDictionary<string, string> ForOutput(IReadOnlyDictionary<string, string> original,

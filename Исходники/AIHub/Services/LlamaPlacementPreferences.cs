@@ -11,8 +11,9 @@ internal sealed class LlamaPlacementPreferences(string directory)
     internal static string Key(string modelPath, int requestedContext, LlamaRuntimeSelection selection)
     {
         var file = new FileInfo(modelPath);
-        var identity = JsonSerializer.Serialize(new { revision = 3, path = file.FullName.ToUpperInvariant(), file.Length,
+        var identity = JsonSerializer.Serialize(new { revision = 4, path = file.FullName.ToUpperInvariant(), file.Length,
             modified = file.LastWriteTimeUtc.Ticks, requestedContext, selection.Bundle.Directory,
+            selection.Bundle.EngineSetId, runtimeVersion = selection.Bundle.Version, runtimeRevision = selection.Bundle.Revision,
             selection.Bundle.Backend, device = selection.Device?.Id, name = selection.Device?.Name,
             totalBytes = selection.Device?.TotalBytes });
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));

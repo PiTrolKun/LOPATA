@@ -42,6 +42,8 @@ public sealed record MusicExpertSettings
     public string Variation { get; init; } = MusicComponentCatalog.ModelId;
     [JsonRequired] public Dictionary<string, double> Values { get; init; } = MusicExpertCatalog.Parameters.ToDictionary(p => p.Key, p => p.Default);
     public Dictionary<string, string> TextValues { get; init; } = new(StringComparer.Ordinal);
+    // Absent in existing projects/presets: retain the reference solver.
+    public string StudioSolver { get; init; } = "midpoint";
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public ModelTuningState? Tuning { get; init; }
     public double Get(string key) => Values[key];
     public int Integer(string key) => checked((int)Get(key));
@@ -54,10 +56,12 @@ public sealed record MusicExpertSettings
         "off" => "Generate music with codec tokens from the given conditions.",
         _ => MusicTextBudget.DefaultInstruction };
     public MusicExpertSettings Snapshot() => this with { Values = new(Values, StringComparer.Ordinal), TextValues = new(TextValues, StringComparer.Ordinal), Tuning = Tuning?.Snapshot() };
-    public bool SameAs(MusicExpertSettings other) => Variation == other.Variation && Values.Count == other.Values.Count && Values.All(p => other.Values.TryGetValue(p.Key, out var v) && v == p.Value) && TextValues.Count == other.TextValues.Count && TextValues.All(p => other.TextValues.TryGetValue(p.Key, out var v) && v == p.Value);
+    public bool SameAs(MusicExpertSettings other) => Variation == other.Variation && StudioSolver == other.StudioSolver && Values.Count == other.Values.Count && Values.All(p => other.Values.TryGetValue(p.Key, out var v) && v == p.Value) && TextValues.Count == other.TextValues.Count && TextValues.All(p => other.TextValues.TryGetValue(p.Key, out var v) && v == p.Value);
     public void Validate()
     {
         if (!MusicModelVariants.Supported(Variation)) throw new InvalidDataException("Unsupported settings variation.");
+        if (StudioSolver is not ("midpoint" or "ab2") || Variation != MusicStudioRuntime.Variation && StudioSolver != "midpoint")
+            throw new InvalidDataException("Unsupported Studio solver.");
         if (Values is null) throw new InvalidDataException("Missing parameter values.");
         if (TextValues is null) throw new InvalidDataException("Missing text parameter values.");
         if (MusicHeartMuLaCatalog.IsHeart(Variation)) { MusicHeartMuLaCatalog.Validate(this); return; }

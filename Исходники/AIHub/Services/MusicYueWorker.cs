@@ -12,6 +12,8 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
     public MusicExpertSettings? Expert { get; init; }
     public AIHub.Models.MusicWishSnapshot? Wishes { get; init; }
     public bool DurationAutomatic { get; init; }
+    public string? StudioRuntimeRevision { get; init; }
+    public string? StudioRuntimePack { get; init; }
     public MusicExpertSettings EffectiveExpert => Expert ?? new();
     public int EffectivePlanLimit => Expert?.PlanLimit ?? PlanTokenLimit;
     public int SequenceLimit => EffectiveExpert.SequenceLimit(DurationSeconds);

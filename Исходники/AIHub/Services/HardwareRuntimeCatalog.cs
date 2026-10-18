@@ -47,7 +47,7 @@ public static class HardwareRuntimeCatalog
             Source = "https://pytorch.org/get-started/previous-versions/",
             License = "Original Python and wheel notices; Intel OpenMP terms; Microsoft C++ runtime",
             LicenseIds = ["runtime.python-cpu", "runtime.python-intel-openmp", "runtime.llama-msvc"],
-            Dependencies = [LlamaCpuId], HealthCheckRelativePath = "python.exe"
+            Dependencies = [], HealthCheckRelativePath = "python.exe"
         },
         PythonGpu(PythonCudaId, PythonRuntimeProfile.Cuda126, "CUDA 12.6", 2654724874, 4323315735, "runtime.python-cuda"),
         PythonGpu(PythonCuda128Id, PythonRuntimeProfile.Cuda128, "CUDA 12.8", 2932253048, 4730769399, "runtime.python-cuda128"),
@@ -92,7 +92,7 @@ public static class HardwareRuntimeCatalog
             : "https://pytorch.org/get-started/previous-versions/",
         License = "Original upstream Python/PyTorch/dependency notices and separate vendor terms",
         LicenseIds = ["runtime.python-cpu", "runtime.python-intel-openmp", "runtime.llama-msvc", license],
-        Dependencies = [LlamaCpuId], HealthCheckRelativePath = "python.exe"
+        Dependencies = [], HealthCheckRelativePath = "python.exe"
     };
 
     private static ComponentCatalogEntry Sd(string id, string label, string flavor,

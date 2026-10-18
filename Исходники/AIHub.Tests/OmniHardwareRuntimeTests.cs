@@ -54,7 +54,7 @@ public sealed class OmniHardwareRuntimeTests
         {
             await runtime.PrepareAsync(line => { lock (log) File.AppendAllText(log, line + Environment.NewLine); }, null, timeout.Token);
             TestContext.WriteLine(runtime.CurrentExecutable + "; " + runtime.DeviceMapJson);
-            Assert.IsTrue(runtime.CurrentExecutable!.Contains(cpu ? "runtime.llama.cpu" : "runtime.llama.vulkan", StringComparison.Ordinal));
+            Assert.IsTrue(Path.GetDirectoryName(runtime.CurrentExecutable!) == LlamaRuntimeSelector.InstalledBundles().Single(b => b.Backend == (cpu ? "CPU" : "Vulkan")).Directory);
             using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(12) };
             using var slots = JsonDocument.Parse(await client.GetStringAsync(new Uri(runtime.Endpoint, "slots"), timeout.Token));
             Assert.AreEqual(32768, slots.RootElement[0].GetProperty("n_ctx").GetInt32());

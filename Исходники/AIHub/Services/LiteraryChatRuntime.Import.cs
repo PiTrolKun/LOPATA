@@ -25,7 +25,8 @@ public sealed partial class LiteraryChatRuntime
             ValidatePreparation(); _layout?.EnsurePresent();
             await PrepareAsync(ct).ConfigureAwait(false);
             var backendHash = ImportSession.HashFile(_process!.StartInfo.FileName);
-            var fingerprint = ImportSession.Hash(LiteraryModelLocation.Sha256 + backendHash + "import-v2-json-object-t0.2");
+            var fingerprint = ImportSession.Hash(LiteraryModelLocation.Sha256 + backendHash
+                + _selectedRuntime!.Bundle.EngineSetId + _selectedRuntime.Bundle.Revision + "import-v2-json-object-t0.2");
             if (session.State.RuntimeFingerprint.Length > 0 && session.State.RuntimeFingerprint != fingerprint)
                 throw new InvalidDataException("Literary.Import.RuntimeChanged");
             session.State.RuntimeFingerprint = fingerprint; session.Save();
@@ -49,7 +50,8 @@ public sealed partial class LiteraryChatRuntime
             var parents = parentSteps.Select(s => session.State.Artifacts.LastOrDefault(a => a.Step == s)?.Id).OfType<string>().ToArray();
             var requestRecord = session.Add(step + "/request", requestJson, "complete", parents);
             session.AddJson(step + "/settings", new { model = LiteraryModelLocation.FileName, modelSha256 = LiteraryModelLocation.Sha256,
-                backendSha256 = backendHash, inputTokens = count,
+                backendSha256 = backendHash, engineSet = _selectedRuntime.Bundle.EngineSetId,
+                runtimeVersion = _selectedRuntime.Bundle.Version, runtimeRevision = _selectedRuntime.Bundle.Revision, inputTokens = count,
                 template = template.RootElement.Clone(), ContextCapacity, minimumReply, protocol = "import-v2", thinking = false }, requestRecord.Id);
             var raw = session.BeginRaw(step + "/raw-response", requestRecord.Id); var status = "partial";
             try

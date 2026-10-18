@@ -155,6 +155,12 @@ public sealed class MusicGenerationSession : IDisposable
                 return;
             }
             if (_working || _controller?.IsRunning == true || !_ready || !_view.Editor.TryGetGenerationText(out var lyrics)) return;
+            if (_view.Generation.Variation == MusicStudioRuntime.Variation
+                && _view.Generation.ExpertSettings.StudioSolver == "ab2" && !MusicStudioRuntime.SelectedProfile.SupportsAb2)
+            {
+                _view.Status.AppendLog(_l("Music.Expert.UnsupportedSolver"));
+                return;
+            }
             _starting = true; RefreshButtons();
             var options = _view.Generation.Options;
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,

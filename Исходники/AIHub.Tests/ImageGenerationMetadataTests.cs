@@ -39,7 +39,8 @@ public sealed class ImageGenerationMetadataTests
             Assert.AreEqual("Krea 2 Turbo #" + (7 + result.Index), metadata.Title);
             // WIC trims outer whitespace for display; the raw iTXt/JSON prompt below remains exact.
             Assert.AreEqual(request.Prompt.Trim(), metadata.Comment);
-            Assert.AreEqual("LOPATA", metadata.ApplicationName);
+            Assert.IsTrue(metadata.ApplicationName.StartsWith("LOPATA ", StringComparison.Ordinal));
+            StringAssert.Contains(metadata.ApplicationName, "engine set unknown");
             Assert.IsFalse(string.IsNullOrWhiteSpace(metadata.DateTaken));
             CollectionAssert.AreEqual(new[] { "LOPATA", "AI", "Krea 2 Turbo" }, metadata.Keywords.ToArray());
             var text = TextFields(actual);

@@ -78,6 +78,7 @@ public static class ScenarioNavigationCatalog
     // Mechanic labels and canonical entrances share this catalog; no per-page tag lists.
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
+        Tag("engine_sets", Creation),
         Tag("lyric_video", LyricVideo), Tag("matrix_rain", LyricVideo), Tag("video_rain_text", LyricVideo),
         Tag("music_preparation", Music),
         Tag("music_poetry", Music), Tag("music_poetry_sessions", Music), Tag("music_poetry_assembly", Music),

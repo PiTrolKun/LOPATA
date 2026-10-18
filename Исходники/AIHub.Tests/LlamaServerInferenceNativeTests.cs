@@ -59,12 +59,12 @@ public sealed class LlamaServerInferenceNativeTests
         try
         {
             await runtime.PrepareAsync(model, diagnostics.Enqueue, timeout.Token);
-            Assert.IsTrue(runtime.ExpectedExecutablePath.Contains("runtime.llama.vulkan", StringComparison.Ordinal));
+            Assert.IsTrue(Path.GetDirectoryName(runtime.ExpectedExecutablePath) == LlamaRuntimeSelector.InstalledBundles().Single(b => b.Backend == "Vulkan").Directory);
             var text = await runtime.GenerateTextAsync(model, "Reply only with the requested word. Do not explain.",
                 "Name the capital of France.", 128, 0, diagnostics.Enqueue, timeout.Token,
                 streaming ? new InlineProgress(chunks.Add) : null);
             Assert.IsTrue(text.Contains("Paris", StringComparison.OrdinalIgnoreCase), text);
-            Assert.IsTrue(runtime.ExpectedExecutablePath.Contains("runtime.llama.cpu", StringComparison.Ordinal));
+            Assert.IsTrue(Path.GetDirectoryName(runtime.ExpectedExecutablePath) == LlamaRuntimeSelector.InstalledBundles().Single(b => b.Backend == "CPU").Directory);
             Assert.AreEqual(2, handler.Requests.Count);
             Assert.AreEqual(handler.Requests[0], handler.Requests[1]);
             AssertRetired(diagnostics);

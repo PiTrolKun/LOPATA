@@ -10,13 +10,25 @@ public static class MusicStudioRuntime
 {
     public const string Variation = "music-yue2-studio-q8";
     public const string ComponentId = "runtime.music-yue2-studio";
+    public const string CurrentComponentId = "runtime.music-yue2-studio-002";
     public const string CompanionId = "music-yue2-studio-companion";
-    public const string Revision = "v3.4.0-lopata-paths-1";
-    public const string SourceRevision = "9125be3cf9ba720ac439a81cd09ff8bcc2a00368";
-    public const string EngineRevision = "1141479c725b803a3649c900fd3e6fcb27f6f595";
+    public static readonly MusicStudioProfile Legacy = new("001", "v3.4.0-lopata-paths-1",
+        "9125be3cf9ba720ac439a81cd09ff8bcc2a00368", "1141479c725b803a3649c900fd3e6fcb27f6f595", "studio-win-x64", false);
+    public static readonly MusicStudioProfile Current = new("002", "v3.6.0-lopata-paths-1",
+        "c3e214f3a65f3f56c18e107127ebd2ebad5150ad", "c8516dbf44d660cca40d3f420c67063e37ec8258", "studio-3.6.0-win-x64", true);
+    public static MusicStudioProfile SelectedProfile => EngineSetSelection.ActiveId switch {
+        "001" => Legacy, "002" => Current, _ => throw new InvalidDataException("Unsupported Studio engine set.") };
+    public static string Revision => SelectedProfile.Revision;
+    public static string SourceRevision => SelectedProfile.SourceRevision;
+    public static string EngineRevision => SelectedProfile.EngineRevision;
     public const string CompanionRevision = "e2e63d859f3af879baf1b4d4e9f22d1eeda6fde5";
-    public const string Pack = "studio-win-x64";
-    public static string DirectoryPath => Path.Combine(AppContext.BaseDirectory, "MusicStudioRuntime");
+    public static string Pack => SelectedProfile.Pack;
+    public static string DirectoryPath => SelectedProfile.DirectoryPath;
+    internal static string ProfileDirectory(MusicStudioProfile profile) => EngineSetSelection.ResolveDirectory(profile.EngineSetId, "studio", "native");
+    public static MusicStudioProfile ResolveProfile(string revision, string pack) => new[] { Legacy, Current }
+        .SingleOrDefault(p => p.Revision == revision && p.Pack == pack)
+        ?? throw new InvalidDataException("Unsupported Studio runtime contract.");
+    public static bool IsSupported(string revision, string pack) => new[] { Legacy, Current }.Any(p => p.Revision == revision && p.Pack == pack);
     public static bool Available => File.Exists(Path.Combine(DirectoryPath, "manifest.json"));
     public static IReadOnlyList<ManagedModelArtifactCard> Cards(string root) => [.. MusicComponentCatalog.CreateCards(root), Companion(root)];
     private static ManagedModelArtifactCard Companion(string root) => new() {
@@ -34,13 +46,14 @@ public static class MusicStudioRuntime
             SourceUrl = "https://huggingface.co/Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4/resolve/" + CompanionRevision + "/nar_lora_joint_v9.safetensors",
             Purpose = "audio_decoder_adapter" }]
     };
-    public static async Task VerifyAsync(CancellationToken token)
+    public static Task VerifyAsync(CancellationToken token) => VerifyAsync(SelectedProfile, token);
+    public static async Task VerifyAsync(MusicStudioProfile profile, CancellationToken token)
     {
-        using var input = File.OpenRead(Path.Combine(DirectoryPath, "manifest.json"));
+        using var input = File.OpenRead(Path.Combine(profile.DirectoryPath, "manifest.json"));
         using var manifest = await JsonDocument.ParseAsync(input, cancellationToken: token);
         var root = manifest.RootElement;
-        if (root.GetProperty("Revision").GetString() != Revision || root.GetProperty("SourceRevision").GetString() != SourceRevision
-            || root.GetProperty("EngineRevision").GetString() != EngineRevision)
+        if (root.GetProperty("Revision").GetString() != profile.Revision || root.GetProperty("SourceRevision").GetString() != profile.SourceRevision
+            || root.GetProperty("EngineRevision").GetString() != profile.EngineRevision)
             throw new InvalidDataException("Unsupported Studio runtime manifest.");
         var files = root.GetProperty("Files").EnumerateArray().ToArray();
         foreach (var required in new[] { "music-server.exe", "engine/yue-server.exe", "engine/ggml.dll", "engine/ggml-base.dll",
@@ -48,7 +61,7 @@ public static class MusicStudioRuntime
             "engine/cublas64_12.dll", "engine/cublasLt64_12.dll", "engine/cublas64_13.dll", "engine/cublasLt64_13.dll" })
             if (files.Count(f => f.GetProperty("Name").GetString() == required) != 1)
                 throw new InvalidDataException("Incomplete Studio runtime: " + required);
-        var directory = Path.GetFullPath(DirectoryPath) + Path.DirectorySeparatorChar;
+        var directory = Path.GetFullPath(profile.DirectoryPath) + Path.DirectorySeparatorChar;
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in files)
         {

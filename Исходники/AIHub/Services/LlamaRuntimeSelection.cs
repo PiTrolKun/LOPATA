@@ -5,6 +5,9 @@ namespace AIHub.Services;
 public sealed record LlamaRuntimeBundle(string Directory, string Backend, IReadOnlyList<string> LicenseIds)
 {
     public string? ComponentId { get; init; }
+    public string EngineSetId { get; init; } = NativeRuntimeReleasePolicy.LegacySet;
+    public string Version => NativeRuntimeReleasePolicy.LlamaVersion(EngineSetId);
+    public string Revision => NativeRuntimeReleasePolicy.LlamaRevision(EngineSetId);
     public string Server => Path.Combine(Directory, "llama-server.exe");
     public string Cli => Path.Combine(Directory, "llama-cli.exe");
 }
@@ -20,22 +23,32 @@ public sealed record LlamaRuntimeSelection(LlamaRuntimeBundle Bundle, RuntimeDev
 /// <summary>Each launch captures its own bundle and ordinal. Running processes are never switched by global state.</summary>
 public static class LlamaRuntimeSelector
 {
-    public static IReadOnlyList<LlamaRuntimeBundle> InstalledBundles()
+    public static IReadOnlyList<LlamaRuntimeBundle> InstalledBundles(string? engineSetId = null)
     {
+        var setId = NativeRuntimeReleasePolicy.ValidateSetId(engineSetId ?? EngineSetSelection.ActiveId);
         var manager = new ComponentManager();
         var result = new List<LlamaRuntimeBundle>();
         foreach (var id in new[] { HardwareRuntimeCatalog.LlamaCpuId, HardwareRuntimeCatalog.LlamaVulkanId })
         {
             var entry = ComponentCatalog.Find(id)!;
-            var folder = manager.GetInstallDirectory(entry);
+            var flavor = id == HardwareRuntimeCatalog.LlamaCpuId ? "cpu" : "vulkan";
+            var setDirectory = EngineSetSelection.ResolveDirectory(setId, "llama", flavor);
+            var folder = setId == NativeRuntimeReleasePolicy.UpdatedSet || HardwareRuntimeBundleVerifier.HasCompleteLayout(id, setDirectory)
+                ? setDirectory : manager.GetInstallDirectory(entry);
             if (File.Exists(Path.Combine(folder, "llama-server.exe")))
-                result.Add(new(folder, id == HardwareRuntimeCatalog.LlamaCpuId ? "CPU" : "Vulkan", entry.LicenseIds) { ComponentId = id });
+                result.Add(new(folder, flavor == "cpu" ? "CPU" : "Vulkan", setId == NativeRuntimeReleasePolicy.UpdatedSet
+                    ? ["runtime.llama-engine-002", "runtime.llama-msvc", .. (flavor == "vulkan" ? new[] { "runtime.llama-vulkan-loader" } : [])]
+                    : entry.LicenseIds) { ComponentId = id, EngineSetId = setId });
         }
         return result;
     }
 
     public static Task<LlamaRuntimeSelection> SelectAsync(long requiredGpuBytes, bool forceCpu, Action<string> log, CancellationToken token) =>
         SelectAsync(InstalledBundles(), requiredGpuBytes, forceCpu, log, token);
+
+    internal static Task<LlamaRuntimeSelection> SelectForSetAsync(string engineSetId, long requiredGpuBytes,
+        bool forceCpu, Action<string> log, CancellationToken token) =>
+        SelectAsync(InstalledBundles(engineSetId), requiredGpuBytes, forceCpu, log, token);
 
     internal static async Task<LlamaRuntimeSelection> SelectAsync(IReadOnlyList<LlamaRuntimeBundle> bundles,
         long requiredGpuBytes, bool forceCpu, Action<string> log, CancellationToken token)
@@ -49,10 +62,12 @@ public static class LlamaRuntimeSelector
             await ComponentLicenseGate.EnsureAsync(bundle.LicenseIds, token);
             try
             {
-                if (bundle.ComponentId is { } id)
+                if (bundle.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
+                    await NativeEngineBundleVerifier.VerifyFilesAsync("llama", bundle.Backend.ToLowerInvariant(), bundle.Directory, token);
+                else if (bundle.ComponentId is { } id)
                     await HardwareRuntimeBundleVerifier.VerifyFilesAsync(id, bundle.Directory, token);
                 var version = await RuntimeDeviceProbe.RunAsync(bundle.Server, "--version", token);
-                if (!HardwareRuntimePreparation.IsPinnedVersion(version)) throw new InvalidDataException("Runtime version differs from the pinned catalog.");
+                if (!NativeRuntimeReleasePolicy.IsLlamaVersion(version, bundle.EngineSetId)) throw new InvalidDataException("Runtime version differs from the selected engine set.");
                 ready.Add(bundle);
                 if (bundle.Backend == "CPU") continue;
                 var inventory = await RuntimeDeviceProbe.RunAsync(bundle.Server, "--list-devices", token);
@@ -66,7 +81,7 @@ public static class LlamaRuntimeSelector
             .ThenBy(item => item.Bundle.Backend == "CUDA" ? 0 : 1).FirstOrDefault();
         selected ??= ready.FirstOrDefault(bundle => bundle.Backend == "CPU") is { } cpu ? new(cpu, null) : null;
         if (selected is null) throw new IOException("No verified compatible llama.cpp runtime is available. Prepare hardware libraries first.");
-        log($"Runtime: {selected.Bundle.Backend}; device={selected.DeviceId}; executable={selected.Bundle.Server}; free={selected.Device?.FreeBytes}");
+        log($"Runtime: {selected.Bundle.Backend}; engineSet={selected.Bundle.EngineSetId}; version={selected.Bundle.Version}; revision={selected.Bundle.Revision}; device={selected.DeviceId}; executable={selected.Bundle.Server}; free={selected.Device?.FreeBytes}");
         return selected;
     }
 }

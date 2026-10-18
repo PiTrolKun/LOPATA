@@ -12,15 +12,37 @@ public sealed partial class HardwareRuntimePreparation(ComponentManager manager)
     public static bool IsPinnedVersion(string output) => PinnedVersion().IsMatch(output)
         && output.Contains("d4c8e2c", StringComparison.OrdinalIgnoreCase);
 
+    internal static bool IsSelectedNativeLayoutReady(string setId)
+    {
+        NativeRuntimeReleasePolicy.ValidateSetId(setId);
+        return setId == NativeRuntimeReleasePolicy.LegacySet || new[] { ("llama", "cpu"), ("llama", "vulkan"),
+            ("sd", "cpu"), ("sd", "vulkan"), ("sd", "cuda12") }.All(item => NativeEngineBundleVerifier.HasCompleteLayout(
+                item.Item1, item.Item2, EngineSetSelection.ResolveDirectory(setId, item.Item1, item.Item2)));
+    }
+
+    private static bool HasPackagedLegacyNativeLayout() => new[]
+    {
+        (HardwareRuntimeCatalog.LlamaCpuId, "llama", "cpu"),
+        (HardwareRuntimeCatalog.LlamaVulkanId, "llama", "vulkan"),
+        (HardwareRuntimeCatalog.SdCpuId, "sd", "cpu"),
+        (HardwareRuntimeCatalog.SdVulkanId, "sd", "vulkan")
+    }.All(item => HardwareRuntimeBundleVerifier.HasCompleteLayout(item.Item1,
+        EngineSetSelection.ResolveDirectory(NativeRuntimeReleasePolicy.LegacySet, item.Item2, item.Item3)));
+
     /// <summary>Startup inventory only; consumers still verify content before executing a selected runtime.</summary>
     public async Task<ComponentAcquisitionPlan> CheckReadinessAsync(IEnumerable<GpuPassport> devices, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
+        var setId = EngineSetSelection.ActiveId;
+        if (!IsSelectedNativeLayoutReady(setId)) throw new InvalidDataException("The selected engine set is incomplete. Prepare or select a verified engine set first.");
         var inventory = devices.ToArray();
         var cudaMajors = inventory.Any(gpu => gpu.Name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase))
             ? await Task.Run(NvidiaDriverCapabilities.ReadComputeMajors, token) : [];
         token.ThrowIfCancellationRequested();
-        return manager.BuildPlanForComponents(HardwareRuntimeCatalog.RequiredComponents(inventory, cudaMajors), "Hardware runtime preparation");
+        var ids = HardwareRuntimeCatalog.RequiredComponents(inventory, cudaMajors);
+        if (setId == NativeRuntimeReleasePolicy.UpdatedSet || HasPackagedLegacyNativeLayout())
+            ids = ids.Where(id => !HardwareRuntimeBundleVerifier.IsManaged(id)).ToArray();
+        return manager.BuildPlanForComponents(ids, "Hardware runtime preparation; engineSet=" + setId);
     }
 
     /// <summary>Explicit complete integrity check, including executable version probes.</summary>

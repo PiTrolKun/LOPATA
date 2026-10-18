@@ -283,7 +283,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
             if (_layout is not null || _preparationRoot is not null)
             {
                 ValidatePreparation();
-                var cacheFolder = _layout?.EnsureFolder("Dialogs/RuntimeCache") ?? Path.Combine(_preparationRoot!, "Dialogs", "RuntimeCache");
+                var cacheRoot = _layout?.EnsureFolder("Dialogs/RuntimeCache") ?? Path.Combine(_preparationRoot!, "Dialogs", "RuntimeCache");
+                var cacheFolder = NativeRuntimeCacheDirectory.ForLlama(cacheRoot, _selectedRuntime.Bundle);
                 LiteraryProjectLayout.CheckTreePath(cacheFolder); Directory.CreateDirectory(cacheFolder);
                 info.ArgumentList.Add("--slot-save-path"); info.ArgumentList.Add(cacheFolder);
             }
@@ -305,7 +306,9 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
                 if (!_suppressBackendLog) { Log(line); _diagnostics?.Write("stderr", line); }
             };
             var launch = new { executable = info.FileName, workingDirectory = info.WorkingDirectory, arguments = info.ArgumentList.ToArray(),
-                model, modelBytes = modelInfo.Length, backend = FileVersionInfo.GetVersionInfo(info.FileName).FileVersion };
+                model, modelBytes = modelInfo.Length, engineSet = _selectedRuntime.Bundle.EngineSetId,
+                runtimeVersion = _selectedRuntime.Bundle.Version, runtimeRevision = _selectedRuntime.Bundle.Revision,
+                backend = FileVersionInfo.GetVersionInfo(info.FileName).FileVersion };
             trace.Stage("process_start");
             trace.Record("launch", launch);
             _diagnostics?.Write("launch", launch);

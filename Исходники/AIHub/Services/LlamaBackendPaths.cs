@@ -17,5 +17,6 @@ public static class LlamaBackendPaths
 
     public static string CliExecutablePath => Path.Combine(DirectoryPath, "llama-cli.exe");
 
-    public static string DisplayName => $"llama.cpp {Release}";
+    // This is a catalog family label, not evidence about an executed bundle.
+    public static string DisplayName => "llama.cpp";
 }

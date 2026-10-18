@@ -34,7 +34,8 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
     public string ModelId => _profile.Repository;
     public string ModelRevision => _profile.Revision;
     public string RuntimeId => ImageAnalysisRuntimeIds.Qwen35Llama;
-    public string RuntimeVersion => _selectedRuntime?.Bundle.ComponentId is not null ? ComponentCatalog.Find(_selectedRuntime.Bundle.ComponentId)!.Version : LlamaBackendPaths.Release;
+    public string RuntimeVersion => _selectedRuntime is { } selected
+        ? $"{selected.Bundle.Version}; set={selected.Bundle.EngineSetId}; revision={selected.Bundle.Revision}" : "not-launched";
     public string DeviceMapJson => OmniLlamaProtocol.DescribeDeviceMap(_profile, _selectedRuntime?.Bundle.Backend ?? "CPU", _selectedRuntime?.DeviceId ?? "none");
     public bool IsReady
     {

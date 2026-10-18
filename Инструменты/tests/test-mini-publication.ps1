@@ -3,6 +3,7 @@ $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $scratch = Join-Path $root ('_tmp/mini-publish-mock-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $scratch -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $root 'Инструменты/publish-file-update.ps1') -Destination $scratch
+Copy-Item -LiteralPath (Join-Path $root 'Инструменты/get-engine-set-release-assets.ps1') -Destination $scratch
 # Test-only verified-bundle adapter. Crypto and ZIP validation are covered by C# tests;
 # every GitHub call below is intercepted, so this fixture cannot publish anything.
 @'

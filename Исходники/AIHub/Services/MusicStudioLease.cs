@@ -23,8 +23,10 @@ internal sealed class MusicStudioLease : IAsyncDisposable
         _process = process; Address = address; _data = data; _log = log;
         _stdout = DrainAsync(process.StandardOutput); _stderr = DrainAsync(process.StandardError);
     }
-    public static async Task<MusicStudioLease> StartAsync(string modelsRoot, string data, int context, Action<string> log, CancellationToken token)
+    public static async Task<MusicStudioLease> StartAsync(string modelsRoot, string data, int context, Action<string> log, CancellationToken token,
+        MusicStudioProfile? profile = null)
     {
+        profile ??= MusicStudioRuntime.SelectedProfile;
         Directory.CreateDirectory(data);
         // Reserve both ephemeral loopback ports together. No fixed port and no discovery/adoption of another server.
         var front = new TcpListener(IPAddress.Loopback, 0); var engine = new TcpListener(IPAddress.Loopback, 0);
@@ -37,8 +39,8 @@ internal sealed class MusicStudioLease : IAsyncDisposable
             lyrics_sync = new { enabled = false, provider = "none" }, cover_auto = false,
             configuration = new { selections = new[] { new { capability = "music_generation", mode = "local", local_engine = "yue2-cpp" } } }
         }), token);
-        var info = new ProcessStartInfo(Path.Combine(MusicStudioRuntime.DirectoryPath, "music-server.exe")) {
-            WorkingDirectory = MusicStudioRuntime.DirectoryPath, UseShellExecute = false, CreateNoWindow = true,
+        var info = new ProcessStartInfo(Path.Combine(profile.DirectoryPath, "music-server.exe")) {
+            WorkingDirectory = profile.DirectoryPath, UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true,
             StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
         MusicHardwareProbe.CleanEnvironment(info);
@@ -47,7 +49,7 @@ internal sealed class MusicStudioLease : IAsyncDisposable
             ["YUE_ENGINE_PORT"] = enginePort.ToString(System.Globalization.CultureInfo.InvariantCulture),
             ["YUE_ENGINE_HOST"] = IPAddress.Loopback.ToString(),
             ["YUE_ENGINE_BASE_URL"] = new UriBuilder("http", IPAddress.Loopback.ToString(), enginePort).Uri.AbsoluteUri.TrimEnd('/'),
-            ["YUE_ENGINE_ROOT"] = Path.Combine(MusicStudioRuntime.DirectoryPath, "engine"),
+            ["YUE_ENGINE_ROOT"] = Path.Combine(profile.DirectoryPath, "engine"),
             ["YUE_STUDIO_DATA_ROOT"] = data, ["YUE_STUDIO_SETTINGS_PATH"] = settings,
             ["YUE_MODELS_ROOT"] = Path.Combine(data, "model-state"),
             ["LOPATA_YUE_BACKBONE"] = MusicModelVariants.Artifact(modelsRoot, MusicStudioRuntime.Variation, MusicComponentCatalog.ModelId),
@@ -79,7 +81,7 @@ internal sealed class MusicStudioLease : IAsyncDisposable
                 catch (OperationCanceledException) when (!deadline.IsCancellationRequested) { }
                 await Task.Delay(500, deadline.Token);
             }
-            log("[Studio] engine ready; revision=" + MusicStudioRuntime.Revision + "; companion=" + MusicStudioRuntime.CompanionRevision);
+            log("[Studio] engine ready; set=" + profile.EngineSetId + "; revision=" + profile.Revision + "; companion=" + MusicStudioRuntime.CompanionRevision);
             return lease;
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested) {
@@ -99,7 +101,8 @@ internal sealed class MusicStudioLease : IAsyncDisposable
     }
     public async Task CopyAudioAsync(string route, string path, CancellationToken token)
     {
-        if (!route.StartsWith("/v1/library/media/", StringComparison.Ordinal) || route.Contains("..") || route.Contains('?'))
+        if (route != "/v1/processing/preview" && !route.StartsWith("/v1/library/media/", StringComparison.Ordinal)
+            || route.Contains("..") || route.Contains('?') || route.Contains('#') || route.Contains('\\'))
             throw new InvalidDataException("Unexpected Studio audio URL.");
         using var response = await _http.GetAsync(new Uri(Address, route), HttpCompletionOption.ResponseHeadersRead, token);
         response.EnsureSuccessStatusCode();

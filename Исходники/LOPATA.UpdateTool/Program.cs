@@ -25,11 +25,30 @@ try
         var reuse = config.PreviousManifestPath is null ? null : Read(config.PreviousManifestPath).Verify(keys);
         var manifest = await UpdatePackageBuilder.BuildAsync(config.Roots, config.OutputDirectory,
             config.Version, config.SourceCommit, config.Notes, reuse);
+        if (EngineSetTransition.UsesSets(manifest))
+        {
+            if (config.LegacyEngineSetManifestPath is null || config.LegacyEngineSetDirectory is null)
+                throw new InvalidDataException("Engine set delivery requires a signed legacy transition payload and a separate fresh manifest.");
+            WriteJson(Path.Combine(config.OutputDirectory, EngineSetTransition.FreshManifestName),
+                SignedManifest.Sign(manifest, config.KeyId, signingKey));
+            manifest = await EngineSetTransition.BuildAsync(manifest, Read(config.LegacyEngineSetManifestPath).Verify(keys),
+                config.LegacyEngineSetDirectory, config.OutputDirectory, reuse);
+        }
         var signed = SignedManifest.Sign(manifest, config.KeyId, signingKey);
         signed.Verify(keys);
         WriteJson(Path.Combine(config.OutputDirectory, "lopata-files.json"), signed);
         Console.WriteLine(JsonSerializer.Serialize(new { manifest.Version, Files = manifest.Files.Length,
             Packages = manifest.Packages.Length, Bytes = manifest.Packages.Sum(p => p.Size) }));
+        return 0;
+    }
+    if (args[0] == "verify-engine-transition")
+    {
+        if (config.FreshManifestPath is null) throw new InvalidDataException("Missing fresh installation manifest.");
+        var transition = Read(config.TargetManifestPath).Verify(keys);
+        EngineSetTransition.ValidatePair(transition, Read(config.FreshManifestPath).Verify(keys));
+        if (config.LegacyEngineSetManifestPath is null) throw new InvalidDataException("Missing signed legacy engine set.");
+        EngineSetTransition.ValidateLegacy(transition, Read(config.LegacyEngineSetManifestPath).Verify(keys));
+        Console.WriteLine("Verified separate fresh and transition manifests.");
         return 0;
     }
     var roots = new UpdateRoots(config.Roots);
@@ -92,6 +111,9 @@ internal sealed record ToolConfig
     public UpdateNote[] Notes { get; init; } = [];
     public string OutputDirectory { get; init; } = "";
     public string? PreviousManifestPath { get; init; }
+    public string? LegacyEngineSetManifestPath { get; init; }
+    public string? LegacyEngineSetDirectory { get; init; }
+    public string? FreshManifestPath { get; init; }
     public string TargetManifestPath { get; init; } = "";
     public string StateDirectory { get; init; } = "";
     public string StagingDirectory { get; init; } = "";

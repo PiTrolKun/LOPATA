@@ -17,7 +17,11 @@ public sealed record ImageGenerationRequest(string Id, string ModelId, string Pr
     public ImageGenerationMetadataOptions? Metadata { get; init; }
     // Zero preserves legacy delivery; the preset is fixed at submission time.
     public int OutputLongestSide { get; init; }
+    // Captured when submitted. A resumed native job cannot silently change executors.
+    public string? EngineSetId { get; init; }
 }
+public sealed record ImageGenerationRuntimeReceipt(string EngineSetId, string RuntimeVersion,
+    string BackendCommit, string Backend, string ComponentId);
 public sealed record ImageGenerationMetadataOptions(string Author);
 public sealed record ImageGenerationResult(int Index, string FileName, long Seed, bool Reviewed = false)
 {
@@ -25,6 +29,7 @@ public sealed record ImageGenerationResult(int Index, string FileName, long Seed
     public bool Exported { get; init; }
     public string? ExportError { get; init; }
     public string? ProcessingError { get; init; }
+    public ImageGenerationRuntimeReceipt? Runtime { get; init; }
 }
 public sealed record ImageGenerationTurn(ImageGenerationRequest Request, ImageGenerationResult[] Results);
 public sealed record ImageGenerationSession(string Id, ImageGenerationTurn[] Turns);

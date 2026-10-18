@@ -34,7 +34,8 @@ public sealed partial class ImageGenerationControl
         OutputFolder = _settings.Folder, SubmittedAt = DateTimeOffset.Now,
         FirstGenerationNumber = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Sum(t => t.Request.Seeds.Length) + 1,
         Metadata = new(ImageGenerationMetadata.Author(_metadataAuthor())),
-        OutputLongestSide = ImageOutputDimensions.Normalize(_settings.OutputLongestSide)
+        OutputLongestSide = ImageOutputDimensions.Normalize(_settings.OutputLongestSide),
+        EngineSetId = EngineSetSelection.ActiveId
     };
     private async Task NewVariantAsync(ImageGenerationRequest previous)
     {

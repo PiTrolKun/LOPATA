@@ -39,7 +39,7 @@ public sealed class ApplicationUpdateCoordinator
     public void CancelPrepared() => _prepared.Clear();
 
     public Task<UpdateOffer?> CheckAsync(string current, UpdateDelivery delivery, CancellationToken token) =>
-        new PublishedUpdateCatalog(_http, UpdateReleaseKeys.Trusted).CheckAsync(current, delivery, token);
+        new PublishedUpdateCatalog(_http, UpdateReleaseKeys.Trusted).CheckAsync(current, delivery, token, preferFreshManifest: true);
 
     public static UpdateOffer PreparedOffer(PreparedApplicationUpdate prepared)
     {

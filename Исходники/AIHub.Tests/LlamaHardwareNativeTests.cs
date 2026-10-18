@@ -42,7 +42,7 @@ public sealed class LlamaHardwareNativeTests
         try
         {
             await runtime.PrepareAsync(timeout.Token);
-            Assert.IsTrue(runtime.CurrentExecutable!.Contains(forceCpu ? "runtime.llama.cpu" : "runtime.llama.vulkan", StringComparison.Ordinal));
+            Assert.IsTrue(Path.GetDirectoryName(runtime.CurrentExecutable!) == LlamaRuntimeSelector.InstalledBundles().Single(b => b.Backend == (forceCpu ? "CPU" : "Vulkan")).Directory);
             Assert.IsTrue(runtime.ContextCapacity >= 1024);
             Assert.IsTrue(runtime.ContextCapacity <= runtime.ModelContextTokens);
             using var client = new HttpClient();
@@ -106,7 +106,7 @@ public sealed class LlamaHardwareNativeTests
         try
         {
             await runtime.PrepareAsync(new DebugModelInfo { Path = model, Name = "Qwen3 native hardware test" }, TestContext.WriteLine, timeout.Token);
-            Assert.IsTrue(runtime.ExpectedExecutablePath.Contains(forceCpu ? "runtime.llama.cpu" : "runtime.llama.vulkan", StringComparison.Ordinal));
+            Assert.IsTrue(Path.GetDirectoryName(runtime.ExpectedExecutablePath) == LlamaRuntimeSelector.InstalledBundles().Single(b => b.Backend == (forceCpu ? "CPU" : "Vulkan")).Directory);
             using var client = new HttpClient();
             using var slots = System.Text.Json.JsonDocument.Parse(await client.GetStringAsync(runtime.Endpoint + "/slots", timeout.Token));
             Assert.AreEqual(CoreContextRuntimeLimits.CurrentBackendContextLimit, slots.RootElement[0].GetProperty("n_ctx").GetInt32());

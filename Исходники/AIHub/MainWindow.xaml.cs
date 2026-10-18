@@ -175,6 +175,7 @@ public partial class MainWindow : Window
 
     private async void PrimaryActionButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!_engineSetsInitialized) { StatusText.Text = L("EngineSets.Working"); return; }
         try { await ComponentLicenseGate.EnsureAsync("basic", CancellationToken.None); }
         catch (OperationCanceledException) { return; }
         if (_appState.HasCompletedSetup)

@@ -53,7 +53,7 @@ public sealed class MusicCoverWork(MusicCoverStore store, Func<IMusicRhymeModel>
                 var request = new ImageGenerationRequest(input.Id, "z-image", run.Prompt, 1024,
                     MusicCoverLayout.Create(input.Artist, input.Title).ImageHeight,
                     Enumerable.Range(0, 4).Select(_ => (long)System.Security.Cryptography.RandomNumberGenerator.GetInt32(int.MaxValue)).ToArray(), input.ModelsRoot, session)
-                    { SubmittedAt = DateTimeOffset.Now, Metadata = new("LOPATA") };
+                    { SubmittedAt = DateTimeOffset.Now, Metadata = new("LOPATA"), EngineSetId = EngineSetSelection.ActiveId };
                 run = Save(run with { Images = request });
             }
             await ApplicationBackgroundOperations.RetireModelsAsync();

@@ -10,6 +10,7 @@ public partial class MainWindow
     private ComponentAcquisitionPlan? _hardwareRuntimePlan;
     private readonly SemaphoreSlim _hardwareRuntimeCheck = new(1, 1);
     private (long Length, DateTime Written)? _readyHardwareState;
+    private string? _readyHardwareEngineSet;
 
     private (long Length, DateTime Written) ReadHardwareStateStamp()
     {
@@ -22,6 +23,8 @@ public partial class MainWindow
         if (_hardwareRuntimePlan?.IsReady != true || _readyHardwareState is null) return false;
         try
         {
+            if (_readyHardwareEngineSet != EngineSetSelection.ActiveId
+                || !HardwareRuntimePreparation.IsSelectedNativeLayoutReady(EngineSetSelection.ActiveId)) return false;
             if (_readyHardwareState != ReadHardwareStateStamp()) return false;
             // A same-session entry needs only the lightweight layout check.
             // Installation/removal or a missing artifact requires a new acquisition plan.
@@ -54,6 +57,7 @@ public partial class MainWindow
             if (_hardwareRuntimePlan.IsReady)
             {
                 _readyHardwareState = ReadHardwareStateStamp();
+                _readyHardwareEngineSet = EngineSetSelection.ActiveId;
                 return true;
             }
             ShowHardwareRuntimePrompt();

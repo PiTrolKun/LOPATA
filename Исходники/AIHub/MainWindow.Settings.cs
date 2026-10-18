@@ -62,6 +62,9 @@ public partial class MainWindow
         System.Windows.Automation.AutomationProperties.SetAutomationId(utilities, "Capture.Settings.Expander");
         var aboutButton = _settingsCards.Action("Settings.About", "About.Title", AboutButton_Click);
         var about = _settingsCards.Card(new TextBlock { Text = Title, FontWeight = FontWeights.SemiBold }, aboutButton);
+        InitializeEngineSetSettings();
+        var engines = _settingsCards.Card(_settingsCards.Label("EngineSets.Title", true),
+            _settingsCards.Label("EngineSets.Help"), _engineSets);
 
         void Section(string id, string icon, params FrameworkElement[] cards) => SettingsNavigator.AddSection(id, icon,
             "Settings.Navigation." + id + ".Title", "Settings.Navigation." + id + ".Help", cards);
@@ -70,6 +73,7 @@ public partial class MainWindow
         Section("voice", "\uE767", SettingsVoiceCard);
         Section("models", "\uE8F1", SettingsAutonomyCard, ManagedModelsExpander);
         Section("components", "\uE74C", ProcessingComponentsExpander, ViewerComponentsExpander, _settingsCards.Card(ComponentLicensesButton));
+        Section("engines", "\uE713", engines);
         Section("downloads", "\uE896", SettingsDownloadsCard);
         Section("utilities", "\uE90F", utilities);
         Section("diagnostics", "\uE9D9", SettingsDiagnosticsCard);
@@ -106,6 +110,7 @@ public partial class MainWindow
         Target("download-viewers", "components", "Components.DownloadSelectedViewers", "Components.ViewersHelp", DownloadSelectedViewersButton);
         Target("verify-viewers", "components", "Components.VerifyViewers", "Components.ViewersHelp", VerifyInstalledViewersButton);
         Target("licenses", "components", "licenses.title", "Settings.Navigation.components.Help", ComponentLicensesButton);
+        Target("engine-sets", "engines", "EngineSets.Title", "EngineSets.Help", _engineSets);
         Target("connections", "downloads", "Settings.ModelDownloadConnections", "Settings.ModelDownloadsHelp", ModelDownloadConnectionsComboBox);
         Target("utilities", "utilities", "Capture.Title", "Capture.Description", utilities);
         Target("logging", "diagnostics", "Diagnostics.Literary.Enabled", "Diagnostics.Literary.Hint", DetailedLiteraryDiagnosticsCheckBox);
@@ -145,6 +150,8 @@ public partial class MainWindow
             _applicationTray?.RefreshLocalization();
             RefreshCaptureLocalization();
             RefreshGenerationSettings();
+            _engineSets.Localize(L);
+            RefreshEngineSetIndicator();
         }
         finally { _refreshingSettingsWorkspace = false; }
     }

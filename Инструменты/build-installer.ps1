@@ -202,6 +202,8 @@ $packageDirectory = Join-Path $repoRoot ("Runtime/UpdatePackages/$version-" + [g
     -ChatLlmBackendDir $chatLlmBackendDir -NotesPath $NotesPath `
     -OutputDirectory $packageDirectory -PreviousManifestPath $PreviousManifestPath -HistoryPath $HistoryPath -StandBuild:([bool]$StandDataRoot)
 $fileManifest = Join-Path $packageDirectory 'lopata-files.json'
+$freshManifest = Join-Path $packageDirectory 'lopata-fresh-files.json'
+if (Test-Path -LiteralPath $freshManifest) { $fileManifest = $freshManifest }
 if (!(Test-Path -LiteralPath $fileManifest)) { throw 'Signed release manifest is missing.' }
 
 $arguments = @(

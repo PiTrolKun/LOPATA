@@ -572,6 +572,12 @@ Source: https://github.com/simple-icons/simple-icons/blob/a844e581a1874bcb2729ce
 Original license: `Исходники/AIHub/Licenses/texts/simple-icons-CC0.txt` (bundled as `Licenses/texts/simple-icons-CC0.txt`).
 Checked: 2026-10-10. Only the VK icon geometry is used; no Simple Icons library is included.
 VK is a trademark of its respective owner. This icon identifies a link to the LOPATA community.
+
+The YouTube channel icon in the About window uses geometry from the same Simple Icons revision (CC0-1.0).
+Source: https://github.com/simple-icons/simple-icons/blob/a844e581a1874bcb2729cef99ab10b36b24fe9ca/icons/youtube.svg
+The original CC0 license is already bundled as `Licenses/texts/simple-icons-CC0.txt`.
+Checked: 2026-10-17. No icon library is included. YouTube is a trademark of Google LLC;
+the icon identifies the LOPATA channel link and does not indicate endorsement.
 # GigaAM v3 CTC — shared music line alignment (2026-10-14)
 
 GigaAM source revision `7447938d791c4f3e643386ee22c33777004293a5` and original v3 CTC weights are MIT licensed, copyright GigaChat Team. Every music generator uses this shared local CPU preparation component. Generator licenses remain unchanged. Original additional packages: Hydra 1.3.2 (MIT), OmegaConf 2.3.0 and ANTLR 4.9.3 (BSD-3-Clause), SoundFile 0.13.1 (BSD-3-Clause) with separately loaded libsndfile 1.2.2 (LGPL-2.1-or-later), CFFI 2.0.0 (original MIT-family LICENSE), pycparser 2.23 (BSD-3-Clause), SentencePiece 0.2.1 (Apache-2.0 with protobuf-lite notice), TorchAudio 2.10.0+cpu (BSD-2-Clause). Python/PyTorch CPU retain their existing upstream notices.
@@ -583,3 +589,44 @@ The immutable runtime is not modified by pip. Unmodified upstream archives, hash
 Microsoft.Web.WebView2 SDK 1.0.4258.31 (NuGet, BSD-3-Clause): встроенная библиотека WPF, оригинальные LICENSE/NOTICE пакета в Licenses/texts/WebView2-SDK-*.txt. Runtime отдельный, используется существующий viewer.webview2 и его условия/каталог; установленная версия не хардкодится. Optional SDK/service entries подготовлены штатным prepare-license-catalog.ps1 -AppendEntries; прежние Terms, installer.txt и installer-receipt.json не меняются, потому что Basic-состав не расширен. Внешний service.alice-chat — штатный облачный чат, не локальная модель/веса/API Search. Условия https://yandex.ru/legal/alice_chat/ru/ проверены 15.10.2026, отражены ограничения контента/защиты и неизвестность специального разрешения автоматизации без юридической гарантии.
 
 Операция музыкального чата остаётся вспомогательной по действующему контракту BeginAuxiliary: выбранная локальная модель последовательно готовит вопрос и итог, browser ожидание находится внутри того же cancel/exit lifecycle. Скрытие встроенного окна сохраняет профиль; выход/отмена не запускают незаметный повтор неизвестной отправки. Практическая приёмка пользователем впереди; отсутствующий runtime и требование действий сайта не блокируют локальный режим. Новый тег music_poetry_search ведёт во вход музыкального сценария. Отдельные стенды не создаются по команде пользователя.
+
+
+## Versioned native engine sets (2026-10-18; 0.5.78-dev)
+
+Set 001 (2026-10-17) preserves llama.cpp b9442, stable-diffusion.cpp master-929
+and the previously documented Studio v3.4.0 headless runtime. Set 002
+(2026-10-18) adds these pinned versions; earlier notices remain applicable to 001:
+
+- llama.cpp v0.7.0 / b11669, source `620d2225cc436ab0b001e3200e590e3b286ef9ab`:
+  MIT. The supplied `libomp.dll` has the original Apache-2.0 with LLVM Exceptions
+  text in `LICENSE-LLVM-OpenMP`; do not infer an LLVM release number from its DLL
+  product-version field. Microsoft runtime and other dependency notices are retained.
+- stable-diffusion.cpp master-973, source `f0aac524d3f29140e60ba78f3cfb16d6acea87db`:
+  MIT, with original BSD and other dependency notices preserved. The pinned CUDA
+  12.8.1 package uses NVIDIA CUDA EULA and its included third-party terms;
+  Microsoft runtime and Vulkan loader terms remain separate.
+- YuE2 Studio `v3.6.0-lopata-paths-1`, source
+  `c3e214f3a65f3f56c18e107127ebd2ebad5150ad`, with yue2.cpp
+  `c8516dbf44d660cca40d3f420c67063e37ec8258`: Studio/yue2.cpp MIT.
+  Retained dependency terms include MIT, Apache-2.0, MPL-2.0, LGPL, BSD, CC0,
+  NVIDIA and Microsoft terms. `Studio-source.zip`, `Cargo.lock`, `CargoSources`,
+  `CargoLicenses`, the explicit-path patch and LAME 3.100 corresponding sources
+  remain in the set. The original LAME LGPL v2 text and rebuilding/relinking
+  materials are retained; dependency rights are not replaced by LOPATA's license.
+
+New license catalog entries are `native-engine-002-entries.json` and
+`music-studio-002-entries.json` under `Исходники/AIHub/Licenses`; complete text
+aggregates are `texts/engine-set-002-llama-NOTICES.txt`,
+`texts/engine-set-002-sd-NOTICES.txt` and `texts/music-studio-002-NOTICES.txt`.
+The immutable payloads also retain their own original notices and source materials.
+Model weights and chatllm.cpp v24 are unchanged. Decoder companion v9 remains
+separately governed by CC BY-NC 4.0; no additional model rights are granted.
+
+Delivery separates signed `lopata-files.json` (legacy-safe first update) from
+`lopata-fresh-files.json` (current set only), plus independently downloadable signed
+set manifests and ZIP packages. Older sets and their notices are retained for
+rollback. An older mini installer does not understand the fresh-manifest route
+and may also download the legacy flat Studio; the current mini installer uses
+only the fresh installation payload. These artifacts are prepared locally;
+this notice does not claim publication, an installer rebuild or remote installation.
+See `Инструменты/EngineSets/README.md` for the delivery contract.

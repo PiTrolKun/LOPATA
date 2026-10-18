@@ -50,12 +50,16 @@ public sealed partial class ModelExpertWindow : Window
         if (MusicAceCatalog.IsAce(_draft.Variation)) { RenderAce(); return; }
         if (_store.Collection == "Simple") {
             _parameters.Children.Add(MusicWishUi.Text(_l("Music.Tuning.FullSnapshot")));
+            if (_draft.Variation == MusicStudioRuntime.Variation)
+                _parameters.Children.Add(MusicWishUi.Text(L("StudioSolver") + ": "
+                    + L(_draft.StudioSolver == "ab2" ? "Choice.Ab2" : "Choice.Midpoint")));
             foreach (var p in MusicExpertCatalog.Parameters.Where(p => MusicModelVariants.SupportsParameter(_draft.Variation, p.Key))) _parameters.Children.Add(MusicWishUi.Text(
                 L("Parameter." + ParameterKey(p.Key)) + " (" + p.Key + "): " + Number(_draft.Get(p.Key))));
             if (_selected?.Recipe is { } recipe) _parameters.Children.Add(MusicWishUi.Text(recipe.Source + "\n" + recipe.Adaptation));
             return;
         }
         _parameters.Children.Add(MusicWishUi.Text(L("Warning")));
+        if (_draft.Variation == MusicStudioRuntime.Variation) RenderStudioSolver();
         foreach (var group in MusicExpertCatalog.Parameters.Where(p => MusicModelVariants.SupportsParameter(_draft.Variation, p.Key)).GroupBy(p => p.Group))
         {
             _parameters.Children.Add(MusicWishUi.Text(L("Group." + group.Key), true));
@@ -167,6 +171,9 @@ public sealed partial class ModelExpertWindow : Window
     private void ValidateDraft()
     {
         _draft.Validate();
+        if (_draft.Variation == MusicStudioRuntime.Variation && _draft.StudioSolver == "ab2"
+            && !MusicStudioRuntime.SelectedProfile.SupportsAb2)
+            throw new System.IO.InvalidDataException(L("UnsupportedSolver"));
         if (MusicAceCatalog.IsAce(_draft.Variation) && _draft.Get("inference_steps") > MusicAceCatalog.MaximumInferenceSteps)
             throw new System.IO.InvalidDataException(_l("Music.Ace.StepsLimit"));
     }

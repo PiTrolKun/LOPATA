@@ -17,7 +17,9 @@ public sealed class AboutWindow : Window
         Resources = owner.Resources;
         Icon = owner.Icon;
         Title = text("About.Title");
-        Width = 760; Height = 640; MinWidth = 460; MinHeight = 360;
+        Width = Math.Min(860, SystemParameters.WorkArea.Width);
+        Height = Math.Min(700, SystemParameters.WorkArea.Height);
+        MinWidth = 460; MinHeight = 360;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         SetResourceReference(BackgroundProperty, "PanelBrush");
         SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
@@ -54,6 +56,27 @@ public sealed class AboutWindow : Window
         AutomationProperties.SetHelpText(vkButton, vkUrl);
         vkButton.Click += (_, _) => OpenLink(vkUrl);
         links.Children.Add(vkButton);
+        // YouTube geometry from the same Simple Icons revision (CC0).
+        var youtubeIcon = new Canvas { Width = 24, Height = 24 };
+        youtubeIcon.Children.Add(new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse("M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"),
+            Fill = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 0, 51))
+        });
+        youtubeIcon.Children.Add(new System.Windows.Shapes.Path
+        {
+            Data = Geometry.Parse("M9.545 15.568V8.432L15.818 12Z"), Fill = System.Windows.Media.Brushes.White
+        });
+        const string youtubeUrl = "https://youtube.com/@lopata_ai_hub?si=dYbvJ3S6E-qbqjc0";
+        var youtubeButton = new Button { Content = youtubeIcon, Width = 44, MinWidth = 44,
+            Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 8),
+            ToolTip = text("About.YouTubeChannel") + "\n" + youtubeUrl };
+        youtubeButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+        AutomationProperties.SetName(youtubeButton, text("About.YouTubeChannel"));
+        AutomationProperties.SetAutomationId(youtubeButton, "About.YouTubeChannel");
+        AutomationProperties.SetHelpText(youtubeButton, youtubeUrl);
+        youtubeButton.Click += (_, _) => OpenLink(youtubeUrl);
+        links.Children.Add(youtubeButton);
         AddButton("About.Repository", () => OpenLink("https://github.com/PiTrolKun/LOPATA/releases"), "https://github.com/PiTrolKun/LOPATA/releases");
         AddButton("Updates.Check", updates);
         foreach (var key in new[] { "Intro", "Choice", "Control" }) panel.Children.Add(Paragraph("About." + key));

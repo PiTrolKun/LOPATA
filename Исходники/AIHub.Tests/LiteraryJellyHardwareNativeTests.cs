@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.IO;
+using System.Text;
 using System.Text.Json;
 using AIHub.Services;
 
@@ -6,14 +9,46 @@ namespace AIHub.Tests;
 [TestClass]
 public sealed class LiteraryJellyHardwareNativeTests
 {
-    [TestMethod]
+    [TestMethod, Timeout(300_000)]
     public async Task PythonHardwarePolicyRejectsBadWeightsAndProbesEveryDevice()
     {
         if (!System.IO.File.Exists(GigaEmbeddingInstallation.Python)) Assert.Inconclusive("Embedded Python is not installed.");
+        // The policy fixture itself is tiny. Full pinned-tree verification is a separate disk-bound stage.
+        var phase = Stopwatch.StartNew();
+        TestContext.WriteLine("phase=resolve_cpu; budget_seconds=180");
+        using (var prepare = new CancellationTokenSource(TimeSpan.FromMinutes(3))) {
+            var actual = await ManagedPythonRuntime.ResolveAsync("cpu", prepare.Token,
+                log: line => TestContext.WriteLine($"prepare_elapsed_seconds={phase.Elapsed.TotalSeconds:F3}; {line}"));
+            Assert.AreEqual("cpu", actual.Device);
+            Assert.AreEqual(GigaEmbeddingInstallation.Python, actual.Python);
+        }
+        TestContext.WriteLine($"phase=resolve_cpu; elapsed_seconds={phase.Elapsed.TotalSeconds:F3}");
+        phase.Restart();
+        TestContext.WriteLine("phase=policy_child; budget_seconds=30");
+        var info = new ProcessStartInfo(GigaEmbeddingInstallation.Python) {
+            WorkingDirectory = GigaEmbeddingInstallation.Root, UseShellExecute = false, CreateNoWindow = true,
+            RedirectStandardOutput = true, RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
+        foreach (var key in info.Environment.Keys.Where(key => key.StartsWith("PYTHON", StringComparison.OrdinalIgnoreCase)).ToArray())
+            info.Environment.Remove(key);
+        info.Environment["HF_HUB_OFFLINE"] = "1"; info.Environment["TRANSFORMERS_OFFLINE"] = "1";
+        ManagedPythonLaunch.ScriptArguments(info, [
+            Path.Combine(AppContext.BaseDirectory, "Fixtures", "Hardware", "test_runtime_hardware.py"),
+            Path.Combine(AppContext.BaseDirectory, "Tools")]);
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        await GigaEmbeddingInstallation.RunAsync([
-            System.IO.Path.Combine(AppContext.BaseDirectory, "Fixtures", "Hardware", "test_runtime_hardware.py"),
-            System.IO.Path.Combine(AppContext.BaseDirectory, "Tools")], TestContext.WriteLine, timeout.Token);
+        using var process = OwnedProcessRegistry.Shared.Start(info, "Tests.PythonHardwarePolicy");
+        var output = process.StandardOutput.ReadToEndAsync(); var error = process.StandardError.ReadToEndAsync();
+        try {
+            await process.WaitForExitAsync(timeout.Token);
+            TestContext.WriteLine(await output); TestContext.WriteLine(await error);
+            Assert.AreEqual(0, process.ExitCode, "Original Python hardware policy assertions failed.");
+        }
+        finally {
+            if (!process.HasExited) process.Kill(true);
+            await process.WaitForExitAsync(CancellationToken.None);
+            await Task.WhenAll(output, error);
+            TestContext.WriteLine($"phase=policy_child; elapsed_seconds={phase.Elapsed.TotalSeconds:F3}; exited={process.HasExited}");
+        }
     }
 
     [TestMethod]

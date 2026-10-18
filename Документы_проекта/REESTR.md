@@ -1,3 +1,12 @@
+## 17.10.2026 — значок YouTube, 0.5.77-dev
+
+Статический UI-вектор Simple Icons из той же ревизии, что и VK: CC0-1.0.
+Источник: https://github.com/simple-icons/simple-icons/blob/a844e581a1874bcb2729cef99ab10b36b24fe9ca/icons/youtube.svg
+Проверен 17.10.2026. Оригинальная лицензия уже поставляется как
+Licenses/texts/simple-icons-CC0.txt; THIRD_PARTY_NOTICES.md дополнен.
+Отдельная библиотека/модель/runtime не добавлены. Товарный знак принадлежит
+Google LLC; используется для обозначения ссылки на канал, без заявления одобрения.
+
 ## 17.10.2026 — музыкальное видео в приложении, 0.5.76-dev
 
 Перенесён проверенный процедурный рендерер стенда: WPF/.NET 10, SkiaSharp 3.119.4,
@@ -2593,3 +2602,65 @@ SQLite/FTS5, самостоятельное чтение, атрибуцию и 
 ## 15.10.2026 — мастерская рифмы 0.5.56-dev
 
 Новых библиотек не добавлено: WPF/.NET, Microsoft.Data.Sqlite и существующие native runners. Компонент data.rhyme-ru-en: закреплённая отдельно поставляемая библиотека 2026.10.15, паспорт и SHA-256 в Content/MusicRhyme*.json. Лицензии и атрибуция всех источников в Licenses/texts/Rhyme, условия в rhyme-entries.json и общем catalog.json. Поисковая модель Giga-Embeddings 3B готовится общим загрузчиком, выбранная LLM берётся из музыкального каталога без Hydra. Собственные алгоритмы и интеграция — GPL-3.0-or-later. См. МАСТЕРСКАЯ_РИФМЫ.md. Публикация не выполнялась.
+
+
+## 18.10.2026 — наборы движков 001/002, первый цикл 0.5.78-dev
+
+Наборы отделены от весов и пользовательских данных. 001 — 17.10.2026,
+прежний состав; 002 — 18.10.2026, новый рекомендуемый состав. Исторические
+записи выше сохранены и не являются описанием активного набора 002.
+
+| Компонент | Набор 001 | Набор 002 | Основные условия |
+|---|---|---|---|
+| llama.cpp, CPU/Vulkan | b9442, `d4c8e2c29ce2fb9a251a0a4a16d6c857b4f70f8c` | v0.7.0 / b11669, `620d2225cc436ab0b001e3200e590e3b286ef9ab` | MIT; в 002 дополнительно поставляется libomp.dll под Apache-2.0 WITH LLVM-exception; оригинальные Microsoft и прочие dependency notices сохранены |
+| stable-diffusion.cpp, CPU/Vulkan/CUDA | master-929, `3f8527a46c54ecf4cb4ed6003da8e8982283c73c` | master-973, `f0aac524d3f29140e60ba78f3cfb16d6acea87db` | MIT и оригинальные BSD/прочие dependency notices; CUDA-пакет 002 закреплён как CUDA 12.8.1 с NVIDIA CUDA EULA; Microsoft/Vulkan имеют собственные условия |
+| YuE2 Studio headless | `v3.4.0-lopata-paths-1`, Studio `9125be3cf9ba720ac439a81cd09ff8bcc2a00368`, yue2.cpp `1141479c725b803a3649c900fd3e6fcb27f6f595` | `v3.6.0-lopata-paths-1`, Studio `c3e214f3a65f3f56c18e107127ebd2ebad5150ad`, yue2.cpp `c8516dbf44d660cca40d3f420c67063e37ec8258` | Studio/yue2.cpp MIT; отдельные зависимости MIT/Apache-2.0/MPL-2.0/LGPL/BSD/CC0, NVIDIA и Microsoft по оригинальным текстам |
+
+chatllm.cpp v24, музыкальные веса и decoder companion v9 этим циклом не обновлялись.
+Companion сохраняет прежнюю CC BY-NC 4.0; включение runtime в набор не даёт
+дополнительных прав на веса. Метка llama.cpp `0.7.0-dev`, выдаваемая exe,
+соответствует закреплённому build 11669 и указанному release SHA.
+
+Полные license/notice и соответствующие исходники находятся внутри payload:
+`Runtime/EngineSets/{id}`. В Studio сохранены `Studio-source.zip`, `Cargo.lock`,
+`CargoSources`, `CargoLicenses`, path patch и LAME 3.100 с исходниками для
+пересборки/перелинковки и оригинальным LGPL-текстом v2. В новых llama-пакетах
+сохранён `LICENSE-LLVM-OpenMP`. Программный каталог новых условий:
+`Исходники/AIHub/Licenses/native-engine-002-entries.json` и
+`music-studio-002-entries.json`; исходные агрегаты — `texts/engine-set-002-*-NOTICES.txt`
+и `texts/music-studio-002-NOTICES.txt`. Прежние Terms/согласия не заменяются.
+
+Доставка использует отдельные подписанные манифесты и SHA-256:
+`lopata-files.json` оставляет прежний плоский Studio для старого установленного
+updater; `lopata-fresh-files.json` поставляет только актуальный набор новой
+установке и обновлённому приложению. Самостоятельные signed manifests/ZIP наборов
+также включаются в подготовку выпуска. Старые наборы не удаляются автоматически;
+ручной выбор и отказ от рекомендации хранятся отдельно в `engine-sets.json`.
+Старый миниустановщик не знает fresh-маршрута и может дополнительно скачать
+прежний плоский Studio; актуальный миниустановщик использует fresh-манифест.
+
+Это локальное внедрение и подготовка артефактов, не подтверждение публикации.
+Удалённая загрузка до выпуска может возвращать 404; выбор пользователя при этом
+сохраняется. Полный/миниустановщик не пересобирались. Контракт доставки и подготовка:
+`Инструменты/EngineSets/README.md`; результаты —
+`Тесты/RuntimeImplementation_20261018/README.md` и
+`Тесты/RuntimeUpdates_20261018/implementation/first-patch-proof/README.md`.
+
+
+## 18.10.2026 — номер набора в метаданных, 0.5.79-dev
+
+В MusicGenerationJob добавлено необязательное EngineSetId без смены схемы: новые
+работы фиксируют выбор один раз; старые файлы без поля остаются совместимы.
+Studio использует однозначный runtime profile из job, для старых иных работ
+неизвестность не подменяется сегодняшними настройками. Producer содержит версию
+ЛОПАТЫ, номер/дату набора, рядом сохраняются LOPATA_VERSION/LOPATA_ENGINE_SET/
+LOPATA_ENGINE_SET_DATE и источник истории. MP3/WAV/FLAC/OPUS используют общий контракт.
+
+ImageGenerationMetadata сохраняет тот же набор в PNG Software/XMP CreatorTool,
+машинных полях и JSON по фактическому receipt. Resize сохраняет происхождение.
+Общий helper EngineSetMetadataIdentity читает только дату исторического id из
+embedded catalog, не активный выбор. Capture/utility JPEG и старые оригиналы
+не переписываются ради выдуманной истории. Новых зависимостей и весов нет.
+
+Первоначальные неопубликованные manifests подготовлены к v0.5.79-beta. Нативные
+деревья и ZIP неизменны; это не новый набор и не опубликованный выпуск.

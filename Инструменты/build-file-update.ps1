@@ -6,6 +6,7 @@ param(
     [Parameter(Mandatory)][string]$OutputDirectory,
     [string]$PreviousManifestPath,
     [string]$HistoryPath,
+    [string]$EngineSetArtifactDirectory,
     [switch]$StandBuild
 )
 $ErrorActionPreference = 'Stop'
@@ -67,15 +68,25 @@ $config = [ordered]@{
     sourceCommit = $commit; notes = $history; outputDirectory = $out
     previousManifestPath = $(if ($PreviousManifestPath) { (Resolve-Path -LiteralPath $PreviousManifestPath).Path } else { $null })
 }
+if (Test-Path -LiteralPath (Join-Path $PublishDir 'EngineSets')) {
+    $config.legacyEngineSetManifestPath = Join-Path $out 'engine-set-001.signed.json'
+    $config.legacyEngineSetDirectory = Join-Path $root 'Runtime/EngineSets/001/studio/native'
+}
 $configPath = Join-Path $packaging 'pack.json'
 $config | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $configPath -Encoding utf8
 dotnet build (Join-Path $root 'Исходники/LOPATA.UpdateTool/LOPATA.UpdateTool.csproj') --configuration Release --verbosity quiet
 if ($LASTEXITCODE -ne 0) { throw 'Packaging tool build failed.' }
+$engineSetArtifacts = @(& (Join-Path $PSScriptRoot 'prepare-engine-set-assets.ps1') -PublishDir $PublishDir `
+    -OutputDirectory $out -Version $Version -EngineSetArtifactDirectory $EngineSetArtifactDirectory `
+    -VerifierPath (Join-Path $root 'Исходники/LOPATA.UpdateTool/bin/Release/net10.0/LOPATA.UpdateTool.dll'))
 & dotnet (Join-Path $root 'Исходники/LOPATA.UpdateTool/bin/Release/net10.0/LOPATA.UpdateTool.dll') pack $configPath
 if ($LASTEXITCODE -ne 0) { throw 'Signed package build failed.' }
 $sourceChanges = & git -C $root status --porcelain --untracked-files=all -- 'Исходники' 'Инструменты' 'VERSION' 'Каталоги' 'LICENSE' 'NOTICE.md' 'THIRD_PARTY_NOTICES.md'
 if ($LASTEXITCODE -ne 0) { throw 'Cannot verify source state.' }
 @{ schemaVersion = 1; version = $Version; sourceCommit = $commit; sourceDirty = [bool]$sourceChanges; standBuild = [bool]$StandBuild;
-    manifestSha256 = (Get-FileHash -LiteralPath (Join-Path $out 'lopata-files.json')).Hash.ToLowerInvariant() } |
-    ConvertTo-Json | Set-Content -LiteralPath (Join-Path $out 'file-update.build.json') -Encoding utf8
+    manifestSha256 = (Get-FileHash -LiteralPath (Join-Path $out 'lopata-files.json')).Hash.ToLowerInvariant();
+    freshManifestSha256 = $(if (Test-Path -LiteralPath (Join-Path $out 'lopata-fresh-files.json')) {
+        (Get-FileHash -LiteralPath (Join-Path $out 'lopata-fresh-files.json')).Hash.ToLowerInvariant() } else { $null });
+    engineSetArtifacts = $engineSetArtifacts } |
+    ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $out 'file-update.build.json') -Encoding utf8
 Write-Host "File update ready: $(Join-Path $out 'lopata-files.json')"

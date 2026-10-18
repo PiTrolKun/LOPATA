@@ -31,7 +31,8 @@
     <Content Include="Tools\heartmula-models.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\heartmula-python-files.json" LogicalName="AIHub.HeartMuLaPythonManifest" />
     <EmbeddedResource Include="Tools\diffrhythm2-python-files.json" LogicalName="AIHub.DiffRhythmPythonManifest" />
-    <Content Include="..\..\Runtime\MusicStudio\v3.4.0-lopata-paths-1\**\*" Link="MusicStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)">
+    <EmbeddedResource Include="ContentEngineSets\catalog.json" LogicalName="AIHub.EngineSets.Catalog" />
+    <Content Include="..\..\Runtime\EngineSets\002\**\*" Link="EngineSets\002\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
@@ -141,7 +142,7 @@
 
   <Target Name="CheckMusicRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\MusicAce\source.zip')" Text="Pinned official ACE source archive is missing. Run Инструменты/MusicAce/pack-source.ps1." />
-    <Error Condition="!Exists('..\..\Runtime\MusicStudio\v3.4.0-lopata-paths-1\manifest.json')" Text="Pinned Studio runtime is missing. Follow Инструменты/MusicStudio/README.md." />
+    <Error Condition="!Exists('..\..\Runtime\EngineSets\002\studio\native\manifest.json') Or !Exists('ContentEngineSets\catalog.json')" Text="Pinned engine set 002 is missing. Follow Инструменты/EngineSets/README.md." />
     <Error Condition="!Exists('..\..\Runtime\MusicAudio\FFmpeg-8.1\bundle\manifest.json')" Text="Music audio bundle is missing. Follow Инструменты/MusicAudioRuntime/README.md." />
     <Error Condition="!Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-x64\manifest.json') Or !Exists('..\..\Runtime\Backends\yue2.cpp\11c1ecb084329200e22fcb286e252b847442ea5c\win-cuda128-x64\manifest.json')" Text="Pinned YuE2 CPU/CUDA runtimes are missing. Restore the bundles documented in REESTR.md before building LOPATA." />
   </Target>

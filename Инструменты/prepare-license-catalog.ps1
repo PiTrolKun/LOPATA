@@ -157,6 +157,12 @@ foreach($entryFile in @('image-generation-entries.json','image-utility-entries.j
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
  }
 }
+foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entries.json')) {
+ $engineEntries=Join-Path $dest $entryFile
+ if(Test-Path -LiteralPath $engineEntries) {
+  foreach($entry in @(Get-Content -LiteralPath $engineEntries -Raw | ConvertFrom-Json)) { $entries.Add($entry) }
+ }
+}
 foreach($e in $entries){
  $e.Texts=@($e.Texts | Select-Object -Unique)
  $terms=$e.License+$e.Ru+$e.En

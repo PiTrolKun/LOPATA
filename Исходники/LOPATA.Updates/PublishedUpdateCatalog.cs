@@ -15,7 +15,7 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
     public const string FileManifestName = "lopata-files.json";
 
     public async Task<UpdateOffer?> CheckAsync(string currentVersion, UpdateDelivery delivery, CancellationToken token = default,
-        bool requireSetup = false)
+        bool requireSetup = false, bool preferFreshManifest = false)
     {
         var current = UpdateManifest.NumericVersion(currentVersion.EndsWith("-dev", StringComparison.Ordinal)
             ? currentVersion[..^4] : currentVersion);
@@ -36,7 +36,9 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
         {
             var version = versionOrNull!;
             var tag = release.GetProperty("tag_name").GetString()!;
-            var signedAsset = Asset(release, FileManifestName);
+            var manifestName = (requireSetup || preferFreshManifest) && Asset(release, EngineSetTransition.FreshManifestName) is not null
+                ? EngineSetTransition.FreshManifestName : FileManifestName;
+            var signedAsset = Asset(release, manifestName);
             var installerName = $"LOPATA_Setup_{version}.exe";
             var installer = Asset(release, installerName);
             var installerMetadata = Asset(release, "lopata-update.json");
@@ -46,7 +48,7 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
             UpdateManifest? files = null;
             if (signedAsset is { } asset)
             {
-                var bytes = await ReadBytesAsync(AssetUrl(asset, tag, FileManifestName), SignedManifest.MaximumEnvelopeBytes, token);
+                var bytes = await ReadBytesAsync(AssetUrl(asset, tag, manifestName), SignedManifest.MaximumEnvelopeBytes, token);
                 envelope = SignedManifest.Read(bytes);
                 files = envelope.Verify(publicKeys);
                 if (files.Version != version) throw new InvalidDataException("Release tag and signed manifest differ.");
