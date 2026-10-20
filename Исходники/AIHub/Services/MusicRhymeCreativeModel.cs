@@ -24,7 +24,7 @@ internal static class MusicRhymeCreativeModel
             {
                 var capacity = Math.Min(8192, tuning.Integer("ModelContext"));
                 var reserve = MusicRhymeModelSettings.Reserve(tuning, capacity);
-                if (prompt.Length / 2 > capacity - Math.Max(4096, reserve) - 96)
+                if (System.Text.Encoding.UTF8.GetByteCount(prompt) + 64 > capacity - Math.Max(4096, reserve) - 96)
                     throw new InvalidDataException("Music.Rhyme.ContextFull");
                 reply = await bin.GenerateUserOnlyAsync(model, prompt, reserve, token,
                     truncated: content => throw new MusicPoetryIncompleteReply(content));

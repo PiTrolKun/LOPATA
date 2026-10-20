@@ -35,6 +35,7 @@ public partial class MainWindow
         RegisterImageShellBackgroundOperation();
         RegisterLyricVideoBackgroundOperation();
         RegisterBookSmartBackgroundOperation();
+        RegisterLyricLibraryBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeGenerationAsync(state, token); });
         _backgroundOperations.Register(MusicLyricsSynchronization.BackgroundKind, (state, token) =>
@@ -214,6 +215,10 @@ public partial class MainWindow
             {
                 RestoreFromTray(); OpenMusicScenario(false); MusicPage.ViewRhymeResult(notice.Project);
                 _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == Services.MusicLibrary.LyricLibrarySearch.BackgroundKind)
+            {
+                ViewLyricLibrary(); _backgroundOperations!.Acknowledge(notice.Id); return;
             }
             if (notice.Kind == MusicCoverWork.Kind)
             {

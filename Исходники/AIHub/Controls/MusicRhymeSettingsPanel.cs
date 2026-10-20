@@ -27,7 +27,7 @@ public sealed class MusicRhymeSettingsPanel : DockPanel
     private readonly TextBlock _error = new() { TextWrapping = TextWrapping.Wrap };
     private readonly Dictionary<string, Func<double>> _read = new(StringComparer.Ordinal);
     private MusicRhymeOptions _draft;
-    private CheckBox _selection = null!, _auto = null!;
+    private CheckBox _selection = null!, _auto = null!, _personalLyrics = null!;
     private readonly CheckBox _expert;
     private bool _switchingMode;
     private ComboBox _models = null!;
@@ -116,6 +116,7 @@ public sealed class MusicRhymeSettingsPanel : DockPanel
         content.Children.Add(catalog);
         _selection = Check(content, "Music.Rhyme.SelectionOnly", _draft.SelectionOnly);
         _auto = Check(content, "Music.Rhyme.AutoAnalyze", _draft.AutoAnalyze);
+        _personalLyrics = Check(content, "Music.Library.UseExamples", _draft.UsePersonalLyricsLibrary);
         content.Children.Add(MusicRhymeSettingRows.Text(_l("Music.Rhyme.Settings.Color"), "TextPrimaryBrush"));
         var palette = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(0, 4, 0, 10) }; content.Children.Add(palette);
         foreach (var color in MusicRhymePreferences.Palette)
@@ -162,6 +163,7 @@ public sealed class MusicRhymeSettingsPanel : DockPanel
         foreach (var (id, read) in _read)
             if (MusicRhymeSettingCatalog.Find(id).Kind != MusicRhymeSettingKind.Information) values[id] = read();
         var options = _draft with { SelectionOnly = _selection.IsChecked == true, AutoAnalyze = _auto.IsChecked == true,
+            UsePersonalLyricsLibrary = _personalLyrics.IsChecked == true,
             ModelId = (_models.SelectedItem as ComboBoxItem)?.Tag as string ?? _draft.ModelId, Tuning = new() { Values = values } };
         options.Validate(); return options;
     }

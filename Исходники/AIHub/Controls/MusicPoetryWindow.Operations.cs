@@ -30,6 +30,7 @@ public sealed partial class MusicPoetryWindow
         Capture(); CommitZone();
         if (!Persist()) return;
         IDisposable? lease = null; string? raw = null; var turn = Guid.NewGuid().ToString("N"); var currentAttempt = 0;
+        AIHub.Services.MusicLibrary.LyricExample[] usedExamples = [];
         try
         {
             lease = _background?.BeginAuxiliary();
@@ -43,16 +44,24 @@ public sealed partial class MusicPoetryWindow
             Availability(); RenderChat(); _status.Text = L("Preparing");
             await ApplicationBackgroundOperations.RetireModelsAsync(); token.ThrowIfCancellationRequested();
             if (search) await PrepareSearchAsync(turn, interfaceLanguage, reasoningPreference, creativity, token);
+            await PrepareLibraryExamplesAsync(message, token);
+            if (_session.PendingLibraryArtist is { Missing.Length: > 0 } missingArtist)
+                ProgramMessage("assistant", string.Format(_l("Music.Library.ArtistMissing"), string.Join(", ", missingArtist.Missing)), turn);
             for (var attempt = 1; attempt <= 2; attempt++)
             {
                 currentAttempt = attempt;
                 raw = null;
                 BeginThoughtAttempt(turn, attempt);
+                usedExamples = [];
                 try {
                 raw = await _runtime.GenerateAsync(_model, _session, _guidance.Text, context => {
+                    AIHub.Services.MusicLibrary.LyricExampleContext.ValidateCurrent(
+                        AIHub.Services.MusicLibrary.LyricLibraryStore.Default, context.LibraryExamples);
                     _capacity = context.Capacity; Meter(context.Tokens, context.Estimated); RenderChat();
+                    usedExamples = context.LibraryExamples;
                     _status.Text = L(attempt == 1 ? "Generating" : "Repairing");
                 }, token, assemble, _reasoningMode, _thoughtDispatcher!.Report, interfaceLanguage, reasoningPreference, creativity);
+                RecordLibraryUse(turn, usedExamples);
                 }
                 finally { FinishThoughtAttempt(!string.IsNullOrWhiteSpace(raw)); }
                 token.ThrowIfCancellationRequested();
@@ -92,19 +101,21 @@ public sealed partial class MusicPoetryWindow
         catch (OperationCanceledException) { _status.Text = L("Canceled"); }
         catch (Exception ex)
         {
-            if (ex is MusicPoetryIncompleteReply incomplete) raw = incomplete.Reply;
+            if (ex is MusicPoetryIncompleteReply incomplete) { raw = incomplete.Reply; RecordLibraryUse(turn, usedExamples); }
             if (!string.IsNullOrWhiteSpace(raw)) {
                 SaveRejected(raw);
                 if (currentAttempt > 0 && !_session.ReplyAttempts.Any(a => a.TurnId == turn && a.Attempt == currentAttempt))
                     _session.ReplyAttempts.Add(new(turn, DateTimeOffset.UtcNow, currentAttempt, raw, "invalid", []));
             }
-            var message = ex.Message.StartsWith("Music.Poetry.", StringComparison.Ordinal) ? _l(ex.Message) : ex.Message;
+            var message = _l(ex.Message);
             _status.Text = L("Error") + " " + message;
             ProgramMessage("assistant", _status.Text, turn); RenderChat(); Persist();
         }
         finally
         {
             _session.SearchRequest = null;
+            _session.PendingLibraryExamples = [];
+            _session.PendingLibraryArtist = null;
             var exchange = _session.SearchExchanges.LastOrDefault(e => e.TurnId == turn);
             if (exchange is not null && exchange.State is not ("completed" or "error" or "interrupted"))
                 exchange.State = "interrupted";

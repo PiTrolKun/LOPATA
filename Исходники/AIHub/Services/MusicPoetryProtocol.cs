@@ -113,7 +113,10 @@ public static class MusicPoetryProtocol
 }
 
 public sealed record MusicPoetryContext(string System, MusicPoetryMessage[] Messages, int Tokens, int Capacity, bool Estimated,
-    bool SearchQuestion = false);
+    bool SearchQuestion = false)
+{
+    public MusicLibrary.LyricExample[] LibraryExamples { get; init; } = [];
+}
 public static class MusicPoetryContextWindow
 {
     public static async Task<MusicPoetryContext> BuildAsync(MusicPoetrySession session, string guidance, int capacity,
@@ -122,6 +125,8 @@ public static class MusicPoetryContextWindow
     {
         var system = session.SearchRequest is null ? MusicPoetryProtocol.System(session, guidance, interfaceLanguage)
             : MusicPoetrySearchProtocol.System(session, interfaceLanguage);
+        if (session.UsePersonalLyricsLibrary && session.SearchRequest?.Preparing != true)
+            system = MusicLibrary.LyricExampleContext.ArtistStatus(system, session.PendingLibraryArtist);
         var messages = (session.SearchRequest is null
             ? MusicPoetryReasoningHistory.Select(session, reasoning ?? MusicPoetryReasoningOptions.Disabled, modelId)
             : MusicPoetrySearchProtocol.Messages(session)).ToList();
@@ -136,7 +141,12 @@ public static class MusicPoetryContextWindow
             tokens = await count(system, messages);
         }
         MusicPoetryModelMessages.Mark(session, messages);
-        return new(system, messages.ToArray(), tokens, capacity, estimated, session.SearchRequest?.Preparing == true);
+        var examples = session.UsePersonalLyricsLibrary && session.SearchRequest?.Preparing != true
+            ? session.PendingLibraryExamples : [];
+        if (examples.Length == 0) return new(system, messages.ToArray(), tokens, capacity, estimated, session.SearchRequest?.Preparing == true);
+        var fitted = await MusicLibrary.LyricExampleContext.FitAsync(system, messages, examples, capacity, reserve, count);
+        return new(fitted.System, messages.ToArray(), fitted.Tokens, capacity, estimated, session.SearchRequest?.Preparing == true)
+            { LibraryExamples = fitted.Examples };
     }
     // Conservative byte ceiling for backends without a tokenizer endpoint; never labelled exact.
     public static int Estimate(string system, IReadOnlyList<MusicPoetryMessage> messages) => checked(

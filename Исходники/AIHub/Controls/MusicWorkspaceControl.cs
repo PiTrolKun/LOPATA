@@ -21,6 +21,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public MusicLyricsPlaybackController LyricsPlayback { get; }
     public MusicRhymeController Rhyme { get; }
     public MusicCoverController Covers { get; }
+    public LyricLibraryController Library { get; }
     private bool _outputConfigured;
     public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null,
         IMusicLyricsSynchronization? synchronizeLyrics = null, IMusicAudioPlayer? audioPlayer = null, MusicCoverStore? coverStore = null)
@@ -53,6 +54,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         var tracks = new Grid(); tracks.ColumnDefinitions.Add(new() { Width = new(54) }); tracks.ColumnDefinitions.Add(new());
         TextActions = new MusicTextActionsControl(Editor, () => Wishes.State.Performers);
         Projects = new(this, projects ?? MusicProjects.Default, jobs ?? MusicGenerationJobs.Default);
+        Library = new(this);
         Editor.AttachHistory(Projects.History);
         var tools = new DockPanel(); DockPanel.SetDock(Projects.ManageButton, Dock.Bottom);
         tools.Children.Add(Projects.ManageButton); tools.Children.Add(TextActions);
@@ -77,6 +79,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Editor.Localize(localize);
         Wishes.Localize(localize);
         TextActions.Localize(localize);
+        Library.Localize(localize);
         Player.Localize(localize);
         Tracks.Localize(localize);
         Status.Localize(localize);

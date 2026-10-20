@@ -1,4 +1,5 @@
 using AIHub.Services;
+using System.Text.Json.Serialization;
 
 namespace AIHub.Models;
 
@@ -16,6 +17,10 @@ public sealed record MusicPoetryMessage(string Role, string Text, string TurnId)
 
 public sealed class MusicPoetrySession
 {
+    public bool UsePersonalLyricsLibrary { get; set; }
+    public List<AIHub.Services.MusicLibrary.LyricExampleUse> LibraryUses { get; set; } = [];
+    [JsonIgnore] public AIHub.Services.MusicLibrary.LyricExample[] PendingLibraryExamples { get; set; } = [];
+    [JsonIgnore] public AIHub.Services.MusicLibrary.LyricArtistStatus? PendingLibraryArtist { get; set; }
     public int Schema { get; set; } = 1;
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

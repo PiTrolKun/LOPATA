@@ -100,6 +100,7 @@ public sealed partial class MusicPoetryWindow : Window
         resizeInput.SetResourceReference(BackgroundProperty, "LineBrush"); Grid.SetRow(resizeInput, 1); conversation.Children.Add(resizeInput);
         var entry = new DockPanel(); var entryActions = new WrapPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Right };
         DockPanel.SetDock(entryActions, Dock.Bottom); entry.Children.Add(entryActions);
+        InitializeLyricLibrary(entryActions);
         InitializeSearch(entryActions, context);
         _creativity = Action(entryActions, "Creativity", OpenCreativity);
         _creativity.IsEnabled = false;

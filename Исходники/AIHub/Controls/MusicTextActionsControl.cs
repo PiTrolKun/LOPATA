@@ -15,13 +15,15 @@ public sealed class MusicTextActionsControl : UserControl
     private readonly MusicLyricsEditor _editor;
     private readonly Func<IReadOnlyList<MusicPerformer>> _performers;
     private readonly Dictionary<string, Button> _buttons = new(StringComparer.Ordinal);
-    private readonly UniformGrid _panel = new() { Rows = 7, Columns = 1, Margin = new(2), VerticalAlignment = VerticalAlignment.Top };
+    private readonly UniformGrid _panel = new() { Rows = 8, Columns = 1, Margin = new(2), VerticalAlignment = VerticalAlignment.Top };
     private Func<string, string> _l = key => key;
     private string _brackets = "[]";
     public Button RhymeButton => _buttons["Rhyme"];
     public event Action? RhymeRequested;
     public Button CoverButton => _buttons["Cover"];
     public event Action? CoverRequested;
+    public Button LibraryButton => _buttons["Library"];
+    public event Action? LibraryRequested;
     public MusicTextActionsControl(MusicLyricsEditor editor, Func<IReadOnlyList<MusicPerformer>> performers)
     {
         _editor = editor; _performers = performers;
@@ -35,6 +37,10 @@ public sealed class MusicTextActionsControl : UserControl
             button.Click += (_, _) => Execute(action); _buttons.Add(action, button); _panel.Children.Add(button);
         }
         Content = _panel;
+        var library = new Button { Content = LyricLibraryIcon.Create(), Margin = new(1, 2, 1, 2), Padding = new(4),
+            MinHeight = 0, MinWidth = 0, MaxHeight = 44 };
+        AutomationProperties.SetAutomationId(library, "Music.Text.Library");
+        library.Click += (_, _) => LibraryRequested?.Invoke(); _buttons.Add("Library", library); _panel.Children.Add(library);
         SizeChanged += (_, _) => ArrangeSlots();
         editor.SelectionChanged += (_, _) => UpdateAccent(); UpdateAccent();
     }
@@ -51,21 +57,21 @@ public sealed class MusicTextActionsControl : UserControl
     private void ArrangeSlots()
     {
         var available = Math.Max(0, ActualHeight - 4);
-        var rows = Math.Max(7, (int)Math.Floor(available / 48));
-        // Keep all seven actions usable; only spare space gets empty slots.
+        var rows = Math.Max(8, (int)Math.Floor(available / 48));
+        // Keep all actions usable; only spare space gets empty slots.
         while (_panel.Children.Count > rows) _panel.Children.RemoveAt(_panel.Children.Count - 1);
         while (_panel.Children.Count < rows)
         {
             var slot = new Button { IsEnabled = false, Focusable = false, MinHeight = 0, MinWidth = 0,
                 MaxHeight = 44, Margin = new(1, 2, 1, 2), Padding = new(4), Opacity = .45 };
-            AutomationProperties.SetAutomationId(slot, "Music.Text.Reserved." + (_panel.Children.Count - 7));
+            AutomationProperties.SetAutomationId(slot, "Music.Text.Reserved." + (_panel.Children.Count - 8));
             ToolTipService.SetShowOnDisabled(slot, true); _panel.Children.Add(slot);
         }
         _panel.Rows = rows; _panel.Height = available; LabelSlots();
     }
     private void LabelSlots()
     {
-        foreach (var slot in _panel.Children.OfType<Button>().Skip(7))
+        foreach (var slot in _panel.Children.OfType<Button>().Skip(8))
         { slot.ToolTip = _l("Music.Text.Reserved"); AutomationProperties.SetName(slot, _l("Music.Text.Reserved")); }
     }
     private void UpdateAccent() => _buttons["Accent"].IsEnabled = MusicTextEdits.Accent(_editor.CaptureSelection()) is not null;

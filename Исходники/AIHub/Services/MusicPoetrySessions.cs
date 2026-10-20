@@ -78,6 +78,10 @@ public sealed class MusicPoetrySessions(string directory)
     }
     internal static void Validate(MusicPoetrySession s)
     {
+        if (s.LibraryUses is null || s.LibraryUses.Count > 200 || s.LibraryUses.Any(use => use is null
+            || use.TurnId is null || use.Examples is null || use.Examples.Length > 8
+            || use.Examples.Any(e => e is null || e.Text is null || e.Text.Length > 16000 || e.Title is null || e.Section is null)))
+            throw new InvalidDataException("Invalid personal library context history.");
         if (s.Schema != 1 || !Guid.TryParseExact(s.Id, "N", out _) || s.Lyrics is null || s.Parameters is null
             || s.Parameters.Text is null || !MusicPoetryProtocol.Variations.Contains(s.Parameters.Variation)
             || s.Draft is null || s.ModelPath is null || s.ModelName is null || s.PartialReply is null || s.IncompleteReplies is null

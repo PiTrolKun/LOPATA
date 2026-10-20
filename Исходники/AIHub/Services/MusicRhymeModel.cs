@@ -62,7 +62,8 @@ public sealed class MusicRhymeModel(UserContextService userContext, Action<strin
             {
                 var capacity = Math.Min(8192, tuning.Integer("ModelContext"));
                 var reserve = MusicRhymeModelSettings.Reserve(tuning, capacity);
-                if ((System.Length + prompt.Length) / 2 > capacity - reserve - 96) throw new InvalidDataException("Music.Rhyme.ContextFull");
+                if (MusicPoetryContextWindow.Estimate(System, [new("user", prompt, "rhyme")]) > capacity - reserve - 96)
+                    throw new InvalidDataException("Music.Rhyme.ContextFull");
                 reply = await _bin.GenerateConversationAsync(model, System, [new("user", prompt)], reserve, token,
                     truncated: content => throw new MusicPoetryIncompleteReply(content));
             }

@@ -12,6 +12,7 @@ public sealed record MusicRhymeOptions
     public string ModelId { get; init; } = "core";
     public bool ExpertMode { get; init; }
     public bool CreativeMode { get; init; }
+    public bool UsePersonalLyricsLibrary { get; init; }
     public MusicRhymeTuning Tuning { get; init; } = new();
     public MusicRhymeOptions Snapshot() => this with { Tuning = Tuning.Snapshot() };
     public void Validate()

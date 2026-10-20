@@ -36,6 +36,7 @@ public sealed record MusicRhymeRequest(string Id, string ProjectId, string Sourc
 {
     public AIHub.Services.MusicRhymeTuning Tuning { get; init; } = new();
     public bool CreativeMode { get; init; }
+    public bool UsePersonalLyricsLibrary { get; init; }
     [JsonIgnore] public string Text => Source.Substring(Start, Length);
     public void Validate()
     {
@@ -63,6 +64,8 @@ public sealed record MusicRhymeStep
     public string Reply { get; init; } = "";
     public string Prompt { get; init; } = "";
     public string Reference { get; init; } = "";
+    public AIHub.Services.MusicLibrary.LyricExample[] LibraryExamples { get; init; } = [];
+    public bool LibraryExamplesReady { get; init; }
     public string CreativeSummary { get; init; } = "";
     public string CreativeSummaryPrompt { get; init; } = "";
     public string? Error { get; init; }
@@ -78,7 +81,8 @@ public sealed record MusicRhymeStep
     public void Validate()
     {
         Request.Validate();
-        if (Original is null || Program is null || Model is null || ProgramDraft is null || Reply is null || Prompt is null || Reference is null
+        if (LibraryExamples is null || LibraryExamples.Length > 8 || LibraryExamples.Any(e => e is null || e.Text is null || e.Text.Length > 16000)
+            || Original is null || Program is null || Model is null || ProgramDraft is null || Reply is null || Prompt is null || Reference is null
             || CreativeSummary is null || CreativeSummaryPrompt is null
             || new[] { Original, Program, Model, ProgramDraft, Reply, Prompt, Reference, CreativeSummary, CreativeSummaryPrompt }.Any(s => s.Length > 400_000)
             || Suggestions is null || Suggestions.Length > 1000 || ProgramChanges is null || ProgramChanges.Length > 32

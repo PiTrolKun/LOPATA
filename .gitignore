@@ -83,6 +83,9 @@ _backups/
 __pycache__/
 *.py[cod]
 
+# Personal lyric collections and local evaluation corpora are never shipped.
+/Тесты/MusicLyricsLibraryStand/private/
+
 # Private user import results; never publish source chats or their derivatives
 /Тесты/1/
 /Тесты/2/
@@ -99,3 +102,6 @@ __pycache__/
 
 # Local capture fixtures may contain microphone/system audio; source probes remain tracked.
 /Тесты/VideoCapture/runs/
+
+# Private lyrics and model-comparison evidence; publish only the test mechanics/protocol.
+/_tmp/music-library-implementation/

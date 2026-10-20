@@ -202,6 +202,9 @@ public sealed class MusicRhymeWindow : Window
                 + "\n\n" + _l("Music.Rhyme.Prompt") + "\n" + step.Prompt + "\n\n" + step.Reference;
             if (step.CreativeSummary.Length > 0)
                 _details.Text += "\n\n" + _l("Music.Rhyme.Creative.Summary") + "\n" + step.CreativeSummary;
+            if (step.LibraryExamples.Length > 0)
+                _details.Text += "\n\n" + _l(step.Reply.Length > 0 ? "Music.Library.UsedExamples" : "Music.Library.FindingExamples")
+                    + "\n" + string.Join("\n\n", step.LibraryExamples.Select(e => e.Title + " · " + e.Section + "\n" + e.Text));
         }
         finally { _updating = false; }
     }

@@ -59,16 +59,19 @@ public sealed partial class MusicRhymeController
         var request = new MusicRhymeRequest(Guid.NewGuid().ToString("N"), _view.Projects.Current.Id,
             selection.Text, scope.Start, scope.Length, _options.ModelId, choice?.Model?.Path,
             _storage?.Models.Locations.FirstOrDefault()?.Path ?? "", _l("Music.Rhyme.Language")) {
-                Tuning = _options.Tuning.Snapshot(), CreativeMode = _options.CreativeMode };
+                Tuning = _options.Tuning.Snapshot(), CreativeMode = _options.CreativeMode,
+                UsePersonalLyricsLibrary = _options.UsePersonalLyricsLibrary };
         request.Validate(); return request;
     }
     private static bool SameInput(MusicRhymeRequest a, MusicRhymeRequest b) => a.ProjectId == b.ProjectId
         && a.Source == b.Source && a.Start == b.Start && a.Length == b.Length && a.ModelId == b.ModelId
-        && a.InterfaceLanguage == b.InterfaceLanguage && a.CreativeMode == b.CreativeMode && a.Tuning.Equals(b.Tuning);
+        && a.InterfaceLanguage == b.InterfaceLanguage && a.CreativeMode == b.CreativeMode
+        && a.UsePersonalLyricsLibrary == b.UsePersonalLyricsLibrary && a.Tuning.Equals(b.Tuning);
     private bool StillCurrent(MusicRhymeRequest request)
     {
         if (_disposed || _view.Projects.Current.Id != request.ProjectId || _view.Editor.Lyrics != request.Source) return false;
-        if (request.ModelId != _options.ModelId || request.CreativeMode != _options.CreativeMode || !request.Tuning.Equals(_options.Tuning)
+        if (request.ModelId != _options.ModelId || request.CreativeMode != _options.CreativeMode
+            || request.UsePersonalLyricsLibrary != _options.UsePersonalLyricsLibrary || !request.Tuning.Equals(_options.Tuning)
             || request.InterfaceLanguage != _l("Music.Rhyme.Language")) return false;
         try
         {

@@ -72,8 +72,21 @@ public sealed class MusicRhymeWork(Func<IMusicRhymeModel> models)
                 HashSet<int> editable = step.Request.CreativeMode ? [] : MusicRhymeTask.ReplyEditableLines(step);
                 if (!step.Request.CreativeMode && editable.Count == 0)
                 { Save(step with { Model = step.Request.Text, ModelReady = true, ModelSkipped = true, Stage = "Ready" }); return step; }
+                if (step.Request.UsePersonalLyricsLibrary && !step.LibraryExamplesReady)
+                {
+                    await ApplicationBackgroundOperations.RetireModelsAsync();
+                    var examples = await new MusicLibrary.LyricLibrarySearch(MusicLibrary.LyricLibraryStore.Default,
+                        step.Request.ModelsRoot, sharedOperation: true).SearchAsync(
+                            MusicLibrary.LyricExampleContext.Query(step.Request.CreativeMode ? step.CreativeSummary : step.Request.Text), progress, attempt);
+                    Save(step with { LibraryExamples = MusicLibrary.LyricExampleContext.Bound(examples.Take(3).ToArray(),
+                        step.Request.Tuning.Integer("ModelContext")), LibraryExamplesReady = true });
+                }
                 var prompt = step.Reply.Length > 0 && step.Prompt.Length > 0 ? step.Prompt
                     : step.Request.CreativeMode ? MusicRhymeCreativeTask.ComposePrompt(step) : MusicRhymeTask.Prompt(step);
+                var basePrompt = prompt;
+                if (step.Reply.Length == 0)
+                    MusicLibrary.LyricExampleContext.ValidateCurrent(MusicLibrary.LyricLibraryStore.Default, step.LibraryExamples);
+                if (step.Reply.Length == 0) prompt = MusicLibrary.LyricExampleContext.Append(basePrompt, step.LibraryExamples);
                 if (prompt.Length > 400000) throw new InvalidDataException("Music.Rhyme.ContextFull");
                 Save(step with { Prompt = prompt, Stage = "Model" }); progress.Report(new("Model"));
                 var result = step.Reply;
@@ -83,11 +96,23 @@ public sealed class MusicRhymeWork(Func<IMusicRhymeModel> models)
                     var model = new DebugModelInfo { Name = Path.GetFileName(step.Request.ModelPath!), Path = step.Request.ModelPath!,
                         Format = Path.GetExtension(step.Request.ModelPath!).Equals(".bin", StringComparison.OrdinalIgnoreCase) ? "chatllm" : "gguf" };
                     using var runtime = models();
-                    result = step.Request.CreativeMode
-                        ? await MusicRhymeModelDeadline.RunOperationAsync(
+                    while (true)
+                    {
+                        try
+                        {
+                            result = step.Request.CreativeMode ? await MusicRhymeModelDeadline.RunOperationAsync(
                             cancellation => runtime.ComposeAsync(model, prompt, step.Request.Tuning, cancellation),
                             step.Request.Tuning.Integer("GenerationTimeoutSeconds"), "Music.Rhyme.Settings.GenerationTimedOut", attempt)
-                        : await MusicRhymeModelDeadline.RunAsync(runtime, model, prompt, step.Request.Tuning, attempt);
+                                : await MusicRhymeModelDeadline.RunAsync(runtime, model, prompt, step.Request.Tuning, attempt);
+                            break;
+                        }
+                        catch (InvalidDataException error) when (error.Message == "Music.Rhyme.ContextFull" && step.LibraryExamples.Length > 0)
+                        {
+                            Save(step with { LibraryExamples = step.LibraryExamples[..^1] });
+                            prompt = MusicLibrary.LyricExampleContext.Append(basePrompt, step.LibraryExamples);
+                            Save(step with { Prompt = prompt });
+                        }
+                    }
                     Save(step with { Model = step.Request.CreativeMode ? MusicRhymeCreativeTask.SongFromReply(result) : result, Reply = result });
                 }
                 if (step.Request.CreativeMode)
