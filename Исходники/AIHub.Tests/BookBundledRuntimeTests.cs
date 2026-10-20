@@ -15,9 +15,10 @@ public sealed class BookBundledRuntimeTests
         var office = BookConverterRuntime.FindBundledLibreOffice();
         Assert.IsNotNull(office);
         Assert.AreEqual(office, BookConverterRuntime.FindLibreOffice());
-        Assert.IsTrue(office.StartsWith(Path.Combine(AppContext.BaseDirectory, "BookOfficeRuntime"), StringComparison.OrdinalIgnoreCase));
+        var archived = File.Exists(Path.Combine(AppContext.BaseDirectory, "BookOfficeRuntime", BookOfficeBundle.FileName));
+        Assert.IsTrue(office.StartsWith(archived ? AppDataPaths.RuntimeDirectory : Path.Combine(AppContext.BaseDirectory, "BookOfficeRuntime"), StringComparison.OrdinalIgnoreCase));
         Assert.AreEqual(office, new SystemCliDiscoveryService().Find("convert.legacy_office")?.ExecutablePath);
-        foreach (var file in new[] { "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll" })
+        if (!archived) foreach (var file in new[] { "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll" })
             Assert.IsTrue(File.Exists(Path.Combine(Path.GetDirectoryName(office)!, file)), "Office must carry its app-local CRT: " + file);
         var entry = ComponentCatalog.Find("runtime.libreoffice")!;
         Assert.IsTrue(entry.IsBuiltIn);

@@ -17,10 +17,19 @@ public static partial class BookConverterRuntime
     internal static string? FindBundledLibreOffice(string applicationDirectory)
     {
         var root = Path.Combine(applicationDirectory, "BookOfficeRuntime");
+        if (File.Exists(Path.Combine(root, BookOfficeBundle.FileName))) return Path.Combine(BundledOfficeCache, "program", "soffice.com");
         var executable = Path.Combine(root, "program", "soffice.com");
         return File.Exists(executable) && File.Exists(Path.Combine(root, "program", "soffice.bin"))
             && Directory.Exists(Path.Combine(root, "share")) ? executable : null;
     }
+
+    private static readonly Lazy<string> OfficeManifestId = new(() =>
+    {
+        using var manifest = typeof(BookConverterRuntime).Assembly.GetManifestResourceStream("AIHub.BookOfficeManifest")!;
+        return Convert.ToHexStringLower(SHA256.HashData(manifest));
+    });
+    private static string BundledOfficeCache => Path.Combine(AppDataPaths.RuntimeDirectory, "BookConverter",
+        "bundled-office-" + LibreOfficeVersion + "-" + OfficeManifestId.Value[..16]);
 
     private static string? FindManagedLibreOffice()
     {
@@ -47,7 +56,9 @@ public static partial class BookConverterRuntime
             if (_verifiedOfficeRoot == root) return;
             await using var manifest = typeof(BookConverterRuntime).Assembly.GetManifestResourceStream("AIHub.BookOfficeManifest")
                 ?? throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
-            await VerifyOfficeFilesAsync(root, manifest, token);
+            var archive = Path.Combine(AppContext.BaseDirectory, "BookOfficeRuntime", BookOfficeBundle.FileName);
+            if (File.Exists(archive)) await BookOfficeBundle.EnsureAsync(archive, root, manifest, token);
+            else await VerifyOfficeFilesAsync(root, manifest, token);
             _verifiedOfficeRoot = root;
         }
         finally { OfficeVerificationGate.Release(); }

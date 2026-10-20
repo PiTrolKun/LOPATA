@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -9,6 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <BookOfficeArchive Condition="'$(BookOfficeArchive)' == '' And '$(Configuration)' == 'Release'">true</BookOfficeArchive>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <AIHubVersion Condition="'$(AIHubVersion)' == ''">$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\..\VERSION').Trim())</AIHubVersion>
     <AIHubNumericVersion>$([System.Text.RegularExpressions.Regex]::Replace('$(AIHubVersion)', '-.*$', ''))</AIHubNumericVersion>
@@ -23,9 +24,10 @@
     <Content Include="Tools\BookSmart\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\BookConverter\calibre-9.16.0\**\*" Link="BookConverterRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\book-converter-files.json" LogicalName="AIHub.BookConverterManifest" />
-    <Content Include="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\**\*" Exclude="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\*.msi" Link="BookOfficeRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\**\*" Condition="'$(BookOfficeArchive)' != 'true'" Exclude="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\*.msi" Link="BookOfficeRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\BookConverter\libreoffice-26.2.4.2.bundle.zip" Condition="'$(BookOfficeArchive)' == 'true'" Link="BookOfficeRuntime\libreoffice.bundle.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\book-office-files.json" LogicalName="AIHub.BookOfficeManifest" />
-    <Content Include="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\System64\*.dll" Link="BookOfficeRuntime\program\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\System64\*.dll" Condition="'$(BookOfficeArchive)' != 'true'" Link="BookOfficeRuntime\program\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\MusicAce\source.zip" Link="MusicAceRuntime\source.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -164,6 +166,7 @@
     <Error Condition="!Exists('..\..\Runtime\Metadata\ExifTool-13.59\exiftool-13.59_64\exiftool.exe')" Text="Metadata runtime is missing. Run Инструменты/MetadataRuntime/prepare.ps1." />
   </Target>
   <Target Name="CheckBookRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="'$(BookOfficeArchive)' == 'true' And !Exists('..\..\Runtime\BookConverter\libreoffice-26.2.4.2.bundle.zip')" Text="Bundled office archive is missing. Run python Инструменты/BookConverter/package-office.py." />
     <Error Condition="!Exists('..\..\Runtime\BookConverter\calibre-9.16.0\Calibre Portable\Calibre\ebook-convert.exe')" Text="Bundled calibre is missing. Run Инструменты/BookConverter/prepare.py --prepare before building." />
     <Error Condition="!Exists('..\..\Runtime\BookConverter\libreoffice-26.2.4.2\program\soffice.com') Or !Exists('Tools\book-office-files.json')" Text="Bundled LibreOffice is missing. Run Инструменты/BookConverter/prepare-office.py --prepare before building." />
   </Target>
