@@ -12,5 +12,8 @@ public sealed class ApplicationBehaviorSettings
 
     public bool ImageShellIntegrationEnabled { get; set; } = true;
 
+    // null migrates the old utility's existing registration once; new installations remain off.
+    public bool? BookShellIntegrationEnabled { get; set; }
+
     public string LastSettingsSection { get; set; } = "general";
 }

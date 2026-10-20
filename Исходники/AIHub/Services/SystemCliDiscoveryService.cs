@@ -27,6 +27,8 @@ public sealed class SystemCliDiscoveryService
 
     public SystemCliDiscoveryResult? Find(string capabilityId)
     {
+        if (capabilityId == "convert.legacy_office" && Books.BookConverterRuntime.FindBundledLibreOffice() is { } bundledOffice)
+            return new SystemCliDiscoveryResult(capabilityId, "soffice.com", bundledOffice);
         if (!CapabilityCommands.TryGetValue(capabilityId, out var commands))
         {
             return null;

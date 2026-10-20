@@ -1,4 +1,4 @@
-## 2026-10-17 — metadata utility
+﻿## 2026-10-17 — metadata utility
 
 The optional bundled metadata.exiftool runtime is the official ExifTool 13.59 Windows x64 package.
 The original Perl/ExifTool sources, GPL-3.0 LICENSE, CC0 launcher notice and complete
@@ -630,3 +630,57 @@ and may also download the legacy flat Studio; the current mini installer uses
 only the fresh installation payload. These artifacts are prepared locally;
 this notice does not claim publication, an installer rebuild or remote installation.
 See `Инструменты/EngineSets/README.md` for the delivery contract.
+
+## Book conversion — 0.5.80-dev (19 October 2026)
+
+The simple book utility uses the complete official calibre 9.16.0 Windows x64
+portable distribution (9 October 2026), GPL-3.0 with the original third-party
+terms retained in its bundle. The corresponding unmodified source archive
+`calibre-9.16.0.tar.xz`, COPYRIGHT and provenance are copied to BookConverterRuntime
+with the binaries. Download/source pins and file verification are documented in
+`Инструменты/BookConverter/README.md` and `Тесты/BookConverterStand/Runtime_и_лицензии.md`.
+The catalog acknowledgement is `books.calibre`; full original LICENSE/COPYRIGHT
+are in `Исходники/AIHub/Licenses/texts/books-calibre-*`.
+
+Legacy DOC and ODT output use discovered LibreOffice or explicit preparation of
+26.2.4.2 from The Document Foundation's official archive. The acknowledgement
+remains `runtime.libreoffice`. Its original license.txt and NOTICE are retained as
+`books-libreoffice-license.txt` and `books-libreoffice-NOTICE.txt`; component terms
+are not replaced by the application's license. The existing inaccessible stable
+download address and incorrect size were corrected to the pinned archive package.
+
+Direct paths reuse the existing OpenXml, PdfPig, SkiaSharp, Windows PDF/WIC,
+AngleSharp, Markdig, SharpCompress, XML and ZIP dependencies with their existing
+terms. EPUBCheck 5.4.0, Temurin JRE and lxml are isolated stand validators; they
+are not added as application runtime requirements. No AI model is used by this
+conversion stage. No new installer or public release is claimed by this notice.
+
+
+## LibreOffice bundled document converter (20.10.2026)
+
+LOPATA 0.5.85-dev includes the unmodified LibreOffice 26.2.4.2 Windows x64
+administrative image in BookOfficeRuntime, with its original license.txt, NOTICE,
+credits and third-party notices. The administrative MSI is not needed at runtime.
+Original System64 VC runtime libraries are also copied beside soffice for app-local
+loading; their original licenses remain applicable. No system office installation
+is performed. The program no longer downloads this book conversion component.
+
+Corresponding source and build information: Licenses/texts/books-libreoffice-sources.txt,
+https://downloadarchive.documentfoundation.org/libreoffice/old/26.2.4.2/ and
+https://www.libreoffice.org/licenses/ . LibreOffice and its dependencies retain
+their own licenses; this notice does not replace them.
+
+
+## Smart book conversion — 0.5.87-dev (2026-10-20)
+
+PaddleOCR-VL1.6 and PP-DocLayoutV3 use pinned official PaddlePaddle artifacts (Apache-2.0).
+OvisOCR2 is by ATH-MaaS; the selected GGUF quantization is by bartowski (Apache-2.0).
+The existing Qwen core and Alpha/Beta retain their existing notices.
+Private CPython3.12.10 and pinned PaddleOCR3.6.0/Paddle3.2.1/PaddleX3.6.1 dependencies
+are acquired only through the application's license/download preparation. Ovis uses
+CPython and Pillow12.1.1. No shared Python installation is modified.
+Original transitive notices: Исходники/AIHub/Licenses/texts/book-smart-python-wheels-NOTICES.txt;
+PSF and Pillow originals are in the same license directory. Exact URLs, versions,
+sizes and SHA-256: Исходники/AIHub/Tools/BookSmart/windows-cp312-wheel-lock.json.
+The bundled calibre/QtSvg rasterizer retains its existing GPL-3.0 notices/source delivery.
+Original per-distribution notices remain in the private installed runtime.

@@ -15,6 +15,19 @@ public partial class App : System.Windows.Application
     public static bool AudioShellLaunch { get; private set; }
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (e.Args is ["--remove-book-shell"])
+        {
+            try { new Services.Books.BookShellIntegration(Environment.ProcessPath!).Apply(false, _ => ""); Shutdown(); }
+            catch { Shutdown(1); }
+            return;
+        }
+        if (e.Args.Contains("--shell-book", StringComparer.Ordinal))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            // No MainWindow, single-instance activation, dialogs, or tray are created for this verb.
+            _ = RunBookShellAsync(e.Args);
+            return;
+        }
         if (e.Args is ["--owned-console-stop", var pidText, var ticksText]
             && int.TryParse(pidText, out var pid) && long.TryParse(ticksText, out var ticks))
         {
@@ -70,6 +83,18 @@ public partial class App : System.Windows.Application
             Services.OwnedProcessRegistry.Log(AudioShellLaunch ? "audio_shell_startup_failed" : "image_shell_startup_failed", "Application", detail: error.GetType().Name);
             Shutdown(1);
         }
+    }
+
+    private async Task RunBookShellAsync(string[] args)
+    {
+        int code;
+        try { code = await Services.Books.BookShellRunner.RunAsync(args); }
+        catch (Exception error)
+        {
+            Services.OwnedProcessRegistry.Log("book_shell_startup_failed", "Application", detail: error.GetType().Name);
+            code = 1;
+        }
+        Shutdown(code);
     }
 
     protected override void OnExit(ExitEventArgs e)

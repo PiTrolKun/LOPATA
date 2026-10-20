@@ -1,0 +1,20 @@
+[
+  {
+    "Id": "books.calibre",
+    "Name": "calibre — преобразование электронных книг",
+    "Version": "9.16.0 Windows x64 portable",
+    "Author": "Kovid Goyal and calibre / bundled dependency contributors",
+    "License": "GPL-3.0; bundled dependencies retain their licenses",
+    "Source": "https://github.com/kovidgoyal/calibre/releases/tag/v9.16.0",
+    "Checked": "2026-10-19",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Terms": "EB5B230A3AEFEB53DE48148D9E865B19AA2E705EECFBED7FDD0AAB6D8D624DA7",
+    "Texts": [
+      "texts/books-calibre-LICENSE.txt",
+      "texts/books-calibre-COPYRIGHT.txt"
+    ],
+    "Ru": "Официальный неизменённый Windows x64 portable-комплект calibre 9.16.0 для локальной конвертации книг. Подготовлен из закреплённого дистрибутива с SHA-256; системная установка не выполняется. Оригинальные LICENSE, COPYRIGHT и соответствующий исходный архив calibre 9.16.0 сохраняются в BookConverterRuntime. Вложенные библиотеки сохраняют собственные условия; полный аудит всех транзитивных бинарных зависимостей отдельно не завершён. Не обходите DRM и соблюдайте права на преобразуемые произведения.",
+    "En": "Unmodified official calibre 9.16.0 Windows x64 portable distribution for local book conversion. Prepared from a SHA-256 pinned release, without system installation. Original LICENSE, COPYRIGHT and the corresponding calibre 9.16.0 source archive are retained in BookConverterRuntime. Bundled libraries retain their own terms; a complete separate audit of every transitive binary dependency is not complete. DRM is not bypassed; respect the rights in converted works."
+  }
+]

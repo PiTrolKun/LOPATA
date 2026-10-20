@@ -11,6 +11,7 @@ public partial class MainWindow
     private readonly EngineSetsControl _engineSets = new();
     private CancellationTokenSource? _engineSetOperation;
     private bool _engineSetsInitialized;
+    private bool _engineSetListRefreshing;
 
     private void InitializeEngineSetSettings()
     {
@@ -19,22 +20,33 @@ public partial class MainWindow
         _engineSets.RefreshRequested += RefreshEngineSetsAsync;
         _engineSets.ActionRequested += ChangeEngineSetAsync;
         _engineSets.CancelRequested += () => _engineSetOperation?.Cancel();
-        _engineSets.Loaded += async (_, _) =>
+        _engineSets.IsVisibleChanged += async (_, _) =>
         {
-            if (!_engineSetsInitialized) return;
+            if (!_engineSetsInitialized || !_engineSets.IsVisible || _engineSetOperation is not null || _engineSetListRefreshing) return;
+            _engineSetListRefreshing = true;
+            _engineSets.Busy(true);
             try { await RefreshEngineSetsAsync(); }
             catch (OperationCanceledException) { }
             catch (Exception error) { EngineSetFailure(error); }
+            finally { _engineSetListRefreshing = false; _engineSets.Busy(false); }
         };
         Closed += (_, _) => _engineSetOperation?.Cancel();
     }
 
     private async Task InitializeEngineSetsAsync()
     {
-        await EngineSetService.Shared.InitializeAsync(_backgroundLifetime.Token);
-        _engineSetsInitialized = true;
-        RefreshEngineSetIndicator();
-        await RefreshEngineSetsAsync();
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        OwnedProcessRegistry.Log("startup_check_started", "EngineSets");
+        try
+        {
+            await EngineSetService.Shared.InitializeAsync(_backgroundLifetime.Token);
+            _engineSetsInitialized = true;
+            RefreshEngineSetIndicator();
+            // The settings list is verified when opened. Startup only needs the
+            // selected set, already fully verified by InitializeAsync.
+            if (_engineSets.IsVisible) await RefreshEngineSetsAsync();
+        }
+        finally { OwnedProcessRegistry.Log("startup_check_finished", "EngineSets", detail: $"elapsedMs={timer.ElapsedMilliseconds}"); }
     }
 
     private async Task RefreshEngineSetsAsync()

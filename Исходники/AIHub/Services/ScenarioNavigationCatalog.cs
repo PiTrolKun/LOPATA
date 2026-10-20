@@ -1,4 +1,4 @@
-namespace AIHub.Services;
+﻿namespace AIHub.Services;
 
 public enum ScenarioNavigationKind { Direction, Group, Scenario }
 
@@ -29,6 +29,7 @@ public static class ScenarioNavigationCatalog
     public const string RagBooks = "rag_book_preparation";
     public const string Metadata = "file_metadata";
     public const string LyricVideo = "music_video";
+    public const string BookConversion = "text_to_book";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -36,6 +37,9 @@ public static class ScenarioNavigationCatalog
         Node(Analysis, ScenarioNavigationKind.Direction, null, "Navigation.Analysis", "Navigation.AnalysisHint", "analyze"),
         Node(Experiments, ScenarioNavigationKind.Direction, null, "Navigation.Experiments", "Navigation.ExperimentsHint", "experiment"),
         Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause"]),
+        Node("utilities_text", ScenarioNavigationKind.Group, Utilities, "BookConverter.Group", "", "tools"),
+        Node(BookConversion, ScenarioNavigationKind.Scenario, "utilities_text", "BookConverter.Title", "BookConverter.Description", "tools",
+            tags: ["text_to_book", "book_merge", "book_shell", "book_view", "book_editor", "book_smart", "book_logs"], related: [RagBooks]),
         Node("utilities_knowledge", ScenarioNavigationKind.Group, Utilities, "RagBooks.Group", "", "tools"),
         Node(RagBooks, ScenarioNavigationKind.Scenario, "utilities_knowledge", "RagBooks.Title", "RagBooks.Description", "tools",
             tags: ["rag_books", "rag_lexicon", "stress_tables"], related: []),
@@ -79,6 +83,8 @@ public static class ScenarioNavigationCatalog
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
         Tag("engine_sets", Creation),
+        Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),
+        Tag("book_view", BookConversion), Tag("book_editor", BookConversion), Tag("book_smart", BookConversion), Tag("book_logs", BookConversion),
         Tag("lyric_video", LyricVideo), Tag("matrix_rain", LyricVideo), Tag("video_rain_text", LyricVideo),
         Tag("music_preparation", Music),
         Tag("music_poetry", Music), Tag("music_poetry_sessions", Music), Tag("music_poetry_assembly", Music),

@@ -24,6 +24,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.BookConversion:
+                    OpenBookConversionUtility();
+                    break;
                 case ScenarioNavigationCatalog.LyricVideo:
                     OpenLyricVideoUtility();
                     break;

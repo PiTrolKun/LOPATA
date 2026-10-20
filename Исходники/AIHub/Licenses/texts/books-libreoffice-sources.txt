@@ -1,0 +1,16 @@
+LibreOffice 26.2.4.2 — bundled unmodified Windows x64 administrative image.
+Copyright The Document Foundation and the contributors listed in the original
+license.txt, NOTICE, CREDITS and third-party notices distributed with this image.
+No system installation is performed by LOPATA. The original components retain
+their own licenses; the LOPATA license does not replace them.
+
+Official release archive (binary distributions and corresponding source):
+https://downloadarchive.documentfoundation.org/libreoffice/old/26.2.4.2/
+Source code and build instructions:
+https://www.libreoffice.org/about-us/source-code/
+https://git.libreoffice.org/core/+/refs/tags/libreoffice-26.2.4.2
+Licensing information:
+https://www.libreoffice.org/licenses/
+
+The sources are available from the official project under the licenses stated
+there. No modifications to LibreOffice source code are included in this bundle.

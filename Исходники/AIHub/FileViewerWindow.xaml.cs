@@ -27,15 +27,18 @@ public partial class FileViewerWindow : Window
     private const long MaximumTextBytes = 16L * 1024 * 1024;
     private const int MaximumTableRows = 10_000;
     private readonly string _path;
-    private readonly LocalizationService _localization;
+    private readonly Func<string, string> _localize;
 
     public FileViewerWindow(
         string path,
         bool isDarkTheme,
         LocalizationService localization)
+        : this(path, isDarkTheme, localization.T) { }
+
+    public FileViewerWindow(string path, bool isDarkTheme, Func<string, string> localize, bool originalPdfPages = false)
     {
         _path = Path.GetFullPath(path);
-        _localization = localization;
+        _localize = localize;
         InitializeComponent();
         Title = T("FileViewer.WindowTitle");
         OpenExternalButton.Content = T("FileViewer.OpenExternal");
@@ -47,7 +50,12 @@ public partial class FileViewerWindow : Window
         var info = new FileInfo(_path);
         FileDetailsText.Text = $"{info.FullName}  |  {FormatBytes(info.Length)}  |  {info.LastWriteTime:yyyy-MM-dd HH:mm:ss}";
         ApplyTheme(isDarkTheme);
-        Loaded += async (_, _) => await LoadFileAsync();
+        Loaded += async (_, _) =>
+        {
+            if (originalPdfPages && Path.GetExtension(_path).Equals(".pdf", StringComparison.OrdinalIgnoreCase)) await ShowBookPdfAsync();
+            else await LoadFileAsync();
+        };
+        Closed += (_, _) => _bookPdfLifetime.Cancel();
     }
 
     public void ApplyTheme(bool dark)
@@ -477,7 +485,7 @@ public partial class FileViewerWindow : Window
     private static SolidColorBrush Brush(string value) =>
         new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(value));
 
-    private string T(string key) => _localization.T(key);
+    private string T(string key) => _localize(key);
 
     private string FormatBytes(long bytes)
     {

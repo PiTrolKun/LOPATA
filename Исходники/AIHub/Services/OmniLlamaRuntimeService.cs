@@ -10,6 +10,10 @@ namespace AIHub.Services;
 
 public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore library, OmniLlamaProfile? profile = null, bool forceCpu = false, HttpMessageHandler? testHandler = null) : IOmniTextRuntime
 {
+    private readonly OmniRuntimeMemoryOverride? _memoryOverride;
+    internal OmniLlamaRuntimeService(ManagedModelLibraryStore library, OmniLlamaProfile profile,
+        OmniRuntimeMemoryOverride memoryOverride, bool forceCpu = false) : this(library, profile, forceCpu)
+        => _memoryOverride = memoryOverride ?? throw new ArgumentNullException(nameof(memoryOverride));
     private readonly OmniLlamaProfile _profile = profile ?? OmniLlamaProfile.Alpha;
     private readonly HttpClient _http = testHandler is null ? new() { Timeout = Timeout.InfiniteTimeSpan }
         : new(testHandler, disposeHandler: false) { Timeout = Timeout.InfiniteTimeSpan };
@@ -88,9 +92,14 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
             var projector = ResolveFile(card, "projector");
             var metadata = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model), cancellationToken);
             var projectorBytes = new FileInfo(projector).Length;
-            _selectedRuntime = await LlamaRuntimeSelector.SelectAsync(
-                OmniRuntimeMemoryPolicy.GpuRequired(metadata, projectorBytes), useCpu, log, cancellationToken);
-            if (!_selectedRuntime.UsesGpu) OmniRuntimeMemoryPolicy.EnsureCurrentCpuMemory(metadata, projectorBytes);
+            var gpuRequired = _memoryOverride is { } dedicated ? dedicated.GpuRequired(metadata, projectorBytes)
+                : OmniRuntimeMemoryPolicy.GpuRequired(metadata, projectorBytes);
+            _selectedRuntime = await LlamaRuntimeSelector.SelectAsync(gpuRequired, useCpu, log, cancellationToken);
+            if (!_selectedRuntime.UsesGpu)
+            {
+                if (_memoryOverride is { } cpuPolicy) cpuPolicy.EnsureCurrentCpuMemory(metadata, projectorBytes);
+                else OmniRuntimeMemoryPolicy.EnsureCurrentCpuMemory(metadata, projectorBytes);
+            }
             Volatile.Write(ref _nativeHardwareFailed, 0);
             var before = await _resources.CaptureForRuntimeAsync(_selectedRuntime, cancellationToken);
             CurrentPlan = new([before], before.AvailableRamBytes, before.AvailableVramBytes,

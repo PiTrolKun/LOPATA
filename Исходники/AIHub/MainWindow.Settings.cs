@@ -44,8 +44,10 @@ public partial class MainWindow
         var startup = _settingsCards.Card(_autostartSwitch, _settingsCards.Label("Settings.Behavior.AutostartHelp"),
             _autoResumeSwitch, _settingsCards.Label("Settings.Behavior.AutoResumeHelp"));
         _imageShellIntegrationSwitch = _settingsCards.Switch("WindowsIntegration.Enabled", "Settings.ImageShellIntegration", SetImageShellIntegration);
+        _bookShellIntegrationSwitch = _settingsCards.Switch("WindowsIntegration.BooksEnabled", "Settings.BookShellIntegration", SetBookShellIntegration);
         var windowsIntegration = _settingsCards.Card(_settingsCards.Label("WindowsIntegration.Title", true),
-            _imageShellIntegrationSwitch, _settingsCards.Label("WindowsIntegration.Help"));
+            _imageShellIntegrationSwitch, _settingsCards.Label("WindowsIntegration.Help"),
+            _bookShellIntegrationSwitch, _settingsCards.Label("WindowsIntegration.BooksHelp"));
         var folders = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Folders", true), OpenImagesFolderButton);
         _generationSettings.Configure(_appSettings.ImageGeneration, L);
         _generationSettings.Changed += () => _appSettingsStore.Save(_appSettings);
@@ -86,6 +88,7 @@ public partial class MainWindow
         Target("autostart", "general", "Settings.Behavior.Autostart", "Settings.Behavior.AutostartHelp", _autostartSwitch);
         Target("autoresume", "general", "Settings.Behavior.AutoResume", "Settings.Behavior.AutoResumeHelp", _autoResumeSwitch);
         Target("windows-integration", "general", "WindowsIntegration.Title", "WindowsIntegration.Help", _imageShellIntegrationSwitch);
+        Target("book-windows-integration", "general", "WindowsIntegration.BooksEnabled", "WindowsIntegration.BooksHelp", _bookShellIntegrationSwitch);
         Target("folders", "general", "ImageInput.Folder", "Settings.Navigation.Folders", OpenImagesFolderButton);
         Target("generation-folder", "general", "Generation.OutputFolder", "Generation.ChooseFolder", _generationSettings);
         Target("theme", "interface", "Settings.Navigation.Theme", "Settings.Navigation.interface.Help", _settingsThemeButton);

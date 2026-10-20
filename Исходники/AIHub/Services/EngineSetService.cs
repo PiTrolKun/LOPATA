@@ -115,20 +115,22 @@ public sealed partial class EngineSetService
             { EngineSetSelection.RegisterDirectory(set.Id, SafeUpdatePath.Resolve(parent, set.Id)); return true; }
         return false;
     }
-    private static async Task<bool> VerifyAtAsync(EngineSetDefinition set, string root, CancellationToken ct)
+    private static Task<bool> VerifyAtAsync(EngineSetDefinition set, string root, CancellationToken ct) => Task.Run(async () =>
     {
+        // Hashing thousands of files must not resume on the WPF dispatcher after
+        // every asynchronous read. Keep the complete signed-manifest check on a worker.
         try
         {
             foreach (var file in set.VerifiedManifest.Files)
             {
                 ct.ThrowIfCancellationRequested();
                 var path = SafeUpdatePath.Resolve(root, file.Path);
-                if (!File.Exists(path) || !await UpdatePlanner.MatchesAsync(path, file, ct)) return false;
+                if (!File.Exists(path) || !await UpdatePlanner.MatchesAsync(path, file, ct).ConfigureAwait(false)) return false;
             }
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException) { return false; }
-    }
+    }, ct);
     private void Save(EngineSetState value)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_statePath)!);

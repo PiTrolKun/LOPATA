@@ -1,4 +1,4 @@
-using System.Windows.Threading;
+﻿using System.Windows.Threading;
 using AIHub.Models;
 using AIHub.Services;
 
@@ -34,6 +34,7 @@ public partial class MainWindow
         RegisterRagBookBackgroundOperation();
         RegisterImageShellBackgroundOperation();
         RegisterLyricVideoBackgroundOperation();
+        RegisterBookSmartBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeGenerationAsync(state, token); });
         _backgroundOperations.Register(MusicLyricsSynchronization.BackgroundKind, (state, token) =>
@@ -163,6 +164,8 @@ public partial class MainWindow
                 else QueueRagBooksResume();
                 return; // Observe restored work separately so the tray remains able to pause it.
             }
+            if (state is { RequiresDecision: true, Kind: Services.Books.Smart.BookSmartWork.Kind })
+            { RestoreFromTray(); OpenBookConversionUtility(); }
             if (state is { RequiresDecision: true } && state.Kind is ImageBackgroundWork.Kind or ImageBatchBackgroundKind
                 or ImageSpeechBackgroundKind or ImagePreparationBackgroundKind or SandboxCoreBackgroundKind or ExecutorWorkflowService.BackgroundKind)
                 RestoreFromTray();
@@ -195,6 +198,12 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind == Services.Books.Smart.BookSmartWork.Kind)
+            {
+                var result = _backgroundOperations!.LoadResult(notice.Id) ?? _backgroundOperations.State!;
+                RestoreFromTray(); OpenBookConversionUtility(); _bookConversionWindow!.ViewSmartResult(result);
+                _backgroundOperations.Acknowledge(notice.Id); return;
+            }
             if (notice.Kind == Services.LyricVideo.ClipWork.Kind && notice.Project is { } clipPath)
             {
                 RestoreFromTray();

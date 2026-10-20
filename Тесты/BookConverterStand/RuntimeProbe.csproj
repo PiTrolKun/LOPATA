@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup><Compile Include="RuntimeProbe.cs" /><Compile Include="..\..\Исходники\AIHub\Services\Books\BookConverterRuntime.cs" Link="BookConverterRuntime.cs" /><Compile Include="..\..\Исходники\AIHub\Services\Books\BookOfficeRuntime.cs" Link="BookOfficeRuntime.cs" /><PackageReference Include="SharpCompress" Version="1.0.0" /></ItemGroup>
+</Project>

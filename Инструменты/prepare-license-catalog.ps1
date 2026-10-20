@@ -1,4 +1,4 @@
-param([switch]$RefreshTexts, [string]$AppendEntries = '')
+﻿param([switch]$RefreshTexts, [string]$AppendEntries = '')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 $dest=Join-Path $root 'Исходники/AIHub/Licenses'
@@ -151,7 +151,7 @@ foreach($pair in @(@('builtin.dotnet','microsoft.netcore.app.runtime.win-x64'),@
   }
  }
 }
-foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','music-diffrhythm-entries.json','hardware-runtime-entries.json','executor-chat-entries.json','poetry-profile-entries.json','rag-book-entries.json','rhyme-entries.json','metadata-entries.json')){
+foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','music-diffrhythm-entries.json','hardware-runtime-entries.json','executor-chat-entries.json','poetry-profile-entries.json','rag-book-entries.json','rhyme-entries.json','metadata-entries.json','books-entries.json','book-smart-entries.json')){
  $scenarioEntries=Join-Path $dest $entryFile
  if(Test-Path $scenarioEntries){
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
@@ -162,6 +162,12 @@ foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entri
  if(Test-Path -LiteralPath $engineEntries) {
   foreach($entry in @(Get-Content -LiteralPath $engineEntries -Raw | ConvertFrom-Json)) { $entries.Add($entry) }
  }
+}
+$officeEntry = $entries | Where-Object Id -eq 'runtime.libreoffice'
+if ($officeEntry) {
+ $officeEntry.Checked='2026-10-20'
+ $officeEntry.Delivery='bundled'
+ $officeEntry.Texts=@('texts/books-libreoffice-license.txt','texts/books-libreoffice-NOTICE.txt','texts/books-libreoffice-sources.txt')
 }
 foreach($e in $entries){
  $e.Texts=@($e.Texts | Select-Object -Unique)

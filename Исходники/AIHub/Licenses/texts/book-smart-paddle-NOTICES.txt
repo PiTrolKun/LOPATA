@@ -1,0 +1,5 @@
+PaddleOCR 3.6.0 / PaddlePaddle 3.2.1 / PaddleX 3.6.1
+Apache-2.0; transitive dependencies retain their own licenses.
+Pinned upstream wheel sources, versions and SHA-256 are listed in Tools/BookSmart/windows-cp312-wheel-lock.json.
+Original distribution notices are retained in the private runtime Lib/site-packages/*.dist-info directories.
+No user document is uploaded to the model host.

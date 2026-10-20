@@ -1,0 +1,106 @@
+[
+  {
+    "Id": "model-book-paddleocr-vl16",
+    "Name": "PaddleOCR-VL 1.6",
+    "Version": "511b09642bb3",
+    "Author": "Upstream contributors; original notices retained",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6-GGUF",
+    "Checked": "2026-10-20",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "1E04F44E6D034598FB0CC95B6FFC3882D5611853D3C0171F67043B1F1F718189",
+    "Texts": [
+      "texts/ace-accelerate-ee699da3.txt"
+    ],
+    "Ru": "Локальное распознавание документов. Могут быть ошибки, пропуски и неверный порядок чтения; сверяйте с оригиналом. Авторство текста не меняется. Закреплённые веса проверяются SHA-256. Официальные веса PaddlePaddle.",
+    "En": "Local document recognition can contain errors, omissions and incorrect reading order; compare with the original. Pinned weights are SHA-256 verified. Official PaddlePaddle weights."
+  },
+  {
+    "Id": "model-book-paddle-doclayout-v3",
+    "Name": "PP-DocLayoutV3",
+    "Version": "241f8bdfc77a7",
+    "Author": "Upstream contributors; original notices retained",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/PaddlePaddle/PP-DocLayoutV3",
+    "Checked": "2026-10-20",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "1E04F44E6D034598FB0CC95B6FFC3882D5611853D3C0171F67043B1F1F718189",
+    "Texts": [
+      "texts/ace-accelerate-ee699da3.txt"
+    ],
+    "Ru": "Локальное распознавание документов. Могут быть ошибки, пропуски и неверный порядок чтения; сверяйте с оригиналом. Авторство текста не меняется. Закреплённые веса проверяются SHA-256. Официальные веса PaddlePaddle.",
+    "En": "Local document recognition can contain errors, omissions and incorrect reading order; compare with the original. Pinned weights are SHA-256 verified. Official PaddlePaddle weights."
+  },
+  {
+    "Id": "model-book-ovisocr2-q8",
+    "Name": "OvisOCR2 — bartowski GGUF",
+    "Version": "ab22420f3d44",
+    "Author": "Upstream contributors; original notices retained",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/bartowski/ATH-MaaS_OvisOCR2-GGUF",
+    "Checked": "2026-10-20",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "C925F67CE4FD020BADCC3C04FD6D394645ABDAD842BB5039076E73EFB776D4CD",
+    "Texts": [
+      "texts/ace-accelerate-ee699da3.txt"
+    ],
+    "Ru": "Локальное распознавание документов. Могут быть ошибки, пропуски и неверный порядок чтения; сверяйте с оригиналом. Авторство текста не меняется. Закреплённые веса проверяются SHA-256. Модель ATH-MaaS/OvisOCR2; GGUF подготовлен bartowski.",
+    "En": "Local document recognition can contain errors, omissions and incorrect reading order; compare with the original. Pinned weights are SHA-256 verified. ATH-MaaS/OvisOCR2 model; community GGUF by bartowski."
+  },
+  {
+    "Id": "runtime.book-smart-python",
+    "Name": "CPython — умный конвертер",
+    "Version": "3.12.10",
+    "Author": "Upstream contributors; original notices retained",
+    "License": "PSF-2.0",
+    "Source": "https://www.python.org/downloads/release/python-31210/",
+    "Checked": "2026-10-20",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "B66AD17585BC77C08E7A439F14B327FB024AA0BB37ACC8AD4B7643F3017C1994",
+    "Texts": [
+      "texts/python-3.12.10-LICENSE.txt"
+    ],
+    "Ru": "Отдельная переносимая среда Python для распознавания книг. Системный Python не изменяется.",
+    "En": "Private portable Python runtime for book recognition. System Python is not changed."
+  },
+  {
+    "Id": "runtime.book-smart-paddle",
+    "Name": "PaddleOCR — Windows CPU layout runtime",
+    "Version": "3.6.0 / 3.2.1 / 3.6.1",
+    "Author": "Upstream contributors; original notices retained",
+    "License": "Apache-2.0; bundled dependency licenses",
+    "Source": "https://github.com/PaddlePaddle/PaddleOCR",
+    "Checked": "2026-10-20",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Terms": "2FFFCE5B83588E49E7E0FE8EEA4231A1C242AB6350226FD90DCA3C9377A96C43",
+    "Texts": [
+      "texts/ace-accelerate-ee699da3.txt",
+      "texts/book-smart-paddle-NOTICES.txt",
+      "texts/book-smart-python-wheels-NOTICES.txt"
+    ],
+    "Ru": "Приватный Windows x64-комплект официальных Python-пакетов для разметки страниц. Загрузка закреплённых зависимостей; исходные уведомления остаются в каждой библиотеке. Разметка работает на CPU; распознавание использует выбранный совместимый движок.",
+    "En": "Private Windows x64 upstream Python dependencies for page layout. Pinned downloads retain original package notices. Layout runs on CPU; recognition uses the selected compatible model engine."
+  },
+  {
+    "Id": "runtime.book-smart-pillow",
+    "Name": "Pillow — иллюстрации OvisOCR2",
+    "Version": "12.1.1",
+    "Author": "Pillow contributors",
+    "License": "HPND and bundled dependency licenses",
+    "Source": "https://pillow.readthedocs.io/en/stable/about.html",
+    "Checked": "2026-10-20",
+    "Basic": false,
+    "Delivery": "downloaded",
+    "Texts": [
+      "texts/book-smart-pillow-LICENSE.txt"
+    ],
+    "Ru": "Сохранение исходных областей изображений в локальном умном конвертере. Приватная библиотека не меняет системный Python.",
+    "En": "Retains original image regions in the local smart converter. Private library; system Python is not modified.",
+    "Terms": "873806C76BE35649897980932A67E42B113CF3EE891EF77D1232C2C637D4BF86"
+  }
+]

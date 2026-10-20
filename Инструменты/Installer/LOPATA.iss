@@ -101,6 +101,9 @@ Name: "{autodesktop}\ЛОПАТА"; Filename: "{#UpdateHost}"; Parameters: "--la
 [Run]
 Filename: "{#UpdateHost}"; Parameters: "--launch"; Description: "{cm:LaunchLopata}"; Flags: nowait postinstall skipifsilent
 
+[UninstallRun]
+Filename: "{app}\{#AppExeName}"; Parameters: "--remove-book-shell"; Flags: runhidden skipifdoesntexist; RunOnceId: "RemoveOwnedBookShellVerbs"
+
 [Code]
 type
   TLicenseSystemTime = record

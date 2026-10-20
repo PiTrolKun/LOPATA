@@ -2664,3 +2664,71 @@ embedded catalog, не активный выбор. Capture/utility JPEG и ст
 
 Первоначальные неопубликованные manifests подготовлены к v0.5.79-beta. Нативные
 деревья и ZIP неизменны; это не новый набор и не опубликованный выпуск.
+# 19.10.2026 — конвертер книг, 0.5.80-dev
+
+Добавлен books.calibre: полный официальный calibre 9.16.0 Windows x64 portable,
+GPL-3.0 и оригинальные условия вложений, соответствующий исходный tar.xz,
+LICENSE/COPYRIGHT и pin-манифест 1356 файлов. Каталог лицензий воспроизводится
+Инструменты/prepare-license-catalog.ps1; UI и тихий запуск требуют штатное
+подтверждение. Новые TXT/книги используют общий OutputProvenance, без моделей.
+
+LibreOffice 26.2.4.2: существующий runtime.libreoffice, официальный archive URL,
+исправлены версия/размер, приложены оригинальные license.txt и NOTICE. Управляемая
+административная распаковка без системной установки, либо discovery существующей
+установки. Тихий маршрут не скачивает/не запрашивает условия. Большой runtime
+LibreOffice не дублируется в сборку; calibre копируется полным комплектом.
+
+Точные URL/SHA/размеры, оригинальные лицензии и оговорка о незавершённом полном
+транзитивном аудите: [протокол](../Тесты/BookConverterStand/Runtime_и_лицензии.md).
+EPUBCheck 5.4.0 / Temurin JRE / lxml 6.0.2 — изолированные средства стенда,
+не новые зависимости пользовательского приложения. Модели/engine sets неизменны.
+Полный установщик и файловый выпуск на этом этапе не создавались.
+
+
+## 20.10.2026 — книжные компоненты включены в поставку, 0.5.85-dev
+
+Новое требование заменяет описание отдельного LibreOffice выше. Закреплённые
+версии не менялись: calibre 9.16.0 уже встроен; LibreOffice 26.2.4.2 теперь входит
+в build/publish в BookOfficeRuntime. Полный административный образ без служебного
+MSI; десять оригинальных System64 DLL дополнительно размещаются в program для
+app-local VC runtime. Итог: 19537 записей манифеста, 1575595694 байта, плюс
+служебный provenance. MSI/бинарники/лицензии upstream не модифицированы.
+
+ComponentCatalog runtime.libreoffice теперь bundled/built-in, без пользовательского
+DownloadUrl/DownloadSize. Discovery выбирает собственный комплект перед PATH;
+изолированный профиль сохранён. Книжный UI и runtime больше не скачивают компоненты.
+Манифест встроен в приложение, файлы проверяются при первом офисном использовании
+процесса; текущая проверка оборудования/engine sets не затронута.
+
+Лицензионная запись runtime.libreoffice: Delivery=bundled, Checked=2026-10-20,
+LICENSE/NOTICE и новый books-libreoffice-sources.txt; Terms пересчитан только для
+этой записи. Скрипт prepare-license-catalog.ps1 воспроизводит эти свойства.
+Исходный код и условия: https://www.libreoffice.org/licenses/ и официальный
+архив https://downloadarchive.documentfoundation.org/libreoffice/old/26.2.4.2/ .
+Подготовка: Инструменты/BookConverter/README.md. Публикация не выполнялась.
+
+
+### 20.10.2026 — 0.5.87-dev, умный конвертер книг
+
+Новые модели: PaddlePaddle/PaddleOCR-VL-1.6-GGUF BF16 @511b09642bb324401f15f97cc23bc67e8f0a291d;
+PaddlePaddle/PP-DocLayoutV3 @241f8bdfc77a7c7bee915a5057aaee58c235a8d3;
+ATH-MaaS/OvisOCR2 в стороннем bartowski/ATH-MaaS_OvisOCR2-GGUF Q8_0/F16
+@ab22420f3d44201d3aa5a62ca49a665a46b507e9. Apache-2.0; происхождение квантования не скрыто.
+Полные manifests/SHA: BookSmartOcrCatalog.cs и Тесты/BookSmartStand/model-pins.json.
+Существующие Альфа/Бета и Qwen3-8B используются без замены их весов.
+
+Приватная среда: CPython3.12.10 (PSF), PaddlePaddle3.2.1/PaddleOCR3.6.0/PaddleX3.6.1,
+101 точный upstream wheel из официального PyPI (без pip-resolution на машине пользователя).
+Ovis скачивает только Python+Pillow12.1.1. Основные компоненты Paddle Apache-2.0,
+транзитивные зависимости сохраняют свои условия: 127 оригинальных LICENSE/NOTICE
+собраны в Licenses/texts/book-smart-python-wheels-NOTICES.txt. Отдельные PSF/Pillow terms.
+Каталог: Licenses/book-smart-entries.json; prepare-license-catalog.ps1 воспроизводит включение.
+Все скачивания проходят штатный gate. Системный Python и общий Torch не меняются.
+Существующий calibre9.16.0/QtSvg используется для растровой копии SVG.
+
+Модели исполняются существующим llama.cpp с аппаратным выбором. Новых движков не добавлено.
+Для paddleocr18layers/2KVheads/K,V128 добавлен отдельный ограниченный exact-profile
+планировщик, без расширения generic whitelist. Бюджеты являются оценками, не VRAM-пиком.
+Физически проверены Windows CPU/CUDA; Vulkan и другие GPU новым стендом не испытаны.
+Общие библиотеки сохраняют поддержку ранее совместимых устройств.
+Подробные фактические ограничения распознавания записаны в Тесты/BookSmartStand/README.md.

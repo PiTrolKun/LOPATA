@@ -66,6 +66,20 @@ public sealed class EngineSetTests
     }
 
     [TestMethod]
+    public async Task RepeatedInventoryAndActivationStillRejectSameSizeDamageWithRestoredTimestamp()
+    {
+        using var f = new Fixture(); f.Install("001"); f.Install("002");
+        var service = f.Service(); await service.InitializeAsync();
+        Assert.IsTrue((await service.GetInstalledAsync()).Contains("002"));
+        var file = f.RuntimeFile("002");
+        var modified = File.GetLastWriteTimeUtc(file); var bytes = File.ReadAllBytes(file);
+        bytes[0] ^= 1; File.WriteAllBytes(file, bytes); File.SetLastWriteTimeUtc(file, modified);
+        Assert.IsFalse((await service.GetInstalledAsync()).Contains("002"), "Inventory must still hash content, not trust size or timestamps.");
+        await Assert.ThrowsAsync<InvalidDataException>(() => service.ActivateAsync("002"));
+        Assert.AreEqual("001", service.GetState().ActiveId);
+    }
+
+    [TestMethod]
     public async Task UnsupportedModelRequirementDoesNotAllowRollback()
     {
         using var f = new Fixture(); f.Install("001"); f.Install("002");
