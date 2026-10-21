@@ -64,12 +64,14 @@ def main():
 
     with open(request_path, encoding='utf-8-sig') as file:
         request = json.load(file)
+    import runpy
+    cover_runtime = runpy.run_path(str(Path(__file__).with_name('music_cover_runtime.py')))
+    cover_runtime['verify_inputs'](request.get('audio_task'))
     for warning in request['warnings']:
         print('[ACE] ' + warning, flush=True)
     params = GenerationParams(**request['params'])
     config = GenerationConfig(**request['config'])
-    public_request = dict(request)
-    public_request['loras'] = [{k: v for k, v in u.items() if k != 'directory'} for u in request.get('loras', [])]
+    public_request = cover_runtime['public_request'](request)
     receipt = {'request': public_request, 'hardware': device, 'torch': torch.__version__, 'mode': mode}
     if mode == 'probe':
         # Import/API validation only: no weights loaded, no inference.
@@ -97,6 +99,9 @@ def main():
     print('[ACE] ' + str(status), flush=True)
     if not ok:
         raise RuntimeError(status)
+    receipt['references'] = cover_runtime['attach_references'](handler, request.get('audio_task'))
+    if receipt['references']:
+        print('[Cover] Packed references: ' + str(len(receipt['references'])), flush=True)
     import runpy
     lora_runtime = runpy.run_path(str(Path(__file__).with_name('music_lora_runtime.py')))
     receipt['loras'] = lora_runtime['apply_ace_loras'](handler, request.get('loras', []))

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -550,24 +550,8 @@ public sealed class SpecialistComponentToolService
 
     private static string ResolveInstalledArtifact(ComponentStatusSnapshot status)
     {
-        if (File.Exists(status.Record.InstallPath))
-        {
-            return Path.GetFullPath(status.Record.InstallPath);
-        }
-
-        var path = Path.Combine(
-            status.Record.InstallPath,
-            status.Entry.HealthCheckRelativePath.Replace(
-                '/',
-                Path.DirectorySeparatorChar));
-        if (!File.Exists(path))
-        {
-            throw new SessionFileToolException(
-                "component_health_check_failed",
-                $"The verified component '{status.Entry.Id}' is missing its expected artifact.");
-        }
-
-        return Path.GetFullPath(path);
+        try { return InstalledComponentArtifact.Resolve(status); }
+        catch (IOException) { throw new SessionFileToolException("component_health_check_failed", $"The verified component '{status.Entry.Id}' is missing its expected artifact."); }
     }
 
     private static string Limit(string value, int maxLength) =>

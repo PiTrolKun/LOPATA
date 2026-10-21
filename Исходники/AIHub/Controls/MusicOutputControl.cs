@@ -8,6 +8,7 @@ using UserControl = System.Windows.Controls.UserControl;
 using ComboBox = System.Windows.Controls.ComboBox;
 using CheckBox = System.Windows.Controls.CheckBox;
 using Binding = System.Windows.Data.Binding;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
 namespace AIHub.Controls;
 
@@ -16,11 +17,20 @@ public sealed class MusicOutputControl : UserControl
     private readonly ComboBox _format = new() { Width = 86, MinHeight = 30 }, _extra = new() { Width = 86, MinHeight = 30 };
     private readonly ComboBox _bitrate = new() { Width = 64, MinHeight = 30 }, _extraBitrate = new() { Width = 64, MinHeight = 30 };
     private readonly CheckBox _duplicate = new() { Content = "+", VerticalAlignment = VerticalAlignment.Center, Margin = new(3, 0, 0, 0) };
-    private readonly TextBlock _label = MusicAudioUi.Text(12), _extraLabel = MusicAudioUi.Text(11);
+    private readonly TextBlock _label = MusicAudioUi.Text(12), _extraLabel = MusicAudioUi.Text(11), _separateLabel = MusicAudioUi.Text(12);
     private readonly StackPanel _extraRow;
     private bool _updating;
     private Func<string, string> _l = key => key;
     public event Action? Changed;
+    private readonly System.Windows.Controls.CheckBox _separate = new() { Width = 28, Height = 30, MinWidth = 0, MinHeight = 0, HorizontalAlignment = HorizontalAlignment.Center };
+    private bool _settingSeparation;
+    private bool _canSeparate = true;
+    public bool CanSeparate { set { _canSeparate = value; _separate.IsEnabled = value; if (!value) SeparateTracks = false; } }
+    public Func<Task<bool>>? PrepareSeparation { get; set; }
+    public event Action? SeparationChanged;
+    public bool SeparateTracks { get => _separate.IsChecked == true; set {
+        _settingSeparation = true; _separate.IsChecked = value; _settingSeparation = false;
+    } }
     public MusicOutputSettings Settings => new() { Format = (MusicAudioFormat)(_format.SelectedItem ?? MusicAudioFormat.Opus),
         Bitrate = (int)(_bitrate.SelectedItem ?? MusicOutputSettings.DefaultBitrate), AdditionalFormat = _duplicate.IsChecked == true ? (MusicAudioFormat?)_extra.SelectedItem : null,
         AdditionalBitrate = (int)(_extraBitrate.SelectedItem ?? MusicOutputSettings.DefaultBitrate) };
@@ -60,9 +70,37 @@ public sealed class MusicOutputControl : UserControl
             text.SetBinding(TextBlock.TextProperty, new Binding { Converter = new FormatLabel() });
             box.Template = template; box.FontSize = 14; box.ItemTemplate = new DataTemplate { VisualTree = text };
         }
-        var root = new StackPanel(); root.Children.Add(_label);
-        var primary = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
-        primary.Children.Add(_format); primary.Children.Add(_duplicate); primary.Children.Add(_bitrate); root.Children.Add(primary);
+        var root = new StackPanel();
+        var primary = new WrapPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+        var formatSection = new StackPanel(); formatSection.Children.Add(_label);
+        var formatRow = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+        formatRow.Children.Add(_format); formatRow.Children.Add(_duplicate); formatRow.Children.Add(_bitrate);
+        formatSection.Children.Add(formatRow); primary.Children.Add(formatSection);
+        var separationSection = new StackPanel { Width = 48, Margin = new(6, 0, 0, 0) };
+        _separateLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        AutomationProperties.SetAutomationId(_separateLabel, "Music.Output.SeparateTracks.Label");
+        separationSection.Children.Add(_separateLabel); separationSection.Children.Add(_separate);
+        primary.Children.Add(separationSection); root.Children.Add(primary);
+        _separate.Template = (ControlTemplate)System.Windows.Markup.XamlReader.Parse("""
+            <ControlTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" TargetType="CheckBox">
+              <Border x:Name="Frame" Margin="4" CornerRadius="3" BorderThickness="1" BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource SecondaryButtonBackgroundBrush}">
+                <TextBlock x:Name="Mark" Text="✓" Visibility="Collapsed" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True"><Setter TargetName="Mark" Property="Visibility" Value="Visible"/><Setter TargetName="Frame" Property="Background" Value="{DynamicResource AccentBrush}"/></Trigger>
+                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+            """);
+        AutomationProperties.SetAutomationId(_separate, "Music.Output.SeparateTracks");
+        _separate.Checked += async (_, _) => {
+            if (_settingSeparation) return;
+            _separate.IsEnabled = false;
+            try { if (PrepareSeparation is not null && !await PrepareSeparation()) SeparateTracks = false; }
+            finally { _separate.IsEnabled = _canSeparate; SeparationChanged?.Invoke(); }
+        };
+        _separate.Unchecked += (_, _) => { if (!_settingSeparation) SeparationChanged?.Invoke(); };
         root.Children.Add(_extraLabel); _extraRow = new() { Orientation = System.Windows.Controls.Orientation.Horizontal };
         _extraRow.Children.Add(_extra); _extraRow.Children.Add(_extraBitrate); root.Children.Add(_extraRow); Content = root;
         foreach (var format in Enum.GetValues<MusicAudioFormat>()) _format.Items.Add(format);
@@ -75,7 +113,7 @@ public sealed class MusicOutputControl : UserControl
         _duplicate.Checked += (_, _) => Refresh(); _duplicate.Unchecked += (_, _) => Refresh();
         Set(new());
         SizeChanged += (_, _) => {
-            var width = Math.Clamp(ActualWidth - 96, 56, 86); _format.Width = _extra.Width = width;
+            var width = Math.Clamp(ActualWidth - 130, 56, 86); _format.Width = _extra.Width = width;
         };
     }
     public void Set(MusicOutputSettings settings)
@@ -111,9 +149,11 @@ public sealed class MusicOutputControl : UserControl
     {
         _l = l;
         _label.Text = l("Music.Output.Format"); _extraLabel.Text = l("Music.Output.Additional");
+        _separateLabel.Text = l("Music.Stems.ShortLabel");
         UpdateDuplicateButton();
         _bitrate.ToolTip = _extraBitrate.ToolTip = l("Music.Output.Bitrate");
         _format.ToolTip = _extra.ToolTip = l("Music.Output.Hint");
+        _separate.ToolTip = l("Music.Stems.EnableHint"); AutomationProperties.SetName(_separate, l("Music.Stems.Enable"));
     }
     private sealed class FormatLabel : IValueConverter
     {

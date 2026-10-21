@@ -17,6 +17,11 @@ public sealed class MusicOutputPublisher(IMusicAudioEncoder encoder)
                 var variant = current.Variants[index];
                 Match(variant.ResultPath, variant.ResultHash ?? (current.Output is null ? variant.AudioHash : null));
                 if (variant.AdditionalPath is { } additional) Match(additional, variant.AdditionalHash);
+                if (variant.Stems is { } stems) {
+                    Match(MusicStemBundle.MusicPath(variant), stems.MusicHash);
+                    if (variant.AdditionalPath is not null) Match(MusicStemBundle.MusicPath(variant, true), stems.AdditionalMusicHash);
+                    if (stems.Published) Match(MusicStemBundle.TextPath(variant), stems.TextHash);
+                }
                 return current;
                 void Match(string path, string? expected) {
                     token.ThrowIfCancellationRequested(); using var stream = File.OpenRead(path);

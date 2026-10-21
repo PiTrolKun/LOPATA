@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
@@ -12,7 +12,8 @@ public sealed class LyricLibraryController
     private readonly MusicWorkspaceControl _view;
     private Func<string, string> _l = key => key;
     public LyricLibraryController(MusicWorkspaceControl view)
-    { _view = view; view.TextActions.LibraryRequested += OpenMenu; }
+    { _view = view; view.TextActions.LibraryRequested += OpenMenu;
+        view.Editor.LibraryOffer.Draft = () => LyricLibraryDraft.FromEditor(view.Projects.Capture(), view.Editor.Lyrics, _l); }
     public void Localize(Func<string, string> localize) => _l = localize;
     private void OpenMenu()
     {

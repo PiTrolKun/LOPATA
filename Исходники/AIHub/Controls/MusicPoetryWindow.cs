@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -88,7 +88,10 @@ public sealed partial class MusicPoetryWindow : Window
         var song = new DockPanel(); var songHead = new DockPanel(); DockPanel.SetDock(songHead, Dock.Top); song.Children.Add(songHead);
         _lyricsPrevious = Action(songHead, "Previous", () => Navigate(false, -1), "‹");
         _lyricsNext = Action(songHead, "Next", () => Navigate(false, 1), "›"); songHead.Children.Add(_lyricsStep);
-        var songTitle = Label(L("Song")); DockPanel.SetDock(songTitle, Dock.Top); song.Children.Add(songTitle); song.Children.Add(_lyrics);
+        var songTitle = Label(L("Song")); DockPanel.SetDock(songTitle, Dock.Top); song.Children.Add(songTitle);
+        var offer = new LyricLibraryOffer { Draft = () => AIHub.Services.MusicLibrary.LyricLibraryDraft.FromEditor(_seed(), _lyrics.Text, _l) };
+        offer.Localize(_l); _lyrics.TextChanged += (_, _) => offer.SetText(_lyrics.Text);
+        DockPanel.SetDock(offer, Dock.Bottom); song.Children.Add(offer); song.Children.Add(_lyrics);
         Add(Card(song), 0); Splitter(1);
         var conversation = new Grid(); conversation.RowDefinitions.Add(new()); conversation.RowDefinitions.Add(new() { Height = new(8) });
         conversation.RowDefinitions.Add(new() { Height = new(145), MinHeight = 90 });

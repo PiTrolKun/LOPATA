@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -37,6 +37,10 @@ public static class MusicSongMetadata
                 "\neffective_semantic_min_tokens=" + Math.Min(job.Expert.Integer("semantic_sampling.min_tokens"), job.Expert.SequenceLimit(job.DurationSeconds)).ToString(culture))
         };
         EngineSetMetadataIdentity.AddTags(result, engineSetId);
+        if (job.Melody is { Enabled: true } melody) result["LOPATA_MELODY"] = JsonSerializer.Serialize(new {
+            adapter = job.Variation == MusicStudioRuntime.Variation ? "bounded ABC; melody score" : "synthesized melody; ACE src_audio cover",
+            melody.Bpm, melody.Numerator, melody.Denominator, melody.Notes, grid = "1/32", melody.ImportWarnings,
+            source = System.IO.Path.GetFileName(melody.SourceName), variant.MelodyInputHash });
         if (job.Loras.Length > 0) result["LOPATA_LORAS"] = JsonSerializer.Serialize(job.Loras.Select(u => {
             var d = MusicLora.MusicLoraCatalog.Find(u.Id); return new { u.Id, u.Revision, u.Strength, d.Repository,
                 slots = d.Slots, Format = d.Variation == MusicAceCatalog.Variation ? d.Format : "native-engine",
@@ -67,7 +71,7 @@ public static class MusicSongMetadata
         if (MusicAceCatalog.IsAce(job.Variation)) {
             result.Remove("LOPATA_LM_SEED");
             result["LOPATA_ACE_REQUEST"] = PublicAceReceipt(variant.ExecutionReceipt);
-            result["LOPATA_ADAPTER"] = "official Python API; LM=1.7B/PyTorch; task=text2music; batch=1; no lyric rewrite";
+            result["LOPATA_ADAPTER"] = "official Python API; LM=1.7B/PyTorch; task=" + (job.Melody?.Enabled == true ? "MIDI-cover" : job.AudioTask?.Mode.ToString() ?? "text2music") + "; batch=1; no lyric rewrite";
         }
         if (job.Variation == MusicModelVariants.Bf16) {
             result.Remove("LOPATA_LM_SEED");
@@ -94,6 +98,14 @@ public static class MusicSongMetadata
         if (variant.Hardware is { Length: > 0 }) result["LOPATA_HARDWARE"] = variant.Hardware;
         if (variant.PlanHardware is { Length: > 0 }) result["LOPATA_PLAN_HARDWARE"] = variant.PlanHardware;
         if (variant.GenerationSeconds is { } seconds) result["LOPATA_GENERATION_SECONDS"] = seconds.ToString("0.###", culture);
+        if (job.AudioTask is { Enabled: true } transform) {
+            result["LOPATA_AUDIO_OPERATION"] = JsonSerializer.Serialize(transform.PublicReceipt());
+            result["LOPATA_AUDIO_PROCESSING"] = variant.AudioTask?.Detail ?? "";
+            if (!transform.UsesGenerator) {
+                foreach (var key in new[] { "LOPATA_VARIATION", "LOPATA_DURATION_REQUEST_SECONDS", "LOPATA_MODEL", "LOPATA_MODEL_REVISION", "LOPATA_DECODER_REVISION", "LOPATA_RUNTIME_REVISION", "LOPATA_RUNTIME_PACK", "LOPATA_ENGINE_REVISION", "LOPATA_STUDIO_SOURCE", "LOPATA_STUDIO_POLICY", "LOPATA_STUDIO_SOLVER", "LOPATA_PRECISION", "LOPATA_PARAMETERS", "LOPATA_LORAS", "LOPATA_LORA_RUNTIME", "LOPATA_SEED", "LOPATA_LM_SEED", "LOPATA_ACE_REQUEST", "LOPATA_STUDIO_REQUEST" }) result.Remove(key);
+                result["LOPATA_ADAPTER"] = "LOPATA PCM soft pause gate / peak normalization; no music generation model used; input model history unknown";
+            }
+        }
         return result.Where(p => p.Value.Length > 0).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
     }
     private static string PublicAceReceipt(string? receipt)
@@ -101,6 +113,8 @@ public static class MusicSongMetadata
         if (string.IsNullOrEmpty(receipt)) return "";
         var node = System.Text.Json.Nodes.JsonNode.Parse(receipt);
         if (node?["initialization"] is System.Text.Json.Nodes.JsonObject init) { init.Remove("project_root"); init.Remove("config_path"); }
+        if (node?["request"]?["params"] is System.Text.Json.Nodes.JsonObject parameters) { parameters.Remove("src_audio"); parameters.Remove("reference_audio"); }
+        if (node?["request"] is System.Text.Json.Nodes.JsonObject body) body.Remove("audio_task");
         foreach (var bank in new[] { node?["loras"], node?["request"]?["loras"] }.OfType<System.Text.Json.Nodes.JsonArray>())
             foreach (var item in bank.OfType<System.Text.Json.Nodes.JsonObject>()) item.Remove("directory");
         return node?.ToJsonString() ?? "";

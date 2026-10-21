@@ -53,12 +53,23 @@ public static class MusicAceRequest
         foreach (var p in MusicAceCatalog.Parameters.Where(p => !result.ContainsKey(p.Key) && p.Group != "Runtime"))
             result[p.Key] = p.Maximum == 1 && p.Minimum == 0 && p.Step == 1 ? (object)(expert.Get(p.Key) == 1)
                 : p.Step == 1 ? (object)expert.Integer(p.Key) : expert.Get(p.Key);
+        if (request.AudioTask is { Enabled: true } task) {
+            task.Validate(expert.Variation, true);
+            result["task_type"] = task.Mode == MusicAudioTaskMode.Repaint ? "repaint" : task.NeedsSource ? "cover" : "text2music";
+            if (task.Source is { } source) { result["src_audio"] = source.Path; result["duration"] = MusicWaveFile.ReadDuration(source.Path).TotalSeconds; }
+            if (task.References.FirstOrDefault() is { } reference) result["reference_audio"] = reference.Path;
+            result["audio_cover_strength"] = task.SourceStrength;
+            if (task.Mode == MusicAudioTaskMode.Repaint) { result["repainting_start"] = task.EditStart; result["repainting_end"] = task.EditEnd; result["repaint_wav_crossfade_sec"] = 0; }
+            if (task.NeedsSource) foreach (var key in new[] { "thinking", "use_cot_metas", "use_cot_caption", "use_cot_language" }) result[key] = false;
+        }
         return new() { ["params"] = result, ["runtime"] = MusicAceCatalog.Parameters.Where(p => p.Group == "Runtime").ToDictionary(p => p.Key, p => expert.Get(p.Key)),
             ["config"] = new { batch_size = 1, allow_lm_batch = false, use_random_seed = false, seeds = new[] { request.SoundSeed },
                 audio_format = "wav", constrained_decoding_debug = expert.Get("constrained_decoding_debug") == 1 },
             ["warnings"] = warnings.ToArray(), ["source_revision"] = MusicAceCatalog.SourceRevision,
             ["model_revision"] = MusicAceCatalog.ModelRevision, ["companion_revision"] = MusicAceCatalog.CompanionRevision,
-            ["tuning"] = expert.Tuning };
+            ["tuning"] = expert.Tuning,
+            ["audio_task"] = request.AudioTask is { Enabled: true } operation ? new {
+                mode = operation.Mode.ToString(), source = operation.Source, references = operation.References, public_receipt = operation.PublicReceipt() } : null };
     }
     private static string Language(string value) => value switch {
         "russian" => "ru", "english" => "en", "chinese" => "zh", "japanese" => "ja", "korean" => "ko",

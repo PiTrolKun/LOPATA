@@ -1,0 +1,23 @@
+[
+  {
+    "Id": "music.cover-score",
+    "Name": "SheetSage2 / MERT-v2-FullSong Q8",
+    "Version": "e630f2b8f6aedf8254c3186438633c1b5eeaf80a",
+    "Author": "M-A-P / YuE2 authors; GGUF conversion Serveurperso",
+    "License": "CC BY-NC 4.0; model card conditions apply",
+    "Source": "https://huggingface.co/Serveurperso/YuE2-GGUF",
+    "Checked": "2026-10-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "",
+    "Ru": "Необязательные модели распознавания музыкального плана для каверов YuE2 Studio. Условия авторов CC BY-NC 4.0: некоммерческое использование, указание авторства и изменений. Согласие не распространяется на права на загружаемую музыку. Выполняются локально через подготовленный native engine; веса скачиваются отдельно (около 1 ГБ).",
+    "En": "Optional music score transcription for YuE2 Studio covers. Author terms CC BY-NC 4.0: noncommercial use, attribution and indication of changes. Consent does not cover rights to input music. Local execution through the prepared native engine; weights are downloaded separately (about 1 GB).",
+    "Texts": [
+      "texts/music.cover-score_SheetSage2.md",
+      "texts/music.cover-score_MERT-v2-FullSong.md",
+      "texts/music.cover-score_YuE2-GGUF.md",
+      "texts/music.cover-score_SheetSage2-LICENSE.txt",
+      "texts/music.cover-score_MERT-v2-FullSong-LICENSE.txt"
+    ]
+  }
+]

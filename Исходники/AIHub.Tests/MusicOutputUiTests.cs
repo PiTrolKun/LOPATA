@@ -18,7 +18,7 @@ public sealed class MusicOutputUiTests
     public Task IdentityPlaceholdersAreNotDataAndDuplicateHasOnlyThreeAlternatives(string language, bool dark) => ScenarioNavigationTests.Sta(() => {
         var testRoot = MusicOutputTests.Temporary();
         var l = new LocalizationService(); l.Load(language); var control = new MusicGenerationControl(new MusicOutputPreferences(Path.Combine(testRoot, "output.json"))); control.Localize(l.T);
-        var host = new Window { Content = control, Width = 580, Height = 700, Left = -10000, Top = -10000, ShowInTaskbar = false };
+        var host = new Window { Content = control, Width = 550, Height = 700, Left = -10000, Top = -10000, ShowInTaskbar = false };
         host.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
         host.Resources["TextPrimaryBrush"] = dark ? Brushes.White : Brushes.Black; host.Resources["TextSecondaryBrush"] = Brushes.Gray;
         host.Resources["WindowBackgroundBrush"] = dark ? new SolidColorBrush(Color.FromRgb(16, 24, 39)) : Brushes.WhiteSmoke;
@@ -37,6 +37,21 @@ public sealed class MusicOutputUiTests
                 comment.Text = "Заметка"; identity.Text = "Автор"; title.Text = "Песня";
                 Assert.AreEqual("Заметка", control.Options.Comment);
                 var format = Find<ComboBox>("Music.Output.Format"); format.SelectedItem = MusicAudioFormat.Opus;
+                host.UpdateLayout();
+                var layersLabel = Find<TextBlock>("Music.Output.SeparateTracks.Label");
+                var layers = Find<CheckBox>("Music.Output.SeparateTracks");
+                Assert.AreEqual(l.T("Music.Stems.ShortLabel"), layersLabel.Text);
+                Assert.IsTrue(layersLabel.IsVisible);
+                var variants = Find<ComboBox>("Music.Generation.Variants");
+                var duration = Find<ComboBox>("Music.Generation.Duration");
+                Capture("layout");
+                foreach (var aligned in new FrameworkElement[] { duration, format, layers })
+                    Assert.AreEqual(variants.TranslatePoint(new(), control).Y, aligned.TranslatePoint(new(), control).Y, 1,
+                        $"Output controls should share one row: {AutomationProperties.GetAutomationId(aligned)}.");
+                Assert.IsTrue(layersLabel.TranslatePoint(new(), control).Y < layers.TranslatePoint(new(), control).Y);
+                Assert.AreEqual(TextWrapping.NoWrap, ((TextBlock)((ComboBoxItem)duration.SelectedItem).Content).TextWrapping);
+                control.SeparateTracks = true; host.UpdateLayout(); Assert.IsTrue(layersLabel.IsVisible);
+                control.SeparateTracks = false;
                 Assert.AreEqual(320, control.Options.Output.Bitrate);
                 var extra = Find<ComboBox>("Music.Output.AdditionalFormat");
                 var duplicate = Find<CheckBox>("Music.Output.Duplicate");

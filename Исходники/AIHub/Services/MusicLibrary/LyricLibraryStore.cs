@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
@@ -40,6 +40,16 @@ public sealed class LyricLibraryStore
             create.ExecuteNonQuery(); return db;
         }
         catch { db.Dispose(); throw; }
+    }
+    public bool ContainsText(string text)
+    {
+        var path = Path.Combine(DirectoryPath, "works.sqlite");
+        if (!File.Exists(path)) return false;
+        using var db = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadOnly, Pooling = false, DefaultTimeout = 1 }.ToString());
+        db.Open(); using var command = db.CreateCommand();
+        command.CommandText = "SELECT 1 FROM works WHERE hash=$hash AND deleted=0 LIMIT 1";
+        command.Parameters.AddWithValue("$hash", new LyricEntry { Text = text }.TextHash);
+        return command.ExecuteScalar() is not null;
     }
     public LyricLibrarySnapshot Snapshot()
     {

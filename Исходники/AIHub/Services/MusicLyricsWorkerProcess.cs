@@ -9,7 +9,7 @@ internal static class MusicLyricsWorkerProcess
 {
     internal sealed record Outcome(int ExitCode, string Error);
     internal static async Task<Outcome> RunAsync(string python, string script, string request,
-        Action<string> emit, CancellationToken token)
+        Action<string> emit, CancellationToken token, string operation = "Music.LyricsAlignment", TimeSpan? timeoutLimit = null)
     {
         var info = new ProcessStartInfo(python) { UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8,
@@ -20,7 +20,7 @@ internal static class MusicLyricsWorkerProcess
         info.Environment["HF_HUB_OFFLINE"] = "1"; info.Environment["TRANSFORMERS_OFFLINE"] = "1";
         ManagedPythonLaunch.ScriptArguments(info,[script,"--request",request]);
         token.ThrowIfCancellationRequested();
-        using var process = OwnedProcessRegistry.Shared.Start(info,"Music.LyricsAlignment");
+        using var process = OwnedProcessRegistry.Shared.Start(info,operation);
         var errors = new StringBuilder();
         async Task Pump(StreamReader reader, bool error) {
             while(await reader.ReadLineAsync() is { } line) {
@@ -29,12 +29,12 @@ internal static class MusicLyricsWorkerProcess
             }
         }
         var stdout=Pump(process.StandardOutput,false); var stderr=Pump(process.StandardError,true);
-        using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token); timeout.CancelAfter(TimeSpan.FromMinutes(30));
+        using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token); timeout.CancelAfter(timeoutLimit ?? TimeSpan.FromMinutes(30));
         try { await process.WaitForExitAsync(timeout.Token); }
         catch(OperationCanceledException) {
             if(!process.HasExited) process.Kill(true);
             await process.WaitForExitAsync(CancellationToken.None); await Task.WhenAll(stdout,stderr);
-            token.ThrowIfCancellationRequested(); throw new TimeoutException("Lyrics acoustic search timed out.");
+            token.ThrowIfCancellationRequested(); throw new TimeoutException("Music worker timed out: " + operation);
         }
         finally {
             if(!process.HasExited) process.Kill(true);

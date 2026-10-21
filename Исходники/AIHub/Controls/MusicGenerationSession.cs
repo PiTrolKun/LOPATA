@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using AIHub.Models;
 using AIHub.Services;
@@ -27,6 +27,7 @@ public sealed class MusicGenerationSession : IDisposable
         _jobs = jobs ?? MusicGenerationJobs.Default;
         _view = view; _controller = ApplicationBackgroundOperations.Current;
         _view.Generation.StartPause = StartPauseAsync; _view.Generation.Cancel = CancelAsync;
+        _view.Generation.PrepareSeparation = () => MusicStemsPreparationWindow.EnsureAsync(_view, _l, ApplicationBackgroundOperations.ExitToken);
         _view.Generation.OptionsChanged += RefreshBudget; _view.Wishes.Changed += WishesChanged;
         _view.Editor.ValidityChanged += ValidityChanged;
         if (_controller is not null) _controller.Changed += ControllerChanged;
@@ -155,8 +156,11 @@ public sealed class MusicGenerationSession : IDisposable
                 else if (_controller.State.Phase != BackgroundOperationPhase.Pausing) await _controller.ResumeAsync(ApplicationBackgroundOperations.ExitToken);
                 return;
             }
-            if (_working || _controller?.IsRunning == true || !_ready || !_view.Editor.TryGetGenerationText(out var lyrics)) return;
-            if (_view.Generation.Variation == MusicStudioRuntime.Variation
+            var processingOnly = _view.Generation.AudioTask is { Enabled: true, Mode: MusicAudioTaskMode.Restore };
+            if (_working || _controller?.IsRunning == true || !_ready && !processingOnly) return;
+            var lyrics = _view.Editor.Lyrics;
+            if (!processingOnly && !_view.Editor.TryGetGenerationText(out lyrics)) return;
+            if (!processingOnly && _view.Generation.Variation == MusicStudioRuntime.Variation
                 && _view.Generation.ExpertSettings.StudioSolver == "ab2" && !MusicStudioRuntime.SelectedProfile.SupportsAb2)
             {
                 _view.Status.AppendLog(_l("Music.Expert.UnsupportedSolver"));
@@ -164,12 +168,27 @@ public sealed class MusicGenerationSession : IDisposable
             }
             _starting = true; RefreshButtons();
             var options = _view.Generation.Options;
-            var loras = AIHub.Services.MusicLora.MusicLoraCatalog.Capture(_view.Lora.Selection, _view.Generation.Variation);
-            await AIHub.Services.MusicLora.MusicLoraAssets.EnsureAsync(_modelsRoot, loras, _view.Generation.Variation, ApplicationBackgroundOperations.ExitToken);
+            AIHub.Services.MusicMidi.MusicMelodyPipeline.Validate(options.Melody, options.AudioTask, _view.Generation.Variation);
+            if (options.Melody.Enabled && System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view),
+                string.Format(_l("Music.Midi.BeforeStart"), options.Melody.Notes.Length, options.Melody.Seconds.ToString("0.##")) + "\n\n" +
+                _l(_view.Generation.Variation == MusicStudioRuntime.Variation ? "Music.Midi.Studio" : "Music.Midi.Ace"),
+                _l("Music.Midi.Title"), System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Information) != System.Windows.MessageBoxResult.OK) return;
+            if (options.SeparateTracks && _view.Projects.Current.Steps.Any(s => s.Snapshot.SeparateTracks)) {
+                var choice = ConfirmSeparation(); if (choice is null) return;
+                _view.Generation.SeparateTracks = choice.Value; options = _view.Generation.Options;
+            }
+            if (options.SeparateTracks && !await MusicStemsPreparationWindow.EnsureAsync(_view, _l, ApplicationBackgroundOperations.ExitToken)) return;
+            if (!await MusicAudioTaskPreparationWindow.EnsureAsync(_view, options.AudioTask, _view.Generation.Variation, _l, ApplicationBackgroundOperations.ExitToken)) return;
+            if (options.AudioTask.Enabled && options.AudioTask.NeedsSeparation && (string.IsNullOrWhiteSpace(options.AudioTask.SourceLyrics) || string.IsNullOrWhiteSpace(lyrics))) throw new InvalidDataException("Music.Transform.AlignmentLyrics");
+            if (options.AudioTask.Enabled && !ConfirmAudioTask(options.AudioTask)) return;
+            var loras = processingOnly ? Array.Empty<AIHub.Services.MusicLora.MusicLoraUse>() : AIHub.Services.MusicLora.MusicLoraCatalog.Capture(_view.Lora.Selection, _view.Generation.Variation);
+            if (loras.Length > 0) await AIHub.Services.MusicLora.MusicLoraAssets.EnsureAsync(_modelsRoot, loras, _view.Generation.Variation, ApplicationBackgroundOperations.ExitToken);
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
-                options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
+                (options.DurationSeconds ?? (MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation) ? MusicDiffRhythmCatalog.MaximumDuration : 360)), _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
                 wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment, durationAutomatic: options.DurationSeconds is null,
-                cover: _view.Covers.CaptureSelection(options.Artist, options.Title), loras: loras);
+                cover: _view.Covers.CaptureSelection(options.Artist, options.Title), loras: loras, separateTracks: options.SeparateTracks);
+            job = await CaptureAudioTaskAsync(job, options.AudioTask, ApplicationBackgroundOperations.ExitToken);
+            job = AIHub.Services.MusicMidi.MusicMelodyPipeline.Capture(job, options.Melody);
             submitted = job = _view.Projects.Record(job, _view.Projects.Capture());
             await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             _starting = false; await RunAsync(job.Id);
@@ -186,14 +205,21 @@ public sealed class MusicGenerationSession : IDisposable
             _starting = true; RefreshButtons();
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
             if (MusicModelVariants.WorkspaceVariation(original.Variation) != original.Variation) return;
+            var split = original.SeparateTracks;
+            if (split) { var choice = ConfirmSeparation(); if (choice is null) return; split = choice.Value; }
+            _view.Generation.SeparateTracks = split;
+            if (split && !await MusicStemsPreparationWindow.EnsureAsync(_view, _l, ApplicationBackgroundOperations.ExitToken)) return;
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
                 original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment, original.DurationAutomatic,
-                _view.Covers.CaptureSelection(original.Artist, original.Title), original.Loras.ToArray());
+                _view.Covers.CaptureSelection(original.Artist, original.Title), original.Loras.ToArray(), split);
+            if (!await MusicAudioTaskPreparationWindow.EnsureAsync(_view, original.AudioTask, original.Variation, _l, ApplicationBackgroundOperations.ExitToken)) return;
+            repeat = await CaptureAudioTaskAsync(repeat, original.AudioTask ?? new(), ApplicationBackgroundOperations.ExitToken);
+            repeat = AIHub.Services.MusicMidi.MusicMelodyPipeline.Capture(repeat, original.Melody ?? new());
             submitted = repeat = _view.Projects.Record(repeat, MusicProjectSnapshot.FromJob(repeat));
             if (original.Output is not null) await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             // Preserve the exact score used by the completed track, alongside its two seeds.
             repeat = repeat with { RuntimePack = original.RuntimePack, RuntimeRevision = original.RuntimeRevision, EngineSetId = original.EngineSetId };
-            if (original.Expert.Cot != "off") {
+            if (original.Expert.Cot != "off" && variant.PlanFile is not null) {
                 var score = _jobs.StagePath(repeat.Id, ".abc"); File.Copy(variant.PlanFile!, score, false);
                 repeat = repeat with { Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.PlanHash, PlanHardware = variant.PlanHardware }] };
             }
@@ -226,6 +252,8 @@ public sealed class MusicGenerationSession : IDisposable
     {
         if (_working) throw new InvalidOperationException("Music generation is already active.");
         var job = _jobs.Load(id);
+        if (!await MusicAudioTaskPreparationWindow.EnsureAsync(_view, job.AudioTask, job.Variation, _l, token)) return;
+        if (job.SeparateTracks && !await MusicStemsPreparationWindow.EnsureAsync(_view, _l, token)) return;
         if (restored is not null) job = _view.Projects.RestoreJob(job);
         _working = true;
         _worker.Log -= NativeLog; if (_worker is MusicYueWorker oldNative) oldNative.HardwareChanged -= HardwareChanged;
@@ -236,7 +264,7 @@ public sealed class MusicGenerationSession : IDisposable
         _worker.Log += NativeLog; if (_worker is MusicYueWorker native) native.HardwareChanged += HardwareChanged;
         if (_worker is MusicStudioWorker studio) studio.HardwareChanged += HardwareChanged;
         _cancel = CancellationTokenSource.CreateLinkedTokenSource(token); RefreshButtons();
-        var runner = new MusicGenerationRunner(_jobs, _worker, synchronizeLyrics: _view.LyricsPlayback.SynchronizeGeneratedAsync);
+        var runner = new MusicGenerationRunner(_jobs, _worker, synchronizeLyrics: _view.LyricsPlayback.SynchronizeGeneratedAsync, log: NativeLog);
         runner.Stage += stage => _view.Status.Telemetry.Report(_telemetry, stage);
         runner.TrackReady += track => _view.Dispatcher.Invoke(() => { var present = _view.Tracks.HasTrack(track.Path!); _view.Tracks.AddTrack(track);
             if (!present) _view.Status.AppendLog(_l("Music.Audio.Saved") + ": " + track.Title); });
@@ -253,7 +281,12 @@ public sealed class MusicGenerationSession : IDisposable
             var completed = _jobs.Load(id).Variants.All(MusicGenerationJobs.ResultVisible);
             Outcome(job, completed ? MusicProjectOutcome.Completed : MusicProjectOutcome.Paused);
             _view.Status.Telemetry.Report(_telemetry, completed ? MusicGenerationStage.Completed : MusicGenerationStage.Paused);
-            if (completed) GenerationCompleted?.Invoke(id);
+            if (completed) {
+                GenerationCompleted?.Invoke(id);
+                if (_jobs.Load(id).Variants.Any(v => v.AudioTask?.Alignment?.Approximate == true))
+                    _view.Dispatcher.Invoke(() => System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view), _l("Music.Transform.ApproximateFit"), _l("Music.Transform.Title"),
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information));
+            }
         }
         catch (OperationCanceledException)
         {
@@ -316,11 +349,12 @@ public sealed class MusicGenerationSession : IDisposable
     private void RefreshButtons()
     {
         if (_disposed) return;
+        _view.Generation.CanSeparate = !_view.Wishes.State.Instrumental;
         var state = _controller?.State; var own = _controller?.HasPending == true && state?.Kind == MusicGenerationRunner.BackgroundKind;
         var paused = own && state!.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Countdown;
         var busy = _working && !paused || own && state!.Phase is BackgroundOperationPhase.Running or BackgroundOperationPhase.Pausing;
         _view.Projects.SetBusy(_starting || _working || own);
-        _view.Generation.UpdateState(_view.Editor.CanGenerate && _controller?.IsRunning != true && _controller?.BlocksNewWork != true && !_starting, busy, paused, _ready,
+        _view.Generation.UpdateState((_view.Editor.CanGenerate || _view.Generation.AudioTask is { Enabled: true, Mode: MusicAudioTaskMode.Restore, Source: not null }) && _controller?.IsRunning != true && _controller?.BlocksNewWork != true && !_starting, busy, paused, _ready || _view.Generation.AudioTask is { Enabled: true, Mode: MusicAudioTaskMode.Restore },
             _starting || _cancelRequested || own && state!.Phase == BackgroundOperationPhase.Pausing);
         _view.Player.RefreshRepeat();
         StateChanged?.Invoke();
@@ -337,7 +371,8 @@ public sealed class MusicGenerationSession : IDisposable
         if ((_worker is MusicDiffRhythmWorker or MusicHeartMuLaWorker) && message.StartsWith("[Hardware]", StringComparison.Ordinal)
             && !_view.Dispatcher.HasShutdownStarted)
             _view.Dispatcher.Invoke(() => { if (!_disposed) _view.Generation.SetHardware(MusicModelVariants.Family(_view.Generation.Variation) + " · " + message[10..].Trim()); });
-        MusicGenerationStage? stage = message.StartsWith("[Load]", StringComparison.Ordinal) ? MusicGenerationStage.Loading
+        MusicGenerationStage? stage = message.StartsWith("[Stems]", StringComparison.Ordinal) ? MusicGenerationStage.Separating
+            : message.StartsWith("[Load]", StringComparison.Ordinal) ? MusicGenerationStage.Loading
             : message.StartsWith("[Plan]", StringComparison.Ordinal) || message.StartsWith("[ABC]", StringComparison.Ordinal) || message.StartsWith("[AR] Score", StringComparison.Ordinal) ? MusicGenerationStage.Planning
             : message.StartsWith("[AR]", StringComparison.Ordinal) ? MusicGenerationStage.Sequence
             : message.StartsWith("[Synth]", StringComparison.Ordinal) || message.StartsWith("[NAR]", StringComparison.Ordinal) || message.StartsWith("[VAE]", StringComparison.Ordinal) ? MusicGenerationStage.Sound : null;
@@ -357,9 +392,18 @@ public sealed class MusicGenerationSession : IDisposable
     private void ReportFailure(Exception error)
     {
         if (error is OperationCanceledException) return;
+        if (error.Message.StartsWith("Music.Midi.", StringComparison.Ordinal))
+            _view.Dispatcher.Invoke(() => System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view), _l(error.Message), _l("Music.Midi.Title"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning));
+        if (error.Message.StartsWith("Music.Transform.", StringComparison.Ordinal))
+            _view.Dispatcher.Invoke(() => System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view), _l(error.Message), _l("Music.Transform.Title"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning));
+        if (error is MusicStemsException) {
+            _view.Status.AppendLog(_l("Music.Stems.Failed") + " " + error.InnerException?.Message);
+            _view.Dispatcher.Invoke(() => System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view), _l("Music.Stems.Failed"), _l("Music.Stems.Title"),
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning));
+        }
         if (!_view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error))
         { _telemetry = _view.Status.Telemetry.Begin(); _view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error); }
-        _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + (error.Message.StartsWith("Music.Lora.", StringComparison.Ordinal) ? _l(error.Message) : error.Message));
+        _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + (error is MusicStemsException || (error.Message.StartsWith("Music.Lora.", StringComparison.Ordinal) || error.Message.StartsWith("Music.Transform.", StringComparison.Ordinal) || error.Message.StartsWith("Music.Midi.", StringComparison.Ordinal)) ? _l(error.Message) : error.Message));
         if (error.Message is "Music.Lora.ScoreCombinationFailure" or "Music.Lora.ScoreFailure") MusicLoraNotices.Show(_view, error.Message, _l);
     }
     private void Outcome(MusicGenerationJob job, MusicProjectOutcome outcome, string message = "")
@@ -367,9 +411,37 @@ public sealed class MusicGenerationSession : IDisposable
         try { _view.Projects.Outcome(job, outcome, message); }
         catch (Exception error) { _view.Status.AppendLog(_l("Music.Projects.WriteError") + " " + error.Message); }
     }
+    private async Task<MusicGenerationJob> CaptureAudioTaskAsync(MusicGenerationJob job, MusicAudioTask task, CancellationToken token)
+    {
+        if (task.Enabled) await ApplicationBackgroundOperations.RetireModelsAsync();
+        var captured = await MusicAudioTaskFiles.CaptureAsync(task, _jobs.Folder(job.Id), job.Variation, token);
+        if (captured is null) return job;
+        var expert = job.Expert.Snapshot();
+        if (job.Variation == MusicStudioRuntime.Variation && captured.NeedsSource && captured.UsesGenerator)
+            expert.Values["cot"] = captured.KeepHarmony ? 0 : 1;
+        job = job with { AudioTask = captured, Expert = expert,
+            DurationSeconds = captured.UsesGenerator && captured.Source?.End is { } end ? Math.Clamp((int)Math.Ceiling(end), 1, 360) : job.DurationSeconds,
+            DurationAutomatic = captured.NeedsSource ? false : job.DurationAutomatic };
+        _jobs.Save(job); return job;
+    }
+    private bool ConfirmAudioTask(MusicAudioTask task)
+    {
+        var summary = _l("Music.Transform.Mode." + task.Mode) + "\n" + _l("Music.Transform.Summary." + task.Mode)
+            + "\n" + _l("Music.Transform.References") + ": " + MusicAudioInputPolicy.ActiveReferences(task, _view.Generation.Variation).Count()
+            + "\n\n" + _l(MusicAudioInputPolicy.ReferenceHintKey(_view.Generation.Variation, task.Mode));
+        return System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view), summary, _l("Music.Transform.BeforeStart"),
+            System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Information) == System.Windows.MessageBoxResult.OK;
+    }
+    private bool? ConfirmSeparation()
+    {
+        var result = System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view), _l("Music.Stems.KeepEnabled"), _l("Music.Stems.Title"),
+            System.Windows.MessageBoxButton.YesNoCancel, System.Windows.MessageBoxImage.Question);
+        return result == System.Windows.MessageBoxResult.Cancel ? null : result == System.Windows.MessageBoxResult.Yes;
+    }
     public void Dispose()
     {
         if (_disposed) return; _disposed = true; _cancel?.Cancel();
+        _view.Generation.PrepareSeparation = null;
         _view.Editor.ValidityChanged -= ValidityChanged; _view.Wishes.Changed -= WishesChanged;
         _view.Generation.OptionsChanged -= RefreshBudget; if (_controller is not null) _controller.Changed -= ControllerChanged;
         _worker.Log -= NativeLog;

@@ -23,6 +23,8 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public MusicCoverController Covers { get; }
     public LyricLibraryController Library { get; }
     public MusicLoraController Lora { get; }
+    public MusicAudioTaskController AudioTask { get; }
+    public MusicMelodyController Melody { get; }
     private bool _outputConfigured;
     public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null,
         IMusicLyricsSynchronization? synchronizeLyrics = null, IMusicAudioPlayer? audioPlayer = null, MusicCoverStore? coverStore = null)
@@ -36,7 +38,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         grid.ColumnDefinitions.Add(new() { Width = new(12) });
         grid.ColumnDefinitions.Add(new() { Width = new(140) });
         grid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star), MinWidth = 220 });
-        grid.ColumnDefinitions.Add(new() { Width = new(1.4, GridUnitType.Star), MinWidth = 260 });
+        grid.ColumnDefinitions.Add(new() { Width = new(1.4, GridUnitType.Star), MinWidth = 330 });
         grid.RowDefinitions.Add(new() { Height = new(110) });
         grid.RowDefinitions.Add(new() { Height = new(190) });
         grid.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
@@ -72,7 +74,9 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Rhyme = new(this);
         Covers = new(this, jobs ?? MusicGenerationJobs.Default, coverStore);
         Lora = new(this);
-        double MaximumWidth() => Math.Max(250, grid.ActualWidth - 140 - 12 - 220 - 260);
+        AudioTask = new(this);
+        Melody = new(this);
+        double MaximumWidth() => Math.Max(250, grid.ActualWidth - 140 - 12 - 220 - 330);
         void Add(UIElement element, int column, int row, int rowSpan = 1, int columnSpan = 1)
         { Grid.SetColumn(element, column); Grid.SetRow(element, row); Grid.SetRowSpan(element, rowSpan); Grid.SetColumnSpan(element, columnSpan); grid.Children.Add(element); }
     }
@@ -91,6 +95,8 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Rhyme.Localize(localize);
         Covers.Localize(localize);
         Lora.Localize(localize);
+        AudioTask.Localize(localize);
+        Melody.Localize(localize);
         var grid = (Grid)Content;
         var divider = (Thumb)grid.Children[1]; divider.ToolTip = localize("Music.Editor.Resize");
         AutomationProperties.SetName(divider, localize("Music.Editor.Resize"));

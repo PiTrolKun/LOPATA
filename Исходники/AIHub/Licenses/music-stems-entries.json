@@ -1,0 +1,21 @@
+[
+  {
+    "Id": "music.stems",
+    "Name": "HT-Demucs ONNX / music separation",
+    "Version": "htdemucs-49df9b6989cf / ORT 1.23.2",
+    "Author": "Meta Demucs contributors; StemSplitio ONNX export; Microsoft ONNX Runtime and wheel authors",
+    "License": "MIT (Demucs/model/ORT); NumPy BSD and bundled notices; individual wheel licenses apply",
+    "Source": "https://huggingface.co/StemSplitio/htdemucs-6s-onnx/tree/49df9b6989cf2150840ea65b0bef77a2e471b678",
+    "Checked": "2026-10-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "8E105FD90F7F457ADF542DBBD38BF86CEFF476DC100A418F144D25625A2AEC04",
+    "Ru": "Локальное разделение песни. Модель и ONNX Runtime предоставлены авторами по MIT; зависимости сохраняют собственные условия, включённые ниже. Используется изолированно, рабочие окружения музыкальных моделей не изменяются. Права на исходное аудио определяются отдельно. GPU требует совместимых библиотек CUDA/cuDNN из подготовленной среды; они имеют отдельные условия.",
+    "En": "Local song separation. The model and ONNX Runtime are published under MIT; dependencies retain their original conditions included below. Isolated use, without changing music model environments. Rights to input audio are separate. GPU requires compatible CUDA/cuDNN libraries from the prepared runtime; their separate terms apply.",
+    "Texts": [
+      "texts/music.stems_MODEL-CARD.md",
+      "texts/music.stems_DEMUCS-LICENSE.txt",
+      "texts/music.stems_WHEEL-NOTICES.txt"
+    ]
+  }
+]

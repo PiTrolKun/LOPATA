@@ -44,9 +44,15 @@ public sealed class MusicProjectController
             ModelSettings = _modelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Lyrics = _view.Editor.Lyrics,
             RhymeSteps = Current.Saved.RhymeSteps.Select(s => s.Snapshot()).ToArray(), Title = options.Title, Artist = options.Artist, Comment = options.Comment,
             Variants = options.Variants, DurationSeconds = options.DurationSeconds, OutputFolder = _view.Tracks.OutputFolder,
-            Expert = _view.Generation.ExpertSettings, Output = options.Output, Wishes = MusicWishSnapshot.Capture(_view.Wishes.State), Loras = _view.Lora.Selection.Snapshot() };
+            Expert = _view.Generation.ExpertSettings, Output = options.Output, SeparateTracks = options.SeparateTracks, AudioTask = options.AudioTask, Melody = _view.Generation.Melody,
+            Wishes = MusicWishSnapshot.Capture(_view.Wishes.State), Loras = _view.Lora.Selection.Snapshot() };
     }
-    public void RememberDefaults() => _initial ??= (Capture() with { RhymeSteps = [], Loras = new() }).Snapshot();
+    // Output/model preferences may be configured after restoring a submitted song.
+    // Its contents must never become the template for a new project.
+    public void RememberDefaults() => _initial ??= (Capture() with {
+        Lyrics = "", Title = "", Artist = "", Comment = "", Wishes = MusicWishSnapshot.Capture(new()),
+        RhymeSteps = [], Loras = new(), SeparateTracks = false, AudioTask = new(), Melody = new()
+    }).Snapshot();
     public void SaveLoraWorkspace() { EnsureIdle(); Current = _store.SaveWorkspace(Current, Capture()); History.Refresh(); }
     public void SetBusy(bool busy) { Busy = busy; History.Refresh(); }
     public void CycleMode() { if (Busy) return; Mode = (MusicHistoryMode)(((int)Mode + 1) % 3); History.Refresh(); }
@@ -69,7 +75,7 @@ public sealed class MusicProjectController
             var active = MusicModelVariants.WorkspaceSettings(snapshot.Expert);
             _view.Generation.ConfigureVariation(active.Variation, active);
             _view.Generation.SetOptions(new(snapshot.Title, snapshot.Variants, snapshot.DurationSeconds) {
-                Artist = snapshot.Artist, Comment = snapshot.Comment, Output = snapshot.Output });
+                Artist = snapshot.Artist, Comment = snapshot.Comment, Output = snapshot.Output, SeparateTracks = snapshot.SeparateTracks, AudioTask = snapshot.AudioTask, Melody = snapshot.Melody });
             _view.Generation.SetExpertSettings(active, false);
             _view.Lora.Restore(snapshot.Loras);
             _view.Wishes.Apply(snapshot.Wishes.ToPreferences()); _view.Tracks.SetOutputFolder(snapshot.OutputFolder);

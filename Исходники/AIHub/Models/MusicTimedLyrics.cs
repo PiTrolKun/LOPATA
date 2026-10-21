@@ -6,6 +6,7 @@ namespace AIHub.Models;
 
 public sealed record MusicTimedLyricsWord(int SourceStart, int SourceLength, double StartSeconds, double EndSeconds);
 public sealed record MusicTimedLyricsClock(string SourcePayloadHash, double OffsetSeconds, double MinimumCorrelation, double LagSpreadSeconds);
+public sealed record MusicTimedLyricsDerivation(string SourcePayloadHash, string Operation, int SampleRate, long Samples);
 public sealed record MusicTimedLyricsLine(int SourceStart, int SourceLength, double StartSeconds, double EndSeconds)
 {
     public double? Confidence { get; init; }
@@ -30,6 +31,7 @@ public sealed record MusicTimedLyrics
     public string Accuracy { get; init; } = "line";
     public MusicTimedLyricsLine[] Lines { get; init; } = [];
     public MusicTimedLyricsClock? Clock { get; init; }
+    public MusicTimedLyricsDerivation[] Derivations { get; init; } = [];
 
     public static string Normalize(string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
     public static string HashLyrics(string text) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Normalize(text))));
@@ -43,6 +45,10 @@ public sealed record MusicTimedLyrics
             !double.IsFinite(DurationSeconds) || DurationSeconds <= 0 || string.IsNullOrWhiteSpace(Provider) ||
             string.IsNullOrWhiteSpace(ProviderVersion) || Accuracy is not ("line" or "word" or "approximate") || Lines is null || Lines.Length > 10000)
             throw new InvalidDataException("Invalid timed lyrics identity.");
+        if (Derivations is null || Derivations.Length > 8 || Derivations.Any(d => d is null ||
+            d.SourcePayloadHash is null || d.SourcePayloadHash.Length != 64 || !d.SourcePayloadHash.All(Uri.IsHexDigit) ||
+            d.Operation is not ("htdemucs-aligned-pcm" or "sum-aligned-decoded-stems") || d.SampleRate != 48000 || d.Samples is <= 0 or > 86400000))
+            throw new InvalidDataException("Invalid timed lyrics derivation.");
         if (Clock is { } clock && (clock.SourcePayloadHash is null || clock.SourcePayloadHash.Length != 64 || !clock.SourcePayloadHash.All(Uri.IsHexDigit) ||
             !double.IsFinite(clock.OffsetSeconds) || Math.Abs(clock.OffsetSeconds) > 1 || !double.IsFinite(clock.MinimumCorrelation) ||
             clock.MinimumCorrelation is < .9 or > 1.001 || !double.IsFinite(clock.LagSpreadSeconds) || clock.LagSpreadSeconds is < 0 or > .03))

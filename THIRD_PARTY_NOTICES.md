@@ -1,3 +1,34 @@
+## 2026-10-21 — MIDI import/export
+
+DryWetMIDI 8.0.3 by Maxim Dobroselsky, MIT (Copyright (c) 2018 Maxim Dobroselsky).
+Source: https://github.com/melanchall/drywetmidi/tree/v8.0.3
+Original license is included at Исходники/AIHub/Licenses/texts/music.midi_DryWetMIDI-LICENSE.txt.
+Used for SMF import/export and timing conversion. No third-party editor, SoundFont,
+voice bank, ComfyUI node code or transcription model is copied by this feature.
+
+## 2026-10-21 — optional music score transcription
+
+SheetSage2 and MERT-v2-FullSong (M-A-P), CC BY-NC 4.0 and published model-card
+conditions; optional GGUF downloads by Serveurperso, pinned revision
+ e630f2b8f6aedf8254c3186438633c1b5eeaf80a. Complete downloaded model cards and
+available original license texts with source revisions are retained under
+`Исходники/AIHub/Licenses/texts/music.cover-score_*`. Existing native engine
+licenses remain in force. No ComfyUI node-pack code was copied into the product.
+The ACE adapter calls the pinned official API. Existing whisper.cpp and Whisper
+MIT components are reused for optional lyric transcription.
+
+## 2026-10-21 — optional song separation
+
+HT-Demucs 6s ONNX export: StemSplitio revision
+49df9b6989cf2150840ea65b0bef77a2e471b678, declared MIT; original Meta Demucs
+MIT license is retained. ONNX Runtime 1.23.2 CPU/CUDA and isolated dependency
+wheels are optional managed downloads, not installations into ACE or system Python.
+Original model card, Demucs license and complete wheel notices are retained in
+`Исходники/AIHub/Licenses/texts/music.stems_*`. NumPy BSD and other wheel conditions
+remain applicable. CUDA/cuDNN come from the separately licensed hardware profile.
+See `Инструменты/MusicStems/README.md` and the embedded per-file SHA256 manifest.
+No rights to input recordings are supplied by this mechanism.
+
 ## 2026-10-17 — metadata utility
 
 The optional bundled metadata.exiftool runtime is the official ExifTool 13.59 Windows x64 package.

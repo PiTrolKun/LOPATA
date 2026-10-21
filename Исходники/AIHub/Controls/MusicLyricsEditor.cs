@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -35,6 +35,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
     public event EventHandler? EditingFinished;
     public event EventHandler? EditingStarted;
     public bool IsEditing => _editor.IsKeyboardFocusWithin;
+    public LyricLibraryOffer LibraryOffer { get; } = new();
     public string Lyrics { get => _editor.Text; set => _editor.Text = value; }
     public void SetPlaybackHighlight(int start, int length, bool playing = true)
     {
@@ -90,6 +91,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
             text.FontSize = 12; text.TextWrapping = TextWrapping.Wrap; text.Margin = new(0, 2, 0, 2);
             text.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush"); footer.Children.Add(text);
         }
+        footer.Children.Add(LibraryOffer);
         AutomationProperties.SetAutomationId(_context, "Music.ContextCount");
         AutomationProperties.SetAutomationId(_weight, "Music.LyricsCount");
         AutomationProperties.SetAutomationId(_characters, "Music.CharacterCount");
@@ -97,7 +99,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         _debounce = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) { Interval = TimeSpan.FromMilliseconds(180) };
         _debounce.Tick += DebounceTick;
         _editor.TextChanged += (_, _) => {
-            ClearPlaybackHighlight(); InvalidateCounts(); LyricsChanged?.Invoke(this, EventArgs.Empty);
+            ClearPlaybackHighlight(); InvalidateCounts(); LibraryOffer.SetText(_editor.Text); LyricsChanged?.Invoke(this, EventArgs.Empty);
         };
         _editor.SelectionChanged += (_, _) => SelectionChanged?.Invoke(this, EventArgs.Empty);
         _editor.GotKeyboardFocus += (_, _) => EditingStarted?.Invoke(this, EventArgs.Empty);
@@ -107,7 +109,7 @@ public sealed class MusicLyricsEditor : UserControl, IDisposable
         UpdateLabels();
     }
 
-    public void Localize(Func<string, string> localize) { _l = localize; UpdateLabels(); }
+    public void Localize(Func<string, string> localize) { _l = localize; LibraryOffer.Localize(localize); UpdateLabels(); }
     public void AttachHistory(MusicHistoryControl history)
     {
         var grid = (Grid)Content; grid.Children.Remove(_title); _title.FontSize = 18; _title.TextWrapping = TextWrapping.Wrap;

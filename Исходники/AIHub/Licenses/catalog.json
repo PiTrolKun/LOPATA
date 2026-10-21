@@ -4080,5 +4080,62 @@
     "Delivery": "external-service",
     "Texts": [],
     "Terms": "A53F40B1EEE3D8ED83952A9C479A4CF1E7EB9547E6F080B0C09243E201618367"
+  },
+  {
+    "Id": "music.stems",
+    "Name": "HT-Demucs ONNX / music separation",
+    "Version": "htdemucs-49df9b6989cf / ORT 1.23.2",
+    "Author": "Meta Demucs contributors; StemSplitio ONNX export; Microsoft ONNX Runtime and wheel authors",
+    "License": "MIT (Demucs/model/ORT); NumPy BSD and bundled notices; individual wheel licenses apply",
+    "Source": "https://huggingface.co/StemSplitio/htdemucs-6s-onnx/tree/49df9b6989cf2150840ea65b0bef77a2e471b678",
+    "Checked": "2026-10-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "8E105FD90F7F457ADF542DBBD38BF86CEFF476DC100A418F144D25625A2AEC04",
+    "Ru": "Локальное разделение песни. Модель и ONNX Runtime предоставлены авторами по MIT; зависимости сохраняют собственные условия, включённые ниже. Используется изолированно, рабочие окружения музыкальных моделей не изменяются. Права на исходное аудио определяются отдельно. GPU требует совместимых библиотек CUDA/cuDNN из подготовленной среды; они имеют отдельные условия.",
+    "En": "Local song separation. The model and ONNX Runtime are published under MIT; dependencies retain their original conditions included below. Isolated use, without changing music model environments. Rights to input audio are separate. GPU requires compatible CUDA/cuDNN libraries from the prepared runtime; their separate terms apply.",
+    "Texts": [
+      "texts/music.stems_MODEL-CARD.md",
+      "texts/music.stems_DEMUCS-LICENSE.txt",
+      "texts/music.stems_WHEEL-NOTICES.txt"
+    ]
+  },
+  {
+    "Id": "music.cover-score",
+    "Name": "SheetSage2 / MERT-v2-FullSong Q8",
+    "Version": "e630f2b8f6aedf8254c3186438633c1b5eeaf80a",
+    "Author": "M-A-P / YuE2 authors; GGUF conversion Serveurperso",
+    "License": "CC BY-NC 4.0; model card conditions apply",
+    "Source": "https://huggingface.co/Serveurperso/YuE2-GGUF",
+    "Checked": "2026-10-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "DEBFC01D5E8CEA7BD203E9BAAF14C5FD03209A29831AF9A5F63A3E8EEB17B376",
+    "Ru": "Необязательные модели распознавания музыкального плана для каверов YuE2 Studio. Условия авторов CC BY-NC 4.0: некоммерческое использование, указание авторства и изменений. Согласие не распространяется на права на загружаемую музыку. Выполняются локально через подготовленный native engine; веса скачиваются отдельно (около 1 ГБ).",
+    "En": "Optional music score transcription for YuE2 Studio covers. Author terms CC BY-NC 4.0: noncommercial use, attribution and indication of changes. Consent does not cover rights to input music. Local execution through the prepared native engine; weights are downloaded separately (about 1 GB).",
+    "Texts": [
+      "texts/music.cover-score_SheetSage2.md",
+      "texts/music.cover-score_MERT-v2-FullSong.md",
+      "texts/music.cover-score_YuE2-GGUF.md",
+      "texts/music.cover-score_SheetSage2-LICENSE.txt",
+      "texts/music.cover-score_MERT-v2-FullSong-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "music.midi",
+    "Name": "DryWetMIDI",
+    "Version": "8.0.3",
+    "Author": "Maxim Dobroselsky",
+    "License": "MIT",
+    "Source": "https://github.com/melanchall/drywetmidi/tree/v8.0.3",
+    "Checked": "2026-10-21",
+    "Basic": false,
+    "Delivery": "built-in",
+    "Terms": "FA7A541AE72A53375DD53F49444A06DCF50576A8C9D73B692A452FEFE5752BDE",
+    "Ru": "Встроенная библиотека импорта и экспорта MIDI для необязательного редактора мелодии. MIT, Copyright (c) 2018 Maxim Dobroselsky. Исходная лицензия включена; библиотека не является AI-моделью, не содержит голосов или музыкальных весов и не устанавливает системный синтезатор.",
+    "En": "Bundled MIDI import/export library for the optional melody editor. MIT, Copyright (c) 2018 Maxim Dobroselsky. Original license included. This is not an AI model; it contains no voices or music weights and does not install a system synthesizer.",
+    "Texts": [
+      "texts/music.midi_DryWetMIDI-LICENSE.txt"
+    ]
   }
 ]

@@ -16,6 +16,7 @@ public partial class MainWindow
 {
     private readonly ClipWork _clipWork = new();
     private readonly List<LyricVideoWindow> _clipWindows = [];
+    private readonly Dictionary<string, string> _stemClipSources = [];
     private void OpenLyricVideoUtility()
     {
         var picker = new Microsoft.Win32.OpenFileDialog { Title = L("LyricVideo.ChooseFile"),
@@ -23,7 +24,7 @@ public partial class MainWindow
         if (Directory.Exists(_appSettings.MusicOutputFolder)) picker.InitialDirectory = _appSettings.MusicOutputFolder;
         if (picker.ShowDialog(this) == true) OpenLyricVideo(picker.FileName);
     }
-    private void OpenMusicLyricVideo(MusicWorkspaceControl workspace)
+    private async void OpenMusicLyricVideo(MusicWorkspaceControl workspace)
     {
         var tracks = workspace.Tracks.SessionTracks.Where(t => !t.IsExample && File.Exists(t.Path)).ToArray();
         if (tracks.Length == 0) { MessageBox.Show(this, L("LyricVideo.NoTracks"), L("LyricVideo.Title")); return; }
@@ -40,9 +41,24 @@ public partial class MainWindow
         panel.Children.Add(list);
         use.Click += (_, _) => { if (list.SelectedItem is not null) chooser.DialogResult = true; };
         if (chooser.ShowDialog() == true && list.SelectedItem is AIHub.Models.MusicTrack track)
-        { workspace.Player.Pause(); OpenLyricVideo(track.Path!); }
+        {
+            workspace.Player.Pause();
+            try {
+                var key = track.JobId + ":" + track.Variant + ":" + Path.GetExtension(track.Path);
+                var path = track.Path!;
+                if (track.IsLayered) {
+                    if (_stemClipSources.TryGetValue(key, out var cached) && _clipWindows.Any(w => w.SourcePath == cached)) path = cached;
+                    else path = _stemClipSources[key] = await MusicStemPlayback.ForClipAsync(track, MusicGenerationJobs.Default, ApplicationBackgroundOperations.ExitToken);
+                }
+                OpenLyricVideo(path, track.IsLayered);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException) {
+                MessageBox.Show(this, L("Music.Audio.FileError") + " " + error.Message, L("LyricVideo.Title"));
+            }
+        }
     }
-    private void OpenLyricVideo(string path)
+    private void OpenLyricVideo(string path, bool ownsSource = false)
     {
         path = Path.GetFullPath(path);
         var previous = _clipWindows.FirstOrDefault(w => w.SourcePath.Equals(path, StringComparison.OrdinalIgnoreCase));
@@ -50,7 +66,14 @@ public partial class MainWindow
         var window = new LyricVideoWindow(path, _clipWork, L, _localizationService.CurrentLanguageCode) { Owner = this };
         window.Resources.MergedDictionaries.Add(Resources);
         window.ViewFileRequested += result => _fileViewerService.Open(this, result, _appSettings.FileViewer, _isDarkTheme, _localizationService);
-        window.Closed += (_, _) => _clipWindows.Remove(window);
+        window.Closed += (_, _) => {
+            _clipWindows.Remove(window);
+            foreach (var key in _stemClipSources.Where(p => p.Value == path).Select(p => p.Key).ToArray()) _stemClipSources.Remove(key);
+            // A pending clip still references its owned source for durable recovery.
+            if (ownsSource && _backgroundOperations?.HasPending != true) {
+                try { File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+            }
+        };
         _clipWindows.Add(window); window.Show();
     }
     private void RegisterLyricVideoBackgroundOperation()

@@ -14,7 +14,7 @@ using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
 namespace AIHub.Controls;
 
-public sealed class MusicPlayerControl : UserControl, IDisposable
+public sealed partial class MusicPlayerControl : UserControl, IDisposable
 {
     private readonly IMusicAudioPlayer _audio;
     private readonly TextBlock _title = MusicAudioUi.Text(14), _time = MusicAudioUi.Text(), _status = MusicAudioUi.Text(11);
@@ -37,7 +37,7 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
     public MusicTrack? CurrentTrack => _track;
     public TimeSpan PlaybackPosition => _audio.IsReady && !_disposed ? _audio.Position : TimeSpan.Zero;
     public bool CanHighlightPlayback => !_disposed && _surfaceActive && !_playbackEnded && _errorKey.Length == 0 &&
-        _track is { IsExample: false } && _audio.IsReady && _audio.Duration > TimeSpan.Zero &&
+        _track is { IsExample: false } && (!_track.IsLayered || _stemMode != MusicStemPlaybackMode.Music) && _audio.IsReady && _audio.Duration > TimeSpan.Zero &&
         _audio.Position >= TimeSpan.Zero && _audio.Position < _audio.Duration;
     private Func<MusicTrack, bool>? _canRepeat;
     private Action<MusicTrack>? _requestRepeat;
@@ -104,9 +104,13 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
     public void Select(MusicTrack track, bool play = false)
     {
         if (_disposed) return;
+        ResetStemPlayback();
         _track = track; _errorKey = ""; _previouslyPlaying = _playbackEnded = false;
         _lyricsPending = _waitingPlay = _lyricsUnavailable = false;
-        TrackChanged?.Invoke(track); _audio.Open(track.Path);
+        TrackChanged?.Invoke(track);
+        ConfigureStemMenu();
+        if (track.IsLayered) { _stemMode = MusicStemPlaybackMode.Together; _ = OpenStemAsync(TimeSpan.Zero, play); Refresh(); return; }
+        _audio.Open(track.Path);
         if (play && !track.IsExample) RequestPlayback(); Refresh();
     }
     public void Localize(Func<string, string> localize)
@@ -114,13 +118,15 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
         _l = localize; MusicAudioUi.Label(_speaker, _l("Music.Audio.Volume")); MusicAudioUi.Label(_save, _l("Music.Audio.Save"));
         MusicAudioUi.Label(_repeat, _l("Music.Audio.Repeat"));
         AutomationProperties.SetName(_seek, _l("Music.Audio.Seek")); AutomationProperties.SetName(_volume, _l("Music.Audio.Volume")); Refresh();
+        ConfigureStemMenu();
     }
     private void AudioChanged() {
+        CompleteStemOpen();
         if (_audio.IsPlaying) _playbackEnded = false;
         else if (_previouslyPlaying && _audio.Position == TimeSpan.Zero) _playbackEnded = true;
         _previouslyPlaying = _audio.IsPlaying; Refresh(); PlaybackChanged?.Invoke();
     }
-    public void Clear() { _track = null; _errorKey = ""; _lyricsPending = _waitingPlay = _lyricsUnavailable = false; TrackChanged?.Invoke(null); _audio.Open(null); Refresh(); }
+    public void Clear() { ResetStemPlayback(); _play.ContextMenu = null; _track = null; _errorKey = ""; _lyricsPending = _waitingPlay = _lyricsUnavailable = false; TrackChanged?.Invoke(null); _audio.Open(null); Refresh(); }
     private void Failed(string key) { _waitingPlay = false; _errorKey = key; Refresh(); }
     private void Tick(object? sender, EventArgs e) => RefreshTime();
     private void Refresh()
@@ -131,11 +137,12 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
             _lyricsPending ? _l(_waitingPlay ? "Music.Audio.SyncWaitingPlay" : "Music.Audio.SyncPending") :
             _lyricsUnavailable ? _l("Music.Audio.KaraokeUnavailable") : "";
         var hasFile = _track is { IsExample: false } && File.Exists(_track.Path);
-        _save.IsEnabled = hasFile; _play.IsEnabled = hasFile && _errorKey.Length == 0;
+        _save.IsEnabled = hasFile; _play.IsEnabled = hasFile && _errorKey.Length == 0 && !_stemLoading;
         RefreshRepeat();
         _play.Opacity = _play.IsEnabled ? 1 : .45;
         _play.Content = MusicAudioUi.Icon(_audio.IsPlaying || _waitingPlay ? "M7,3 V21 M17,3 V21" : "M7,3 L21,12 L7,21 Z");
         MusicAudioUi.Label(_play, _l(_waitingPlay ? "Music.Audio.CancelWaitingPlay" : _audio.IsPlaying ? "Music.Audio.Pause" : "Music.Audio.Play"));
+        RefreshStemIcon();
         _seek.IsEnabled = _track is not null && _audio.IsReady; RefreshTime();
     }
     private void RefreshTime()
@@ -144,14 +151,15 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
         _refreshing = true;
         if (_track is null) { _seek.Value = 0; _time.Text = "00:00 / 00:00"; _refreshing = false; PositionChanged?.Invoke(); return; }
         _seek.Maximum = Math.Max(1, (_audio.IsReady ? _audio.Duration : _track?.Duration ?? TimeSpan.Zero).TotalSeconds);
-        _seek.Value = _audio.IsReady ? _audio.Position.TotalSeconds : 0;
+        _seek.Value = _stemLoading && _stemPosition is { } pendingPosition ? pendingPosition.TotalSeconds : _audio.IsReady ? _audio.Position.TotalSeconds : 0;
         _refreshing = false;
-        _time.Text = MusicAudioUi.Time(_audio.Position) + " / " + MusicAudioUi.Time(_audio.IsReady ? _audio.Duration : _track?.Duration ?? TimeSpan.Zero);
+        _time.Text = MusicAudioUi.Time(_stemLoading && _stemPosition is { } position ? position : _audio.Position) + " / " + MusicAudioUi.Time(_audio.IsReady ? _audio.Duration : _track?.Duration ?? TimeSpan.Zero);
         PositionChanged?.Invoke();
     }
     private void Save()
     {
         if (_track is null || _track.IsExample || !File.Exists(_track.Path)) return;
+        if (_track.IsLayered) { _ = SaveStemFolderAsync(_track); return; }
         var dialog = new Microsoft.Win32.SaveFileDialog { Title = _l("Music.Audio.Save"), FileName = Path.GetFileName(_track.Path),
             Filter = $"{_l("Music.Audio.File")} (*{Path.GetExtension(_track.Path)})|*{Path.GetExtension(_track.Path)}", InitialDirectory = Directory.Exists(_outputFolder) ? _outputFolder : "" };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
@@ -166,6 +174,7 @@ public sealed class MusicPlayerControl : UserControl, IDisposable
     public void Dispose()
     {
         if (_disposed) return; _disposed = true; _waitingPlay = false; _clock.Stop(); _clock.Tick -= Tick; _volumePopup.IsOpen = false;
+        ResetStemPlayback();
         _audio.Changed -= AudioChanged; _audio.Failed -= Failed; _audio.Dispose();
         PositionChanged?.Invoke(); PositionChanged = null;
         PlaybackSeeked = null;

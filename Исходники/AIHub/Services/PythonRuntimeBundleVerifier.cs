@@ -59,6 +59,8 @@ internal static class PythonRuntimeBundleVerifier
             var relative = file.GetProperty("path").GetString()!;
             files.Add(new(relative, file.GetProperty("size").GetInt64(), file.GetProperty("sha256").GetString()!));
         }
-        await PinnedFileTreeVerifier.VerifyAsync(directory, files, token, progress);
+        await PinnedFileTreeVerifier.VerifyAsync(directory, files, token, progress,
+            pythonCacheQuarantineDirectory: Path.Combine(AppDataPaths.BaseDirectory, "Python", "BytecodeQuarantine", profile.Flavor()),
+            cacheQuarantined: path => OwnedProcessRegistry.Log("python_bytecode_quarantined", "Python.Runtime", detail: Path.GetFileName(path)));
     }
 }

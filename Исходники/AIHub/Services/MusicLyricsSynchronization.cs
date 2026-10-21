@@ -56,6 +56,7 @@ public sealed class MusicLyricsSynchronization : IMusicLyricsSynchronization
             await SynchronizeAdditionalAsync(job, index, cached, token);
             if (cached.Provider == MusicLyricsAlignmentService.Provider && variant.KaraokeReadiness == MusicKaraokeReadiness.Unavailable)
                 _jobs.SetKaraokeReadiness(jobId, index, MusicKaraokeReadiness.Ready);
+            if (variant.Stems?.Published == true) await MusicStemPublisher.FinalizeAsync(_jobs, jobId, index, token);
             return cached;
         }
         await VerifyTrackAsync(job, index, variant.ResultPath, token);
@@ -72,7 +73,11 @@ public sealed class MusicLyricsSynchronization : IMusicLyricsSynchronization
             catch (Exception error) when (error is IOException or JsonException) { /* A damaged negative cache is not an audio failure. */ }
         }
         await ApplicationBackgroundOperations.RetireModelsAsync();
-        var result = await _alignment.AlignAsync(variant.ResultPath, job.Lyrics,
+        var analysisSource = variant.ResultPath;
+        if (job.SeparateTracks && variant.AudioFile is { } native && File.Exists(native)) {
+            await MusicOutputPublisher.MatchHashAsync(native, variant.AudioHash!, token); analysisSource = native;
+        }
+        var result = await _alignment.AlignAsync(analysisSource, job.Lyrics,
             Path.Combine(_jobs.Folder(jobId), "lyrics-alignment-" + index), token, language);
         Log?.Invoke("[Lyrics] " + result.Diagnostics);
         token.ThrowIfCancellationRequested();
@@ -94,9 +99,18 @@ public sealed class MusicLyricsSynchronization : IMusicLyricsSynchronization
             DurationSeconds = result.DurationSeconds, Provider = result.Provider, ProviderVersion = result.ProviderVersion,
             Accuracy = "approximate", Lines = result.Lines
         };
+        if (analysisSource != variant.ResultPath) {
+            timing = timing with { AudioPayloadHash = await MusicLyricsTimingMetadata.AudioPayloadHashAsync(analysisSource, token) };
+            timing.Validate();
+            await MusicStemPublisher.SaveSourceTimingAsync(_jobs, jobId, index, timing, token);
+            var mapped = await MusicLyricsStemClock.MapAsync(job, variant, timing, _jobs.Folder(jobId), token);
+            if (mapped is null) { Log?.Invoke("[Lyrics] Original mix timing saved to TXT; separated voice clock could not be verified."); return null; }
+            timing = mapped;
+        }
         timing.Validate(); await _store.PublishAsync(jobId, index, timing, token);
         await SynchronizeAdditionalAsync(_jobs.Load(jobId), index, timing, token);
         _jobs.SetKaraokeReadiness(jobId, index, MusicKaraokeReadiness.Ready);
+        if (variant.Stems?.Published == true) await MusicStemPublisher.FinalizeAsync(_jobs, jobId, index, token);
         return timing;
     }
 

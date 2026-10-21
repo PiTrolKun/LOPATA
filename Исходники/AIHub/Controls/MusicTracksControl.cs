@@ -108,7 +108,8 @@ public sealed class MusicTracksControl : UserControl
                     AutomationProperties.SetAutomationId(format, "Music.Audio.Format." + Path.GetExtension(path).TrimStart('.'));
                     format.IsEnabled = File.Exists(path);
                     format.Click += (_, e) => { _list.SelectedItem = _list.Items.OfType<ListBoxItem>().Single(item => Equals(item.Tag, track));
-                        Selected?.Invoke(track with { Path = path, Title = Path.GetFileName(path) }, false); e.Handled = true; };
+                        Selected?.Invoke(track with { Path = path, Title = track.IsLayered ? track.Title : Path.GetFileName(path),
+                            MusicPath = track.IsLayered && path == extra ? track.AdditionalMusicPath : track.MusicPath }, false); e.Handled = true; };
                     formats.Children.Add(format);
                 }
                 labels.Children.Add(formats);
@@ -155,8 +156,8 @@ public sealed class MusicTracksControl : UserControl
     {
         if (track.IsExample || !File.Exists(track.Path)) return;
         try {
-            var files = new System.Collections.Specialized.StringCollection { Path.GetFullPath(track.Path!) };
-            if (track.AdditionalPath is { } extra && File.Exists(extra)) files.Add(Path.GetFullPath(extra));
+            var files = new System.Collections.Specialized.StringCollection { Path.GetFullPath(track.IsLayered ? track.BundleFolder! : track.Path!) };
+            if (!track.IsLayered && track.AdditionalPath is { } extra && File.Exists(extra)) files.Add(Path.GetFullPath(extra));
             Clipboard.SetFileDropList(files); _message.Text = _l("Music.Audio.Copied"); _message.Visibility = Visibility.Visible;
         }
         catch (Exception e) when (e is System.Runtime.InteropServices.ExternalException or IOException) { Error(e); }

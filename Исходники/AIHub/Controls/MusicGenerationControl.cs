@@ -1,9 +1,10 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using AIHub.Services;
+using AIHub.Models;
 using Button = System.Windows.Controls.Button;
 using UserControl = System.Windows.Controls.UserControl;
 using TextBox = System.Windows.Controls.TextBox;
@@ -20,6 +21,9 @@ public sealed record MusicGenerationOptions(string Title, int Variants, int? Dur
     public string Artist { get; init; } = "";
     public string Comment { get; init; } = "";
     public MusicOutputSettings Output { get; init; } = new();
+    public bool SeparateTracks { get; init; }
+    public MusicAudioTask AudioTask { get; init; } = new();
+    public MusicMelody Melody { get; init; } = new();
 }
 
 public sealed class MusicGenerationControl : UserControl
@@ -61,9 +65,23 @@ public sealed class MusicGenerationControl : UserControl
     public Action? OpenPoetry { get; set; }
     public Action? OpenVideo { get; set; }
     public Button LoraButton { get; }
+    public Button AudioTaskButton { get; }
+    public Button MelodyButton { get; }
+    private MusicMelody _melody = new();
+    public MusicMelody Melody { get => _melody.Snapshot(); set { value.Validate(); _melody = value.Snapshot(); RefreshMelody(); OptionsChanged?.Invoke(); } }
+    private void RefreshMelody() {
+        MusicAudioUi.Label(MelodyButton, _l("Music.Midi.Title") + " · " + _l(_melody.Enabled ? "Music.Midi.On" : "Music.Midi.Off") + " · " + _melody.Notes.Length);
+        MelodyButton.Opacity = _melody.Enabled ? 1 : .7;
+    }
+    private readonly TextBlock _audioTaskCount = new() { FontSize = 9, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
+    private MusicAudioTask _audioTask = new();
+    public MusicAudioTask AudioTask { get => _audioTask.Snapshot(); set { _audioTask = value.Snapshot(); RefreshAudioTask(); OptionsChanged?.Invoke(); } }
+    public bool SeparateTracks { get => _output.SeparateTracks; set { _output.SeparateTracks = value; OptionsChanged?.Invoke(); } }
+    public bool CanSeparate { set => _output.CanSeparate = value; }
+    public Func<Task<bool>>? PrepareSeparation { get => _output.PrepareSeparation; set => _output.PrepareSeparation = value; }
     public MusicGenerationOptions Options => new(_title.Text.Trim(), (int)(_count.SelectedItem ?? 1),
         _duration.SelectedIndex <= 0 ? null : (int?)((ComboBoxItem)_duration.SelectedItem).Tag)
-        { Artist = _artistInput.Input.Text.Trim(), Comment = _commentInput.Input.Text, Output = _output.Settings };
+        { Artist = _artistInput.Input.Text.Trim(), Comment = _commentInput.Input.Text, Output = _output.Settings, SeparateTracks = SeparateTracks, Melody = Melody, AudioTask = Variation == MusicAceCatalog.Variation || Variation == MusicStudioRuntime.Variation || AudioTask.Mode == MusicAudioTaskMode.Restore ? AudioTask : AudioTask with { Enabled = false } };
 
     public MusicGenerationControl(MusicOutputPreferences? outputPreferences = null)
     {
@@ -83,11 +101,13 @@ public sealed class MusicGenerationControl : UserControl
         identity.Children.Add(_artistInput); var separator = MusicAudioUi.Text(); separator.Text = "—"; separator.Margin = new(6, 0, 6, 0);
         Grid.SetColumn(separator, 1); identity.Children.Add(separator); Grid.SetColumn(_titleInput, 2); identity.Children.Add(_titleInput); Add(identity, 0, 2, 2);
         var choices = new WrapPanel();
+        _countLabel.Width = _count.Width;
+        _durationLabel.SetBinding(FrameworkElement.WidthProperty, new System.Windows.Data.Binding(nameof(Width)) { Source = _duration });
         var counts = new StackPanel { Margin = new(0, 4, 12, 0) }; counts.Children.Add(_countLabel); counts.Children.Add(_count);
         var durations = new StackPanel { Margin = new(0, 4, 0, 0) }; durations.Children.Add(_durationLabel); durations.Children.Add(_duration);
         _output.Margin = new(0, 4, 0, 0); durations.Margin = new(0, 4, 12, 0);
         choices.Children.Add(counts); choices.Children.Add(durations); choices.Children.Add(_output); Add(choices, 0, 3, 2);
-        _settings.SizeChanged += (_, _) => SizeChoices(_settings.ActualWidth - 8);
+        _settings.SizeChanged += (_, _) => SizeChoices(_settings.ActualWidth);
         _hardware.TextWrapping = TextWrapping.Wrap; Add(_hardware, 0, 4, 2);
         AutomationProperties.SetAutomationId(_hardware, "Music.Generation.Hardware");
         _readiness.TextWrapping = TextWrapping.Wrap; _readiness.Margin = new(0, 8, 0, 0);
@@ -117,6 +137,15 @@ public sealed class MusicGenerationControl : UserControl
         LoraButton = MusicAudioUi.IconButton("LoRA", "M7,5 H17 V19 H7 Z M4,8 H7 M4,12 H7 M4,16 H7 M17,8 H21 L23,5 M17,12 H23 M17,16 H21 L23,19 M10,2 V5 M14,2 V5 M10,19 V22 M14,19 V22 M10,9 H14 V15 H10 Z", () => { });
         LoraButton.Width = LoraButton.Height = 42; leftTools.Children.Add(LoraButton);
         AutomationProperties.SetAutomationId(LoraButton, "Music.Lora.Open");
+        AudioTaskButton = MusicAudioUi.IconButton("Transform", "M3,12 A9,9 0 1 1 12,21 M3,12 V4 M3,12 H11 M10,8 L18,12 L10,17 Z", () => { });
+        AudioTaskButton.Width = AudioTaskButton.Height = 42;
+        var audioTaskIcon = (UIElement)AudioTaskButton.Content; AudioTaskButton.Content = null; var audioTaskGrid = new Grid(); audioTaskGrid.Children.Add(audioTaskIcon);
+        _audioTaskCount.SetResourceReference(TextBlock.ForegroundProperty, "AccentBrush"); audioTaskGrid.Children.Add(_audioTaskCount); AudioTaskButton.Content = audioTaskGrid;
+        leftTools.Children.Add(AudioTaskButton);
+        AutomationProperties.SetAutomationId(AudioTaskButton, "Music.Transform.Open");
+        MelodyButton = MusicAudioUi.IconButton("Midi", "M3,4 H21 V20 H3 Z M7,4 V14 H10 V4 M14,4 V14 H17 V4 M9,14 V20 M15,14 V20", () => { });
+        MelodyButton.Width = MelodyButton.Height = 42; leftTools.Children.Add(MelodyButton);
+        AutomationProperties.SetAutomationId(MelodyButton, "Music.Midi.Open");
         _expert = MusicAudioUi.IconButton("Expert", "M12,2 L14,5 L17,5 L19,7 L19,10 L22,12 L19,14 L19,17 L17,19 L14,19 L12,22 L10,19 L7,19 L5,17 L5,14 L2,12 L5,10 L5,7 L7,5 L10,5 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12", OpenExpert);
         _recipes = MusicAudioUi.IconButton("Recipes", "M3,3 H11 L12,5 L13,3 H21 V20 H13 L12,22 L11,20 H3 Z M12,5 V22 M6,7 H9 M6,11 H9 M15,7 H18 M15,11 H18", Tuning.OpenRecipes);
         _video = MusicAudioUi.IconButton("Video", "M3,4 H21 V20 H3 Z M9,8 L16,12 L9,16 Z M3,8 H6 M3,16 H6 M18,8 H21 M18,16 H21", () => OpenVideo?.Invoke());
@@ -134,6 +163,7 @@ public sealed class MusicGenerationControl : UserControl
         try { _output.Set(_outputPreferences.Load()); }
         catch (Exception error) when (error is System.IO.IOException or System.Text.Json.JsonException or UnauthorizedAccessException) { _outputError = error; }
         _output.Changed += () => { _saveOutput.Stop(); _saveOutput.Start(); OptionsChanged?.Invoke(); };
+        _output.SeparationChanged += () => OptionsChanged?.Invoke();
         _saveOutput.Tick += (_, _) => { _saveOutput.Stop(); PersistOutput(); };
         Unloaded += (_, _) => { if (_saveOutput.IsEnabled) { _saveOutput.Stop(); PersistOutput(); } };
         Tuning.SettingsChanged += settings => SetExpertSettings(settings);
@@ -160,27 +190,28 @@ public sealed class MusicGenerationControl : UserControl
         _count.SelectedItem = options.Variants;
         _duration.SelectedIndex = Enumerable.Range(0, _duration.Items.Count).FirstOrDefault(i =>
             (int)((ComboBoxItem)_duration.Items[i]).Tag == (options.DurationSeconds ?? 0));
-        _output.Set(options.Output); OptionsChanged?.Invoke();
+        _output.Set(options.Output); _output.SeparateTracks = options.SeparateTracks; AudioTask = options.AudioTask; Melody = options.Melody; OptionsChanged?.Invoke();
     }
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        if (double.IsFinite(availableSize.Width)) SizeChoices(availableSize.Width - 114);
+        if (double.IsFinite(availableSize.Width)) SizeChoices(availableSize.Width - 106);
         return base.MeasureOverride(availableSize);
     }
     private void SizeChoices(double available)
     {
-        _duration.Width = available >= 360 ? Math.Clamp(available - 277, 110, 190) : Math.Clamp(available - 89, 70, 190);
-        _output.Width = Math.Clamp(available, 149, 185);
+        // Reserve the complete output group, including its permanent two-layer heading.
+        _duration.Width = available >= 430 ? Math.Clamp(available - 335, 95, 190) : Math.Clamp(available - 89, 70, 190);
+        _output.Width = Math.Clamp(available, 149, 238);
     }
 
     public void Localize(Func<string, string> localize)
     {
         MusicAudioUi.Label(_video, localize("LyricVideo.Title"));
         _l = localize; var selected = _duration.SelectedIndex; _duration.Items.Clear();
-        _duration.Items.Add(new ComboBoxItem { Content = L("Automatic"), Tag = 0 });
+        _duration.Items.Add(DurationItem(L("Automatic"), 0));
         foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 })
-            _duration.Items.Add(new ComboBoxItem { Content = seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), Tag = seconds });
+            _duration.Items.Add(DurationItem(seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), seconds));
         _duration.SelectedIndex = Math.Max(0, selected);
         _heading.Text = L("Heading"); _titleLabel.Text = L("Title"); _countLabel.Text = L("Variants"); _durationLabel.Text = L("Duration");
         _title.ToolTip = L("TitleHint"); _duration.ToolTip = L("DurationHint");
@@ -190,15 +221,20 @@ public sealed class MusicGenerationControl : UserControl
         MusicAudioUi.Label(_expert, _l("Music.Expert.Title"));
         MusicAudioUi.Label(_recipes, _l("Music.Tuning.Recipes"));
         Tuning.Localize(localize); RefreshDuration();
+        RefreshAudioTask();
+        RefreshMelody();
         UpdateCaption();
     }
     public void UpdateState(bool canStart, bool busy, bool paused, bool runtimeReady, bool commandsDisabled = false)
     {
         _poetry.IsEnabled = OpenPoetry is not null;
-        _busy = busy; _paused = paused; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused;
+        _busy = busy; _paused = paused; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused && !commandsDisabled;
         _expert.IsEnabled = !busy && !paused && !commandsDisabled;
         _recipes.IsEnabled = !busy && !paused && !commandsDisabled;
         Tuning.IsEnabled = !busy && !paused && !commandsDisabled;
+        RefreshAudioTask();
+        AudioTaskButton.IsEnabled = !busy && !paused && !commandsDisabled;
+        MelodyButton.IsEnabled = !busy && !paused && !commandsDisabled;
         _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null && _outputError is null; _cancel.IsEnabled = busy || paused;
         if (commandsDisabled) _start.IsEnabled = _cancel.IsEnabled = false;
         _readiness.Text = runtimeReady ? "" : L("RuntimeMissing"); UpdateCaption();
@@ -206,10 +242,21 @@ public sealed class MusicGenerationControl : UserControl
     private void RefreshDuration()
     {
         var value = _duration.SelectedItem is ComboBoxItem item ? (int)item.Tag : 0;
-        _duration.Items.Clear(); _duration.Items.Add(new ComboBoxItem { Content = L("Automatic"), Tag = 0 });
+        _duration.Items.Clear(); _duration.Items.Add(DurationItem(L("Automatic"), 0));
         foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 }.Where(s => !MusicDiffRhythmCatalog.IsDiff(Variation) || s <= MusicDiffRhythmCatalog.MaximumDuration))
-            _duration.Items.Add(new ComboBoxItem { Content = seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), Tag = seconds });
+            _duration.Items.Add(DurationItem(seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), seconds));
         _duration.SelectedIndex = Enumerable.Range(0, _duration.Items.Count).FirstOrDefault(i => (int)((ComboBoxItem)_duration.Items[i]).Tag == value);
+    }
+    private static ComboBoxItem DurationItem(string label, int seconds) => new() {
+        Content = new TextBlock { Text = label, TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis },
+        Tag = seconds, ToolTip = label
+    };
+    private void RefreshAudioTask()
+    {
+        AudioTaskButton.Opacity = _audioTask.Enabled ? 1 : .55;
+        var count = MusicAudioInputPolicy.ActiveReferences(_audioTask, Variation).Count(); _audioTaskCount.Text = count > 0 ? count.ToString() : "";
+        MusicAudioUi.Label(AudioTaskButton, Variation != MusicAceCatalog.Variation && Variation != MusicStudioRuntime.Variation ? _l("Music.Transform.GenericHint") : _l("Music.Transform.Title") + " · " + _l(_audioTask.Enabled ? "Music.Transform.Active" : "Music.Transform.Inactive")
+            + " · " + count + " · " + _l("Music.Transform.ButtonHint"));
     }
     private void UpdateCaption()
     {

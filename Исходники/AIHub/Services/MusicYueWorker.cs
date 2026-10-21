@@ -15,6 +15,7 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
     public bool DurationAutomatic { get; init; }
     public string? StudioRuntimeRevision { get; init; }
     public string? StudioRuntimePack { get; init; }
+    public MusicAudioTask? AudioTask { get; init; }
     public MusicExpertSettings EffectiveExpert => Expert ?? new();
     public int EffectivePlanLimit => Expert?.PlanLimit ?? PlanTokenLimit;
     public int SequenceLimit => EffectiveExpert.SequenceLimit(DurationSeconds);
