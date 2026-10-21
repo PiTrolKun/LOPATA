@@ -68,7 +68,9 @@ def main():
         print('[ACE] ' + warning, flush=True)
     params = GenerationParams(**request['params'])
     config = GenerationConfig(**request['config'])
-    receipt = {'request': request, 'hardware': device, 'torch': torch.__version__, 'mode': mode}
+    public_request = dict(request)
+    public_request['loras'] = [{k: v for k, v in u.items() if k != 'directory'} for u in request.get('loras', [])]
+    receipt = {'request': public_request, 'hardware': device, 'torch': torch.__version__, 'mode': mode}
     if mode == 'probe':
         # Import/API validation only: no weights loaded, no inference.
         Path(output).write_text('ACE official API ready', encoding='utf-8')
@@ -95,6 +97,9 @@ def main():
     print('[ACE] ' + str(status), flush=True)
     if not ok:
         raise RuntimeError(status)
+    import runpy
+    lora_runtime = runpy.run_path(str(Path(__file__).with_name('music_lora_runtime.py')))
+    receipt['loras'] = lora_runtime['apply_ace_loras'](handler, request.get('loras', []))
     # Upstream's conditioner truncates at 256/2048 tokens. Keep the official
     # tokenizer, but fail explicitly instead of silently discarding input.
     handler.text_tokenizer = BoundedTokenizer(handler.text_tokenizer)
@@ -117,6 +122,7 @@ def main():
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix='lopata-ace-') as stage:
         result = generate_music(handler, llm, params, config, save_dir=stage, progress=progress)
+        lora_runtime['verify_ace_loras'](handler, request.get('loras', []))
         if not result.success or len(result.audios) != 1:
             raise RuntimeError(result.error or result.status_message or 'ACE returned no single audio result.')
         audio = result.audios[0]

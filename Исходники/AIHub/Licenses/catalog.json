@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "Id": "builtin.dotnet",
     "Name": ".NET file primitives",
@@ -3267,5 +3267,803 @@
     "Ru": "Сохранение исходных областей изображений в локальном умном конвертере. Приватная библиотека не меняет системный Python.",
     "En": "Retains original image regions in the local smart converter. Private library; system Python is not modified.",
     "Terms": "873806C76BE35649897980932A67E42B113CF3EE891EF77D1232C2C637D4BF86"
+  },
+  {
+    "Id": "music-lora-dreampop",
+    "Name": "Dream pop",
+    "Version": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "Author": "atomtanstudio",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/atomtanstudio/lora-library",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "Texts": [
+      "texts/music-lora-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-oldschool-hiphop",
+    "Name": "Old-school hip-hop",
+    "Version": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "Author": "atomtanstudio",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/atomtanstudio/lora-library",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "Texts": [
+      "texts/music-lora-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-jay2",
+    "Name": "JAY 2 — vocals and delivery",
+    "Version": "9799caf5d324008fcbf9f38d1619a198a6ebb295",
+    "Author": "str8bored",
+    "License": "CC0-1.0",
+    "Source": "https://huggingface.co/str8bored/JAY_2",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA под CC0. Условия базовой модели продолжают действовать.",
+    "En": "Optional CC0 LoRA. Base-model conditions continue to apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "9799caf5d324008fcbf9f38d1619a198a6ebb295",
+    "Texts": [
+      "texts/music-lora-attribution.txt",
+      "texts/simple-icons-CC0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-industrial",
+    "Name": "Industrial",
+    "Version": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "Author": "atomtanstudio",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/atomtanstudio/lora-library",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-grvl-cinder",
+    "Name": "GRVL Cinder — husky timbre",
+    "Version": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-grvl-ember",
+    "Name": "GRVL Ember — light touch",
+    "Version": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-grvl-smoulder",
+    "Name": "GRVL Smoulder — mild delivery",
+    "Version": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-grvl-tempest",
+    "Name": "GRVL Tempest — strong character",
+    "Version": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-grvl-thunder",
+    "Name": "GRVL Thunder — focused voice",
+    "Version": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-grvl-wildfire",
+    "Name": "GRVL Wildfire — powerful chorus",
+    "Version": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-mltnt-chanter",
+    "Name": "MLTNT Chanter — settled timbre",
+    "Version": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-mltnt-frontline",
+    "Name": "MLTNT Frontline — fast delivery",
+    "Version": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-mltnt-fusion",
+    "Name": "MLTNT Fusion — reggae / hip-hop",
+    "Version": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-mltnt-roots",
+    "Name": "MLTNT Roots — roots reggae",
+    "Version": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-mltnt-soundclash",
+    "Name": "MLTNT Soundclash — expressive delivery",
+    "Version": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-mltnt-steppers",
+    "Name": "MLTNT Steppers — tight groove",
+    "Version": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "Author": "becausereasons",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-acoustic-folk",
+    "Name": "Acoustic folk · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-afrobeats",
+    "Name": "Afrobeats · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-country",
+    "Name": "Country · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-disco-funk",
+    "Name": "Disco / funk · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-female",
+    "Name": "Female vocals · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-hiphop",
+    "Name": "Hip-hop · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-house",
+    "Name": "House · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-indie-rock",
+    "Name": "Indie rock · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-kpop",
+    "Name": "K-pop · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-lofi",
+    "Name": "Lo-fi · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-male",
+    "Name": "Male vocals · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-metal",
+    "Name": "Metal · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-pop-punk",
+    "Name": "Pop punk · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-pop",
+    "Name": "Pop · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-reggaeton",
+    "Name": "Reggaeton · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ntc-rnb",
+    "Name": "R&B · NTC",
+    "Version": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "Author": "ntc-ai",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/ntc-ai/yue2-particle-sliders",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-instrumental-v3",
+    "Name": "Instrumental · V3",
+    "Version": "947f2f4b28978b2b6c3e316e6a87925c76bf3c4b",
+    "Author": "Mothersuperior",
+    "License": "CC BY-NC 4.0",
+    "Source": "https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras",
+    "Checked": "2026-10-20",
+    "Ru": "Дополнительная LoRA. Некоммерческое использование с указанием автора; действуют также условия базовой модели.",
+    "En": "Optional LoRA. Noncommercial use with attribution; base-model conditions also apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "8D94F8E1E0C3A655DCAA520BF71ABC77158BC517762EC6FD1319B4E463567D3C",
+    "Texts": [
+      "texts/music-lora-expansion-attribution.txt",
+      "texts/music-lora-CC-BY-NC-4.0.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-brightness",
+    "Name": "Audio Sliders — Brightness",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-density",
+    "Name": "Audio Sliders — Density",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-electronic",
+    "Name": "Audio Sliders — Electronic sound",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-energy",
+    "Name": "Audio Sliders — Energy",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-ensemble",
+    "Name": "Audio Sliders — Ensemble",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-groove",
+    "Name": "Audio Sliders — Groove",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-harmony",
+    "Name": "Audio Sliders — Rich harmony",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-melody",
+    "Name": "Audio Sliders — Melody",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-mood",
+    "Name": "Audio Sliders — Happy mood",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-tempo",
+    "Name": "Audio Sliders — Tempo feel",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-tension",
+    "Name": "Audio Sliders — Tension",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
+  },
+  {
+    "Id": "music-lora-ace-slider-vintage",
+    "Name": "Audio Sliders — Vintage sound",
+    "Version": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "Author": "takakhoo",
+    "License": "MIT",
+    "Source": "https://huggingface.co/takakhoo/audio-sliders",
+    "Checked": "2026-10-21",
+    "Ru": "Автор весов указывает MIT. Сохраняйте условия и сведения об авторе; также действуют условия ACE. Отдельное copyright-уведомление автором не опубликовано. Исходные веса не изменяются, преобразование формата выполняется локально.",
+    "En": "The weight author declares MIT. Retain the terms and author credit; ACE model terms also apply. No separate copyright notice was published. Original weights stay unchanged; format adaptation runs locally.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "EFE9BC569E30642E86C3E875C2256B631752E4D3B2A99EE011CB159F8882BA4B",
+    "Texts": [
+      "texts/music-lora-audio-sliders-MIT.txt"
+    ]
   }
 ]

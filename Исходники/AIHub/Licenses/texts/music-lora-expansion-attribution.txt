@@ -1,0 +1,34 @@
+Additional music LoRA attribution — catalog expansion 2026-10-20
+Weights remain separate downloads, unmodified. All entries below: CC BY-NC 4.0.
+The license of the ntc-ai repository code does not replace the CC BY-NC license of its model weights.
+Base-model terms also apply; base checkpoint special permissions do not extend to third-party adapters.
+
+atomtanstudio/lora-library
+Revision: af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff
+Source: https://huggingface.co/atomtanstudio/lora-library
+Files: sv_industrial_step500.safetensors
+License: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+becausereasons/yue2-grvl-raspy-rock-soul
+Revision: 4fec3b8491bf217d9320b509c3933d5963dae5a3
+Source: https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul
+Files: grvl_cinder.safetensors, grvl_ember.safetensors, grvl_smoulder.safetensors, grvl_tempest.safetensors, grvl_thunder.safetensors, grvl_wildfire.safetensors
+License: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+becausereasons/yue2-mltnt-militant-reggae
+Revision: a9fedc857cd1f3952be3177326c76526abcea53a
+Source: https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae
+Files: mltnt_chanter.safetensors, mltnt_frontline.safetensors, mltnt_fusion.safetensors, mltnt_roots.safetensors, mltnt_soundclash.safetensors, mltnt_steppers.safetensors
+License: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+ntc-ai/yue2-particle-sliders
+Revision: 31649319eee53e6da999cc4aff3e081d213f7911
+Source: https://huggingface.co/ntc-ai/yue2-particle-sliders
+Files: acoustic-folk_v2_distilled_rank8.safetensors, afrobeats_v2_distilled_rank8.safetensors, country_v2_distilled_rank8.safetensors, disco-funk_v2_distilled_rank8.safetensors, female_v2_distilled_rank8.safetensors, hiphop_v2_distilled_rank8.safetensors, house_v2_distilled_rank8.safetensors, indie-rock_v2_distilled_rank8.safetensors, kpop_v2_distilled_rank8.safetensors, lofi_v2_distilled_rank8.safetensors, male_v2_distilled_rank8.safetensors, metal_v2_distilled_rank8.safetensors, pop-punk_v2_distilled_rank8.safetensors, pop_v2_distilled_rank8.safetensors, reggaeton_v2_distilled_rank8.safetensors, rnb_v2_distilled_rank8.safetensors
+License: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Mothersuperior/YuE2-instrumental-cot-full-loras
+Revision: 947f2f4b28978b2b6c3e316e6a87925c76bf3c4b
+Source: https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras
+Files: ar_lora_inst_v3abc.bf16.safetensors
+License: https://creativecommons.org/licenses/by-nc/4.0/legalcode

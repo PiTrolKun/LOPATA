@@ -1,0 +1,1504 @@
+[
+  {
+    "Id": "dreampop",
+    "Ru": "Дрим-поп",
+    "En": "Dream pop",
+    "DescriptionRu": "Мягкое воздушное звучание и мечтательная подача.",
+    "DescriptionEn": "Airy dream-pop texture and delivery.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "atomtanstudio/lora-library",
+    "Revision": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "sv_dreampop",
+    "Minimum": 0.0,
+    "Maximum": 1.0,
+    "Default": 1.0,
+    "Tags": [
+      "dream",
+      "дрим",
+      "dream-pop",
+      "dream pop",
+      "soft",
+      "мягк"
+    ],
+    "Slots": {
+      "ar": 1.0,
+      "nar": 1.0
+    },
+    "Files": [
+      {
+        "RelativePath": "dreampop.safetensors",
+        "SizeBytes": 234969024,
+        "Sha256": "617852d379c66b0407879421a353233d29cda8188cca82973a94c61b512ca03d",
+        "SourceUrl": "https://huggingface.co/atomtanstudio/lora-library/resolve/af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff/yue2/dreampop/dreampop_sv_dreampop.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "oldschool-hiphop",
+    "Ru": "Олдскульный хип-хоп",
+    "En": "Old-school hip-hop",
+    "DescriptionRu": "Олдскульный хип-хоп и ритмичная речевая подача.",
+    "DescriptionEn": "Old-school hip-hop groove and vocal delivery.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "atomtanstudio/lora-library",
+    "Revision": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "sv_oldschoolhiphop",
+    "Minimum": 0.0,
+    "Maximum": 1.0,
+    "Default": 1.0,
+    "Tags": [
+      "hip-hop",
+      "hip hop",
+      "хип-хоп",
+      "rap",
+      "рэп",
+      "oldschool",
+      "олдскул"
+    ],
+    "Slots": {
+      "ar": 1.0,
+      "nar": 1.0
+    },
+    "Files": [
+      {
+        "RelativePath": "hiphop.safetensors",
+        "SizeBytes": 234969032,
+        "Sha256": "ca176909d55998d4f78426439885ff79cc96ba4daaaaea22a9936590d6e72694",
+        "SourceUrl": "https://huggingface.co/atomtanstudio/lora-library/resolve/af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff/yue2/oldschoolhiphop/sv_oldschoolhiphop.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "jay2",
+    "Ru": "JAY 2 — вокал и подача",
+    "En": "JAY 2 — vocals and delivery",
+    "DescriptionRu": "Мужская ретро-подача. Автор рекомендует влияние 1; ниже возможны артефакты.",
+    "DescriptionEn": "Retro male delivery. Author recommends strength 1; lower values may introduce artifacts.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "str8bored/JAY_2",
+    "Revision": "9799caf5d324008fcbf9f38d1619a198a6ebb295",
+    "License": "CC0-1.0",
+    "Trigger": "jay_singing_runs",
+    "Minimum": 0.0,
+    "Maximum": 1.0,
+    "Default": 1.0,
+    "Tags": [
+      "male",
+      "муж",
+      "retro",
+      "ретро",
+      "rock",
+      "рок"
+    ],
+    "Slots": {
+      "dit": 1.0
+    },
+    "Files": [
+      {
+        "RelativePath": "adapter_config.json",
+        "SizeBytes": 1068,
+        "Sha256": "606c4843176a17d1790037bc0cce6ab635f74fa677c865337d3fc01a0255951e",
+        "SourceUrl": "https://huggingface.co/str8bored/JAY_2/resolve/9799caf5d324008fcbf9f38d1619a198a6ebb295/adapter_config.json"
+      },
+      {
+        "RelativePath": "adapter_model.safetensors",
+        "SizeBytes": 83952640,
+        "Sha256": "c62a00cec8ae677b48c93eebe587f1d0e0ff5d5b7c74cd7e6145f9ece7bef1d8",
+        "SourceUrl": "https://huggingface.co/str8bored/JAY_2/resolve/9799caf5d324008fcbf9f38d1619a198a6ebb295/adapter_model.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "industrial",
+    "Ru": "Индастриал",
+    "En": "Industrial",
+    "DescriptionRu": "Жёсткий электронный ритм и индустриальная фактура. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Hard electronic rhythm and industrial texture. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "atomtanstudio/lora-library",
+    "Revision": "af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "sv_industrial",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "industrial",
+      "индастриал",
+      "индустриальн"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "sv_industrial_step500.safetensors",
+        "SizeBytes": 258066232,
+        "Sha256": "18459e0de71f7e1686c8d1b0a1e7d0348a26549c770032ca65d99efcb36bda0a",
+        "SourceUrl": "https://huggingface.co/atomtanstudio/lora-library/resolve/af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff/yue2/industrial/sv_industrial_step500.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "grvl-cinder",
+    "Ru": "GRVL Cinder — хриплый тембр",
+    "En": "GRVL Cinder — husky timbre",
+    "DescriptionRu": "Женский рок / соул с хрипотцой; хриплый тембр. Обучение на английском. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Raspy female rock / soul; husky timbre. Trained in English. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-grvl-raspy-rock-soul",
+    "Revision": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "grvl",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "rock",
+      "soul",
+      "рок",
+      "соул",
+      "female",
+      "женск",
+      "raspy",
+      "хрипл"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "grvl_cinder.safetensors",
+        "SizeBytes": 117500800,
+        "Sha256": "2017b5b36c9d4232de3b017e6b007ef5120964e7543056a7b93fd622118888ad",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul/resolve/4fec3b8491bf217d9320b509c3933d5963dae5a3/grvl_cinder.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "grvl-ember",
+    "Ru": "GRVL Ember — лёгкий оттенок",
+    "En": "GRVL Ember — light touch",
+    "DescriptionRu": "Женский рок / соул с хрипотцой; лёгкий оттенок. Обучение на английском. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Raspy female rock / soul; light touch. Trained in English. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-grvl-raspy-rock-soul",
+    "Revision": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "grvl",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "rock",
+      "soul",
+      "рок",
+      "соул",
+      "female",
+      "женск",
+      "raspy",
+      "хрипл"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "grvl_ember.safetensors",
+        "SizeBytes": 117500800,
+        "Sha256": "97449c739f7f503e19621ad83d8c85e8ef501a76a19dbc93b1b62bae32f54809",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul/resolve/4fec3b8491bf217d9320b509c3933d5963dae5a3/grvl_ember.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "grvl-smoulder",
+    "Ru": "GRVL Smoulder — мягкая подача",
+    "En": "GRVL Smoulder — mild delivery",
+    "DescriptionRu": "Женский рок / соул с хрипотцой; мягкая подача. Обучение на английском. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Raspy female rock / soul; mild delivery. Trained in English. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-grvl-raspy-rock-soul",
+    "Revision": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "grvl",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "rock",
+      "soul",
+      "рок",
+      "соул",
+      "female",
+      "женск",
+      "raspy",
+      "хрипл"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "grvl_smoulder.safetensors",
+        "SizeBytes": 117500808,
+        "Sha256": "7edcb87dd497f0adf4d5a501efadfac89a20606199ffa19825441254d12e25a1",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul/resolve/4fec3b8491bf217d9320b509c3933d5963dae5a3/grvl_smoulder.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "grvl-tempest",
+    "Ru": "GRVL Tempest — яркий характер",
+    "En": "GRVL Tempest — strong character",
+    "DescriptionRu": "Женский рок / соул с хрипотцой; яркий характер. Обучение на английском. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Raspy female rock / soul; strong character. Trained in English. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-grvl-raspy-rock-soul",
+    "Revision": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "grvl",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "rock",
+      "soul",
+      "рок",
+      "соул",
+      "female",
+      "женск",
+      "raspy",
+      "хрипл"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "grvl_tempest.safetensors",
+        "SizeBytes": 117500808,
+        "Sha256": "3aaf5ffbe06aa54bc431b6f60e59f157d410b63bba544601c9a0324681c9cc18",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul/resolve/4fec3b8491bf217d9320b509c3933d5963dae5a3/grvl_tempest.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "grvl-thunder",
+    "Ru": "GRVL Thunder — собранный голос",
+    "En": "GRVL Thunder — focused voice",
+    "DescriptionRu": "Женский рок / соул с хрипотцой; собранный голос. Обучение на английском. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Raspy female rock / soul; focused voice. Trained in English. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-grvl-raspy-rock-soul",
+    "Revision": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "grvl",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "rock",
+      "soul",
+      "рок",
+      "соул",
+      "female",
+      "женск",
+      "raspy",
+      "хрипл"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "grvl_thunder.safetensors",
+        "SizeBytes": 117500808,
+        "Sha256": "553f2f159600e5af193bf1f26e84939227c6ec1467a2cfb972919503c6401d53",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul/resolve/4fec3b8491bf217d9320b509c3933d5963dae5a3/grvl_thunder.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "grvl-wildfire",
+    "Ru": "GRVL Wildfire — мощный припев",
+    "En": "GRVL Wildfire — powerful chorus",
+    "DescriptionRu": "Женский рок / соул с хрипотцой; мощный припев. Обучение на английском. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Raspy female rock / soul; powerful chorus. Trained in English. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-grvl-raspy-rock-soul",
+    "Revision": "4fec3b8491bf217d9320b509c3933d5963dae5a3",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "grvl",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "rock",
+      "soul",
+      "рок",
+      "соул",
+      "female",
+      "женск",
+      "raspy",
+      "хрипл"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "grvl_wildfire.safetensors",
+        "SizeBytes": 117500808,
+        "Sha256": "c25ac35a717f92cceb8553fbefe0867bc589415042e885cbf864bd3169ebeb9b",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-grvl-raspy-rock-soul/resolve/4fec3b8491bf217d9320b509c3933d5963dae5a3/grvl_wildfire.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "mltnt-chanter",
+    "Ru": "MLTNT Chanter — устойчивый тембр",
+    "En": "MLTNT Chanter — settled timbre",
+    "DescriptionRu": "Мужское регги и ямайская манера речи; устойчивый тембр. Обучение на английском / патуа. Рекомендуется полный музыкальный план. Планировщик ослаблен до ½ для быстрой подачи.",
+    "DescriptionEn": "Male reggae and Jamaican delivery; settled timbre. Trained in English / patois. Full score recommended. Planner reduced to ½ for fast delivery.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-mltnt-militant-reggae",
+    "Revision": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "mltnt",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "reggae",
+      "регги",
+      "dancehall",
+      "дэнсхолл",
+      "dub",
+      "даб",
+      "jamaican"
+    ],
+    "Slots": {
+      "ar": 0.5,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "mltnt_chanter.safetensors",
+        "SizeBytes": 117500816,
+        "Sha256": "4aaaa42f7c61b4a3226880dd1e6f1a36bd585171d26a45358c3dba3c9d56b20c",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae/resolve/a9fedc857cd1f3952be3177326c76526abcea53a/mltnt_chanter.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "mltnt-frontline",
+    "Ru": "MLTNT Frontline — быстрая подача",
+    "En": "MLTNT Frontline — fast delivery",
+    "DescriptionRu": "Мужское регги и ямайская манера речи; быстрая подача. Обучение на английском / патуа. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Male reggae and Jamaican delivery; fast delivery. Trained in English / patois. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-mltnt-militant-reggae",
+    "Revision": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "mltnt",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "reggae",
+      "регги",
+      "dancehall",
+      "дэнсхолл",
+      "dub",
+      "даб",
+      "jamaican"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "mltnt_frontline.safetensors",
+        "SizeBytes": 177279880,
+        "Sha256": "9c8960158db6340156cc1b44fbec1ff58d0bfabfc96e933ee5a1d14b0bc26574",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae/resolve/a9fedc857cd1f3952be3177326c76526abcea53a/mltnt_frontline.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "mltnt-fusion",
+    "Ru": "MLTNT Fusion — регги / хип-хоп",
+    "En": "MLTNT Fusion — reggae / hip-hop",
+    "DescriptionRu": "Мужское регги и ямайская манера речи; регги / хип-хоп. Обучение на английском / патуа. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Male reggae and Jamaican delivery; reggae / hip-hop. Trained in English / patois. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-mltnt-militant-reggae",
+    "Revision": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "mltnt",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "reggae",
+      "регги",
+      "dancehall",
+      "дэнсхолл",
+      "dub",
+      "даб",
+      "jamaican"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "mltnt_fusion.safetensors",
+        "SizeBytes": 177279784,
+        "Sha256": "e9525b892ce625ac7491a13c21b39b7623ef132884996a87eb341370f459aa7b",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae/resolve/a9fedc857cd1f3952be3177326c76526abcea53a/mltnt_fusion.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "mltnt-roots",
+    "Ru": "MLTNT Roots — корневое регги",
+    "En": "MLTNT Roots — roots reggae",
+    "DescriptionRu": "Мужское регги и ямайская манера речи; корневое регги. Обучение на английском / патуа. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Male reggae and Jamaican delivery; roots reggae. Trained in English / patois. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-mltnt-militant-reggae",
+    "Revision": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "mltnt",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "reggae",
+      "регги",
+      "dancehall",
+      "дэнсхолл",
+      "dub",
+      "даб",
+      "jamaican"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "mltnt_roots.safetensors",
+        "SizeBytes": 177279888,
+        "Sha256": "e829f3af1534614bc28f85e821115d48888edf35aead317e9b5cdf179a79f5f3",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae/resolve/a9fedc857cd1f3952be3177326c76526abcea53a/mltnt_roots.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "mltnt-soundclash",
+    "Ru": "MLTNT Soundclash — выразительная подача",
+    "En": "MLTNT Soundclash — expressive delivery",
+    "DescriptionRu": "Мужское регги и ямайская манера речи; выразительная подача. Обучение на английском / патуа. Рекомендуется полный музыкальный план. Планировщик ослаблен до ½ для быстрой подачи.",
+    "DescriptionEn": "Male reggae and Jamaican delivery; expressive delivery. Trained in English / patois. Full score recommended. Planner reduced to ½ for fast delivery.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-mltnt-militant-reggae",
+    "Revision": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "mltnt",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "reggae",
+      "регги",
+      "dancehall",
+      "дэнсхолл",
+      "dub",
+      "даб",
+      "jamaican"
+    ],
+    "Slots": {
+      "ar": 0.5,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "mltnt_soundclash.safetensors",
+        "SizeBytes": 117500816,
+        "Sha256": "fa43a4ddb7af26fb0e7821c1ad3386fc90db84897efd00571e0c7f27cf790537",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae/resolve/a9fedc857cd1f3952be3177326c76526abcea53a/mltnt_soundclash.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "mltnt-steppers",
+    "Ru": "MLTNT Steppers — плотный ритм",
+    "En": "MLTNT Steppers — tight groove",
+    "DescriptionRu": "Мужское регги и ямайская манера речи; плотный ритм. Обучение на английском / патуа. Рекомендуется полный музыкальный план.",
+    "DescriptionEn": "Male reggae and Jamaican delivery; tight groove. Trained in English / patois. Full score recommended.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "becausereasons/yue2-mltnt-militant-reggae",
+    "Revision": "a9fedc857cd1f3952be3177326c76526abcea53a",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "mltnt",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "reggae",
+      "регги",
+      "dancehall",
+      "дэнсхолл",
+      "dub",
+      "даб",
+      "jamaican"
+    ],
+    "Slots": {
+      "ar": 1,
+      "nar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "mltnt_steppers.safetensors",
+        "SizeBytes": 177279888,
+        "Sha256": "63094f0bbf8dd1e1fb2654a94aaba77e7360b0bef08d2254ef4a972ea8dce10e",
+        "SourceUrl": "https://huggingface.co/becausereasons/yue2-mltnt-militant-reggae/resolve/a9fedc857cd1f3952be3177326c76526abcea53a/mltnt_steppers.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-acoustic-folk",
+    "Ru": "Акустический фолк · NTC",
+    "En": "Acoustic folk · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: акустический фолк. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: acoustic folk. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "acoustic",
+      "folk",
+      "фолк",
+      "акустическ"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "acoustic-folk_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891952,
+        "Sha256": "b849721f2f76b98f558d072213783730d7c88293aea5a86dbf8a313fe285bd58",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/acoustic-folk_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-afrobeats",
+    "Ru": "Афробитс · NTC",
+    "En": "Afrobeats · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: афробитс. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: afrobeats. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "afrobeats",
+      "афробит"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "afrobeats_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "18004cbc0af16f793c9a77371943a674728ae20184ef9296dfab7cef46d05755",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/afrobeats_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-country",
+    "Ru": "Кантри · NTC",
+    "En": "Country · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: кантри. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: country. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "country",
+      "кантри"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "country_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "469bd6168a7a8d46f36f66888964329cfe419e9f293d7cc1505318f4b38dfc49",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/country_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-disco-funk",
+    "Ru": "Диско / фанк · NTC",
+    "En": "Disco / funk · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: диско / фанк. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: disco / funk. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "disco",
+      "funk",
+      "диско",
+      "фанк"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "disco-funk_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891952,
+        "Sha256": "78d73a7ebaf12becf7409d154fed3777b15376a020d6b6e9a56c320ca335401d",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/disco-funk_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-female",
+    "Ru": "Женский вокал · NTC",
+    "En": "Female vocals · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: женский вокал. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: female vocals. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "female",
+      "женск"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "female_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "318ddd368bd59552de42575936aa606f4b19eb3157915561568639e53324cc52",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/female_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-hiphop",
+    "Ru": "Хип-хоп · NTC",
+    "En": "Hip-hop · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: хип-хоп. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: hip-hop. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "hiphop",
+      "hip-hop",
+      "rap",
+      "рэп",
+      "хип-хоп"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "hiphop_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "70d47848af05d7c53418a18542c82b9feeb18e2acdc41c454e05906a7ca0a7a0",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/hiphop_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-house",
+    "Ru": "Хаус · NTC",
+    "En": "House · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: хаус. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: house. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "house",
+      "хаус"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "house_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "62cf7d88a5c2dc0cb91fb38ea8e3978d589709229cb8e491f285b34d30add217",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/house_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-indie-rock",
+    "Ru": "Инди-рок · NTC",
+    "En": "Indie rock · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: инди-рок. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: indie rock. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "indie",
+      "инди",
+      "indie rock"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "indie-rock_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891952,
+        "Sha256": "96516d60c7a4524dd77c8eb45030c00a51c12b6467445867770d99ba4954fb88",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/indie-rock_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-kpop",
+    "Ru": "K-pop · NTC",
+    "En": "K-pop · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: k-pop. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: k-pop. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "k-pop",
+      "kpop"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "kpop_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "e73a1ea28b576bfacb59edb85e5e535013f0640cfe91fac7cb88f3bc5aa453f4",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/kpop_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-lofi",
+    "Ru": "Лоу-фай · NTC",
+    "En": "Lo-fi · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: лоу-фай. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: lo-fi. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "lofi",
+      "lo-fi",
+      "лоу-фай"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "lofi_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "a61511ec6d6eab25813d372efda73b4e9a117bf1b4f5e89834181ac8d9b1e5dc",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/lofi_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-male",
+    "Ru": "Мужской вокал · NTC",
+    "En": "Male vocals · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: мужской вокал. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: male vocals. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "male",
+      "мужск"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "male_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "d54e33bcc987d31e8143f9bb7e3ce9337e4f64c419aa61a6698a857ed643f311",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/male_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-metal",
+    "Ru": "Метал · NTC",
+    "En": "Metal · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: метал. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: metal. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "metal",
+      "метал"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "metal_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "5a81e845e57effdd8e5a28ac6e0747798d9e38407f7179e9375d01ad8b44e8ee",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/metal_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-pop-punk",
+    "Ru": "Поп-панк · NTC",
+    "En": "Pop punk · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: поп-панк. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: pop punk. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "pop punk",
+      "pop-punk",
+      "панк"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "pop-punk_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "a7906eb5f111992a81d8c0ed4f67df5cdd47b891c453e5d3a7f29b4131941878",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/pop-punk_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-pop",
+    "Ru": "Поп · NTC",
+    "En": "Pop · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: поп. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: pop. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "pop",
+      "поп"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "pop_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "b5bf6b0f4adf115b2074beb917ca25b2791fd91cf3661271c780c2741fd44b04",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/pop_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-reggaeton",
+    "Ru": "Реггетон · NTC",
+    "En": "Reggaeton · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: реггетон. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: reggaeton. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "reggaeton",
+      "реггетон"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "reggaeton_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "d38c18bc01ebd63b18bf6445ebcd8f59b5665dbba758f03b69ccc7f32870cd1a",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/reggaeton_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ntc-rnb",
+    "Ru": "R&B · NTC",
+    "En": "R&B · NTC",
+    "DescriptionRu": "Обычная компактная LoRA: r&b. Воздействует на музыкальный план и семантику; не меняет декодер. Приближение Particle Sliders, а не исходный particle-формат.",
+    "DescriptionEn": "Compact standard LoRA: r&b. Affects score and semantics; decoder unchanged. Approximates Particle Sliders; not the original particle format.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "ntc-ai/yue2-particle-sliders",
+    "Revision": "31649319eee53e6da999cc4aff3e081d213f7911",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "rnb",
+      "r&b",
+      "soul",
+      "соул"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "rnb_v2_distilled_rank8.safetensors",
+        "SizeBytes": 12891944,
+        "Sha256": "b3459b5fba7ca6170daa9b0383a14ba4cb45b9b4ebc6be64661b66b98adda7c9",
+        "SourceUrl": "https://huggingface.co/ntc-ai/yue2-particle-sliders/resolve/31649319eee53e6da999cc4aff3e081d213f7911/distilled-rank8-v2/native/rnb_v2_distilled_rank8.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "instrumental-v3",
+    "Ru": "Инструментал · V3",
+    "En": "Instrumental · V3",
+    "DescriptionRu": "Построение инструментальной партитуры. Используйте полный план и [instrumental] вместо слов песни; режим без вокала включается отдельно.",
+    "DescriptionEn": "Instrumental score planning. Use full score and [instrumental] instead of sung lyrics; enable instrumental mode separately.",
+    "Variation": "music-yue2-studio-q8",
+    "Repository": "Mothersuperior/YuE2-instrumental-cot-full-loras",
+    "Revision": "947f2f4b28978b2b6c3e316e6a87925c76bf3c4b",
+    "License": "CC BY-NC 4.0",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 1,
+    "Tags": [
+      "instrumental",
+      "инструментальн",
+      "без вокала"
+    ],
+    "Slots": {
+      "ar": 1
+    },
+    "Files": [
+      {
+        "RelativePath": "ar_lora_inst_v3abc.bf16.safetensors",
+        "SizeBytes": 139502088,
+        "Sha256": "e408fd3148b75b1165f7ddbf63db575d83bb6402a0b5f876fcb767dbcb2c5414",
+        "SourceUrl": "https://huggingface.co/Mothersuperior/YuE2-instrumental-cot-full-loras/resolve/947f2f4b28978b2b6c3e316e6a87925c76bf3c4b/ar_lora_inst_v3abc.bf16.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-brightness",
+    "Ru": "Audio Sliders — Яркость",
+    "En": "Audio Sliders — Brightness",
+    "DescriptionRu": "Более яркий, воздушный звук и выраженные высокие частоты. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Brighter, airier sound and more prominent high frequencies. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "bright",
+      "airy",
+      "ярк",
+      "воздуш"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "brightness.safetensors",
+        "SizeBytes": 39915680,
+        "Sha256": "6657f20a778d49ca77b008aa30f6971ee5fc435b5680ea237b43659506079f94",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/brightness.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-density",
+    "Ru": "Audio Sliders — Плотность",
+    "En": "Audio Sliders — Density",
+    "DescriptionRu": "Более плотная аранжировка с частыми звуковыми событиями. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Denser arrangement with more frequent musical events. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "dense",
+      "density",
+      "плотн",
+      "насыщ"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "density.safetensors",
+        "SizeBytes": 39915688,
+        "Sha256": "34a1a33c61a1cb1a5164239eb6d4190292fa83596bbd7a01af78ed3a3be8551e",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/density.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-electronic",
+    "Ru": "Audio Sliders — Электронное звучание",
+    "En": "Audio Sliders — Electronic sound",
+    "DescriptionRu": "Сдвиг от акустического к электронному звучанию. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Moves from acoustic toward electronic sound. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "electronic",
+      "synth",
+      "электрон",
+      "синт"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "electronic.safetensors",
+        "SizeBytes": 39915672,
+        "Sha256": "847c8596c40c6c826a3a6b15d4e4de827dc8a8baf1e187ad07480ebd2f0ddbad",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/electronic.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-energy",
+    "Ru": "Audio Sliders — Энергия",
+    "En": "Audio Sliders — Energy",
+    "DescriptionRu": "Более энергичный, интенсивный характер музыки. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "More energetic and intense music. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "energetic",
+      "intense",
+      "энерг",
+      "интенсив"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "energy.safetensors",
+        "SizeBytes": 39915664,
+        "Sha256": "37ad768f6d41f2ffe50c86e9a4f7dd8a1cfd663675b0435132b116d10b05350d",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/energy.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-ensemble",
+    "Ru": "Audio Sliders — Ансамбль",
+    "En": "Audio Sliders — Ensemble",
+    "DescriptionRu": "Более полный инструментальный состав вместо сольного звучания. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Fuller instrumental ensemble instead of solo instrumentation. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "ensemble",
+      "orchestra",
+      "band",
+      "ансамбл",
+      "оркестр",
+      "групп"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "ensemble.safetensors",
+        "SizeBytes": 39915712,
+        "Sha256": "5875cc7b5802c23aee4d9a4ec9c1a9fa0089570f927352c046cdbf470e1a4a5f",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/ensemble.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-groove",
+    "Ru": "Audio Sliders — Грув",
+    "En": "Audio Sliders — Groove",
+    "DescriptionRu": "Более выраженная ритмическая раскачка. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "More pronounced rhythmic groove. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "groove",
+      "funk",
+      "грув",
+      "фанк"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "groove.safetensors",
+        "SizeBytes": 39915664,
+        "Sha256": "d5f7bfcafa5fdca0f885dcb4ec9ea4eca6c6d01e519714f3cf88a9d34b521d97",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/groove.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-harmony",
+    "Ru": "Audio Sliders — Богатая гармония",
+    "En": "Audio Sliders — Rich harmony",
+    "DescriptionRu": "Более насыщенная и сложная гармония. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Richer, more complex harmony. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "harmony",
+      "harmonic",
+      "гармон"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "harmony.safetensors",
+        "SizeBytes": 39915688,
+        "Sha256": "c8e64500f48311833697346b9e8517d77be5169341c53eb883d7c50b7dfd942d",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/harmony.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-melody",
+    "Ru": "Audio Sliders — Мелодичность",
+    "En": "Audio Sliders — Melody",
+    "DescriptionRu": "Выраженная мелодия вместо фоновой звуковой фактуры. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "More prominent melody instead of background texture. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "melody",
+      "melodic",
+      "мелод"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "melody.safetensors",
+        "SizeBytes": 39915672,
+        "Sha256": "0354c8acdc5550bf1ec9ae9503f8242cacab43d930196327560e15fffe4f5c83",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/melody.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-mood",
+    "Ru": "Audio Sliders — Светлое настроение",
+    "En": "Audio Sliders — Happy mood",
+    "DescriptionRu": "Сдвиг от грустного к более радостному настроению. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Moves from sad toward a happier mood. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "happy",
+      "joy",
+      "радост",
+      "весел",
+      "светл"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "mood.safetensors",
+        "SizeBytes": 39915664,
+        "Sha256": "b2feee50e5eab7e9b5dceb5b2695e54c50b0c4ab1f418780df9cc7d4175dcd11",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/mood.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-tempo",
+    "Ru": "Audio Sliders — Ощущение темпа",
+    "En": "Audio Sliders — Tempo feel",
+    "DescriptionRu": "Более быстрое ощущение музыки; не заменяет точное задание BPM. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Faster musical feel; does not replace an explicit BPM setting. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "fast",
+      "uptempo",
+      "быстр",
+      "темп"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "tempo.safetensors",
+        "SizeBytes": 39915672,
+        "Sha256": "8156bd0c46af8069d05b921b3dcb6df06db8788a1198747fd91dc7218698e508",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/tempo.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-tension",
+    "Ru": "Audio Sliders — Напряжение",
+    "En": "Audio Sliders — Tension",
+    "DescriptionRu": "Более напряжённый, неспокойный характер музыки. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "More tense, unsettled music. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "tense",
+      "tension",
+      "напряж",
+      "тревож"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "tension.safetensors",
+        "SizeBytes": 39915656,
+        "Sha256": "c7610b3ee8289e4cd6ad3d3ab2557d435be75d56c88802748278bdbfc33d4234",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/tension.safetensors"
+      }
+    ]
+  },
+  {
+    "Id": "ace-slider-vintage",
+    "Ru": "Audio Sliders — Ретро-звучание",
+    "En": "Audio Sliders — Vintage sound",
+    "DescriptionRu": "Сдвиг от современного к винтажному звучанию. Влияние 0–1: положительная сторона шкалы автора. Проверялось автором на короткой инструментальной музыке; результат с вокалом может отличаться.",
+    "DescriptionEn": "Moves from modern toward vintage sound. Strength 0–1 uses the positive side of the author's scale. Trained and evaluated on short instrumentals; vocal results may differ.",
+    "Variation": "music-ace15-xl-turbo",
+    "Repository": "takakhoo/audio-sliders",
+    "Revision": "f48387abdb1982129cc1e41b99e8bb564e04b107",
+    "License": "MIT",
+    "Trigger": "",
+    "Minimum": 0,
+    "Maximum": 1,
+    "Default": 0.5,
+    "Tags": [
+      "vintage",
+      "retro",
+      "old",
+      "винтаж",
+      "ретро"
+    ],
+    "Slots": {
+      "dit": 1
+    },
+    "Format": "audio-sliders-peft-v1",
+    "Files": [
+      {
+        "RelativePath": "vintage.safetensors",
+        "SizeBytes": 39915672,
+        "Sha256": "a3672b117842a850cd3234d87510a9955a374e06f0ae3e468e2ef162d58cb01b",
+        "SourceUrl": "https://huggingface.co/takakhoo/audio-sliders/resolve/f48387abdb1982129cc1e41b99e8bb564e04b107/ace-step-1.5-xl-turbo/text/vintage.safetensors"
+      }
+    ]
+  }
+]

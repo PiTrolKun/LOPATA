@@ -29,9 +29,11 @@ public sealed record ComponentLicenseReceipt(string Id, string Terms, DateTimeOf
 public sealed class ComponentLicenseService(string directory, string statePath)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
-    public IReadOnlyList<ComponentLicenseEntry> Entries { get; } =
+    private readonly IReadOnlyList<ComponentLicenseEntry> _bundled =
         JsonSerializer.Deserialize<List<ComponentLicenseEntry>>(File.ReadAllText(Path.Combine(directory, "catalog.json")))
         ?? throw new InvalidDataException("License catalog is empty.");
+    public IReadOnlyList<ComponentLicenseEntry> Entries => _bundled.Concat(ComponentLicenseExtensions.Entries()
+        .Where(e => !_bundled.Any(b => b.Id == e.Id))).ToArray();
 
     public static IReadOnlyList<string> ExpandSelection(IEnumerable<string> requested, IEnumerable<ComponentLicenseEntry> catalog)
     {
@@ -63,6 +65,7 @@ public sealed class ComponentLicenseService(string directory, string statePath)
 
     public string ReadText(string relativePath)
     {
+        if (relativePath.StartsWith("extensions/", StringComparison.Ordinal)) return ComponentLicenseExtensions.Text(relativePath);
         var path = Path.GetFullPath(Path.Combine(directory, relativePath));
         if (!path.StartsWith(Path.GetFullPath(directory) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("License text path escapes the catalog.");
@@ -75,8 +78,9 @@ public sealed class ComponentLicenseService(string directory, string statePath)
         await _gate.WaitAsync(token);
         try
         {
+            var catalog = Entries;
             var selected = ids.Distinct(StringComparer.Ordinal).Select(id =>
-                Entries.SingleOrDefault(x => x.Id == id)
+                catalog.SingleOrDefault(x => x.Id == id)
                 ?? throw new InvalidOperationException($"Component license is not registered: {id}")).ToList();
             var receipts = ReadReceipts().ToList();
             var pending = selected.Where(x => !receipts.Any(r => r.Id == x.Id && r.Terms == x.Terms)).ToList();

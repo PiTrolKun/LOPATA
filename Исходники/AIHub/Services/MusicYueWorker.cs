@@ -11,6 +11,7 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
     public int PlanTokenLimit { get; init; } = 4096;
     public MusicExpertSettings? Expert { get; init; }
     public AIHub.Models.MusicWishSnapshot? Wishes { get; init; }
+    public MusicLora.MusicLoraUse[] Loras { get; init; } = [];
     public bool DurationAutomatic { get; init; }
     public string? StudioRuntimeRevision { get; init; }
     public string? StudioRuntimePack { get; init; }
@@ -34,7 +35,7 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
     }
     public void Validate()
     {
-        Expert?.Validate();
+        Expert?.Validate(); MusicLora.MusicLoraCatalog.Validate(Loras, EffectiveExpert.Variation);
         if (LanguageSeed < 0 || SoundSeed < 0 || DurationSeconds is < 1 or > 360 || PlanTokenLimit is < 32 or > 4096)
             throw new ArgumentOutOfRangeException(nameof(DurationSeconds), "YuE2 seeds and duration must be fixed before execution.");
     }

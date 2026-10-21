@@ -1,0 +1,22 @@
+Music LoRA sources and attribution
+
+atomtanstudio/lora-library
+Revision: af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff
+License: CC BY-NC 4.0
+Source: https://huggingface.co/atomtanstudio/lora-library
+
+atomtanstudio/lora-library
+Revision: af2250ed6d4ba6fe3a70e12ce8500afee92fa2ff
+License: CC BY-NC 4.0
+Source: https://huggingface.co/atomtanstudio/lora-library
+
+str8bored/JAY_2
+Revision: 9799caf5d324008fcbf9f38d1619a198a6ebb295
+License: CC0-1.0
+Source: https://huggingface.co/str8bored/JAY_2
+
+CC BY-NC 4.0: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+CC0: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Full standard CC BY-NC text: https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC-BY-NC-4.0.txt
+The additional permissions of the YuE2 base checkpoint do not extend to independent third-party adapters.

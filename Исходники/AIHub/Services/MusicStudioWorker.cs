@@ -15,12 +15,16 @@ public sealed class MusicStudioWorker : IMusicYueWorker
     public static object Request(MusicYueRequest request, bool plan, MusicStudioProfile? profile = null)
     {
         profile ??= Profile(request);
+        MusicLora.MusicLoraCatalog.Validate(request.Loras, request.EffectiveExpert.Variation);
+        if (request.Loras.Length > 0 && !profile.SeparateNormalization) throw new InvalidDataException("Music.Lora.Incompatible");
         if (request.EffectiveExpert.StudioSolver == "ab2" && !profile.SupportsAb2)
             throw new InvalidDataException("AB2 requires Studio engine set 002 or later.");
         var body = new Dictionary<string, object> {
-            ["style"] = request.Style, ["lyrics"] = request.Lyrics, ["cot"] = request.EffectiveExpert.Cot,
+            ["style"] = MusicLora.MusicLoraCatalog.EffectiveStyle(request.Style, request.Loras), ["lyrics"] = request.Lyrics, ["cot"] = request.EffectiveExpert.Cot,
             ["lm_seed"] = request.LanguageSeed, ["lm_batch_size"] = 1,
             ["abc_sampling"] = request.EffectiveExpert.Sampling("abc_sampling", Math.Max(1, request.EffectivePlanLimit)) };
+        if (request.Loras.Length > 0) body["adapters"] = request.Loras.Select(u => new { id = u.Id,
+            scales = MusicLora.MusicLoraCatalog.Find(u.Id).Slots.ToDictionary(p => p.Key, p => p.Value * u.Strength) }).ToArray();
         if (plan) return body;
         body["abc"] = request.Abc; body["seed"] = request.SoundSeed; body["duration_seconds"] = request.DurationSeconds;
         body["synth_batch_size"] = 1; body["steps"] = request.EffectiveExpert.Integer("steps");
@@ -45,6 +49,7 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         request.Validate(); LastRequestReceipt = null; LastRuntimePack = null; _devices.Clear();
         var profile = Profile(request);
         var body = Request(request, plan, profile); // Reject unsupported settings before loading models.
+        foreach (var warning in MusicLora.MusicLoraUsageHints.Warnings(request.Loras)) Emit(warning);
         if (request.EffectiveExpert.Variation != MusicStudioRuntime.Variation) throw new InvalidDataException("Studio settings required.");
         if (!plan && request.EffectiveExpert.Cot != "off" && string.IsNullOrWhiteSpace(request.Abc)) throw new InvalidDataException("Studio synthesis needs a saved score.");
         if (File.Exists(output)) throw new IOException("Studio stage output already exists.");
@@ -52,7 +57,8 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(MusicStudioRuntime.Variation), token);
         if (profile.SeparateNormalization) await ComponentLicenseGate.EnsureAsync(MusicStudioRuntime.CurrentComponentId, token);
         await MusicStudioRuntime.VerifyAsync(profile, token); await MusicStudioRuntime.VerifyModelsAsync(modelsRoot, token);
-        await Task.Run(() => request.CheckContext(new MusicTokenizer(MusicTokenizerMetadata.Read(model, token)), token), token);
+        await Task.Run(() => (request with { Style = MusicLora.MusicLoraCatalog.EffectiveStyle(request.Style, request.Loras) })
+            .CheckContext(new MusicTokenizer(MusicTokenizerMetadata.Read(model, token)), token), token);
         var choice = await MusicHardwareProbe.CheckAsync(MusicYueRuntime.DirectoryPath, model,
             MusicModelVariants.Artifact(modelsRoot, MusicStudioRuntime.Variation, MusicComponentCatalog.DecoderId), request, !plan, token, Emit);
         // The original policy is a preflight estimate. Studio independently validates its device and may fall back.
@@ -61,7 +67,10 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         await using (var file = new FileStream(requestPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
             await JsonSerializer.SerializeAsync(file, body, cancellationToken: token); file.Flush(true);
         }
-        await using var lease = await MusicStudioLease.StartAsync(modelsRoot, requestPath + ".studio", choice.Demand.ContextTokens, Emit, token, profile);
+        await MusicLora.MusicLoraAssets.EnsureAsync(modelsRoot, request.Loras, request.EffectiveExpert.Variation, token);
+        using var adapters = await MusicLora.MusicLoraStudioStage.CreateAsync(modelsRoot, requestPath + ".studio", request.Loras, token);
+        if (request.Loras.Length > 0) Emit("[LoRA] " + string.Join(", ", request.Loras.Select(x => x.Id + "=" + x.Strength)));
+        await using var lease = await MusicStudioLease.StartAsync(modelsRoot, requestPath + ".studio", choice.Demand.ContextTokens, Emit, token, profile, request.Loras.Length > 0);
         var route = plan ? "v1/scores" : "v1/music/jobs";
         var submitted = await lease.SendAsync(route, body, token);
         var id = submitted.GetProperty("id").GetString() ?? throw new InvalidDataException("Studio job ID missing.");
@@ -74,8 +83,12 @@ public sealed class MusicStudioWorker : IMusicYueWorker
             var state = status.GetProperty("status").GetString()!.ToLowerInvariant();
             var message = status.TryGetProperty("message", out var detail) ? detail.GetString() : state;
             if (last != message) { Emit("[Studio] job=" + id + "; " + message); last = message ?? ""; }
-            if (state is "failed" or "cancelled") throw new InvalidOperationException("Studio " + state + ": " +
-                (status.TryGetProperty("error", out var error) ? error.GetString() : message));
+            if (state is "failed" or "cancelled") {
+                var failure = "Studio " + state + ": " + (status.TryGetProperty("error", out var error) ? error.GetString() : message);
+                Emit(failure); // Retain the native diagnostic alongside the human explanation.
+                throw new InvalidOperationException(request.Loras.Length > 0 && MusicLora.MusicLoraUsageHints.InvalidScore(failure)
+                    ? request.Loras.Length > 1 ? "Music.Lora.ScoreCombinationFailure" : "Music.Lora.ScoreFailure" : failure);
+            }
             if (state is "done" or "completed")
             {
                 if (!plan && status.TryGetProperty("generation_settings", out var effective)) {

@@ -33,7 +33,7 @@ public static class MusicAceRequest
             negative = string.Join(", ", (wishes.Selections.GetValueOrDefault("avoid") ?? []).Select(id => MusicWishCatalog.Prompt("avoid", id)));
         if (negative.Length == 0) negative = "NO USER INPUT";
         var result = new Dictionary<string, object?> {
-            ["task_type"] = "text2music", ["caption"] = request.Style,
+            ["task_type"] = "text2music", ["caption"] = MusicLora.MusicLoraCatalog.EffectiveStyle(request.Style, request.Loras),
             ["lyrics"] = instrumental ? "[Instrumental]" : request.Lyrics, ["instrumental"] = instrumental,
             ["vocal_language"] = instrumental ? "unknown" : language,
             ["bpm"] = expert.Integer("bpm") == 0 ? null : expert.Integer("bpm"),

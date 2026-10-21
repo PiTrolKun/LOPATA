@@ -37,6 +37,13 @@ public static class MusicSongMetadata
                 "\neffective_semantic_min_tokens=" + Math.Min(job.Expert.Integer("semantic_sampling.min_tokens"), job.Expert.SequenceLimit(job.DurationSeconds)).ToString(culture))
         };
         EngineSetMetadataIdentity.AddTags(result, engineSetId);
+        if (job.Loras.Length > 0) result["LOPATA_LORAS"] = JsonSerializer.Serialize(job.Loras.Select(u => {
+            var d = MusicLora.MusicLoraCatalog.Find(u.Id); return new { u.Id, u.Revision, u.Strength, d.Repository,
+                slots = d.Slots, Format = d.Variation == MusicAceCatalog.Variation ? d.Format : "native-engine",
+                files = d.Files.Select(f => new { f.RelativePath, f.Sha256 }) };
+        }));
+        if (job.Loras.Length > 0 && job.Variation == MusicStudioRuntime.Variation)
+            result["LOPATA_LORA_RUNTIME"] = MusicLora.MusicLoraStudioRuntime.Revision + "; sha256=" + MusicLora.MusicLoraStudioRuntime.ServerHash;
         result["LOPATA_ENGINE_SET_HISTORY"] = studioProfile is not null
             ? job.EngineSetId is not null && job.EngineSetId != engineSetId ? "runtime-profile; conflicting-job-snapshot" : "runtime-profile"
             : engineSetId is null ? "unknown" : "job-snapshot";
@@ -59,7 +66,7 @@ public static class MusicSongMetadata
         }
         if (MusicAceCatalog.IsAce(job.Variation)) {
             result.Remove("LOPATA_LM_SEED");
-            result["LOPATA_ACE_REQUEST"] = variant.ExecutionReceipt ?? "";
+            result["LOPATA_ACE_REQUEST"] = PublicAceReceipt(variant.ExecutionReceipt);
             result["LOPATA_ADAPTER"] = "official Python API; LM=1.7B/PyTorch; task=text2music; batch=1; no lyric rewrite";
         }
         if (job.Variation == MusicModelVariants.Bf16) {
@@ -88,6 +95,15 @@ public static class MusicSongMetadata
         if (variant.PlanHardware is { Length: > 0 }) result["LOPATA_PLAN_HARDWARE"] = variant.PlanHardware;
         if (variant.GenerationSeconds is { } seconds) result["LOPATA_GENERATION_SECONDS"] = seconds.ToString("0.###", culture);
         return result.Where(p => p.Value.Length > 0).ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
+    }
+    private static string PublicAceReceipt(string? receipt)
+    {
+        if (string.IsNullOrEmpty(receipt)) return "";
+        var node = System.Text.Json.Nodes.JsonNode.Parse(receipt);
+        if (node?["initialization"] is System.Text.Json.Nodes.JsonObject init) { init.Remove("project_root"); init.Remove("config_path"); }
+        foreach (var bank in new[] { node?["loras"], node?["request"]?["loras"] }.OfType<System.Text.Json.Nodes.JsonArray>())
+            foreach (var item in bank.OfType<System.Text.Json.Nodes.JsonObject>()) item.Remove("directory");
+        return node?.ToJsonString() ?? "";
     }
     public static string AppVersion => Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
         .InformationalVersion.Split('+')[0] ?? "unknown";

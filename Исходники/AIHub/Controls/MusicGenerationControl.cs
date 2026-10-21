@@ -60,6 +60,7 @@ public sealed class MusicGenerationControl : UserControl
     public event Action? OptionsChanged;
     public Action? OpenPoetry { get; set; }
     public Action? OpenVideo { get; set; }
+    public Button LoraButton { get; }
     public MusicGenerationOptions Options => new(_title.Text.Trim(), (int)(_count.SelectedItem ?? 1),
         _duration.SelectedIndex <= 0 ? null : (int?)((ComboBoxItem)_duration.SelectedItem).Tag)
         { Artist = _artistInput.Input.Text.Trim(), Comment = _commentInput.Input.Text, Output = _output.Settings };
@@ -111,7 +112,11 @@ public sealed class MusicGenerationControl : UserControl
         _poetry = MusicAudioUi.IconButton("PoetryChat", "M2,3 H22 V16 H10 L5,21 V16 H2 Z M9,12 L16,5 L19,8 L12,15 H9 Z", () => OpenPoetry?.Invoke());
         _poetryIndicator = new(_poetry);
         _poetry.Width = _poetry.Height = 42;
-        _poetry.HorizontalAlignment = HorizontalAlignment.Left; lower.Children.Add(_poetry);
+        _poetry.HorizontalAlignment = HorizontalAlignment.Left;
+        var leftTools = new StackPanel { Orientation = Orientation.Horizontal }; leftTools.Children.Add(_poetry); lower.Children.Add(leftTools);
+        LoraButton = MusicAudioUi.IconButton("LoRA", "M7,5 H17 V19 H7 Z M4,8 H7 M4,12 H7 M4,16 H7 M17,8 H21 L23,5 M17,12 H23 M17,16 H21 L23,19 M10,2 V5 M14,2 V5 M10,19 V22 M14,19 V22 M10,9 H14 V15 H10 Z", () => { });
+        LoraButton.Width = LoraButton.Height = 42; leftTools.Children.Add(LoraButton);
+        AutomationProperties.SetAutomationId(LoraButton, "Music.Lora.Open");
         _expert = MusicAudioUi.IconButton("Expert", "M12,2 L14,5 L17,5 L19,7 L19,10 L22,12 L19,14 L19,17 L17,19 L14,19 L12,22 L10,19 L7,19 L5,17 L5,14 L2,12 L5,10 L5,7 L7,5 L10,5 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12", OpenExpert);
         _recipes = MusicAudioUi.IconButton("Recipes", "M3,3 H11 L12,5 L13,3 H21 V20 H13 L12,22 L11,20 H3 Z M12,5 V22 M6,7 H9 M6,11 H9 M15,7 H18 M15,11 H18", Tuning.OpenRecipes);
         _video = MusicAudioUi.IconButton("Video", "M3,4 H21 V20 H3 Z M9,8 L16,12 L9,16 Z M3,8 H6 M3,16 H6 M18,8 H21 M18,16 H21", () => OpenVideo?.Invoke());

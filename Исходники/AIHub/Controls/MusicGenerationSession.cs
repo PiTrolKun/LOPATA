@@ -16,6 +16,7 @@ public sealed class MusicGenerationSession : IDisposable
     private Func<string, string> _l = key => key;
     private CancellationTokenSource? _cancel;
     private Guid _telemetry;
+    private Guid _loraWarningOperation;
     private bool _ready, _starting, _working, _disposed, _checking, _cancelRequested;
     private int _modelCheck;
     public event Action? StateChanged;
@@ -163,10 +164,12 @@ public sealed class MusicGenerationSession : IDisposable
             }
             _starting = true; RefreshButtons();
             var options = _view.Generation.Options;
+            var loras = AIHub.Services.MusicLora.MusicLoraCatalog.Capture(_view.Lora.Selection, _view.Generation.Variation);
+            await AIHub.Services.MusicLora.MusicLoraAssets.EnsureAsync(_modelsRoot, loras, _view.Generation.Variation, ApplicationBackgroundOperations.ExitToken);
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
                 options.DurationSeconds ?? 360, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
                 wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment, durationAutomatic: options.DurationSeconds is null,
-                cover: _view.Covers.CaptureSelection(options.Artist, options.Title));
+                cover: _view.Covers.CaptureSelection(options.Artist, options.Title), loras: loras);
             submitted = job = _view.Projects.Record(job, _view.Projects.Capture());
             await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             _starting = false; await RunAsync(job.Id);
@@ -185,11 +188,11 @@ public sealed class MusicGenerationSession : IDisposable
             if (MusicModelVariants.WorkspaceVariation(original.Variation) != original.Variation) return;
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
                 original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment, original.DurationAutomatic,
-                _view.Covers.CaptureSelection(original.Artist, original.Title));
+                _view.Covers.CaptureSelection(original.Artist, original.Title), original.Loras.ToArray());
             submitted = repeat = _view.Projects.Record(repeat, MusicProjectSnapshot.FromJob(repeat));
             if (original.Output is not null) await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             // Preserve the exact score used by the completed track, alongside its two seeds.
-            repeat = repeat with { RuntimePack = original.RuntimePack };
+            repeat = repeat with { RuntimePack = original.RuntimePack, RuntimeRevision = original.RuntimeRevision, EngineSetId = original.EngineSetId };
             if (original.Expert.Cot != "off") {
                 var score = _jobs.StagePath(repeat.Id, ".abc"); File.Copy(variant.PlanFile!, score, false);
                 repeat = repeat with { Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.PlanHash, PlanHardware = variant.PlanHardware }] };
@@ -325,7 +328,12 @@ public sealed class MusicGenerationSession : IDisposable
     private void NativeLog(string message)
     {
         if (_disposed) return;
-        _view.Status.AppendLog(message); var operation = _telemetry;
+        _view.Status.AppendLog(message.StartsWith("Music.Lora.", StringComparison.Ordinal) ? _l(message) : message); var operation = _telemetry;
+        if (message == "Music.Lora.PlannerCombinationWarning" && !_view.Dispatcher.HasShutdownStarted)
+            _view.Dispatcher.BeginInvoke(() => {
+                if (_disposed || _loraWarningOperation == operation) return;
+                _loraWarningOperation = operation; MusicLoraNotices.Show(_view, message, _l);
+            });
         if ((_worker is MusicDiffRhythmWorker or MusicHeartMuLaWorker) && message.StartsWith("[Hardware]", StringComparison.Ordinal)
             && !_view.Dispatcher.HasShutdownStarted)
             _view.Dispatcher.Invoke(() => { if (!_disposed) _view.Generation.SetHardware(MusicModelVariants.Family(_view.Generation.Variation) + " · " + message[10..].Trim()); });
@@ -351,7 +359,8 @@ public sealed class MusicGenerationSession : IDisposable
         if (error is OperationCanceledException) return;
         if (!_view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error))
         { _telemetry = _view.Status.Telemetry.Begin(); _view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error); }
-        _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + error.Message);
+        _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + (error.Message.StartsWith("Music.Lora.", StringComparison.Ordinal) ? _l(error.Message) : error.Message));
+        if (error.Message is "Music.Lora.ScoreCombinationFailure" or "Music.Lora.ScoreFailure") MusicLoraNotices.Show(_view, error.Message, _l);
     }
     private void Outcome(MusicGenerationJob job, MusicProjectOutcome outcome, string message = "")
     {

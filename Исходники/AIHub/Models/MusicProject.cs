@@ -1,4 +1,5 @@
 using AIHub.Services;
+using MusicLora = AIHub.Services.MusicLora;
 
 namespace AIHub.Models;
 
@@ -22,16 +23,17 @@ public sealed record MusicProjectSnapshot
     public Dictionary<string, MusicExpertSettings> ModelSettings { get; init; } = new();
     public MusicOutputSettings Output { get; init; } = new();
     public MusicWishSnapshot Wishes { get; init; } = MusicWishSnapshot.Capture(new());
+    public MusicLora.MusicLoraSelection Loras { get; init; } = new();
     public MusicProjectSnapshot Snapshot() => this with { Expert = Expert.Snapshot(), Wishes = Wishes.Snapshot(),
-        ModelSettings = ModelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), RhymeSteps = RhymeSteps.Select(s => s.Snapshot()).ToArray() };
+        ModelSettings = ModelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Loras = Loras.Snapshot(), RhymeSteps = RhymeSteps.Select(s => s.Snapshot()).ToArray() };
     public void Validate()
     {
         if (Lyrics is null || Title is null || Artist is null || Comment is null || string.IsNullOrWhiteSpace(Model)
             || string.IsNullOrWhiteSpace(Variation) || string.IsNullOrWhiteSpace(ModelRevision)
             || OutputFolder is null || Variants is < 1 or > 8 || DurationSeconds is { } seconds && seconds is < 1 or > 360
-            || Expert is null || Output is null || Wishes is null || Wishes.Selections is null || Wishes.Performers is null)
+            || Expert is null || Output is null || Loras is null || Wishes is null || Wishes.Selections is null || Wishes.Performers is null)
             throw new System.IO.InvalidDataException("Invalid music project snapshot.");
-        Expert.Validate(); Output.Validate();
+        Expert.Validate(); Output.Validate(); Loras.Validate();
         if (RhymeSteps is null || RhymeSteps.Length > 500) throw new System.IO.InvalidDataException("Music.Rhyme.InvalidInput");
         foreach (var step in RhymeSteps) step.Validate();
         if (Expert.Variation != Variation || ModelSettings is null || ModelSettings.Count > 100)
@@ -49,7 +51,8 @@ public sealed record MusicProjectSnapshot
         Lyrics = job.Lyrics, Title = job.Title, Artist = job.Artist, Comment = job.Comment, ModelRevision = job.ModelRevision, Variation = job.Variation,
         Variants = job.Variants.Length, DurationSeconds = job.DurationAutomatic ? null : job.DurationSeconds, OutputFolder = job.OutputFolder,
         Expert = job.Expert.Snapshot(), Output = job.Output ?? new() { Format = MusicAudioFormat.Wav },
-        Wishes = job.Wishes?.Snapshot() ?? MusicWishSnapshot.Capture(new()) };
+        Wishes = job.Wishes?.Snapshot() ?? MusicWishSnapshot.Capture(new()), Loras = new() {
+            ByModel = new() { [job.Variation] = job.Loras.Select(x => new MusicLora.MusicLoraChoice(x.Id, x.Strength)).ToArray() } } };
 }
 
 public sealed record MusicProjectStep(int Number, string JobId, DateTimeOffset CreatedAt, MusicProjectSnapshot Snapshot)

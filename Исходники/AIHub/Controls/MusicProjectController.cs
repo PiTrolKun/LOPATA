@@ -44,9 +44,10 @@ public sealed class MusicProjectController
             ModelSettings = _modelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Lyrics = _view.Editor.Lyrics,
             RhymeSteps = Current.Saved.RhymeSteps.Select(s => s.Snapshot()).ToArray(), Title = options.Title, Artist = options.Artist, Comment = options.Comment,
             Variants = options.Variants, DurationSeconds = options.DurationSeconds, OutputFolder = _view.Tracks.OutputFolder,
-            Expert = _view.Generation.ExpertSettings, Output = options.Output, Wishes = MusicWishSnapshot.Capture(_view.Wishes.State) };
+            Expert = _view.Generation.ExpertSettings, Output = options.Output, Wishes = MusicWishSnapshot.Capture(_view.Wishes.State), Loras = _view.Lora.Selection.Snapshot() };
     }
-    public void RememberDefaults() => _initial ??= (Capture() with { RhymeSteps = [] }).Snapshot();
+    public void RememberDefaults() => _initial ??= (Capture() with { RhymeSteps = [], Loras = new() }).Snapshot();
+    public void SaveLoraWorkspace() { EnsureIdle(); Current = _store.SaveWorkspace(Current, Capture()); History.Refresh(); }
     public void SetBusy(bool busy) { Busy = busy; History.Refresh(); }
     public void CycleMode() { if (Busy) return; Mode = (MusicHistoryMode)(((int)Mode + 1) % 3); History.Refresh(); }
     public bool CanNavigate(int delta) => !Busy && Mode != MusicHistoryMode.Off && _cursor + delta >= 0 && _cursor + delta < Current.Steps.Length;
@@ -70,6 +71,7 @@ public sealed class MusicProjectController
             _view.Generation.SetOptions(new(snapshot.Title, snapshot.Variants, snapshot.DurationSeconds) {
                 Artist = snapshot.Artist, Comment = snapshot.Comment, Output = snapshot.Output });
             _view.Generation.SetExpertSettings(active, false);
+            _view.Lora.Restore(snapshot.Loras);
             _view.Wishes.Apply(snapshot.Wishes.ToPreferences()); _view.Tracks.SetOutputFolder(snapshot.OutputFolder);
             _view.Session.ModelChanged();
         }
@@ -147,7 +149,7 @@ public sealed class MusicProjectController
         var previous = _view.Generation.ExpertSettings;
         try {
             _view.Generation.ConfigureVariation(variation, _modelSettings.GetValueOrDefault(variation));
-            Current = _store.SaveWorkspace(Current, Capture()); _view.Session.ModelChanged(verifiedHardware); History.Refresh();
+            Current = _store.SaveWorkspace(Current, Capture()); _view.Session.ModelChanged(verifiedHardware); _view.Lora.Refresh(); History.Refresh();
         }
         catch { _view.Generation.ConfigureVariation(previous.Variation, previous); _view.Session.ModelChanged(); throw; }
     }

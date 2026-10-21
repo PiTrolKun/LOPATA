@@ -35,6 +35,7 @@ public sealed record MusicGenerationJob(string Id, string ModelsRoot, string Out
     public string RuntimePack { get; init; } = MusicYueRuntime.CpuPack;
     public MusicExpertSettings Expert { get; init; } = new();
     public MusicWishSnapshot? Wishes { get; init; }
+    public MusicLora.MusicLoraUse[] Loras { get; init; } = [];
     // Null means the original WAV-only job contract, including recovery of old jobs.
     public MusicOutputSettings? Output { get; init; }
     public string Artist { get; init; } = "";
@@ -75,7 +76,7 @@ public sealed class MusicGenerationJobs(string directory)
     public MusicGenerationJob Create(string modelsRoot, string output, string title, int count, int duration, string style, string lyrics,
         MusicGenerationVariant? repeat = null, MusicExpertSettings? expert = null, MusicWishSnapshot? wishes = null,
         MusicOutputSettings? outputSettings = null, string artist = "", string comment = "", bool durationAutomatic = false,
-        MusicCoverSelection? cover = null)
+        MusicCoverSelection? cover = null, MusicLora.MusicLoraUse[]? loras = null)
     {
         if (count is < 1 or > 8) throw new ArgumentOutOfRangeException(nameof(count));
         var settings = (expert ?? new()).Snapshot(); settings.Validate();
@@ -104,7 +105,7 @@ public sealed class MusicGenerationJobs(string directory)
                 DecoderRevision = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.CompanionRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.CompanionRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.CompanionRevision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision,
                 RuntimeRevision = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.SourceRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.SourceRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.SourceRevision : studioProfile is not null ? studioProfile.Revision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
                 RuntimePack = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.RuntimeRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.RuntimeRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.RuntimeRevision : studioProfile is not null ? studioProfile.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(), DurationAutomatic = durationAutomatic,
-                Output = outputSettings, Artist = artist.Trim(), Comment = comment, Cover = cover };
+                Output = outputSettings, Artist = artist.Trim(), Comment = comment, Cover = cover, Loras = loras?.ToArray() ?? [] };
         if (settings.Variation == MusicModelVariants.Bf16 || MusicModelVariants.ExternalPipeline(settings.Variation)) job = job with { Variants = job.Variants.Select(v => v with { LanguageSeed = v.SoundSeed }).ToArray() };
         Save(job); return job;
         int Seed(string key, int index) => !settings.Values.ContainsKey(key) || settings.Integer(key) < 0 ? RandomNumberGenerator.GetInt32(1, int.MaxValue)
@@ -147,7 +148,7 @@ public sealed class MusicGenerationJobs(string directory)
     {
         if (job.EngineSetId is not null) EngineSetSelection.ValidateId(job.EngineSetId);
         if (job.Expert is null) throw new InvalidDataException("Missing music settings snapshot.");
-        job.Expert.Validate();
+        job.Expert.Validate(); MusicLora.MusicLoraCatalog.Validate(job.Loras, job.Variation);
         job.Output?.Validate();
         if (job.ProjectId is not null && (!Guid.TryParseExact(job.ProjectId, "N", out _) || job.ProjectStep is null or < 1)
             || job.ProjectId is null && job.ProjectStep is not null) throw new InvalidDataException("Invalid music project link.");

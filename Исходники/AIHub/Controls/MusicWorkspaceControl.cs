@@ -22,6 +22,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public MusicRhymeController Rhyme { get; }
     public MusicCoverController Covers { get; }
     public LyricLibraryController Library { get; }
+    public MusicLoraController Lora { get; }
     private bool _outputConfigured;
     public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null,
         IMusicLyricsSynchronization? synchronizeLyrics = null, IMusicAudioPlayer? audioPlayer = null, MusicCoverStore? coverStore = null)
@@ -70,6 +71,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         LyricsPlayback = new(this, jobs ?? MusicGenerationJobs.Default, synchronizeLyrics);
         Rhyme = new(this);
         Covers = new(this, jobs ?? MusicGenerationJobs.Default, coverStore);
+        Lora = new(this);
         double MaximumWidth() => Math.Max(250, grid.ActualWidth - 140 - 12 - 220 - 260);
         void Add(UIElement element, int column, int row, int rowSpan = 1, int columnSpan = 1)
         { Grid.SetColumn(element, column); Grid.SetRow(element, row); Grid.SetRowSpan(element, rowSpan); Grid.SetColumnSpan(element, columnSpan); grid.Children.Add(element); }
@@ -88,6 +90,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         LyricsPlayback.Localize(localize);
         Rhyme.Localize(localize);
         Covers.Localize(localize);
+        Lora.Localize(localize);
         var grid = (Grid)Content;
         var divider = (Thumb)grid.Children[1]; divider.ToolTip = localize("Music.Editor.Resize");
         AutomationProperties.SetName(divider, localize("Music.Editor.Resize"));
@@ -101,6 +104,6 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     { if (_outputConfigured) return; _outputConfigured = true;
         Tracks.ConfigureFolder(folder, save); Player.ConfigureFolder(folder); Projects.RememberDefaults(); }
     public void ConfigureGeneration(string modelsRoot, Func<string, string> localize)
-    { Session.Configure(modelsRoot, localize); LyricsPlayback.Configure(localize); }
-    public void Dispose() { Covers.Dispose(); Rhyme.Dispose(); LyricsPlayback.Dispose(); Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
+    { Lora.Configure(modelsRoot); Session.Configure(modelsRoot, localize); LyricsPlayback.Configure(localize); }
+    public void Dispose() { Lora.Dispose(); Covers.Dispose(); Rhyme.Dispose(); LyricsPlayback.Dispose(); Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
 }

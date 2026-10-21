@@ -32,6 +32,12 @@ public sealed class MusicAceWorker : IMusicYueWorker
     private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token)
     {
         request.Validate(); var payload = MusicAceRequest.Build(request);
+        await MusicLora.MusicLoraAssets.EnsureAsync(root, request.Loras, request.EffectiveExpert.Variation, token);
+        using var adapters = await MusicLora.MusicLoraAssets.AcquireAsync(root, request.Loras, token);
+        payload["loras"] = request.Loras.Select(u => new { id = u.Id, revision = u.Revision, strength = u.Strength,
+            directory = MusicLora.MusicLoraCatalog.Find(u.Id).Card(root).InstallDirectory,
+            format = MusicLora.MusicLoraCatalog.Find(u.Id).Format,
+            files = MusicLora.MusicLoraCatalog.Find(u.Id).Files.Select(f => new { name = f.RelativePath, sha256 = f.Sha256 }) }).ToArray();
         if (File.Exists(output)) throw new IOException("Music output already exists.");
         Log?.Invoke("[Load] ACE XL Turbo · official API");
         var preparation = Stopwatch.StartNew();
@@ -48,6 +54,7 @@ public sealed class MusicAceWorker : IMusicYueWorker
             HardwareRuntimeCatalog.PythonCuda128Id, HardwareRuntimeCatalog.PythonCudaId, HardwareRuntimeCatalog.PythonXpuId }, line => Log?.Invoke(line));
         StageFinished("hardware", preparation.Elapsed);
         LastRuntimePack = runtime.Entry.Id + "/" + MusicAceCatalog.RuntimeRevision;
+        if (runtime.Device != "cpu") MusicLora.MusicLoraForecast.ObserveFreeGpu(MusicAceCatalog.Variation, runtime.FreeBytes);
         await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
         var temporary = output + "." + Guid.NewGuid().ToString("N") + ".partial";
         var info = new ProcessStartInfo(runtime.Python) { UseShellExecute = false, CreateNoWindow = true,

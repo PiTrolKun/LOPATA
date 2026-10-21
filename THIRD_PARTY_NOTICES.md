@@ -1,4 +1,4 @@
-﻿## 2026-10-17 — metadata utility
+## 2026-10-17 — metadata utility
 
 The optional bundled metadata.exiftool runtime is the official ExifTool 13.59 Windows x64 package.
 The original Perl/ExifTool sources, GPL-3.0 LICENSE, CC0 launcher notice and complete
@@ -684,3 +684,14 @@ PSF and Pillow originals are in the same license directory. Exact URLs, versions
 sizes and SHA-256: Исходники/AIHub/Tools/BookSmart/windows-cp312-wheel-lock.json.
 The bundled calibre/QtSvg rasterizer retains its existing GPL-3.0 notices/source delivery.
 Original per-distribution notices remain in the private installed runtime.
+
+## Optional Audio Sliders weights (2026-10-21)
+
+Author: takakhoo. Model card declares MIT. Source:
+https://huggingface.co/takakhoo/audio-sliders/tree/f48387abdb1982129cc1e41b99e8bb564e04b107
+Twelve text sliders are optional downloads, not bundled weights. A separate
+copyright notice was not published. Terms and credit are retained in
+`Исходники/AIHub/Licenses/texts/music-lora-audio-sliders-MIT.txt`.
+LOPATA adapts the artifact layout locally without changing original weights or
+the official ACE sampler; model conditions still apply. Layout reference:
+https://github.com/takakhoo/audio-diffusion-control/blob/2daefac5b7a90e52929f3f17143943424a83920d/audiosliders/lora.py

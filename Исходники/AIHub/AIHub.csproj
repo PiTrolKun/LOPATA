@@ -21,6 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\**\*" Link="MusicLoraStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\BookSmart\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\BookConverter\calibre-9.16.0\**\*" Link="BookConverterRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\book-converter-files.json" LogicalName="AIHub.BookConverterManifest" />
@@ -112,6 +113,8 @@
     </Content>
     <Content Include="Tools\giga-manifest.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Tools\music-lyrics-components.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\music-loras.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Resource Include="Assets\music-lora-header.png" />
     <Content Include="Tools\yue2-bf16-models.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Tools\python-hardware-cpu-lock.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Tools\python-hardware-cu126-lock.json"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
@@ -149,6 +152,7 @@
   </ItemGroup>
 
   <Target Name="CheckMusicRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\manifest.json') Or !Exists('..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\music-server.exe')" Text="Pinned Studio LoRA wrapper is missing. Follow Инструменты/MusicLora/README.md." />
     <Error Condition="!Exists('..\..\Runtime\MusicAce\source.zip')" Text="Pinned official ACE source archive is missing. Run Инструменты/MusicAce/pack-source.ps1." />
     <Error Condition="!Exists('..\..\Runtime\EngineSets\002\studio\native\manifest.json') Or !Exists('ContentEngineSets\catalog.json')" Text="Pinned engine set 002 is missing. Follow Инструменты/EngineSets/README.md." />
     <Error Condition="!Exists('..\..\Runtime\MusicAudio\FFmpeg-8.1\bundle\manifest.json')" Text="Music audio bundle is missing. Follow Инструменты/MusicAudioRuntime/README.md." />

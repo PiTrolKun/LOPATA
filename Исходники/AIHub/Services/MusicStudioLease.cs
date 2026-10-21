@@ -24,7 +24,7 @@ internal sealed class MusicStudioLease : IAsyncDisposable
         _stdout = DrainAsync(process.StandardOutput); _stderr = DrainAsync(process.StandardError);
     }
     public static async Task<MusicStudioLease> StartAsync(string modelsRoot, string data, int context, Action<string> log, CancellationToken token,
-        MusicStudioProfile? profile = null)
+        MusicStudioProfile? profile = null, bool useLoras = false)
     {
         profile ??= MusicStudioRuntime.SelectedProfile;
         Directory.CreateDirectory(data);
@@ -39,7 +39,8 @@ internal sealed class MusicStudioLease : IAsyncDisposable
             lyrics_sync = new { enabled = false, provider = "none" }, cover_auto = false,
             configuration = new { selections = new[] { new { capability = "music_generation", mode = "local", local_engine = "yue2-cpp" } } }
         }), token);
-        var info = new ProcessStartInfo(Path.Combine(profile.DirectoryPath, "music-server.exe")) {
+        var executablePath = useLoras ? await MusicLora.MusicLoraStudioRuntime.ExecutableAsync(token) : Path.Combine(profile.DirectoryPath, "music-server.exe");
+        var info = new ProcessStartInfo(executablePath) {
             WorkingDirectory = profile.DirectoryPath, UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true,
             StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
@@ -57,6 +58,8 @@ internal sealed class MusicStudioLease : IAsyncDisposable
             ["LOPATA_YUE_COMPANION"] = MusicModelVariants.Artifact(modelsRoot, MusicStudioRuntime.Variation, MusicStudioRuntime.CompanionId)
         };
         foreach (var pair in values) info.Environment[pair.Key] = pair.Value;
+        if (useLoras) info.Environment["LOPATA_YUE_ADAPTERS"] = Path.Combine(data, "adapters");
+        else info.Environment.Remove("LOPATA_YUE_ADAPTERS");
         var owned = OwnedProcessRegistry.Shared.Start(info, "Music.Studio");
         var lease = new MusicStudioLease(owned, new UriBuilder("http", IPAddress.Loopback.ToString(), frontPort).Uri, data, log);
         try
