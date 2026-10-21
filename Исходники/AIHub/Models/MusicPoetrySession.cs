@@ -42,6 +42,7 @@ public sealed class MusicPoetrySession
     public List<MusicPoetryThought> Thoughts { get; set; } = [];
     public List<MusicPoetrySearchExchange> SearchExchanges { get; set; } = [];
     public string AliceChatUrl { get; set; } = "";
+    public string DeepSeekChatUrl { get; set; } = "";
     [System.Text.Json.Serialization.JsonIgnore] public MusicPoetrySearchRequest? SearchRequest { get; set; }
     [System.Text.Json.Serialization.JsonIgnore] public string UserDisplayName { get; set; } = "";
 

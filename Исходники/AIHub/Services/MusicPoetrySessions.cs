@@ -99,7 +99,7 @@ public sealed class MusicPoetrySessions(string directory)
             || s.LyricsCursor < -1 || s.LyricsCursor >= s.LyricsSteps.Count || s.ParameterCursor < -1 || s.ParameterCursor >= s.ParameterSteps.Count
             || s.Messages.Any(m => m is null || m.Role is not ("user" or "assistant" or "notice") || m.Text is null || m.TurnId is null))
             throw new InvalidDataException("Invalid poetry session.");
-        if (s.AliceChatUrl is null || s.SearchExchanges is null || s.SearchExchanges.Any(e => e is null || e.TurnId is null
+        if (s.DeepSeekChatUrl is null || s.AliceChatUrl is null || s.SearchExchanges is null || s.SearchExchanges.Any(e => e is null || !MusicCloudProviders.IsKnown(e.ProviderId) || e.TurnId is null
             || e.Question is null || e.Answer is null || e.Links is null || e.Links.Any(link => link is null)
             || e.State is not ("preparing" or "ready" or "sent" or "received" or "completed" or "interrupted" or "error"))
             || s.SearchExchanges.Select(e => e.TurnId).Distinct(StringComparer.Ordinal).Count() != s.SearchExchanges.Count)

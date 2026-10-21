@@ -68,11 +68,11 @@ internal static class MusicAceRuntime
         var files = manifest.RootElement.GetProperty("files").EnumerateArray().Select(row => new PinnedTreeFile(
             row.GetProperty("path").GetString()!, row.GetProperty("size").GetInt64(), row.GetProperty("sha256").GetString()!)).ToArray();
         var reported = 0;
-        await PinnedFileTreeVerifier.VerifyAsync(root, files, token, (done, total) => {
+        await MusicPythonOverlayVerifier.VerifyAsync(root, files, token, (done, total) => {
             var bucket = done * 20 / total;
             if (bucket > Volatile.Read(ref reported) && Interlocked.Exchange(ref reported, bucket) < bucket)
                 log?.Invoke($"[Prepare] ACE libraries · {done}/{total}");
-        }, ignoredFiles: new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "files.json" });
+        }, log);
     }
     private static async Task<string> Hash(string path, CancellationToken token)
     { await using var stream = File.OpenRead(path); return Convert.ToHexString(await SHA256.HashDataAsync(stream, token)); }

@@ -4065,5 +4065,20 @@
     "Texts": [
       "texts/music-lora-audio-sliders-MIT.txt"
     ]
+  },
+  {
+    "Id": "service.deepseek-chat",
+    "Name": "DeepSeek browser chat",
+    "Version": "terms-2026-03-27;privacy-2026-02-10",
+    "Author": "Hangzhou DeepSeek Artificial Intelligence Co., Ltd.",
+    "License": "DeepSeek service terms and privacy policy",
+    "Source": "https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html",
+    "Checked": "2026-10-21",
+    "Ru": "Внешний сервис chat.deepseek.com через WebView2. Требуется личный аккаунт и ручной вход; CAPTCHA и почтовые коды пользователь проходит сам. При включении передаются вопрос и текущий текст песни. Сервис обрабатывает ввод и может использовать его для улучшения моделей согласно своей политике: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html . Это не локальная модель и не API. Специальное одобрение управления сайтом со стороны DeepSeek не установлено; защиты и ограничения не обходятся. Аккаунт и подписка автоматически не создаются.",
+    "En": "External service at chat.deepseek.com through WebView2. A personal account and manual sign-in are required; the user handles CAPTCHA and email codes. Enabling it shares the question and current lyrics. The service processes inputs and may use them to improve models under its privacy policy: https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html . This is neither a local model nor the API. Specific approval of site automation by DeepSeek has not been established; no protections or limits are bypassed. No account or subscription is created automatically.",
+    "Basic": false,
+    "Delivery": "external-service",
+    "Texts": [],
+    "Terms": "A53F40B1EEE3D8ED83952A9C479A4CF1E7EB9547E6F080B0C09243E201618367"
   }
 ]

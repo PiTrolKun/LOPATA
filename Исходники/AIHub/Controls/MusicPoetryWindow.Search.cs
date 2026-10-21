@@ -24,7 +24,6 @@ public sealed partial class MusicPoetryWindow
 {
     private Button _search = null!;
     private bool _searchEnabled, _searchConnected = true, _searchInitializing, _searchOfflineAttempt;
-    private AliceBrowserWindow? _alice;
     private readonly DispatcherTimer _searchBlink = new() { Interval = TimeSpan.FromMilliseconds(800) };
     private readonly Dictionary<string, (BlockUIContainer Block, Expander Expander, TextBox Text)> _searchViews = [];
     private UserContextService _profileContext = null!;
@@ -37,57 +36,45 @@ public sealed partial class MusicPoetryWindow
         _search = Action(actions, "Search", () => _ = ToggleSearchAsync(), "🔍");
         AutomationProperties.SetName(_search, L("Search.Title"));
         _search.ToolTip = L("Search.Off");
-        var menu = new ContextMenu(); menu.SetResourceReference(StyleProperty, typeof(ContextMenu));
-        var external = new MenuItem { Header = L("Search.OpenExternal") };
-        external.Click += (_, _) => Process.Start(new ProcessStartInfo(AliceBrowserWindow.HomeUrl) { UseShellExecute = true });
-        var embedded = new MenuItem { Header = L("Search.ShowBrowser") };
-        embedded.Click += (_, _) => _ = ShowAliceAsync();
-        menu.Items.Add(external); menu.Items.Add(embedded); _search.ContextMenu = menu;
+        InitializeCloudMenu();
         _searchBlink.Tick += (_, _) => _search.Opacity = _search.Opacity == 1 ? .45 : 1;
         NetworkChange.NetworkAvailabilityChanged += SearchNetworkChanged;
         UpdateSearchIndicator();
     }
 
-    private AliceBrowserWindow Alice()
-    {
-        if (_alice?.RequiresRestart == true) { _alice.Dispose(); _alice = null; }
-        if (_alice is null)
-        {
-            _alice = new(L);
-            _alice.ConnectivityChanged += connected => { _searchConnected = connected; if (connected) _searchOfflineAttempt = false; UpdateSearchIndicator(); };
-        }
-        return _alice;
-    }
-
     private async Task ToggleSearchAsync()
     {
-        if (_searchInitializing) return;
+        if (_searchInitializing) { _cloudInitialization?.Cancel(); return; }
         if (_searchEnabled || _searchOfflineAttempt) { _searchEnabled = false; _searchOfflineAttempt = false; _operation?.Cancel(); UpdateSearchIndicator(); Recount(); return; }
         if (IsWorking) return;
-        _searchInitializing = true; _search.IsEnabled = false;
+        _searchInitializing = true; Availability();
+        _cloudInitialization = CancellationTokenSource.CreateLinkedTokenSource(ApplicationBackgroundOperations.ExitToken);
         try
         {
-            await Alice().EnsureAsync(ApplicationBackgroundOperations.ExitToken);
-            var state = await Alice().SnapshotAsync();
-            RememberAliceAuth(state.Auth);
-            if (state.Auth == "guest" && !_preferences.Load().AliceGuestAcknowledged)
+            var id = _preferences.Load().CloudAssistantId ?? ChooseCloudProvider();
+            if (id is null || _viewClosed) return;
+            _cloudInitialization.Token.ThrowIfCancellationRequested();
+            _cloudProvider = MusicCloudProviders.Get(id);
+            _searchConnected = true; UpdateSearchIndicator();
+            var token = _cloudInitialization.Token;
+            var browser = CloudBrowser();
+            await browser.EnsureAsync(token);
+            _status.Text = CloudText("Cloud.SignInWaiting");
+            await browser.RequireSignInAsync(token);
+            var state = await browser.SnapshotAsync();
+            if (_cloudProvider.Id == MusicCloudProviders.AliceId) RememberAliceAuth(state.Auth);
+            if (!_cloudProvider.RequiresSignIn && state.Auth == "guest" && !_preferences.Load().AliceGuestAcknowledged)
             {
                 var choice = AskAliceSignIn();
                 if (choice is null) return;
-                if (choice == true) await Alice().ShowBrowserAsync(ApplicationBackgroundOperations.ExitToken);
+                if (choice == true) await browser.ShowBrowserAsync(token);
                 else _preferences.AcknowledgeAliceGuest();
             }
-            _searchEnabled = true; _status.Text = L("Search.Transmission");
+            _searchEnabled = true; _status.Text = CloudText("Search.Transmission");
         }
         catch (OperationCanceledException) { }
         catch (Exception ex) { SearchFailure(ex); }
-        finally { _searchInitializing = false; _search.IsEnabled = true; UpdateSearchIndicator(); Recount(); }
-    }
-
-    private async Task ShowAliceAsync()
-    {
-        try { await Alice().ShowBrowserAsync(ApplicationBackgroundOperations.ExitToken); }
-        catch (Exception ex) { SearchFailure(ex); }
+        finally { _searchInitializing = false; _cloudInitialization?.Dispose(); _cloudInitialization = null; UpdateSearchIndicator(); Recount(); Availability(); }
     }
 
     private bool? AskAliceSignIn()
@@ -127,44 +114,46 @@ public sealed partial class MusicPoetryWindow
             if (!_searchBlink.IsEnabled) _searchBlink.Start();
         }
         else { _searchBlink.Stop(); _search.Opacity = 1; _search.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush"); }
-        _search.ToolTip = L(alert ? "Search.Offline" : _searchEnabled ? "Search.On" : "Search.Off");
+        _search.ToolTip = _searchInitializing ? CloudText("Cloud.SignInWaiting") : CloudText(alert ? "Search.Offline" : _searchEnabled ? "Search.On" : "Search.Off");
         AutomationProperties.SetHelpText(_search, _search.ToolTip.ToString());
     }
 
     private async Task PrepareSearchAsync(string turn, string language, MusicPoetryReasoningPreference preference,
         double creativity, CancellationToken token)
     {
-        var exchange = new MusicPoetrySearchExchange { TurnId = turn };
+        var exchange = new MusicPoetrySearchExchange { TurnId = turn, ProviderId = _cloudProvider.Id };
         _session.SearchExchanges.Add(exchange); Persist(); RenderChat();
-        _session.SearchRequest = new(true);
+        _session.SearchRequest = new(true, ProviderId: _cloudProvider.Id);
         try
         {
-            _status.Text = L("Search.Preparing");
+            _status.Text = CloudText("Search.Preparing");
             var raw = await _runtime.GenerateAsync(_model!, _session, "", context => {
                 _capacity = context.Capacity; Meter(context.Tokens, context.Estimated);
             }, token, false, _reasoningMode, null, language, preference, creativity);
             exchange.Question = MusicPoetrySearchProtocol.Question(raw);
             exchange.State = "ready"; Persist(); RenderChat();
-            var browser = Alice(); await browser.NavigateChatAsync(_session.AliceChatUrl, token);
+            var browser = CloudBrowser();
+            _status.Text = CloudText("Cloud.SignInWaiting");
+            await browser.NavigateChatAsync(CloudChatUrl, token);
             var auth = await browser.SnapshotAsync();
-            RememberAliceAuth(auth.Auth);
-            var input = MusicPoetrySearchProtocol.AliceInput(exchange.Question, _session.Lyrics, language);
-            _status.Text = L("Search.Waiting");
+            if (_cloudProvider.Id == MusicCloudProviders.AliceId) RememberAliceAuth(auth.Auth);
+            var input = MusicPoetrySearchProtocol.Input(exchange.Question, _session.Lyrics, language);
+            _status.Text = CloudText("Search.Waiting");
             var answer = await browser.AskAsync(input, state => {
                 exchange.State = state;
                 if (!Persist()) throw new IOException("Music.Poetry.SaveFailed");
                 RenderChat();
-            }, text => { exchange.Answer = text; _session.AliceChatUrl = browser.CurrentChatUrl; RenderChat(); _save.Start(); }, token);
+            }, text => { exchange.Answer = text; RememberCloudUrl(browser.CurrentChatUrl); RenderChat(); _save.Start(); }, token);
             exchange.Answer = answer.Text; exchange.Links = answer.Links; exchange.State = "received";
-            _session.AliceChatUrl = browser.CurrentChatUrl;
-            _session.SearchRequest = new(false, exchange.Question, exchange.Answer, exchange.Links);
+            RememberCloudUrl(browser.CurrentChatUrl);
+            _session.SearchRequest = new(false, exchange.Question, exchange.Answer, exchange.Links, _cloudProvider.Id);
             Persist(); RenderChat();
         }
         catch (Exception ex)
         {
             exchange.State = ex is OperationCanceledException ? "interrupted" : "error";
             exchange.Error = ex.Message.StartsWith("Music.Poetry.", StringComparison.Ordinal) ? ex.Message : "Music.Poetry.Search.BrowserFailed";
-            _session.AliceChatUrl = _alice?.CurrentChatUrl ?? _session.AliceChatUrl;
+            if (_cloudBrowsers.TryGetValue(_cloudProvider.Id, out var browser)) RememberCloudUrl(browser.CurrentChatUrl);
             if (ex.Message == "Music.Poetry.Search.Offline") { _searchConnected = false; UpdateSearchIndicator(); }
             Persist(); RenderChat(); throw;
         }
@@ -195,8 +184,8 @@ public sealed partial class MusicPoetryWindow
         var terminal = exchange.State is "completed" or "error" or "interrupted";
         if (terminal && view.Expander.Tag as string != exchange.State) view.Expander.IsExpanded = false;
         view.Expander.Tag = exchange.State;
-        view.Expander.Header = L("Search.Journal") + " · " + L("Search.State." + exchange.State);
-        var content = L("Search.Question") + "\n" + exchange.Question + "\n\n" + L("Search.Alice") + "\n" + exchange.Answer
+        view.Expander.Header = CloudText("Search.Journal", exchange.ProviderId) + " · " + L("Search.State." + exchange.State);
+        var content = CloudText("Search.Question", exchange.ProviderId) + "\n" + exchange.Question + "\n\n" + CloudText("Search.Alice", exchange.ProviderId) + "\n" + exchange.Answer
             + (exchange.Links.Length > 0 ? "\n\n" + string.Join("\n", exchange.Links) : "")
             + (exchange.Error is not null ? "\n\n" + _l(exchange.Error) : "");
         if (view.Text.Text != content) view.Text.Text = content;
@@ -206,7 +195,9 @@ public sealed partial class MusicPoetryWindow
     private void CloseSearch()
     {
         NetworkChange.NetworkAvailabilityChanged -= SearchNetworkChanged;
-        _searchBlink.Stop(); _alice?.Dispose(); _alice = null;
+        _searchBlink.Stop(); _cloudInitialization?.Cancel();
+        foreach (var browser in _cloudBrowsers.Values) browser.Dispose();
+        _cloudBrowsers.Clear();
     }
 
     private string DisplayedSystem()
@@ -215,6 +206,6 @@ public sealed partial class MusicPoetryWindow
         if (_session.SearchRequest is not null) return MusicPoetrySearchProtocol.System(_session, _interfaceLanguage());
         if (!_searchEnabled || IsWorking) return MusicPoetryProtocol.System(_session, _guidance.Text, _interfaceLanguage());
         return MusicPoetrySearchProtocol.System(new MusicPoetrySession { Lyrics = _session.Lyrics,
-            UserDisplayName = _session.UserDisplayName, SearchRequest = new(true) }, _interfaceLanguage());
+            UserDisplayName = _session.UserDisplayName, SearchRequest = new(true, ProviderId: _cloudProvider.Id) }, _interfaceLanguage());
     }
 }

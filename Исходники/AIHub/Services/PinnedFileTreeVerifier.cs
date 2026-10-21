@@ -13,10 +13,15 @@ internal static class PinnedFileTreeVerifier
 {
     internal static async Task VerifyAsync(string directory, IReadOnlyList<PinnedTreeFile> files,
         CancellationToken token, Action<int, int>? progress = null, int parallelism = 2,
-        IReadOnlySet<string>? ignoredFiles = null)
+        IReadOnlySet<string>? ignoredFiles = null, string? pythonCacheQuarantineDirectory = null,
+        Action<string>? cacheQuarantined = null)
     {
         if (parallelism is < 1 or > 4) throw new ArgumentOutOfRangeException(nameof(parallelism));
         var root = Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar);
+        var quarantine = pythonCacheQuarantineDirectory is null ? null : Path.GetFullPath(pythonCacheQuarantineDirectory).TrimEnd(Path.DirectorySeparatorChar);
+        if (quarantine is not null && (quarantine.Equals(root, StringComparison.OrdinalIgnoreCase)
+            || quarantine.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+            throw new ArgumentException("Python cache quarantine must be outside the verified tree.");
         var expected = new Dictionary<string, PinnedTreeFile>(StringComparer.OrdinalIgnoreCase);
         foreach (var file in files) {
             PythonWheelExtractor.RelativeDestination(file.Path, wheelLayout: false);
@@ -65,11 +70,33 @@ internal static class PinnedFileTreeVerifier
                     RejectReparse(path);
                     if (Directory.Exists(path)) { Lease(path); pending.Enqueue(path); }
                     else if (expected.ContainsKey(path)) seen.Add(path);
-                    else if (ignoredFiles?.Contains(Path.GetRelativePath(root, path)) != true)
+                    else if (ignoredFiles?.Contains(Path.GetRelativePath(root, path)) != true && !QuarantineCache(path))
                         throw new InvalidDataException("Unlisted pinned file: " + path);
                 }
             }
             if (seen.Count != expected.Count) throw new InvalidDataException("Missing pinned files.");
+        }
+        bool QuarantineCache(string path) {
+            if (quarantine is null) return false;
+            var cache = Path.GetDirectoryName(path)!;
+            if (!Path.GetFileName(cache).Equals("__pycache__", StringComparison.OrdinalIgnoreCase)) return false;
+            var match = System.Text.RegularExpressions.Regex.Match(Path.GetFileName(path),
+                @"^(?<module>.+)\.cpython-[0-9]{2,3}(?:\.opt-[12])?\.pyc$",
+                System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+            if (!match.Success || !expected.ContainsKey(Path.Combine(Path.GetDirectoryName(cache)!, match.Groups["module"].Value + ".py")))
+                return false;
+            // Unverified bytecode is never ignored or executed. Source hashes are still checked below.
+            var destination = Path.Combine(quarantine, Path.GetRelativePath(root, path)) + "." + Guid.NewGuid().ToString("N") + ".quarantined";
+            EnsureDirectory(Path.GetDirectoryName(destination)!);
+            token.ThrowIfCancellationRequested(); File.Move(path, destination);
+            cacheQuarantined?.Invoke(destination); return true;
+        }
+        void EnsureDirectory(string path) {
+            if (!Directory.Exists(path)) {
+                var parent = Path.GetDirectoryName(path) ?? throw new InvalidDataException("Invalid quarantine directory.");
+                EnsureDirectory(parent); Directory.CreateDirectory(path);
+            }
+            Lease(path);
         }
     }
     private static void RejectReparse(string path)

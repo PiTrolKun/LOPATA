@@ -10,6 +10,61 @@ namespace AIHub.Tests;
 public sealed class PinnedFileTreeVerifierTests
 {
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public async Task GeneratedCacheIsQuarantinedOnlyWhenExplicitlyEnabledAndSourceIsPinned()
+    {
+        using var files = new MusicProjectTests.Files();
+        var root = Path.Combine(files.Root, "tree"); var cache = Path.Combine(root, "__pycache__");
+        Directory.CreateDirectory(cache); await File.WriteAllTextAsync(Path.Combine(root, "brotli.py"), "ok");
+        var bytecode = Path.Combine(cache, "brotli.cpython-312.pyc"); await File.WriteAllTextAsync(bytecode, "untrusted bytecode");
+        var expected = new[] { Entry("brotli.py", "ok") }; var quarantine = Path.Combine(files.Root, "quarantine");
+        await Assert.ThrowsAsync<InvalidDataException>(() => PinnedFileTreeVerifier.VerifyAsync(root, expected, default));
+        var moved = new List<string>();
+        await PinnedFileTreeVerifier.VerifyAsync(root, expected, default,
+            pythonCacheQuarantineDirectory: quarantine, cacheQuarantined: moved.Add);
+        Assert.IsFalse(File.Exists(bytecode)); Assert.AreEqual("untrusted bytecode", await File.ReadAllTextAsync(moved.Single()));
+        await PinnedFileTreeVerifier.VerifyAsync(root, expected, default, pythonCacheQuarantineDirectory: quarantine);
+        Assert.HasCount(1, Directory.GetFiles(quarantine, "*", SearchOption.AllDirectories));
+        await File.WriteAllTextAsync(Path.Combine(root, "brotli.py"), "tampered");
+        await File.WriteAllTextAsync(bytecode, "another cache");
+        await Assert.ThrowsAsync<InvalidDataException>(() => PinnedFileTreeVerifier.VerifyAsync(root, expected, default,
+            pythonCacheQuarantineDirectory: quarantine));
+    }
+
+    [TestMethod]
+    public async Task CacheRepairStillRejectsUnknownModulesUnexpectedFilesAndPinnedBytecodeChanges()
+    {
+        using var files = new MusicProjectTests.Files(); var root = Path.Combine(files.Root, "tree");
+        var quarantine = Path.Combine(files.Root, "quarantine"); Directory.CreateDirectory(Path.Combine(root, "__pycache__"));
+        await File.WriteAllTextAsync(Path.Combine(root, "a.py"), "ok");
+        foreach (var name in new[] { "__pycache__/unknown.cpython-312.pyc", "__pycache__/a.py", "a.pyc", "__pycache__/a.cpython-312.pyd" })
+        {
+            var path = Path.Combine(root, name); await File.WriteAllTextAsync(path, "unexpected");
+            await Assert.ThrowsAsync<InvalidDataException>(() => PinnedFileTreeVerifier.VerifyAsync(root, [Entry("a.py", "ok")], default,
+                pythonCacheQuarantineDirectory: quarantine));
+            Assert.IsTrue(File.Exists(path)); File.Delete(path);
+        }
+        var pinned = Path.Combine(root, "__pycache__/a.cpython-312.pyc"); await File.WriteAllTextAsync(pinned, "tampered");
+        await Assert.ThrowsAsync<InvalidDataException>(() => PinnedFileTreeVerifier.VerifyAsync(root,
+            [Entry("a.py", "ok"), Entry("__pycache__/a.cpython-312.pyc", "expected")], default, pythonCacheQuarantineDirectory: quarantine));
+        Assert.IsTrue(File.Exists(pinned));
+        await Assert.ThrowsAsync<ArgumentException>(() => PinnedFileTreeVerifier.VerifyAsync(root, [], default,
+            pythonCacheQuarantineDirectory: Path.Combine(root, "quarantine")));
+    }
+
+    [TestMethod]
+    public async Task LiveMusicOverlayCacheRecoveryWithoutModelOrNetwork()
+    {
+        if (Environment.GetEnvironmentVariable("LOPATA_MUSIC_CACHE_RECOVERY") != "1")
+        { Assert.Inconclusive("Explicit existing-overlay verification and cache quarantine required."); return; }
+        var root = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicAceCatalog.RuntimeRevision);
+        using var manifest = JsonDocument.Parse(typeof(MusicAceCatalog).Assembly.GetManifestResourceStream("AIHub.AcePythonManifest")!);
+        var entries = manifest.RootElement.GetProperty("files").EnumerateArray().Select(row => new PinnedTreeFile(
+            row.GetProperty("path").GetString()!, row.GetProperty("size").GetInt64(), row.GetProperty("sha256").GetString()!)).ToArray();
+        await MusicPythonOverlayVerifier.VerifyAsync(root, entries, default, null, TestContext.WriteLine);
+        TestContext.WriteLine("Verified pinned ACE overlay files: " + entries.Length);
+    }
     private static PinnedTreeFile Entry(string path, string text) => new(path, System.Text.Encoding.UTF8.GetByteCount(text),
         Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text))));
     [TestMethod]

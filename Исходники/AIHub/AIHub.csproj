@@ -97,6 +97,7 @@
     <EmbeddedResource Include="Content\FinancialCurrencies.json" WithCulture="false" />
     <EmbeddedResource Include="Content\Music*.json" WithCulture="false" />
     <EmbeddedResource Include="Content\AliceChatDom.js" LogicalName="AIHub.AliceChatDom" />
+    <EmbeddedResource Include="Content\DeepSeekChatDom.js" LogicalName="AIHub.DeepSeekChatDom" />
     <Resource Include="Assets\lopata_brand.png" />
     <Resource Include="Assets\scenario-calibration.png" />
     <Resource Include="Assets\music-rhyme-creative.png" />

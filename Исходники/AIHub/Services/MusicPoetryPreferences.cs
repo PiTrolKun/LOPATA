@@ -7,6 +7,7 @@ namespace AIHub.Services;
 public sealed record MusicPoetryPreferenceState
 {
     public string? FavoriteId { get; init; }
+    public string? CloudAssistantId { get; init; }
     public Dictionary<string, string> Comments { get; init; } = [];
     public Dictionary<string, MusicPoetryReasoningPreference> Reasoning { get; init; } = [];
     public Dictionary<string, double> Creativity { get; init; } = [];
@@ -34,10 +35,16 @@ public sealed class MusicPoetryPreferences(string path)
                 || state.Creativity is null || state.Creativity.Any(pair => !MusicPoetryCreativity.IsValid(pair.Value))
                 || !MusicPoetryThoughtAppearance.IsValid(state.ThoughtFontIncreasePercent))
                 throw new InvalidDataException("Invalid poetry preferences.");
-            return state with { FavoriteId = MusicPoetryModelCatalog.All.Any(candidate => candidate.Id == state.FavoriteId)
+            return state with { CloudAssistantId = MusicCloudProviders.IsKnown(state.CloudAssistantId) ? state.CloudAssistantId : null, FavoriteId = MusicPoetryModelCatalog.All.Any(candidate => candidate.Id == state.FavoriteId)
                 ? state.FavoriteId : null };
         }
         catch (JsonException ex) { throw new InvalidDataException("Invalid poetry preferences.", ex); }
+    }
+
+    public void SetCloudAssistant(string? id)
+    {
+        if (id is not null && !MusicCloudProviders.IsKnown(id)) throw new ArgumentException("Unknown cloud assistant.", nameof(id));
+        Save(Load() with { CloudAssistantId = id });
     }
 
     public void SetFavorite(string? id)
