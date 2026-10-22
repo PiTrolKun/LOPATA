@@ -67,7 +67,20 @@ public sealed class MusicGenerationControl : UserControl
     public Button LoraButton { get; }
     public Button AudioTaskButton { get; }
     public Button MelodyButton { get; }
+    public Button ScorePlansButton { get; }
+    private MusicScoreWorkspace _scores=new();
+    private AIHub.Services.MusicAceIdeas.MusicAceIdeaWorkspace _aceIdeas=new();
+    public AIHub.Services.MusicAceIdeas.MusicAceIdeaWorkspace AceIdeas {get=>_aceIdeas.Snapshot();set{value.Validate();_aceIdeas=value.Snapshot();OptionsChanged?.Invoke();}}
+    public MusicScoreWorkspace Scores {get=>_scores.Snapshot();set{value.Validate();_scores=value.Snapshot();RefreshScores();OptionsChanged?.Invoke();}}
+    private void RefreshScores() {
+        var supported=AIHub.Services.MusicScore.MusicScorePipeline.Supported(Variation)||MusicAceCatalog.IsAce(Variation);
+        ScorePlansButton.IsEnabled=supported&&!_busy&&!_paused&&!_commandsDisabled;
+        var hint=supported?_l("Music.Score.Plans"):_l("Music.Score.Unsupported");
+        MusicAudioUi.Label(ScorePlansButton,hint);AutomationProperties.SetHelpText(ScorePlansButton,hint);
+        ToolTipService.SetShowOnDisabled(ScorePlansButton,true);
+    }
     private MusicMelody _melody = new();
+    private bool _commandsDisabled;
     public MusicMelody Melody { get => _melody.Snapshot(); set { value.Validate(); _melody = value.Snapshot(); RefreshMelody(); OptionsChanged?.Invoke(); } }
     private void RefreshMelody() {
         MusicAudioUi.Label(MelodyButton, _l("Music.Midi.Title") + " · " + _l(_melody.Enabled ? "Music.Midi.On" : "Music.Midi.Off") + " · " + _melody.Notes.Length);
@@ -146,15 +159,20 @@ public sealed class MusicGenerationControl : UserControl
         MelodyButton = MusicAudioUi.IconButton("Midi", "M3,4 H21 V20 H3 Z M7,4 V14 H10 V4 M14,4 V14 H17 V4 M9,14 V20 M15,14 V20", () => { });
         MelodyButton.Width = MelodyButton.Height = 42; leftTools.Children.Add(MelodyButton);
         AutomationProperties.SetAutomationId(MelodyButton, "Music.Midi.Open");
+        ScorePlansButton=MusicAudioUi.IconButton("ScorePlans","M3,3 H16 V20 H3 Z M7,7 H13 M7,11 H13 M19,6 H22 V23 H8",()=>{});
+        ScorePlansButton.Width=ScorePlansButton.Height=36;leftTools.Children.Add(ScorePlansButton);
+        AutomationProperties.SetAutomationId(ScorePlansButton,"Music.Score.Open.Plans");
         _expert = MusicAudioUi.IconButton("Expert", "M12,2 L14,5 L17,5 L19,7 L19,10 L22,12 L19,14 L19,17 L17,19 L14,19 L12,22 L10,19 L7,19 L5,17 L5,14 L2,12 L5,10 L5,7 L7,5 L10,5 Z M16,12 A4,4 0 1 1 8,12 A4,4 0 1 1 16,12", OpenExpert);
         _recipes = MusicAudioUi.IconButton("Recipes", "M3,3 H11 L12,5 L13,3 H21 V20 H13 L12,22 L11,20 H3 Z M12,5 V22 M6,7 H9 M6,11 H9 M15,7 H18 M15,11 H18", Tuning.OpenRecipes);
         _video = MusicAudioUi.IconButton("Video", "M3,4 H21 V20 H3 Z M9,8 L16,12 L9,16 Z M3,8 H6 M3,16 H6 M18,8 H21 M18,16 H21", () => OpenVideo?.Invoke());
         _video.Width = _video.Height = 42; Grid.SetColumn(_video, 1); lower.Children.Add(_video);
         _recipes.Width = _recipes.Height = 42; Grid.SetColumn(_recipes, 2); lower.Children.Add(_recipes);
         _expert.Width = _expert.Height = 42; Grid.SetColumn(_expert, 3); lower.Children.Add(_expert);
-        var toolbar = new Border { Child = lower, CornerRadius = new(10), BorderThickness = new(1),
+        var toolScroll=new ScrollViewer{Content=lower,HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,VerticalScrollBarVisibility=ScrollBarVisibility.Disabled};
+        var toolbar = new Border { Child = toolScroll, CornerRadius = new(10), BorderThickness = new(1),
             Padding = new(3), Margin = new(0, 12, 0, 0) };
         toolbar.SetResourceReference(Border.BorderBrushProperty, "LineBrush");
+        toolbar.SizeChanged+=(_,_)=>lower.MinWidth=Math.Max(0,toolbar.ActualWidth-8);
         DockPanel.SetDock(toolbar, Dock.Bottom);
         root.Children.Insert(0, toolbar); root.Children.Add(Tuning);
         try { _expertSettings = ModelExpertPresets.Default.Current(); }
@@ -188,8 +206,7 @@ public sealed class MusicGenerationControl : UserControl
     {
         _title.Text = options.Title; _artistInput.Input.Text = options.Artist; _commentInput.Input.Text = options.Comment;
         _count.SelectedItem = options.Variants;
-        _duration.SelectedIndex = Enumerable.Range(0, _duration.Items.Count).FirstOrDefault(i =>
-            (int)((ComboBoxItem)_duration.Items[i]).Tag == (options.DurationSeconds ?? 0));
+        SelectDuration(options.DurationSeconds??0);
         _output.Set(options.Output); _output.SeparateTracks = options.SeparateTracks; AudioTask = options.AudioTask; Melody = options.Melody; OptionsChanged?.Invoke();
     }
 
@@ -208,11 +225,11 @@ public sealed class MusicGenerationControl : UserControl
     public void Localize(Func<string, string> localize)
     {
         MusicAudioUi.Label(_video, localize("LyricVideo.Title"));
-        _l = localize; var selected = _duration.SelectedIndex; _duration.Items.Clear();
+        _l = localize; var selected = _duration.SelectedItem is ComboBoxItem durationItem?(int)durationItem.Tag:0; _duration.Items.Clear();
         _duration.Items.Add(DurationItem(L("Automatic"), 0));
         foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 })
             _duration.Items.Add(DurationItem(seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), seconds));
-        _duration.SelectedIndex = Math.Max(0, selected);
+        SelectDuration(selected);
         _heading.Text = L("Heading"); _titleLabel.Text = L("Title"); _countLabel.Text = L("Variants"); _durationLabel.Text = L("Duration");
         _title.ToolTip = L("TitleHint"); _duration.ToolTip = L("DurationHint");
         _titleInput.Localize(_l("Music.Output.Title")); _artistInput.Localize(_l("Music.Output.Artist"));
@@ -223,18 +240,20 @@ public sealed class MusicGenerationControl : UserControl
         Tuning.Localize(localize); RefreshDuration();
         RefreshAudioTask();
         RefreshMelody();
+        RefreshScores();
         UpdateCaption();
     }
     public void UpdateState(bool canStart, bool busy, bool paused, bool runtimeReady, bool commandsDisabled = false)
     {
         _poetry.IsEnabled = OpenPoetry is not null;
-        _busy = busy; _paused = paused; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused && !commandsDisabled;
+        _busy = busy; _paused = paused; _commandsDisabled=commandsDisabled; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused && !commandsDisabled;
         _expert.IsEnabled = !busy && !paused && !commandsDisabled;
         _recipes.IsEnabled = !busy && !paused && !commandsDisabled;
         Tuning.IsEnabled = !busy && !paused && !commandsDisabled;
         RefreshAudioTask();
         AudioTaskButton.IsEnabled = !busy && !paused && !commandsDisabled;
         MelodyButton.IsEnabled = !busy && !paused && !commandsDisabled;
+        RefreshScores();
         _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null && _outputError is null; _cancel.IsEnabled = busy || paused;
         if (commandsDisabled) _start.IsEnabled = _cancel.IsEnabled = false;
         _readiness.Text = runtimeReady ? "" : L("RuntimeMissing"); UpdateCaption();
@@ -245,7 +264,13 @@ public sealed class MusicGenerationControl : UserControl
         _duration.Items.Clear(); _duration.Items.Add(DurationItem(L("Automatic"), 0));
         foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 }.Where(s => !MusicDiffRhythmCatalog.IsDiff(Variation) || s <= MusicDiffRhythmCatalog.MaximumDuration))
             _duration.Items.Add(DurationItem(seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), seconds));
-        _duration.SelectedIndex = Enumerable.Range(0, _duration.Items.Count).FirstOrDefault(i => (int)((ComboBoxItem)_duration.Items[i]).Tag == value);
+        SelectDuration(value);
+    }
+    private void SelectDuration(int value) {
+        if(value is >0 and <=360&&(!MusicDiffRhythmCatalog.IsDiff(Variation)||value<=MusicDiffRhythmCatalog.MaximumDuration)
+            &&!_duration.Items.Cast<ComboBoxItem>().Any(i=>(int)i.Tag==value))
+            _duration.Items.Add(DurationItem(TimeSpan.FromSeconds(value).ToString(@"mm\:ss"),value));
+        _duration.SelectedIndex=Enumerable.Range(0,_duration.Items.Count).FirstOrDefault(i=>(int)((ComboBoxItem)_duration.Items[i]).Tag==value);
     }
     private static ComboBoxItem DurationItem(string label, int seconds) => new() {
         Content = new TextBlock { Text = label, TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis },
@@ -294,6 +319,7 @@ public sealed class MusicGenerationControl : UserControl
         Tuning.Visibility = _recipes.Visibility = MusicHeartMuLaCatalog.NoCircle(settings.Variation) ? Visibility.Collapsed : Visibility.Visible;
         RefreshDuration();
         if (!MusicHeartMuLaCatalog.NoCircle(settings.Variation)) Tuning.Refresh(_expertSettings); OptionsChanged?.Invoke();
+        RefreshScores();
         if (persist) { _saveTuning.Stop(); _saveTuning.Start(); }
     }
     private void PersistTuning()

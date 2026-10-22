@@ -45,15 +45,19 @@ public sealed class MusicProjectController
             RhymeSteps = Current.Saved.RhymeSteps.Select(s => s.Snapshot()).ToArray(), Title = options.Title, Artist = options.Artist, Comment = options.Comment,
             Variants = options.Variants, DurationSeconds = options.DurationSeconds, OutputFolder = _view.Tracks.OutputFolder,
             Expert = _view.Generation.ExpertSettings, Output = options.Output, SeparateTracks = options.SeparateTracks, AudioTask = options.AudioTask, Melody = _view.Generation.Melody,
-            Wishes = MusicWishSnapshot.Capture(_view.Wishes.State), Loras = _view.Lora.Selection.Snapshot() };
+            Wishes = MusicWishSnapshot.Capture(_view.Wishes.State), Loras = _view.Lora.Selection.Snapshot(),Scores=_view.Generation.Scores,AceIdeas=_view.Generation.AceIdeas };
     }
     // Output/model preferences may be configured after restoring a submitted song.
     // Its contents must never become the template for a new project.
     public void RememberDefaults() => _initial ??= (Capture() with {
         Lyrics = "", Title = "", Artist = "", Comment = "", Wishes = MusicWishSnapshot.Capture(new()),
-        RhymeSteps = [], Loras = new(), SeparateTracks = false, AudioTask = new(), Melody = new()
+        RhymeSteps = [], Loras = new(), SeparateTracks = false, AudioTask = new(), Melody = new(),Scores=new(),AceIdeas=new()
     }).Snapshot();
     public void SaveLoraWorkspace() { EnsureIdle(); Current = _store.SaveWorkspace(Current, Capture()); History.Refresh(); }
+    internal void SaveScores(string projectId) {
+        if(Current.Id!=projectId)throw new InvalidDataException("Music.Score.InputChanged");
+        Current=_store.SaveWorkspace(Current,Capture(),persistDraft:true);History.Refresh();
+    }
     public void SetBusy(bool busy) { Busy = busy; History.Refresh(); }
     public void CycleMode() { if (Busy) return; Mode = (MusicHistoryMode)(((int)Mode + 1) % 3); History.Refresh(); }
     public bool CanNavigate(int delta) => !Busy && Mode != MusicHistoryMode.Off && _cursor + delta >= 0 && _cursor + delta < Current.Steps.Length;
@@ -77,6 +81,8 @@ public sealed class MusicProjectController
             _view.Generation.SetOptions(new(snapshot.Title, snapshot.Variants, snapshot.DurationSeconds) {
                 Artist = snapshot.Artist, Comment = snapshot.Comment, Output = snapshot.Output, SeparateTracks = snapshot.SeparateTracks, AudioTask = snapshot.AudioTask, Melody = snapshot.Melody });
             _view.Generation.SetExpertSettings(active, false);
+            _view.Generation.Scores=snapshot.Scores;
+            _view.Generation.AceIdeas=snapshot.AceIdeas;
             _view.Lora.Restore(snapshot.Loras);
             _view.Wishes.Apply(snapshot.Wishes.ToPreferences()); _view.Tracks.SetOutputFolder(snapshot.OutputFolder);
             _view.Session.ModelChanged();

@@ -25,6 +25,10 @@ public sealed class MusicStudioWorker : IMusicYueWorker
             ["abc_sampling"] = request.EffectiveExpert.Sampling("abc_sampling", Math.Max(1, request.EffectivePlanLimit)) };
         if (request.Loras.Length > 0) body["adapters"] = request.Loras.Select(u => new { id = u.Id,
             scales = MusicLora.MusicLoraCatalog.Find(u.Id).Slots.ToDictionary(p => p.Key, p => p.Value * u.Strength) }).ToArray();
+        if(request.FollowScoreSections) {
+            if(!profile.SeparateNormalization||request.EffectiveExpert.Cot!="full")throw new InvalidDataException("Music.Score.NeedSections");
+            body["harmony"]=new {follow_lyrics=true};
+        }
         if (plan) return body;
         body["abc"] = request.Abc; body["seed"] = request.SoundSeed; body["duration_seconds"] = request.DurationSeconds;
         body["synth_batch_size"] = 1; body["steps"] = request.EffectiveExpert.Integer("steps");
@@ -33,7 +37,8 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         body["output_format"] = profile.SeparateNormalization ? "wav32" : "wav16";
         if (profile.SeparateNormalization) {
             body["solver"] = request.EffectiveExpert.StudioSolver;
-            body["companion_scale"] = 1; body["lyric_timing"] = false;
+            if(request.ScoreLyricTiming&&request.EffectiveExpert.Get("cfg_scale")!=1)throw new InvalidDataException("Music.Score.TimingUnavailable");
+            body["companion_scale"] = 1; body["lyric_timing"] = request.ScoreLyricTiming;
         } else body["peak_clip"] = request.EffectiveExpert.Integer("peak_clip");
         return body;
     }
@@ -117,7 +122,7 @@ public sealed class MusicStudioWorker : IMusicYueWorker
                                 runtime_revision = profile.Revision, studio_source = profile.SourceRevision, engine_revision = profile.EngineRevision,
                                 generation_settings = status.GetProperty("generation_settings"),
                                 ignored_generation_fields = new[] { "peak_clip" },
-                                submitted_policy = new { companion_scale = 1, lyric_timing = false, solver = request.EffectiveExpert.StudioSolver },
+                                submitted_policy = new { companion_scale = 1, lyric_timing = request.ScoreLyricTiming, solver = request.EffectiveExpert.StudioSolver },
                                 processing, conversion = "Studio normalized FLAC24 -> FFmpeg PCM16 stereo 48000 Hz" });
                             if (receipt.Length > 1_048_576) throw new InvalidDataException("Oversized Studio request receipt.");
                             await File.WriteAllTextAsync(requestPath + ".processing.json", processing.GetRawText(), token);

@@ -1,3 +1,26 @@
+## 2026-10-22 — ACE XL retake compatibility
+
+The pinned XL checkpoint d4a0b288 includes older remote model code that accepts
+but ignores retake kwargs. Tools/music_ace_retake.py wraps its existing noise
+factory using the exact variance-preserving sin/cos formula from the MIT-licensed
+ACE-Step source ca1e85fe9430179831e6bc6be790c332190a3866,
+acestep/models/xl_turbo/modeling_acestep_v15_xl_turbo.py.
+The existing ACE MIT license and source snapshot remain bundled. No model weights,
+checkpoint files or original source archive are rewritten. The compatibility path
+checks the loaded model-code SHA256 and records actual noise transformation.
+
+## 2026-10-22 — Studio ABC CPU helper
+
+The optional Studio score UI uses the pinned YuE2-Studio score parser/writer,
+sections and lyric scheduler at c3e214f3a65f3f56c18e107127ebd2ebad5150ad.
+Original MIT license is preserved in Инструменты/MusicScore/LICENSE-Studio.txt.
+The upstream modules credit pytraveler/YuE2-ComfyUI (Apache-2.0); the deployed
+MusicScoreRuntime package includes that license, the LOPATA GPL-3.0 license,
+Source.zip, Cargo.lock, dependencies.json and original notices for all 25 crates.
+Own JSON adapter and local two-voice preview do not copy a synthesizer or sound bank.
+Package score-c3e214f3-3 is immutable and checked by SHA256 before execution.
+This does not change existing Studio engine/model license conditions.
+
 ## 2026-10-21 — MIDI import/export
 
 DryWetMIDI 8.0.3 by Maxim Dobroselsky, MIT (Copyright (c) 2018 Maxim Dobroselsky).

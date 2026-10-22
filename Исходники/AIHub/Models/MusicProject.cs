@@ -25,10 +25,12 @@ public sealed record MusicProjectSnapshot
     public bool SeparateTracks { get; init; }
     public MusicAudioTask AudioTask { get; init; } = new();
     public MusicMelody Melody { get; init; } = new();
+    public MusicScoreWorkspace Scores { get; init; } = new();
+    public AIHub.Services.MusicAceIdeas.MusicAceIdeaWorkspace AceIdeas {get;init;}=new();
     public MusicWishSnapshot Wishes { get; init; } = MusicWishSnapshot.Capture(new());
     public MusicLora.MusicLoraSelection Loras { get; init; } = new();
     public MusicProjectSnapshot Snapshot() => this with { Expert = Expert.Snapshot(), Wishes = Wishes.Snapshot(),
-        ModelSettings = ModelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Loras = Loras.Snapshot(), AudioTask = AudioTask.Snapshot(), Melody = Melody.Snapshot(), RhymeSteps = RhymeSteps.Select(s => s.Snapshot()).ToArray() };
+        ModelSettings = ModelSettings.ToDictionary(p => p.Key, p => p.Value.Snapshot()), Loras = Loras.Snapshot(), AudioTask = AudioTask.Snapshot(), Melody = Melody.Snapshot(), Scores=Scores.Snapshot(),AceIdeas=AceIdeas.Snapshot(), RhymeSteps = RhymeSteps.Select(s => s.Snapshot()).ToArray() };
     public void Validate()
     {
         if (Lyrics is null || Title is null || Artist is null || Comment is null || string.IsNullOrWhiteSpace(Model)
@@ -41,6 +43,8 @@ public sealed record MusicProjectSnapshot
         AudioTask.Validate();
         if (Melody is null) throw new System.IO.InvalidDataException("Music.Midi.Invalid");
         Melody.Validate();
+        if(Scores is null)throw new System.IO.InvalidDataException("Music.Score.Invalid");Scores.Validate();
+        if(AceIdeas is null)throw new System.IO.InvalidDataException("Music.AceIdeas.Invalid");AceIdeas.Validate();
         if (RhymeSteps is null || RhymeSteps.Length > 500) throw new System.IO.InvalidDataException("Music.Rhyme.InvalidInput");
         foreach (var step in RhymeSteps) step.Validate();
         if (Expert.Variation != Variation || ModelSettings is null || ModelSettings.Count > 100)
@@ -60,6 +64,7 @@ public sealed record MusicProjectSnapshot
         Expert = job.Expert.Snapshot(), Output = job.Output ?? new() { Format = MusicAudioFormat.Wav }, SeparateTracks = job.SeparateTracks,
         AudioTask = job.AudioTask?.Snapshot() ?? new(),
         Melody = job.Melody?.Snapshot() ?? new(),
+        Scores=job.Scores?.Snapshot()??new(),
         Wishes = job.Wishes?.Snapshot() ?? MusicWishSnapshot.Capture(new()), Loras = new() {
             ByModel = new() { [job.Variation] = job.Loras.Select(x => new MusicLora.MusicLoraChoice(x.Id, x.Strength)).ToArray() } } };
 }

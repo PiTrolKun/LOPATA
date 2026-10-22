@@ -21,6 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="..\..\Runtime\MusicScore\score-c3e214f3-3\**\*" Link="MusicScoreRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\**\*" Link="MusicLoraStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\BookSmart\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\BookConverter\calibre-9.16.0\**\*" Link="BookConverterRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

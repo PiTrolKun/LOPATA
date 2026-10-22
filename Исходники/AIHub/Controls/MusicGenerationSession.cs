@@ -18,6 +18,11 @@ public sealed class MusicGenerationSession : IDisposable
     private Guid _telemetry;
     private Guid _loraWarningOperation;
     private bool _ready, _starting, _working, _disposed, _checking, _cancelRequested;
+    private bool _aceIdeaPreview;
+    public async Task StartAceIdeasAsync(bool preview) {
+        if(_starting||_working)throw new InvalidOperationException("Music.Generation.OtherOperation");
+        _aceIdeaPreview=preview;try{await StartPauseAsync();}finally{_aceIdeaPreview=false;}
+    }
     private int _modelCheck;
     public event Action? StateChanged;
     public event Action<string>? GenerationCompleted;
@@ -44,6 +49,7 @@ public sealed class MusicGenerationSession : IDisposable
             File.Exists(Path.Combine(MusicYueRuntime.DirectoryPath, "manifest.json")))) _ = CheckRuntimeAsync();
         RefreshButtons();
     }
+    internal Task EnsureRuntimeReadyAsync()=>_ready?Task.CompletedTask:CheckRuntimeAsync();
     private async Task CheckRuntimeAsync()
     {
         var check = ++_modelCheck; var variation = _view.Generation.Variation;
@@ -168,6 +174,13 @@ public sealed class MusicGenerationSession : IDisposable
             }
             _starting = true; RefreshButtons();
             var options = _view.Generation.Options;
+            var scores=_view.Generation.Variation==MusicStudioRuntime.Variation?_view.Generation.Scores:new AIHub.Models.MusicScoreWorkspace();
+            AIHub.Services.MusicScore.MusicScorePipeline.Validate(scores,_view.Generation.Variation,_view.Generation.ExpertSettings,options.AudioTask,options.Melody,lyrics);
+            var ideas=MusicAceCatalog.IsAce(_view.Generation.Variation)?_view.Generation.AceIdeas:new AIHub.Services.MusicAceIdeas.MusicAceIdeaWorkspace();
+            AIHub.Services.MusicAceIdeas.MusicAceIdeaPipeline.Validate(ideas,_view.Generation.Variation,options.AudioTask,options.Melody);
+            if(_aceIdeaPreview)ideas=ideas with {Selected=ideas.Selected.Take(1).ToArray()};
+            var totalVariants=_aceIdeaPreview?1:options.Variants*(scores.Enabled?scores.Selected.Length:ideas.Enabled?ideas.Selected.Length:1);
+            if(totalVariants>8)throw new InvalidDataException("Music.Score.TooManySongs");
             AIHub.Services.MusicMidi.MusicMelodyPipeline.Validate(options.Melody, options.AudioTask, _view.Generation.Variation);
             if (options.Melody.Enabled && System.Windows.MessageBox.Show(System.Windows.Window.GetWindow(_view),
                 string.Format(_l("Music.Midi.BeforeStart"), options.Melody.Notes.Length, options.Melody.Seconds.ToString("0.##")) + "\n\n" +
@@ -183,12 +196,16 @@ public sealed class MusicGenerationSession : IDisposable
             if (options.AudioTask.Enabled && !ConfirmAudioTask(options.AudioTask)) return;
             var loras = processingOnly ? Array.Empty<AIHub.Services.MusicLora.MusicLoraUse>() : AIHub.Services.MusicLora.MusicLoraCatalog.Capture(_view.Lora.Selection, _view.Generation.Variation);
             if (loras.Length > 0) await AIHub.Services.MusicLora.MusicLoraAssets.EnsureAsync(_modelsRoot, loras, _view.Generation.Variation, ApplicationBackgroundOperations.ExitToken);
-            var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, options.Title, options.Variants,
+            var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, _aceIdeaPreview?options.Title+" · "+_l("Music.AceIdeas.PreviewName"):options.Title, totalVariants,
                 (options.DurationSeconds ?? (MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation) ? MusicDiffRhythmCatalog.MaximumDuration : 360)), _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
                 wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment, durationAutomatic: options.DurationSeconds is null,
                 cover: _view.Covers.CaptureSelection(options.Artist, options.Title), loras: loras, separateTracks: options.SeparateTracks);
             job = await CaptureAudioTaskAsync(job, options.AudioTask, ApplicationBackgroundOperations.ExitToken);
             job = AIHub.Services.MusicMidi.MusicMelodyPipeline.Capture(job, options.Melody);
+            job=await AIHub.Services.MusicScore.MusicScorePipeline.CaptureAsync(_jobs,job,scores,ApplicationBackgroundOperations.ExitToken);
+            job=AIHub.Services.MusicAceIdeas.MusicAceIdeaPipeline.Capture(job,ideas,_aceIdeaPreview);
+            if(_aceIdeaPreview)job=job with {DurationAutomatic=false,DurationSeconds=(int)Math.Ceiling(job.Variants[0].AceIdea!.EffectiveData.Duration)};
+            _jobs.Save(job);
             submitted = job = _view.Projects.Record(job, _view.Projects.Capture());
             await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             _starting = false; await RunAsync(job.Id);
@@ -218,10 +235,13 @@ public sealed class MusicGenerationSession : IDisposable
             submitted = repeat = _view.Projects.Record(repeat, MusicProjectSnapshot.FromJob(repeat));
             if (original.Output is not null) await MusicAudioRuntime.Default.PrepareAsync(ApplicationBackgroundOperations.ExitToken);
             // Preserve the exact score used by the completed track, alongside its two seeds.
-            repeat = repeat with { RuntimePack = original.RuntimePack, RuntimeRevision = original.RuntimeRevision, EngineSetId = original.EngineSetId };
+            repeat = repeat with { RuntimePack = original.RuntimePack, RuntimeRevision = original.RuntimeRevision, EngineSetId = original.EngineSetId,
+                Scores=original.Scores?.Snapshot() };
+            if(variant.AceIdea is {} aceIdea)repeat=repeat with {Variants=[repeat.Variants[0] with {AceIdea=aceIdea}]};
             if (original.Expert.Cot != "off" && variant.PlanFile is not null) {
-                var score = _jobs.StagePath(repeat.Id, ".abc"); File.Copy(variant.PlanFile!, score, false);
-                repeat = repeat with { Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.PlanHash, PlanHardware = variant.PlanHardware }] };
+                var score = _jobs.StagePath(repeat.Id, ".abc"); File.Copy(variant.EffectivePlanFile??variant.PlanFile!, score, false);
+                repeat = repeat with { Variants = [repeat.Variants[0] with { PlanFile = score, PlanHash = variant.EffectivePlanHash??variant.PlanHash,
+                    ScoreVersionId=variant.ScoreVersionId, PlanHardware = variant.PlanHardware }] };
             }
             _jobs.Save(repeat);
             _starting = false; await RunAsync(repeat.Id);
@@ -353,9 +373,10 @@ public sealed class MusicGenerationSession : IDisposable
         var state = _controller?.State; var own = _controller?.HasPending == true && state?.Kind == MusicGenerationRunner.BackgroundKind;
         var paused = own && state!.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Countdown;
         var busy = _working && !paused || own && state!.Phase is BackgroundOperationPhase.Running or BackgroundOperationPhase.Pausing;
-        _view.Projects.SetBusy(_starting || _working || own);
+        var planning=_controller?.IsRunning==true&&(state?.Kind==AIHub.Services.MusicScore.MusicScorePlanWork.Kind||state?.Kind==AIHub.Services.MusicAceIdeas.MusicAceIdeaWork.Kind);
+        _view.Projects.SetBusy(_starting || _working || own || planning);
         _view.Generation.UpdateState((_view.Editor.CanGenerate || _view.Generation.AudioTask is { Enabled: true, Mode: MusicAudioTaskMode.Restore, Source: not null }) && _controller?.IsRunning != true && _controller?.BlocksNewWork != true && !_starting, busy, paused, _ready || _view.Generation.AudioTask is { Enabled: true, Mode: MusicAudioTaskMode.Restore },
-            _starting || _cancelRequested || own && state!.Phase == BackgroundOperationPhase.Pausing);
+            _starting || planning || _cancelRequested || own && state!.Phase == BackgroundOperationPhase.Pausing);
         _view.Player.RefreshRepeat();
         StateChanged?.Invoke();
     }

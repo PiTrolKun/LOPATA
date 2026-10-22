@@ -15,7 +15,7 @@ public sealed class MusicAceWorker : IMusicYueWorker
     private IReadOnlyList<ManagedModelArtifactCard> _verifiedCards = [];
     internal sealed record PreparationReceipt(string Hardware, IReadOnlyList<ManagedModelArtifactCard> Cards);
     public Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token) =>
-        throw new NotSupportedException("ACE generates its LM plan inside the official pipeline.");
+        RunAsync(Root(model),request,requestPath,planPath,false,token,plan:true);
     public Task SynthesizeAsync(string model, string decoder, MusicYueRequest request, string requestPath, string outputPath, CancellationToken token) =>
         RunAsync(Root(model), request, requestPath, outputPath, false, token);
     private static string Root(string model) => Directory.GetParent(model)!.Parent!.Parent!.FullName;
@@ -29,7 +29,7 @@ public sealed class MusicAceWorker : IMusicYueWorker
         }
         finally { foreach (var suffix in new[] { ".json", ".probe", ".probe.receipt.json" }) if (File.Exists(path + suffix)) File.Delete(path + suffix); }
     }
-    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token)
+    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token,bool plan=false)
     {
         request.Validate(); var payload = MusicAceRequest.Build(request);
         await MusicLora.MusicLoraAssets.EnsureAsync(root, request.Loras, request.EffectiveExpert.Variation, token);
@@ -65,7 +65,7 @@ public sealed class MusicAceWorker : IMusicYueWorker
         info.Environment["GRADIO_ANALYTICS_ENABLED"] = "False";
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "music_ace_worker.py"),
             prepared.Overlay, MusicAceSource.DirectoryPath, MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Variation),
-            MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Companions), requestPath, temporary, runtime.Device, probe ? "probe" : "generate"]);
+            MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Companions), requestPath, temporary, runtime.Device, probe ? "probe" : plan?"plan":"generate"]);
         token.ThrowIfCancellationRequested();
         Log?.Invoke(probe ? "[Check] Importing official ACE API · timeout=90s" : "[Load] Starting official ACE pipeline");
         using var process = OwnedProcessRegistry.Shared.Start(info, "Music.ACE.XL");
@@ -89,7 +89,11 @@ public sealed class MusicAceWorker : IMusicYueWorker
             }, probe, token);
             token.ThrowIfCancellationRequested();
             if (process.ExitCode != 0) throw new IOException("ACE worker failed (" + process.ExitCode + "). " + string.Join('\n', errors));
-            if (!probe) _ = MusicWaveFile.ReadDuration(temporary);
+            if(plan) {
+                if(new FileInfo(temporary).Length>200000)throw new InvalidDataException("Music.AceIdeas.Invalid");
+                var idea=JsonSerializer.Deserialize<MusicAceIdeas.MusicAceIdeaData>(await File.ReadAllTextAsync(temporary,token))
+                    ??throw new InvalidDataException("Music.AceIdeas.Invalid");idea.Validate();
+            } else if (!probe) _ = MusicWaveFile.ReadDuration(temporary);
             var receipt = temporary + ".receipt.json";
             if (!File.Exists(receipt) || new FileInfo(receipt).Length > 1_048_576) throw new InvalidDataException("Missing or oversized ACE receipt.");
             LastRequestReceipt = await File.ReadAllTextAsync(receipt, token);

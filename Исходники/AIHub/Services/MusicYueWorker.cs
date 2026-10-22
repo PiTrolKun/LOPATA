@@ -8,6 +8,8 @@ namespace AIHub.Services;
 public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSeed, int SoundSeed, int DurationSeconds = 360)
 {
     public string Abc { get; init; } = "";
+    public bool FollowScoreSections { get; init; }
+    public bool ScoreLyricTiming { get; init; }
     public int PlanTokenLimit { get; init; } = 4096;
     public MusicExpertSettings? Expert { get; init; }
     public AIHub.Models.MusicWishSnapshot? Wishes { get; init; }
@@ -16,6 +18,7 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
     public string? StudioRuntimeRevision { get; init; }
     public string? StudioRuntimePack { get; init; }
     public MusicAudioTask? AudioTask { get; init; }
+    public MusicAceIdeas.MusicAceIdeaUse? AceIdea {get;init;}
     public MusicExpertSettings EffectiveExpert => Expert ?? new();
     public int EffectivePlanLimit => Expert?.PlanLimit ?? PlanTokenLimit;
     public int SequenceLimit => EffectiveExpert.SequenceLimit(DurationSeconds);

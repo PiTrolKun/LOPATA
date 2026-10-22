@@ -25,6 +25,8 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     public MusicLoraController Lora { get; }
     public MusicAudioTaskController AudioTask { get; }
     public MusicMelodyController Melody { get; }
+    public MusicScoreController Scores {get;}
+    public MusicAceIdeaController AceIdeas {get;}
     private bool _outputConfigured;
     public MusicWorkspaceControl(MusicProjects? projects = null, MusicGenerationJobs? jobs = null, MusicOutputPreferences? outputPreferences = null,
         IMusicLyricsSynchronization? synchronizeLyrics = null, IMusicAudioPlayer? audioPlayer = null, MusicCoverStore? coverStore = null)
@@ -76,6 +78,8 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Lora = new(this);
         AudioTask = new(this);
         Melody = new(this);
+        Scores=new(this,jobs??MusicGenerationJobs.Default);
+        AceIdeas=new(this,jobs??MusicGenerationJobs.Default);
         double MaximumWidth() => Math.Max(250, grid.ActualWidth - 140 - 12 - 220 - 330);
         void Add(UIElement element, int column, int row, int rowSpan = 1, int columnSpan = 1)
         { Grid.SetColumn(element, column); Grid.SetRow(element, row); Grid.SetRowSpan(element, rowSpan); Grid.SetColumnSpan(element, columnSpan); grid.Children.Add(element); }
@@ -97,6 +101,8 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Lora.Localize(localize);
         AudioTask.Localize(localize);
         Melody.Localize(localize);
+        Scores.Localize(localize);
+        AceIdeas.Localize(localize);
         var grid = (Grid)Content;
         var divider = (Thumb)grid.Children[1]; divider.ToolTip = localize("Music.Editor.Resize");
         AutomationProperties.SetName(divider, localize("Music.Editor.Resize"));
@@ -110,6 +116,6 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
     { if (_outputConfigured) return; _outputConfigured = true;
         Tracks.ConfigureFolder(folder, save); Player.ConfigureFolder(folder); Projects.RememberDefaults(); }
     public void ConfigureGeneration(string modelsRoot, Func<string, string> localize)
-    { Lora.Configure(modelsRoot); Session.Configure(modelsRoot, localize); LyricsPlayback.Configure(localize); }
-    public void Dispose() { Lora.Dispose(); Covers.Dispose(); Rhyme.Dispose(); LyricsPlayback.Dispose(); Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
+    { Lora.Configure(modelsRoot); Scores.Configure(modelsRoot); AceIdeas.Configure(modelsRoot); Session.Configure(modelsRoot, localize); LyricsPlayback.Configure(localize); }
+    public void Dispose() { AceIdeas.Dispose(); Scores.Dispose(); Lora.Dispose(); Covers.Dispose(); Rhyme.Dispose(); LyricsPlayback.Dispose(); Session.Dispose(); Editor.Dispose(); Player.Dispose(); Status.Dispose(); }
 }

@@ -30,7 +30,8 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                 var request = new MusicYueRequest(job.Style, job.Lyrics, variant.LanguageSeed, variant.SoundSeed, job.DurationSeconds)
                     { Expert = job.Expert.Snapshot(), Wishes = job.Wishes?.Snapshot(), DurationAutomatic = job.DurationAutomatic, Loras = job.Loras.ToArray(),
                         StudioRuntimeRevision = job.Variation == MusicStudioRuntime.Variation ? job.RuntimeRevision : null,
-                        StudioRuntimePack = job.Variation == MusicStudioRuntime.Variation ? job.RuntimePack : null };
+                        StudioRuntimePack = job.Variation == MusicStudioRuntime.Variation ? job.RuntimePack : null,
+                        FollowScoreSections=job.Scores?.FollowSections==true,ScoreLyricTiming=job.Scores?.LyricTiming==true,AceIdea=variant.AceIdea };
                 var transform = new MusicAudioTaskPipeline(coverScoreWorker, stemsWorker, log, layerFitter);
                 if (job.Melody is { Enabled: true }) {
                     request = await MusicMidi.MusicMelodyPipeline.PrepareAsync(jobs, job, variant, request, Save, token);
@@ -57,8 +58,11 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                     else {
                     var audio = jobs.StagePath(id, ".wav"); Stage?.Invoke(MusicGenerationStage.Loading);
                     if (job.Expert.Cot != "off") request = request with { Abc = await File.ReadAllTextAsync(variant.PlanFile!, token) };
+                    await MusicScore.MusicScorePipeline.CheckSchedulingAsync(request,token);
                     await worker.SynthesizeAsync(Artifact(job.Variation), Artifact(MusicModelVariants.Decoder(job.Variation)), request,
                         jobs.StagePath(id, ".json"), audio, token);
+                    MusicAceIdeas.MusicAceIdeaPipeline.Confirm(variant.AceIdea,worker.LastRequestReceipt,variant.SoundSeed);
+                    variant=await MusicScore.MusicScorePipeline.SaveEffectiveAsync(jobs,job,variant,worker.LastRequestReceipt,token);
                     _ = MusicWaveFile.ReadDuration(audio);
                     if (job.AudioTask is { Enabled: true }) {
                         variant = variant with { AudioTask = new() { RenderPath = audio, RenderHash = await HashAsync(audio, token) },

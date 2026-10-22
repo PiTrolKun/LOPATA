@@ -37,6 +37,18 @@ public static class MusicSongMetadata
                 "\neffective_semantic_min_tokens=" + Math.Min(job.Expert.Integer("semantic_sampling.min_tokens"), job.Expert.SequenceLimit(job.DurationSeconds)).ToString(culture))
         };
         EngineSetMetadataIdentity.AddTags(result, engineSetId);
+        if(variant.AceIdea is {} aceIdea)result["LOPATA_ACE_IDEA"]=JsonSerializer.Serialize(new {
+            aceIdea.Idea.Id,aceIdea.Idea.Hash,aceIdea.Idea.Origin,aceIdea.Idea.Created,aceIdea.Idea.Seed,aceIdea.Idea.SourceJob,aceIdea.Idea.SourceVariant,
+            aceIdea.Idea.SourceRevision,aceIdea.Idea.ModelRevision,aceIdea.Idea.RuntimeRevision,aceIdea.Preview,
+            operation=aceIdea.Preview?"idea-preview":aceIdea.RetakeSeed is not null?"retake":"idea-render",
+            base_seed=variant.SoundSeed,aceIdea.RetakeSeed,aceIdea.Variance,effective_hash=MusicAceIdeas.MusicAceIdea.Stamp(aceIdea.EffectiveData.Codes)
+        });
+        if (job.Scores is { } scores) result["LOPATA_SCORE"] = JsonSerializer.Serialize(new {
+            variant.ScoreVersionId, selectedHash = variant.PlanHash, effectiveHash = variant.EffectivePlanHash,
+            scores.Keep, scores.FollowSections, scores.LyricTiming,
+            source = scores.Versions.FirstOrDefault(v => v.Id == variant.ScoreVersionId)?.Origin,
+            adapter = "Studio ABC; pinned parser c3e214f3; score helper 2"
+        });
         if (job.Melody is { Enabled: true } melody) result["LOPATA_MELODY"] = JsonSerializer.Serialize(new {
             adapter = job.Variation == MusicStudioRuntime.Variation ? "bounded ABC; melody score" : "synthesized melody; ACE src_audio cover",
             melody.Bpm, melody.Numerator, melody.Denominator, melody.Notes, grid = "1/32", melody.ImportWarnings,
@@ -71,7 +83,7 @@ public static class MusicSongMetadata
         if (MusicAceCatalog.IsAce(job.Variation)) {
             result.Remove("LOPATA_LM_SEED");
             result["LOPATA_ACE_REQUEST"] = PublicAceReceipt(variant.ExecutionReceipt);
-            result["LOPATA_ADAPTER"] = "official Python API; LM=1.7B/PyTorch; task=" + (job.Melody?.Enabled == true ? "MIDI-cover" : job.AudioTask?.Mode.ToString() ?? "text2music") + "; batch=1; no lyric rewrite";
+            result["LOPATA_ADAPTER"] = "official Python API; LM="+(variant.AceIdea is null?"1.7B/PyTorch":"saved 5Hz codes; planning skipped")+"; task=" + (job.Melody?.Enabled == true ? "MIDI-cover" : job.AudioTask?.Mode.ToString() ?? "text2music") + "; batch=1; no lyric rewrite";
         }
         if (job.Variation == MusicModelVariants.Bf16) {
             result.Remove("LOPATA_LM_SEED");

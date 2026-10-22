@@ -62,6 +62,10 @@ public static class MusicAceRequest
             if (task.Mode == MusicAudioTaskMode.Repaint) { result["repainting_start"] = task.EditStart; result["repainting_end"] = task.EditEnd; result["repaint_wav_crossfade_sec"] = 0; }
             if (task.NeedsSource) foreach (var key in new[] { "thinking", "use_cot_metas", "use_cot_caption", "use_cot_language" }) result[key] = false;
         }
+        if(request.AceIdea is {} idea) {
+            if(request.AudioTask?.Enabled==true)throw new InvalidDataException("Music.AceIdeas.Conflict");
+            MusicAceIdeas.MusicAceIdeaPipeline.Apply(result,idea);
+        }
         return new() { ["params"] = result, ["runtime"] = MusicAceCatalog.Parameters.Where(p => p.Group == "Runtime").ToDictionary(p => p.Key, p => expert.Get(p.Key)),
             ["config"] = new { batch_size = 1, allow_lm_batch = false, use_random_seed = false, seeds = new[] { request.SoundSeed },
                 audio_format = "wav", constrained_decoding_debug = expert.Get("constrained_decoding_debug") == 1 },

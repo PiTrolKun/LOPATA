@@ -58,11 +58,11 @@ public sealed class MusicProjects(string directory)
         var saved = project with { Steps = project.Steps.Select(s => s.JobId == jobId ? s with { Outcome = outcome, Message = message } : s).ToArray() };
         Save(saved); return saved;
     }
-    public MusicProject SaveWorkspace(MusicProject project, MusicProjectSnapshot snapshot)
+    public MusicProject SaveWorkspace(MusicProject project, MusicProjectSnapshot snapshot, bool persistDraft = false)
     {
-        snapshot.Validate(); if (!project.Persistent) return project;
-        using var gate = Lock(); var current = Load(project.Id);
-        var updated = current with { Saved = snapshot.Snapshot() }; Save(updated); return updated;
+        snapshot.Validate(); if (!project.Persistent && !persistDraft) return project;
+        using var gate = Lock(); var current = project.Persistent ? Load(project.Id) : project;
+        var updated = current with { Persistent = true, Saved = snapshot.Snapshot() }; Save(updated); return updated;
     }
     private void Save(MusicProject project) {
         Validate(project); var path = PathFor(project.Id);

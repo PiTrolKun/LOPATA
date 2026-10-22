@@ -38,6 +38,10 @@ public partial class MainWindow
         RegisterLyricLibraryBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeGenerationAsync(state, token); });
+        _backgroundOperations.Register(Services.MusicScore.MusicScorePlanWork.Kind,(state,token)=>
+        {ConfigureMusic();return MusicPage.ResumeScoreAsync(state,token);});
+        _backgroundOperations.Register(Services.MusicAceIdeas.MusicAceIdeaWork.Kind,(state,token)=>
+        {ConfigureMusic();return MusicPage.ResumeAceIdeasAsync(state,token);});
         _backgroundOperations.Register(MusicLyricsSynchronization.BackgroundKind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeLyricsSyncAsync(state, token); });
         _backgroundOperations.Register(MusicRhymeWork.Kind, (state, token) =>
@@ -229,6 +233,14 @@ public partial class MainWindow
             if (notice.Kind is RagBookAcquisitionWork.Kind or RagBookPreparation.Kind)
             {
                 RevealRagBooksPage(notice.Kind == RagBookAcquisitionWork.Kind); _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
+            if(notice.Kind==Services.MusicAceIdeas.MusicAceIdeaWork.Kind && notice.Project is not null) {
+                RestoreFromTray();OpenMusicScenario(false);MusicPage.ViewAceIdeaResult(notice.Project);
+                _backgroundOperations!.Acknowledge(notice.Id);return;
+            }
+            if(notice.Kind==Services.MusicScore.MusicScorePlanWork.Kind && notice.Project is not null) {
+                RestoreFromTray();OpenMusicScenario(false);MusicPage.ViewScoreResult(notice.Project);
+                _backgroundOperations!.Acknowledge(notice.Id);return;
             }
             if (notice.Kind is MusicGenerationRunner.BackgroundKind or MusicLyricsSynchronization.BackgroundKind && notice.Project is not null)
             {

@@ -140,6 +140,23 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     }
     private bool ShowPendingWorkspace()
     {
+        if(ApplicationBackgroundOperations.Current is {HasPending:true,State.Kind:AIHub.Services.MusicAceIdeas.MusicAceIdeaWork.Kind} aceIdeas) {
+            try {
+                var work=AIHub.Services.MusicAceIdeas.MusicAceIdeaStore.Default.Load(aceIdeas.State.Input.GetProperty("Id").GetString()!);
+                EnsureWorkspace();_pendingExample=null;_applySelection=false;
+                if(_workspace!.Projects.Current.Id!=work.ProjectId)_workspace.Projects.Open(work.ProjectId);
+                _variation=MusicAceCatalog.Variation;_preparation.Variation=_variation;ShowWorkspace();
+            }catch(Exception error){ShowPreparationError(error);Render();}return true;
+        }
+        if(ApplicationBackgroundOperations.Current is {HasPending:true,State.Kind:AIHub.Services.MusicScore.MusicScorePlanWork.Kind} plans) {
+            try {
+                var work=AIHub.Services.MusicScore.MusicScorePlanWork.Load(plans.State.Input.GetProperty("Id").GetString()!);
+                EnsureWorkspace();_pendingExample=null;_applySelection=false;
+                if(_workspace!.Projects.Current.Id!=work.ProjectId)_workspace.Projects.Open(work.ProjectId);
+                _variation=MusicStudioRuntime.Variation;_preparation.Variation=_variation;ShowWorkspace();
+            }catch(Exception error){ShowPreparationError(error);Render();}
+            return true;
+        }
         if (ApplicationBackgroundOperations.Current is not { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind }) return false;
         try {
             EnsureWorkspace();
@@ -160,6 +177,14 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     }
     public Task ResumeGenerationAsync(BackgroundOperationState state, CancellationToken token)
     { ShowWorkspace(); return _workspace!.Session.ResumeAsync(state, token); }
+    public Task ResumeScoreAsync(BackgroundOperationState state,CancellationToken token)
+    {ShowWorkspace();return _workspace!.Scores.ResumeAsync(state,token);}
+    public Task ResumeAceIdeasAsync(BackgroundOperationState state,CancellationToken token)
+    {ShowWorkspace();return _workspace!.AceIdeas.ResumeAsync(state,token);}
+    public void ViewAceIdeaResult(string project)
+    {ShowWorkspace();if(_workspace!.Projects.Current.Id!=project)_workspace.Projects.Open(project);_workspace.AceIdeas.Open();}
+    public void ViewScoreResult(string project)
+    {ShowWorkspace();if(_workspace!.Projects.Current.Id!=project)_workspace.Projects.Open(project);_workspace.Scores.Open();}
     public Task ResumeLyricsSyncAsync(BackgroundOperationState state, CancellationToken token)
     { ShowWorkspace(); return _workspace!.LyricsPlayback.ResumeAsync(state, token); }
     public void ViewGenerationResult(string id)

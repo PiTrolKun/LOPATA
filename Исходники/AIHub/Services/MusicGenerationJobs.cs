@@ -9,6 +9,9 @@ public sealed record MusicGenerationVariant(int LanguageSeed, int SoundSeed, str
 {
     public string? PlanFile { get; init; }
     public string? PlanHash { get; init; }
+    public string? ScoreVersionId { get; init; }
+    public string? EffectivePlanFile { get; init; }
+    public string? EffectivePlanHash { get; init; }
     public string? AudioFile { get; init; }
     public string? AudioHash { get; init; }
     public string? ResultHash { get; init; }
@@ -20,6 +23,7 @@ public sealed record MusicGenerationVariant(int LanguageSeed, int SoundSeed, str
     public string? PlanHardware { get; init; }
     public string? UsedRuntimePack { get; init; }
     public string? ExecutionReceipt { get; init; }
+    public MusicAceIdeas.MusicAceIdeaUse? AceIdea {get;init;}
     public bool Completed { get; init; }
     public MusicStemBundle? Stems { get; init; }
     public MusicAudioTaskReceipt? AudioTask { get; init; }
@@ -49,6 +53,7 @@ public sealed record MusicGenerationJob(string Id, string ModelsRoot, string Out
     public bool SeparateTracks { get; init; }
     public MusicAudioTask? AudioTask { get; init; }
     public MusicMelody? Melody { get; init; }
+    public MusicScoreWorkspace? Scores { get; init; }
     public string AppVersion { get; init; } = MusicSongMetadata.AppVersion;
     // Null is unknown history in old jobs, never a request to use today's selected set.
     public string? EngineSetId { get; init; }
@@ -175,9 +180,14 @@ public sealed class MusicGenerationJobs(string directory)
         if (job.ProjectId is not null && (!Guid.TryParseExact(job.ProjectId, "N", out _) || job.ProjectStep is null or < 1)
             || job.ProjectId is null && job.ProjectStep is not null) throw new InvalidDataException("Invalid music project link.");
         var folder = Path.GetFullPath(Folder(job.Id)) + Path.DirectorySeparatorChar;
+        foreach(var use in job.Variants.Select(v=>v.AceIdea).OfType<MusicAceIdeas.MusicAceIdeaUse>()) {
+            use.Validate();if(!MusicAceCatalog.IsAce(job.Variation)||job.AudioTask?.Enabled==true||job.Melody?.Enabled==true)
+                throw new InvalidDataException("Music.AceIdeas.Conflict");
+        }
         MusicAudioTaskFiles.ValidateOwned(job.AudioTask, folder);
         job.AudioTask?.Validate(job.Variation, true);
         MusicMidi.MusicMelodyPipeline.Validate(job.Melody, job.AudioTask, job.Variation);
+        MusicScore.MusicScorePipeline.Validate(job.Scores,job.Variation,job.Expert,job.AudioTask,job.Melody,job.Lyrics);
         foreach (var receipt in job.Variants.Select(v => v.AudioTask).OfType<MusicAudioTaskReceipt>()) {
             foreach (var path in new[] { receipt.ScorePath, receipt.RenderPath, receipt.OutputPath, receipt.FittedLayerPath,
                 receipt.OriginalStems?.VoicePcm, receipt.OriginalStems?.MusicPcm, receipt.RenderedStems?.VoicePcm, receipt.RenderedStems?.MusicPcm }.OfType<string>())
@@ -231,7 +241,8 @@ public sealed class MusicGenerationJobs(string directory)
             if ((v.MelodyInputPath is null) != (v.MelodyInputHash is null)
                 || v.MelodyInputHash is { } melodyHash && (melodyHash.Length != 64 || !melodyHash.All(Uri.IsHexDigit)))
                 throw new InvalidDataException("Music.Midi.Invalid");
-            foreach (var path in new[] { v.PlanFile, v.AudioFile, v.MelodyInputPath }.OfType<string>())
+            if((v.EffectivePlanFile is null)!=(v.EffectivePlanHash is null))throw new InvalidDataException("Music.Score.Invalid");
+            foreach (var path in new[] { v.PlanFile, v.AudioFile, v.MelodyInputPath, v.EffectivePlanFile }.OfType<string>())
                 if (!Path.GetFullPath(path).StartsWith(folder, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("Music stage path escapes its job folder.");
         }

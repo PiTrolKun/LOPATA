@@ -87,6 +87,12 @@ def main():
         value = runtime[key]
         return default if value == -1 else value == 1
 
+    if mode == 'plan':
+        ideas = runpy.run_path(str(Path(__file__).with_name('music_ace_ideas.py')))
+        ideas['generate_plan'](request, companions, execution_device, output, receipt, LLMHandler,
+                               automatic('lm_offload_to_cpu', gpu_config.offload_to_cpu_default))
+        return
+
     init = dict(project_root=source, config_path=str(Path(model) / 'acestep-v15-xl-turbo'),
                 device=execution_device, use_flash_attention=bool(runtime['use_flash_attention']),
                 compile_model=bool(runtime['compile_model']), quantization=None, use_mlx_dit=False,
@@ -99,6 +105,8 @@ def main():
     print('[ACE] ' + str(status), flush=True)
     if not ok:
         raise RuntimeError(status)
+    retake_runtime = runpy.run_path(str(Path(__file__).with_name('music_ace_retake.py')))
+    receipt['retake_adapter'] = retake_runtime['install'](handler.model, params.retake_variance, params.retake_seed)
     receipt['references'] = cover_runtime['attach_references'](handler, request.get('audio_task'))
     if receipt['references']:
         print('[Cover] Packed references: ' + str(len(receipt['references'])), flush=True)
@@ -127,6 +135,8 @@ def main():
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix='lopata-ace-') as stage:
         result = generate_music(handler, llm, params, config, save_dir=stage, progress=progress)
+        if params.retake_variance > 0 and not receipt['retake_adapter'].get('applied'):
+            raise RuntimeError('Music.AceIdeas.RetakeUnsupported')
         lora_runtime['verify_ace_loras'](handler, request.get('loras', []))
         if not result.success or len(result.audios) != 1:
             raise RuntimeError(result.error or result.status_message or 'ACE returned no single audio result.')
