@@ -38,6 +38,7 @@ public sealed partial class EngineSetService
     public EngineSetState GetState() => _state ?? throw new InvalidOperationException("Initialize engine sets first.");
     public async Task InitializeAsync(CancellationToken ct = default)
     {
+        using var audit = ComponentAudit.CaptureOperation();
         await _gate.WaitAsync(ct);
         try
         {
@@ -66,12 +67,14 @@ public sealed partial class EngineSetService
 
     public async Task<IReadOnlyList<string>> GetInstalledAsync(CancellationToken ct = default)
     {
+        using var audit = ComponentAudit.CaptureOperation();
         var result = new List<string>();
         foreach (var set in _catalog.Sets) if (await VerifyAsync(set, ct)) result.Add(set.Id);
         return result;
     }
     public async Task<EngineSetDefinition?> GetOfferAsync(CancellationToken ct = default)
     {
+        using var audit = ComponentAudit.CaptureOperation();
         await InitializeAsync(ct);
         var state = GetState();
         var recommended = Find(_catalog.RecommendedId);
@@ -80,6 +83,7 @@ public sealed partial class EngineSetService
     }
     public async Task ActivateAsync(string id, CancellationToken ct = default)
     {
+        using var audit = ComponentAudit.CaptureOperation();
         await InitializeAsync(ct);
         await _gate.WaitAsync(ct);
         try
@@ -121,12 +125,16 @@ public sealed partial class EngineSetService
         // every asynchronous read. Keep the complete signed-manifest check on a worker.
         try
         {
+            if (!Directory.Exists(root)) return false;
+            // An absent/partial optional copy may legitimately fall back to the bundled set.
+            // Do not publish an audit failure for that inventory case.
             foreach (var file in set.VerifiedManifest.Files)
             {
                 ct.ThrowIfCancellationRequested();
-                var path = SafeUpdatePath.Resolve(root, file.Path);
-                if (!File.Exists(path) || !await UpdatePlanner.MatchesAsync(path, file, ct).ConfigureAwait(false)) return false;
+                if (!File.Exists(SafeUpdatePath.Resolve(root, file.Path))) return false;
             }
+            var files = set.VerifiedManifest.Files.Select(file => new PinnedTreeFile(file.Path, file.Size, file.Sha256)).ToArray();
+            await RuntimeFileAudit.VerifyAsync("engine-set-" + set.Id, root, set.Date, files, ct).ConfigureAwait(false);
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException) { return false; }

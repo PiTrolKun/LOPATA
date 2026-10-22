@@ -19,6 +19,7 @@ public partial class MainWindow
         _backgroundCountdown.Cancel();
         _backgroundTimer.Stop();
         StatusText.Text = L("Tray.Exiting");
+        await DisposeDictationAsync();
         try { _backgroundLifetime.Cancel(); }
         catch (AggregateException error)
         { OwnedProcessRegistry.Log("background_cancel_callback_failed", "Application", detail: error.GetType().Name); }

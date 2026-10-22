@@ -5,6 +5,7 @@ public sealed class AppSettings
     public string MusicOutputFolder { get; set; } = "";
     public ImageGenerationSettings ImageGeneration { get; set; } = new();
     public ScreenCaptureSettings ScreenCapture { get; set; } = new();
+    public DictationSettings Dictation { get; set; } = new();
     public bool DetailedLiteraryDiagnostics { get; set; } = true;
     public ApplicationUpdateSettings Updates { get; set; } = new();
     public string LanguageCode { get; set; } = "ru";

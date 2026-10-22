@@ -75,6 +75,10 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <PackageReference Include="MimeKit" Version="4.17.0" />
     <PackageReference Include="NAudio.Wasapi" Version="2.3.0" />
+    <PackageReference Include="NAudio.WinMM" Version="2.3.0" />
+    <Reference Include="sherpa-onnx"><HintPath>..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\sherpa-onnx.dll</HintPath><Private>true</Private></Reference>
+    <EmbeddedResource Include="Tools\dictation-runtime-files.json" LogicalName="AIHub.DictationRuntimeManifest" />
+    <Content Include="..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\**\*" Exclude="..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\sherpa-onnx.dll" Link="VoiceInputRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="PdfPig" Version="0.1.15" />
     <PackageReference Include="SharpCompress" Version="1.0.0" />
     <PackageReference Include="SkiaSharp" Version="3.119.4" />
@@ -165,6 +169,9 @@
   <Target Name="CheckCaptureRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\Capture\FFmpeg-8.1\bundle\ffmpeg.exe') Or !Exists('..\..\Runtime\Capture\FFmpeg-8.1\bundle\provenance.json')"
            Text="Bundled capture runtime is missing. Run Инструменты/prepare-capture-runtime.ps1 before building LOPATA." />
+  </Target>
+  <Target Name="CheckDictationRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\sherpa-onnx.dll') Or !Exists('..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\sherpa-onnx-c-api.dll') Or !Exists('..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\onnxruntime.dll')" Text="Dictation CPU runtime is missing. Run Инструменты/prepare-dictation-runtime.ps1 before building LOPATA." />
   </Target>
   <Target Name="CheckImageUtilityRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\Backends\chatllm.cpp\v24\win-x64\imagemagick\magick.exe')"

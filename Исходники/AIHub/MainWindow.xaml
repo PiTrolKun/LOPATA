@@ -3379,6 +3379,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock x:Name="ActiveEngineSetText"
@@ -3423,14 +3424,16 @@
                         </ContentControl.Style>
                     </ContentControl>
 
-                    <controls:ComponentAuditIndicator x:Name="ComponentAuditButton" Grid.Column="2"
+                    <ContentControl x:Name="DictationHost" Grid.Column="2" Margin="12,0,0,0"
+                                    VerticalAlignment="Center" />
+                    <controls:ComponentAuditIndicator x:Name="ComponentAuditButton" Grid.Column="3"
                             Width="28" Height="24" MinWidth="0" MinHeight="0"
                             Padding="0" Margin="12,0,0,0"
                             VerticalAlignment="Center" HorizontalAlignment="Center"
                             Style="{StaticResource SecondaryButtonStyle}"
                             Click="ComponentAuditButton_Click" />
 
-                    <Button x:Name="AboutButton" Grid.Column="3" Content="?"
+                    <Button x:Name="AboutButton" Grid.Column="4" Content="?"
                             Width="22" Height="22" MinWidth="0" MinHeight="0"
                             Padding="0" Margin="12,0,0,0"
                             VerticalAlignment="Center" HorizontalContentAlignment="Center"
@@ -3438,7 +3441,7 @@
                             Click="AboutButton_Click" />
 
                     <StackPanel x:Name="CoreMemoryIndicatorPanel"
-                                Grid.Column="4"
+                                Grid.Column="5"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center"
                                 Margin="16,0,0,0"

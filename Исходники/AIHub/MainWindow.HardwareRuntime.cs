@@ -49,7 +49,7 @@ public partial class MainWindow
             // Reuse only the inventory just collected by startup; later checks refresh it.
             _hardwareRuntimePlan = await Task.Run(async () =>
             {
-                var passport = knownPassport ?? new ComputerPassportService().RegeneratePassport();
+                var passport = knownPassport ?? new ComputerPassportService().ForStartup(ComponentAudit.Enabled);
                 return await new HardwareRuntimePreparation(_componentManager).CheckReadinessAsync(passport.Gpus, _backgroundLifetime.Token);
             }, _backgroundLifetime.Token);
             if (_processShutdownPending || _processShutdownComplete) return false;

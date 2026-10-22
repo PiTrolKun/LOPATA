@@ -1,0 +1,20 @@
+[
+  {
+    "Id": "runtime.dictation.sherpa-onnx",
+    "File": "sherpa-onnx.dll",
+    "Bytes": 51200,
+    "Hash": "4fdc9716e2de7a55463f73989206e627833fa2adc0e22b096eb7ef156507143b"
+  },
+  {
+    "Id": "runtime.dictation.sherpa-onnx",
+    "File": "onnxruntime.dll",
+    "Bytes": 17799168,
+    "Hash": "7f66f939a881baf4f46a2216496798edf4a1429878b646d12674aa62f27d8a25"
+  },
+  {
+    "Id": "runtime.dictation.sherpa-onnx",
+    "File": "sherpa-onnx-c-api.dll",
+    "Bytes": 4605952,
+    "Hash": "2729a0da3fbd20fb4e14e157f7cc0e00af848b55f04121319d445c138aeba214"
+  }
+]

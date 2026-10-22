@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <AssemblyName>LOPATA.VoiceInputStand</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AIHub"><HintPath>../../Исходники/AIHub/bin/Debug/net10.0-windows/AIHub.dll</HintPath></Reference>
+    <Reference Include="LOPATA.Updates"><HintPath>../../Исходники/LOPATA.Updates/bin/Debug/net10.0/LOPATA.Updates.dll</HintPath></Reference>
+    <PackageReference Include="NAudio" Version="2.3.0" />
+  </ItemGroup>
+</Project>

@@ -31,7 +31,8 @@ public partial class MainWindow
             // Render a first frame before checks; hidden tray launches stay hidden.
             await Dispatcher.Yield(DispatcherPriority.Background);
             OwnedProcessRegistry.Log("startup_check_started", "ComputerPassport");
-            var passport = await Task.Run(() => _computerPassportService.RegeneratePassport(), _backgroundLifetime.Token);
+            var fullAudit = ComponentAudit.Enabled;
+            var passport = await Task.Run(() => _computerPassportService.ForStartup(fullAudit), _backgroundLifetime.Token);
             OwnedProcessRegistry.Log("startup_check_finished", "ComputerPassport", detail: $"elapsedMs={elapsed.ElapsedMilliseconds}");
             if (_backgroundLifetime.IsCancellationRequested || _processShutdownPending || _processShutdownComplete) return;
             _lastPassport = passport;

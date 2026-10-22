@@ -7,8 +7,9 @@ using Microsoft.Win32;
 
 namespace AIHub.Services;
 
-public sealed class ComputerPassportService
+public sealed class ComputerPassportService(string? passportPath = null)
 {
+    private readonly string _passportPath = passportPath ?? AppDataPaths.ComputerPassportPath;
     private const double BytesInGb = 1024d * 1024d * 1024d;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -21,14 +22,14 @@ public sealed class ComputerPassportService
     {
         AppDataPaths.EnsureBaseDirectory();
 
-        if (!File.Exists(AppDataPaths.ComputerPassportPath))
+        if (!File.Exists(_passportPath))
         {
             return RegeneratePassport();
         }
 
         try
         {
-            var json = File.ReadAllText(AppDataPaths.ComputerPassportPath);
+            var json = File.ReadAllText(_passportPath);
             var passport = JsonSerializer.Deserialize<ComputerPassport>(json, JsonOptions)
                 ?? RegeneratePassport();
             if (passport.LogicalProcessorCount <= 0)
@@ -70,10 +71,12 @@ public sealed class ComputerPassportService
 
     private static int GetLogicalProcessorCount() => Math.Max(1, Environment.ProcessorCount);
 
-    private static void SavePassport(ComputerPassport passport)
+    public ComputerPassport ForStartup(bool fullAudit) => fullAudit ? RegeneratePassport() : EnsurePassport();
+
+    private void SavePassport(ComputerPassport passport)
     {
         var json = JsonSerializer.Serialize(passport, JsonOptions);
-        File.WriteAllText(AppDataPaths.ComputerPassportPath, json);
+        File.WriteAllText(_passportPath, json);
     }
 
     private static string GetCpuName()

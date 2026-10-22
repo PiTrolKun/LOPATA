@@ -1,0 +1,5 @@
+sherpa-onnx==1.13.8
+sherpa-onnx-core==1.13.8
+numpy==2.5.4
+psutil==7.2.2
+requests==2.34.2

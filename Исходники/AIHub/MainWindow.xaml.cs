@@ -165,6 +165,7 @@ public partial class MainWindow : Window
         InitializeApplicationTray();
         InitializeBackgroundOperations();
         InitializeComponentAudit();
+        InitializeDictation();
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -1027,6 +1028,7 @@ public partial class MainWindow : Window
     {
         _updateLifetime.Cancel();
         DisposeComponentAudit();
+        _ = DisposeDictationAsync();
         DisposeApplicationTray();
         _updateHttp.Dispose();
         try

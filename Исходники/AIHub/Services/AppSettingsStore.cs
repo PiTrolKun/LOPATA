@@ -29,6 +29,7 @@ public sealed class AppSettingsStore
             var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
             settings.ImageGeneration ??= new();
             settings.ScreenCapture ??= new();
+            settings.Dictation ??= new();
             settings.ScreenCapture.Normalize();
             settings.CoreVoice ??= new CoreVoiceSettings();
             settings.CoreAutonomy ??= new CoreAutonomySettings();

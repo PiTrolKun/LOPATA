@@ -37,7 +37,8 @@ public sealed partial class HardwareRuntimePreparation(ComponentManager manager)
         if (!IsSelectedNativeLayoutReady(setId)) throw new InvalidDataException("The selected engine set is incomplete. Prepare or select a verified engine set first.");
         var inventory = devices.ToArray();
         var cudaMajors = inventory.Any(gpu => gpu.Name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase))
-            ? await Task.Run(NvidiaDriverCapabilities.ReadComputeMajors, token) : [];
+            ? await Task.Run(() => HardwareInventoryCache.ComputeMajors(inventory, ComponentAudit.FullRequired,
+                NvidiaDriverCapabilities.ReadComputeMajors), token) : [];
         token.ThrowIfCancellationRequested();
         var ids = HardwareRuntimeCatalog.RequiredComponents(inventory, cudaMajors);
         if (setId == NativeRuntimeReleasePolicy.UpdatedSet || HasPackagedLegacyNativeLayout())

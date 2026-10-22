@@ -93,6 +93,7 @@ public partial class MainWindow
             await InitializeStartupChecksAsync();
             if (_backgroundLifetime.IsCancellationRequested || _processShutdownPending || _processShutdownComplete) return;
             _applicationReady = true;
+            PrewarmDictationAfterStartup();
             ApplyImageShellIntegration();
             RefreshBackgroundResumeSchedule(); RefreshBackgroundTray();
             await CompleteUpdateStartupAsync();

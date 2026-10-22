@@ -15,6 +15,10 @@ public partial class App : System.Windows.Application
     public static bool AudioShellLaunch { get; private set; }
     protected override void OnStartup(StartupEventArgs e)
     {
+        if(e.Args is ["--dictation-worker"]) {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            _=RunDictationWorkerAsync();return;
+        }
         if (e.Args is ["--remove-book-shell"])
         {
             try { new Services.Books.BookShellIntegration(Environment.ProcessPath!).Apply(false, _ => ""); Shutdown(); }
@@ -96,6 +100,8 @@ public partial class App : System.Windows.Application
         }
         Shutdown(code);
     }
+
+    private async Task RunDictationWorkerAsync() => Shutdown(await Services.Dictation.DictationWorker.RunAsync());
 
     protected override void OnExit(ExitEventArgs e)
     {

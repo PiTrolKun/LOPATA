@@ -72,7 +72,7 @@ public partial class MainWindow
             "Settings.Navigation." + id + ".Title", "Settings.Navigation." + id + ".Help", cards);
         Section("general", "\uE713", general, startup, windowsIntegration, folders, generationFolder);
         Section("interface", "\uE771", theme, SettingsLanguageCard, SettingsInterfaceCard);
-        Section("voice", "\uE767", SettingsVoiceCard);
+        Section("voice", "\uE767", SettingsVoiceCard, _settingsCards.Card(_dictationSettings));
         Section("models", "\uE8F1", SettingsAutonomyCard, ManagedModelsExpander);
         Section("components", "\uE74C", ProcessingComponentsExpander, ViewerComponentsExpander, _settingsCards.Card(ComponentLicensesButton));
         Section("engines", "\uE713", engines);
@@ -97,6 +97,7 @@ public partial class MainWindow
         Target("scale", "interface", "Settings.TextSize", "Settings.InterfaceHelp", InterfaceTextScaleSlider);
         Target("window", "interface", "Settings.WindowStartup", "Settings.InterfaceHelp", WindowStartupModeComboBox);
         Target("voice", "voice", "Settings.CoreVoiceEnabled", "Settings.CoreVoiceHelp", CoreVoiceEnabledCheckBox);
+        Target("dictation", "voice", "Dictation.Title", "Dictation.SettingsHelp", _dictationSettings);
         Target("provider", "voice", "Settings.CoreVoiceProvider", "Settings.CoreVoiceHelp", CoreVoiceProviderComboBox);
         Target("volume", "voice", "Settings.CoreVoiceVolume", "Settings.CoreVoiceHelp", CoreVoiceVolumeSlider);
         Target("rate", "voice", "Settings.CoreVoiceRate", "Settings.CoreVoiceHelp", CoreVoiceRateSlider);
@@ -152,6 +153,8 @@ public partial class MainWindow
             SettingsNavigator.RefreshLocalization();
             _applicationTray?.RefreshLocalization();
             RefreshCaptureLocalization();
+            RefreshDictationSettings();
+            RefreshDictation();
             RefreshGenerationSettings();
             _engineSets.Localize(L);
             RefreshEngineSetIndicator();

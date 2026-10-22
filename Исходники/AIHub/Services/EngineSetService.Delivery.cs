@@ -12,6 +12,7 @@ public sealed partial class EngineSetService
     public async Task DownloadAsync(string id, IProgress<ManagedModelDownloadProgress>? progress = null,
         CancellationToken ct = default)
     {
+        using var audit = ComponentAudit.CaptureOperation();
         await InitializeAsync(ct);
         await _gate.WaitAsync(ct);
         string? staging = null;
@@ -63,6 +64,7 @@ public sealed partial class EngineSetService
                     throw new InvalidDataException("Incomplete engine set extraction.");
             ct.ThrowIfCancellationRequested();
             SafeUpdatePath.RejectLinks(target);
+            ComponentAudit.Invalidate(target);
             string? previous = null;
             if (Directory.Exists(target))
             {
@@ -127,6 +129,7 @@ public sealed partial class EngineSetService
             await using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             { await input.CopyToAsync(output, ct); output.Flush(true); }
             if (!await UpdatePlanner.MatchesAsync(temporary, file, ct)) throw new InvalidDataException("Legacy engine copy changed.");
+            ComponentAudit.Invalidate(target);
             File.Move(temporary, destination, true);
         }
         return migrated;

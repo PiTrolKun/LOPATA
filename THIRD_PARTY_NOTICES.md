@@ -1,3 +1,18 @@
+## 2026-10-22 — local CPU dictation
+
+LOPATA integrates NVIDIA Parakeet TDT 0.6B v3 in the csukuangfj INT8 conversion
+(CC BY 4.0; conversion is a format/precision modification). Model weights are
+an optional separate download pinned to revision 2bda32ec70b097a55adaa07d9a7173915b43cc78.
+NVIDIA model: https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
+Conversion: https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8
+The official sherpa-onnx 1.13.8 Windows CPU NuGet runtime and net10.0 binding
+are bundled (Apache-2.0). The included ONNX Runtime DLL is 1.28.2, MIT with
+its original third-party notices. NAudio.WinMM 2.3.0 is MIT licensed.
+Original texts and attribution are retained in Licenses/texts/dictation-*.
+Runtime preparation and SHA256 inventory are in prepare-dictation-runtime.ps1
+and Tools/dictation-runtime-files.json. The LOPATA adapter uses UTF-8 config
+strings instead of upstream Windows LPStr; inference stays in the official runtime.
+
 ## 2026-10-22 — ACE XL retake compatibility
 
 The pinned XL checkpoint d4a0b288 includes older remote model code that accepts

@@ -30,6 +30,7 @@ public static class ScenarioNavigationCatalog
     public const string Metadata = "file_metadata";
     public const string LyricVideo = "music_video";
     public const string BookConversion = "text_to_book";
+    public const string Dictation = "voice_input";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -38,6 +39,7 @@ public static class ScenarioNavigationCatalog
         Node(Experiments, ScenarioNavigationKind.Direction, null, "Navigation.Experiments", "Navigation.ExperimentsHint", "experiment"),
         Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause", "component_audit"]),
         Node("utilities_text", ScenarioNavigationKind.Group, Utilities, "BookConverter.Group", "", "tools"),
+        Node(Dictation,ScenarioNavigationKind.Scenario,"utilities_text","Dictation.Title","Dictation.Help","tools",tags:["voice_input"]),
         Node(BookConversion, ScenarioNavigationKind.Scenario, "utilities_text", "BookConverter.Title", "BookConverter.Description", "tools",
             tags: ["text_to_book", "book_merge", "book_shell", "book_view", "book_editor", "book_smart", "book_logs"], related: [RagBooks]),
         Node("utilities_knowledge", ScenarioNavigationKind.Group, Utilities, "RagBooks.Group", "", "tools"),
@@ -83,6 +85,7 @@ public static class ScenarioNavigationCatalog
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
+        new ScenarioNavigationTag("voice_input","Dictation.Title","Dictation.Help",Dictation),
         Tag("engine_sets", Creation),
         Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),
         Tag("book_view", BookConversion), Tag("book_editor", BookConversion), Tag("book_smart", BookConversion), Tag("book_logs", BookConversion),

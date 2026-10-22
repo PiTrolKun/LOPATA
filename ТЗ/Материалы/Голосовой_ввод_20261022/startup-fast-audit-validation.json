@@ -1,0 +1,207 @@
+{
+  "backupVerifiedFiles": 16,
+  "version": "0.6.2-dev",
+  "beforeReportedEngineMs": [
+    8844,
+    10009
+  ],
+  "notes": [
+    "Actual app startup after reboot, no test-mode audit store or fake proof",
+    "First audit remains mandatory; repeat startup uses presence checks",
+    "Passport and GPU cache byte hashes unchanged across repeat launch",
+    "Voice prewarm begins after StartupPreparation, microphone remains off"
+  ],
+  "runs": [
+    {
+      "events": [
+        {
+          "at": "2026-10-22T13:14:07.2444598Z",
+          "owner": 25080,
+          "kind": "startup_check_started",
+          "component": "EngineSets",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:14:07.5578669Z",
+          "owner": 25080,
+          "kind": "component_audit_first_run",
+          "component": "ComponentAudit",
+          "pid": null,
+          "detail": "engine-set-002"
+        },
+        {
+          "at": "2026-10-22T13:14:30.0590305Z",
+          "owner": 25080,
+          "kind": "startup_check_finished",
+          "component": "EngineSets",
+          "pid": null,
+          "detail": "elapsedMs=22815"
+        },
+        {
+          "at": "2026-10-22T13:14:30.0605259Z",
+          "owner": 25080,
+          "kind": "startup_check_started",
+          "component": "StartupPreparation",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:14:30.0625577Z",
+          "owner": 25080,
+          "kind": "startup_check_started",
+          "component": "ComputerPassport",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:14:30.0730961Z",
+          "owner": 25080,
+          "kind": "startup_check_finished",
+          "component": "ComputerPassport",
+          "pid": null,
+          "detail": "elapsedMs=12"
+        },
+        {
+          "at": "2026-10-22T13:14:30.089323Z",
+          "owner": 25080,
+          "kind": "startup_check_started",
+          "component": "HardwareReadiness",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:14:30.344024Z",
+          "owner": 25080,
+          "kind": "startup_check_finished",
+          "component": "HardwareReadiness",
+          "pid": null,
+          "detail": "elapsedMs=254"
+        },
+        {
+          "at": "2026-10-22T13:14:30.3446956Z",
+          "owner": 25080,
+          "kind": "startup_check_finished",
+          "component": "StartupPreparation",
+          "pid": null,
+          "detail": "elapsedMs=284"
+        },
+        {
+          "at": "2026-10-22T13:14:30.4820093Z",
+          "owner": 25080,
+          "kind": "started",
+          "component": "VoiceInput.Parakeet",
+          "pid": 36416,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:14:33.6337728Z",
+          "owner": 25080,
+          "kind": "dictation_ready",
+          "component": "VoiceInput",
+          "pid": 36416,
+          "detail": null
+        }
+      ],
+      "owner": 25080,
+      "mode": "first-full-after-new-audit-identity"
+    },
+    {
+      "events": [
+        {
+          "at": "2026-10-22T13:16:29.0471712Z",
+          "owner": 17344,
+          "kind": "startup_check_started",
+          "component": "EngineSets",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:16:29.2614108Z",
+          "owner": 17344,
+          "kind": "startup_check_finished",
+          "component": "EngineSets",
+          "pid": null,
+          "detail": "elapsedMs=214"
+        },
+        {
+          "at": "2026-10-22T13:16:29.2624464Z",
+          "owner": 17344,
+          "kind": "startup_check_started",
+          "component": "StartupPreparation",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:16:29.2637588Z",
+          "owner": 17344,
+          "kind": "startup_check_started",
+          "component": "ComputerPassport",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:16:29.2670303Z",
+          "owner": 17344,
+          "kind": "startup_check_finished",
+          "component": "ComputerPassport",
+          "pid": null,
+          "detail": "elapsedMs=4"
+        },
+        {
+          "at": "2026-10-22T13:16:29.2738095Z",
+          "owner": 17344,
+          "kind": "startup_check_started",
+          "component": "HardwareReadiness",
+          "pid": null,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:16:29.3728375Z",
+          "owner": 17344,
+          "kind": "startup_check_finished",
+          "component": "HardwareReadiness",
+          "pid": null,
+          "detail": "elapsedMs=99"
+        },
+        {
+          "at": "2026-10-22T13:16:29.3732352Z",
+          "owner": 17344,
+          "kind": "startup_check_finished",
+          "component": "StartupPreparation",
+          "pid": null,
+          "detail": "elapsedMs=110"
+        },
+        {
+          "at": "2026-10-22T13:16:29.4694658Z",
+          "owner": 17344,
+          "kind": "started",
+          "component": "VoiceInput.Parakeet",
+          "pid": 7904,
+          "detail": null
+        },
+        {
+          "at": "2026-10-22T13:16:30.9803005Z",
+          "owner": 17344,
+          "kind": "dictation_ready",
+          "component": "VoiceInput",
+          "pid": 7904,
+          "detail": null
+        }
+      ],
+      "owner": 17344,
+      "mode": "repeat-quick"
+    }
+  ],
+  "cachedFilesUnchanged": true,
+  "tests": {
+    "skipped": 1,
+    "log": "_tmp/startup-fast-audit/tests-final.log",
+    "failed": 0,
+    "passed": 51
+  },
+  "build": {
+    "warnings": 0,
+    "errors": 0
+  }
+}

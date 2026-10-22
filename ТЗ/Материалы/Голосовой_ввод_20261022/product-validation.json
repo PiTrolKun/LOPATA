@@ -1,0 +1,133 @@
+{
+  "version": "0.6.1-dev",
+  "status": "implemented-awaiting-user-acceptance",
+  "build": {
+    "errors": 0,
+    "warnings": 0,
+    "safeStart": true
+  },
+  "tests": {
+    "total": 55,
+    "passed": 54,
+    "failed": 0,
+    "skipped": 1,
+    "skip": "Opt-in packaged audio audit benchmark; outside this change"
+  },
+  "native": {
+    "cpuOnly": true,
+    "microphoneOpened": false,
+    "unicodeModelPaths": true,
+    "proofReceipts": 5,
+    "runs": [
+      {
+        "audit": false,
+        "ready": {
+          "type": "ready",
+          "loadMs": 1389.8451
+        },
+        "decodeMs": [
+          156.1056,
+          431.3321,
+          518.5283
+        ],
+        "textCharacters": [
+          79,
+          50,
+          50
+        ],
+        "repeatEqual": true,
+        "exitCode": 0,
+        "stderrEmpty": true,
+        "wallSeconds": 3.7596195000223815
+      },
+      {
+        "audit": false,
+        "ready": {
+          "type": "ready",
+          "loadMs": 1354.1011
+        },
+        "decodeMs": [
+          148.3313,
+          410.1688,
+          414.2763
+        ],
+        "textCharacters": [
+          79,
+          50,
+          50
+        ],
+        "repeatEqual": true,
+        "exitCode": 0,
+        "stderrEmpty": true,
+        "wallSeconds": 2.5462867000023834
+      },
+      {
+        "audit": true,
+        "ready": {
+          "type": "ready",
+          "loadMs": 1348.4761
+        },
+        "decodeMs": [
+          148.1574,
+          418.1438,
+          528.0464
+        ],
+        "textCharacters": [
+          79,
+          50,
+          50
+        ],
+        "repeatEqual": true,
+        "exitCode": 0,
+        "stderrEmpty": true,
+        "wallSeconds": 3.635040900000604
+      },
+      {
+        "rejected": "hash",
+        "beforeRecognition": true,
+        "exitCode": 1
+      },
+      {
+        "rejected": "missing",
+        "beforeRecognition": true,
+        "exitCode": 1
+      }
+    ]
+  },
+  "ui": {
+    "startCollapsed": true,
+    "dockedSingleRow": true,
+    "detachAndReturn": true,
+    "themes": [
+      "ru dark",
+      "ru light",
+      "en dark",
+      "en light"
+    ],
+    "externalAccessibleEditor": true
+  },
+  "licenses": {
+    "previousEntriesUnchanged": true,
+    "basicInstallerUnchanged": true,
+    "automaticAcknowledgement": false
+  },
+  "runtimeRestore": {
+    "officialNuget": true,
+    "isolatedRestorePassed": true
+  },
+  "text": {
+    "scopedFiles": 44,
+    "strictUtf8": true,
+    "mojibakeFindings": 0,
+    "diffCheckPassed": true
+  },
+  "knownBaseline": {
+    "test": "ComponentCatalogTests.EveryFixedComponent_HasBilingualSemanticPassport",
+    "firstMissing": "runtime.music-stems.onnxruntime",
+    "scope": "Existing music-stems entries already included by HEAD ComponentCatalog; passport fallback unchanged. New dictation passports pass their own catalog test."
+  },
+  "release": {
+    "installerRebuilt": false,
+    "published": false
+  }
+}

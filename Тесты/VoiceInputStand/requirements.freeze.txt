@@ -1,0 +1,9 @@
+certifi==2026.10.19
+charset-normalizer==3.5.2
+idna==3.20
+numpy==2.5.4
+psutil==7.2.2
+requests==2.34.2
+sherpa-onnx-core==1.13.8
+sherpa_onnx==1.13.8
+urllib3==2.8.0

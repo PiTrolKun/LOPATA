@@ -24,6 +24,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.Dictation:
+                    DockDictation();
+                    break;
                 case ScenarioNavigationCatalog.BookConversion:
                     OpenBookConversionUtility();
                     break;

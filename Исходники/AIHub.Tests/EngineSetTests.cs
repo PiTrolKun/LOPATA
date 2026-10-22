@@ -14,6 +14,47 @@ namespace AIHub.Tests;
 public sealed class EngineSetTests
 {
     [TestMethod]
+    public async Task QuickAuditReusesProofAcrossServicesWithoutOpeningPayloadAndStillRequiresPresence()
+    {
+        using var f = new Fixture(); f.Install("002", bundled: true);
+        using var audit = ComponentAudit.UseTestStore(Path.Combine(f.Root,"audit"), false);
+        await f.Service().InitializeAsync();
+        var file = f.RuntimeFile("002", bundled: true);
+        using (var locked = new FileStream(file,FileMode.Open,FileAccess.ReadWrite,FileShare.None))
+        {
+            var restarted = f.Service(); await restarted.InitializeAsync();
+            Assert.IsTrue((await restarted.GetInstalledAsync()).Contains("002"), "Quick mode must not open payload files.");
+        }
+        File.Delete(file);
+        Assert.IsFalse((await f.Service().GetInstalledAsync()).Contains("002"));
+    }
+
+    [TestMethod]
+    public async Task FullAuditAndReinstallationRevokeQuickProofForDamagedEngineFiles()
+    {
+        using var f = new Fixture(); f.Install("002", bundled: true);
+        using var audit = ComponentAudit.UseTestStore(Path.Combine(f.Root,"audit"), false);
+        await f.Service().InitializeAsync();
+        var file = f.RuntimeFile("002", bundled: true); File.WriteAllText(file,"damaged");
+        Assert.IsTrue((await f.Service().GetInstalledAsync()).Contains("002"), "Opted-out audit checks existence only.");
+        using(ComponentAudit.ForceFull()) Assert.IsFalse((await f.Service().GetInstalledAsync()).Contains("002"));
+        Assert.IsFalse((await f.Service().GetInstalledAsync()).Contains("002"), "A failed full audit must revoke old proof.");
+        f.Install("002", bundled: true); await f.Service().InitializeAsync();
+        File.WriteAllText(file,"damaged again"); ComponentAudit.Invalidate(Path.Combine(f.Root,"bundled","002"));
+        Assert.IsFalse((await f.Service().GetInstalledAsync()).Contains("002"));
+    }
+
+    [TestMethod]
+    public async Task DownloadVerificationDoesNotConsumeMandatoryFirstRuntimeAudit()
+    {
+        using var f = new Fixture(); f.Install("002", bundled: true);
+        using var audit = ComponentAudit.UseTestStore(Path.Combine(f.Root,"audit"), false);
+        var service = f.Service(); await service.InitializeAsync(); await service.DownloadAsync("001");
+        using(var locked = new FileStream(f.RuntimeFile("001"),FileMode.Open,FileAccess.ReadWrite,FileShare.None))
+            Assert.IsFalse((await service.GetInstalledAsync()).Contains("001"), "First-use verification must still read files.");
+        Assert.IsTrue((await service.GetInstalledAsync()).Contains("001"));
+    }
+    [TestMethod]
     public async Task FreshInstallationOnlyNeedsTheRecommendedSet()
     {
         using var f = new Fixture(); f.Install("002", bundled: true);
@@ -259,12 +300,14 @@ public sealed class EngineSetTests
         public EngineSetDefinition[] Sets { get; }
         public FakeNetwork Network { get; } = new();
         private readonly ECDsa _key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        private readonly IDisposable _audit;
         private readonly string _originalActive = EngineSetSelection.ActiveId;
         private readonly string _originalRecommended = EngineSetSelection.RecommendedId;
         public Fixture(params string[] ids)
         {
             if (ids.Length == 0) ids = ["001", "002"];
             Directory.CreateDirectory(Root);
+            _audit = ComponentAudit.UseTestStore(Path.Combine(Root,"audit"), true);
             Sets = ids.Select(id =>
             {
                 using var memory = new MemoryStream();
@@ -329,7 +372,7 @@ public sealed class EngineSetTests
         {
             typeof(EngineSetSelection).GetMethod("Publish", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
                 .Invoke(null, [_originalActive, _originalRecommended]);
-            _key.Dispose(); Network.Dispose();
+            _audit.Dispose(); _key.Dispose(); Network.Dispose();
             var absolute = Path.GetFullPath(Root); var temp = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             if (!absolute.StartsWith(temp, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(absolute).StartsWith("lopata-engine-test-", StringComparison.Ordinal))
                 throw new InvalidOperationException("Unsafe test cleanup.");

@@ -1,0 +1,24 @@
+[
+  {
+    "Id": "dictation-parakeet",
+    "Name": "Parakeet TDT v3 INT8 · sherpa-onnx CPU",
+    "Version": "v3 / 1.13.8",
+    "Author": "NVIDIA; csukuangfj; sherpa-onnx contributors; Microsoft; NAudio contributors",
+    "License": "CC BY 4.0; Apache-2.0; MIT; third-party notices",
+    "Source": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
+    "Checked": "2026-10-22",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "",
+    "Ru": "Локальный голосовой ввод. Модель NVIDIA в INT8-конверсии csukuangfj скачивается отдельно. Исполнитель sherpa-onnx и ONNX Runtime входят в программу; NAudio используется для захвата. Для модели сохраняются атрибуция и ссылка CC BY 4.0, конверсия обозначается как изменение формата/точности. Условия сторонних частей действуют отдельно. Качество диктовки и работа на каждом ПК не гарантированы.",
+    "En": "Local voice input. The NVIDIA model in the csukuangfj INT8 conversion is downloaded separately. sherpa-onnx and ONNX Runtime are bundled; NAudio captures audio. Model attribution and CC BY 4.0 link are retained, and the format/precision conversion is identified. Third-party terms apply separately. Dictation quality and operation on every computer are not guaranteed.",
+    "Texts": [
+      "texts/dictation-CC-BY-4.0.txt",
+      "texts/dictation-Parakeet-model-card.md",
+      "texts/dictation-sherpa-LICENSE.txt",
+      "texts/dictation-onnxruntime-LICENSE.txt",
+      "texts/dictation-onnxruntime-NOTICES.txt",
+      "texts/dictation-naudio-LICENSE.txt"
+    ]
+  }
+]
