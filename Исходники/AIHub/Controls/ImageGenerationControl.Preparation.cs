@@ -94,7 +94,7 @@ public sealed partial class ImageGenerationControl
             _preparationChecked = true; Status(L(_preparationReady ? "Preparation.Ready" : "Preparation.NeedsDownload"));
         }
         catch (OperationCanceledException) { Status(L("Canceled")); }
-        catch (Exception ex) { Error(ex); }
+        catch (Exception ex) { ComponentAuditFailures.Report(ex); Error(ex); }
         finally { _busy = false; _cancel.Dispose(); _cancel = null; Render(); }
         if (_preparationOnly && _preparationReady && await PrepareAsync(false)) PreparationCompleted?.Invoke();
     }

@@ -98,6 +98,7 @@ public sealed class LiteraryPreparationControl : UserControl
         }
         catch (Exception ex)
         {
+            ComponentAuditFailures.Report(ex);
             _needsDownload = downloadWasNeeded;
             _install.Visibility = _needsDownload ? Visibility.Visible : Visibility.Collapsed;
             _status.Text = _l("Literary.Prepare.Error") + " " + ex.Message;
@@ -116,7 +117,7 @@ public sealed class LiteraryPreparationControl : UserControl
             _cancel.Token.ThrowIfCancellationRequested(); Ready?.Invoke();
         }
         catch (OperationCanceledException) { _status.Text = _l("Literary.Prepare.Cancelled"); }
-        catch (Exception ex) { _status.Text = _l("Literary.Prepare.Error") + " " + ex.Message; }
+        catch (Exception ex) { ComponentAuditFailures.Report(ex); _status.Text = _l("Literary.Prepare.Error") + " " + ex.Message; }
         finally { _busy = false; _next.IsEnabled = _componentsReady; _install.IsEnabled = _needsDownload; _retry.IsEnabled = true; _cancel.Dispose(); _cancel = null; }
     }
 }

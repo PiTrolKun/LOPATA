@@ -16,7 +16,6 @@ public static partial class BookConverterRuntime
     public const string DownloadSha256 = "BE3B24228133EC64148ACF5E6A3244DBC88A9B509AE8992B7922C425DA0F1AAE";
     private const long DownloadBytes = 217118472;
     private static readonly SemaphoreSlim VerificationGate = new(1, 1);
-    private static string? _verifiedRoot;
     private static string ManagedRoot => Path.Combine(AppDataPaths.RuntimeDirectory, "BookConverter", "calibre-" + Version);
     private static string RelativeExecutable => Path.Combine("Calibre Portable", "Calibre", "ebook-convert.exe");
 
@@ -77,20 +76,12 @@ public static partial class BookConverterRuntime
         await VerificationGate.WaitAsync(token);
         try
         {
-            if (root == _verifiedRoot) return;
             await using var manifest = typeof(BookConverterRuntime).Assembly.GetManifestResourceStream("AIHub.BookConverterManifest")
                 ?? throw new InvalidDataException("Missing calibre file manifest.");
             using var doc = await JsonDocument.ParseAsync(manifest, cancellationToken: token);
-            foreach (var entry in doc.RootElement.GetProperty("Files").EnumerateArray())
-            {
-                var path = Path.GetFullPath(Path.Combine(root, entry.GetProperty("Name").GetString()!));
-                if (!path.StartsWith(Path.GetFullPath(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Invalid calibre manifest path.");
-                Lopata.Updates.SafeUpdatePath.RejectLinks(path);
-                await using var file = File.OpenRead(path);
-                if (file.Length != entry.GetProperty("Bytes").GetInt64() || !Convert.ToHexString(await SHA256.HashDataAsync(file, token)).Equals(entry.GetProperty("Sha256").GetString(), StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("Calibre file checksum mismatch: " + entry.GetProperty("Name").GetString());
-            }
-            _verifiedRoot = root;
+            var expected = doc.RootElement.GetProperty("Files").EnumerateArray().Select(f => new PinnedTreeFile(
+                f.GetProperty("Name").GetString()!, f.GetProperty("Bytes").GetInt64(), f.GetProperty("Sha256").GetString()!)).ToArray();
+            await RuntimeFileAudit.VerifyAsync("Books.Calibre", root, Version, expected, token);
         }
         finally { VerificationGate.Release(); }
     }
@@ -151,7 +142,7 @@ public static partial class BookConverterRuntime
             if (!File.Exists(Path.Combine(stage, RelativeExecutable))) throw new InvalidDataException("Missing calibre executable.");
             // No deletion/replacement of an existing installation or a concurrent preparation.
             if (Directory.Exists(destination)) throw new IOException("Calibre destination already exists; inspect the incomplete installation before retrying.");
-            Directory.Move(stage, destination);
+            Directory.Move(stage, destination); ComponentAudit.Invalidate(destination);
         }
         finally
         {

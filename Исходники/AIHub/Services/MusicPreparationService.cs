@@ -34,6 +34,7 @@ public sealed class MusicPreparationService : IMusicPreparation
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         _lyricsVerified = false;
         if (MusicLyricsComponentCatalog.IsAvailable(new ComponentManager()))
         {
@@ -55,6 +56,7 @@ public sealed class MusicPreparationService : IMusicPreparation
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> PrepareAsync(string root, bool download,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         var cards = Register(root);
         await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(Variation), token);
         _lyricsVerified = false;

@@ -25,6 +25,7 @@ public sealed class ExecutorModelInstaller : IDisposable
         IProgress<ExecutorDownloadProgress> progress,
         CancellationToken cancellationToken)
     {
+        using var auditInstallation = ComponentAudit.Installation();
         ArgumentNullException.ThrowIfNull(artifact);
         ArgumentNullException.ThrowIfNull(storageSettings);
         await ComponentLicenseGate.EnsureAsync(artifact.RepoId, cancellationToken);
@@ -129,6 +130,7 @@ public sealed class ExecutorModelInstaller : IDisposable
         }
 
         File.Move(partialPath, targetPath, overwrite: true);
+        ComponentAudit.Invalidate(directory);
         artifact.Sha256 = actualHash;
         artifact.IsInstalled = false;
         artifact.InstalledPath = targetPath;
@@ -137,6 +139,17 @@ public sealed class ExecutorModelInstaller : IDisposable
         SaveManifest(manifestPath, verified);
         progress.Report(new ExecutorDownloadProgress(downloadedBytes, artifact.SizeBytes, 0, "runtime_validation"));
         return artifact;
+    }
+
+    /// <summary>Use the pinned local executor manifest only when it names the model being loaded.</summary>
+    public static async Task VerifyPathForUseAsync(string path, CancellationToken token, Action<string>? log = null)
+    {
+        var directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
+        var manifest = ExecutorModelManifestStore.Load(Path.Combine(directory, ManifestFileName));
+        if (manifest is null || !Path.GetFileName(path).Equals(manifest.File, StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(manifest.Sha256) || manifest.Sha256.Length != 64) return;
+        await RuntimeFileAudit.VerifyAsync("executor:" + manifest.RepoId, directory, manifest.Sha256,
+            [new PinnedTreeFile(manifest.File, manifest.TotalBytes, manifest.Sha256)], token, log);
     }
 
     public ExecutorModelArtifact MarkRuntimeVerified(ExecutorModelArtifact artifact)

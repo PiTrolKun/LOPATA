@@ -51,6 +51,8 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         RunAsync(model, request, requestPath, outputPath, false, token);
     private async Task RunAsync(string model, MusicYueRequest request, string requestPath, string output, bool plan, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         request.Validate(); LastRequestReceipt = null; LastRuntimePack = null; _devices.Clear();
         var profile = Profile(request);
         var body = Request(request, plan, profile); // Reject unsupported settings before loading models.

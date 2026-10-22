@@ -37,14 +37,21 @@ internal static class MusicBf16Runtime
                 foreach (var path in Directory.EnumerateFiles(staging, "*", SearchOption.AllDirectories))
                     manifest[Path.GetRelativePath(staging, path)] = await Hash(path, token);
                 await File.WriteAllTextAsync(Path.Combine(staging, "files.json"), JsonSerializer.Serialize(manifest), token);
-                token.ThrowIfCancellationRequested(); Directory.Move(staging, root);
+                token.ThrowIfCancellationRequested(); Directory.Move(staging, root); ComponentAudit.Invalidate(root);
             }
             finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
+            await VerifyAsync(root, runtime, token);
             return Path.Combine(root, "Lib", "site-packages");
         }
         finally { Gate.Release(); }
     }
-    private static async Task VerifyAsync(string root, ManagedModelArtifactCard runtime, CancellationToken token)
+    private static string Identity(ManagedModelArtifactCard runtime) => MusicModelVariants.RuntimeRevision + ":" +
+        string.Join(";", runtime.Files.OrderBy(f => f.RelativePath, StringComparer.Ordinal).Select(f => $"{f.RelativePath}|{f.SizeBytes}|{f.Sha256}"));
+    private static Task VerifyAsync(string root, ManagedModelArtifactCard runtime, CancellationToken token) =>
+        ComponentAudit.RunAsync("Music.YuE2.BF16.Libraries", root, Identity(runtime),
+            ct => RuntimeFileAudit.PresenceInventoryAsync(root, Identity(runtime), ct),
+            ct => VerifyFullAsync(root, runtime, ct), token);
+    private static async Task VerifyFullAsync(string root, ManagedModelArtifactCard runtime, CancellationToken token)
     {
         Lopata.Updates.SafeUpdatePath.RejectLinks(root);
         var prefix = Path.GetFullPath(root) + Path.DirectorySeparatorChar;
@@ -69,6 +76,7 @@ internal static class MusicBf16Runtime
         }
         foreach (var installed in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
             if (!expectedPaths.Contains(installed)) throw new InvalidDataException("Unexpected Python overlay file: " + Path.GetFileName(installed));
+        await RuntimeFileAudit.SaveInventoryAsync(root, Identity(runtime), expectedPaths.Select(p => Path.GetRelativePath(root, p)), token);
     }
     private static async Task<string> Hash(string path, CancellationToken token)
     { await using var stream = File.OpenRead(path); return Convert.ToHexString(await SHA256.HashDataAsync(stream, token)); }

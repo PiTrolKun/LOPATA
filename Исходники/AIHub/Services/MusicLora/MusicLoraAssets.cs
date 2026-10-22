@@ -11,9 +11,11 @@ public static class MusicLoraAssets
     public static bool Ready(MusicLoraDefinition d, string root)
     {
         var expected = d.Card(root); var saved = new ManagedModelLibraryStore().Load(expected.ModelArtifactId);
-        return saved is not null && saved.Revision == d.Revision && saved.InstallDirectory == expected.InstallDirectory
+        return saved is not null && saved.Status == ManagedModelStatuses.Installed && saved.Revision == d.Revision && saved.InstallDirectory == expected.InstallDirectory
             && expected.Files.All(f => {
-                var info = new FileInfo(Path.Combine(expected.InstallDirectory, f.RelativePath));
+                var path = RuntimeFileAudit.Contained(expected.InstallDirectory, f.RelativePath);
+                if (!ComponentAudit.FullRequired) return File.Exists(path);
+                var info = new FileInfo(path);
                 var known = saved.Files.SingleOrDefault(x => x.RelativePath == f.RelativePath && x.Sha256 == f.Sha256);
                 return info.Exists && info.Length == f.SizeBytes && known is not null && known.VerifiedSizeBytes == info.Length
                     && known.VerifiedLastWriteTimeUtc == info.LastWriteTimeUtc;
@@ -22,6 +24,7 @@ public static class MusicLoraAssets
     public static async Task<bool> PrepareAsync(string root, IReadOnlyList<MusicLoraUse> uses, bool download,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         // One acknowledgement for the whole action, before registration or any download.
         if (download) {
             var ids = uses.Select(u => {
@@ -48,9 +51,10 @@ public static class MusicLoraAssets
     }
     public static async Task EnsureAsync(string root, MusicLoraUse[] uses, string variation, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         MusicLoraCatalog.Validate(uses, variation); if (uses.Length == 0) return;
         await ComponentLicenseGate.EnsureAsync(uses.Select(u => MusicLoraCatalog.Find(u.Id).LicenseId).ToArray(), token);
-        if (uses.All(u => Ready(MusicLoraCatalog.Find(u.Id), root))) return;
+        if (await PrepareAsync(root, uses, false, null, token)) return;
         if (RequestPreparation is null || !await RequestPreparation(root, uses, token)) throw new InvalidDataException("Music.Lora.Missing");
         if (!uses.All(u => Ready(MusicLoraCatalog.Find(u.Id), root))) throw new InvalidDataException("Music.Lora.Missing");
     }
@@ -67,12 +71,15 @@ public static class MusicLoraAssets
                 var files = card.Files.Select(f => Path.Combine(directory, f.RelativePath)).ToArray();
                 foreach (var file in files) Lopata.Updates.SafeUpdatePath.RejectLinks(file);
                 foreach (var file in files) if (File.Exists(file)) File.Delete(file);
+                ComponentAudit.Invalidate(directory);
             }
             card.Status = ManagedModelStatuses.FilesRemoved; (library ?? new ManagedModelLibraryStore()).Upsert(card);
         } finally { Gate.Release(); }
     }
     public static async Task<IDisposable> AcquireAsync(string root, MusicLoraUse[] uses, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        if (!await PrepareAsync(root, uses, false, null, token)) throw new InvalidDataException("Music.Lora.Missing");
         await Gate.WaitAsync(token);
         try {
             if (uses.Any(u => !Ready(MusicLoraCatalog.Find(u.Id), root))) throw new InvalidDataException("Music.Lora.Missing");

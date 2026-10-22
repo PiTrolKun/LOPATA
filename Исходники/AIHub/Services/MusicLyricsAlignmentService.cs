@@ -22,6 +22,8 @@ public sealed class MusicLyricsAlignmentService(ComponentManager? components = n
     public async Task<MusicLyricsAlignmentResult> AlignAsync(string audioPath, string lyrics, string workDirectory, CancellationToken token,
         string speechLanguage = "auto")
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         audioPath = Path.GetFullPath(audioPath);
         if (!File.Exists(audioPath)) throw new FileNotFoundException("Lyrics alignment audio is missing.", audioPath);
         if (string.IsNullOrWhiteSpace(lyrics)) throw new InvalidDataException("No source lyrics to align.");
@@ -69,7 +71,7 @@ public sealed class MusicLyricsAlignmentService(ComponentManager? components = n
                     source_hash = MusicTimedLyrics.HashLyrics(lyrics), duration_seconds = duration, speech_language = speechLanguage,
                     weights = MusicLyricsComponentCatalog.GetModelPath(_components), import_roots = MusicLyricsComponentCatalog.GetImportRoots(_components),
                     lines = rows.Select(row => new { index = row.Index, text = row.Text }), output = resultPath,
-                    device = runtime.Device,
+                    device = runtime.Device, component_audit_prepared = true,
                     threads = Math.Clamp(Environment.ProcessorCount / 2, 1, 8), provider = Provider, version = ProviderVersion,
                     note = "Whole-source-line CTC likelihood, no transcript prompt, no inferred intervals." }), Encoding.UTF8, token);
                 var outcome = await MusicLyricsWorkerProcess.RunAsync(runtime.Python, script, requestPath, Emit, token);

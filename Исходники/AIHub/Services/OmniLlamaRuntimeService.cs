@@ -54,6 +54,8 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
     public async Task<OmniWarmupResult> PrepareAsync(Action<string> log,
         IProgress<ImageAnalysisLiteraryProgress>? progress, CancellationToken cancellationToken, bool reuseCurrentPlan = false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (!_backgroundRegistered)
         {
@@ -84,8 +86,7 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
     {
             Stop();
             await AwaitProcessRetirementAsync(cancellationToken);
-            var card = library.Load(_profile.ArtifactId)
-                ?? throw new InvalidDataException("The Omni model is not registered. Download it using the model button.");
+            var card = await ManagedModelRuntimeAudit.VerifyAsync(library, _profile.ArtifactId, cancellationToken, log);
             if (card.Status != ManagedModelStatuses.Installed || card.Revision != ModelRevision)
                 throw new InvalidDataException("Download and verify the complete Omni model and projector first.");
             var model = ResolveFile(card, "main_model");
@@ -225,7 +226,8 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
         var file = card.Files.Single(f => f.Purpose == purpose);
         var root = Path.GetFullPath(card.InstallDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         var path = Path.GetFullPath(Path.Combine(root, file.RelativePath));
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(path) || new FileInfo(path).Length != file.SizeBytes)
+        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(path)
+            || ComponentAudit.FullRequired && new FileInfo(path).Length != file.SizeBytes)
             throw new InvalidDataException("A verified Omni file is missing or changed.");
         return path;
     }

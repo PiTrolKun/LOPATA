@@ -7,14 +7,14 @@ namespace AIHub.Services;
 /// <summary>Native sub-bundle integrity in addition to the enclosing engine-set manifest.</summary>
 internal static class NativeEngineBundleVerifier
 {
-    private static JsonDocument Read(string family, string backend, string directory, string engineSetId)
+    private static JsonDocument Read(string family, string backend, string directory, string engineSetId, bool full = true)
     {
         var path = Path.Combine(directory, "runtime-manifest.json");
         Lopata.Updates.SafeUpdatePath.RejectLinks(path);
         if (!File.Exists(path) || new FileInfo(path).Length > 512 * 1024)
             throw new InvalidDataException("Native runtime manifest is missing or too large.");
         var bytes = File.ReadAllBytes(path);
-        if (!Convert.ToHexString(SHA256.HashData(bytes)).Equals(NativeRuntimeReleasePolicy.ManifestDigest(family, backend, engineSetId), StringComparison.OrdinalIgnoreCase))
+        if (full && !Convert.ToHexString(SHA256.HashData(bytes)).Equals(NativeRuntimeReleasePolicy.ManifestDigest(family, backend, engineSetId), StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Native runtime manifest is not the pinned engine-set payload.");
         var manifest = JsonDocument.Parse(bytes);
         if (manifest.RootElement.GetProperty("backend").GetString() != backend
@@ -38,19 +38,50 @@ internal static class NativeEngineBundleVerifier
     {
         try
         {
-            using var manifest = Read(family, backend, directory, engineSetId);
+            var full = ComponentAudit.FullRequired;
+            using var manifest = Read(family, backend, directory, engineSetId, full);
             return manifest.RootElement.GetProperty("files").EnumerateArray().All(item =>
             {
                 var path = ContainedPath(directory, item.GetProperty("path").GetString()!);
-                return File.Exists(path) && new FileInfo(path).Length == item.GetProperty("size").GetInt64();
+                return File.Exists(path) && (!full || new FileInfo(path).Length == item.GetProperty("size").GetInt64());
             });
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or ArgumentException)
         { return false; }
     }
 
-    internal static async Task VerifyFilesAsync(string family, string backend, string directory, CancellationToken token,
-        string engineSetId = NativeRuntimeReleasePolicy.UpdatedSet)
+    internal static Task VerifyFilesAsync(string family, string backend, string directory, CancellationToken token,
+        string engineSetId = NativeRuntimeReleasePolicy.UpdatedSet) => ComponentAudit.RunAsync("native-" + family + "-" + backend,
+            directory, engineSetId + "/" + NativeRuntimeReleasePolicy.ManifestDigest(family, backend, engineSetId),
+            cancellation => VerifyPresenceAsync(family, backend, directory, engineSetId, cancellation),
+            cancellation => VerifyFullAsync(family, backend, directory, engineSetId, cancellation), token);
+
+    internal static Task VerifyExecutableAsync(string family, string backend, string directory, CancellationToken token,
+        string engineSetId = NativeRuntimeReleasePolicy.UpdatedSet) => ComponentAudit.RunAsync("native-executable-" + family + "-" + backend,
+            directory, engineSetId + "/" + NativeRuntimeReleasePolicy.ManifestDigest(family, backend, engineSetId),
+            cancellation => VerifyPresenceAsync(family, backend, directory, engineSetId, cancellation), async cancellation => {
+                await VerifyFilesAsync(family, backend, directory, cancellation, engineSetId);
+                var executable = Path.Combine(directory, family == "llama" ? "llama-server.exe" : "sd-cli.exe");
+                var version = await RuntimeDeviceProbe.RunAsync(executable, "--version", cancellation);
+                if (!(family == "llama" ? NativeRuntimeReleasePolicy.IsLlamaVersion(version, engineSetId)
+                    : NativeRuntimeReleasePolicy.IsSdVersion(version, engineSetId)))
+                    throw new InvalidDataException("Runtime version differs from the selected engine set.");
+            }, token);
+
+    private static Task VerifyPresenceAsync(string family, string backend, string directory, string engineSetId, CancellationToken token)
+    {
+        using var manifest = Read(family, backend, directory, engineSetId, false);
+        var expected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in manifest.RootElement.GetProperty("files").EnumerateArray())
+        {
+            token.ThrowIfCancellationRequested();
+            var path = ContainedPath(directory, item.GetProperty("path").GetString()!);
+            if (!expected.Add(path) || !File.Exists(path)) throw new InvalidDataException("Missing or duplicate native runtime file.");
+        }
+        return Task.CompletedTask;
+    }
+
+    private static async Task VerifyFullAsync(string family, string backend, string directory, string engineSetId, CancellationToken token)
     {
         using var manifest = Read(family, backend, directory, engineSetId);
         var expected = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

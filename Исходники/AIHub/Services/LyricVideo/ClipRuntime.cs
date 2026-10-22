@@ -22,16 +22,9 @@ internal static class ClipRuntime
         await ComponentLicenseGate.EnsureAsync("capture.ffmpeg", token);
         var path = Path.Combine(VideoDirectory, "provenance.json");
         using var doc = JsonDocument.Parse(await File.ReadAllBytesAsync(path, token));
-        foreach (var entry in doc.RootElement.GetProperty("Files").EnumerateArray())
-        {
-            var name = entry.GetProperty("Name").GetString() ?? throw new InvalidDataException();
-            var file = Path.GetFullPath(Path.Combine(VideoDirectory, name));
-            if (!file.StartsWith(Path.GetFullPath(VideoDirectory) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Invalid video runtime entry.");
-            if (!string.Equals(await HashAsync(file, token),
-                entry.GetProperty("Sha256").GetString(), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Video runtime checksum mismatch.");
-        }
+        var expected = doc.RootElement.GetProperty("Files").EnumerateArray().Select(f => new PinnedTreeFile(
+            f.GetProperty("Name").GetString()!, -1, f.GetProperty("Sha256").GetString()!)).ToArray();
+        await RuntimeFileAudit.VerifyAsync("Music.Video.Runtime", VideoDirectory, "capture.ffmpeg", expected, token);
     }
     public static async Task<string> RunAsync(IEnumerable<string> arguments, CancellationToken token)
     {

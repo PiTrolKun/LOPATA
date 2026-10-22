@@ -66,8 +66,9 @@ internal static class BookOfficeBundle
                 }
                 if (written != row.Bytes) throw Invalid();
             }
-            await BookConverterRuntime.VerifyOfficeFilesAsync(stage, new MemoryStream(manifestBytes), token);
-            token.ThrowIfCancellationRequested(); Directory.Move(stage, destination);
+            using (ComponentAudit.Installation()) await BookConverterRuntime.VerifyOfficeFilesAsync(stage, new MemoryStream(manifestBytes), token);
+            token.ThrowIfCancellationRequested(); Directory.Move(stage, destination); ComponentAudit.Invalidate(destination);
+            await BookConverterRuntime.VerifyOfficeFilesAsync(destination, new MemoryStream(manifestBytes), token);
         }
         finally
         {

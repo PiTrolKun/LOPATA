@@ -54,16 +54,41 @@ public static class LiteraryJellyInstallation
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(45));
             try
             {
-                await GigaEmbeddingInstallation.RunAsync([Script, "--mode", mode, "--deps", folder!, "--check"], null, timeout.Token);
+                var inventory = DependenciesManifest(mode);
+                await ComponentAudit.RunAsync("literary-jelly-dependencies:" + mode, folder!, inventory.GetRawText(),
+                    token => { VerifyDependenciesPresence(mode, folder!, inventory, token); return Task.CompletedTask; },
+                    token => GigaEmbeddingInstallation.RunAsync([Script, "--mode", mode, "--deps", folder!, "--check"], null, token), timeout.Token);
                 return folder;
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested) { }
-            catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or LiteraryEmbeddingException) { }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or System.ComponentModel.Win32Exception or LiteraryEmbeddingException) { }
         }
         return null;
     }
+    private static JsonElement DependenciesManifest(string mode)
+    {
+        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Tools", "jelly-dependencies.json")));
+        return doc.RootElement.GetProperty(mode).Clone();
+    }
+    private static void VerifyDependenciesPresence(string mode, string folder, JsonElement inventory, CancellationToken token)
+    {
+        foreach (var package in inventory.EnumerateObject())
+        {
+            token.ThrowIfCancellationRequested();
+            var name = package.Name.Replace('-', '_') + "-" + package.Value.GetString() + ".dist-info/METADATA";
+            var path = PinnedZipExpansionVerifier.ResolveArchivePath(folder, name);
+            if (!File.Exists(path)) throw new FileNotFoundException("Jelly dependency is missing.", path);
+        }
+        foreach (var relative in mode == "gliner" ? new[] { "transformers/__init__.py", "gliner2/__init__.py" } : ["transformers/__init__.py"])
+        {
+            var path = PinnedZipExpansionVerifier.ResolveArchivePath(folder, relative);
+            if (!File.Exists(path)) throw new FileNotFoundException("Jelly dependency is missing.", path);
+        }
+        if (!File.Exists(Script)) throw new FileNotFoundException("Jelly worker is missing.", Script);
+    }
     public static async Task InstallAsync(string mode, IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
     {
+        using var installation = ComponentAudit.Installation();
         await ComponentLicenseGate.EnsureAsync(Licenses, ct);
         var manifest = Manifest(mode);
         if (await FindModelAsync(mode, ct) is null)
@@ -94,6 +119,7 @@ public static class LiteraryJellyInstallation
             await GigaEmbeddingInstallation.RunAsync([Script, "--mode", mode, "--deps", staging, "--check"], null, ct);
             if (Directory.Exists(target)) Directory.Move(target, target + ".previous-" + Guid.NewGuid().ToString("N"));
             Directory.Move(staging, target);
+            ComponentAudit.Invalidate(target);
         }
         finally
         {

@@ -10,14 +10,20 @@ namespace AIHub.Services;
 /// <summary>Verify expanded binaries and weights against the original, SHA-pinned archive.</summary>
 internal static class PinnedZipExpansionVerifier
 {
-    internal static async Task VerifyAsync(string source, ManagedModelArtifactFile expected, string expanded, CancellationToken token)
+    internal static Task VerifyAsync(string source, ManagedModelArtifactFile expected, string expanded, CancellationToken token) =>
+        ComponentAudit.RunAsync("zip-expansion", expanded, expected.Sha256 + "/" + expected.SizeBytes,
+            cancellation => VerifyModeAsync(source, expected, expanded, false, cancellation),
+            cancellation => VerifyModeAsync(source, expected, expanded, true, cancellation), token);
+
+    private static async Task VerifyModeAsync(string source, ManagedModelArtifactFile expected, string expanded, bool full,
+        CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         SafeUpdatePath.RejectLinks(source);
         SafeUpdatePath.RejectLinks(expanded);
         await using var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (input.Length != expected.SizeBytes
-            || !Convert.ToHexString(await SHA256.HashDataAsync(input, token)).Equals(expected.Sha256, StringComparison.OrdinalIgnoreCase))
+        if (full && (input.Length != expected.SizeBytes
+            || !Convert.ToHexString(await SHA256.HashDataAsync(input, token)).Equals(expected.Sha256, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidDataException("Native source archive differs from the pinned catalog.");
         input.Position = 0;
         using var archive = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: true);
@@ -31,6 +37,12 @@ internal static class PinnedZipExpansionVerifier
             var path = ResolveArchivePath(expanded, relative);
             if (entry.FullName.EndsWith('/')) continue;
             if (!expectedPaths.Add(path)) throw new InvalidDataException("Duplicate native archive path.");
+            // Presence mode reads the ZIP central-directory names only, never entry payloads.
+            if (!full)
+            {
+                if (!File.Exists(path)) throw new InvalidDataException("Expanded native file is missing: " + relative);
+                continue;
+            }
             total = checked(total + entry.Length);
             if (total > 2L * 1024 * 1024 * 1024) throw new InvalidDataException("Native expansion exceeds its bound.");
             await using var actual = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -41,6 +53,7 @@ internal static class PinnedZipExpansionVerifier
             if (!CryptographicOperations.FixedTimeEquals(originalHash, actualHash))
                 throw new InvalidDataException("Expanded native file differs from its pinned source: " + relative);
         }
+        if (!full) return;
         expectedPaths.Add(Path.GetFullPath(Path.Combine(expanded, "image-utility-ready.json")));
         var pending = new Queue<string>();
         pending.Enqueue(expanded);

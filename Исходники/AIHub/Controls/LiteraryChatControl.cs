@@ -183,8 +183,8 @@ public sealed class LiteraryChatControl : UserControl
         catch (LiteraryDraftLimitException) { PreservePartial(); SetStatus("Literary.Draft.TokenLimit"); _input.Text = text; }
         catch (ImageAnalysisContextExhaustedException ex) { PreservePartial(); SetStatus(ex.OutputTruncated ? "Literary.Shared.OutputLimit" : "Literary.Writer.Context", ex); _input.Text = text; }
         catch (OperationCanceledException) { PreservePartial(); SetStatus(cts.IsCancellationRequested ? "Literary.Writer.Cancelled" : "Literary.Writer.Timeout"); _input.Text = text; }
-        catch (System.IO.FileNotFoundException) { PreservePartial(); SetStatus("Literary.Writer.Missing"); _input.Text = text; }
-        catch (Exception) { PreservePartial(); SetStatus("Literary.Writer.Error"); _input.Text = text; }
+        catch (System.IO.FileNotFoundException ex) { ComponentAuditFailures.Report(ex); PreservePartial(); SetStatus("Literary.Writer.Missing"); _input.Text = text; }
+        catch (Exception ex) { ComponentAuditFailures.Report(ex); PreservePartial(); SetStatus("Literary.Writer.Error"); _input.Text = text; }
         finally { finished = true; await streamDisplay.CompleteAsync(); _cts = null; _currentStream = null; SaveDialogue(); UpdateButtons(); }
         void PreservePartial()
         {

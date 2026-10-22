@@ -32,6 +32,8 @@ public sealed class BookSmartPreparationService : IDisposable
     public async Task<BookSmartReadiness> PrepareAsync(BookSmartSelection selection, bool download,
         IProgress<string> progress, CancellationToken cancellationToken)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(progress.Report);
         await _gate.WaitAsync(cancellationToken);
         try
         {
@@ -42,13 +44,13 @@ public sealed class BookSmartPreparationService : IDisposable
                 var card = Register(definition);
                 progress.Report(string.Format(L("CheckFile"), card.DisplayName));
                 var transfer = new InlineProgress<ManagedModelDownloadProgress>(value => progress.Report(
-                    value.Stage == "verifying" ? string.Format(L("CheckFile"), card.DisplayName)
+                    value.Stage.StartsWith("verif", StringComparison.Ordinal) ? string.Format(L("CheckFile"), card.DisplayName)
                     : string.Format(L("Transfer"), card.DisplayName, value.DownloadedBytes / 1048576d, value.TotalBytes / 1048576d)));
                 card = await _acquisition.VerifyAsync(card.ModelArtifactId, transfer, cancellationToken);
                 if (!FilesReady(card) && download)
                     card = await _acquisition.DownloadAsync(card.ModelArtifactId, transfer, cancellationToken);
                 var ready = FilesReady(card);
-                states.Add(new(card.DisplayName, L(ready ? "FilesVerified" : "Missing"),
+                states.Add(new(card.DisplayName, L(ready ? (ComponentAudit.FullRequired ? "FilesVerified" : "FilesPresent") : "Missing"),
                     ready ? 0 : await MissingBytesAsync(card, cancellationToken), ready));
             }
             if (_runtimePreparation is not null)
@@ -90,8 +92,8 @@ public sealed class BookSmartPreparationService : IDisposable
                 var path = Path.GetFullPath(Path.Combine(root, file.RelativePath));
                 if (Path.IsPathRooted(file.RelativePath) || !path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) return null;
                 var info = new FileInfo(path);
-                if (!info.Exists || info.Length != file.SizeBytes || file.VerifiedSizeBytes != info.Length
-                    || file.VerifiedLastWriteTimeUtc != info.LastWriteTimeUtc) return null;
+                if (!info.Exists || (ComponentAudit.FullRequired && (info.Length != file.SizeBytes || file.VerifiedSizeBytes != info.Length
+                    || file.VerifiedLastWriteTimeUtc != info.LastWriteTimeUtc))) return null;
                 paths.Add(path);
             }
         }
@@ -127,6 +129,7 @@ public sealed class BookSmartPreparationService : IDisposable
             var path = Path.GetFullPath(Path.Combine(root, file.RelativePath));
             if (Path.IsPathRooted(file.RelativePath) || !path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("The model manifest file path escapes its installation.");
+            if (!ComponentAudit.FullRequired) { if (!File.Exists(path)) missing += file.SizeBytes; continue; }
             var info = new FileInfo(path); var valid = false;
             if (info.Exists && info.Length == file.SizeBytes)
             {

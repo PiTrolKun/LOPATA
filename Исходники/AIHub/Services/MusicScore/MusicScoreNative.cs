@@ -28,10 +28,14 @@ public static class MusicScoreNative
         var manifest=Path.Combine(AppContext.BaseDirectory,"MusicScoreRuntime","helper.sha256");
         if(!File.Exists(executable)||!File.Exists(manifest)) throw new InvalidDataException("Music.Score.HelperMissing");
         // Build-time manifest is shipped with the fixed helper; no arbitrary executable or script path is accepted.
-        await using(var file=File.OpenRead(executable)) {
-            var hash=Convert.ToHexString(await SHA256.HashDataAsync(file,token));
-            if(hash!=HelperHash||hash!=File.ReadAllText(manifest).Trim()) throw new InvalidDataException("Music.Score.HelperMissing");
-        }
+        await ComponentAudit.RunAsync("Music.Score.Parser", Path.GetDirectoryName(executable)!, HelperHash,
+            ct => { ct.ThrowIfCancellationRequested();
+                if (!File.Exists(executable) || !File.Exists(manifest)) throw new InvalidDataException("Music.Score.HelperMissing");
+                return Task.CompletedTask; },
+            async ct => { await using var file = File.OpenRead(executable);
+                var hash = Convert.ToHexString(await SHA256.HashDataAsync(file, ct));
+                if (hash != HelperHash || hash != File.ReadAllText(manifest).Trim()) throw new InvalidDataException("Music.Score.HelperMissing");
+            }, token);
         using var deadline=CancellationTokenSource.CreateLinkedTokenSource(token); deadline.CancelAfter(TimeSpan.FromSeconds(15));
         var info=new ProcessStartInfo(executable) {UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,
             RedirectStandardOutput=true,RedirectStandardError=true,StandardInputEncoding=new UTF8Encoding(false),

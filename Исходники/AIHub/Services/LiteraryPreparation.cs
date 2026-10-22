@@ -13,6 +13,7 @@ public static class LiteraryPreparation
         GigaEmbeddingInstallation.LicenseId, GigaEmbeddingInstallation.RuntimeLicenseId, .. LiteraryJellyInstallation.Licenses];
     public static async Task<IReadOnlyList<LiteraryComponentState>> CheckAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct, bool forceVerification = false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         var result = new List<LiteraryComponentState>();
         progress.Report(new("Checking", -1, LiteraryModelLocation.DisplayName));
         var rune = false;
@@ -53,6 +54,7 @@ public static class LiteraryPreparation
     }
     public static async Task InstallAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
     {
+        using var installation = ComponentAudit.Installation();
         await ComponentLicenseGate.EnsureAsync(Licenses, ct);
         await Gate.WaitAsync(ct);
         try

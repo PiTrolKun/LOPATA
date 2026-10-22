@@ -45,10 +45,11 @@ internal static class MusicAceRuntime
                 foreach (var path in Directory.EnumerateFiles(staging, "*", SearchOption.AllDirectories))
                     manifest[Path.GetRelativePath(staging, path)] = await Hash(path, token);
                 await File.WriteAllTextAsync(Path.Combine(staging, "files.json"), JsonSerializer.Serialize(manifest), token);
-                await VerifyAsync(staging, runtime, token, log);
-                token.ThrowIfCancellationRequested(); Directory.Move(staging, root);
+                using (ComponentAudit.Installation()) await VerifyAsync(staging, runtime, token, log);
+                token.ThrowIfCancellationRequested(); Directory.Move(staging, root); ComponentAudit.Invalidate(root);
             }
             finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
+            await VerifyAsync(root, runtime, token, log);
             return new(Path.Combine(root, "Lib", "site-packages"), verified);
         }
         finally { Gate.Release(); }

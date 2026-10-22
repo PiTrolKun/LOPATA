@@ -23,6 +23,8 @@ internal static partial class ManagedPythonRuntime
     internal static async Task<ManagedPythonSelection> ResolveAsync(string requested, CancellationToken token,
         IReadOnlySet<string>? allowedProfiles = null, Action<string>? log = null)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         if (!DevicePattern().IsMatch(requested)) throw new ArgumentException("Unknown Python device policy.", nameof(requested));
         var manager = new ComponentManager();
         var statuses = manager.GetStatus();

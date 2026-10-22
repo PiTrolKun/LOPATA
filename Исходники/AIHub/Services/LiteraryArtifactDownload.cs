@@ -16,12 +16,13 @@ public static class LiteraryArtifactDownload
     public static async Task GetAsync(Uri uri, string path, long size, string hash, string algorithm,
         IProgress<double>? progress, CancellationToken ct)
     {
+        using var installation = ComponentAudit.Installation();
         if (await ValidAsync(path, size, hash, algorithm, ct)) { progress?.Report(100); return; }
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var partial = path + ".part";
         if (File.Exists(partial) && new FileInfo(partial).Length >= size)
         {
-            if (await ValidAsync(partial, size, hash, algorithm, ct, true)) { File.Move(partial, path, true); return; }
+            if (await ValidAsync(partial, size, hash, algorithm, ct, true)) { File.Move(partial, path, true); ComponentAudit.Invalidate(Path.GetDirectoryName(Path.GetFullPath(path))!); return; }
             File.Delete(partial);
         }
         long offset = File.Exists(partial) ? new FileInfo(partial).Length : 0;
@@ -36,7 +37,7 @@ public static class LiteraryArtifactDownload
                 path, 0, new InlineProgress<ManagedModelDownloadProgress>(p => progress?.Report(100d * p.DownloadedBytes / size)), ct);
             if (!await ValidAsync(partial, size, hash, algorithm, ct, true))
             { File.Delete(partial); throw new InvalidDataException("Downloaded file checksum mismatch."); }
-            File.Move(partial, path, true); return;
+            File.Move(partial, path, true); ComponentAudit.Invalidate(Path.GetDirectoryName(Path.GetFullPath(path))!); return;
         }
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
         timeout.CancelAfter(TimeSpan.FromSeconds(60));
@@ -68,5 +69,6 @@ public static class LiteraryArtifactDownload
         if (!await ValidAsync(partial, size, hash, algorithm, ct, true))
         { File.Delete(partial); throw new InvalidDataException("Downloaded file checksum mismatch."); }
         File.Move(partial, path, true);
+        ComponentAudit.Invalidate(Path.GetDirectoryName(Path.GetFullPath(path))!);
     }
 }

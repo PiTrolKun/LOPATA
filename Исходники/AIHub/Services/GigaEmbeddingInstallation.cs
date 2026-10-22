@@ -43,9 +43,18 @@ public static class GigaEmbeddingInstallation
     {
         if (!ManagedPythonRuntime.HasCpu) return false;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(45));
-        try { await RunAsync([Script, "--check"], null, timeout.Token); return true; }
+        try
+        {
+            await ComponentAudit.RunAsync("giga-python-import", Root, PythonRuntimeBundleVerifier.CpuManifestDigest + "/giga-check-v1",
+                token => {
+                    token.ThrowIfCancellationRequested();
+                    if (!File.Exists(Python) || !File.Exists(Script)) throw new FileNotFoundException("Giga embedding runtime is missing.");
+                    return Task.CompletedTask;
+                }, token => RunAsync([Script, "--check"], null, token), timeout.Token);
+            return true;
+        }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested) { return false; }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or System.ComponentModel.Win32Exception) { return false; }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or LiteraryEmbeddingException or System.ComponentModel.Win32Exception) { return false; }
     }
     public static async Task InstallModelAsync(IProgress<LiteraryPreparationProgress> progress, CancellationToken ct)
     {

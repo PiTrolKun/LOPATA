@@ -10,7 +10,22 @@ internal static class MusicHeartMuLaSource
     internal const string ArchiveDigest = "83EB311C33655A22574073A6E6E6704151363D461770DB0566B2996A5BB2C892";
     internal static string ArchivePath => Path.Combine(AppContext.BaseDirectory, "MusicHeartMuLaRuntime", "source.zip");
     internal static string DirectoryPath => Path.Combine(AppDataPaths.BaseDirectory, "Music", "HeartMuLaSource", MusicHeartMuLaCatalog.SourceRevision);
-    internal static async Task VerifyAsync(CancellationToken token)
+    internal static Task VerifyAsync(CancellationToken token) =>
+        ComponentAudit.RunAsync("Music.HeartMuLa.Source", DirectoryPath, MusicHeartMuLaCatalog.SourceRevision + ArchiveDigest,
+            PresenceAsync, VerifyFullAsync, token);
+    private static async Task PresenceAsync(CancellationToken token)
+    {
+        if (!File.Exists(ArchivePath)) throw new FileNotFoundException("Missing HeartMuLa source archive.");
+        await using var input = File.OpenRead(Path.Combine(DirectoryPath, "manifest.json"));
+        var manifest = await JsonSerializer.DeserializeAsync<Manifest>(input, cancellationToken: token)
+            ?? throw new InvalidDataException("Missing HeartMuLa source manifest.");
+        if (manifest.Revision != MusicHeartMuLaCatalog.SourceRevision || manifest.Files.Count < 10)
+            throw new InvalidDataException("Unsupported HeartMuLa engine revision.");
+        foreach (var relative in manifest.Files.Keys)
+            if (!File.Exists(RuntimeFileAudit.Contained(DirectoryPath, relative)))
+                throw new FileNotFoundException("Missing HeartMuLa source file: " + relative);
+    }
+    private static async Task VerifyFullAsync(CancellationToken token)
     {
         await Gate.WaitAsync(token);
         try {
@@ -30,7 +45,7 @@ internal static class MusicHeartMuLaSource
                         50806, ArchiveDigest, new("https://github.com/HeartMuLa/heartlib/tree/" + MusicHeartMuLaCatalog.SourceRevision));
                     await PythonWheelExtractor.ExtractAsync(artifact, ArchivePath, staging, token, wheelLayout: false);
                     await VerifyDirectoryAsync(staging, token);
-                    token.ThrowIfCancellationRequested(); Directory.Move(staging, root);
+                    token.ThrowIfCancellationRequested(); Directory.Move(staging, root); ComponentAudit.Invalidate(root);
                 }
                 finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
             }

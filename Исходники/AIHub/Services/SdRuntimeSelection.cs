@@ -36,6 +36,7 @@ internal static class SdRuntimeSelector
     public static async Task<SdRuntimeSelection> SelectAsync(IReadOnlyList<ManagedModelArtifactCard> cards,
         bool forceCpu, CancellationToken token, string? engineSetId = null)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         var setId = NativeRuntimeReleasePolicy.ValidateSetId(engineSetId ?? EngineSetSelection.ActiveId);
         var manager = new ComponentManager();
         var backends = forceCpu ? new[] { "cpu" } : ["vulkan", "cuda12", "cpu"];
@@ -54,9 +55,7 @@ internal static class SdRuntimeSelector
                 await ComponentLicenseGate.EnsureAsync([setId == NativeRuntimeReleasePolicy.LegacySet ? "generation-runtime" : "runtime.sd-engine-002", "runtime.sd-msvc",
                     .. (backend == "vulkan" ? new[] { "runtime.llama-vulkan-loader" }
                         : backend == "cuda12" && setId == NativeRuntimeReleasePolicy.UpdatedSet ? ["runtime.sd-cuda128-002"] : [])], token);
-                await NativeEngineBundleVerifier.VerifyFilesAsync("sd", backend, directory, token, setId);
-                var version = await RuntimeDeviceProbe.RunAsync(Path.Combine(directory, "sd-cli.exe"), "--version", token);
-                if (!NativeRuntimeReleasePolicy.IsSdVersion(version, setId)) throw new InvalidDataException("Image runtime version differs from the selected engine set.");
+                await NativeEngineBundleVerifier.VerifyExecutableAsync("sd", backend, directory, token, setId);
             }
             else
             {

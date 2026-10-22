@@ -21,9 +21,12 @@ internal sealed class MusicLoraStudioStage(IDisposable lease, List<string> files
                     await using var output = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.None);
                     files.Add(target); await input.CopyToAsync(output, token); output.Flush(true);
                     output.Close();
-                    await using var verify = File.OpenRead(target);
-                    var hash = Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(verify, token));
-                    if (!hash.Equals(file.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Music.Lora.Missing");
+                    if (ComponentAudit.FullRequired)
+                    {
+                        await using var verify = File.OpenRead(target);
+                        var hash = Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(verify, token));
+                        if (!hash.Equals(file.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Music.Lora.Missing");
+                    }
                 }
                 var meta = Path.Combine(directory, "adapter.json"); Lopata.Updates.SafeUpdatePath.RejectLinks(meta); files.Add(meta);
                 await File.WriteAllTextAsync(meta, JsonSerializer.Serialize(new { id = definition.Id, engine = "yue2-cpp",

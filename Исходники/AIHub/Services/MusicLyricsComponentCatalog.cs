@@ -95,29 +95,15 @@ public static class MusicLyricsComponentCatalog
         return result;
     }
 
-    private static async Task VerifyModelAsync(ComponentManager manager, CancellationToken token) =>
-        await VerifyFileAsync(GetModelPath(manager), 441714678, ModelHash, token);
-
-    private static async Task VerifyPayloadAsync(ComponentManager manager, Payload payload, CancellationToken token)
+    private static Task VerifyModelAsync(ComponentManager manager, CancellationToken token)
     {
-        var root = manager.GetInstallDirectory(Entries.Single(x => x.Id == payload.Id));
-        foreach (var file in payload.Files)
-        {
-            token.ThrowIfCancellationRequested();
-            var full = Path.GetFullPath(Path.Combine(root, file.Path));
-            if (!full.StartsWith(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
-                StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Alignment payload escapes its component directory.");
-            await VerifyFileAsync(full, file.Size, file.Sha256, token);
-        }
+        var path = GetModelPath(manager);
+        return RuntimeFileAudit.VerifyAsync(ModelId, Path.GetDirectoryName(path)!, ModelHash,
+            [new("v3_ctc.ckpt", 441714678, ModelHash)], token);
     }
-
-    private static async Task VerifyFileAsync(string path, long size, string hash, CancellationToken token)
-    {
-        if (!File.Exists(path) || new FileInfo(path).Length != size) throw new IOException("Alignment component is missing or has changed: " + path);
-        await using var input = File.OpenRead(path);
-        var actual = Convert.ToHexString(await SHA256.HashDataAsync(input, token));
-        if (!actual.Equals(hash, StringComparison.OrdinalIgnoreCase)) throw new IOException("Alignment component failed SHA-256 verification: " + path);
-    }
+    private static Task VerifyPayloadAsync(ComponentManager manager, Payload payload, CancellationToken token) =>
+        RuntimeFileAudit.VerifyAsync(payload.Id, manager.GetInstallDirectory(Entries.Single(x => x.Id == payload.Id)), payload.Version,
+            payload.Files.Select(f => new PinnedTreeFile(f.Path, f.Size, f.Sha256)).ToArray(), token);
 
     private sealed record Payload(string Id, string Name, string Version, string Url, string File, string Sha256,
         long Size, long InstalledSize, string Health, string ImportRoot, string License, List<PayloadFile> Files);

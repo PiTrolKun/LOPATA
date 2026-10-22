@@ -122,6 +122,7 @@ public sealed partial class ComponentManager
         CancellationToken cancellationToken,
         bool forceReinstall = false)
     {
+        using var auditInstallation = ComponentAudit.Installation();
         var ordered = ComponentCatalog.ResolveDependencies([componentId]);
         await ComponentLicenseGate.EnsureAsync(ordered.SelectMany(x =>
             x.LicenseIds.Count > 0 ? x.LicenseIds : new[] { x.Id }).Distinct(StringComparer.Ordinal).ToArray(), cancellationToken);
@@ -374,6 +375,7 @@ public sealed partial class ComponentManager
             try
             {
                 Directory.Move(temporaryDirectory, installDirectory);
+                ComponentAudit.Invalidate(installDirectory);
                 record.InstallPath = installDirectory;
                 record.InstalledAt = DateTimeOffset.Now;
                 record.Status = ComponentInstallStatuses.Installed;

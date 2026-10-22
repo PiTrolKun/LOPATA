@@ -13,6 +13,8 @@ public sealed class MusicStemsWorker(string requestedDevice = "auto") : IMusicSt
 {
     public async Task<MusicStemReceipt> SeparateAsync(string source, string sourceHash, string folder, Action<string> log, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         log("[Stems] Preparing HT-Demucs / ONNX separation.");
         await MusicStemsCatalog.PrepareAsync(false, null, token, verifyPython: false);
         await MusicOutputPublisher.MatchHashAsync(source, sourceHash, token);

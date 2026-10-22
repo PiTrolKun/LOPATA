@@ -11,6 +11,7 @@ public sealed partial class ComponentManager
     private async Task<ComponentStatusSnapshot> InstallPythonProfileAsync(ComponentCatalogEntry entry,
         IProgress<ComponentDownloadProgress>? progress, CancellationToken token)
     {
+        using var audit = ComponentAudit.Installation();
         var profile = HardwareRuntimeCatalog.PythonProfile(entry.Id);
         var state = _stateStore.Load();
         var original = JsonSerializer.Deserialize<ComponentInstallationRecord>(
@@ -87,6 +88,7 @@ public sealed partial class ComponentManager
                 if (!installed.IsAvailable) throw new InvalidDataException("Python profile did not pass installed layout checks.");
                 _eventLog.Write("component_verified", new { entry.Id, record.InstallPath, record.ComputedSha256 });
                 committed = true;
+                ComponentAudit.Invalidate(directory);
                 // The commit is complete; cleanup failure must not roll back a validated installation.
                 try { DeleteContainedDirectory(previous); }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException)

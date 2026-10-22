@@ -53,6 +53,8 @@ public static class LlamaRuntimeSelector
     internal static async Task<LlamaRuntimeSelection> SelectAsync(IReadOnlyList<LlamaRuntimeBundle> bundles,
         long requiredGpuBytes, bool forceCpu, Action<string> log, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         ArgumentOutOfRangeException.ThrowIfNegative(requiredGpuBytes);
         var ready = new List<LlamaRuntimeBundle>();
         var candidates = new List<LlamaRuntimeSelection>();
@@ -63,11 +65,17 @@ public static class LlamaRuntimeSelector
             try
             {
                 if (bundle.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
-                    await NativeEngineBundleVerifier.VerifyFilesAsync("llama", bundle.Backend.ToLowerInvariant(), bundle.Directory, token);
+                    await NativeEngineBundleVerifier.VerifyExecutableAsync("llama", bundle.Backend.ToLowerInvariant(), bundle.Directory, token);
                 else if (bundle.ComponentId is { } id)
-                    await HardwareRuntimeBundleVerifier.VerifyFilesAsync(id, bundle.Directory, token);
-                var version = await RuntimeDeviceProbe.RunAsync(bundle.Server, "--version", token);
-                if (!NativeRuntimeReleasePolicy.IsLlamaVersion(version, bundle.EngineSetId)) throw new InvalidDataException("Runtime version differs from the selected engine set.");
+                    await HardwareRuntimeBundleVerifier.VerifyExecutableAsync(id, bundle.Directory, token);
+                else
+                    await ComponentAudit.RunAsync("llama-runtime-version", bundle.Directory, bundle.EngineSetId + "/" + bundle.Revision,
+                        _ => File.Exists(bundle.Server) ? Task.CompletedTask : Task.FromException(new FileNotFoundException("llama-server.exe is missing.")),
+                        async cancellation => {
+                            var version = await RuntimeDeviceProbe.RunAsync(bundle.Server, "--version", cancellation);
+                            if (!NativeRuntimeReleasePolicy.IsLlamaVersion(version, bundle.EngineSetId))
+                                throw new InvalidDataException("Runtime version differs from the selected engine set.");
+                        }, token, log);
                 ready.Add(bundle);
                 if (bundle.Backend == "CPU") continue;
                 var inventory = await RuntimeDeviceProbe.RunAsync(bundle.Server, "--list-devices", token);

@@ -37,15 +37,11 @@ public static class MusicYueRuntime
         var files = root.GetProperty("Files").EnumerateArray().ToArray();
         string[] required = IsCuda(directory) ? [.. RequiredFiles, "ggml-cuda.dll", "ggml-vulkan.dll", "cudart64_12.dll", "cublas64_12.dll", "cublasLt64_12.dll"] : RequiredFiles;
         if (files.Length != required.Length) throw new InvalidDataException("Incomplete YuE2 runtime manifest.");
-        foreach (var name in required)
-        {
-            token.ThrowIfCancellationRequested();
+        var expected = required.Select(name => {
             var entries = files.Where(f => f.GetProperty("Name").GetString() == name).ToArray();
             if (entries.Length != 1) throw new InvalidDataException("Duplicate or missing YuE2 runtime file.");
-            using var file = File.OpenRead(Path.Combine(directory, name));
-            var hash = Convert.ToHexString(await SHA256.HashDataAsync(file, token));
-            if (!hash.Equals(entries[0].GetProperty("Sha256").GetString(), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("YuE2 runtime checksum mismatch: " + name);
-        }
+            return new PinnedTreeFile(name, -1, entries[0].GetProperty("Sha256").GetString()!);
+        }).ToArray();
+        await RuntimeFileAudit.VerifyAsync("Music.YuE2.Runtime", directory, Revision + GgmlRevision, expected, token);
     }
 }

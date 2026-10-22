@@ -18,6 +18,18 @@ def log(message):
     print(message, flush=True)
 
 
+def verify_checkpoint(request):
+    """The host sets prepared only after its full/first-use/presence audit succeeds."""
+    weights = Path(request['weights'])
+    if weights.name != 'v3_ctc.ckpt' or not weights.is_file():
+        raise ValueError('Missing or unsupported GigaAM checkpoint.')
+    if request.get('component_audit_prepared') is not True:
+        with weights.open('rb') as stream:
+            if hashlib.file_digest(stream, 'sha256').hexdigest() != WEIGHT_SHA:
+                raise ValueError('GigaAM checkpoint integrity mismatch.')
+    return weights
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--request', required=True)
@@ -28,12 +40,7 @@ def main():
     device = request.get('device', 'cpu')
     if not re.fullmatch(r'cpu|(?:cuda|xpu):[0-9]{1,2}', device):
         raise ValueError('Unsupported managed acoustic device.')
-    weights = Path(request['weights'])
-    if weights.name != 'v3_ctc.ckpt':
-        raise ValueError('Unsupported GigaAM checkpoint name.')
-    with weights.open('rb') as stream:
-        if hashlib.file_digest(stream, 'sha256').hexdigest() != WEIGHT_SHA:
-            raise ValueError('GigaAM checkpoint integrity mismatch.')
+    weights = verify_checkpoint(request)
     roots = [str(Path(p).resolve()) for p in request['import_roots']]
     if any(not Path(p).is_dir() for p in roots):
         raise ValueError('Managed GigaAM import directory is missing.')

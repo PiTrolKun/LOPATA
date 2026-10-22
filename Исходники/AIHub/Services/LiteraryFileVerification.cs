@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace AIHub.Services;
 
-/// <summary>Reuses a successful digest only while the file and expected digest are unchanged.</summary>
+/// <summary>Pinned literary artifacts use the shared full-audit or presence-only policy.</summary>
 public sealed class LiteraryFileVerification(string receiptDirectory)
 {
     public static LiteraryFileVerification Shared { get; } = new(Path.Combine(AppDataPaths.BaseDirectory, "Literary", "Verification"));
@@ -18,6 +18,31 @@ public sealed class LiteraryFileVerification(string receiptDirectory)
         ct.ThrowIfCancellationRequested();
         if (algorithm is not ("sha256" or "gitsha1")) throw new ArgumentException("Unsupported digest.", nameof(algorithm));
         path = Path.GetFullPath(path);
+        if (!File.Exists(path)) return false;
+        using var explicitCheck = force ? ComponentAudit.ForceFull() : null;
+        try
+        {
+            await ComponentAudit.RunAsync("literary-file:" + Path.GetFileName(path), Path.GetDirectoryName(path)!,
+                $"{algorithm}/{size}/{hash}", cancellation => {
+                    cancellation.ThrowIfCancellationRequested();
+                    if (!File.Exists(path)) throw new VerificationFailedException();
+                    progress?.Report(100);
+                    return Task.CompletedTask;
+                }, async cancellation => {
+                    // A legacy metadata cache must not replace the first full audit of an installation.
+                    if (!await ValidFullAsync(path, size, hash, algorithm, cancellation, true, progress))
+                        throw new VerificationFailedException();
+                }, ct);
+            return true;
+        }
+        catch (VerificationFailedException) { return false; }
+    }
+
+    private sealed class VerificationFailedException : Exception { }
+
+    private async Task<bool> ValidFullAsync(string path, long size, string hash, string algorithm, CancellationToken ct,
+        bool force, IProgress<double>? progress)
+    {
         var receiptPath = Path.Combine(receiptDirectory,
             Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path.ToUpperInvariant()))) + ".json");
         await _gate.WaitAsync(ct).ConfigureAwait(false);

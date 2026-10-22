@@ -10,10 +10,9 @@ internal static class MusicLoraStudioRuntime
     public const string ServerHash = "872ee1d1201873773ddec2f83b5dc80fc80bc9179136a3be3cc739331675d851";
     public static async Task<string> ExecutableAsync(CancellationToken token)
     {
-        var executable = Path.Combine(AppContext.BaseDirectory, "MusicLoraStudioRuntime", "music-server.exe");
-        await using var file = File.OpenRead(executable);
-        if (!Convert.ToHexString(await SHA256.HashDataAsync(file, token)).Equals(ServerHash, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Music.Lora.RuntimeInvalid");
-        return executable;
+        var directory = Path.Combine(AppContext.BaseDirectory, "MusicLoraStudioRuntime");
+        await RuntimeFileAudit.VerifyAsync("Music.LoRA.Studio", directory, Revision,
+            [new("music-server.exe", -1, ServerHash)], token);
+        return Path.Combine(directory, "music-server.exe");
     }
 }

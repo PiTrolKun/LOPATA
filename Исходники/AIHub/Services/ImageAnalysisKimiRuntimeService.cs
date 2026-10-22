@@ -137,6 +137,8 @@ public sealed class ImageAnalysisKimiRuntimeService : IDisposable
         Action<string> log,
         CancellationToken cancellationToken)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         await ComponentLicenseGate.EnsureAsync(ManagedModelCatalog.KimiMediumArtifactId, cancellationToken);
         await _runtimeGate.WaitAsync(cancellationToken);
         try
@@ -151,6 +153,7 @@ public sealed class ImageAnalysisKimiRuntimeService : IDisposable
                 }
             }
 
+            await ManagedModelRuntimeAudit.VerifyAsync(_libraryStore, ManagedModelCatalog.KimiMediumArtifactId, cancellationToken, log);
             Stop();
             var port = ReserveLoopbackPort();
             var process = StartServer(modelPath, port, log);

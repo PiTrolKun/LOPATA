@@ -19,14 +19,14 @@ public static class HardwareRuntimeBundleVerifier
         _ => throw new ArgumentException("Unknown hardware runtime.", nameof(id))
     };
 
-    private static JsonDocument ReadTrustedManifest(string id, string directory)
+    private static JsonDocument ReadTrustedManifest(string id, string directory, bool full = true)
     {
         var path = Path.Combine(directory, "runtime-manifest.json");
         Lopata.Updates.SafeUpdatePath.RejectLinks(path);
         if (!File.Exists(path) || new FileInfo(path).Length > 256 * 1024)
             throw new InvalidDataException("Hardware runtime manifest is missing or too large.");
         var bytes = File.ReadAllBytes(path);
-        if (!Convert.ToHexString(SHA256.HashData(bytes)).Equals(ManifestHash(id), StringComparison.OrdinalIgnoreCase))
+        if (full && !Convert.ToHexString(SHA256.HashData(bytes)).Equals(ManifestHash(id), StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Hardware runtime manifest differs from the trusted catalog.");
         return JsonDocument.Parse(bytes);
     }
@@ -45,18 +45,37 @@ public static class HardwareRuntimeBundleVerifier
     {
         try
         {
-            using var manifest = ReadTrustedManifest(id, directory);
+            var full = ComponentAudit.FullRequired;
+            using var manifest = ReadTrustedManifest(id, directory, full);
             return manifest.RootElement.GetProperty("files").EnumerateArray().All(file =>
             {
                 var path = ContainedPath(directory, file.GetProperty("path").GetString()!);
-                return File.Exists(path) && new FileInfo(path).Length == file.GetProperty("size").GetInt64();
+                return File.Exists(path) && (!full || new FileInfo(path).Length == file.GetProperty("size").GetInt64());
             });
         }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or ArgumentException)
+        catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException or JsonException or ArgumentException)
         { return false; }
     }
 
-    public static async Task VerifyFilesAsync(string id, string directory, CancellationToken token)
+    public static Task VerifyFilesAsync(string id, string directory, CancellationToken token) =>
+        ComponentAudit.RunAsync("hardware-" + id, directory, ManifestHash(id),
+            cancellation => VerifyPresenceAsync(id, directory, cancellation),
+            cancellation => VerifyFullAsync(id, directory, cancellation), token);
+
+    private static Task VerifyPresenceAsync(string id, string directory, CancellationToken token)
+    {
+        using var manifest = ReadTrustedManifest(id, directory, false);
+        var expected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in manifest.RootElement.GetProperty("files").EnumerateArray())
+        {
+            token.ThrowIfCancellationRequested();
+            var path = ContainedPath(directory, file.GetProperty("path").GetString()!);
+            if (!expected.Add(path) || !File.Exists(path)) throw new InvalidDataException("Runtime file is missing or duplicated: " + path);
+        }
+        return Task.CompletedTask;
+    }
+
+    private static async Task VerifyFullAsync(string id, string directory, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         using var manifest = ReadTrustedManifest(id, directory);
@@ -99,7 +118,12 @@ public static class HardwareRuntimeBundleVerifier
         }
     }
 
-    public static async Task VerifyExecutableAsync(string id, string directory, CancellationToken token)
+    public static Task VerifyExecutableAsync(string id, string directory, CancellationToken token) =>
+        ComponentAudit.RunAsync("hardware-executable-" + id, directory, ManifestHash(id),
+            cancellation => VerifyPresenceAsync(id, directory, cancellation),
+            cancellation => VerifyExecutableFullAsync(id, directory, cancellation), token);
+
+    private static async Task VerifyExecutableFullAsync(string id, string directory, CancellationToken token)
     {
         await VerifyFilesAsync(id, directory, token);
         var executable = ComponentCatalog.Find(id)?.HealthCheckRelativePath

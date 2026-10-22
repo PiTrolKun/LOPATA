@@ -30,6 +30,18 @@ def verify_ace_loras(handler, uses):
                 raise RuntimeError('ACE LoRA strength mismatch: ' + name)
 
 
+def verify_component_files(directory, use):
+    """Prepared adapters were audited by the host, but required paths still must exist."""
+    for file in use['files']:
+        path = directory / file['name']
+        if path.parent != directory or path.is_symlink() or not path.is_file():
+            raise RuntimeError('Invalid or missing ACE LoRA file')
+        if use.get('audit_prepared') is not True:
+            with path.open('rb') as stream:
+                if hashlib.file_digest(stream, 'sha256').hexdigest() != file['sha256'].lower():
+                    raise RuntimeError('ACE LoRA hash mismatch')
+
+
 def apply_ace_loras(handler, uses):
     if not uses:
         verify_ace_loras(handler, uses)
@@ -38,14 +50,8 @@ def apply_ace_loras(handler, uses):
     with ExitStack() as temporary:
         for u in uses:
             directory = Path(u['directory']).resolve(strict=True)
-            for f in u['files']:
-                path = directory / f['name']
-                if path.parent != directory or path.is_symlink():
-                    raise RuntimeError('Invalid ACE LoRA file')
-                with path.open('rb') as stream:
-                    if hashlib.file_digest(stream, 'sha256').hexdigest() != f['sha256'].lower():
-                        raise RuntimeError('ACE LoRA hash mismatch')
-            item = {k: v for k, v in u.items() if k != 'directory'}
+            verify_component_files(directory, u)
+            item = {k: v for k, v in u.items() if k not in ('directory', 'audit_prepared')}
             format_name = u.get('format', 'peft')
             if format_name == 'audio-sliders-peft-v1':
                 if len(u['files']) != 1 or not u['files'][0]['name'].endswith('.safetensors'):

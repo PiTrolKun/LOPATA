@@ -7,7 +7,6 @@ namespace AIHub.Services;
 internal sealed class FileMetadataExifTool
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static bool _verified;
     internal static string DirectoryPath => Path.Combine(AppContext.BaseDirectory, "MetadataRuntime");
     internal static async Task PrepareAsync(CancellationToken token)
     {
@@ -15,12 +14,10 @@ internal sealed class FileMetadataExifTool
         await Gate.WaitAsync(token);
         try
         {
-            if (_verified) return;
             using var stream = typeof(FileMetadataExifTool).Assembly.GetManifestResourceStream("AIHub.MetadataExifToolManifest")
                 ?? throw new InvalidDataException("Metadata.RuntimeMissing");
             var files = JsonSerializer.Deserialize<PinnedTreeFile[]>(stream) ?? throw new InvalidDataException("Metadata.RuntimeMissing");
             await PinnedFileTreeVerifier.VerifyAsync(DirectoryPath, files, token);
-            _verified = true;
         }
         finally { Gate.Release(); }
     }
@@ -33,6 +30,8 @@ internal sealed class FileMetadataExifTool
     }
     internal static async Task WriteAsync(string path, IReadOnlyDictionary<string, string> values, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        await PrepareAsync(token);
         var files = new List<string>();
         try
         {

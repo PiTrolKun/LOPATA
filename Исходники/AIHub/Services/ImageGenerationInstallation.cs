@@ -40,12 +40,15 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
         return Register(root, modelId).All(card => card.Status == ManagedModelStatuses.Installed && card.Files.All(file =>
         {
             var info = new FileInfo(Path.Combine(card.InstallDirectory, file.RelativePath));
-            return info.Exists && info.Length == file.VerifiedSizeBytes && info.LastWriteTimeUtc == file.VerifiedLastWriteTimeUtc;
+            return info.Exists && (!ComponentAudit.FullRequired
+                || info.Length == file.VerifiedSizeBytes && info.LastWriteTimeUtc == file.VerifiedLastWriteTimeUtc);
         }));
     }
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> PrepareAsync(string root, string modelId, bool download,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        using var installation = download ? ComponentAudit.Installation() : null;
+        using var auditOperation = ComponentAudit.CaptureOperation();
         var cards = Register(root, modelId);
         // Confirm every inherited component before any download or model use.
         await ComponentLicenseGate.EnsureAsync(cards.Select(c => c.ModelArtifactId).ToArray(), token);
@@ -62,12 +65,13 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
         }
         cards = Register(root, modelId);
         if (cards.SingleOrDefault(c => c.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
-            await Task.Run(() => EnsureRuntime(legacyRuntime, token), token);
+            await EnsureRuntimeAsync(legacyRuntime, token);
         return cards;
     }
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root, string modelId,
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         var states = new List<ManagedModelArtifactCard>();
         foreach (var card in Register(root, modelId))
         {
@@ -79,19 +83,54 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
     public static string Executable(IReadOnlyList<ManagedModelArtifactCard> cards)
     {
         if (SdRuntimeSelector.AvailableExecutable() is { } managed) return managed;
-        var directory = Path.Combine(cards.Single(c => c.ModelArtifactId == "generation-runtime").InstallDirectory, "bin");
-        if (!Directory.Exists(directory)) throw new FileNotFoundException("Generation.DownloadRequired");
-        return Directory.EnumerateFiles(directory, "sd-cli.exe", SearchOption.AllDirectories).Single();
+        var runtime = cards.Single(c => c.ModelArtifactId == "generation-runtime");
+        var executable = RuntimePaths(runtime).Single(path => Path.GetFileName(path).Equals("sd-cli.exe", StringComparison.OrdinalIgnoreCase));
+        if (!File.Exists(executable)) throw new FileNotFoundException("Generation.DownloadRequired");
+        return executable;
     }
     public static string Weight(IReadOnlyList<ManagedModelArtifactCard> cards, string purpose)
     {
         var pairs = cards.SelectMany(c => c.Files.Where(f => f.Purpose == purpose).Select(f => Path.Combine(c.InstallDirectory, f.RelativePath))).ToArray();
         return pairs.Single();
     }
+    internal static Task EnsureRuntimeAsync(ManagedModelArtifactCard card, CancellationToken token) =>
+        ComponentAudit.RunAsync("image-generation-legacy-runtime", Path.Combine(card.InstallDirectory, "bin"),
+            card.Revision + "/" + string.Join('\n', card.Files.OrderBy(file => file.RelativePath, StringComparer.Ordinal)
+                .Select(file => $"{file.RelativePath}|{file.SizeBytes}|{file.Sha256}")), cancellation => {
+                    VerifyRuntimePresence(card, cancellation); return Task.CompletedTask;
+                }, async cancellation => {
+                    await Task.Run(() => EnsureRuntime(card, cancellation), cancellation);
+                    VerifyRuntimePresence(card, cancellation);
+                }, token);
+
+    private static IReadOnlyList<string> RuntimePaths(ManagedModelArtifactCard card)
+    {
+        var destination = Path.Combine(card.InstallDirectory, "bin");
+        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in card.Files.Where(file => file.IsRequired))
+        {
+            var source = PinnedZipExpansionVerifier.ResolveArchivePath(card.InstallDirectory, file.RelativePath.Replace('\\', '/'));
+            using var archive = ZipFile.OpenRead(source);
+            if (archive.Entries.Count is < 1 or > 4096) throw new InvalidDataException("Invalid runtime archive inventory.");
+            foreach (var entry in archive.Entries.Where(entry => !entry.FullName.EndsWith('/')))
+                paths.Add(PinnedZipExpansionVerifier.ResolveArchivePath(destination, entry.FullName));
+        }
+        return paths.ToArray();
+    }
+    private static void VerifyRuntimePresence(ManagedModelArtifactCard card, CancellationToken token)
+    {
+        foreach (var path in RuntimePaths(card).Append(Path.Combine(card.InstallDirectory, "bin", "ready.txt")))
+        {
+            token.ThrowIfCancellationRequested();
+            if (!File.Exists(path)) throw new FileNotFoundException("Generation.DownloadRequired", path);
+        }
+    }
     private static void EnsureRuntime(ManagedModelArtifactCard card, CancellationToken token)
     {
         var destination = Path.Combine(card.InstallDirectory, "bin");
-        if (File.Exists(Path.Combine(destination, "ready.txt")) && Directory.EnumerateFiles(destination, "sd-cli.exe", SearchOption.AllDirectories).Count() == 1) return;
+        try { VerifyRuntimePresence(card, token); return; }
+        catch (FileNotFoundException) { }
+        using var installation = ComponentAudit.Installation();
         var staging = destination + "." + Guid.NewGuid().ToString("N");
         Directory.CreateDirectory(staging);
         try
@@ -106,6 +145,7 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
             File.WriteAllText(Path.Combine(staging, "ready.txt"), ImageGenerationCatalog.Manifest.BackendCommit);
             if (Directory.Exists(destination)) Directory.Move(destination, destination + ".old." + Guid.NewGuid().ToString("N"));
             Directory.Move(staging, destination);
+            ComponentAudit.Invalidate(destination);
         }
         finally
         {

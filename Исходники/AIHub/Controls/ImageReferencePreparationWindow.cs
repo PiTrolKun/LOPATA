@@ -58,7 +58,7 @@ public sealed class ImageReferencePreparationWindow : Window
             _cancel.Token.ThrowIfCancellationRequested(); Snapshot = updated; _control.UpdateSnapshot(updated); ready = updated.CanStart;
         }
         catch (OperationCanceledException) { RefreshAfterFailure(); if (!_closeAfterCancel) Problem(_l("Status.ImageAnalysisOperationCancelled")); }
-        catch (Exception error) { RefreshAfterFailure(); Problem(_l("Status.ImageAnalysisOperationFailed") + "\n" + error.Message); }
+        catch (Exception error) { ComponentAuditFailures.Report(error); RefreshAfterFailure(); Problem(_l("Status.ImageAnalysisOperationFailed") + "\n" + error.Message); }
         finally { _cancel.Dispose(); _cancel = null; _control.SetBusy(false); }
         if (ready) { DialogResult = true; }
         else if (_closeAfterCancel) Close();

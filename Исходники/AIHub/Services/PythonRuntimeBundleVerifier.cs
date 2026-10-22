@@ -40,15 +40,20 @@ internal static class PythonRuntimeBundleVerifier
     internal static async Task VerifyCpuAsync(string directory, CancellationToken token) =>
         await VerifyAsync(PythonRuntimeProfile.Cpu, directory, token);
 
-    internal static async Task VerifyAsync(PythonRuntimeProfile profile, string directory, CancellationToken token,
-        Action<int, int>? progress = null)
+    internal static Task VerifyAsync(PythonRuntimeProfile profile, string directory, CancellationToken token,
+        Action<int, int>? progress = null) => ComponentAudit.RunAsync("python-" + profile.Flavor(), directory,
+            ManifestDigest(profile), cancellation => VerifyModeAsync(profile, directory, false, cancellation, progress),
+            cancellation => VerifyModeAsync(profile, directory, true, cancellation, progress), token);
+
+    private static async Task VerifyModeAsync(PythonRuntimeProfile profile, string directory, bool full,
+        CancellationToken token, Action<int, int>? progress)
     {
         token.ThrowIfCancellationRequested();
         var manifestPath = Path.Combine(AppContext.BaseDirectory, "Tools", "python-hardware-" + profile.Flavor() + "-files.json");
         Lopata.Updates.SafeUpdatePath.RejectLinks(manifestPath);
         await using var manifestFile = File.OpenRead(manifestPath);
         if (manifestFile.Length > 8 * 1024 * 1024) throw new InvalidDataException("Oversized Python file manifest.");
-        if (!Convert.ToHexString(await SHA256.HashDataAsync(manifestFile, token)).Equals(ManifestDigest(profile), StringComparison.OrdinalIgnoreCase))
+        if (full && !Convert.ToHexString(await SHA256.HashDataAsync(manifestFile, token)).Equals(ManifestDigest(profile), StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Python file manifest differs from the trusted catalog.");
         manifestFile.Position = 0;
         using var manifest = await JsonDocument.ParseAsync(manifestFile, cancellationToken: token);
@@ -58,6 +63,11 @@ internal static class PythonRuntimeBundleVerifier
             token.ThrowIfCancellationRequested();
             var relative = file.GetProperty("path").GetString()!;
             files.Add(new(relative, file.GetProperty("size").GetInt64(), file.GetProperty("sha256").GetString()!));
+        }
+        if (!full)
+        {
+            await PinnedFileTreeVerifier.VerifyPresenceAsync(directory, files, token, progress);
+            return;
         }
         await PinnedFileTreeVerifier.VerifyAsync(directory, files, token, progress,
             pythonCacheQuarantineDirectory: Path.Combine(AppDataPaths.BaseDirectory, "Python", "BytecodeQuarantine", profile.Flavor()),

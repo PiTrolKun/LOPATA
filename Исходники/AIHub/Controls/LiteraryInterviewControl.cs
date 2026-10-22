@@ -98,6 +98,7 @@ public sealed partial class LiteraryInterviewControl : UserControl
         catch (OperationCanceledException) { S.InFlight = false; _session.Journal("cancelled"); Save(); }
         catch (Exception ex)
         {
+            ComponentAuditFailures.Report(ex);
             S.InFlight = false; _session.Journal("error", ex.ToString());
             Save(); _error = ex is ImageAnalysisContextExhaustedException { OutputTruncated: true }
                 ? T("OutputLimit") : _l(ex.Message) != ex.Message ? _l(ex.Message) : T("Error") + " " + ex.Message;

@@ -77,6 +77,12 @@ public sealed class CoreModelManager
             return result;
         }
 
+        if (!ComponentAudit.FullRequired)
+        {
+            result.Availability = CoreModelAvailability.Installed;
+            return result;
+        }
+
         result.ExistingBytes = modelInfo.Length;
         if (modelInfo.Length != CoreModelTotalBytes)
         {
@@ -107,11 +113,23 @@ public sealed class CoreModelManager
             return result;
         }
 
-        var hash = await ComputeSha256Async(result.ModelPath, cancellationToken);
-        var isValid = string.Equals(hash, CreateManifest().Sha256, StringComparison.OrdinalIgnoreCase);
+        var fullRan = false;
+        var isValid = true;
+        try
+        {
+            await ComponentAudit.RunAsync(ManagedModelCatalog.CoreArtifactId, Path.GetDirectoryName(result.ModelPath)!, AuditRevision(),
+                _ => File.Exists(result.ModelPath) ? Task.CompletedTask : Task.FromException(new FileNotFoundException("Core model is missing.")),
+                async ct => {
+                    fullRan = true;
+                    var hash = await ComputeSha256Async(result.ModelPath, ct);
+                    if (!string.Equals(hash, CreateManifest().Sha256, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("Core model hash verification failed.");
+                }, cancellationToken);
+        }
+        catch (InvalidDataException) { isValid = false; }
         result.Availability = isValid ? CoreModelAvailability.Installed : CoreModelAvailability.Invalid;
 
-        if (result.ManifestPath is not null)
+        if (fullRan && result.ManifestPath is not null)
         {
             var manifest = CreateManifest(isValid ? "installed" : "invalid", new FileInfo(result.ModelPath).Length);
             manifest.VerifiedAt = isValid ? DateTimeOffset.Now : null;
@@ -121,11 +139,33 @@ public sealed class CoreModelManager
         return result;
     }
 
+    private static string AuditRevision() => RuntimeFileAudit.Revision(CreateManifest().SourceCommit,
+        [new PinnedTreeFile(CoreModelFileName, CoreModelTotalBytes, CreateManifest().Sha256)]);
+
+    /// <summary>Audit the configured core before its first real load; unrelated/debug models keep their own contract.</summary>
+    public static async Task VerifyPathForUseAsync(string path, CancellationToken token, Action<string>? log = null)
+    {
+        if (!Path.GetFileName(path).Equals(CoreModelFileName, StringComparison.OrdinalIgnoreCase)) return;
+        var settings = new StorageSettingsStore().LoadOrCreate();
+        var modelsRoot = settings.Models.Locations.FirstOrDefault()?.Path;
+        if (string.IsNullOrWhiteSpace(modelsRoot)) return;
+        var expected = BuildPaths(modelsRoot).ModelPath;
+        if (!Path.GetFullPath(path).Equals(Path.GetFullPath(expected), StringComparison.OrdinalIgnoreCase)) return;
+        await ComponentAudit.RunAsync(ManagedModelCatalog.CoreArtifactId, Path.GetDirectoryName(expected)!, AuditRevision(),
+            _ => File.Exists(expected) ? Task.CompletedTask : Task.FromException(new FileNotFoundException("Core model is missing.")),
+            async ct => {
+                var hash = await ComputeSha256Async(expected, ct);
+                if (!hash.Equals(CreateManifest().Sha256, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Core model hash verification failed.");
+            }, token, log);
+    }
+
     public async Task DownloadAsync(
         StorageSettings storageSettings,
         IProgress<CoreModelDownloadProgress> progress,
         CancellationToken cancellationToken)
     {
+        using var auditInstallation = ComponentAudit.Installation();
         await ComponentLicenseGate.EnsureAsync(ManagedModelCatalog.CoreArtifactId, cancellationToken);
         var modelsRoot = GetModelsRoot(storageSettings);
         if (string.IsNullOrWhiteSpace(modelsRoot))
@@ -223,6 +263,7 @@ public sealed class CoreModelManager
 
         local.Close();
         File.Move(paths.PartialPath, paths.ModelPath, overwrite: true);
+        ComponentAudit.Invalidate(paths.ModelDirectory);
 
         var verified = await VerifyInstalledAsync(storageSettings, cancellationToken);
         if (verified.Availability != CoreModelAvailability.Installed)

@@ -63,6 +63,8 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
     public string? LastRuntimePack { get; private set; }
     public async Task PlanAsync(string model, MusicYueRequest request, string requestPath, string planPath, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         request.Validate();
         await PrepareAsync(model, request, token);
         await WriteRequestAsync(requestPath, request, token);
@@ -74,6 +76,8 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
     public async Task SynthesizeAsync(string model, string decoder, MusicYueRequest request, string requestPath,
         string outputPath, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         request.Validate();
         if (request.EffectiveExpert.Cot != "off" && string.IsNullOrWhiteSpace(request.Abc))
             throw new InvalidDataException("A saved musical plan is required before synthesis.");
@@ -125,11 +129,10 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
     }
     private static async Task VerifyModelAsync(string path, string id, CancellationToken token)
     {
-        var expected = MusicComponentCatalog.CreateCards("").Single(c => c.ModelArtifactId == id).Files.Single();
-        if (new FileInfo(path).Length != expected.SizeBytes) throw new InvalidDataException("YuE2 model size mismatch.");
-        using var file = File.OpenRead(path);
-        var hash = Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(file, token));
-        if (!hash.Equals(expected.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("YuE2 model checksum mismatch.");
+        var card = MusicComponentCatalog.CreateCards("").Single(c => c.ModelArtifactId == id);
+        var expected = card.Files.Single();
+        await RuntimeFileAudit.VerifyAsync(id, Path.GetDirectoryName(path)!, card.Revision,
+            [new(Path.GetFileName(path), expected.SizeBytes, expected.Sha256)], token);
     }
     private static async Task WriteRequestAsync(string path, MusicYueRequest request, CancellationToken token)
     {

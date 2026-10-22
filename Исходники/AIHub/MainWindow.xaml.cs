@@ -164,6 +164,7 @@ public partial class MainWindow : Window
         InitializeScreenCapture();
         InitializeApplicationTray();
         InitializeBackgroundOperations();
+        InitializeComponentAudit();
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -458,6 +459,7 @@ public partial class MainWindow : Window
     private void InitializeLocalization()
     {
         _appSettings = _appSettingsStore.LoadOrCreate();
+        InitializeComponentAuditSettings();
         LiteraryRequestDiagnostics.Enabled = _appSettings.DetailedLiteraryDiagnostics;
         _appSettings.CoreVoice ??= new CoreVoiceSettings();
         _appSettings.CoreAutonomy ??= new CoreAutonomySettings();
@@ -488,6 +490,7 @@ public partial class MainWindow : Window
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(
             _localizationService.CurrentLanguageCode.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "en-US" : "ru-RU");
         AboutButton.ToolTip = L("About.Title");
+        RefreshComponentAudit();
         System.Windows.Automation.AutomationProperties.SetName(AboutButton, L("About.Title"));
         RefreshDetailedDiagnosticsSettings();
         ApplicationUpdateNotice.Content = L("Updates.Available");
@@ -1023,6 +1026,7 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _updateLifetime.Cancel();
+        DisposeComponentAudit();
         DisposeApplicationTray();
         _updateHttp.Dispose();
         try

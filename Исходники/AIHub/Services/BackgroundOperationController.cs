@@ -96,6 +96,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
     public async Task<T> RunAsync<T>(BackgroundOperationState input, Func<CancellationToken, Task<T>> execute,
         Func<Task> releaseModels, CancellationToken lifetime)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         if (IsInOperationScope) return await execute(lifetime);
         lock (_gate)
         {
@@ -176,6 +177,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
         }
         catch (Exception error)
         {
+            ComponentAuditFailures.Report(error);
             var terminal = error is BackgroundOperationFailedException;
             if (terminal) {
                 try { await releaseModels(); }

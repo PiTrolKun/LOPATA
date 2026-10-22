@@ -19,16 +19,18 @@ public sealed class LiteraryFileVerificationTests
             Directory.Delete(_root, true);
     }
 
-    [TestMethod] public async Task SuccessfulDigestPersistsAndAvoidsAnotherRead()
+    [TestMethod] public async Task FullAuditRechecksTheDigestDespiteTheLegacyReceipt()
     {
+        using var policy = ComponentAudit.UseTestStore(Path.Combine(_root, "audit"), true);
         var full = 0; var progress = new Progress(p => { if (p == 0) full++; });
         Assert.IsTrue(await new LiteraryFileVerification(Cache).ValidAsync(Model, 4, Hash("test"), "sha256", default, progress: progress));
         Assert.IsTrue(await new LiteraryFileVerification(Cache).ValidAsync(Model, 4, Hash("test"), "sha256", default, progress: progress));
-        Assert.AreEqual(1, full);
+        Assert.AreEqual(2, full);
     }
 
     [TestMethod] public async Task ChangedFileAndExpectedDigestInvalidateReceipt()
     {
+        using var policy = ComponentAudit.UseTestStore(Path.Combine(_root, "audit"), true);
         var check = new LiteraryFileVerification(Cache);
         Assert.IsTrue(await check.ValidAsync(Model, 4, Hash("test"), "sha256", default));
         Assert.IsFalse(await check.ValidAsync(Model, 4, Hash("else"), "sha256", default));
@@ -40,6 +42,7 @@ public sealed class LiteraryFileVerificationTests
 
     [TestMethod] public async Task ForceDetectsDamageEvenWithPreservedMetadataAndRemovesOldSuccess()
     {
+        using var policy = ComponentAudit.UseTestStore(Path.Combine(_root, "audit"), true);
         var check = new LiteraryFileVerification(Cache);
         Assert.IsTrue(await check.ValidAsync(Model, 4, Hash("test"), "sha256", default));
         var written = File.GetLastWriteTimeUtc(Model);
@@ -50,6 +53,7 @@ public sealed class LiteraryFileVerificationTests
 
     [TestMethod] public async Task MissingResizedAndMalformedReceiptsNeverReportReady()
     {
+        using var policy = ComponentAudit.UseTestStore(Path.Combine(_root, "audit"), true);
         var check = new LiteraryFileVerification(Cache);
         Assert.IsTrue(await check.ValidAsync(Model, 4, Hash("test"), "sha256", default));
         File.WriteAllText(Directory.GetFiles(Cache).Single(), "broken json");
@@ -63,6 +67,8 @@ public sealed class LiteraryFileVerificationTests
 
     [TestMethod] public async Task CancelledRecheckLeavesNoReceiptAndConcurrentChecksShareSuccess()
     {
+        using var policy = ComponentAudit.UseTestStore(Path.Combine(_root, "audit"), true);
+        using var operation = ComponentAudit.CaptureOperation();
         var check = new LiteraryFileVerification(Cache); var full = 0;
         var progress = new Progress(p => { if (p == 0) full++; });
         var checks = Enumerable.Range(0, 4).Select(_ => check.ValidAsync(Model, 4, Hash("test"), "sha256", default, progress: progress));
@@ -79,6 +85,7 @@ public sealed class LiteraryFileVerificationTests
 
     [TestMethod] public async Task GitBlobDigestAndChangedAlgorithmAreVerified()
     {
+        using var policy = ComponentAudit.UseTestStore(Path.Combine(_root, "audit"), true);
         var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes("blob 4\0test")));
         var check = new LiteraryFileVerification(Cache);
         Assert.IsTrue(await check.ValidAsync(Model, 4, hash, "gitsha1", default));

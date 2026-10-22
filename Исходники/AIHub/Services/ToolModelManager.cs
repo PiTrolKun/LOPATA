@@ -55,6 +55,7 @@ public sealed class ToolModelManager
         IProgress<CoreModelDownloadProgress> progress,
         CancellationToken cancellationToken)
     {
+        using var auditInstallation = ComponentAudit.Installation();
         await ComponentLicenseGate.EnsureAsync("bge-reranker-v2-m3-tool", cancellationToken);
         var paths = BuildRerankerPaths(storageSettings)
             ?? throw new InvalidOperationException("Models storage is not configured.");
@@ -192,7 +193,16 @@ public sealed class ToolModelManager
         }
 
         File.Move(partialPath, targetPath, overwrite: true);
+        ComponentAudit.Invalidate(Path.GetDirectoryName(targetPath)!);
         return file.SizeBytes;
+    }
+
+    public Task VerifyRerankerForUseAsync(StorageSettings storageSettings, CancellationToken token)
+    {
+        var paths = BuildRerankerPaths(storageSettings)
+            ?? throw new InvalidOperationException("Models storage is not configured.");
+        return RuntimeFileAudit.VerifyAsync("bge-reranker-v2-m3-tool", paths.ModelDirectory, SourceCommit,
+            CreateRerankerFiles().Select(f => new PinnedTreeFile(f.File, f.SizeBytes, f.Sha256)).ToArray(), token);
     }
 
     private static ToolModelManifest CreateRerankerManifest(string status = "missing", long downloadedBytes = 0)

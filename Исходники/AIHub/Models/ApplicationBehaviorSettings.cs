@@ -10,6 +10,10 @@ public sealed class ApplicationBehaviorSettings
 
     public bool AutoResumeBackgroundOperation { get; set; } = true;
 
+    public bool ComponentAuditEnabled { get; set; } = true;
+
+    public bool ComponentAuditEverDisabled { get; set; }
+
     public bool ImageShellIntegrationEnabled { get; set; } = true;
 
     // null migrates the old utility's existing registration once; new installations remain off.

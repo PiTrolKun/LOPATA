@@ -63,13 +63,15 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
             return cards.All(c => c!.Status == ManagedModelStatuses.Installed && c.Files.All(f =>
             {
                 var info = new FileInfo(Path.Combine(c.InstallDirectory, f.RelativePath));
-                return info.Exists && info.Length == f.VerifiedSizeBytes && info.LastWriteTimeUtc == f.VerifiedLastWriteTimeUtc;
+                return info.Exists && (!ComponentAudit.FullRequired
+                    || info.Length == f.VerifiedSizeBytes && info.LastWriteTimeUtc == f.VerifiedLastWriteTimeUtc);
             })) && ExtractionReady(cards.Single()!) && (methodId != "swinir" || ManagedPythonRuntime.HasCpu);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { return false; }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or JsonException) { return false; }
     }
     public async Task<bool> CheckAsync(string methodId, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         foreach (var card in Register(methodId))
             if ((await _downloads.VerifyAsync(card.ModelArtifactId, progress, token)).Status != ManagedModelStatuses.Installed) return false;
         if (!IsReady(methodId)) return false;
@@ -85,16 +87,16 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
             timeout.CancelAfter(TimeSpan.FromSeconds(45));
             try
             {
-                var runtime = await ManagedPythonRuntime.ResolveAsync("cpu", timeout.Token);
-                await RunAsync(runtime.Python, PythonArguments(Register(methodId).Single(), "--check"), null, timeout.Token);
+                await VerifySwinirImportAsync(Register(methodId).Single(), timeout.Token);
             }
             catch (OperationCanceledException) when (!token.IsCancellationRequested) { return false; }
-            catch (Exception ex) when (ex is ImageUtilityException or IOException or System.ComponentModel.Win32Exception) { return false; }
+            catch (Exception ex) when (ex is ImageUtilityException or IOException or InvalidDataException or System.ComponentModel.Win32Exception) { return false; }
         }
         return true;
     }
     public async Task InstallAsync(string methodId, IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
+        using var installation = ComponentAudit.Installation();
         await InstallationGate.WaitAsync(token);
         try
         {
@@ -123,24 +125,32 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
         => new[] { Worker, "--dependencies", Path.Combine(card.InstallDirectory, "expanded") }.Concat(arguments);
 
     private sealed record ExtractedFile(string Path, long Length, DateTime LastWriteTimeUtc);
+    private static ExtractedFile[] ExtractionFiles(ManagedModelArtifactCard card)
+    {
+        var stamp = Path.Combine(card.InstallDirectory, "expanded", "image-utility-ready.json");
+        if (!File.Exists(stamp) || new FileInfo(stamp).Length > 4 * 1024 * 1024)
+            throw new InvalidDataException("Image utility extraction inventory is missing or oversized.");
+        return JsonSerializer.Deserialize<ExtractedFile[]>(File.ReadAllText(stamp)) ?? [];
+    }
     private static bool ExtractionReady(ManagedModelArtifactCard card)
     {
         var root = Path.Combine(card.InstallDirectory, "expanded");
         var stamp = Path.Combine(root, "image-utility-ready.json");
         if (!File.Exists(stamp)) return false;
-        var files = JsonSerializer.Deserialize<ExtractedFile[]>(File.ReadAllText(stamp));
+        var files = ExtractionFiles(card);
         return files is { Length: > 0 } && files.All(f =>
         {
             var path = Path.GetFullPath(Path.Combine(root, f.Path));
             if (!path.StartsWith(Path.GetFullPath(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return false;
+            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
             var info = new FileInfo(path);
-            return info.Exists && info.Length == f.Length && info.LastWriteTimeUtc == f.LastWriteTimeUtc;
+            return info.Exists && (!ComponentAudit.FullRequired || info.Length == f.Length && info.LastWriteTimeUtc == f.LastWriteTimeUtc);
         });
     }
     private static void Extract(ManagedModelArtifactCard card, CancellationToken token)
     {
         try { if (ExtractionReady(card)) return; }
-        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException) { }
+        catch (Exception ex) when (ex is JsonException or IOException or InvalidDataException or UnauthorizedAccessException) { }
         var destination = Path.Combine(card.InstallDirectory, "expanded");
         var staging = Path.Combine(card.InstallDirectory, "extract-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(staging);
@@ -157,12 +167,28 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
             // Preserve the previous extraction until the new one is complete; never touch model sources.
             if (Directory.Exists(destination)) Directory.Move(destination, destination + ".old-" + Guid.NewGuid().ToString("N"));
             Directory.Move(staging, destination);
+            ComponentAudit.Invalidate(destination);
         }
         finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
     }
     private static string NativeExecutable(ManagedModelArtifactCard card, string methodId)
-        => Directory.EnumerateFiles(Path.Combine(card.InstallDirectory, "expanded"),
-            methodId == "real-esrgan" ? "realesrgan-ncnn-vulkan.exe" : "realcugan-ncnn-vulkan.exe", SearchOption.AllDirectories).Single();
+    {
+        var name = methodId == "real-esrgan" ? "realesrgan-ncnn-vulkan.exe" : "realcugan-ncnn-vulkan.exe";
+        var file = ExtractionFiles(card).Single(file => Path.GetFileName(file.Path).Equals(name, StringComparison.OrdinalIgnoreCase));
+        return PinnedZipExpansionVerifier.ResolveArchivePath(Path.Combine(card.InstallDirectory, "expanded"), file.Path.Replace('\\', '/'));
+    }
+
+    private static Task VerifySwinirImportAsync(ManagedModelArtifactCard card, CancellationToken token) =>
+        ComponentAudit.RunAsync("image-utility-swinir-import", Path.Combine(card.InstallDirectory, "expanded"),
+            card.Revision + "/" + string.Join('\n', card.Files.Select(file => file.RelativePath + "|" + file.Sha256)),
+            cancellation => {
+                cancellation.ThrowIfCancellationRequested();
+                if (!ExtractionReady(card) || !File.Exists(Worker)) throw new InvalidDataException("Image utility dependencies are missing.");
+                return Task.CompletedTask;
+            }, async cancellation => {
+                var runtime = await ManagedPythonRuntime.ResolveAsync("cpu", cancellation);
+                await RunAsync(runtime.Python, PythonArguments(card, "--check"), null, cancellation);
+            }, token);
 
     private static async Task RunAsync(string executable, IEnumerable<string> arguments,
         IProgress<ImageUtilityProgress>? progress, CancellationToken token)

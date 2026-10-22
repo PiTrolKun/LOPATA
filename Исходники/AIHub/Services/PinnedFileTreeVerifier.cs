@@ -2,19 +2,54 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text.Json;
 using Microsoft.Win32.SafeHandles;
 
 namespace AIHub.Services;
 
 internal sealed record PinnedTreeFile(string Path, long Size, string Sha256);
 
-/// <summary>Full hashes on every call. Directory leases avoid repeated ancestor walks without trusting a cache.</summary>
+/// <summary>Component audit entry; full checks retain directory leases, presence checks only visit required paths.</summary>
 internal static class PinnedFileTreeVerifier
 {
-    internal static async Task VerifyAsync(string directory, IReadOnlyList<PinnedTreeFile> files,
+    internal static Task VerifyAsync(string directory, IReadOnlyList<PinnedTreeFile> files,
         CancellationToken token, Action<int, int>? progress = null, int parallelism = 2,
         IReadOnlySet<string>? ignoredFiles = null, string? pythonCacheQuarantineDirectory = null,
         Action<string>? cacheQuarantined = null)
+    {
+        if (parallelism is < 1 or > 4) throw new ArgumentOutOfRangeException(nameof(parallelism));
+        var inventory = files.OrderBy(file => file.Path, StringComparer.OrdinalIgnoreCase).ToArray();
+        var revision = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(inventory)));
+        return ComponentAudit.RunAsync("pinned-files", directory, revision,
+            cancellation => VerifyPresenceAsync(directory, inventory, cancellation, progress),
+            cancellation => VerifyFullAsync(directory, inventory, cancellation, progress, parallelism,
+                ignoredFiles, pythonCacheQuarantineDirectory, cacheQuarantined), token);
+    }
+
+    internal static Task VerifyPresenceAsync(string directory, IReadOnlyList<PinnedTreeFile> files,
+        CancellationToken token, Action<int, int>? progress)
+    {
+        var root = Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var completed = 0;
+        foreach (var file in files)
+        {
+            token.ThrowIfCancellationRequested();
+            PythonWheelExtractor.RelativeDestination(file.Path, wheelLayout: false);
+            var path = Path.GetFullPath(Path.Combine(root, file.Path));
+            if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !seen.Add(path))
+                throw new InvalidDataException("Ambiguous pinned file tree.");
+            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
+            if (!File.Exists(path)) throw new InvalidDataException("Missing pinned file: " + file.Path);
+            progress?.Invoke(++completed, files.Count);
+        }
+        return Task.CompletedTask;
+    }
+
+    private static async Task VerifyFullAsync(string directory, IReadOnlyList<PinnedTreeFile> files,
+        CancellationToken token, Action<int, int>? progress, int parallelism,
+        IReadOnlySet<string>? ignoredFiles, string? pythonCacheQuarantineDirectory,
+        Action<string>? cacheQuarantined)
     {
         if (parallelism is < 1 or > 4) throw new ArgumentOutOfRangeException(nameof(parallelism));
         var root = Path.GetFullPath(directory).TrimEnd(Path.DirectorySeparatorChar);

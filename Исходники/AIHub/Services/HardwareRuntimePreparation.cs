@@ -45,7 +45,7 @@ public sealed partial class HardwareRuntimePreparation(ComponentManager manager)
         return manager.BuildPlanForComponents(ids, "Hardware runtime preparation; engineSet=" + setId);
     }
 
-    /// <summary>Explicit complete integrity check, including executable version probes.</summary>
+    /// <summary>Preparation follows the selected audit policy; first-use and installation checks stay full.</summary>
     public async Task<ComponentAcquisitionPlan> CheckAsync(IEnumerable<GpuPassport> devices, CancellationToken token)
     {
         var plan = await CheckReadinessAsync(devices, token);
@@ -65,11 +65,13 @@ public sealed partial class HardwareRuntimePreparation(ComponentManager manager)
 
     public async Task InstallAsync(ComponentAcquisitionPlan plan, IProgress<ComponentDownloadProgress>? progress, CancellationToken token)
     {
+        using var audit = ComponentAudit.Installation();
         foreach (var item in plan.Items.Where(item => !item.AlreadyAvailable))
         {
             var installed = await manager.DownloadAndInstallAsync(item.ComponentId, progress, token, forceReinstall: true);
             if (!installed.IsAvailable) throw new IOException("Hardware runtime installation is incomplete.");
             await VerifyAsync(item.ComponentId, installed.Record.InstallPath, token);
+            ComponentAudit.Invalidate(installed.Record.InstallPath);
             item.AlreadyAvailable = true;
         }
     }

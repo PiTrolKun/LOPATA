@@ -10,7 +10,22 @@ internal static class MusicAceSource
     internal const string ArchiveDigest = "BA8D5E5874F61140C2EC15FB9BFE36ABDF22B63BC7A7A7476EE8ECE0D1387D5B";
     internal static string ArchivePath => Path.Combine(AppContext.BaseDirectory, "MusicAceRuntime", "source.zip");
     internal static string DirectoryPath => Path.Combine(AppDataPaths.BaseDirectory, "Music", "AceSource", MusicAceCatalog.SourceRevision);
-    internal static async Task VerifyAsync(CancellationToken token)
+    internal static Task VerifyAsync(CancellationToken token) =>
+        ComponentAudit.RunAsync("Music.Ace.Source", DirectoryPath, MusicAceCatalog.SourceRevision + ArchiveDigest,
+            PresenceAsync, VerifyFullAsync, token);
+    private static async Task PresenceAsync(CancellationToken token)
+    {
+        if (!File.Exists(ArchivePath)) throw new FileNotFoundException("Missing ACE source archive.");
+        await using var input = File.OpenRead(Path.Combine(DirectoryPath, "manifest.json"));
+        var manifest = await JsonSerializer.DeserializeAsync<Manifest>(input, cancellationToken: token)
+            ?? throw new InvalidDataException("Missing ACE source manifest.");
+        if (manifest.Revision != MusicAceCatalog.SourceRevision || manifest.Files.Count < 10)
+            throw new InvalidDataException("Unsupported ACE engine revision.");
+        foreach (var relative in manifest.Files.Keys)
+            if (!File.Exists(RuntimeFileAudit.Contained(DirectoryPath, relative)))
+                throw new FileNotFoundException("Missing ACE source file: " + relative);
+    }
+    private static async Task VerifyFullAsync(CancellationToken token)
     {
         await Gate.WaitAsync(token);
         try {
@@ -30,7 +45,7 @@ internal static class MusicAceSource
                         2_157_596, ArchiveDigest, new("https://github.com/ace-step/ACE-Step-1.5"));
                     await PythonWheelExtractor.ExtractAsync(artifact, ArchivePath, staging, token, wheelLayout: false);
                     await VerifyDirectoryAsync(staging, token);
-                    token.ThrowIfCancellationRequested(); Directory.Move(staging, root);
+                    token.ThrowIfCancellationRequested(); Directory.Move(staging, root); ComponentAudit.Invalidate(root);
                 }
                 finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
             }

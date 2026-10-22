@@ -24,17 +24,22 @@ public sealed class MusicAceWorker : IMusicYueWorker
         var worker = new MusicAceWorker(); worker.Log += log;
         var path = Path.Combine(Path.GetTempPath(), "lopata-ace-" + Guid.NewGuid().ToString("N"));
         try {
-            await worker.RunAsync(root, new("", "", 1, 1) { Expert = MusicAceCatalog.Defaults() }, path + ".json", path + ".probe", true, token);
+            var directory = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicAceCatalog.RuntimeRevision);
+            await ComponentAudit.RunAsync("Music.ACE.Probe", directory, MusicAceCatalog.RuntimeRevision + MusicAceCatalog.SourceRevision,
+                ct => worker.RunAsync(root, new("", "", 1, 1) { Expert = MusicAceCatalog.Defaults() }, path + ".json", path + ".probe", true, ct, presenceProbe: true),
+                ct => worker.RunAsync(root, new("", "", 1, 1) { Expert = MusicAceCatalog.Defaults() }, path + ".json", path + ".probe", true, ct, presenceProbe: false), token, log);
             return new(worker.LastHardware ?? "ACE / PyTorch", worker._verifiedCards);
         }
         finally { foreach (var suffix in new[] { ".json", ".probe", ".probe.receipt.json" }) if (File.Exists(path + suffix)) File.Delete(path + suffix); }
     }
-    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token,bool plan=false)
+    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token,bool plan=false, bool presenceProbe=false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         request.Validate(); var payload = MusicAceRequest.Build(request);
         await MusicLora.MusicLoraAssets.EnsureAsync(root, request.Loras, request.EffectiveExpert.Variation, token);
         using var adapters = await MusicLora.MusicLoraAssets.AcquireAsync(root, request.Loras, token);
-        payload["loras"] = request.Loras.Select(u => new { id = u.Id, revision = u.Revision, strength = u.Strength,
+        payload["loras"] = request.Loras.Select(u => new { id = u.Id, revision = u.Revision, strength = u.Strength, audit_prepared = true,
             directory = MusicLora.MusicLoraCatalog.Find(u.Id).Card(root).InstallDirectory,
             format = MusicLora.MusicLoraCatalog.Find(u.Id).Format,
             files = MusicLora.MusicLoraCatalog.Find(u.Id).Files.Select(f => new { name = f.RelativePath, sha256 = f.Sha256 }) }).ToArray();
@@ -54,6 +59,7 @@ public sealed class MusicAceWorker : IMusicYueWorker
             HardwareRuntimeCatalog.PythonCuda128Id, HardwareRuntimeCatalog.PythonCudaId, HardwareRuntimeCatalog.PythonXpuId }, line => Log?.Invoke(line));
         StageFinished("hardware", preparation.Elapsed);
         LastRuntimePack = runtime.Entry.Id + "/" + MusicAceCatalog.RuntimeRevision;
+        if (probe && presenceProbe) { LastHardware = runtime.Device + " / " + runtime.Entry.Id; return; }
         if (runtime.Device != "cpu") MusicLora.MusicLoraForecast.ObserveFreeGpu(MusicAceCatalog.Variation, runtime.FreeBytes);
         await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
         var temporary = output + "." + Guid.NewGuid().ToString("N") + ".partial";

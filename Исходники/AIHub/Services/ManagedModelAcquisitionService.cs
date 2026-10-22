@@ -35,6 +35,7 @@ public sealed class ManagedModelAcquisitionService : IDisposable
         IProgress<ManagedModelDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
+        using var auditInstallation = ComponentAudit.Installation();
         var card = _store.Load(modelArtifactId)
             ?? throw new InvalidOperationException("The model card is not registered in the LOPATA library.");
         await ComponentLicenseGate.EnsureAsync(modelArtifactId, cancellationToken);
@@ -104,6 +105,7 @@ public sealed class ManagedModelAcquisitionService : IDisposable
         IProgress<ManagedModelDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
+        using var auditInstallation = ComponentAudit.Installation();
         var card = _store.Load(modelArtifactId)
             ?? throw new InvalidOperationException("The model card is not registered in the LOPATA library.");
         await ComponentLicenseGate.EnsureAsync(modelArtifactId, cancellationToken);
@@ -158,6 +160,49 @@ public sealed class ManagedModelAcquisitionService : IDisposable
     }
 
     public async Task<ManagedModelArtifactCard> VerifyAsync(
+        string modelArtifactId,
+        IProgress<ManagedModelDownloadProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        var card = _store.Load(modelArtifactId)
+            ?? throw new InvalidOperationException("The model card is not registered in the LOPATA library.");
+        EnsureManagedPath(card);
+        var root = Path.GetFullPath(card.InstallDirectory);
+        var identity = RuntimeFileAudit.Revision(card.Revision, card.Files.Where(f => f.IsRequired)
+            .Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray());
+        ManagedModelArtifactCard? result = null;
+        try
+        {
+            await ComponentAudit.RunAsync(card.ModelArtifactId, root, identity,
+                ct => {
+                    foreach (var file in card.Files.Where(f => f.IsRequired))
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        if (!File.Exists(GetContainedPath(root, file.RelativePath)))
+                            throw new FileNotFoundException("Missing component file: " + file.RelativePath);
+                    }
+                    card.LastError = string.Empty;
+                    card.Status = RequiresRuntimeSmokeCheck(card) ? ManagedModelStatuses.NeedsVerification : ManagedModelStatuses.Installed;
+                    _store.Upsert(card); result = card;
+                    progress?.Report(new(card.ModelArtifactId, string.Empty, card.TotalBytes, card.TotalBytes, 0, "verifying-presence"));
+                    return Task.CompletedTask;
+                }, async ct => {
+                    result = await VerifyFullAsync(modelArtifactId, progress, ct);
+                    if (result.Status is ManagedModelStatuses.Corrupted or ManagedModelStatuses.FilesRemoved)
+                        throw new InvalidDataException(result.LastError);
+                }, cancellationToken);
+            return result ?? card;
+        }
+        catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException)
+        {
+            if (result is not null) return result;
+            card.Status = error is FileNotFoundException or DirectoryNotFoundException
+                ? ManagedModelStatuses.FilesRemoved : ManagedModelStatuses.Corrupted;
+            card.LastError = error.Message; _store.Upsert(card); return card;
+        }
+    }
+
+    private async Task<ManagedModelArtifactCard> VerifyFullAsync(
         string modelArtifactId,
         IProgress<ManagedModelDownloadProgress>? progress,
         CancellationToken cancellationToken)
@@ -243,6 +288,7 @@ public sealed class ManagedModelAcquisitionService : IDisposable
             throw new InvalidDataException($"SHA-256 verification failed: {file.RelativePath}");
         }
         File.Move(partialPath, targetPath, overwrite: true);
+        ComponentAudit.Invalidate(card.InstallDirectory);
         DeletePartialArtifacts(targetPath);
     }
 

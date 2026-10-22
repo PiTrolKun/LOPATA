@@ -81,6 +81,7 @@ public sealed class WebSearchRerankerService
 
         try
         {
+            await _toolModelManager.VerifyRerankerForUseAsync(storageSettings, cancellationToken);
             var rerankResult = await ExecutePythonRerankerAsync(
                 pythonPath,
                 scriptPath,
@@ -100,6 +101,7 @@ public sealed class WebSearchRerankerService
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex)
         {
+            ComponentAuditFailures.Report(ex);
             ApplyLexicalFallback(query, results);
             return new WebSearchRerankInfo
             {

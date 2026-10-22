@@ -160,7 +160,7 @@ public sealed partial class LiteraryStudioControl
         catch (LiteraryGpuContextUnavailableException) { PreservePartial(); _status.Text = _l("Literary.MemoryRecovery.GpuUnavailable"); }
         catch (LiteraryMemorySearchLimitException) { PreservePartial(); _status.Text = _l("Literary.MemorySearch.Limit"); }
         catch (LiteraryMemorySearchFailedException) { PreservePartial(); _status.Text = _l("Literary.MemorySearch.Failed"); }
-        catch (Exception ex) { PreservePartial(); _status.Text = _l("Paragraph.Failure") + " " + ex.Message; }
+        catch (Exception ex) { ComponentAuditFailures.Report(ex); PreservePartial(); _status.Text = _l("Paragraph.Failure") + " " + ex.Message; }
         NotifyRequestNeedsAttention();
         return false;
         void PreservePartial() { if (raw.Length > 0 && !transfer) State.Add(role.ToString(),raw.ToString(),false); }

@@ -41,7 +41,7 @@ public static class LiteraryModelLocation
         }
         foreach (var path in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            if (!Path.IsPathFullyQualified(path) || !File.Exists(path) || new FileInfo(path).Length != SizeBytes) continue;
+            if (!Path.IsPathFullyQualified(path) || !File.Exists(path)) continue;
             if (!await LiteraryFileVerification.Shared.ValidAsync(path, SizeBytes, Sha256, "sha256", token, forceVerification, progress))
                 throw new InvalidDataException("Qwen literary GGUF SHA256 mismatch.");
             return path;

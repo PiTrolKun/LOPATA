@@ -307,8 +307,9 @@ public partial class MainWindow
         {
             StatusText.Text = L("Status.ImageAnalysisOperationCancelled");
         }
-        catch (Exception)
+        catch (Exception error)
         {
+            ComponentAuditFailures.Report(error);
             var updated = _imageAnalysisBundleInstallationService.Check(_storageSettings, bundleId);
             ImageAnalysisBundleConfirmationPage.UpdateSnapshot(updated);
             StatusText.Text = L("Status.ImageAnalysisOperationFailed");

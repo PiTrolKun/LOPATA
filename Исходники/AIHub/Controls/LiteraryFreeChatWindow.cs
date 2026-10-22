@@ -73,7 +73,7 @@ public sealed class LiteraryFreeChatWindow : Window
         }
         catch (OperationCanceledException) { _status.Text = _l("Paragraph.Cancelled"); }
         catch (ImageAnalysisContextExhaustedException ex) { _status.Text = LiteraryContextBudgetMessage.Format(ex, _l); }
-        catch (Exception) { _status.Text = _l("Paragraph.Failure"); }
+        catch (Exception ex) { ComponentAuditFailures.Report(ex); _status.Text = _l("Paragraph.Failure"); }
         finally { _operation = null; lease?.Dispose(); Availability(); }
     }
     private async void OnClosing(object? sender, CancelEventArgs e)

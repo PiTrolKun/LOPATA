@@ -10,6 +10,8 @@ internal static class VideoExport
     public static async Task<string> RunAsync(ClipSession session, string destination, ClipOptions options, string operationId, double from, double length,
         Action<string> log, Action<double>? progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         options.Validate();
         if (!Guid.TryParseExact(operationId, "N", out _)) throw new InvalidDataException("Invalid export identity.");
         if (from < 0 || length <= 0 || from + length > session.TotalDuration + .001) throw new ArgumentOutOfRangeException(nameof(length));

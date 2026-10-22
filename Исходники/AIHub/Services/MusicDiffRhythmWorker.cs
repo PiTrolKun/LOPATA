@@ -24,13 +24,18 @@ public sealed class MusicDiffRhythmWorker : IMusicYueWorker
         var worker = new MusicDiffRhythmWorker(); worker.Log += log;
         var path = Path.Combine(Path.GetTempPath(), "lopata-diff2-" + Guid.NewGuid().ToString("N"));
         try {
-            await worker.RunAsync(root, new("", "", 1, 1, 30) { Expert = MusicDiffRhythmCatalog.Defaults() }, path + ".json", path + ".probe", true, token);
+            var directory = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicDiffRhythmCatalog.RuntimeRevision);
+            await ComponentAudit.RunAsync("Music.DiffRhythm.Probe", directory, MusicDiffRhythmCatalog.RuntimeRevision + MusicDiffRhythmCatalog.SourceRevision,
+                ct => worker.RunAsync(root, new("", "", 1, 1, 30) { Expert = MusicDiffRhythmCatalog.Defaults() }, path + ".json", path + ".probe", true, ct, presenceProbe: true),
+                ct => worker.RunAsync(root, new("", "", 1, 1, 30) { Expert = MusicDiffRhythmCatalog.Defaults() }, path + ".json", path + ".probe", true, ct, presenceProbe: false), token, log);
             return new(worker.LastHardware ?? "DiffRhythm / PyTorch", worker._verifiedCards);
         }
         finally { foreach (var suffix in new[] { ".json", ".probe", ".probe.receipt.json" }) if (File.Exists(path + suffix)) File.Delete(path + suffix); }
     }
-    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token)
+    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token, bool presenceProbe=false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         Dictionary<string, object?> payload;
         try { payload = MusicDiffRhythmRequest.Build(request); }
         catch (Exception error) when (error is InvalidDataException or ArgumentOutOfRangeException) {
@@ -54,6 +59,7 @@ public sealed class MusicDiffRhythmWorker : IMusicYueWorker
             HardwareRuntimeCatalog.PythonCuda128Id, HardwareRuntimeCatalog.PythonCudaId, HardwareRuntimeCatalog.PythonXpuId }, line => Log?.Invoke(line));
         StageFinished("hardware", preparation.Elapsed);
         LastRuntimePack = runtime.Entry.Id + "/" + MusicDiffRhythmCatalog.RuntimeRevision;
+        if (probe && presenceProbe) { LastHardware = runtime.Device + " / " + runtime.Entry.Id; return; }
         await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
         var temporary = output + "." + Guid.NewGuid().ToString("N") + ".partial";
         var info = new ProcessStartInfo(runtime.Python) { UseShellExecute = false, CreateNoWindow = true,

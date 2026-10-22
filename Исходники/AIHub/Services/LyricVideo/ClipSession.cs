@@ -36,6 +36,8 @@ internal sealed class ClipSession
     private sealed record Cache(string SourceHash, string PcmHash, string WaveHash, string AnalysisHash);
     public static async Task<ClipSession> LoadAsync(ClipConfig config, Action<string>? log, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         Directory.CreateDirectory(config.Output);
         var localizer = new LocalizationService(); localizer.Load(config.Language);
         var l = localizer.T;

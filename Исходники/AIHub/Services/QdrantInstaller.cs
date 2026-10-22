@@ -11,13 +11,27 @@ public static class QdrantInstaller
     public static async Task<bool> IsInstalledAsync(QdrantOptions options, CancellationToken token)
     {
         if (!File.Exists(options.Executable)) return false;
-        await using var input = File.OpenRead(options.Executable);
-        var actual = Convert.ToHexString(await SHA256.HashDataAsync(input, token));
-        return actual.Equals(QdrantOptions.ExecutableSha256, StringComparison.OrdinalIgnoreCase);
+        try
+        {
+            await ComponentAudit.RunAsync("qdrant", options.InstallDirectory, QdrantOptions.ExecutableSha256,
+                ct => {
+                    ct.ThrowIfCancellationRequested();
+                    if (!File.Exists(options.Executable)) throw new FileNotFoundException("Qdrant is missing.", options.Executable);
+                    return Task.CompletedTask;
+                }, async ct => {
+                    await using var input = File.OpenRead(options.Executable);
+                    var actual = Convert.ToHexString(await SHA256.HashDataAsync(input, ct));
+                    if (!actual.Equals(QdrantOptions.ExecutableSha256, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException("Qdrant executable SHA256 mismatch.");
+                }, token);
+            return true;
+        }
+        catch (InvalidDataException) { return false; }
     }
 
     public static async Task InstallAsync(QdrantOptions options, IProgress<double>? progress, CancellationToken token)
     {
+        using var installation = ComponentAudit.Installation();
         await ComponentLicenseGate.EnsureAsync(QdrantOptions.LicenseId, token);
         await Gate.WaitAsync(token);
         try
@@ -66,6 +80,7 @@ public static class QdrantInstaller
                 // Preserve an incomplete/changed old installation for inspection, never touch its data directory.
                 if (Directory.Exists(options.InstallDirectory)) Directory.Move(options.InstallDirectory, options.InstallDirectory + ".previous-" + Guid.NewGuid().ToString("N"));
                 Directory.Move(stage, options.InstallDirectory);
+                ComponentAudit.Invalidate(options.InstallDirectory);
             }
             finally { if (Directory.Exists(stage)) Directory.Delete(stage, true); }
         }

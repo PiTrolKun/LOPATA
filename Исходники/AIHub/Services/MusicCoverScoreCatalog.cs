@@ -23,19 +23,22 @@ public static class MusicCoverScoreCatalog
         foreach (var entry in Entries) {
             if (download) await manager.DownloadAndInstallAsync(entry.Id, progress, token);
             var source = Path.Combine(manager.GetInstallDirectory(entry), entry.FileName);
-            if (!File.Exists(source) || new FileInfo(source).Length != entry.DownloadSizeBytes
-                || !string.Equals(await MusicAudioTaskFiles.HashAsync(source, token), entry.Sha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Music.Transform.ScoreMissing");
+            var pins = new PinnedTreeFile[] { new(entry.FileName, entry.DownloadSizeBytes, entry.Sha256) };
+            await RuntimeFileAudit.VerifyAsync(entry.Id, Path.GetDirectoryName(source)!, Revision, pins, token);
             Directory.CreateDirectory(CacheDirectory); var target = Path.Combine(CacheDirectory, entry.FileName);
-            if (File.Exists(target) && new FileInfo(target).Length == entry.DownloadSizeBytes
-                && string.Equals(await MusicAudioTaskFiles.HashAsync(target, token), entry.Sha256, StringComparison.OrdinalIgnoreCase)) continue;
+            if (File.Exists(target))
+            {
+                try { await RuntimeFileAudit.VerifyAsync(entry.Id + ".cache", CacheDirectory, Revision, pins, token); continue; }
+                catch (IOException) { /* Repair the private copy from the separately audited installation. */ }
+            }
             var temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try {
                 await using (var input = File.OpenRead(source)) await using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
                     await input.CopyToAsync(output, token); output.Flush(true);
                 }
                 if (!string.Equals(await MusicAudioTaskFiles.HashAsync(temporary, token), entry.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Music.Transform.InputChanged");
-                File.Move(temporary, target, true);
+                File.Move(temporary, target, true); ComponentAudit.Invalidate(CacheDirectory);
+                await RuntimeFileAudit.VerifyAsync(entry.Id + ".cache", CacheDirectory, Revision, pins, token);
             } finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }
     }

@@ -21,12 +21,9 @@ public sealed class MusicAudioRuntime(string directory)
         var required = new[] { "ffmpeg.exe", "ffprobe.exe", "avcodec-62.dll", "avformat-62.dll", "avutil-60.dll", "avfilter-11.dll", "swresample-6.dll" };
         var files = manifest.RootElement.GetProperty("Files").EnumerateArray().ToArray();
         if (files.Length != required.Length) throw new InvalidDataException("Incomplete audio runtime.");
-        foreach (var name in required) {
-            var entry = files.Single(f => f.GetProperty("Name").GetString() == name);
-            using var file = File.OpenRead(Path.Combine(directory, name));
-            var hash = Convert.ToHexString(await SHA256.HashDataAsync(file, token));
-            if (!hash.Equals(entry.GetProperty("Sha256").GetString(), StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Audio runtime checksum mismatch: " + name);
-        }
+        var expected = required.Select(name => new PinnedTreeFile(name, -1,
+            files.Single(f => f.GetProperty("Name").GetString() == name).GetProperty("Sha256").GetString()!)).ToArray();
+        await RuntimeFileAudit.VerifyAsync("Music.Audio", directory, Revision, expected, token);
     }
     public async Task<string> RunAsync(bool probe, IEnumerable<string> arguments, CancellationToken token, TimeSpan? timeoutLimit = null)
     {

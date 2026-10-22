@@ -37,12 +37,18 @@ public static class ApplicationBackgroundOperations
     public static async Task<T> RunAsync<T>(string kind, string title, string? project, object input,
         Func<CancellationToken, Task<T>> execute, CancellationToken token, BackgroundOperationState? restored = null)
     {
-        if (Current is not { } controller) return await execute(token);
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        if (Current is not { } controller)
+        {
+            try { return await execute(token); }
+            catch (Exception error) { ComponentAuditFailures.Report(error); throw; }
+        }
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, ExitToken);
         var operation = restored ?? new BackgroundOperationState
             { Kind = kind, Title = title, Project = project, Input = JsonSerializer.SerializeToElement(input) };
         try { return await controller.RunAsync(operation, execute, RetireModelsAsync, lifetime.Token); }
         catch (OperationCanceledException) when (token.IsCancellationRequested && !ExitToken.IsCancellationRequested)
         { controller.DiscardPending(operation.Id); throw; }
+        catch (Exception error) { ComponentAuditFailures.Report(error); throw; }
     }
 }

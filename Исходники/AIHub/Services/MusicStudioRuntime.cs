@@ -61,28 +61,17 @@ public static class MusicStudioRuntime
             "engine/cublas64_12.dll", "engine/cublasLt64_12.dll", "engine/cublas64_13.dll", "engine/cublasLt64_13.dll" })
             if (files.Count(f => f.GetProperty("Name").GetString() == required) != 1)
                 throw new InvalidDataException("Incomplete Studio runtime: " + required);
-        var directory = Path.GetFullPath(profile.DirectoryPath) + Path.DirectorySeparatorChar;
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var entry in files)
-        {
-            var name = entry.GetProperty("Name").GetString()!;
-            var path = Path.GetFullPath(Path.Combine(directory, name));
-            if (!path.StartsWith(directory, StringComparison.OrdinalIgnoreCase) || !names.Add(name))
-                throw new InvalidDataException("Unsafe Studio manifest path.");
-            using var file = File.OpenRead(path);
-            if (file.Length != entry.GetProperty("Bytes").GetInt64() || !Convert.ToHexString(await SHA256.HashDataAsync(file, token))
-                .Equals(entry.GetProperty("Sha256").GetString(), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Studio runtime checksum mismatch: " + name);
-        }
+        var expected = files.Select(f => new PinnedTreeFile(f.GetProperty("Name").GetString()!,
+            f.GetProperty("Bytes").GetInt64(), f.GetProperty("Sha256").GetString()!)).ToArray();
+        if (expected.Select(f => f.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() != expected.Length)
+            throw new InvalidDataException("Unsafe Studio manifest path.");
+        await RuntimeFileAudit.VerifyAsync("Music.Studio.Runtime", profile.DirectoryPath,
+            profile.Revision + profile.SourceRevision + profile.EngineRevision, expected, token);
     }
     public static async Task VerifyModelsAsync(string modelsRoot, CancellationToken token)
     {
-        foreach (var card in Cards(modelsRoot)) foreach (var expected in card.Files)
-        {
-            using var file = File.OpenRead(Path.Combine(card.InstallDirectory, expected.RelativePath));
-            if (file.Length != expected.SizeBytes || !Convert.ToHexString(await SHA256.HashDataAsync(file, token))
-                .Equals(expected.Sha256, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Studio model checksum mismatch: " + expected.RelativePath);
-        }
+        foreach (var card in Cards(modelsRoot))
+            await RuntimeFileAudit.VerifyAsync(card.ModelArtifactId, card.InstallDirectory, card.Revision,
+                card.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray(), token);
     }
 }

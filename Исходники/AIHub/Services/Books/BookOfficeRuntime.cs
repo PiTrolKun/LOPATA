@@ -9,7 +9,6 @@ public static partial class BookConverterRuntime
     public const string LibreOfficeVersion = "26.2.4.2";
     public const string LibreOfficeUrl = "https://downloadarchive.documentfoundation.org/libreoffice/old/26.2.4.2/win/x86_64/LibreOffice_26.2.4.2_Win_x86-64.msi";
     private static readonly SemaphoreSlim OfficeVerificationGate = new(1, 1);
-    private static string? _verifiedOfficeRoot;
     private static string OfficeRoot => Path.Combine(AppDataPaths.RuntimeDirectory, "BookConverter", "libreoffice-" + LibreOfficeVersion);
 
     // This lookup is independent of PATH, user state and ComponentManager.
@@ -53,13 +52,11 @@ public static partial class BookConverterRuntime
         await OfficeVerificationGate.WaitAsync(token);
         try
         {
-            if (_verifiedOfficeRoot == root) return;
             await using var manifest = typeof(BookConverterRuntime).Assembly.GetManifestResourceStream("AIHub.BookOfficeManifest")
                 ?? throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
             var archive = Path.Combine(AppContext.BaseDirectory, "BookOfficeRuntime", BookOfficeBundle.FileName);
             if (File.Exists(archive)) await BookOfficeBundle.EnsureAsync(archive, root, manifest, token);
             else await VerifyOfficeFilesAsync(root, manifest, token);
-            _verifiedOfficeRoot = root;
         }
         finally { OfficeVerificationGate.Release(); }
     }
@@ -67,22 +64,9 @@ public static partial class BookConverterRuntime
     internal static async Task VerifyOfficeFilesAsync(string root, Stream manifest, CancellationToken token)
     {
         using var document = await JsonDocument.ParseAsync(manifest, cancellationToken: token);
-        var basePath = Path.GetFullPath(root) + Path.DirectorySeparatorChar;
-        var files = document.RootElement.GetProperty("Files");
-        if (files.GetArrayLength() == 0) throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
-        foreach (var entry in files.EnumerateArray())
-        {
-            token.ThrowIfCancellationRequested();
-            var name = entry.GetProperty("Name").GetString()!;
-            var path = Path.GetFullPath(Path.Combine(root, name));
-            if (Path.IsPathFullyQualified(name) || !path.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
-            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
-            if (!File.Exists(path)) throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
-            await using var file = File.OpenRead(path);
-            if (file.Length != entry.GetProperty("Bytes").GetInt64()
-                || !Convert.ToHexString(await SHA256.HashDataAsync(file, token)).Equals(entry.GetProperty("Sha256").GetString(), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
-        }
+        var expected = document.RootElement.GetProperty("Files").EnumerateArray().Select(f => new PinnedTreeFile(
+            f.GetProperty("Name").GetString()!, f.GetProperty("Bytes").GetInt64(), f.GetProperty("Sha256").GetString()!)).ToArray();
+        if (expected.Length == 0) throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
+        await RuntimeFileAudit.VerifyAsync("Books.LibreOffice", root, LibreOfficeVersion, expected, token);
     }
 }

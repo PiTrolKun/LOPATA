@@ -17,18 +17,19 @@ public static class LyricLibraryPreparation
     private static string? Stamp(string root)
     {
         var definition = Definition(root); var card = new ManagedModelLibraryStore().Load(definition.ModelArtifactId);
-        if (!BrokenRuntimes.IsEmpty || !ManagedPythonRuntime.HasCpu || card is null || card.InstallDirectory != definition.InstallDirectory || card.Revision != definition.Revision) return null;
-        var parts = new List<string> { Path.GetFullPath(root), ManagedPythonRuntime.CpuDirectory };
+        if (!BrokenRuntimes.IsEmpty || !ManagedPythonRuntime.HasCpu || card is null || card.Status != ManagedModelStatuses.Installed || card.InstallDirectory != definition.InstallDirectory || card.Revision != definition.Revision) return null;
+        var full = ComponentAudit.FullRequired;
+        var parts = new List<string> { Path.GetFullPath(root), ManagedPythonRuntime.CpuDirectory, full ? "full" : "presence" };
         foreach (var file in card.Files)
         {
             var info = new FileInfo(Path.Combine(card.InstallDirectory, file.RelativePath));
-            if (!info.Exists || info.Length != file.SizeBytes || file.VerifiedSizeBytes != info.Length
-                || file.VerifiedLastWriteTimeUtc != info.LastWriteTimeUtc) return null;
-            parts.Add(info.FullName + ":" + info.Length + ":" + info.LastWriteTimeUtc.Ticks);
+            if (!info.Exists || (full && (info.Length != file.SizeBytes || file.VerifiedSizeBytes != info.Length
+                || file.VerifiedLastWriteTimeUtc != info.LastWriteTimeUtc))) return null;
+            parts.Add(full ? info.FullName + ":" + info.Length + ":" + info.LastWriteTimeUtc.Ticks : info.FullName);
         }
         var python = new FileInfo(Path.Combine(ManagedPythonRuntime.CpuDirectory, "python.exe"));
         if (!python.Exists) return null;
-        parts.Add(python.Length + ":" + python.LastWriteTimeUtc.Ticks);
+        parts.Add(full ? python.Length + ":" + python.LastWriteTimeUtc.Ticks : python.FullName);
         return LyricEntry.Hash(string.Join(";", parts));
     }
     public static bool IsReady(string root) => _verified is not null && _verified == Stamp(root);
@@ -43,18 +44,37 @@ public static class LyricLibraryPreparation
     }
     public static async Task EnsureAsync(string root, CancellationToken token)
     {
-        if (IsReady(root)) return;
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        if (IsReady(root) && await VerifyCachedAsync(root, token)) return;
         await Gate.WaitAsync(token);
         try
         {
-            if (IsReady(root)) return;
+            if (IsReady(root) && await VerifyCachedAsync(root, token)) return;
             if (RequestPreparation is null || !await RequestPreparation(root, token)) throw new OperationCanceledException(token);
             if (!IsReady(root)) throw new InvalidDataException("Music.Library.NotReady");
         }
         finally { Gate.Release(); }
     }
+    private static async Task<bool> VerifyCachedAsync(string root, CancellationToken token)
+    {
+        try
+        {
+            var store = new ManagedModelLibraryStore();
+            using var acquisition = new ManagedModelAcquisitionService(store);
+            var card = await acquisition.VerifyAsync(Definition(root).ModelArtifactId, null, token);
+            if (card.Status != ManagedModelStatuses.Installed) { Invalidate(); return false; }
+            await PythonRuntimeBundleVerifier.VerifyCpuAsync(ManagedPythonRuntime.CpuDirectory, token);
+            _verified = Stamp(root);
+            return _verified is not null;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        { Invalidate(); return false; }
+    }
+
     public static async Task<bool> PrepareAsync(string root, bool download, IProgress<string> progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(progress.Report);
         Invalidate();
         using var preparation = new RagBookModelPreparation(root, new AppSettingsStore().LoadOrCreate().ModelDownloads?.MaximumParallelConnections ?? 0);
         progress.Report("Giga-Embeddings 3B");

@@ -24,13 +24,18 @@ public sealed class MusicHeartMuLaWorker : IMusicYueWorker
         var worker = new MusicHeartMuLaWorker(); worker.Log += log;
         var path = Path.Combine(Path.GetTempPath(), "lopata-heartmula-" + Guid.NewGuid().ToString("N"));
         try {
-            await worker.RunAsync(root, new("", "", 1, 1, 30) { Expert = MusicHeartMuLaCatalog.Defaults() }, path + ".json", path + ".probe", true, token);
+            var directory = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicHeartMuLaCatalog.RuntimeRevision);
+            await ComponentAudit.RunAsync("Music.HeartMuLa.Probe", directory, MusicHeartMuLaCatalog.RuntimeRevision + MusicHeartMuLaCatalog.SourceRevision,
+                ct => worker.RunAsync(root, new("", "", 1, 1, 30) { Expert = MusicHeartMuLaCatalog.Defaults() }, path + ".json", path + ".probe", true, ct, presenceProbe: true),
+                ct => worker.RunAsync(root, new("", "", 1, 1, 30) { Expert = MusicHeartMuLaCatalog.Defaults() }, path + ".json", path + ".probe", true, ct, presenceProbe: false), token, log);
             return new(worker.LastHardware ?? "HeartMuLa / PyTorch", worker._verifiedCards);
         }
         finally { foreach (var suffix in new[] { ".json", ".probe", ".probe.receipt.json" }) if (File.Exists(path + suffix)) File.Delete(path + suffix); }
     }
-    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token)
+    private async Task RunAsync(string root, MusicYueRequest request, string requestPath, string output, bool probe, CancellationToken token, bool presenceProbe=false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         request.Validate(); var payload = MusicHeartMuLaRequest.Build(request);
         if (File.Exists(output)) throw new IOException("Music output already exists.");
         Log?.Invoke("[Load] HeartMuLa · official API");
@@ -48,6 +53,7 @@ public sealed class MusicHeartMuLaWorker : IMusicYueWorker
             HardwareRuntimeCatalog.PythonCuda128Id, HardwareRuntimeCatalog.PythonCudaId, HardwareRuntimeCatalog.PythonXpuId }, line => Log?.Invoke(line));
         StageFinished("hardware", preparation.Elapsed);
         LastRuntimePack = runtime.Entry.Id + "/" + MusicHeartMuLaCatalog.RuntimeRevision;
+        if (probe && presenceProbe) { LastHardware = runtime.Device + " / " + runtime.Entry.Id; return; }
         await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
         var temporary = output + "." + Guid.NewGuid().ToString("N") + ".partial";
         var info = new ProcessStartInfo(runtime.Python) { UseShellExecute = false, CreateNoWindow = true,

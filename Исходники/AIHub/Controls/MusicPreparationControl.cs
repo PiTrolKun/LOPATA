@@ -34,6 +34,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     private string _variation = MusicStudioRuntime.Variation;
     private bool _applySelection;
     private string? _preparedHardware;
+    private readonly List<string> _pendingAuditLog = [];
     public event Action? WorkspaceChanged;
     public event Action<MusicWorkspaceControl>? PoetryRequested;
     public event Action<MusicWorkspaceControl>? VideoRequested;
@@ -137,6 +138,8 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
         _workspace.Generation.OpenVideo = () => VideoRequested?.Invoke(_workspace);
         _workspace.Generation.OptionsChanged += () => { _variation = _workspace.Generation.Variation; WorkspaceChanged?.Invoke(); };
         _workspace.Session.StateChanged += () => WorkspaceChanged?.Invoke();
+        foreach (var line in _pendingAuditLog) _workspace.Status.AppendLog(line);
+        _pendingAuditLog.Clear();
     }
     private bool ShowPendingWorkspace()
     {
@@ -171,6 +174,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     }
     private void ShowPreparationError(Exception error)
     {
+        ComponentAuditFailures.Report(error);
         IsWorkspace = false; IsModelSelection = false; _ready = false;
         _statusKey = "Music.Error"; ErrorText = error.Message;
         OwnedProcessRegistry.Log("music_ui_preparation_failed", "Music.Preparation", detail: error.ToString());
@@ -204,11 +208,13 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     {
         if (_disposed || IsBusy) return;
         if (open && ShowPendingWorkspace()) return;
+        using var auditOperation = ComponentAudit.CaptureOperation();
         IsWorkspace = false; IsModelSelection = false; _ready = false;
         if (string.IsNullOrWhiteSpace(_root)) { _statusKey = "Music.StorageRequired"; Render(); return; }
         IsBusy = true; _cancel = new();
         _preparedHardware = null;
         var operation = _cancel;
+        using var auditLog = ComponentAudit.CaptureLog(line => ReportAuditPreparation(line, operation));
         _statusKey = "Music.Preparation.Checking"; Render();
         var progress = new Progress<ManagedModelDownloadProgress>(p =>
         {
@@ -222,7 +228,7 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
         {
             var filesWatch = System.Diagnostics.Stopwatch.StartNew();
             // External pipelines delegate complete verification to their worker.
-            // Previous status is a UI hint only; the worker re-hashes every component before execution.
+            // Previous status is a UI hint only; the worker applies the common component-audit policy before execution.
             if (!(open && MusicModelVariants.ExternalPipeline(_variation))) _cards = acknowledge
                 ? await _preparation.PrepareAsync(_root, download, progress, operation.Token)
                 : await _preparation.CheckAsync(_root, progress, operation.Token);
@@ -234,7 +240,8 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
             _statusKey = _ready ? "Music.Preparation.Ready" : "Music.Preparation.Missing";
             if (open && _ready && _variation == MusicModelVariants.Bf16)
                 _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
-                    line => { if (_status is not null) _status.Text = line; });
+                    line => { if (line.StartsWith("[Audit]", StringComparison.Ordinal)) ReportAuditPreparation(line, operation);
+                        else if (_status is not null) _status.Text = line; });
             if (open && _ready && MusicHeartMuLaCatalog.IsHeart(_variation)) {
                 var receipt = await MusicHeartMuLaWorker.ProbeAsync(_root, operation.Token, line => ReportExternalPreparation(line, operation));
                 _preparedHardware = receipt.Hardware; _cards = receipt.Cards;
@@ -278,10 +285,20 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
     }
     private string ErrorText { get; set; } = "";
 
+    private void ReportAuditPreparation(string line, CancellationTokenSource operation)
+    {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => ReportAuditPreparation(line, operation)); return; }
+        if (_disposed) return;
+        if (_workspace is not null) _workspace.Status.AppendLog(line);
+        else { if (_pendingAuditLog.Count >= 200) _pendingAuditLog.RemoveAt(0); _pendingAuditLog.Add(line); }
+        if (IsBusy && _cancel == operation && _status is not null) _status.Text = line;
+    }
+
     private void ReportExternalPreparation(string line, CancellationTokenSource operation)
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => ReportExternalPreparation(line, operation)); return; }
         if (_disposed || !IsBusy || _cancel != operation) return;
+        if (line.StartsWith("[Audit]", StringComparison.Ordinal)) ReportAuditPreparation(line, operation);
         var key = line.Contains("source", StringComparison.OrdinalIgnoreCase) ? "Source"
             : line.Contains("Importing", StringComparison.Ordinal) ? "Api"
             : line.Contains("hardware", StringComparison.OrdinalIgnoreCase) || line.Contains("Python profile", StringComparison.Ordinal) ? "Hardware"

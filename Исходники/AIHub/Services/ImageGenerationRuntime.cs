@@ -49,7 +49,13 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
     public async Task<ImageGenerationRuntimeReceipt?> GenerateWithReceiptAsync(ImageGenerationRequest request, int index,
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         token.ThrowIfCancellationRequested();
+        var store = new ManagedModelLibraryStore();
+        foreach (var card in cards)
+            await ManagedModelRuntimeAudit.VerifyAsync(store, card.ModelArtifactId, token);
+        if (cards.SingleOrDefault(card => card.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
+            await ImageGenerationInstallation.EnsureRuntimeAsync(legacyRuntime, token);
         var setId = request.EngineSetId ?? EngineSetSelection.ActiveId;
         var selection = await SdRuntimeSelector.SelectAsync(cards, false, token, setId);
         var result = await AttemptAsync(request, index, cards, promptFile, output, selection, token);

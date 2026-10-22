@@ -30,11 +30,15 @@ public sealed class LlamaCliRuntimeService
         Action<string> log,
         CancellationToken cancellationToken)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         if (!IsAvailable)
         {
             throw new FileNotFoundException("llama-cli.exe was not found.", ExpectedExecutablePath);
         }
 
+        await CoreModelManager.VerifyPathForUseAsync(model.Path, cancellationToken, log);
+        await ExecutorModelInstaller.VerifyPathForUseAsync(model.Path, cancellationToken, log);
         var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), cancellationToken);
         var selection = await LlamaRuntimeSelector.SelectAsync(LlamaDenseMemoryPolicy.GpuRequired(memory,
             CoreContextRuntimeLimits.CurrentBackendContextLimit), _forceCpu, log, cancellationToken);

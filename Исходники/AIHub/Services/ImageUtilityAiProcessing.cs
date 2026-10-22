@@ -11,16 +11,19 @@ public sealed partial class ImageUtilityAiService
         IReadOnlyDictionary<string, string> parameters, IProgress<ImageUtilityProgress>? progress,
         CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         if (!ImageUtilityAiCatalog.IsAi(methodId)) throw new ArgumentException("Unknown image AI method.");
         if (string.Equals(Path.GetFullPath(inputPath), Path.GetFullPath(outputPngPath), StringComparison.OrdinalIgnoreCase)
             || File.Exists(outputPngPath)) throw new IOException("AI output must be a new separate file.");
         if (!IsReady(methodId)) throw new ImageUtilityException("ImageUtility.Ai.DownloadRequired");
         var cards = Register(methodId); var card = cards.Single();
+        await ManagedModelRuntimeAudit.VerifyAsync(_store, card.ModelArtifactId, token);
         await ComponentLicenseGate.EnsureAsync(methodId == "swinir"
             ? [card.ModelArtifactId, GigaEmbeddingInstallation.RuntimeLicenseId] : NativeLicenseIds(card, methodId), token);
         progress?.Report(new("ImageUtility.Ai.Loading"));
         if (methodId == "swinir")
         {
+            await VerifySwinirImportAsync(card, token);
             var scale = Number(parameters, "scale", 4, 2, 8);
             if (scale is not (2 or 3 or 4 or 8)) Invalid();
             var tile = Number(parameters, "tile", 256, 0, 32768);

@@ -64,8 +64,11 @@ public sealed class Qwen25OmniRuntimeService : IOmniTextRuntime
         CancellationToken cancellationToken,
         bool reuseCurrentPlan = false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         await ComponentLicenseGate.EnsureAsync(ManagedModelCatalog.Qwen25OmniHeavyArtifactId, cancellationToken);
         ObjectDisposedException.ThrowIf(_disposed, this);
+        await ManagedModelRuntimeAudit.VerifyAsync(_libraryStore, ManagedModelCatalog.Qwen25OmniHeavyArtifactId, cancellationToken, log);
         var card = ResolveReadyCard();
         progress?.Report(new ImageAnalysisLiteraryProgress(
             ManagedModelRoles.Core,
@@ -484,7 +487,7 @@ public sealed class Qwen25OmniRuntimeService : IOmniTextRuntime
             var info = new FileInfo(path);
             return !path.StartsWith(root, StringComparison.OrdinalIgnoreCase)
                 || !info.Exists
-                || info.Length != file.SizeBytes;
+                || ComponentAudit.FullRequired && info.Length != file.SizeBytes;
         }))
         {
             throw new InvalidDataException("A verified Qwen2.5-Omni file is missing or has changed.");

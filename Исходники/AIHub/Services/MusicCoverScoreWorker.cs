@@ -18,6 +18,8 @@ public sealed class MusicCoverScoreWorker : IMusicCoverScoreWorker
 {
     public async Task<string> TranscribeAsync(string modelsRoot, string audio, bool harmony, Action<string> log, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         await MusicCoverScoreCatalog.PrepareAsync(false, null, token);
         var profile = MusicStudioRuntime.Current;
         await ComponentLicenseGate.EnsureAsync([MusicStudioRuntime.CurrentComponentId], token);

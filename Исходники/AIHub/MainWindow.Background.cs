@@ -84,20 +84,28 @@ public partial class MainWindow
 
     internal async void CompleteApplicationStartup()
     {
-        _stateBeforeTray = WindowState == System.Windows.WindowState.Minimized ? _lastNonMinimizedWindowState : WindowState;
-        try { await InitializeEngineSetsAsync(); }
-        catch (OperationCanceledException) { return; }
-        catch (Exception error) { EngineSetFailure(error); return; }
-        await InitializeStartupChecksAsync();
-        if (_backgroundLifetime.IsCancellationRequested || _processShutdownPending || _processShutdownComplete) return;
-        _applicationReady = true;
-        ApplyImageShellIntegration();
-        RefreshBackgroundResumeSchedule(); RefreshBackgroundTray();
-        await CompleteUpdateStartupAsync();
-        try { await OfferEngineSetAsync(); }
-        catch (OperationCanceledException) { return; }
-        catch (Exception error) { EngineSetFailure(error); }
-        await PumpImageShellAsync();
+        try
+        {
+            _stateBeforeTray = WindowState == System.Windows.WindowState.Minimized ? _lastNonMinimizedWindowState : WindowState;
+            try { await InitializeEngineSetsAsync(); }
+            catch (OperationCanceledException) { return; }
+            catch (Exception error) { EngineSetFailure(error); return; }
+            await InitializeStartupChecksAsync();
+            if (_backgroundLifetime.IsCancellationRequested || _processShutdownPending || _processShutdownComplete) return;
+            _applicationReady = true;
+            ApplyImageShellIntegration();
+            RefreshBackgroundResumeSchedule(); RefreshBackgroundTray();
+            await CompleteUpdateStartupAsync();
+            try { await OfferEngineSetAsync(); }
+            catch (OperationCanceledException) { return; }
+            catch (Exception error) { EngineSetFailure(error); }
+            await PumpImageShellAsync();
+        }
+        finally
+        {
+            if (!Dispatcher.HasShutdownStarted && !_processShutdownPending && !_processShutdownComplete)
+                _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ContextIdle, new Action(AnnounceComponentAuditStartup));
+        }
     }
 
     private void RefreshBackgroundResumeSchedule()

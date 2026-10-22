@@ -234,6 +234,8 @@ public sealed partial class LiteraryChatRuntime : IDisposable, ILiteraryStudioRe
     }
     internal async Task PrepareAsync(CancellationToken token, bool forceCpu = false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(Log);
         forceCpu |= _forceCpu;
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (_process is { HasExited: false } && _loadedUsesRamReserve != _runtimeOptions.UseRamReserve) StopProcess();

@@ -123,7 +123,7 @@ public sealed partial class ImageGenerationControl : UserControl
             prepared = true;
         }
         catch (OperationCanceledException) { _preparationReady = wasReady; Status(L("Canceled")); }
-        catch (Exception e) { Error(e); }
+        catch (Exception e) { ComponentAuditFailures.Report(e); Error(e); }
         finally { _busy = false; _cancel.Dispose(); _cancel = null; Render(); }
         return prepared;
     }

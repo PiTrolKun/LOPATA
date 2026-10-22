@@ -26,6 +26,7 @@ public sealed partial class BookConversionWindow
     }
     private async Task<bool> PrepareSmartAsync(bool choose = false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         var storage = _smartStorage ?? new StorageSettingsStore().LoadOrCreate();
         var root = new CoreModelManager().GetModelsRoot(storage);
         if (string.IsNullOrWhiteSpace(root)) throw new InvalidOperationException(_l("BookConverter.SmartPreparation.StorageMissing"));
@@ -36,10 +37,22 @@ public sealed partial class BookConversionWindow
         // Returning to the mode chooser still offers model choices. Convert reuses the prepared session.
         if (!choose && _preparedSmartSession is not null)
         {
-            var paths = service.VerifiedPaths(_smartSelection, hasImages: true)
-                ?? service.VerifiedPaths(_smartSelection, hasImages);
-            if (paths is not null && _preparedSmartSession.Matches(root, _smartSelection, hasImages,
-                EngineSetSelection.ActiveId, PreparedRuntimePaths(_smartSelection, paths))) return true;
+            SetBusy(true); _work = CancellationTokenSource.CreateLinkedTokenSource(ApplicationBackgroundOperations.ExitToken);
+            try
+            {
+                var progress = new Progress<string>(line => { _status.Text = line; AppendLog(line); });
+                // Cached paths cannot authorize a reinstalled component. The common policy checks every current installation first.
+                var readiness = await service.PrepareAsync(_smartSelection, false, progress, _work.Token);
+                _work.Token.ThrowIfCancellationRequested();
+                if (readiness.Ready)
+                {
+                    var paths = service.VerifiedPaths(_smartSelection, hasImages: true)
+                        ?? service.VerifiedPaths(_smartSelection, hasImages);
+                    if (paths is not null && _preparedSmartSession.Matches(root, _smartSelection, hasImages,
+                        EngineSetSelection.ActiveId, await PreparedRuntimePathsAsync(_smartSelection, paths, _work.Token))) return true;
+                }
+            }
+            finally { FinishWork(); }
         }
         var window = new BookSmartPreparationWindow(this, _l, _smartSelection, service.PrepareAsync);
         window.ShowDialog();
@@ -48,14 +61,14 @@ public sealed partial class BookConversionWindow
         // An already verified visual model can be reused when images are added after choosing the mode.
         var all = service.VerifiedPaths(_smartSelection, hasImages: true);
         var prepared = all ?? service.VerifiedPaths(_smartSelection, hasImages);
-        var preparedFiles = prepared is null ? null : PreparedRuntimePaths(_smartSelection, prepared);
+        var preparedFiles = prepared is null ? null : await PreparedRuntimePathsAsync(_smartSelection, prepared, ApplicationBackgroundOperations.ExitToken);
         _preparedSmartSession = preparedFiles is null ? null : new(root, _smartSelection, all is not null || hasImages,
             EngineSetSelection.ActiveId, preparedFiles);
         return true;
     }
-    private static string[]? PreparedRuntimePaths(BookSmartSelection selection, string[] models)
+    private static async Task<string[]?> PreparedRuntimePathsAsync(BookSmartSelection selection, string[] models, CancellationToken token)
     {
-        try { return models.Concat(Directory.EnumerateFiles(BookSmartOcrRuntime.DirectoryFor(selection), "*", SearchOption.AllDirectories))
+        try { return models.Concat(await BookSmartOcrRuntime.KnownFilesAsync(selection, token))
             .Append(BookSmartOcrRuntime.WorkerPath).ToArray(); }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return null; }
     }

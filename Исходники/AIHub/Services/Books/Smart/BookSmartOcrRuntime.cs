@@ -20,6 +20,8 @@ internal sealed class BookSmartOcrRuntime(Func<string, string> localize)
     internal async Task<BookSmartPreparationItem[]> PrepareRuntimeAsync(BookSmartSelection selection, bool download,
         IProgress<string> progress, CancellationToken token)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(progress.Report);
         await Gate.WaitAsync(token);
         try
         {
@@ -27,18 +29,18 @@ internal sealed class BookSmartOcrRuntime(Func<string, string> localize)
             var directory = DirectoryFor(selection); var cache = CacheFor(selection);
             long missing = 0;
             foreach (var artifact in artifacts)
-                if (!await BookSmartRuntimeManifest.MatchesAsync(Path.Combine(cache, artifact.FileName), artifact, token)) missing += artifact.Bytes;
+                if (!File.Exists(Path.Combine(cache, artifact.FileName))) missing += artifact.Bytes;
             var msvc = await MsvcAsync(selection, download, token);
             if (selection.OcrId == "paddle" && msvc is null)
                 missing += ComponentCatalog.Find(HardwareRuntimeCatalog.LlamaCpuId)!.DownloadSizeBytes;
             var ready = false;
-            if (missing == 0 && Directory.Exists(directory) && (selection.OcrId != "paddle" || msvc is not null))
+            if (Directory.Exists(directory) && (selection.OcrId != "paddle" || msvc is not null))
             {
                 try
                 {
-                    var expected = await BookSmartRuntimeManifest.ExpectedFilesAsync(artifacts, cache, msvc, token);
-                    await PinnedFileTreeVerifier.VerifyAsync(directory, expected, token);
-                    ready = true;
+                    await EnsureLicenseAsync(selection, token);
+                    await VerifyInstalledAsync(selection, artifacts, cache, msvc, progress, token);
+                    ready = true; missing = 0;
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException) { ready = false; }
             }
@@ -46,24 +48,48 @@ internal sealed class BookSmartOcrRuntime(Func<string, string> localize)
             {
                 await ComponentLicenseGate.EnsureAsync(selection.OcrId == "paddle"
                     ? ["runtime.book-smart-python", "runtime.book-smart-paddle"] : ["runtime.book-smart-python", "runtime.book-smart-pillow"], token);
-                using var client = new HttpClient();
-                var sources = await PinnedPythonDownloader.AcquireAsync(artifacts, cache, client,
-                    (done, total) => progress.Report(string.Format(L("Transfer"), L("Runtime"), done / 1048576d, total / 1048576d)), token);
-                await InstallAsync(selection, artifacts, sources, msvc, progress, token);
+                using (ComponentAudit.Installation())
+                {
+                    using var client = new HttpClient();
+                    var sources = await PinnedPythonDownloader.AcquireAsync(artifacts, cache, client,
+                        (done, total) => progress.Report(string.Format(L("Transfer"), L("Runtime"), done / 1048576d, total / 1048576d)), token);
+                    await InstallAsync(selection, artifacts, sources, msvc, progress, token);
+                }
+                // Installation validation is not a first-use receipt. Establish it now, before using this runtime.
+                await VerifyInstalledAsync(selection, artifacts, cache, msvc, progress, token);
                 ready = true; missing = 0;
             }
-            if (ready)
-            {
-                // Existing files may have been restored manually; acknowledgement still precedes executing native code.
-                await ComponentLicenseGate.EnsureAsync(selection.OcrId == "paddle"
-                    ? ["runtime.book-smart-python", "runtime.book-smart-paddle"] : ["runtime.book-smart-python", "runtime.book-smart-pillow"], token);
-                progress.Report(L("RuntimeProbe"));
-                await ProbeAsync(selection, directory, token);
-            }
-            return [new(L("Runtime"), L(ready ? "FilesVerified" : "RuntimeMissing"), missing, ready),
-                new(L("Worker"), L(File.Exists(WorkerPath) ? "FilesVerified" : "RuntimeMissing"), 0, File.Exists(WorkerPath))];
+            return [new(L("Runtime"), L(ready ? (ComponentAudit.FullRequired ? "FilesVerified" : "FilesPresent") : "RuntimeMissing"), missing, ready),
+                new(L("Worker"), L(File.Exists(WorkerPath) ? "FilesPresent" : "RuntimeMissing"), 0, File.Exists(WorkerPath))];
         }
         finally { Gate.Release(); }
+    }
+
+    private static Task EnsureLicenseAsync(BookSmartSelection selection, CancellationToken token) =>
+        ComponentLicenseGate.EnsureAsync(selection.OcrId == "paddle"
+            ? ["runtime.book-smart-python", "runtime.book-smart-paddle"] : ["runtime.book-smart-python", "runtime.book-smart-pillow"], token);
+
+    private static string InventoryIdentity(BookSmartSelection selection, IReadOnlyList<PinnedPythonArtifact> artifacts) =>
+        BookSmartRuntimeManifest.LockDigest + ":" + selection.OcrId + ":" +
+        string.Join(";", artifacts.Select(a => a.FileName + "|" + a.Bytes + "|" + a.Sha256));
+    internal static Task<string[]> KnownFilesAsync(BookSmartSelection selection, CancellationToken token) =>
+        RuntimeFileAudit.InventoryFilesAsync(DirectoryFor(selection),
+            InventoryIdentity(selection, BookSmartRuntimeManifest.Artifacts(selection)), token);
+
+    private Task VerifyInstalledAsync(BookSmartSelection selection, IReadOnlyList<PinnedPythonArtifact> artifacts,
+        string cache, string? msvc, IProgress<string> progress, CancellationToken token)
+    {
+        var directory = DirectoryFor(selection);
+        var identity = InventoryIdentity(selection, artifacts);
+        return ComponentAudit.RunAsync("Books.Smart.OCR." + selection.OcrId, directory, identity,
+            ct => RuntimeFileAudit.PresenceInventoryAsync(directory, identity, ct), async ct =>
+            {
+                var expected = await BookSmartRuntimeManifest.ExpectedFilesAsync(artifacts, cache, msvc, ct);
+                await PinnedFileTreeVerifier.VerifyAsync(directory, expected, ct);
+                progress.Report(L("RuntimeProbe"));
+                await ProbeAsync(selection, directory, ct);
+                await RuntimeFileAudit.SaveInventoryAsync(directory, identity, expected.Select(f => f.Path), ct);
+            }, token, progress.Report);
     }
 
     private static async Task<string?> MsvcAsync(BookSmartSelection selection, bool download, CancellationToken token)
@@ -108,7 +134,7 @@ internal sealed class BookSmartOcrRuntime(Func<string, string> localize)
             await PinnedFileTreeVerifier.VerifyAsync(stage, expected, token);
             await ProbeAsync(selection, stage, token); token.ThrowIfCancellationRequested();
             if (Directory.Exists(directory)) Directory.Move(directory, previous);
-            try { Directory.Move(stage, directory); }
+            try { Directory.Move(stage, directory); ComponentAudit.Invalidate(directory); }
             catch { if (Directory.Exists(previous)) Directory.Move(previous, directory); throw; }
             // Keep the replaced runtime for a manual rollback; never discard it as a side effect of preparation.
         }

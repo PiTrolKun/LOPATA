@@ -28,25 +28,24 @@ public sealed class ImageAnalysisRuntimeCompatibilityService
     {
         var card = _store.Load(modelArtifactId)
             ?? throw new InvalidOperationException("The model card is not registered in the LOPATA library.");
+        var checkedRuntime = false;
         try
         {
-            if (string.Equals(card.ModelArtifactId, ManagedModelCatalog.KimiMediumArtifactId, StringComparison.Ordinal))
-            {
-                ReportRuntimeProgress(card, progress, "runtime_loading");
-                await VerifyKimiAsync(card, cancellationToken);
-            }
-            else if (string.Equals(card.ModelArtifactId, ManagedModelCatalog.FlorenceLargeArtifactId, StringComparison.Ordinal))
-            {
-                ReportRuntimeProgress(card, progress, "runtime_loading");
-                await VerifyFlorenceAsync(card, cancellationToken);
-            }
-            else
-            {
+            if (card.ModelArtifactId is not (ManagedModelCatalog.KimiMediumArtifactId or ManagedModelCatalog.FlorenceLargeArtifactId))
                 throw new InvalidOperationException("No runtime smoke-check is registered for this model.");
-            }
+            var revision = card.Revision + "/" + ChatLlmBackendPaths.Release + "/" + string.Join('\n', card.Files
+                .Where(file => file.IsRequired).OrderBy(file => file.RelativePath, StringComparer.Ordinal)
+                .Select(file => $"{file.RelativePath}|{file.SizeBytes}|{file.Sha256}"));
+            await ComponentAudit.RunAsync("image-analysis-smoke:" + card.ModelArtifactId, card.InstallDirectory, revision,
+                token => { VerifyPresence(card, token); return Task.CompletedTask; }, async token => {
+                    checkedRuntime = true;
+                    ReportRuntimeProgress(card, progress, "runtime_loading");
+                    if (card.ModelArtifactId == ManagedModelCatalog.KimiMediumArtifactId) await VerifyKimiAsync(card, token);
+                    else await VerifyFlorenceAsync(card, token);
+                }, cancellationToken);
 
             card.Status = ManagedModelStatuses.Installed;
-            card.RuntimeVerifiedAt = DateTimeOffset.Now;
+            if (checkedRuntime) card.RuntimeVerifiedAt = DateTimeOffset.Now;
             card.LastError = string.Empty;
             ReportRuntimeProgress(card, progress, "runtime_verified");
         }
@@ -64,6 +63,29 @@ public sealed class ImageAnalysisRuntimeCompatibilityService
         }
 
         return _store.Upsert(card);
+    }
+
+    private static void VerifyPresence(ManagedModelArtifactCard card, CancellationToken token)
+    {
+        var root = Path.GetFullPath(card.InstallDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        foreach (var file in card.Files.Where(file => file.IsRequired))
+        {
+            token.ThrowIfCancellationRequested();
+            var path = Path.GetFullPath(Path.Combine(root, file.RelativePath));
+            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
+            if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase) || !File.Exists(path))
+                throw new FileNotFoundException("A verified visual model file is missing.", path);
+        }
+        if (card.ModelArtifactId == ManagedModelCatalog.KimiMediumArtifactId)
+        {
+            foreach (var path in new[] { ChatLlmBackendPaths.ServerExecutablePath, ChatLlmBackendPaths.ImageMagickExecutablePath })
+                if (!File.Exists(path)) throw new FileNotFoundException("The visual model runtime is missing.", path);
+        }
+        else
+        {
+            _ = FindUpward("Runtime", "Python", "reranker", ".venv", "Scripts", "python.exe")
+                ?? throw new FileNotFoundException("The managed Python/Transformers runtime was not found.");
+        }
     }
 
     private static async Task VerifyKimiAsync(

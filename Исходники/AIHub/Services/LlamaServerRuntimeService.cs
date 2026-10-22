@@ -305,6 +305,8 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
 
     private async Task EnsureStartedAsync(DebugModelInfo model, Action<string> log, CancellationToken cancellationToken, bool forceCpuFallback = false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(log);
         await _startupGate.WaitAsync(cancellationToken);
         try
         {
@@ -322,6 +324,8 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
             }
 
             await ModelProcessRetirement.StopAsync(_process, Stop);
+            await CoreModelManager.VerifyPathForUseAsync(model.Path, cancellationToken, log);
+            await ExecutorModelInstaller.VerifyPathForUseAsync(model.Path, cancellationToken, log);
             var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), cancellationToken);
             if (_poetryJournal is not null)
             {

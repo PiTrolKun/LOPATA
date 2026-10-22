@@ -10,7 +10,22 @@ internal static class MusicDiffRhythmSource
     internal const string ArchiveDigest = "1A5ED6B66B125A7A69AC7867391FC619B30BE29FFA07C78D1FB8E884C1BCACF8";
     internal static string ArchivePath => Path.Combine(AppContext.BaseDirectory, "MusicDiffRhythmRuntime", "source.zip");
     internal static string DirectoryPath => Path.Combine(AppDataPaths.BaseDirectory, "Music", "DiffRhythmSource", MusicDiffRhythmCatalog.SourceRevision);
-    internal static async Task VerifyAsync(CancellationToken token)
+    internal static Task VerifyAsync(CancellationToken token) =>
+        ComponentAudit.RunAsync("Music.DiffRhythm.Source", DirectoryPath, MusicDiffRhythmCatalog.SourceRevision + ArchiveDigest,
+            PresenceAsync, VerifyFullAsync, token);
+    private static async Task PresenceAsync(CancellationToken token)
+    {
+        if (!File.Exists(ArchivePath)) throw new FileNotFoundException("Missing DiffRhythm source archive.");
+        await using var input = File.OpenRead(Path.Combine(DirectoryPath, "manifest.json"));
+        var manifest = await JsonSerializer.DeserializeAsync<Manifest>(input, cancellationToken: token)
+            ?? throw new InvalidDataException("Missing DiffRhythm source manifest.");
+        if (manifest.Revision != MusicDiffRhythmCatalog.SourceRevision || manifest.Files.Count < 10)
+            throw new InvalidDataException("Unsupported DiffRhythm engine revision.");
+        foreach (var relative in manifest.Files.Keys)
+            if (!File.Exists(RuntimeFileAudit.Contained(DirectoryPath, relative)))
+                throw new FileNotFoundException("Missing DiffRhythm source file: " + relative);
+    }
+    private static async Task VerifyFullAsync(CancellationToken token)
     {
         await Gate.WaitAsync(token);
         try {
@@ -30,7 +45,7 @@ internal static class MusicDiffRhythmSource
                         25109972, ArchiveDigest, new("https://huggingface.co/spaces/ASLP-lab/DiffRhythm2/tree/" + MusicDiffRhythmCatalog.SourceRevision));
                     await PythonWheelExtractor.ExtractAsync(artifact, ArchivePath, staging, token, wheelLayout: false);
                     await VerifyDirectoryAsync(staging, token);
-                    token.ThrowIfCancellationRequested(); Directory.Move(staging, root);
+                    token.ThrowIfCancellationRequested(); Directory.Move(staging, root); ComponentAudit.Invalidate(root);
                 }
                 finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
             }

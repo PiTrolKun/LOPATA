@@ -22,10 +22,17 @@ public sealed class MusicBf16Worker : IMusicYueWorker
         timeout.CancelAfter(TimeSpan.FromSeconds(60));
         var worker = new MusicBf16Worker(); worker.Log += log;
         var path = Path.Combine(Path.GetTempPath(), "lopata-bf16-" + Guid.NewGuid().ToString("N"));
-        try { await worker.RunAsync(MusicModelVariants.Artifact(root, MusicModelVariants.Bf16, MusicModelVariants.Bf16),
-            MusicModelVariants.Artifact(root, MusicModelVariants.Bf16, MusicModelVariants.Bf16Vae),
-            new("", "", 1, 1, 1) { Expert = MusicModelVariants.Defaults(MusicModelVariants.Bf16) }, path + ".json", path + ".probe", "probe", timeout.Token);
-            return worker.LastHardware ?? "BF16"; }
+        try {
+            var directory = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicModelVariants.RuntimeRevision);
+            Task Check(CancellationToken ct, bool quick) => worker.RunAsync(
+                MusicModelVariants.Artifact(root, MusicModelVariants.Bf16, MusicModelVariants.Bf16),
+                MusicModelVariants.Artifact(root, MusicModelVariants.Bf16, MusicModelVariants.Bf16Vae),
+                new("", "", 1, 1, 1) { Expert = MusicModelVariants.Defaults(MusicModelVariants.Bf16) },
+                path + ".json", path + ".probe", "probe", ct, quick);
+            await ComponentAudit.RunAsync("Music.YuE2.BF16.Probe", directory, MusicModelVariants.RuntimeRevision,
+                ct => Check(ct, true), ct => Check(ct, false), timeout.Token, log);
+            return worker.LastHardware ?? "BF16";
+        }
         catch (OperationCanceledException) when (!token.IsCancellationRequested) { throw new IOException("YuE2 BF16 hardware check timed out after 60 seconds."); }
         finally { if (File.Exists(path + ".json")) File.Delete(path + ".json"); if (File.Exists(path + ".probe")) File.Delete(path + ".probe"); }
     }
@@ -37,14 +44,17 @@ public sealed class MusicBf16Worker : IMusicYueWorker
         semantic_sampling = request.EffectiveExpert.Sampling("semantic_sampling", request.SequenceLimit)
     };
     private async Task RunAsync(string model, string decoder, MusicYueRequest request, string requestPath, string outputPath,
-        string stage, CancellationToken token)
+        string stage, CancellationToken token, bool presenceProbe=false)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
+        using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         request.Validate(); if (request.EffectiveExpert.Variation != MusicModelVariants.Bf16) throw new InvalidDataException("BF16 settings required.");
         if (File.Exists(outputPath)) throw new IOException("Music output already exists.");
         Log?.Invoke("[Load] YuE2 BF16 · " + stage);
         var overlay = await MusicBf16Runtime.PrepareAsync(Root(model), token);
         var runtime = await ManagedPythonRuntime.ResolveAsync("auto", token);
         LastRuntimePack = runtime.Entry.Id + "/" + MusicModelVariants.RuntimeRevision;
+        if (stage == "probe" && presenceProbe) { LastHardware = runtime.Device + " / " + runtime.Entry.Id; return; }
         // Stage checkpoint contains exact token IDs, not only an ABC decode/encode round trip.
         var budgetRequest = request;
         if (stage == "synth" && request.EffectiveExpert.Cot != "off") {
