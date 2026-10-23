@@ -45,6 +45,8 @@ public partial class MainWindow
             StatusText.Text = L("WindowsIntegration.Failed");
         }
         ApplyBookShellIntegration();
+        try { ApplyVectorIntegration(); }
+        catch (Exception error) { OwnedProcessRegistry.Log("vector_shell_registration_failed","WindowsIntegration",detail:error.GetType().Name); }
     }
     private void SetImageShellIntegration(bool enabled)
     {
@@ -77,6 +79,7 @@ public partial class MainWindow
     {
         if (_imageShellIntegrationSwitch is not null) _imageShellIntegrationSwitch.IsChecked = _appSettings.Behavior.ImageShellIntegrationEnabled;
         RefreshBookShellIntegrationSetting();
+        if (_vectorEditorSwitch is not null) _vectorEditorSwitch.IsChecked = _appSettings.Behavior.VectorEditorEnabled;
         if (_imageShellIntegrationInitialized && _imageShellIntegrationLanguage != _appSettings.LanguageCode) ApplyImageShellIntegration();
     }
 

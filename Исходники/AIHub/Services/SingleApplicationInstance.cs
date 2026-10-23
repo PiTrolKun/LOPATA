@@ -15,20 +15,25 @@ internal sealed class SingleApplicationInstance : IDisposable
     private readonly Task _server;
     private readonly TaskCompletionSource<Func<ImageShellRequest, Task>> _imageHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<AudioShellRequest, Task>> _audioHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<Func<VectorEditor.VectorFileRequest, Task>> _vectorHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public event Action? OpenRequested;
     private int _pendingOpen;
 
     private SingleApplicationInstance(Mutex mutex, string pipe)
     { _mutex = mutex; _pipe = pipe; _server = ListenAsync(); }
 
-    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null)
+    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null)
     {
         var identity = Environment.UserDomainName + "\\" + Environment.UserName + "|" + Path.GetFullPath(AppContext.BaseDirectory).ToUpperInvariant();
         var name = "LOPATA-" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..32];
         var mutex = new Mutex(true, @"Local\" + name, out var first);
         if (first) return new(mutex, name);
         mutex.Dispose();
-        if (audioRequest is not null)
+        if (vectorRequest is not null)
+        {
+            SendVectorAsync(name, vectorRequest).GetAwaiter().GetResult();
+        }
+        else if (audioRequest is not null)
         {
             SendAudioAsync(name, audioRequest).GetAwaiter().GetResult();
         }
@@ -49,6 +54,17 @@ internal sealed class SingleApplicationInstance : IDisposable
         => _imageHandler.TrySetResult(handler);
 
     public void SetAudioShellHandler(Func<AudioShellRequest, Task> handler) => _audioHandler.TrySetResult(handler);
+    public void SetVectorHandler(Func<VectorEditor.VectorFileRequest, Task> handler) => _vectorHandler.TrySetResult(handler);
+
+    private static async Task SendVectorAsync(string name, VectorEditor.VectorFileRequest request)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        await using var pipe = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        await pipe.ConnectAsync(timeout.Token).ConfigureAwait(false);
+        await VectorEditor.VectorFileProtocol.WriteAsync(pipe, request, timeout.Token).ConfigureAwait(false);
+        var answer = new byte[1]; await pipe.ReadExactlyAsync(answer, timeout.Token).ConfigureAwait(false);
+        if (answer[0] != ImageShellProtocol.Accepted) throw new IOException("SVG request was not accepted.");
+    }
 
     private static async Task SendAudioAsync(string name, AudioShellRequest request)
     {
@@ -104,6 +120,15 @@ internal sealed class SingleApplicationInstance : IDisposable
                     read.CancelAfter(TimeSpan.FromSeconds(30));
                     var handler = await _audioHandler.Task.WaitAsync(read.Token).ConfigureAwait(false);
                     await AudioShellProtocol.ReceiveAsync(pipe, handler, read.Token).ConfigureAwait(false);
+                }
+                else if (request[0] == VectorEditor.VectorFileProtocol.Marker)
+                {
+                    read.CancelAfter(TimeSpan.FromSeconds(30));
+                    var item = await VectorEditor.VectorFileProtocol.ReadAsync(pipe, read.Token).ConfigureAwait(false);
+                    var handler = await _vectorHandler.Task.WaitAsync(read.Token).ConfigureAwait(false);
+                    await handler(item).WaitAsync(read.Token).ConfigureAwait(false);
+                    await pipe.WriteAsync(new byte[] { ImageShellProtocol.Accepted }, read.Token).ConfigureAwait(false);
+                    await pipe.FlushAsync(read.Token).ConfigureAwait(false);
                 }
                 else throw new InvalidDataException("Unknown application instance request.");
             }

@@ -47,12 +47,29 @@ public static class VectorRasterExport
             throw new InvalidDataException("Vector.Error.ExportDestination");
         Lopata.Updates.SafeUpdatePath.RejectLinks(source);
         var svg = await File.ReadAllTextAsync(source, token);
+        var facts = (item.Provenance ?? new OutputProvenance { ModelHistory = "unknown", CreatedUtc = item.Request.CreatedUtc }) with
+        { Scenario = "vector-graphics/raster-export", ExportedUtc = DateTimeOffset.UtcNow,
+            ProgramVersion = new OutputProvenance().ProgramVersion };
+        await SaveSourceAsync(svg, facts, destination, options, token);
+    }
+    public static async Task SaveSourceAsync(string svg, OutputProvenance provenance, string destination, VectorRasterOptions options, CancellationToken token)
+    {
+        using var audit = ComponentAudit.CaptureOperation(); options.Validate(); token.ThrowIfCancellationRequested();
+        if (!new ImageAnalysisSpeechMemoryPolicy().EvaluateCurrent(EstimatedBytes(options), 0).HasEnoughMemory)
+            throw new InvalidDataException("Vector.Error.ExportMemory");
+        var path = Path.GetFullPath(destination); Lopata.Updates.SafeUpdatePath.RejectLinks(path);
+        foreach(var root in new[]{VectorStore.Root,AIHub.Services.VectorEditor.VectorProjectRecovery.Root})
+            if(path.StartsWith(Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar)+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Vector.Error.ExportDestination");
+        var extension = Path.GetExtension(path).ToLowerInvariant();
+        if (!(options.Format == "jpeg" ? extension is ".jpeg" or ".jpg" : extension == "." + options.Format))
+            throw new InvalidDataException("Vector.Error.ExportDestination");
         var composed = Compose(svg, options);
         var directory = Path.GetDirectoryName(path)!; Directory.CreateDirectory(directory);
         var temporary = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".export.tmp");
         var rendered = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".export.png");
-        var facts = (item.Provenance ?? new OutputProvenance { ModelHistory = "unknown", CreatedUtc = item.Request.CreatedUtc }) with
-        { Scenario = "vector-graphics/raster-export", ExportedUtc = DateTimeOffset.UtcNow,
+        var facts = provenance with
+        { Scenario = provenance.Scenario.StartsWith("vector-editor/",StringComparison.Ordinal) ? "vector-editor/raster-export" : provenance.Scenario, ExportedUtc = DateTimeOffset.UtcNow,
             ProgramVersion = new OutputProvenance().ProgramVersion };
         try
         {

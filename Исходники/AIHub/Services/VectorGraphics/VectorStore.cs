@@ -4,7 +4,8 @@ using System.Text.Json;
 namespace AIHub.Services.VectorGraphics;
 
 public sealed record VectorRequest(string Id, string Prompt, string OutputDirectory, string? Author, DateTimeOffset CreatedUtc,
-    string ModelId = VectorModels.Ridge, int Seed = 0, string? SessionId = null, AIHub.Models.VectorGenerationOptions? Options = null);
+    string ModelId = VectorModels.Ridge, int Seed = 0, string? SessionId = null, AIHub.Models.VectorGenerationOptions? Options = null,
+    AIHub.Services.VectorEditor.VectorEditorContext? Editor = null);
 public sealed record VectorResult(VectorRequest Request, string Phase = "queued", string? Error = null, OutputProvenance? Provenance = null, string? ExportPath = null, int SyntaxCorrections = 0);
 
 /// <summary>Per-request durable files, independent of the visible page. No old outputs are overwritten.</summary>

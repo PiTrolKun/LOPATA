@@ -114,6 +114,10 @@
     <EmbeddedResource Include="Assets\VectorExamples\*" LogicalName="AIHub.VectorExamples.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Tools\webview2-viewer-files.json" LogicalName="AIHub.WebView2ViewerManifest" />
     <EmbeddedResource Include="Content\VectorViewer.js" LogicalName="AIHub.VectorViewerScript" />
+    <EmbeddedResource Include="Content\VectorEditor.js" LogicalName="AIHub.VectorEditorScript" />
+    <EmbeddedResource Include="Content\VectorEditorCommands.js" LogicalName="AIHub.VectorEditorCommands" />
+    <EmbeddedResource Include="Content\VectorEditorPlastic.js" LogicalName="AIHub.VectorEditorPlastic" />
+    <Content Include="Assets\SvgFileIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Licenses\**\*"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Installer\bootstrap-v1.txt"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Localization\*.json">

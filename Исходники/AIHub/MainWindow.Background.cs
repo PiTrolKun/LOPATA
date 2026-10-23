@@ -13,7 +13,7 @@ public partial class MainWindow
     private bool _backgroundCommandRunning;
     private bool _applicationReady;
     internal bool CanStartInTray => _applicationTray?.IsAvailable == true;
-    internal void OpenFromSecondInstance() => RestoreFromTray();
+    internal void OpenFromSecondInstance() { CompleteApplicationStartup(); RestoreFromTray(); }
 
     private void InitializeBackgroundOperations()
     {
@@ -84,7 +84,10 @@ public partial class MainWindow
         _backgroundTimer.Start();
     }
 
-    internal async void CompleteApplicationStartup()
+    private Task? _applicationStartupTask;
+    internal void CompleteApplicationStartup() => _ = EnsureApplicationStartupAsync();
+    internal Task EnsureApplicationStartupAsync() => _applicationStartupTask ??= CompleteApplicationStartupCoreAsync();
+    private async Task CompleteApplicationStartupCoreAsync()
     {
         try
         {
@@ -261,6 +264,16 @@ public partial class MainWindow
             if (notice.Kind == FinancialAnalysisPlan.BackgroundKind)
             {
                 if (ViewFinancialBackgroundResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind == Services.VectorEditor.VectorEditorGeneration.BackgroundKind && notice.Project is not null)
+            {
+                var job=Services.VectorGraphics.VectorStore.Load(notice.Project);
+                if(job.Request.Editor is {} context){
+                    var window=_vectorEditors.FirstOrDefault(w=>w.ProjectId==context.ProjectId)
+                        ?? OpenVectorEditor(Services.VectorEditor.VectorProjectArchive.Load(Services.VectorEditor.VectorProjectRecovery.PathFor(context.ProjectId)));
+                    window.Show();window.Activate();_backgroundOperations!.Acknowledge(notice.Id);
+                }
                 return;
             }
             if (notice.Kind == Services.VectorGraphics.VectorStore.BackgroundKind && notice.Project is not null)

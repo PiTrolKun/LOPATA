@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><desc>Author: Петр</desc><metadata id="lopata-provenance">{"Schema":1,"Program":"LOPATA","ProgramVersion":"0.6.10-dev","Scenario":"vector-graphics/generation","ExportedUtc":"2026-10-23T14:36:35.1657531+00:00","CreatedUtc":"2026-10-23T14:33:48.4160079+00:00","ModelHistory":"recorded","ModelScope":"output","Models":[{"Id":"model-qwen3-8-27b-ridge-37bpw","Name":"Qwen3.8-27B-Ridge 3.7 bpw","Revision":"486faa5f2032ff99bdc8993ade1b8fff13d1464c","Role":"SVG text generation"},{"Id":"llama.cpp","Name":"llama.cpp Vulkan","Revision":"620d2225cc436ab0b001e3200e590e3b286ef9ab","Role":"text inference; engine set 002"}]}</metadata>
+  <defs>
+    <radialGradient id="screenGlow" cx="50%" cy="42%" r="80%">
+      <stop offset="0%" stop-color="#2f9e3a" />
+      <stop offset="55%" stop-color="#14601f" />
+      <stop offset="100%" stop-color="#062b0c" />
+    </radialGradient>
+  </defs>
+
+  <!-- CRT monitor -->
+  <path d="M22 42h12l4 5H18z" fill="#d8d0be" />
+  <rect x="6" y="8" width="42" height="34" rx="5" fill="#e9e3d3" />
+  <rect x="9.5" y="11.5" width="35" height="27" rx="3" fill="#101212" />
+  <rect x="11.5" y="13.5" width="31" height="23" rx="1.5" fill="url(#screenGlow)" />
+
+  <!-- Matrix glyphs -->
+  <g font-family="monospace" font-size="5" fill="#c8ffc8">
+    <text x="15" y="20">1</text><text x="23" y="20">0</text><text x="31" y="20" opacity="0.8">7</text>
+    <text x="15" y="26" opacity="0.8">0</text><text x="23" y="26" opacity="0.8">7</text><text x="31" y="26">1</text>
+    <text x="15" y="32" opacity="0.55">7</text><text x="23" y="32" opacity="0.55">1</text><text x="31" y="32" opacity="0.55">0</text>
+  </g>
+  <rect x="36" y="14.5" width="1.8" height="5" rx="0.9" fill="#aaffaa" opacity="0.5" />
+
+  <!-- file sheet with folded corner -->
+  <path d="M33 27h16l9 9v22H33z" fill="#ffffff" stroke="#cfd4da" stroke-width="1" />
+  <path d="M49 27v9h9z" fill="#e0e4ea" stroke="#cfd4da" stroke-width="1" />
+  <text x="43" y="37" font-family="Arial, Helvetica, sans-serif" font-size="7" font-weight="bold" fill="#5a5f6b" text-anchor="middle">SVG</text>
+
+  <!-- Bezier curve with node points -->
+  <path d="M37 52L40 42M54 45L50 56" stroke="#a8c4ec" stroke-width="0.5" stroke-dasharray="1.4 1.2" />
+  <path d="M37 52C40 42 50 56 54 45" fill="none" stroke="#3b82f6" stroke-width="1.6" stroke-linecap="round" />
+  <circle cx="37" cy="52" r="1.7" fill="#3b82f6" />
+  <circle cx="54" cy="45" r="1.7" fill="#3b82f6" />
+  <circle cx="40" cy="42" r="1.1" fill="#ffffff" stroke="#3b82f6" stroke-width="0.9" />
+  <circle cx="50" cy="56" r="1.1" fill="#ffffff" stroke="#3b82f6" stroke-width="0.9" />
+</svg>

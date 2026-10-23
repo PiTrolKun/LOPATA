@@ -37,12 +37,19 @@ public sealed class VectorWork : IDisposable
                     });
                     VectorChatReply reply;
                     var reasoning = new InlineProgress<ModelStreamChunk>(chunk => live?.Report(new(VectorStreamKind.Reasoning, chunk.Text)));
-                    try { reply = await _runtime.VectorChatAsync(VectorPrompt.Compose(request.Prompt, request.Options), progress, token, reasoning); }
+                    try { reply = await _runtime.VectorChatAsync(AIHub.Services.VectorEditor.VectorEditorGeneration.Compose(request), progress, token, reasoning); }
                     finally { if (partial.Length > 0) File.WriteAllText(VectorStore.FilePath(request.Id, "partial.txt"), partial.ToString()); }
                     facts = new OutputProvenance { Scenario = "vector-graphics/generation", CreatedUtc = request.CreatedUtc, ModelHistory = "recorded",
                         Models = [new(ManagedModelCatalog.OmniGammaArtifactId, LiteraryModelLocation.DisplayName, ManagedModelCatalog.OmniGammaRevision, "SVG text generation"),
                             new("llama.cpp", "llama.cpp " + reply.Backend, reply.Revision, "text inference; engine set " + reply.EngineSet)] };
                     answer = reply.SvgAnswer;
+                    if (request.Editor is {} editor)
+                    {
+                        var sources = new[] { editor.SourceSvg, editor.StyleSvg }.OfType<string>().ToArray();
+                        var history = AIHub.Services.VectorEditor.VectorEditorSvg.Facts(sources,request.CreatedUtc);
+                        facts = facts with { Models = history.Models.Concat(facts.Models).Distinct().ToArray(),
+                            ModelHistory = history.ModelHistory.Contains("unknown",StringComparison.Ordinal) ? "recorded-models; source-history-unknown" : "recorded" };
+                    }
                 }
                 await File.WriteAllTextAsync(answerPath, answer, token);
                 VectorStore.Save(state = state with { Phase = "generated", Provenance = facts });
@@ -86,7 +93,7 @@ public sealed class VectorWork : IDisposable
         or "Vector.Error.UnsafeSvg" or "Vector.Error.Complexity" or "Vector.Error.ViewBox" or "Vector.Error.Context";
     public static void RecoverFailedContent(BackgroundOperationController controller)
     {
-        if (controller.State is not { Kind: VectorStore.BackgroundKind, Phase: BackgroundOperationPhase.Waiting, RequiresDecision: true } background
+        if (controller.State is not { Kind: VectorStore.BackgroundKind or AIHub.Services.VectorEditor.VectorEditorGeneration.BackgroundKind, Phase: BackgroundOperationPhase.Waiting, RequiresDecision: true } background
             || controller.HasLiveOperation(background.Id) || background.Project is null) return;
         try
         {

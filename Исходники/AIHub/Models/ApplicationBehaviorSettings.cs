@@ -16,6 +16,10 @@ public sealed class ApplicationBehaviorSettings
 
     public bool ImageShellIntegrationEnabled { get; set; } = true;
 
+    public bool VectorEditorEnabled { get; set; } = true;
+
+    public bool VectorEditorInsertOnCanvas { get; set; }
+
     // null migrates the old utility's existing registration once; new installations remain off.
     public bool? BookShellIntegrationEnabled { get; set; }
 

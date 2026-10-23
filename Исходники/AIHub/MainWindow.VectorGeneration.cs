@@ -21,6 +21,7 @@ public partial class MainWindow
     }
     private void RegisterVectorBackgroundOperation()
     {
+        RegisterVectorEditorOperations();
         VectorPage.WorkspaceChanged += RefreshGenerationHeader;
         VectorPage.IsVisibleChanged += (_, _) => RefreshGenerationHeader();
         _backgroundOperations!.Register(VectorStore.BackgroundKind, (state, token) => { ConfigureVectorGeneration(); return VectorPage.ResumeAsync(state, token); });

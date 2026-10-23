@@ -70,3 +70,7 @@ Runtime/MusicHeartMuLa/source.zip binary
 Исходники/AIHub/Assets/VectorExamples/*.prompt.txt -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/svg-resvg-* -text -eol -whitespace
 ТЗ/Архив/LOPATA_SVG_Qwen3.8_Research_2026-09-22.md -text -eol -whitespace
+
+# Original supplied SVG icon and editor idea retain their exact bytes.
+Данные_для_внедрения/Иконки/SVG/SvgFileIcon.svg -text -eol -whitespace
+"ТЗ/Архив/SVG-просмотрщик и редактор-конструктор.md" -text -eol -whitespace

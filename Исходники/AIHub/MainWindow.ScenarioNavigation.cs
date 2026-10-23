@@ -52,6 +52,9 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.VectorGeneration:
                     OpenVectorGenerationScenario();
                     break;
+                case ScenarioNavigationCatalog.VectorEditor:
+                    OpenVectorEditorScenario();
+                    break;
                 case ScenarioNavigationCatalog.ImageGeneration:
                     OpenImageGenerationScenario();
                     break;

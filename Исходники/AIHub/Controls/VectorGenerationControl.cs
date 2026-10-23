@@ -32,6 +32,7 @@ public sealed partial class VectorGenerationControl : UserControl, IDisposable
     private VectorGenerationOptions _options = new();
     private Action<VectorGenerationOptions>? _saveOptions;
     public event Action? WorkspaceChanged;
+    public event Action<string>? OpenEditorRequested;
     public bool IsChat => _page == 2;
     public bool CanClearWorkspace => !_busy && !HasPending();
     public void ConfigureOptions(VectorGenerationOptions? options, Action<VectorGenerationOptions> save)
@@ -134,6 +135,7 @@ public sealed partial class VectorGenerationControl : UserControl, IDisposable
             actions.Children.Add(Action("Save", "⇩", () => SaveSvg(selected), "Save"));
             actions.Children.Add(Action("Export.Title", "▧", () => ExportRasterAsync(selected), "Export", !_busy && !HasPending()));
             actions.Children.Add(Action("Folder", "▱", () => ShowFolder(selected), "Folder"));
+            actions.Children.Add(Action("Editor.OpenEditor", "✎", () => { OpenEditorRequested?.Invoke(VectorStore.FilePath(selected.Request.Id,"image.svg")); return Task.CompletedTask; }, "OpenEditor"));
         }
         if (_busy || HasPending())
         {

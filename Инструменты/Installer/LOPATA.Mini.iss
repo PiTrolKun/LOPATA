@@ -85,6 +85,8 @@ Name: "{autodesktop}\ЛОПАТА"; Filename: "{#UpdateHost}"; Parameters: "--la
 #endif
 [Run]
 Filename: "{#UpdateHost}"; Parameters: "--launch"; Description: "{cm:LaunchLopata}"; Flags: nowait postinstall skipifsilent
+[UninstallRun]
+Filename: "{app}\AIHub.exe"; Parameters: "--remove-vector-shell"; Flags: runhidden skipifdoesntexist; RunOnceId: "RemoveOwnedSvgAssociations"
 [UninstallDelete]
 Type: files; Name: "{#UpdateHost}"
 

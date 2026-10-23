@@ -13,6 +13,7 @@ public partial class App : System.Windows.Application
     public static bool BackgroundLaunch { get; private set; }
     public static bool ImageShellLaunch { get; private set; }
     public static bool AudioShellLaunch { get; private set; }
+    public static bool VectorFileLaunch { get; private set; }
     protected override void OnStartup(StartupEventArgs e)
     {
         if(e.Args is ["--dictation-worker"]) {
@@ -22,6 +23,12 @@ public partial class App : System.Windows.Application
         if (e.Args is ["--remove-book-shell"])
         {
             try { new Services.Books.BookShellIntegration(Environment.ProcessPath!).Apply(false, _ => ""); Shutdown(); }
+            catch { Shutdown(1); }
+            return;
+        }
+        if (e.Args is ["--remove-vector-shell"])
+        {
+            try { new Services.VectorEditor.VectorShellIntegration(Environment.ProcessPath!).Apply(false,""); Shutdown(); }
             catch { Shutdown(1); }
             return;
         }
@@ -40,21 +47,24 @@ public partial class App : System.Windows.Application
         }
         ImageShellLaunch = e.Args.Contains("--shell-image", StringComparer.Ordinal);
         AudioShellLaunch = e.Args.Contains("--shell-audio", StringComparer.Ordinal);
+        VectorFileLaunch = e.Args.Contains("--svg", StringComparer.Ordinal);
         Models.ImageShellRequest? imageRequest;
         Models.AudioShellRequest? audioRequest;
+        Services.VectorEditor.VectorFileRequest? vectorRequest;
         try
         {
             imageRequest = Models.ImageShellRequest.ParseArguments(e.Args);
             audioRequest = Models.AudioShellRequest.ParseArguments(e.Args);
-            if (ImageShellLaunch && AudioShellLaunch) throw new System.IO.InvalidDataException("Mixed shell requests.");
-            BackgroundLaunch = ImageShellLaunch || AudioShellLaunch || e.Args.Contains("--background", StringComparer.Ordinal);
-            _instance = Services.SingleApplicationInstance.Acquire(BackgroundLaunch, imageRequest, audioRequest);
+            vectorRequest = Services.VectorEditor.VectorFileRequest.Parse(e.Args);
+            if (new[] {ImageShellLaunch,AudioShellLaunch,VectorFileLaunch}.Count(v=>v)>1) throw new System.IO.InvalidDataException("Mixed shell requests.");
+            BackgroundLaunch = ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || e.Args.Contains("--background", StringComparer.Ordinal);
+            _instance = Services.SingleApplicationInstance.Acquire(BackgroundLaunch, imageRequest, audioRequest, vectorRequest);
             if (_instance is null) { Shutdown(); return; }
             if (Services.ApplicationUpdateStartup.RedirectInstalledLaunch(e.Args)) { Shutdown(); return; }
         }
         catch (Exception error)
         {
-            if (ImageShellLaunch || AudioShellLaunch)
+            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch)
             {
                 Services.OwnedProcessRegistry.Log(AudioShellLaunch ? "audio_shell_launch_failed" : "image_shell_launch_failed", "Application", detail: error.GetType().Name);
                 Shutdown(1); return;
@@ -69,20 +79,22 @@ public partial class App : System.Windows.Application
             base.OnStartup(e);
             var window = new MainWindow(); MainWindow = window;
             _instance.OpenRequested += () => Dispatcher.BeginInvoke(window.OpenFromSecondInstance);
-            if (ImageShellLaunch || AudioShellLaunch || (BackgroundLaunch && window.CanStartInTray))
+            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || (BackgroundLaunch && window.CanStartInTray))
             {
                 Services.ApplicationBackgroundOperations.PreserveHiddenWork = true;
                 new System.Windows.Interop.WindowInteropHelper(window).EnsureHandle();
             }
             else window.Show();
-            window.CompleteApplicationStartup();
+            if (!VectorFileLaunch) window.CompleteApplicationStartup();
+            if (vectorRequest is not null) _ = window.AcceptVectorFileAsync(vectorRequest);
+            _instance.SetVectorHandler(request => Dispatcher.InvokeAsync(() => window.AcceptVectorFileAsync(request)).Task.Unwrap());
             if (imageRequest is not null) window.AcceptImageShellRequest(imageRequest);
             _instance.SetImageShellHandler(request => Dispatcher.InvokeAsync(() => window.AcceptImageShellRequest(request)).Task);
             if (audioRequest is not null) window.AcceptAudioShellRequest(audioRequest);
             _instance.SetAudioShellHandler(request => Dispatcher.InvokeAsync(() => window.AcceptAudioShellRequest(request)).Task);
             _instance.DeliverPendingOpen();
         }
-        catch (Exception error) when (ImageShellLaunch || AudioShellLaunch)
+        catch (Exception error) when (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch)
         {
             Services.OwnedProcessRegistry.Log(AudioShellLaunch ? "audio_shell_startup_failed" : "image_shell_startup_failed", "Application", detail: error.GetType().Name);
             Shutdown(1);

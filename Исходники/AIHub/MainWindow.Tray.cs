@@ -43,6 +43,7 @@ public partial class MainWindow
         try
         {
             CheckpointRagBooks();
+            CheckpointVectorEditors();
             if (!LiteraryPage.CheckpointBackgroundState()) throw new System.IO.IOException("Literary checkpoint was not confirmed.");
             _backgroundOperations?.CheckpointForExit();
             SaveActiveSessionCheckpoint(strict: true); SaveCurrentWindowPlacement();
@@ -92,6 +93,7 @@ public partial class MainWindow
 
     private void RestoreFromTray()
     {
+        CompleteApplicationStartup();
         ApplicationBackgroundOperations.PreserveHiddenWork = SettingsPage.Visibility == Visibility.Visible;
         if (!IsVisible) { Show(); WindowState = _stateBeforeTray; }
         if (WindowState == WindowState.Minimized) WindowState = _lastNonMinimizedWindowState;
