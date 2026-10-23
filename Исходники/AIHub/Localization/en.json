@@ -6485,5 +6485,9 @@
   "Dictation.Prepare": "Prepare voice input",
   "Dictation.DownloadQuestion": "Download Parakeet components for local voice input? Model: about 670 MB.",
   "Dictation.CopyPending": "Copy the last undelivered fragment",
-  "Dictation.Overloaded": "Recognition cannot keep up with speech. Capture stopped; inserted text is preserved. Increase the thread count in settings."
+  "Dictation.Overloaded": "Recognition cannot keep up with speech. Capture stopped; inserted text is preserved. Increase the thread count in settings.",
+  "Music.OutputFolder.Title": "No music output folder selected",
+  "Music.OutputFolder.Message": "To create a song, select a folder where LOPATA will save the finished audio files. After choosing a folder, press Start again.",
+  "Music.OutputFolder.Choose": "Choose folder…",
+  "Music.OutputFolder.Cancel": "Cancel"
 }

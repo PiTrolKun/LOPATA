@@ -37,7 +37,7 @@ public sealed class MusicTracksControl : UserControl
         var header = new StackPanel(); _heading.FontWeight = FontWeights.SemiBold; header.Children.Add(_heading);
         var toolbar = new Grid { Margin = new(0, 3, 0, 4) };
         toolbar.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); toolbar.ColumnDefinitions.Add(new() { Width = GridLength.Auto }); toolbar.ColumnDefinitions.Add(new());
-        _choose = MusicAudioUi.IconButton("ChooseFolder", "M2,7 V21 H22 V6 H11 L8,3 H2 V7 M2,9 H22", ChooseFolder);
+        _choose = MusicAudioUi.IconButton("ChooseFolder", "M2,7 V21 H22 V6 H11 L8,3 H2 V7 M2,9 H22", ChooseOutputFolder);
         _open = MusicAudioUi.IconButton("OpenFolder", "M2,7 V21 H19 L23,10 H7 L2,21 M2,7 V3 H9 L12,6 H20 V10", OpenFolder);
         toolbar.Children.Add(_choose); Grid.SetColumn(_open, 1); toolbar.Children.Add(_open); Grid.SetColumn(_folder, 2); toolbar.Children.Add(_folder);
         _folder.SizeChanged += (_, _) => UpdateFolder(); header.Children.Add(toolbar);
@@ -139,7 +139,7 @@ public sealed class MusicTracksControl : UserControl
     }
     private void UpdateFolder()
     { MusicAudioUi.PathText(_folder, string.IsNullOrEmpty(OutputFolder) ? _l("Music.Audio.NoFolder") : OutputFolder); _open.IsEnabled = Directory.Exists(OutputFolder); }
-    private void ChooseFolder()
+    public void ChooseOutputFolder()
     {
         var dialog = new Microsoft.Win32.OpenFolderDialog { Title = _l("Music.Audio.ChooseFolder"), InitialDirectory = Directory.Exists(OutputFolder) ? OutputFolder : "" };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;

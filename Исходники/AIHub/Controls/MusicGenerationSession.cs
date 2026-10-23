@@ -164,6 +164,8 @@ public sealed class MusicGenerationSession : IDisposable
             }
             var processingOnly = _view.Generation.AudioTask is { Enabled: true, Mode: MusicAudioTaskMode.Restore };
             if (_working || _controller?.IsRunning == true || !_ready && !processingOnly) return;
+            _starting = true; RefreshButtons();
+            if (!MusicOutputFolderPrompt.EnsureSelected(_view.Tracks, _l)) return;
             var lyrics = _view.Editor.Lyrics;
             if (!processingOnly && !_view.Editor.TryGetGenerationText(out lyrics)) return;
             if (!processingOnly && _view.Generation.Variation == MusicStudioRuntime.Variation
@@ -172,7 +174,6 @@ public sealed class MusicGenerationSession : IDisposable
                 _view.Status.AppendLog(_l("Music.Expert.UnsupportedSolver"));
                 return;
             }
-            _starting = true; RefreshButtons();
             var options = _view.Generation.Options;
             var scores=_view.Generation.Variation==MusicStudioRuntime.Variation?_view.Generation.Scores:new AIHub.Models.MusicScoreWorkspace();
             AIHub.Services.MusicScore.MusicScorePipeline.Validate(scores,_view.Generation.Variation,_view.Generation.ExpertSettings,options.AudioTask,options.Melody,lyrics);
@@ -220,6 +221,7 @@ public sealed class MusicGenerationSession : IDisposable
         try
         {
             _starting = true; RefreshButtons();
+            if (!MusicOutputFolderPrompt.EnsureSelected(_view.Tracks, _l)) return;
             var original = _jobs.Load(track.JobId); var variant = original.Variants[track.Variant];
             if (MusicModelVariants.WorkspaceVariation(original.Variation) != original.Variation) return;
             var split = original.SeparateTracks;
