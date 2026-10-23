@@ -2073,6 +2073,7 @@
             <controls:MusicPreparationControl x:Name="MusicPage" Grid.Row="0" Visibility="Collapsed" />
                 <controls:FinancialScenarioControl x:Name="FinancialPage" Grid.Row="0" Visibility="Collapsed" />
                 <controls:ImageGenerationControl x:Name="GenerationPage" Grid.Row="0" Visibility="Collapsed" />
+                <controls:VectorGenerationControl x:Name="VectorPage" Grid.Row="0" Visibility="Collapsed" />
             <controls:ImageUtilityControl x:Name="ImageUtilityPage" Grid.Row="0" Visibility="Collapsed" />
             <controls:ScreenCaptureControl x:Name="CapturePage" Grid.Row="0" Visibility="Collapsed" />
             <Expander x:Name="PreviousWorkExpander"

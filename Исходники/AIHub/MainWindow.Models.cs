@@ -115,7 +115,7 @@ public partial class MainWindow
     {
         if (_musicPoetryWindow?.IsWorking == true || _musicPoetryWindow?.IsModelDownloadActive == true) return true;
         if (MusicPage.UsesArtifact(modelArtifactId)) return true;
-        if (GenerationPage.UsesArtifact(modelArtifactId)) return true;
+        if (GenerationPage.UsesArtifact(modelArtifactId) || VectorPage.UsesArtifact(modelArtifactId)) return true;
         if (ImageUtilityPage.UsesArtifact(modelArtifactId)) return true;
         if (modelArtifactId == ManagedModelCatalog.CoreArtifactId)
         {

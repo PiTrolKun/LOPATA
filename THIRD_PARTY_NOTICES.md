@@ -1,3 +1,15 @@
+## 2026-10-22 — static SVG rendering
+
+LOPATA bundles the official Windows x64 resvg 0.47.0 CLI (MIT OR Apache-2.0).
+Source: https://github.com/linebender/resvg/releases/tag/v0.47.0
+Original LICENSE-MIT, LICENSE-APACHE and dependency notices from the official
+vendored source distribution are retained under VectorRuntime and
+Licenses/texts/svg-resvg-*. The pinned binary is unmodified. The source archive
+SHA256 is 22d12bf638479688f3762ac951446f51ca75cb24c6853b23384f96fda02096c5.
+Reproduction and file inventory: prepare-vector-renderer.ps1 and
+Tools/vector-renderer-files.json. The developer's Node/Sharp runtime is not a
+product dependency. Existing Qwen3.8-27B-Ridge model terms still apply separately.
+
 ## 2026-10-22 — local CPU dictation
 
 LOPATA integrates NVIDIA Parakeet TDT 0.6B v3 in the csukuangfj INT8 conversion
@@ -764,3 +776,14 @@ copyright notice was not published. Terms and credit are retained in
 LOPATA adapts the artifact layout locally without changing original weights or
 the official ACE sampler; model conditions still apply. Layout reference:
 https://github.com/takakhoo/audio-diffusion-control/blob/2daefac5b7a90e52929f3f17143943424a83920d/audiosliders/lora.py
+
+## Retired experiment: OmniSVG — removed in 0.6.7-dev
+
+OmniSVG official source: https://github.com/OmniSVG/OmniSVG/tree/308b49b3e3df29c8b5424bbaa7f1f7c6ff218e8d
+Apache License 2.0. DeepSVG: https://github.com/alexandre01/deepsvg/tree/1c14fc3788d861cbfeba69e09b9cab6acd432361
+MIT License, Copyright (c) 2020 Alexandre Carlier. Original licenses, NOTICE and the
+LOPATA lazy-import patch are retained in the development backup of the retired
+experiment. OmniSVG weights, model cards, executable adapter and bundled decoder
+were removed at the user's request. No OmniSVG runtime is shipped in 0.6.7-dev.
+Existing generated results and diagnostic reports are retained as historical data.
+Legacy test-overlay wheels are developer-only; shared Python profiles remain unchanged.

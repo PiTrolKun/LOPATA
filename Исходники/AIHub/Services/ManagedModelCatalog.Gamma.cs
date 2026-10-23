@@ -21,7 +21,7 @@ public static partial class ManagedModelCatalog
         IsManaged = true, CanRemoveFiles = true, ModelsRoot = modelsRoot,
         InstallDirectory = CombineIfRoot(modelsRoot, "Vision", "Qwen3.8-27B-Ridge-GGUF", OmniGammaRevision[..12]),
         Origin = ManagedModelOrigins.PredefinedScenario, RuntimeBackend = LlamaBackendPaths.DisplayName,
-        Consumers = [Consumer("image-analysis-heavy", "Анализ изображений — Гамма", "scenario_bundle")],
+        Consumers = [Consumer("image-analysis-heavy", "Анализ изображений — Гамма", "scenario_bundle"), Consumer("vector-generation", "Генерация векторной графики", "scenario_bundle")],
         Files =
         [
             File("Qwen3.8-27B-Ridge-3.7bpw.gguf", $"https://huggingface.co/{OmniGammaRepository}/resolve/{OmniGammaRevision}/Qwen3.8-27B-Ridge-3.7bpw.gguf", 12_599_187_008,

@@ -21,6 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="..\..\Runtime\Svg\resvg-0.47.0\**\*" Link="VectorRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\vector-renderer-files.json" LogicalName="AIHub.VectorRendererManifest" />
     <Content Include="..\..\Runtime\MusicScore\score-c3e214f3-3\**\*" Link="MusicScoreRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\**\*" Link="MusicLoraStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\BookSmart\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -109,6 +111,9 @@
     <Resource Include="Assets\scenario-calibration.png" />
     <Resource Include="Assets\music-rhyme-creative.png" />
     <EmbeddedResource Include="Assets\music-default-cover.png" LogicalName="AIHub.MusicDefaultCover" />
+    <EmbeddedResource Include="Assets\VectorExamples\*" LogicalName="AIHub.VectorExamples.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Tools\webview2-viewer-files.json" LogicalName="AIHub.WebView2ViewerManifest" />
+    <EmbeddedResource Include="Content\VectorViewer.js" LogicalName="AIHub.VectorViewerScript" />
     <Content Include="Licenses\**\*"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Installer\bootstrap-v1.txt"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Localization\*.json">

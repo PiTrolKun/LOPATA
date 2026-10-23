@@ -1,4 +1,4 @@
-﻿param([switch]$RefreshTexts, [string]$AppendEntries = '')
+param([switch]$RefreshTexts, [string]$AppendEntries = '')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 $dest=Join-Path $root 'Исходники/AIHub/Licenses'
@@ -157,7 +157,7 @@ foreach($entryFile in @('image-generation-entries.json','image-utility-entries.j
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
  }
 }
-foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entries.json','music-lora-entries.json','music-stems-entries.json','music-cover-entries.json','music-midi-entries.json','dictation-entries.json')) {
+foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entries.json','music-lora-entries.json','music-stems-entries.json','music-cover-entries.json','music-midi-entries.json','dictation-entries.json','svg-entries.json')) {
  $engineEntries=Join-Path $dest $entryFile
  if(Test-Path -LiteralPath $engineEntries) {
   foreach($entry in @(Get-Content -LiteralPath $engineEntries -Raw | ConvertFrom-Json)) { $entries.Add($entry) }
@@ -173,6 +173,7 @@ foreach($e in $entries){
  $e.Texts=@($e.Texts | Select-Object -Unique)
  $terms=$e.License+$e.Ru+$e.En
  foreach($f in $e.Texts){$terms+=[IO.File]::ReadAllText((Join-Path $dest $f))}
+ if($e.Id -eq 'svg-renderer'){$terms=$terms.Replace("`r`n","`n").Replace("`r","`n")}
  $e.Terms=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($terms)))
 }
 $entries | ConvertTo-Json -Depth 8 | Set-Content "$dest/catalog.json" -Encoding utf8

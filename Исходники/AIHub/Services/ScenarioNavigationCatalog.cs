@@ -23,6 +23,7 @@ public static class ScenarioNavigationCatalog
     public const string Finance = "finance";
     public const string Capture = "screen_capture";
     public const string ImageGeneration = "image_generation";
+    public const string VectorGeneration = "vector_generation";
     public const string ImageUtility = "image_utility";
     public const string Music = "music";
     public const string Publisher = "github_vk_publisher";
@@ -66,6 +67,7 @@ public static class ScenarioNavigationCatalog
             tags: ["music_preparation", "music_ace_ideas", "music_ace_retake", "music_score_plans", "music_score_editor", "music_score_sections", "music_midi", "music_melody", "music_wishes", "music_performers", "music_text_tools", "music_rhyme", "music_rhyme_creative", "music_player", "music_lyrics_sync", "music_status", "music_generation", "music_expert", "music_presets", "music_models", "music_formats", "music_metadata", "music_stems", "music_audio_cover", "music_audio_references", "music_audio_processing", "music_cover", "music_examples", "music_studio", "music_tuning", "music_diffrhythm", "music_heartmula", "music_model_remove", "music_poetry", "music_poetry_sessions", "music_poetry_assembly", "music_poetry_reasoning", "music_poetry_search", "music_lyrics_library", "music_lora"], related: []),
         Node(ImageGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Generation.Title", "Generation.Description", "create",
             tags: ["image_generation", "image_variation", "generation_history", "image_autosave", "generation_model_switch", "prompt_spelling", "prompt_assistant", "image_reference", "image_metadata", "image_resize"], related: [Images]),
+        Node(VectorGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Vector.Title", "Vector.Description", "create", tags: ["vector_graphics", "svg_generation"], related: [ImageGeneration]),
         Node("analysis_images", ScenarioNavigationKind.Group, Analysis, "Navigation.Images", "", "analyze"),
         Node("experiment_tests", ScenarioNavigationKind.Group, Experiments, "Navigation.Tests", "", "experiment"),
         Node("experiment_finance", ScenarioNavigationKind.Group, Experiments, "Finance.Group", "", "finance"),
@@ -107,6 +109,7 @@ public static class ScenarioNavigationCatalog
         Tag("experiments", Experiments), Tag("finance", Finance), Tag("budget", Finance),
         Tag("expenses", Finance), Tag("income", Finance), Tag("external_coverage", Finance), Tag("financial_behavior", Finance), Tag("savings_discussion", Finance),
         Tag("screenshot", Capture), Tag("screen_capture", Capture), Tag("gif_capture", Capture), Tag("video_capture", Capture),
+        Tag("vector_graphics", VectorGeneration), Tag("svg_generation", VectorGeneration),
         Tag("image_generation", ImageGeneration), Tag("image_variation", ImageGeneration),
         Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", "utilities_images"),
         Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility),

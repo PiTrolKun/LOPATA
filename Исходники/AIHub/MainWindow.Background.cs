@@ -1,4 +1,4 @@
-﻿using System.Windows.Threading;
+using System.Windows.Threading;
 using AIHub.Models;
 using AIHub.Services;
 
@@ -30,6 +30,7 @@ public partial class MainWindow
         RegisterSandboxBackgroundOperations();
         RegisterFinancialBackgroundOperation();
         RegisterImageGenerationBackgroundOperation();
+        RegisterVectorBackgroundOperation();
         RegisterImageUtilityBackgroundOperation();
         RegisterRagBookBackgroundOperation();
         RegisterImageShellBackgroundOperation();
@@ -58,6 +59,7 @@ public partial class MainWindow
         });
         try {
             _backgroundOperations.Load(); ImageGenerationFailureRecovery.Recover(_backgroundOperations);
+            Services.VectorGraphics.VectorWork.RecoverFailedContent(_backgroundOperations);
             MusicDiffRhythmFailureRecovery.Recover(_backgroundOperations, MusicGenerationJobs.Default);
         }
         catch (Exception error)
@@ -260,6 +262,11 @@ public partial class MainWindow
             {
                 if (ViewFinancialBackgroundResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);
                 return;
+            }
+            if (notice.Kind == Services.VectorGraphics.VectorStore.BackgroundKind && notice.Project is not null)
+            {
+                RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage); OpenVectorGenerationScenario();
+                VectorPage.ViewResult(notice.Project); _backgroundOperations!.Acknowledge(notice.Id); return;
             }
             if (notice.Kind == ImageGenerationCatalog.BackgroundKind && notice.Project is not null)
             {

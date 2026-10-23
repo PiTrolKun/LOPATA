@@ -174,7 +174,7 @@ public sealed class ManagedModelOperationsTests
             }
             store.Upsert(card);
             var targetPath = Path.Combine(card.InstallDirectory, card.Files[0].RelativePath);
-            Directory.CreateDirectory(card.InstallDirectory);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
             await File.WriteAllBytesAsync(targetPath + ".part", payload[..prefixLength]);
             using var acquisition = new ManagedModelAcquisitionService(store, client, 64 * 1024)
             {

@@ -1,0 +1,21 @@
+[
+  {
+    "Id": "svg-renderer",
+    "Name": "resvg · static SVG renderer",
+    "Version": "0.47.0",
+    "Author": "resvg authors and contributors; dependency authors",
+    "License": "Apache-2.0 OR MIT; third-party notices",
+    "Source": "https://github.com/linebender/resvg",
+    "Checked": "2026-10-22",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Terms": "",
+    "Ru": "Отрисовка статической векторной графики на CPU. resvg распространяется на выбор по MIT или Apache-2.0. Включены оригинальные тексты и уведомления зависимостей из закреплённого исходного архива. Поддерживается безопасное подмножество статического SVG; внешний контент, скрипты и анимация не выполняются.",
+    "En": "CPU rendering of static vector graphics. resvg is available under MIT or Apache-2.0 at your option. Original license texts and dependency notices from the pinned source archive are included. A safe subset of static SVG is supported; external content, scripts and animation are not executed.",
+    "Texts": [
+      "texts/svg-resvg-LICENSE-MIT.txt",
+      "texts/svg-resvg-LICENSE-APACHE.txt",
+      "texts/svg-resvg-THIRD-PARTY-NOTICES.txt.txt"
+    ]
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "Path": "Microsoft.Web.WebView2.Core.dll",
+    "Size": 698208,
+    "Sha256": "d60e6e94245078cb56e44ebd5f360dc04bf18e460136be93bfc4cfca43b98505"
+  },
+  {
+    "Path": "Microsoft.Web.WebView2.Wpf.dll",
+    "Size": 87392,
+    "Sha256": "4cbabd120344cc47f313f168fb86022d8f7423e09adff43da643e0e88570fa0c"
+  },
+  {
+    "Path": "runtimes/win-x64/native/WebView2Loader.dll",
+    "Size": 194912,
+    "Sha256": "3426dcc55fdfb8b5e7ac623cf33b4ccf283fbf68a0c5a65bddfdb4d749a8abee"
+  }
+]

@@ -27,9 +27,10 @@ public partial class MainWindow
     {
         var visible = GenerationPage.IsVisible && GenerationPage.IsChat;
         var music = MusicPage.IsVisible && MusicPage.IsWorkspace;
+        var vector = VectorPage.IsVisible && VectorPage.IsChat;
         GenerationModelButton.Visibility = visible || music ? Visibility.Visible : Visibility.Collapsed;
-        GenerationClearButton.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-        GenerationClearButton.IsEnabled = GenerationPage.CanChangeModel;
+        GenerationClearButton.Visibility = visible || vector ? Visibility.Visible : Visibility.Collapsed;
+        GenerationClearButton.IsEnabled = vector ? VectorPage.CanClearWorkspace : GenerationPage.CanChangeModel;
         GenerationModelButton.IsEnabled = music ? MusicPage.CanChangeModel : GenerationPage.CanChangeModel;
         var changeModel = L(music ? "Music.Models.ChangeModel" : "Generation.ChangeModel");
         GenerationModelButton.ToolTip = changeModel; GenerationClearButton.ToolTip = L("Generation.ClearWorkspace");
@@ -42,9 +43,11 @@ public partial class MainWindow
         if (MusicPage.IsVisible && MusicPage.IsWorkspace) MusicPage.ShowModelMenu(GenerationModelButton);
         else GenerationPage.ShowModelMenu(GenerationModelButton);
     }
-    private void GenerationClearButton_Click(object sender, RoutedEventArgs e) => GenerationPage.ClearWorkspace();
+    private void GenerationClearButton_Click(object sender, RoutedEventArgs e)
+    { if (VectorPage.IsVisible) VectorPage.ClearWorkspace(); else GenerationPage.ClearWorkspace(); }
     private void OpenImageGenerationScenario()
     {
+        VectorPage.Visibility = Visibility.Collapsed;
         ImageUtilityPage.Visibility = Visibility.Collapsed;
         ConfigureImageGeneration();
         if (ScenarioNavigationPage.IsHome) ScenarioNavigationPage.SelectDirection(ScenarioNavigationCatalog.Creation);

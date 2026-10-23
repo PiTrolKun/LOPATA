@@ -372,7 +372,7 @@ public static class ComponentCatalog
             [".log", ".cs", ".js", ".ts", ".py", ".cpp", ".h", ".sql"])
     ];
 
-    public static IReadOnlyList<ComponentCatalogEntry> All { get; } = [.. Entries, .. HardwareRuntimeCatalog.Components, .. MusicLyricsComponentCatalog.Entries, .. MusicStemsCatalog.Entries, .. MusicCoverScoreCatalog.Entries, .. Dictation.DictationComponents.Entries];
+    public static IReadOnlyList<ComponentCatalogEntry> All { get; } = [.. Entries, .. HardwareRuntimeCatalog.Components, .. MusicLyricsComponentCatalog.Entries, .. MusicStemsCatalog.Entries, .. MusicCoverScoreCatalog.Entries, .. Dictation.DictationComponents.Entries, new ComponentCatalogEntry { Id = VectorGraphics.VectorRenderer.ComponentId, Name = "resvg · SVG renderer", Version = VectorGraphics.VectorRenderer.Revision, License = "Apache-2.0 OR MIT; third-party notices", Source = "https://github.com/linebender/resvg", DeliveryKind = ComponentDeliveryKinds.BuiltIn, LicenseIds = [VectorGraphics.VectorRenderer.TermsId], Capabilities = ["render.svg"] }];
 
     public static IReadOnlyList<ComponentCatalogEntry> Processing => All
         .Where(entry => entry.Kind == ComponentKinds.Processing)

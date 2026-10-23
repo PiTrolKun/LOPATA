@@ -130,6 +130,7 @@ public static class ComponentSemanticPassportCatalog
             ["viewer.babylon"] = new(
                 "Показывает локальные 3D-модели glTF/GLB. Используется только интерфейсом.",
                 "Displays local glTF/GLB 3D models. It is used only by the interface."),
+            ["runtime.svg.resvg"] = new("Локально отрисовывает статический SVG: текст, градиенты, обрезку, маски и фильтры. Не генерирует графику; работает на CPU, без браузера и сети.", "Renders static SVG locally: text, gradients, clipping, masks and filters. Does not generate graphics; CPU only, without a browser or network."),
             ["viewer.avalonedit"] = new(
                 "Открывает большие текстовые файлы и код с номерами строк и поиском. Используется только интерфейсом.",
                 "Opens large text and code files with line numbers and search. It is used only by the interface.")

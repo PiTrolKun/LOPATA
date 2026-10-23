@@ -1,0 +1,22 @@
+[
+  {
+    "Path": "LICENSE-APACHE",
+    "Size": 10173,
+    "Sha256": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9"
+  },
+  {
+    "Path": "LICENSE-MIT",
+    "Size": 1057,
+    "Sha256": "f5d934dc281b44e0003ee461ac740b18b6629a454decd872c774d34e4ee0b21d"
+  },
+  {
+    "Path": "resvg.exe",
+    "Size": 3392000,
+    "Sha256": "433a7c744cff561ed64fcf73c7c04e239d7a07ae5f0aadbf1ba8471d63707402"
+  },
+  {
+    "Path": "THIRD-PARTY-NOTICES.txt",
+    "Size": 794476,
+    "Sha256": "328feeea4b6963dbb699f6f5ac6e2e8e768c91c9174cc3f951a4ad4cabe3f2fa"
+  }
+]

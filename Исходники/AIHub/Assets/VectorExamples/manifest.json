@@ -1,0 +1,20 @@
+[
+  {
+    "Id": "matrix-cat",
+    "Source": "Тесты/SvgChatProbe_20261022_212832",
+    "Sha256": {
+      ".svg": "6666926fb1709012be7da795f46e83f673f2b10b13b421c05b0bdb0c45ab3177",
+      ".png": "ca9436ebdabe6d0d6c862d72e0616dcc64300555b1134a261078aca2989c1801",
+      ".prompt.txt": "8cf455fd0cdc0f6f651e06f755676926d0e56acc1e89c00cd7c841d47d63888e"
+    }
+  },
+  {
+    "Id": "workshop",
+    "Source": "Тесты/SvgHeavy_20261022_230024",
+    "Sha256": {
+      ".svg": "4ff53cf4326a24a0a784ba0da8e28c64e71736ef2661034746b70f59f3914f66",
+      ".png": "c426f850a6f88f341b81c9f195290305b8def6910a5bae1cccd55a834b6b3886",
+      ".prompt.txt": "554152fd68ffa25893cf919a62f1e7c40c0fe63d039dacc57c0a68612350f2fc"
+    }
+  }
+]

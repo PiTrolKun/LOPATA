@@ -630,6 +630,7 @@ public partial class MainWindow : Window
         FinancialPage.Localize(L, _appSettings.LanguageCode);
         RefreshCaptureLocalization();
         GenerationPage.Localize(L, _localizationService.CurrentLanguageCode);
+        VectorPage.Localize(L);
         ImageUtilityPage.Localize(L);
         MusicPage.Localize(L);
         PreviousWorkHeaderText.Text = L("WorkStart.PreviousWork");
@@ -1331,6 +1332,13 @@ public partial class MainWindow : Window
             ScenarioNavigationPage.ReturnFromScenario();
             RefreshScenarioNavigationState();
             return;
+        }
+        if (VectorPage.Visibility == Visibility.Visible)
+        {
+            if (VectorPage.GoBack()) return;
+            VectorPage.Visibility = Visibility.Collapsed;
+            ScenarioNavigationPage.Visibility = Visibility.Visible;
+            ScenarioNavigationPage.ReturnFromScenario(); RefreshScenarioNavigationState(); return;
         }
         if (GenerationPage.Visibility == Visibility.Visible)
         {

@@ -64,3 +64,9 @@ Runtime/MusicHeartMuLa/source.zip binary
 ТЗ/Архив/LOPATA_выходной_формат_музыки_и_метаданные_2026-10-07.md -text -eol -whitespace
 ТЗ/Архив/LOPATA_идея_контроллер_YuE2.md -text -eol -whitespace
 ТЗ/Архив/LOPATA_музыкальные_модели_для_тестов_2026-10-07.md -text -eol -whitespace
+
+# Original SVG examples and pinned upstream notices must survive clean checkouts byte-for-byte.
+Исходники/AIHub/Assets/VectorExamples/*.svg -text -eol -whitespace
+Исходники/AIHub/Assets/VectorExamples/*.prompt.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/svg-resvg-* -text -eol -whitespace
+ТЗ/Архив/LOPATA_SVG_Qwen3.8_Research_2026-09-22.md -text -eol -whitespace

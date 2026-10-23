@@ -17,7 +17,8 @@ public static class LiteraryRawProtocol
         });
 
     public static async Task<string> ReadAsync(Stream stream, IProgress<ModelStreamChunk>? progress,
-        Action<string> rawLine, CancellationToken token, bool requireComplete = false, bool includeReasoning = true)
+        Action<string> rawLine, CancellationToken token, bool requireComplete = false, bool includeReasoning = true,
+        IProgress<ModelStreamChunk>? reasoningProgress = null)
     {
         var text = new StringBuilder();
         string? finishReason = null;
@@ -45,10 +46,14 @@ public static class LiteraryRawProtocol
             if (!choices[0].TryGetProperty("delta", out var delta)) continue;
             foreach (var field in new[] { "reasoning_content", "content" })
             {
-                if (field == "reasoning_content" && !includeReasoning) continue;
                 if (delta.TryGetProperty(field, out var value) && value.ValueKind == JsonValueKind.String
                     && value.GetString() is { Length: > 0 } chunk)
                 {
+                    if (field == "reasoning_content")
+                    {
+                        reasoningProgress?.Report(new ModelStreamChunk(chunk));
+                        if (!includeReasoning) continue;
+                    }
                     text.Append(chunk);
                     progress?.Report(new ModelStreamChunk(chunk));
                 }
