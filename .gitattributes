@@ -52,6 +52,8 @@ Runtime/MusicHeartMuLa/source.zip binary
 Исходники/AIHub/Licenses/texts/music-MSVC-RUNTIME.txt -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/music-studio-NOTICES.txt -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/music.stems_WHEEL-NOTICES.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/book-smart-pillow-LICENSE.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/book-smart-python-wheels-NOTICES.txt -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/music-studio-companion-LICENSE.txt -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/music-studio-companion-MODEL_CARD.txt -text -eol -whitespace
 Инструменты/MusicStudio/lopata-paths.patch -text -eol -whitespace
