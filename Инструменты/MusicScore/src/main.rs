@@ -18,6 +18,16 @@ fn execute(input: Value) -> Result<Value, String> {
         "mark" => return Ok(json!({"abc": edits::attach(&text, Some(&edits::mark(
             input["style"].as_str().unwrap_or(""), input["lyrics"].as_str().unwrap_or(""),
             input["cot"].as_str().unwrap_or("full"))), input["keep"].as_bool().unwrap_or(false))})),
+        "instrumental" => {
+            // Use the pinned upstream event transfer, never a voice-name replacement.
+            if !notation::read(&text)?.notes.Vocal.is_empty() {
+                text = upstream::instrumental::transfer(&text)?.abc;
+            }
+            let sheet = notation::read(&text)?;
+            if !sheet.notes.Vocal.is_empty() || sheet.notes.Ins.is_empty() {
+                return Err("Music.Score.Invalid".into());
+            }
+        },
         "mirror" => {
             let sheet = notation::read(&text)?;
             let source = input["source"].as_u64().ok_or("Music.Score.SectionMismatch")? as usize;

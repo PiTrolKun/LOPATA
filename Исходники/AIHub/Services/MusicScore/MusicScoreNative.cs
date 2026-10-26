@@ -10,11 +10,14 @@ namespace AIHub.Services.MusicScore;
 /// <summary>Pinned CPU-only upstream parser. Its process never loads a model.</summary>
 public static class MusicScoreNative
 {
-    public const string HelperHash = "F2A1434C4E58F797BD3EBCE6D4049345DB56B7265FC3C87E128E79260C47CB2F";
+    public const string HelperHash = "82C760D35E6471B1FAA415196256EB4B5F3872B10C76EE4857F879C030A3FDE5";
     public static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
     public static async Task<MusicScoreInspection> InspectAsync(string abc,CancellationToken token) =>
         (await ExecuteAsync(new {operation="inspect",abc},token)).Deserialize<MusicScoreInspection>(Json)
+        ?? throw new InvalidDataException("Music.Score.Invalid");
+    public static async Task<MusicScoreInspection> InstrumentalAsync(string abc, CancellationToken token) =>
+        (await ExecuteAsync(new { operation = "instrumental", abc }, token)).Deserialize<MusicScoreInspection>(Json)
         ?? throw new InvalidDataException("Music.Score.Invalid");
     public static async Task<string> MarkAsync(string abc,string style,string lyrics,string cot,bool keep,CancellationToken token) =>
         (await ExecuteAsync(new {operation="mark",abc,style,lyrics,cot,keep},token)).GetProperty("abc").GetString()!;

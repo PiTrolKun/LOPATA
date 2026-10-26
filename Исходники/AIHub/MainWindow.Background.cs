@@ -35,6 +35,7 @@ public partial class MainWindow
         RegisterRagBookBackgroundOperation();
         RegisterImageShellBackgroundOperation();
         RegisterLyricVideoBackgroundOperation();
+        RegisterVideoEditorOperations();
         RegisterBookSmartBackgroundOperation();
         RegisterLyricLibraryBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
@@ -228,6 +229,22 @@ public partial class MainWindow
                 RestoreFromTray();
                 _fileViewerService.Open(this, clipPath, _appSettings.FileViewer, _isDarkTheme, _localizationService);
                 _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == Services.VideoEditor.VideoWork.Kind)
+            {
+                var state = _backgroundOperations!.LoadResult(notice.Id) ?? _backgroundOperations.State!;
+                var request = System.Text.Json.JsonSerializer.Deserialize<Services.VideoEditor.VideoWorkRequest>(state.Input);
+                if (request is null) return;
+                RestoreFromTray();
+                if (request.Action == "export" && request.Destination is {} output && System.IO.File.Exists(output))
+                    _fileViewerService.Open(this, output, _appSettings.FileViewer, _isDarkTheme, _localizationService);
+                else
+                {
+                    var project = Services.VideoEditor.VideoProjectStore.Load(request.ProjectPath);
+                    var result = System.IO.Path.Combine(Services.VideoEditor.VideoProjectStore.Work(project.Id), "Operations", request.Id, "result.lopataVideo");
+                    OpenVideoEditorUtility(System.IO.File.Exists(result) ? result : request.ProjectPath);
+                }
+                _backgroundOperations.Acknowledge(notice.Id); return;
             }
             if (notice.Kind == MusicRhymeWork.Kind)
             {

@@ -47,6 +47,8 @@ public partial class MainWindow
         ApplyBookShellIntegration();
         try { ApplyVectorIntegration(); }
         catch (Exception error) { OwnedProcessRegistry.Log("vector_shell_registration_failed","WindowsIntegration",detail:error.GetType().Name); }
+        try { ApplyVideoIntegration(); }
+        catch (Exception error) { OwnedProcessRegistry.Log("video_shell_registration_failed", "WindowsIntegration", detail: error.GetType().Name); }
     }
     private void SetImageShellIntegration(bool enabled)
     {

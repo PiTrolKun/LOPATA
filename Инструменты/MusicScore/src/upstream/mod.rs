@@ -4,6 +4,7 @@ pub mod notation;
 pub mod edits;
 pub mod sections;
 pub mod schedule;
+pub mod instrumental;
 use std::cmp::Ordering;
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};

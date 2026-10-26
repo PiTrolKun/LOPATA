@@ -1,0 +1,581 @@
+[
+  {
+    "id": "kokoro-sveta",
+    "language": "ru",
+    "speaker": "sveta",
+    "file": "kokoro-sveta-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 5.9,
+    "generationSeconds": 11.5775241,
+    "license": "Apache-2.0; voice terms",
+    "source": "https://huggingface.co/zaakirio/kokoro-ru",
+    "models": [
+      {
+        "Id": "model-kokoro-ru-sveta",
+        "Name": "Kokoro · Света",
+        "Revision": "27d078fe1c0cab919613a64e906919214385f21d",
+        "Role": "narration speech synthesis"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "ru"
+  },
+  {
+    "id": "kokoro-heart",
+    "language": "en",
+    "speaker": "af_heart",
+    "file": "kokoro-heart-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 7.775,
+    "generationSeconds": 7.0660731,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/hexgrad/Kokoro-82M",
+    "models": [
+      {
+        "Id": "model-kokoro-82m-en-af-heart",
+        "Name": "Kokoro · af_heart",
+        "Revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
+        "Role": "narration speech synthesis"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "en"
+  },
+  {
+    "id": "kitten2",
+    "language": "ru",
+    "speaker": "Bruno",
+    "file": "kitten2-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 8.28,
+    "generationSeconds": 134.170615,
+    "license": "Stellon Labs Community License; Apache-2.0/MIT code",
+    "source": "https://github.com/KittenML/KittenTTS",
+    "models": [
+      {
+        "Id": "video-narrator-kitten2",
+        "Name": "KittenTTS 2 · Bruno · ru",
+        "Revision": "c93cb7c271baa51d9ae8204d5277988906f235a2",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-kitten",
+        "Name": "KittenTTS 2 · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python interpreter",
+        "Revision": "3.12.10",
+        "Role": "speech interpreter"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "ru"
+  },
+  {
+    "id": "kitten2",
+    "language": "en",
+    "speaker": "Bruno",
+    "file": "kitten2-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 7.76,
+    "generationSeconds": 56.1112888,
+    "license": "Stellon Labs Community License; Apache-2.0/MIT code",
+    "source": "https://github.com/KittenML/KittenTTS",
+    "models": [
+      {
+        "Id": "video-narrator-kitten2",
+        "Name": "KittenTTS 2 · Bruno · en",
+        "Revision": "c93cb7c271baa51d9ae8204d5277988906f235a2",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-kitten",
+        "Name": "KittenTTS 2 · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python interpreter",
+        "Revision": "3.12.10",
+        "Role": "speech interpreter"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "en"
+  },
+  {
+    "id": "supertonic3",
+    "language": "ru",
+    "speaker": "M1",
+    "file": "supertonic3-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 8.2895238,
+    "generationSeconds": 10.194915,
+    "license": "BigScience Open RAIL-M; MIT code",
+    "source": "https://huggingface.co/jiangzhuo9357/supertonic-3",
+    "models": [
+      {
+        "Id": "video-narrator-supertonic3",
+        "Name": "Supertonic 3 · M1 · ru",
+        "Revision": "95e49bbdc2a88e24f25f5469d01a6427d14d9d3a",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-onnx",
+        "Name": "Supertonic 3 · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python / PyTorch · cpu",
+        "Revision": "2.10.0+cpu",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "ru"
+  },
+  {
+    "id": "supertonic3",
+    "language": "en",
+    "speaker": "M1",
+    "file": "supertonic3-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 7.4536054,
+    "generationSeconds": 9.7342253,
+    "license": "BigScience Open RAIL-M; MIT code",
+    "source": "https://huggingface.co/jiangzhuo9357/supertonic-3",
+    "models": [
+      {
+        "Id": "video-narrator-supertonic3",
+        "Name": "Supertonic 3 · M1 · en",
+        "Revision": "95e49bbdc2a88e24f25f5469d01a6427d14d9d3a",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-onnx",
+        "Name": "Supertonic 3 · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python / PyTorch · cpu",
+        "Revision": "2.10.0+cpu",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "en"
+  },
+  {
+    "id": "qwen3-17b",
+    "language": "ru",
+    "speaker": "Ryan",
+    "file": "qwen3-17b-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 8.8,
+    "generationSeconds": 81.9691385,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "models": [
+      {
+        "Id": "video-narrator-qwen3-17b",
+        "Name": "Qwen3-TTS CustomVoice 1.7B · Ryan · ru",
+        "Revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-qwen",
+        "Name": "Qwen3-TTS CustomVoice 0.6B · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "ru"
+  },
+  {
+    "id": "qwen3-17b",
+    "language": "en",
+    "speaker": "Ryan",
+    "file": "qwen3-17b-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 9.84,
+    "generationSeconds": 34.3950944,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "models": [
+      {
+        "Id": "video-narrator-qwen3-17b",
+        "Name": "Qwen3-TTS CustomVoice 1.7B · Ryan · en",
+        "Revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-qwen",
+        "Name": "Qwen3-TTS CustomVoice 0.6B · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "en"
+  },
+  {
+    "id": "qwen3-06b",
+    "language": "ru",
+    "speaker": "Ryan",
+    "file": "qwen3-06b-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 8.8,
+    "generationSeconds": 34.0020208,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+    "models": [
+      {
+        "Id": "video-narrator-qwen3-06b",
+        "Name": "Qwen3-TTS CustomVoice 0.6B · Ryan · ru",
+        "Revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-qwen",
+        "Name": "Qwen3-TTS CustomVoice 0.6B · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "ru"
+  },
+  {
+    "id": "qwen3-06b",
+    "language": "en",
+    "speaker": "Ryan",
+    "file": "qwen3-06b-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 7.84,
+    "generationSeconds": 32.0903844,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+    "models": [
+      {
+        "Id": "video-narrator-qwen3-06b",
+        "Name": "Qwen3-TTS CustomVoice 0.6B · Ryan · en",
+        "Revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-qwen",
+        "Name": "Qwen3-TTS CustomVoice 0.6B · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "en"
+  },
+  {
+    "id": "orpheus3b",
+    "language": "en",
+    "speaker": "tara",
+    "file": "orpheus3b-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 24.6613333,
+    "generationSeconds": 182.4768722,
+    "license": "Apache-2.0; MIT SNAC/code",
+    "source": "https://github.com/canopyai/Orpheus-TTS/tree/main/additional_inference_options/no_gpu",
+    "models": [
+      {
+        "Id": "video-narrator-orpheus3b",
+        "Name": "Orpheus 3B English · Q4_K_M · tara · en",
+        "Revision": "af161b11022b996f8ae2f54d79b8ff71c5a3fb58+f317cdff7efb7b2a63148c9e68bbb0320fe629a1",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-orpheus3b",
+        "Name": "Orpheus 3B English · Q4_K_M · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python / PyTorch · cpu",
+        "Revision": "2.10.0+cpu",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "en"
+  },
+  {
+    "id": "silero56",
+    "language": "ru",
+    "speaker": "xenia",
+    "file": "silero56-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 4.9875,
+    "generationSeconds": 11.850988,
+    "license": "CC-BY-NC-4.0",
+    "source": "https://github.com/snakers4/silero-models",
+    "models": [
+      {
+        "Id": "video-narrator-silero56",
+        "Name": "Silero v5.6 RU · xenia · ru",
+        "Revision": "v5_6_ru-04cc9b1d08ce",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-silero56",
+        "Name": "Silero v5.6 RU · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "ru"
+  },
+  {
+    "id": "cosyvoice300",
+    "language": "en",
+    "speaker": "英文女",
+    "file": "cosyvoice300-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 5.6888888,
+    "generationSeconds": 27.3605815,
+    "license": "Apache-2.0; MIT dependencies",
+    "source": "https://github.com/QwenAudio/CosyVoice",
+    "models": [
+      {
+        "Id": "video-narrator-cosyvoice300",
+        "Name": "CosyVoice-300M-SFT · 英文女 · en",
+        "Revision": "fbb71de2afe387ed854eebd80b9f3d078c6b9869",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-cosyvoice300",
+        "Name": "CosyVoice-300M-SFT · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ],
+    "experimental": false,
+    "synthesisLanguage": "en"
+  },
+  {
+    "id": "kokoro-sveta",
+    "language": "en",
+    "synthesisLanguage": "ru",
+    "experimental": true,
+    "speaker": "sveta",
+    "file": "kokoro-sveta-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 1.575,
+    "generationSeconds": 12.9930535,
+    "license": "Apache-2.0; voice terms",
+    "source": "https://huggingface.co/zaakirio/kokoro-ru",
+    "models": [
+      {
+        "Id": "model-kokoro-ru-sveta",
+        "Name": "Kokoro · Света",
+        "Revision": "27d078fe1c0cab919613a64e906919214385f21d",
+        "Role": "narration speech synthesis"
+      }
+    ]
+  },
+  {
+    "id": "kokoro-heart",
+    "language": "ru",
+    "synthesisLanguage": "en",
+    "experimental": true,
+    "speaker": "af_heart",
+    "file": "kokoro-heart-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 14.625,
+    "generationSeconds": 8.1738722,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/hexgrad/Kokoro-82M",
+    "models": [
+      {
+        "Id": "model-kokoro-82m-en-af-heart",
+        "Name": "Kokoro · af_heart",
+        "Revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
+        "Role": "narration speech synthesis"
+      }
+    ]
+  },
+  {
+    "id": "orpheus3b",
+    "language": "ru",
+    "synthesisLanguage": "en",
+    "experimental": true,
+    "speaker": "tara",
+    "file": "orpheus3b-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 15.616,
+    "generationSeconds": 163.3458367,
+    "license": "Apache-2.0; MIT SNAC/code",
+    "source": "https://github.com/canopyai/Orpheus-TTS/tree/main/additional_inference_options/no_gpu",
+    "models": [
+      {
+        "Id": "video-narrator-orpheus3b",
+        "Name": "Orpheus 3B English · Q4_K_M · tara · en",
+        "Revision": "af161b11022b996f8ae2f54d79b8ff71c5a3fb58+f317cdff7efb7b2a63148c9e68bbb0320fe629a1",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-orpheus3b",
+        "Name": "Orpheus 3B English · Q4_K_M · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python / PyTorch · cpu",
+        "Revision": "2.10.0+cpu",
+        "Role": "speech hardware runtime"
+      }
+    ]
+  },
+  {
+    "id": "silero56",
+    "language": "en",
+    "synthesisLanguage": "ru",
+    "experimental": true,
+    "speaker": "xenia",
+    "file": "silero56-en.wav",
+    "text": "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 0.9875,
+    "generationSeconds": 18.2497765,
+    "license": "CC-BY-NC-4.0",
+    "source": "https://github.com/snakers4/silero-models",
+    "models": [
+      {
+        "Id": "video-narrator-silero56",
+        "Name": "Silero v5.6 RU · xenia · ru",
+        "Revision": "v5_6_ru-04cc9b1d08ce",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-silero56",
+        "Name": "Silero v5.6 RU · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ]
+  },
+  {
+    "id": "cosyvoice300",
+    "language": "ru",
+    "synthesisLanguage": "en",
+    "experimental": true,
+    "speaker": "英文女",
+    "file": "cosyvoice300-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях.",
+    "seconds": 7.0124263,
+    "generationSeconds": 45.7924165,
+    "license": "Apache-2.0; MIT dependencies",
+    "source": "https://github.com/QwenAudio/CosyVoice",
+    "models": [
+      {
+        "Id": "video-narrator-cosyvoice300",
+        "Name": "CosyVoice-300M-SFT · 英文女 · en",
+        "Revision": "fbb71de2afe387ed854eebd80b9f3d078c6b9869",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-cosyvoice300",
+        "Name": "CosyVoice-300M-SFT · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cuda126",
+        "Name": "Python / PyTorch · cu126",
+        "Revision": "2.10.0+cu126",
+        "Role": "speech hardware runtime"
+      }
+    ]
+  },
+  {
+    "id": "vosk010",
+    "language": "ru",
+    "synthesisLanguage": "ru",
+    "experimental": false,
+    "speaker": "0",
+    "file": "vosk010-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. Лопата умеет говорить во многих сценариях.",
+    "seconds": 6.9427664,
+    "generationSeconds": 37.5045926,
+    "license": "Apache-2.0",
+    "source": "https://github.com/alphacep/vosk-tts",
+    "models": [
+      {
+        "Id": "video-narrator-vosk010",
+        "Name": "Vosk-TTS 0.10 multi · 0 · ru",
+        "Revision": "0.10-587183e6987a",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-vosk010",
+        "Name": "Vosk-TTS 0.10 multi · Python runtime",
+        "Revision": "voices-20261026-2",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python / PyTorch · cpu",
+        "Revision": "2.10.0+cpu",
+        "Role": "speech hardware runtime"
+      }
+    ]
+  }
+]

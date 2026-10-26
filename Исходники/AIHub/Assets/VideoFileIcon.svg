@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><desc>Author: Петр</desc><metadata id="lopata-provenance">{"Schema":1,"Program":"LOPATA","ProgramVersion":"0.6.22-dev","Scenario":"vector-graphics/generation","ExportedUtc":"2026-10-25T11:53:43.4366459+00:00","CreatedUtc":"2026-10-25T11:52:14.1599583+00:00","ModelHistory":"recorded","ModelScope":"output","Models":[{"Id":"model-qwen3-8-27b-ridge-37bpw","Name":"Qwen3.8-27B-Ridge 3.7 bpw","Revision":"486faa5f2032ff99bdc8993ade1b8fff13d1464c","Role":"SVG text generation"},{"Id":"llama.cpp","Name":"llama.cpp Vulkan","Revision":"620d2225cc436ab0b001e3200e590e3b286ef9ab","Role":"text inference; engine set 002"}]}</metadata>
+  <defs>
+    <linearGradient id="scr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ce2a3" />
+      <stop offset="1" stop-color="#2ea55f" />
+    </linearGradient>
+  </defs>
+  <path d="M16 4 H36 L52 20 V56 Q52 60 48 60 H16 Q12 60 12 56 V8 Q12 4 16 4 Z" fill="#ffffff" stroke="#aebac6" stroke-width="1.8" stroke-linejoin="round" />
+  <path d="M36 4 L36 20 L52 20 Z" fill="#dbe2e9" />
+  <rect x="19" y="25" width="26" height="19" rx="3" fill="#2a343c" />
+  <rect x="22" y="28" width="20" height="12" rx="1.5" fill="url(#scr)" />
+  <polygon points="28.5,30.5 28.5,37.5 35,34" fill="#ffffff" />
+  <circle cx="41.5" cy="42" r="1.1" fill="#46d07a" />
+  <rect x="19" y="47" width="26" height="6" rx="1.5" fill="#ccd6de" />
+  <rect x="19" y="47" width="11" height="6" rx="1.5" fill="#3fae6c" />
+  <rect x="30.5" y="45.2" width="2" height="9.6" rx="1" fill="#2a343c" />
+</svg>

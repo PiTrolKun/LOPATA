@@ -14,6 +14,7 @@ public partial class App : System.Windows.Application
     public static bool ImageShellLaunch { get; private set; }
     public static bool AudioShellLaunch { get; private set; }
     public static bool VectorFileLaunch { get; private set; }
+    public static bool VideoFileLaunch { get; private set; }
     protected override void OnStartup(StartupEventArgs e)
     {
         if(e.Args is ["--dictation-worker"]) {
@@ -29,6 +30,12 @@ public partial class App : System.Windows.Application
         if (e.Args is ["--remove-vector-shell"])
         {
             try { new Services.VectorEditor.VectorShellIntegration(Environment.ProcessPath!).Apply(false,""); Shutdown(); }
+            catch { Shutdown(1); }
+            return;
+        }
+        if (e.Args is ["--remove-video-shell"])
+        {
+            try { new Services.VideoEditor.VideoShellIntegration(Environment.ProcessPath!).Apply(false, ""); Shutdown(); }
             catch { Shutdown(1); }
             return;
         }
@@ -48,25 +55,29 @@ public partial class App : System.Windows.Application
         ImageShellLaunch = e.Args.Contains("--shell-image", StringComparer.Ordinal);
         AudioShellLaunch = e.Args.Contains("--shell-audio", StringComparer.Ordinal);
         VectorFileLaunch = e.Args.Contains("--svg", StringComparer.Ordinal);
+        VideoFileLaunch = e.Args.Contains("--video-project", StringComparer.Ordinal);
         Models.ImageShellRequest? imageRequest;
         Models.AudioShellRequest? audioRequest;
         Services.VectorEditor.VectorFileRequest? vectorRequest;
+        Services.VideoEditor.VideoFileRequest? videoRequest;
         try
         {
+            Services.OwnedProcessRegistry.Log("startup_enter", "Application", Environment.ProcessId);
             imageRequest = Models.ImageShellRequest.ParseArguments(e.Args);
             audioRequest = Models.AudioShellRequest.ParseArguments(e.Args);
             vectorRequest = Services.VectorEditor.VectorFileRequest.Parse(e.Args);
-            if (new[] {ImageShellLaunch,AudioShellLaunch,VectorFileLaunch}.Count(v=>v)>1) throw new System.IO.InvalidDataException("Mixed shell requests.");
-            BackgroundLaunch = ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || e.Args.Contains("--background", StringComparer.Ordinal);
-            _instance = Services.SingleApplicationInstance.Acquire(BackgroundLaunch, imageRequest, audioRequest, vectorRequest);
+            videoRequest = Services.VideoEditor.VideoFileRequest.Parse(e.Args);
+            if (new[] {ImageShellLaunch,AudioShellLaunch,VectorFileLaunch,VideoFileLaunch}.Count(v=>v)>1) throw new System.IO.InvalidDataException("Mixed shell requests.");
+            BackgroundLaunch = ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || e.Args.Contains("--background", StringComparer.Ordinal);
+            _instance = Services.SingleApplicationInstance.Acquire(BackgroundLaunch, imageRequest, audioRequest, vectorRequest, videoRequest);
             if (_instance is null) { Shutdown(); return; }
             if (Services.ApplicationUpdateStartup.RedirectInstalledLaunch(e.Args)) { Shutdown(); return; }
         }
         catch (Exception error)
         {
-            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch)
+            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch)
             {
-                Services.OwnedProcessRegistry.Log(AudioShellLaunch ? "audio_shell_launch_failed" : "image_shell_launch_failed", "Application", detail: error.GetType().Name);
+                Services.OwnedProcessRegistry.Log(VideoFileLaunch ? "video_file_launch_failed" : AudioShellLaunch ? "audio_shell_launch_failed" : "image_shell_launch_failed", "Application", detail: error.GetType().Name);
                 Shutdown(1); return;
             }
             var localization = new Services.LocalizationService();
@@ -77,15 +88,20 @@ public partial class App : System.Windows.Application
         try
         {
             base.OnStartup(e);
+            Services.OwnedProcessRegistry.Log("startup_window_construct_begin", "Application", Environment.ProcessId);
             var window = new MainWindow(); MainWindow = window;
+            Services.OwnedProcessRegistry.Log("startup_window_construct_end", "Application", Environment.ProcessId);
             _instance.OpenRequested += () => Dispatcher.BeginInvoke(window.OpenFromSecondInstance);
-            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || (BackgroundLaunch && window.CanStartInTray))
+            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || (BackgroundLaunch && window.CanStartInTray))
             {
                 Services.ApplicationBackgroundOperations.PreserveHiddenWork = true;
                 new System.Windows.Interop.WindowInteropHelper(window).EnsureHandle();
             }
             else window.Show();
-            if (!VectorFileLaunch) window.CompleteApplicationStartup();
+            Services.OwnedProcessRegistry.Log(window.IsVisible ? "startup_window_visible" : "startup_window_background", "Application", Environment.ProcessId);
+            if (!VectorFileLaunch && !VideoFileLaunch) window.CompleteApplicationStartup();
+            if (videoRequest is not null) window.AcceptVideoFile(videoRequest);
+            _instance.SetVideoHandler(request => Dispatcher.InvokeAsync(() => window.AcceptVideoFile(request)).Task);
             if (vectorRequest is not null) _ = window.AcceptVectorFileAsync(vectorRequest);
             _instance.SetVectorHandler(request => Dispatcher.InvokeAsync(() => window.AcceptVectorFileAsync(request)).Task.Unwrap());
             if (imageRequest is not null) window.AcceptImageShellRequest(imageRequest);
@@ -94,9 +110,9 @@ public partial class App : System.Windows.Application
             _instance.SetAudioShellHandler(request => Dispatcher.InvokeAsync(() => window.AcceptAudioShellRequest(request)).Task);
             _instance.DeliverPendingOpen();
         }
-        catch (Exception error) when (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch)
+        catch (Exception error) when (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch)
         {
-            Services.OwnedProcessRegistry.Log(AudioShellLaunch ? "audio_shell_startup_failed" : "image_shell_startup_failed", "Application", detail: error.GetType().Name);
+            Services.OwnedProcessRegistry.Log(VideoFileLaunch ? "video_file_startup_failed" : AudioShellLaunch ? "audio_shell_startup_failed" : "image_shell_startup_failed", "Application", detail: error.GetType().Name);
             Shutdown(1);
         }
     }

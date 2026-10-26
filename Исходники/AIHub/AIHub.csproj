@@ -21,9 +21,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Tools\VideoNarrators\**\*" Exclude="Tools\VideoNarrators\**\__pycache__\**;Tools\VideoNarrators\**\*.pyc" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\VideoNarratorSamples\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\VideoEditor\ffmpeg-8.1.3-editor-1\**\*" Link="VideoEditorRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\video-editor-runtime-files.json" LogicalName="AIHub.VideoEditorRuntimeManifest" />
+    <EmbeddedResource Include="Content\VideoEditorPreview.js" LogicalName="AIHub.VideoEditorPreviewScript" />
+    <EmbeddedResource Include="Content\VideoEditorFraming.js" LogicalName="AIHub.VideoEditorFramingScript" />
     <Content Include="..\..\Runtime\Svg\resvg-0.47.0\**\*" Link="VectorRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\vector-renderer-files.json" LogicalName="AIHub.VectorRendererManifest" />
-    <Content Include="..\..\Runtime\MusicScore\score-c3e214f3-3\**\*" Link="MusicScoreRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\MusicScore\score-c3e214f3-4\**\*" Link="MusicScoreRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\**\*" Link="MusicLoraStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\BookSmart\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\BookConverter\calibre-9.16.0\**\*" Link="BookConverterRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -118,6 +124,7 @@
     <EmbeddedResource Include="Content\VectorEditorCommands.js" LogicalName="AIHub.VectorEditorCommands" />
     <EmbeddedResource Include="Content\VectorEditorPlastic.js" LogicalName="AIHub.VectorEditorPlastic" />
     <Content Include="Assets\SvgFileIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\VideoFileIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Licenses\**\*"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Installer\bootstrap-v1.txt"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Localization\*.json">

@@ -112,12 +112,16 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        var startupClock = System.Diagnostics.Stopwatch.StartNew();
+        void StartupMark(string phase) => OwnedProcessRegistry.Log("startup_constructor", "Application", Environment.ProcessId, phase + "; elapsedMs=" + startupClock.ElapsedMilliseconds);
+        StartupMark("enter");
         _userContextService = new UserContextService(_userProfileStore, new IpLocationService());
         _executorWorkflowService = new ExecutorWorkflowService(_userContextService);
         _executorWorkflowService.KnowledgeTreeChanged += ExecutorWorkflowService_KnowledgeTreeChanged;
         _executorWorkflowService.CheckpointChanged += ExecutorWorkflowService_CheckpointChanged;
         _choiceScenarioOrchestrator = new ChoiceScenarioOrchestrator(_choiceScenarioService);
         InitializeComponent();
+        StartupMark("xaml");
         Title = $"{ProductBrand.WindowsName} {GetAppVersion()}";
         _profileBlinkTimer.Interval = TimeSpan.FromMilliseconds(760);
         _profileBlinkTimer.Tick += ProfileBlinkTimer_Tick;
@@ -133,6 +137,7 @@ public partial class MainWindow : Window
         InitializeLocalization();
         InitializeInterfaceSettings();
         InitializeComponentLicenses();
+        StartupMark("settings-licenses");
         _coreSpeechCoordinator = new CoreSpeechPresentationCoordinator(
             new CoreVoiceEngineRouter(new EspeakCoreVoiceEngine(), new RhVoiceCoreVoiceEngine()));
         _executorSpeechCoordinator = new CoreSpeechPresentationCoordinator(
@@ -141,6 +146,7 @@ public partial class MainWindow : Window
         InitializeScenarioNavigation();
         InitializeMusicPreparation();
         ApplyLocalization();
+        StartupMark("localization");
         ChoiceOptionsItemsControl.ItemsSource = _choiceScenarioOptions;
         ExecutorClarificationOptionsItemsControl.ItemsSource = _executorClarificationOptions;
         ExecutorCandidateItemsControl.ItemsSource = _executorCandidateOptions;
@@ -148,14 +154,21 @@ public partial class MainWindow : Window
         ChoiceSessionFilesItemsControl.ItemsSource = _sessionFileCards;
         ExecutorSessionFilesItemsControl.ItemsSource = _sessionFileCards;
         InitializeAppData();
+        StartupMark("app-data");
         InitializeImageInput();
         InitializeComponentCatalogUi();
         InitializeManagedModelsUi();
+        StartupMark("component-model-ui");
         RefreshPreviousSessions();
+        StartupMark("previous-sessions");
         LoadCoreVoiceSettingsIntoControls();
+        StartupMark("core-voice-settings");
         LoadCoreAutonomySettingsIntoControls();
+        StartupMark("autonomy-settings");
         LoadModelDownloadSettingsIntoControls();
+        StartupMark("download-settings");
         LoadInterfaceSettingsIntoControls();
+        StartupMark("sessions-settings");
         UpdateCoreVoiceControls();
         _ = RefreshModelCatalogOnStartupAsync();
         UpdatePrimaryActionButton();
@@ -164,8 +177,10 @@ public partial class MainWindow : Window
         InitializeScreenCapture();
         InitializeApplicationTray();
         InitializeBackgroundOperations();
+        StartupMark("background");
         InitializeComponentAudit();
         InitializeDictation();
+        StartupMark("complete");
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -1621,11 +1636,12 @@ public partial class MainWindow : Window
         var culture = _appSettings.LanguageCode.StartsWith("ru", StringComparison.OrdinalIgnoreCase)
             ? CultureInfo.GetCultureInfo("ru-RU")
             : CultureInfo.GetCultureInfo("en-US");
+        var executorLookup = new SessionExecutorLookup(() => _choiceModelDiscoveryService.Discover(_storageSettings));
         foreach (var session in sessions)
         {
             var canResume = session.Status != ResumableSessionStatuses.Unavailable;
             var requiresDownload = HasExecutorSelection(session)
-                && FindInstalledExecutorArtifact(session) is null;
+                && executorLookup.Find(session) is null;
             _previousSessionCards.Add(new ResumableSessionCardViewModel
             {
                 Session = session,
@@ -1685,52 +1701,7 @@ public partial class MainWindow : Window
         || session.Executor is not null;
 
     private ExecutorModelArtifact? FindInstalledExecutorArtifact(ResumableScenarioSession session)
-    {
-        var saved = session.Executor?.Artifact ?? session.ExecutorArtifact;
-        if (saved is { IsInstalled: true }
-            && !string.IsNullOrWhiteSpace(saved.InstalledPath)
-            && File.Exists(saved.InstalledPath))
-        {
-            return saved;
-        }
-
-        var requestedNames = new[]
-            {
-                session.SelectedExecutorModel,
-                saved?.RepoId,
-                saved?.RequestedModel,
-                session.Executor?.Handoff.ProgramFacts
-                    .FirstOrDefault(item => item.Name == "selected_executor")?.Value
-            }
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Select(value => value!)
-            .ToArray();
-        var discovered = _choiceModelDiscoveryService.Discover(_storageSettings)
-            .FirstOrDefault(model =>
-                string.Equals(model.Role, "executor", StringComparison.OrdinalIgnoreCase)
-                && model.IsRunnable
-                && requestedNames.Any(requested =>
-                    string.Equals(model.Name, requested, StringComparison.OrdinalIgnoreCase)
-                    || requested.Contains(model.Name, StringComparison.OrdinalIgnoreCase)
-                    || model.Name.Contains(requested, StringComparison.OrdinalIgnoreCase)));
-        if (discovered is null)
-        {
-            return null;
-        }
-
-        return new ExecutorModelArtifact
-        {
-            RequestedModel = saved?.RequestedModel ?? session.SelectedExecutorModel,
-            RepoId = string.IsNullOrWhiteSpace(saved?.RepoId) ? discovered.Name : saved.RepoId,
-            FileName = Path.GetFileName(discovered.Path),
-            Quantization = saved?.Quantization ?? string.Empty,
-            License = saved?.License ?? string.Empty,
-            Architecture = saved?.Architecture ?? string.Empty,
-            SizeBytes = discovered.SizeBytes,
-            IsInstalled = true,
-            InstalledPath = discovered.Path
-        };
-    }
+        => new SessionExecutorLookup(() => _choiceModelDiscoveryService.Discover(_storageSettings)).Find(session);
 
     private void PreviousWorkSelectionCheckBox_Click(object sender, RoutedEventArgs e) =>
         UpdatePreviousWorkSelectionPanel();

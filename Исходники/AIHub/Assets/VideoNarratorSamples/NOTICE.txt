@@ -1,0 +1,41 @@
+LOPATA narrator evaluation examples / Оценочные примеры дикторов
+
+These are generated audio examples of the user's test text, not model weights,
+voice clones, endorsements, or recordings of the upstream authors. Original
+spellings Лопата and LOPATA are intentionally kept in both languages.
+Exception requested by the user on 2026-10-26: the Vosk Russian example
+uses Лопата in both sentences, since its native frontend rejects Latin text.
+One default speaker per model is demonstrated. Language support and synthesis
+quality are model-specific. No other model or voice was substituted.
+Experimental entries test foreign-language text through that model's native
+pipeline: language is the text language, synthesisLanguage is the actual native
+pipeline, experimental is true. This does not add advertised language support.
+Unsuccessful attempts are listed separately in unavailable.json.
+
+samples.json records the exact text, speaker, model sources and actual execution
+revisions; each WAV embeds LOPATA provenance. PCM16 audio is copied unchanged
+from the model run, apart from the application's embedded metadata.
+
+Credits / Сведения об авторах моделей:
+Kokoro: hexgrad and contributors; Russian voice Sveta: zaakirio.
+Vosk-TTS: Alpha Cephei and contributors.
+KittenTTS 2: KittenML / Stellon Labs. Powered by Stellon Labs. Powered by KittenML.
+Qwen3-TTS and CosyVoice: Qwen / Alibaba and contributors.
+Supertonic: Supertone and contributors; pinned mirror jiangzhuo9357/supertonic-3.
+Orpheus: Canopy AI and contributors; isaiahbjork GGUF; SNAC by Hubert Siuzdak.
+Silero: Silero Team / snakers4 and contributors.
+
+Original upstream model/runtime terms are shipped under Licenses/texts and
+listed in Licenses/catalog.json. These examples do not grant model rights.
+Kitten outputs are distinct from model derivatives; the output-use restrictions
+in the Stellon Labs Community License still apply. Supertonic output use remains
+subject to Open RAIL-M. Silero's supplied LICENSE says CC BY-NC-SA 4.0, while
+its README badge says CC BY-NC 4.0; this discrepancy is retained explicitly.
+The Silero example is supplied for non-commercial evaluation, with attribution;
+commercial rights are not claimed. No model weights are bundled with these files.
+
+Sources checked 2026-10-26:
+https://huggingface.co/KittenML/kitten-tts-2/blob/main/LICENSE.md
+https://huggingface.co/Supertone/supertonic-3/blob/main/LICENSE
+https://github.com/snakers4/silero-models/blob/master/LICENSE
+Other per-model sources and licenses: samples.json and Licenses/catalog.json.

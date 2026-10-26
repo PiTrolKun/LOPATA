@@ -104,6 +104,7 @@ Filename: "{#UpdateHost}"; Parameters: "--launch"; Description: "{cm:LaunchLopat
 [UninstallRun]
 Filename: "{app}\{#AppExeName}"; Parameters: "--remove-book-shell"; Flags: runhidden skipifdoesntexist; RunOnceId: "RemoveOwnedBookShellVerbs"
 Filename: "{app}\{#AppExeName}"; Parameters: "--remove-vector-shell"; Flags: runhidden skipifdoesntexist; RunOnceId: "RemoveOwnedSvgAssociations"
+Filename: "{app}\{#AppExeName}"; Parameters: "--remove-video-shell"; Flags: runhidden skipifdoesntexist; RunOnceId: "RemoveOwnedVideoAssociations"
 
 [Code]
 type

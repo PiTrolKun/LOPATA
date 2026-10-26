@@ -31,6 +31,7 @@ public static class ScenarioNavigationCatalog
     public const string RagBooks = "rag_book_preparation";
     public const string Metadata = "file_metadata";
     public const string LyricVideo = "music_video";
+    public const string VideoEditor = "video_editor";
     public const string BookConversion = "text_to_book";
     public const string Dictation = "voice_input";
 
@@ -59,6 +60,8 @@ public static class ScenarioNavigationCatalog
         Node("utilities_video", ScenarioNavigationKind.Group, Utilities, "LyricVideo.Group", "", "tools"),
         Node(LyricVideo, ScenarioNavigationKind.Scenario, "utilities_video", "LyricVideo.Title", "LyricVideo.Description", "tools",
             tags: ["lyric_video", "matrix_rain", "video_rain_text"], related: [Music]),
+        Node(VideoEditor, ScenarioNavigationKind.Scenario, "utilities_video", "VideoEditor.Title", "VideoEditor.Description", "tools",
+            tags: ["video_editor", "video_narration", "video_subtitles", "video_svg"], related: [VectorGeneration, Capture]),
         Node(ImageUtility, ScenarioNavigationKind.Scenario, "utilities_images", "ImageUtility.Title", "ImageUtility.Description", "tools",
             tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
@@ -94,6 +97,10 @@ public static class ScenarioNavigationCatalog
         Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),
         Tag("book_view", BookConversion), Tag("book_editor", BookConversion), Tag("book_smart", BookConversion), Tag("book_logs", BookConversion),
         Tag("lyric_video", LyricVideo), Tag("matrix_rain", LyricVideo), Tag("video_rain_text", LyricVideo),
+        Tag("video_editor", VideoEditor), Tag("video_narration", VideoEditor), Tag("video_subtitles", VideoEditor), Tag("video_svg", VideoEditor),
+        Tag("video_linked_selection", VideoEditor), Tag("video_audio_stretch", VideoEditor), Tag("video_waveform", VideoEditor),
+        Tag("video_project_archive", VideoEditor), Tag("video_expanded_preview", VideoEditor),
+        Tag("video_background_music", VideoEditor), Tag("video_narrator_models", VideoEditor),
         Tag("music_preparation", Music), Tag("music_ace_ideas", Music), Tag("music_ace_retake", Music), Tag("music_score_plans", Music), Tag("music_score_editor", Music), Tag("music_score_sections", Music), Tag("music_midi", Music), Tag("music_melody", Music),
         Tag("music_poetry", Music), Tag("music_poetry_sessions", Music), Tag("music_poetry_assembly", Music),
         Tag("music_generation", Music), Tag("music_poetry_reasoning", Music), Tag("music_lyrics_sync", Music), Tag("music_poetry_search", Music),

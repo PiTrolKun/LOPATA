@@ -157,7 +157,7 @@ foreach($entryFile in @('image-generation-entries.json','image-utility-entries.j
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
  }
 }
-foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entries.json','music-lora-entries.json','music-stems-entries.json','music-cover-entries.json','music-midi-entries.json','dictation-entries.json','svg-entries.json')) {
+foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entries.json','music-lora-entries.json','music-stems-entries.json','music-cover-entries.json','music-midi-entries.json','dictation-entries.json','svg-entries.json','video-narrator-entries.json')) {
  $engineEntries=Join-Path $dest $entryFile
  if(Test-Path -LiteralPath $engineEntries) {
   foreach($entry in @(Get-Content -LiteralPath $engineEntries -Raw | ConvertFrom-Json)) { $entries.Add($entry) }

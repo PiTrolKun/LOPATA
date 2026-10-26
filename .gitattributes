@@ -14,6 +14,7 @@
 *.sln text eol=crlf
 *.png binary
 *.ico binary
+Исходники/AIHub/Assets/VideoNarratorSamples/*.wav binary
 
 LICENSE text eol=lf
 VERSION text eol=lf
@@ -74,3 +75,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 # Original supplied SVG icon and editor idea retain their exact bytes.
 Данные_для_внедрения/Иконки/SVG/SvgFileIcon.svg -text -eol -whitespace
 "ТЗ/Архив/SVG-просмотрщик и редактор-конструктор.md" -text -eol -whitespace
+
+# Original upstream KittenTTS license retains its exact bytes.
+Исходники/AIHub/Licenses/texts/VideoNarrator-Kitten2-LICENSE.txt -text -eol -whitespace

@@ -34,6 +34,9 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.LyricVideo:
                     OpenLyricVideoUtility();
                     break;
+                case ScenarioNavigationCatalog.VideoEditor:
+                    OpenVideoEditorUtility();
+                    break;
                 case ScenarioNavigationCatalog.Metadata:
                     OpenMetadataUtility();
                     break;

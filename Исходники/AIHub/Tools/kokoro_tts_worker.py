@@ -41,6 +41,7 @@ class _CompatibleTokenTypeIdsShim:
 
 class KokoroWorker:
     def __init__(self) -> None:
+        self.device = 'cpu'
         self.language = ""
         self.model = None
         self.voice = None
@@ -51,11 +52,12 @@ class KokoroWorker:
         self.np = None
         self.last_diagnostics = "worker_created"
 
-    def load(self, language: str, model_directory: str) -> tuple[bool, int]:
+    def load(self, language: str, model_directory: str, device: str = 'cpu') -> tuple[bool, int]:
+        self.device = device
         language = "en" if str(language).lower().startswith("en") else "ru"
         root = Path(model_directory).resolve()
-        self.last_diagnostics = f"stage=load; language={language}; modelDirectory={root}; device=cpu"
-        if self.model is not None and self.language == language:
+        self.last_diagnostics = f"stage=load; language={language}; modelDirectory={root}; device={device}"
+        if self.model is not None and self.language == language and str(self.model.device) == device:
             return True, 0
 
         started = time.perf_counter()
@@ -87,7 +89,7 @@ class KokoroWorker:
                 repo_id="hexgrad/Kokoro-82M" if language == "en" else "zaakirio/kokoro-ru",
                 config=str(config),
                 model=str(weights),
-            ).to("cpu").eval()
+            ).to(device).eval()
             voice = torch.load(str(voice_path), map_location="cpu", weights_only=False)
             if language == "en":
                 pipeline = KPipeline(
@@ -139,7 +141,7 @@ class KokoroWorker:
         voice_shape = tuple(voice.shape) if hasattr(voice, "shape") else type(voice).__name__
         frontend = type(pipeline).__name__ if pipeline is not None else type(g2p).__name__
         self.last_diagnostics = (
-            f"stage=loaded; language={language}; device=cpu; "
+            f"stage=loaded; language={language}; device={self.device}; "
             f"torch={torch.__version__}; frontend={frontend}; "
             f"voice={self.voice_name}; voiceShape={voice_shape}; "
             f"ruTokenizerCompat={tokenizer_compat['status']}"
@@ -160,7 +162,7 @@ class KokoroWorker:
         speed = min(max(float(speed), 0.7), 1.6)
         chunks = split_text(text)
         self.last_diagnostics = (
-            f"stage=synthesize; language={self.language}; device=cpu; "
+            f"stage=synthesize; language={self.language}; device={self.device}; "
             f"voice={self.voice_name}; "
             f"textChars={len(text)}; textChunks={len(chunks)}"
         )
@@ -195,7 +197,7 @@ class KokoroWorker:
         audio = self.np.concatenate(joined) * volume
         write_wave(Path(output_path), audio, self.np)
         self.last_diagnostics = (
-            f"stage=synthesized; language={self.language}; device=cpu; "
+            f"stage=synthesized; language={self.language}; device={self.device}; "
             f"voice={self.voice_name}; "
             f"textChars={len(text)}; textChunks={len(chunks)}; "
             f"phonemeChars={phoneme_count}; audioParts={len(audio_parts)}; "

@@ -16,20 +16,22 @@ internal sealed class SingleApplicationInstance : IDisposable
     private readonly TaskCompletionSource<Func<ImageShellRequest, Task>> _imageHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<AudioShellRequest, Task>> _audioHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<VectorEditor.VectorFileRequest, Task>> _vectorHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<Func<VideoEditor.VideoFileRequest, Task>> _videoHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public event Action? OpenRequested;
     private int _pendingOpen;
 
     private SingleApplicationInstance(Mutex mutex, string pipe)
     { _mutex = mutex; _pipe = pipe; _server = ListenAsync(); }
 
-    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null)
+    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null, VideoEditor.VideoFileRequest? videoRequest = null)
     {
         var identity = Environment.UserDomainName + "\\" + Environment.UserName + "|" + Path.GetFullPath(AppContext.BaseDirectory).ToUpperInvariant();
         var name = "LOPATA-" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..32];
         var mutex = new Mutex(true, @"Local\" + name, out var first);
         if (first) return new(mutex, name);
         mutex.Dispose();
-        if (vectorRequest is not null)
+        if (videoRequest is not null) SendVideoAsync(name, videoRequest).GetAwaiter().GetResult();
+        else if (vectorRequest is not null)
         {
             SendVectorAsync(name, vectorRequest).GetAwaiter().GetResult();
         }
@@ -55,6 +57,16 @@ internal sealed class SingleApplicationInstance : IDisposable
 
     public void SetAudioShellHandler(Func<AudioShellRequest, Task> handler) => _audioHandler.TrySetResult(handler);
     public void SetVectorHandler(Func<VectorEditor.VectorFileRequest, Task> handler) => _vectorHandler.TrySetResult(handler);
+    public void SetVideoHandler(Func<VideoEditor.VideoFileRequest, Task> handler) => _videoHandler.TrySetResult(handler);
+
+    private static async Task SendVideoAsync(string name, VideoEditor.VideoFileRequest request)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        await using var pipe = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        await pipe.ConnectAsync(timeout.Token).ConfigureAwait(false); await VideoEditor.VideoFileProtocol.WriteAsync(pipe, request, timeout.Token).ConfigureAwait(false);
+        var answer = new byte[1]; await pipe.ReadExactlyAsync(answer, timeout.Token).ConfigureAwait(false);
+        if (answer[0] != ImageShellProtocol.Accepted) throw new IOException("Video project request was not accepted.");
+    }
 
     private static async Task SendVectorAsync(string name, VectorEditor.VectorFileRequest request)
     {
@@ -120,6 +132,14 @@ internal sealed class SingleApplicationInstance : IDisposable
                     read.CancelAfter(TimeSpan.FromSeconds(30));
                     var handler = await _audioHandler.Task.WaitAsync(read.Token).ConfigureAwait(false);
                     await AudioShellProtocol.ReceiveAsync(pipe, handler, read.Token).ConfigureAwait(false);
+                }
+                else if (request[0] == VideoEditor.VideoFileProtocol.Marker)
+                {
+                    read.CancelAfter(TimeSpan.FromSeconds(30));
+                    var item = await VideoEditor.VideoFileProtocol.ReadAsync(pipe, read.Token).ConfigureAwait(false);
+                    var handler = await _videoHandler.Task.WaitAsync(read.Token).ConfigureAwait(false);
+                    await handler(item).WaitAsync(read.Token).ConfigureAwait(false);
+                    await pipe.WriteAsync(new byte[] { ImageShellProtocol.Accepted }, read.Token).ConfigureAwait(false); await pipe.FlushAsync(read.Token).ConfigureAwait(false);
                 }
                 else if (request[0] == VectorEditor.VectorFileProtocol.Marker)
                 {
