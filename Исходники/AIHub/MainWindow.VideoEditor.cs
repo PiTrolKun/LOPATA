@@ -14,6 +14,18 @@ public partial class MainWindow
         await _videoFileGate.WaitAsync();
         try {
             request = request.Validate(); StatusText.Text = L("VideoEditor.OpeningArchive");
+            if (Path.GetExtension(request.Path).Equals(".lopataAIVid", StringComparison.OrdinalIgnoreCase))
+            {
+                OpenFromSecondInstance();
+                ShowWorkStartPage();
+                if (WorkStartPage.Visibility != System.Windows.Visibility.Visible) return;
+                foreach (var page in new System.Windows.FrameworkElement[] { FinancialPage, CapturePage, GenerationPage, ImageUtilityPage, MusicPage, VectorPage, RagBooksPageHost })
+                    page.Visibility = System.Windows.Visibility.Collapsed;
+                ScenarioNavigationPage.Visibility = System.Windows.Visibility.Visible;
+                ScenarioNavigationPage.OpenScenario(ScenarioNavigationCatalog.VideoGeneration);
+                await ScenarioNavigationPage.VideoPreparation!.OpenPathWhenReadyAsync(request.Path, ApplicationBackgroundOperations.ExitToken);
+                RefreshScenarioNavigationState(); return;
+            }
             if (_videoEditor is {} open && await Task.Run(() => VideoProjectArchive.DescribeId(request.Path)) == open.ProjectId) {
                 open.Show(); if (open.WindowState == System.Windows.WindowState.Minimized) open.WindowState = System.Windows.WindowState.Normal; open.Activate(); return;
             }
@@ -48,6 +60,7 @@ public partial class MainWindow
     {
         if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name != typeof(MainWindow).Assembly.GetName().Name || Environment.ProcessPath is not {} executable) return;
         new VideoShellIntegration(executable).Apply(true, L("VideoEditor.FileType"));
+        new VideoShellIntegration(executable, preparation: true).Apply(true, L("VideoPrep.FileType"));
     }
     private void RegisterVideoEditorOperations()
     {

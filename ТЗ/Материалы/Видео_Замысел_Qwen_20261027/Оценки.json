@@ -1,0 +1,418 @@
+{
+  "program": "LOPATA",
+  "version": "0.6.38-dev",
+  "date": "2026-10-27",
+  "evaluator": "Codex, editorial judgement",
+  "scale": "0-10, weighted rubric in Методика.md",
+  "scope": "one request, one response per level, thinking disabled",
+  "models": [
+    {
+      "id": "executor",
+      "name": "Qwen3.6-27B Q4_K_M",
+      "score": 8.2,
+      "levels": [
+        {
+          "level": 1,
+          "score": 8.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 2.0,
+            "coherence": 1.8,
+            "language": 1.1,
+            "usefulness": 1.1
+          },
+          "comment": "Лучше других совместил сохранение героя, событий и запрета на хоррор со связным описанием. Небольшие отступления: «кого-то или что-то», жанровая трактовка и лишний раздел об отсутствии вопросов.",
+          "generationSeconds": 49.26,
+          "finish": "stop",
+          "source": "executor-1.result.json",
+          "answer": "executor-1.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 2,
+          "score": 8.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 2.0,
+            "coherence": 1.8,
+            "language": 1.1,
+            "usefulness": 1.1
+          },
+          "comment": "Хорошо развил атмосферу и финал, сохранив узнаваемую историю. Есть лишняя детализация одежды, лестницы/комнаты и несколько навязанных трактовок памяти.",
+          "generationSeconds": 91.65,
+          "finish": "stop",
+          "source": "executor-2.result.json",
+          "answer": "executor-2.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 3,
+          "score": 7.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.7,
+            "coherence": 1.6,
+            "language": 0.7,
+            "usefulness": 1.0
+          },
+          "comment": "Условия выдержаны, но версия перегружена вариантами «или», есть ошибки «не бежит и не озирался» и неуместное «скарифицированным». Переработка преимущественно атмосферная, без сильного нового поворота.",
+          "generationSeconds": 100.67,
+          "finish": "stop",
+          "source": "executor-3.result.json",
+          "answer": "executor-3.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        }
+      ],
+      "evidence": "...в одном из окон горит свет, однако при осмотре выясняется, что дом совершенно пуст и никого в нём нет.",
+      "placement": "Hybrid",
+      "gpuLayers": 51,
+      "meanGenerationSeconds": 80.53
+    },
+    {
+      "id": "core",
+      "name": "Qwen3-8B Q4_K_M (ядро)",
+      "score": 7.5,
+      "levels": [
+        {
+          "level": 1,
+          "score": 8.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.5,
+            "coherence": 1.8,
+            "language": 1.2,
+            "usefulness": 1.0
+          },
+          "comment": "Сохранил основные события и запреты, но на уровне 1 добавил знакомый дом и новые детали; в перечне правок часть добавлений названа уточнениями.",
+          "generationSeconds": 3.17,
+          "finish": "stop",
+          "source": "core-1.result.json",
+          "answer": "core-1.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 2,
+          "score": 8.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.8,
+            "coherence": 1.7,
+            "language": 1.0,
+            "usefulness": 1.0
+          },
+          "comment": "На уровне 2 расширение умеренное, ситуация остаётся узнаваемой; текст и объяснения местами повторяют исходник.",
+          "generationSeconds": 3.45,
+          "finish": "stop",
+          "source": "core-2.result.json",
+          "answer": "core-2.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 3,
+          "score": 6.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.0,
+            "coherence": 1.6,
+            "language": 1.0,
+            "usefulness": 0.4
+          },
+          "comment": "Текст замысла почти совпал с уровнем 1, а в конце прямо написано «всё в рамках ... уровня свободы 1», хотя запрос задан для 3.",
+          "generationSeconds": 3.95,
+          "finish": "stop",
+          "source": "core-3.result.json",
+          "answer": "core-3.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        }
+      ],
+      "evidence": "Наконец он находит дом, который выглядит знакомым.",
+      "placement": "GPU",
+      "gpuLayers": 37,
+      "meanGenerationSeconds": 3.52
+    },
+    {
+      "id": "profile-katarau",
+      "name": "Katarau 9B",
+      "score": 7.0,
+      "levels": [
+        {
+          "level": 1,
+          "score": 7.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 2.3,
+            "coherence": 1.4,
+            "language": 0.6,
+            "usefulness": 0.7
+          },
+          "comment": "Бережно сохранил почти весь исходник, без лишних событий, но результат очень краткий и содержит неудачную фразу «света оттуда, людей нет».",
+          "generationSeconds": 1.21,
+          "finish": "stop",
+          "source": "profile-katarau-1.result.json",
+          "answer": "profile-katarau-1.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 2,
+          "score": 7.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.5,
+            "coherence": 1.5,
+            "language": 0.9,
+            "usefulness": 0.6
+          },
+          "comment": "В основном сжал исходный текст. Рабочая основа сохранена, но дополнительная редакторская польза и развитие невелики.",
+          "generationSeconds": 1.11,
+          "finish": "stop",
+          "source": "profile-katarau-2.result.json",
+          "answer": "profile-katarau-2.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 3,
+          "score": 6.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.2,
+            "coherence": 1.4,
+            "language": 0.9,
+            "usefulness": 0.5
+          },
+          "comment": "Ответ дословно совпал с уровнем 2. Сильная переработка разрешена, а не обязательна; штраф относится к слабой полезности и отсутствию заметной реакции на переключение, а не к самому сохранению сюжета.",
+          "generationSeconds": 1.14,
+          "finish": "stop",
+          "source": "profile-katarau-3.result.json",
+          "answer": "profile-katarau-3.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        }
+      ],
+      "evidence": "Ответы уровней 2 и 3 полностью одинаковы.",
+      "placement": "GPU",
+      "gpuLayers": 33,
+      "meanGenerationSeconds": 1.15
+    },
+    {
+      "id": "gamma",
+      "name": "Qwen3.8-27B-Ridge (Гамма)",
+      "score": 7.0,
+      "levels": [
+        {
+          "level": 1,
+          "score": 6.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 0.5,
+            "coherence": 1.4,
+            "language": 0.9,
+            "usefulness": 0.7
+          },
+          "comment": "На уровне 1 без разрешения поменяла мужчину на девушку и объяснила это «более универсальным образом». Также изменила неизвестность поиска на невозможность вспомнить конкретного человека.",
+          "generationSeconds": 10.24,
+          "finish": "stop",
+          "source": "gamma-1.result.json",
+          "answer": "gamma-1.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 2,
+          "score": 7.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.4,
+            "coherence": 1.3,
+            "language": 0.9,
+            "usefulness": 0.9
+          },
+          "comment": "Атмосфера и основные события сохранены, но герой сразу ищет «несуществующего», а свет без источника объявлен нарушением физики. Исходная неопределённость стала более определённой мистической трактовкой.",
+          "generationSeconds": 14.67,
+          "finish": "stop",
+          "source": "gamma-2.result.json",
+          "answer": "gamma-2.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 3,
+          "score": 8.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 2.0,
+            "coherence": 1.5,
+            "language": 0.9,
+            "usefulness": 1.1
+          },
+          "comment": "Свободная версия цельнее, допустимо усилила тему пустоты и контраст света. Есть неестественные обороты вроде «выморочным временем» и сомнительная логика завершённого поиска.",
+          "generationSeconds": 13.66,
+          "finish": "stop",
+          "source": "gamma-3.result.json",
+          "answer": "gamma-3.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        }
+      ],
+      "evidence": "Изменён пол главного героя (из «мужика» на «девушку») для устранения гендерно-привязанной лексики",
+      "placement": "GPU",
+      "gpuLayers": 66,
+      "meanGenerationSeconds": 12.86
+    },
+    {
+      "id": "beta",
+      "name": "Qwen3.8-9B-Distill (Бета)",
+      "score": 5.3,
+      "levels": [
+        {
+          "level": 1,
+          "score": 4.5,
+          "criteria": {
+            "conditions": 2.0,
+            "freedomAndHonesty": 0.3,
+            "coherence": 1.0,
+            "language": 0.7,
+            "usefulness": 0.5
+          },
+          "comment": "На бережном уровне добавлены название, фото/телефон, силуэт, гаснущий свет и следы; вместо связного замысла составлен список сцен. Есть противоречие: свет пульсирует, но ниже заявлено отсутствие пульсации.",
+          "generationSeconds": 6.38,
+          "finish": "stop",
+          "source": "beta-1.result.json",
+          "answer": "beta-1.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 2,
+          "score": 5.0,
+          "criteria": {
+            "conditions": 2.0,
+            "freedomAndHonesty": 0.6,
+            "coherence": 1.0,
+            "language": 0.9,
+            "usefulness": 0.5
+          },
+          "comment": "Для уровня 2 слишком сильно изменена идея: герой забыл своё имя, свет объявлен иллюзией, добавлены реплика зрителю и указания камеры.",
+          "generationSeconds": 9.4,
+          "finish": "stop",
+          "source": "beta-2.result.json",
+          "answer": "beta-2.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 3,
+          "score": 6.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.6,
+            "coherence": 1.0,
+            "language": 0.8,
+            "usefulness": 0.6
+          },
+          "comment": "На уровне 3 свобода уместнее, но остались камера, лишние вопросы о будущей раскадровке, англоязычное reciprocation и нечестный пункт об отсутствии технических деталей.",
+          "generationSeconds": 9.59,
+          "finish": "stop",
+          "source": "beta-3.result.json",
+          "answer": "beta-3.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        }
+      ],
+      "evidence": "Из окна виден силуэт — или это реальная фигура, или лишь отблеск на стене?",
+      "placement": "GPU",
+      "gpuLayers": 34,
+      "meanGenerationSeconds": 8.46
+    },
+    {
+      "id": "profile-abliterated",
+      "name": "Qwen3.5-9B Abliterated",
+      "score": 3.3,
+      "levels": [
+        {
+          "level": 1,
+          "score": 2.5,
+          "criteria": {
+            "conditions": 1.5,
+            "freedomAndHonesty": 0.0,
+            "coherence": 0.3,
+            "language": 0.5,
+            "usefulness": 0.2
+          },
+          "comment": "Уровень 1 полностью заменил историю: вместо дома и света — завод, галлюцинации, горящий/плавящийся станок. Внутренняя логика и русский язык слабые.",
+          "generationSeconds": 6.0,
+          "finish": "stop",
+          "source": "profile-abliterated-1.result.json",
+          "answer": "profile-abliterated-1.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 2,
+          "score": 2.0,
+          "criteria": {
+            "conditions": 0.0,
+            "freedomAndHonesty": 0.0,
+            "coherence": 1.0,
+            "language": 0.5,
+            "usefulness": 0.5
+          },
+          "comment": "Прямой провал запрета на ужастики: девушка со шрамами от ножа, сообщение об убийстве и 37 двойниках. Замысел превратился в сцену мистического хоррора; есть камера, отсутствует требуемое описание изменений.",
+          "generationSeconds": 4.37,
+          "finish": "stop",
+          "source": "profile-abliterated-2.result.json",
+          "answer": "profile-abliterated-2.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        },
+        {
+          "level": 3,
+          "score": 5.5,
+          "criteria": {
+            "conditions": 2.0,
+            "freedomAndHonesty": 1.7,
+            "coherence": 0.8,
+            "language": 0.5,
+            "usefulness": 0.5
+          },
+          "comment": "Свободная версия ближе к исходной атмосфере, но добавлены исчезающий незнакомец и оскорбительная записка, есть нелепые выражения и отсутствует перечень изменений.",
+          "generationSeconds": 3.91,
+          "finish": "stop",
+          "source": "profile-abliterated-3.result.json",
+          "answer": "profile-abliterated-3.txt",
+          "backend": "Vulkan",
+          "device": "NVIDIA GeForce RTX 4090",
+          "context": 8192
+        }
+      ],
+      "evidence": "В этом городе есть ещё 37 человек с твоим лицом",
+      "placement": "GPU",
+      "gpuLayers": 33,
+      "meanGenerationSeconds": 4.76
+    }
+  ]
+}

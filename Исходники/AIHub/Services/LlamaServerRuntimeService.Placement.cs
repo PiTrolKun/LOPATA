@@ -29,6 +29,9 @@ public sealed partial class LlamaServerRuntimeService
         { journal.Record("preference_unavailable", error.Message); }
         var initial = saved ?? new(gpu.UsesGpu ? LlamaPlacementMode.Gpu : LlamaPlacementMode.Cpu,
             gpu.UsesGpu ? memory.BlockCount + 1 : 0, requested);
+        var hybridApproved = false;
+        var cpuApproved = false;
+        if (_poetryGpuAdmission is not null && !recover) initial = await PreferredVideoPlacement(token);
         if (recover && gpu.UsesGpu)
         {
             if (_poetryPlacement?.Mode == LlamaPlacementMode.Gpu)
@@ -39,7 +42,8 @@ public sealed partial class LlamaServerRuntimeService
             }
             else initial = new(LlamaPlacementMode.Cpu, 0, RequestedContextTokens);
         }
-        journal.Record("preference", new { key, reused = saved is not null && !recover, initial });
+        journal.Record("preference", new { key, reused = saved is not null && !recover && _poetryGpuAdmission is null,
+            hint = saved, videoFullGpuPriority = _poetryGpuAdmission is not null, initial });
         var successful = await LlamaStagedStartup.RunAsync(initial, Load, Hybrid, RetirePoetryForRecoveryAsync,
             text => journal.Record("transition", text), token);
         _poetryPlacement = successful;
@@ -53,6 +57,12 @@ public sealed partial class LlamaServerRuntimeService
             var selected = gpu;
             if (placement.Mode == LlamaPlacementMode.Cpu)
             {
+                if (_poetryGpuAdmission is not null && !cpuApproved)
+                {
+                    var decision = await _poetryGpuAdmission(new("cpu_fallback", gpu.Device?.Name ?? "", 0, 0, 0), cancellation);
+                    if (decision != LlamaGpuDecision.Cpu) throw new OperationCanceledException(cancellation);
+                    cpuApproved = true;
+                }
                 selected = await LlamaRuntimeSelector.SelectAsync(0, true, log, cancellation);
                 while (true)
                 {
@@ -84,6 +94,19 @@ public sealed partial class LlamaServerRuntimeService
 
         async Task<LlamaStartupPlacement> Hybrid(CancellationToken cancellation)
         {
+            if (_poetryGpuAdmission is not null && !hybridApproved)
+            {
+                var pressureDevice = await CurrentDevice(cancellation);
+                var decision = await _poetryGpuAdmission(new("gpu_load_failed", pressureDevice.Name,
+                    checked(LlamaDenseMemoryPolicy.GpuRequired(memory, requested) + pressureDevice.TotalBytes / 33), pressureDevice.FreeBytes, pressureDevice.TotalBytes), cancellation);
+                if (decision == LlamaGpuDecision.Retry)
+                {
+                    // The failed worker has been retired by the staged loader before this callback.
+                    return new(LlamaPlacementMode.Gpu, memory.BlockCount + 1, requested);
+                }
+                if (decision != LlamaGpuDecision.Hybrid) throw new OperationCanceledException(cancellation);
+                hybridApproved = true;
+            }
             LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens);
             await Task.Delay(250, cancellation); // Let driver accounting catch up after the retired worker.
             var device = await CurrentDevice(cancellation);
@@ -91,6 +114,39 @@ public sealed partial class LlamaServerRuntimeService
             var layers = layout.HybridLayers(device, LlamaDenseMemoryPolicy.KvBytes(memory, RequestedContextTokens));
             journal.Record("hybrid_plan", new { layers, device, layout.FixedBytes, layout.LayerBytes });
             return new(LlamaPlacementMode.Hybrid, layers, RequestedContextTokens);
+        }
+
+        async Task<LlamaStartupPlacement> PreferredVideoPlacement(CancellationToken cancellation)
+        {
+            if (!gpu.UsesGpu || monitor is null)
+            {
+                var choice = await _poetryGpuAdmission!(new("cpu_fallback", "", 0, 0, 0), cancellation);
+                if (choice != LlamaGpuDecision.Cpu) throw new OperationCanceledException(cancellation);
+                cpuApproved = true; return new(LlamaPlacementMode.Cpu, 0, requested);
+            }
+            var required = LlamaDenseMemoryPolicy.GpuRequired(memory, requested);
+            var device = await CurrentDevice(cancellation);
+            if (!LlamaGpuAdmissionPolicy.FitsHardware(required, device.TotalBytes))
+            { hybridApproved = true; return await PlanHybridOrCpu(cancellation); }
+            while (!LlamaGpuAdmissionPolicy.FitsFree(required, device))
+            {
+                var choice = await _poetryGpuAdmission!(new("gpu_memory_busy", device.Name, checked(required + device.TotalBytes / 33), device.FreeBytes, device.TotalBytes), cancellation);
+                if (choice == LlamaGpuDecision.Hybrid) { hybridApproved = true; return await PlanHybridOrCpu(cancellation); }
+                if (choice != LlamaGpuDecision.Retry) throw new OperationCanceledException(cancellation);
+                await Task.Delay(250, cancellation); device = await CurrentDevice(cancellation);
+            }
+            return new(LlamaPlacementMode.Gpu, memory.BlockCount + 1, requested);
+        }
+        async Task<LlamaStartupPlacement> PlanHybridOrCpu(CancellationToken cancellation)
+        {
+            try { return await Hybrid(cancellation); }
+            catch (IOException error)
+            {
+                journal.Record("video_hybrid_unavailable", error.GetType().Name);
+                var choice = await _poetryGpuAdmission!(new("cpu_fallback", gpu.Device?.Name ?? "", 0, 0, 0), cancellation);
+                if (choice != LlamaGpuDecision.Cpu) throw new OperationCanceledException(cancellation);
+                cpuApproved = true; return new(LlamaPlacementMode.Cpu, 0, requested);
+            }
         }
 
         Task<RuntimeDevice> CurrentDevice(CancellationToken cancellation)

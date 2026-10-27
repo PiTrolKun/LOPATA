@@ -14,16 +14,19 @@ public sealed partial class LlamaServerRuntimeService
     private bool _poetryCanResize;
     private TimeSpan? _poetryStartupTimeout;
     private MusicPoetryReasoningOptions _poetryReasoning = MusicPoetryReasoningOptions.Disabled;
+    private Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? _poetryGpuAdmission;
     private int RequestedContextTokens => _poetryContextTokens ?? CoreContextRuntimeLimits.CurrentBackendContextLimit;
     internal async Task<int> PreparePoetryAsync(DebugModelInfo model, CancellationToken token, string? reasoningMode = null,
         MusicPoetryReasoningPreference? reasoningPreference = null, int? requestedContextTokens = null,
-        MusicPoetryReasoningOptions? reasoningOptions = null, TimeSpan? startupTimeout = null)
+        MusicPoetryReasoningOptions? reasoningOptions = null, TimeSpan? startupTimeout = null,
+        Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? gpuAdmission = null)
     {
         var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token);
         var capacity = Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);
         if (requestedContextTokens is { } requested) capacity = Math.Min(capacity, Math.Max(1024, requested));
         await RetirePoetryAsync();
         _poetryReasoning = reasoningOptions ?? MusicPoetryReasoning.Resolve(model, reasoningMode, reasoningPreference);
+        _poetryGpuAdmission = gpuAdmission;
         _poetryStartupTimeout = startupTimeout;
         _poetryRequestedContextTokens = capacity;
         _poetryContextTokens = capacity;
@@ -34,6 +37,16 @@ public sealed partial class LlamaServerRuntimeService
         try { await PrepareAsync(model, text => _poetryJournal.Record("runtime", text), token); }
         finally { _poetryCanResize = false; }
         return RequestedContextTokens;
+    }
+    internal sealed record SessionInfo(int Pid, string Backend, string Device, string Mode, int Layers, int Context);
+    internal SessionInfo? PoetrySession
+    {
+        get
+        {
+            try { return _process is { HasExited: false } p && _poetryPlacement is { } place && _selectedRuntime is { } selected
+                ? new(p.Id, selected.Bundle.Backend, selected.Device?.Name ?? "CPU", place.Mode.ToString(), place.GpuLayers, RequestedContextTokens) : null; }
+            catch (InvalidOperationException) { return null; }
+        }
     }
     internal async Task RetirePoetryAsync()
     {

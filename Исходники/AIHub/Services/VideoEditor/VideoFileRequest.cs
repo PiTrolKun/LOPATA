@@ -9,7 +9,8 @@ public sealed record VideoFileRequest(string Path)
     public VideoFileRequest Validate()
     {
         if (!System.IO.Path.IsPathFullyQualified(Path) || Path.Length > 32760 || Path.IndexOfAny(['\0', '\r', '\n', '"']) >= 0
-            || !System.IO.Path.GetExtension(Path).Equals(".lopataVideo", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("VideoEditor.InvalidProject");
+            || !(System.IO.Path.GetExtension(Path).Equals(".lopataVideo", StringComparison.OrdinalIgnoreCase)
+                || System.IO.Path.GetExtension(Path).Equals(".lopataAIVid", StringComparison.OrdinalIgnoreCase))) throw new InvalidDataException("VideoEditor.InvalidProject");
         return this with { Path = System.IO.Path.GetFullPath(Path) };
     }
     public static VideoFileRequest? Parse(string[] args)

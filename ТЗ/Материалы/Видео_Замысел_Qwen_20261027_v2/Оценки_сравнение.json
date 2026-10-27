@@ -1,0 +1,226 @@
+{
+  "program": "LOPATA",
+  "version": "0.6.38-dev",
+  "date": "2026-10-27",
+  "evaluator": "Codex, editorial judgement",
+  "scale": "same 0-10 weighted rubric as v1",
+  "scope": "same one request, one response per level, thinking off; only unselected level instructions removed",
+  "models": [
+    {
+      "id": "executor",
+      "name": "Qwen3.6-27B Q4_K_M",
+      "before": 8.2,
+      "after": 8.5,
+      "delta": 0.3,
+      "beforeUnrounded": 8.166666666666666,
+      "afterUnrounded": 8.5,
+      "levels": [
+        {
+          "level": 1,
+          "before": 8.5,
+          "after": 9.0,
+          "delta": 0.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 2.3,
+            "coherence": 1.9,
+            "language": 1.2,
+            "usefulness": 1.1
+          },
+          "comment": "Бережная версия точнее: сохранены мужчина, поиск неизвестного человека, вход в дом и горящий свет; исчезло расширение «кого-то или что-то». Есть лишний раздел об отсутствии вопросов и неточная цитата «веських».",
+          "generationSeconds": 41.97,
+          "finish": "stop",
+          "answer": "executor-1.txt",
+          "source": "executor-1.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/executor-1.txt"
+        },
+        {
+          "level": 2,
+          "before": 8.5,
+          "after": 8.0,
+          "delta": -0.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.8,
+            "coherence": 1.7,
+            "language": 0.9,
+            "usefulness": 1.1
+          },
+          "comment": "Атмосфера развита хорошо, но поиск человека сильнее подменён принятием пустоты; есть варианты «дверь ... или терраса», «стена или просто есть» и ошибка «с физическим угрозам». Поэтому ниже первого результата уровня 2.",
+          "generationSeconds": 90.46,
+          "finish": "stop",
+          "answer": "executor-2.txt",
+          "source": "executor-2.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/executor-2.txt"
+        },
+        {
+          "level": 3,
+          "before": 7.5,
+          "after": 8.5,
+          "delta": 1.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 2.1,
+            "coherence": 1.8,
+            "language": 1.2,
+            "usefulness": 0.9
+          },
+          "comment": "Появилась более цельная новая интерпретация: находка дневника/фотографии, поиск собственного прошлого, принятие. Исправились прежние языковые нелепости. Остались альтернативные предметы вместо одного решения и ненужный крупный план/затемнение.",
+          "generationSeconds": 97.89,
+          "finish": "stop",
+          "answer": "executor-3.txt",
+          "source": "executor-3.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/executor-3.txt"
+        }
+      ],
+      "evidence": "Входит внутрь и обнаруживает горящий свет в окне пустой комнаты.",
+      "placement": "Hybrid",
+      "gpuLayers": 51,
+      "meanGenerationSeconds": 76.77
+    },
+    {
+      "id": "core",
+      "name": "Qwen3-8B Q4_K_M (ядро)",
+      "before": 7.5,
+      "after": 7.5,
+      "delta": 0.0,
+      "beforeUnrounded": 7.5,
+      "afterUnrounded": 7.5,
+      "levels": [
+        {
+          "level": 1,
+          "before": 8.0,
+          "after": 7.5,
+          "delta": -0.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.5,
+            "coherence": 1.3,
+            "language": 1.2,
+            "usefulness": 1.0
+          },
+          "comment": "Знакомый дом из первого теста больше не добавлен, но пропал сам вход героя внутрь; вместо него герой просто находит дом со светом. Перечень изменений ошибочно утверждает удаление несуществовавших лишних деталей.",
+          "generationSeconds": 2.69,
+          "finish": "stop",
+          "answer": "core-1.txt",
+          "source": "core-1.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/core-1.txt"
+        },
+        {
+          "level": 2,
+          "before": 8.0,
+          "after": 8.5,
+          "delta": 0.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 2.0,
+            "coherence": 1.8,
+            "language": 1.0,
+            "usefulness": 1.2
+          },
+          "comment": "Развитие заметнее и полезнее первого теста: притяжение к дому, эмоциональная линия прошлого/утраты, сохранён вход и загадка света. Объяснения частично приписывают исходнику отсутствовавшие штампы.",
+          "generationSeconds": 3.96,
+          "finish": "stop",
+          "answer": "core-2.txt",
+          "source": "core-2.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/core-2.txt"
+        },
+        {
+          "level": 3,
+          "before": 6.5,
+          "after": 6.5,
+          "delta": 0.0,
+          "criteria": {
+            "conditions": 2.0,
+            "freedomAndHonesty": 1.8,
+            "coherence": 1.1,
+            "language": 0.7,
+            "usefulness": 0.9
+          },
+          "comment": "Режим 3 теперь отличается от бережного: дом без окон, свет в углу, активный туман. Но фраза «туман начинает разбирать его» неестественна и рискует увести образ в хоррор; речь и объяснения неровные. Новая трактовка сама по себе не штрафуется.",
+          "generationSeconds": 4.49,
+          "finish": "stop",
+          "answer": "core-3.txt",
+          "source": "core-3.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/core-3.txt"
+        }
+      ],
+      "evidence": "Туман начинает разбирать его, как будто поглощает...",
+      "placement": "GPU",
+      "gpuLayers": 37,
+      "meanGenerationSeconds": 3.71
+    },
+    {
+      "id": "profile-katarau",
+      "name": "Katarau 9B",
+      "before": 7.0,
+      "after": 6.5,
+      "delta": -0.5,
+      "beforeUnrounded": 7.0,
+      "afterUnrounded": 6.5,
+      "levels": [
+        {
+          "level": 1,
+          "before": 7.5,
+          "after": 6.0,
+          "delta": -1.5,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.0,
+            "coherence": 1.3,
+            "language": 0.6,
+            "usefulness": 0.6
+          },
+          "comment": "Новая существенная ошибка на уровне 1: после входа свет исчезает («света больше нет»), хотя в исходнике он горит. При этом модель утверждает сохранение деталей. Есть ошибка «с светом».",
+          "generationSeconds": 1.09,
+          "finish": "stop",
+          "answer": "profile-katarau-1.txt",
+          "source": "profile-katarau-1.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/profile-katarau-1.txt"
+        },
+        {
+          "level": 2,
+          "before": 7.0,
+          "after": 7.0,
+          "delta": 0.0,
+          "criteria": {
+            "conditions": 2.5,
+            "freedomAndHonesty": 1.5,
+            "coherence": 1.5,
+            "language": 0.8,
+            "usefulness": 0.7
+          },
+          "comment": "По-прежнему почти сжатый исходник. Полезного развития мало, но основные факты сохранены. Есть ошибка «Уточнёна» и необоснованное утверждение об усилении образов.",
+          "generationSeconds": 1.08,
+          "finish": "stop",
+          "answer": "profile-katarau-2.txt",
+          "source": "profile-katarau-2.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/profile-katarau-2.txt"
+        },
+        {
+          "level": 3,
+          "before": 6.5,
+          "after": 6.5,
+          "delta": 0.0,
+          "criteria": {
+            "conditions": 2.3,
+            "freedomAndHonesty": 1.6,
+            "coherence": 1.3,
+            "language": 0.6,
+            "usefulness": 0.7
+          },
+          "comment": "Больше не копия уровня 2: добавлены незримое присутствие и внутреннее открытие. Однако фраза «ищет неясно» неестественна, итог поверхностен, тревога героя заменена на отсутствие страха.",
+          "generationSeconds": 1.16,
+          "finish": "stop",
+          "answer": "profile-katarau-3.txt",
+          "source": "profile-katarau-3.result.json",
+          "oldAnswer": "../Видео_Замысел_Qwen_20261027/profile-katarau-3.txt"
+        }
+      ],
+      "evidence": "...он заходит внутрь — света больше нет, никого тоже.",
+      "placement": "GPU",
+      "gpuLayers": 33,
+      "meanGenerationSeconds": 1.11
+    }
+  ]
+}

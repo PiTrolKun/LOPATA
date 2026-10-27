@@ -23,13 +23,14 @@ public static class ApplicationBackgroundOperations
         }
     }
 
-    public static async Task RetireModelsAsync()
+    public static Task RetireModelsAsync() => RetireModelsExceptAsync(null);
+    internal static async Task RetireModelsExceptAsync(object? keep)
     {
         (WeakReference<object> Owner, Func<object, Task> Retire)[] models;
         lock (Gate) { Models.RemoveAll(model => !model.Owner.TryGetTarget(out _)); models = Models.ToArray(); }
         List<Exception> errors = [];
         foreach (var model in models)
-            if (model.Owner.TryGetTarget(out var owner))
+            if (model.Owner.TryGetTarget(out var owner) && !ReferenceEquals(owner, keep))
                 try { await model.Retire(owner); } catch (Exception error) { errors.Add(error); }
         if (errors.Count > 0) throw new AggregateException("Model retirement was not confirmed for every backend.", errors);
     }

@@ -125,6 +125,8 @@
     <EmbeddedResource Include="Content\VectorEditorPlastic.js" LogicalName="AIHub.VectorEditorPlastic" />
     <Content Include="Assets\SvgFileIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Assets\VideoFileIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\AIVideoFileIcon.ico;Assets\AIVideoFileIcon.svg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Resource Include="Assets\AIVideoFileIcon.ico" />
     <Content Include="Licenses\**\*"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Installer\bootstrap-v1.txt"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>
     <Content Include="Localization\*.json">
@@ -200,5 +202,14 @@
     <Error Condition="'$(BookOfficeArchive)' == 'true' And !Exists('..\..\Runtime\BookConverter\libreoffice-26.2.4.2.bundle.zip')" Text="Bundled office archive is missing. Run python Инструменты/BookConverter/package-office.py." />
     <Error Condition="!Exists('..\..\Runtime\BookConverter\calibre-9.16.0\Calibre Portable\Calibre\ebook-convert.exe')" Text="Bundled calibre is missing. Run Инструменты/BookConverter/prepare.py --prepare before building." />
     <Error Condition="!Exists('..\..\Runtime\BookConverter\libreoffice-26.2.4.2\program\soffice.com') Or !Exists('Tools\book-office-files.json')" Text="Bundled LibreOffice is missing. Run Инструменты/BookConverter/prepare-office.py --prepare before building." />
+  </Target>
+  <Target Name="GenerateApplicationBuildVersion" BeforeTargets="CoreCompile">
+    <WriteLinesToFile File="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs"
+        Lines="namespace AIHub.Services { internal static class ApplicationBuildVersion { internal const string Value = &quot;$(AIHubVersion)&quot;%3B } }"
+        Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <ItemGroup>
+      <Compile Remove="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs" />
+      <Compile Include="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs" />
+    </ItemGroup>
   </Target>
 </Project>

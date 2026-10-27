@@ -27,7 +27,7 @@ internal static class ApplicationUpdateStartup
         // cannot preserve this request. The verified installed application accepts it directly.
         // Ordinary launches retain the complete update/recovery route.
         if (IsImageShellLaunch(args) || AudioShellRequest.ParseArguments(args) is not null
-            || IsVectorFileLaunch(args)) return false;
+            || IsVectorFileLaunch(args) || IsVideoFileLaunch(args)) return false;
         var start = Launcher("--launch");
         if (args.Contains("--background", StringComparer.Ordinal)) start.ArgumentList.Add("--background");
         AddWaitForThisProcess(start);
@@ -37,6 +37,7 @@ internal static class ApplicationUpdateStartup
 
     internal static bool IsImageShellLaunch(string[] args) => ImageShellRequest.ParseArguments(args) is not null;
     internal static bool IsVectorFileLaunch(string[] args) => VectorEditor.VectorFileRequest.Parse(args) is not null;
+    internal static bool IsVideoFileLaunch(string[] args) => VideoEditor.VideoFileRequest.Parse(args) is not null;
 
     public static ProcessStartInfo Launcher(string command)
     {

@@ -10,26 +10,34 @@ namespace AIHub.Services.VideoEditor;
 public sealed class VideoShellIntegration
 {
     private const string Marker = "video-editor-v1";
-    private readonly string _executable, _root;
+    private readonly string _executable, _root, _extension, _icon, _marker;
     private readonly bool _test;
     public string ProgId { get; }
-    public VideoShellIntegration(string executable, string? testRoot = null)
+    public static void RemoveOwnedProjects(string executable, string? testRoot = null)
+    {
+        new VideoShellIntegration(executable, testRoot).Apply(false, "");
+        new VideoShellIntegration(executable, testRoot, preparation: true).Apply(false, "");
+    }
+    public VideoShellIntegration(string executable, string? testRoot = null, bool preparation = false)
     {
         if (!Path.IsPathFullyQualified(executable) || executable.IndexOfAny(['"', '\r', '\n', '\0']) >= 0) throw new ArgumentException("Invalid executable.");
         if (testRoot is not null && (!testRoot.StartsWith(@"Software\AIHub.Tests\", StringComparison.Ordinal) || !Guid.TryParseExact(testRoot[@"Software\AIHub.Tests\".Length..], "N", out _))) throw new ArgumentException("Invalid test root.");
         _executable = Path.GetFullPath(executable); _root = testRoot ?? @"Software\Classes"; _test = testRoot is not null;
-        ProgId = "LOPATA.Video." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(_executable.ToUpperInvariant())))[..16];
+        _extension = preparation ? ".lopataAIVid" : ".lopataVideo";
+        _icon = preparation ? "AIVideoFileIcon.ico" : "VideoFileIcon.ico";
+        _marker = preparation ? "video-preparation-v1" : Marker;
+        ProgId = (preparation ? "LOPATA.AIVideo." : "LOPATA.Video.") + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(_executable.ToUpperInvariant())))[..16];
     }
     public void Apply(bool enabled, string title)
     {
-        var path = _root + "\\" + ProgId; var extension = _root + @"\.lopataVideo";
-        using (var existing = Registry.CurrentUser.OpenSubKey(path)) if (existing is not null && (!Equals(existing.GetValue("LOPATA.Owner"), Marker) || !Equals(existing.GetValue("LOPATA.Executable"), _executable))) throw new IOException("Project registration belongs to another application.");
+        var path = _root + "\\" + ProgId; var extension = _root + "\\" + _extension;
+        using (var existing = Registry.CurrentUser.OpenSubKey(path)) if (existing is not null && (!Equals(existing.GetValue("LOPATA.Owner"), _marker) || !Equals(existing.GetValue("LOPATA.Executable"), _executable))) throw new IOException("Project registration belongs to another application.");
         // The whole owned subtree is recreated from three values; foreign extension defaults remain intact.
         using var previous = Registry.CurrentUser.OpenSubKey(extension); var previousDefault = previous?.GetValue("");
         if (enabled) {
             using (var key = Registry.CurrentUser.CreateSubKey(path)) {
-                key.SetValue("LOPATA.Owner", Marker); key.SetValue("LOPATA.Executable", _executable); key.SetValue("", title);
-                using var icon = key.CreateSubKey("DefaultIcon"); icon.SetValue("", '"' + Path.Combine(Path.GetDirectoryName(_executable)!, "Assets", "VideoFileIcon.ico") + '"');
+                key.SetValue("LOPATA.Owner", _marker); key.SetValue("LOPATA.Executable", _executable); key.SetValue("", title);
+                using var icon = key.CreateSubKey("DefaultIcon"); icon.SetValue("", '"' + Path.Combine(Path.GetDirectoryName(_executable)!, "Assets", _icon) + '"');
                 using var command = key.CreateSubKey(@"shell\open\command"); command.SetValue("", '"' + _executable + "\" --video-project -- \"%1\"");
             }
             using (var key = Registry.CurrentUser.CreateSubKey(extension + @"\OpenWithProgids")) key.SetValue(ProgId, "");

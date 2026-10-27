@@ -8,18 +8,19 @@ public partial class MainWindow
 {
     private readonly ImageGenerationSettingsControl _generationSettings = new();
     private ImagePromptAssistant? _imagePromptAssistant;
-    private void ConfigureImageGeneration()
+    private void ConfigureImageGeneration() => ConfigureImageGeneration(GenerationPage);
+    private void ConfigureImageGeneration(ImageGenerationControl page)
     {
-        ConfigureGenerationReferences();
+        ConfigureGenerationReferences(page);
         _imagePromptAssistant ??= new(_userContextService);
-        GenerationPage.ConfigurePromptAssistant(_imagePromptAssistant, () =>
+        page.ConfigurePromptAssistant(_imagePromptAssistant, () =>
         {
             var check = _coreModelManager.Check(_storageSettings);
             return check.Availability == AIHub.Models.CoreModelAvailability.Installed ? check.ModelPath : null;
         });
-        GenerationPage.ConfigureOutput(_appSettings.ImageGeneration, () => { _appSettingsStore.Save(_appSettings); RefreshGenerationSettings(); });
-        GenerationPage.ConfigureMetadata(() => _userProfile.DisplayName);
-        GenerationPage.Configure(L, _storageSettings, _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0, _localizationService.CurrentLanguageCode);
+        page.ConfigureOutput(_appSettings.ImageGeneration, () => { _appSettingsStore.Save(_appSettings); RefreshGenerationSettings(); });
+        page.ConfigureMetadata(() => _userProfile.DisplayName);
+        page.Configure(L, _storageSettings, _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0, _localizationService.CurrentLanguageCode);
     }
     private void RefreshGenerationSettings()
     { _generationSettings.Configure(_appSettings.ImageGeneration, L); RefreshGenerationHeader(); }

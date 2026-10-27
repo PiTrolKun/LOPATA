@@ -397,6 +397,13 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         AddArgument(startInfo, selection.DeviceId);
         AddArgument(startInfo, "--parallel");
         AddArgument(startInfo, "1");
+        if (_poetryGpuAdmission is not null && selection.Bundle.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
+        {
+            // Retain weights, not previous video prompts or recurrent-state checkpoints.
+            AddArgument(startInfo, "--ctx-checkpoints"); AddArgument(startInfo, "0");
+            AddArgument(startInfo, "--cache-ram"); AddArgument(startInfo, "0");
+            AddArgument(startInfo, "--no-cache-prompt");
+        }
         AddArgument(startInfo, "--jinja");
         AddArgument(startInfo, "--reasoning");
         AddArgument(startInfo, _poetryReasoning.Enabled ? "on" : "off");

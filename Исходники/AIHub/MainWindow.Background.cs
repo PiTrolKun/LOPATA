@@ -36,6 +36,7 @@ public partial class MainWindow
         RegisterImageShellBackgroundOperation();
         RegisterLyricVideoBackgroundOperation();
         RegisterVideoEditorOperations();
+        RegisterVideoConceptBackgroundOperations();
         RegisterBookSmartBackgroundOperation();
         RegisterLyricLibraryBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
@@ -316,6 +317,14 @@ public partial class MainWindow
                 RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage);
                 OpenImageUtilityScenario(); ImageUtilityPage.Restore(notice.Project);
                 _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind is Services.VideoPreparation.VideoConceptWork.Kind or Services.VideoPreparation.VideoTranslationProtocol.Kind
+                or Services.VideoPreparation.VideoDevelopment.Kind or Services.VideoPreparation.VideoDevelopment.TranslationKind
+                or Services.VideoPreparation.VideoWorld.Kind or Services.VideoPreparation.VideoWorld.CardKind or Services.VideoPreparation.VideoWorld.TranslationKind
+                or Services.VideoPreparation.VideoConceptWarmup.Kind or Services.VideoPreparation.VideoReferenceWork.Kind or Services.VideoPreparation.VideoReferenceImageWork.Kind or Services.VideoPreparation.VideoShots.Kind or Services.VideoPreparation.VideoShots.TranslationKind or Controls.VideoPreparationControl.ExportKind)
+            {
+                if (ViewVideoConceptResult(notice)) _backgroundOperations!.Acknowledge(notice.Id);
                 return;
             }
             if (notice.Kind is ImagePromptAssistant.BackgroundKind or ImageReferenceAnalyzer.BackgroundKind)

@@ -48,6 +48,7 @@ public static class ImageGenerationMetadata
         var structured = JsonSerializer.Serialize(new
         {
             Schema = 1, Author = author, Program = "LOPATA", ProgramVersion = version,
+            Scenario = request.Metadata?.Scenario ?? "image-generation/simple", OperationId = request.Id,
             EngineSetId = runtime?.EngineSetId, EngineSetDate = engineSetDate,
             Model = model.Name, ModelId = model.Id, GenerationNumber = request.FirstGenerationNumber + index,
             request.Prompt, request.SubmittedAt, CreatedAt = createdAt, Seed = seed, request.Width, request.Height,

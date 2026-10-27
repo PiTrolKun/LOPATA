@@ -22,7 +22,7 @@ public sealed record ImageGenerationRequest(string Id, string ModelId, string Pr
 }
 public sealed record ImageGenerationRuntimeReceipt(string EngineSetId, string RuntimeVersion,
     string BackendCommit, string Backend, string ComponentId);
-public sealed record ImageGenerationMetadataOptions(string Author);
+public sealed record ImageGenerationMetadataOptions(string Author, string Scenario = "image-generation/simple");
 public sealed record ImageGenerationResult(int Index, string FileName, long Seed, bool Reviewed = false)
 {
     public string? ExportPath { get; init; }

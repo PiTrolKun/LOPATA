@@ -35,7 +35,7 @@ public partial class App : System.Windows.Application
         }
         if (e.Args is ["--remove-video-shell"])
         {
-            try { new Services.VideoEditor.VideoShellIntegration(Environment.ProcessPath!).Apply(false, ""); Shutdown(); }
+            try { Services.VideoEditor.VideoShellIntegration.RemoveOwnedProjects(Environment.ProcessPath!); Shutdown(); }
             catch { Shutdown(1); }
             return;
         }

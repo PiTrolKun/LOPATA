@@ -329,6 +329,7 @@ public partial class MainWindow
         if (TryHideToTray(closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
         if (!_processShutdownComplete)
         {
+            if (ScenarioNavigationPage.VideoPreparation?.CanClose() == false) { e.Cancel = true; base.OnClosing(e); return; }
             e.Cancel = true;
             base.OnClosing(e);
             _processShutdownPending = true;

@@ -35,7 +35,8 @@ public static class ImageGenerationCatalog
         Format = a.Id == "generation-runtime" ? "ZIP" : "GGUF / Safetensors", RuntimeBackend = "stable-diffusion.cpp",
         ModelsRoot = root, InstallDirectory = string.IsNullOrWhiteSpace(root) ? "" : Path.Combine(root, "ImageGeneration", a.Id, a.Revision[..12]),
         Origin = ManagedModelOrigins.PredefinedScenario,
-        Consumers = [new() { Id = "simple-generation", DisplayName = "Простая генерация / Simple generation", Kind = "scenario" }],
+        Consumers = [new() { Id = "simple-generation", DisplayName = "Простая генерация / Simple generation", Kind = "scenario" },
+            new() { Id = "video-reference-images", DisplayName = "Референсы видео / Video references", Kind = "scenario" }],
         Files = a.Files.Select(f => new ManagedModelArtifactFile { RelativePath = f.RelativePath, SourceUrl = f.SourceUrl,
             SizeBytes = f.SizeBytes, Sha256 = f.Sha256, Purpose = f.Purpose }).ToList()
     });

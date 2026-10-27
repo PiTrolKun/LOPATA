@@ -1,0 +1,199 @@
+{
+  "program": "LOPATA",
+  "version": "0.6.38-dev",
+  "date": "2026-10-27",
+  "operation": "RU to EN translation quality evaluation",
+  "reviewer": "Codex",
+  "assessment": "subjective editorial, one response per shared source",
+  "rubricMaxima": [
+    4,
+    2,
+    2,
+    1.5,
+    0.5
+  ],
+  "averages": [
+    {
+      "model": "executor",
+      "average": 9.5,
+      "original": 9.5
+    },
+    {
+      "model": "core",
+      "average": 8.8,
+      "original": 9.5
+    },
+    {
+      "model": "profile-katarau",
+      "average": 9.1,
+      "original": 9.5
+    }
+  ],
+  "results": [
+    {
+      "model": "executor",
+      "caseId": "original",
+      "meaning": 4,
+      "completeness": 2,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.5,
+      "comment": "Сохранены поиск неизвестного человека, вход в дом, горящий свет, отсутствие людей и жанровые запреты. Foggy all around немного неуклюже, но смысл точный."
+    },
+    {
+      "model": "executor",
+      "caseId": "draft1",
+      "meaning": 4,
+      "completeness": 2,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.5,
+      "comment": "Точно и полно; a burning light и object of his search несколько тяжеловесны для естественного английского."
+    },
+    {
+      "model": "executor",
+      "caseId": "draft2",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.0,
+      "comment": "Хорошо сохранены абзацы и варианты через or. Отсутствие чего-либо передано как absence of something: чуть слабее исходной полной пустоты. Low gray fogs и sterilely clean звучат тяжеловесно."
+    },
+    {
+      "model": "executor",
+      "caseId": "draft3",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 2,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.5,
+      "comment": "Полный связный перевод, сохранены дневник или фотография, прошлое или воспоминание, свет остаётся включён. Верхний этаж стал top floor — небольшой сдвиг к более определённому последнему этажу."
+    },
+    {
+      "model": "executor",
+      "caseId": "mixed",
+      "meaning": 4,
+      "completeness": 2,
+      "english": 2,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 10.0,
+      "comment": "Все контрольные условия сохранены: Miron, кириллическая Лопата, латинская LOPATA, русская реплика, возможно/не подтверждено, запреты, неподвижная камера и отсутствие дождя. Существенных ошибок на этом примере не найдено."
+    },
+    {
+      "model": "core",
+      "caseId": "original",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 2,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.5,
+      "comment": "Почти точный и естественный перевод. Light coming from the window слегка меняет пространственный оттенок света в окне после входа в дом; события и запреты сохранены."
+    },
+    {
+      "model": "core",
+      "caseId": "draft1",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.0,
+      "comment": "Все события сохранены, но тайна стала secrecy (секретность), что сдвигает атмосферу. Story video и object of his search звучат неестественно."
+    },
+    {
+      "model": "core",
+      "caseId": "draft2",
+      "meaning": 4,
+      "completeness": 2,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.5,
+      "comment": "Смысл, варианты, отрицания и структура сохранены. Sound landscape и sterilely clean тяжеловесны; смыслового развития от переводчика нет."
+    },
+    {
+      "model": "core",
+      "caseId": "draft3",
+      "meaning": 3.5,
+      "completeness": 1,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0,
+      "total": 7.5,
+      "comment": "Содержательный перевод в основном полный, но ответ включает перевод всех служебных правил и границ текста, начиная с REQUIRED RULES. Это реальное нарушение формата; дополнительно fade передан как darkness. До публикации результат требует очистки/повторной проверки."
+    },
+    {
+      "model": "core",
+      "caseId": "mixed",
+      "meaning": 4,
+      "completeness": 2,
+      "english": 2,
+      "specialConstraints": 0,
+      "format": 0.5,
+      "total": 8.5,
+      "comment": "Смысл сохранён, но обязательная русская реплика заменена на Here there is no one. Требование оставить её по-русски модель при этом перевела и включила. Названия в двух алфавитах сохранены."
+    },
+    {
+      "model": "profile-katarau",
+      "caseId": "original",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 2,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.5,
+      "comment": "Естественно, сохранены события и запреты. Moody atmosphere менее конкретно передаёт мрачную атмосферу; немного сжата разговорная подача."
+    },
+    {
+      "model": "profile-katarau",
+      "caseId": "draft1",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 2,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.5,
+      "comment": "Связно и полно. Intuitively seems to be looking добавляет оттенок предположения к исходному интуитивному поиску, но не меняет события."
+    },
+    {
+      "model": "profile-katarau",
+      "caseId": "draft2",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.0,
+      "comment": "Основные детали и варианты сохранены. Полное безмолвие стало absolute stillness, что ослабляет именно звуковую характеристику. In his eyes reads — грамматически неудачный оборот."
+    },
+    {
+      "model": "profile-katarau",
+      "caseId": "draft3",
+      "meaning": 3.5,
+      "completeness": 2,
+      "english": 1.5,
+      "specialConstraints": 1.5,
+      "format": 0.5,
+      "total": 9.0,
+      "comment": "Почти полный точный перевод; lost its sharp edges уже по смыслу, чем потеряла чёткие формы. Есть неестественные without distraction by fear и in his eyes reads. Финальные альтернативы, свет и затемнение сохранены."
+    },
+    {
+      "model": "profile-katarau",
+      "caseId": "mixed",
+      "meaning": 4,
+      "completeness": 2,
+      "english": 2,
+      "specialConstraints": 0,
+      "format": 0.5,
+      "total": 8.5,
+      "comment": "Лопата заменена на LOPATA: две разные надписи стали одинаковыми, хотя требовалось сохранить алфавиты и регистр. Русская реплика, неопределённость, запреты, свет, камера и отсутствие дождя сохранены."
+    }
+  ]
+}

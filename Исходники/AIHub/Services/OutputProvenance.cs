@@ -1,5 +1,4 @@
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using System.Xml.Linq;
 using AIHub.Models;
@@ -13,7 +12,9 @@ public sealed record OutputProvenance
 {
     public int Schema { get; init; } = 1;
     public string Program { get; init; } = "LOPATA";
-    public string ProgramVersion { get; init; } = typeof(OutputProvenance).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
+    // Generated from the same VERSION property as AssemblyInformationalVersion.
+    // Deserializing every history entry must not repeatedly enter the native type loader.
+    public string ProgramVersion { get; init; } = ApplicationBuildVersion.Value;
     public string Scenario { get; init; } = "";
     public DateTimeOffset ExportedUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? CreatedUtc { get; init; }

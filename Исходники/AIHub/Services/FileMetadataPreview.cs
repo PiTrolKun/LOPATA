@@ -7,9 +7,9 @@ namespace AIHub.Services;
 
 internal static class FileMetadataPreview
 {
-    internal static void ValidateImage(byte[] bytes)
+    internal static void ValidateImage(byte[] bytes, long maximumBytes = 16 * 1024 * 1024)
     {
-        if (bytes.Length is < 8 or > 16*1024*1024) throw new InvalidDataException("Metadata.InvalidImage");
+        if (bytes.Length < 8 || bytes.Length > maximumBytes) throw new InvalidDataException("Metadata.InvalidImage");
         using var codec=SKCodec.Create(new SKMemoryStream(bytes));
         if(codec is null || codec.Info.Width is <1 or >32768 || codec.Info.Height is <1 or >32768
             || (long)codec.Info.Width*codec.Info.Height>64*1024*1024) throw new InvalidDataException("Metadata.InvalidImage");
@@ -17,18 +17,20 @@ internal static class FileMetadataPreview
         using var check=new SKBitmap(new SKImageInfo(dimensions.Width,dimensions.Height,SKColorType.Bgra8888,SKAlphaType.Premul));
         if(codec.GetPixels(check.Info,check.GetPixels())!=SKCodecResult.Success)throw new InvalidDataException("Metadata.InvalidImage");
     }
-    internal static byte[] Thumbnail(byte[] bytes)
+    internal static byte[] Thumbnail(byte[] bytes, long maximumBytes = 16 * 1024 * 1024)
     {
-        ValidateImage(bytes);
+        ValidateImage(bytes, maximumBytes);
         using var codec=SKCodec.Create(new SKMemoryStream(bytes))!;
         var dimensions=codec.GetScaledDimensions(Math.Min(1,512f/Math.Max(codec.Info.Width,codec.Info.Height)));
         using var bitmap=new SKBitmap(new SKImageInfo(dimensions.Width,dimensions.Height,SKColorType.Bgra8888,SKAlphaType.Premul));
         var result=codec.GetPixels(bitmap.Info,bitmap.GetPixels());
         if(result is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))throw new InvalidDataException("Metadata.PreviewUnavailable");
         var origin=codec.EncodedOrigin;
-        using var surface=SKSurface.Create(new SKImageInfo(origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom ? bitmap.Height:bitmap.Width,
-            origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom ? bitmap.Width:bitmap.Height));
+        var rotated=origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
+        var scale=Math.Min(1,512f/Math.Max(bitmap.Width,bitmap.Height));
+        using var surface=SKSurface.Create(new SKImageInfo(Math.Max(1,(int)((rotated?bitmap.Height:bitmap.Width)*scale)),Math.Max(1,(int)((rotated?bitmap.Width:bitmap.Height)*scale))));
         var c=surface.Canvas;
+        c.Scale(scale);
         switch(origin)
         {
             case SKEncodedOrigin.TopRight:c.Translate(bitmap.Width,0);c.Scale(-1,1);break;

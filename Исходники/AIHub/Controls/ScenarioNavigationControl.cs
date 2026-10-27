@@ -20,9 +20,13 @@ public sealed class ScenarioNavigationControl : UserControl
     private UniformGrid? _tiles;
     public string? SelectedDirectionId { get; private set; }
     public bool IsSandboxLanding { get; private set; }
+    public string? PlaceholderScenarioId { get; private set; }
+    public VideoPreparationControl? VideoPreparation { get; private set; }
+    public bool IsVideoPreparation { get; private set; }
     public bool IsHome => SelectedDirectionId is null;
     public event Action<string>? ScenarioRequested;
     public event Action? StateChanged;
+    public event Action<VideoPreparationControl>? VideoPreparationCreated;
 
     public ScenarioNavigationControl()
     {
@@ -50,6 +54,20 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsVideoPreparation)
+        {
+            if (VideoPreparation!.BackStepIfNeeded()) return true;
+            if (!VideoPreparation.Checkpoint()) return true;
+            IsVideoPreparation = false;
+            if (!ReturnFromScenario()) Render();
+            return true;
+        }
+        if (PlaceholderScenarioId is not null)
+        {
+            PlaceholderScenarioId = null;
+            if (!ReturnFromScenario()) Render();
+            return true;
+        }
         if (ReturnFromScenario()) return true;
         if (IsHome) return false;
         if (IsSandboxLanding) IsSandboxLanding = false;
@@ -60,6 +78,9 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        if (VideoPreparation?.Checkpoint() == false) return;
+        IsVideoPreparation = false;
+        PlaceholderScenarioId = null;
         _tagReturnDirection = null;
         SelectedDirectionId = null;
         IsSandboxLanding = false;
@@ -70,6 +91,9 @@ public sealed class ScenarioNavigationControl : UserControl
     {
         var node = ScenarioNavigationCatalog.Get(id);
         if (node.Kind != ScenarioNavigationKind.Direction || !node.IsAvailable) return;
+        if (VideoPreparation?.Checkpoint() == false) return;
+        IsVideoPreparation = false;
+        PlaceholderScenarioId = null;
         SelectedDirectionId = id;
         IsSandboxLanding = false;
         Render();
@@ -81,7 +105,29 @@ public sealed class ScenarioNavigationControl : UserControl
         if (node.Kind != ScenarioNavigationKind.Scenario || !node.IsAvailable) return;
         var group = ScenarioNavigationCatalog.Get(node.ParentId!);
         SelectedDirectionId = group.ParentId;
-        if (id == ScenarioNavigationCatalog.Sandbox)
+        PlaceholderScenarioId = null;
+        IsSandboxLanding = false;
+        IsVideoPreparation = id == ScenarioNavigationCatalog.VideoGeneration;
+        if (IsVideoPreparation)
+        {
+            if (VideoPreparation is null)
+            {
+                VideoPreparation = new VideoPreparationControl(_localize);
+                VideoPreparationCreated?.Invoke(VideoPreparation);
+                VideoPreparation.BackRequested += () =>
+                {
+                    IsVideoPreparation = false;
+                    if (!ReturnFromScenario()) Render();
+                };
+            }
+            Render();
+        }
+        else if (node.IsPlaceholder)
+        {
+            PlaceholderScenarioId = id;
+            Render();
+        }
+        else if (id == ScenarioNavigationCatalog.Sandbox)
         {
             IsSandboxLanding = true;
             Render();
@@ -113,6 +159,7 @@ public sealed class ScenarioNavigationControl : UserControl
     public bool ReturnFromScenario()
     {
         if (_tagReturnDirection is not { } origin) return false;
+        PlaceholderScenarioId = null;
         _tagReturnDirection = null; SelectedDirectionId = origin; IsSandboxLanding = false;
         Render(); return true;
     }
@@ -131,6 +178,12 @@ public sealed class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (Content == VideoPreparation) Content = null;
+        if (IsVideoPreparation)
+        {
+            VideoPreparation!.Configure(_localize);
+            Content = VideoPreparation; StateChanged?.Invoke(); return;
+        }
         if (_historyHost.Parent is System.Windows.Controls.Panel previous) previous.Children.Remove(_historyHost);
         if (TagCloud.Parent is System.Windows.Controls.Panel previousCloud) previousCloud.Children.Remove(TagCloud);
         _directionBody = null; _scenarioScroll = null;
@@ -139,16 +192,18 @@ public sealed class ScenarioNavigationControl : UserControl
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         root.RowDefinitions.Add(new RowDefinition());
         var heading = new StackPanel { Margin = new Thickness(8, 0, 8, 22) };
+        var placeholder = PlaceholderScenarioId is { } placeholderId ? ScenarioNavigationCatalog.Get(placeholderId) : null;
         if (!IsHome)
         {
             var crumb = Text(_localize("WorkStart.Title") + "  ›  " +
-                _localize(ScenarioNavigationCatalog.Get(SelectedDirectionId!).TitleKey), "UiSmallFontSize", secondary: true);
+                _localize(ScenarioNavigationCatalog.Get(SelectedDirectionId!).TitleKey) +
+                (placeholder is null ? "" : "  ›  " + _localize(ScenarioNavigationCatalog.Get(placeholder.ParentId!).TitleKey)), "UiSmallFontSize", secondary: true);
             heading.Children.Add(crumb);
         }
-        var titleKey = IsHome ? "WorkStart.Title" : IsSandboxLanding
-            ? "WorkStart.ReasoningTitle" : ScenarioNavigationCatalog.Get(SelectedDirectionId!).TitleKey;
-        var hintKey = IsHome ? "Navigation.HomeHint" : IsSandboxLanding
-            ? "Navigation.SandboxHint" : ScenarioNavigationCatalog.Get(SelectedDirectionId!).DescriptionKey;
+        var titleKey = placeholder?.TitleKey ?? (IsHome ? "WorkStart.Title" : IsSandboxLanding
+            ? "WorkStart.ReasoningTitle" : ScenarioNavigationCatalog.Get(SelectedDirectionId!).TitleKey);
+        var hintKey = placeholder?.DescriptionKey ?? (IsHome ? "Navigation.HomeHint" : IsSandboxLanding
+            ? "Navigation.SandboxHint" : ScenarioNavigationCatalog.Get(SelectedDirectionId!).DescriptionKey);
         heading.Children.Add(Text(_localize(titleKey), "UiPageTitleFontSize", title: true));
         heading.Children.Add(Text(_localize(hintKey), "UiBodyFontSize", secondary: true));
         root.Children.Add(heading);
@@ -159,6 +214,11 @@ public sealed class ScenarioNavigationControl : UserControl
             foreach (var node in ScenarioNavigationCatalog.Children(null))
                 _tiles.Children.Add(Card(node, () => SelectDirection(node.Id), direction: true));
             body.Children.Add(_tiles);
+        }
+        else if (placeholder is not null)
+        {
+            AutomationProperties.SetAutomationId(body, "Navigation.Placeholder");
+            body.Children.Add(Text(_localize("Navigation.Placeholder"), "UiBodyFontSize", secondary: true));
         }
         else if (IsSandboxLanding)
         {
@@ -187,7 +247,7 @@ public sealed class ScenarioNavigationControl : UserControl
             PanningMode = PanningMode.VerticalOnly
         };
         Grid.SetRow(scroll, 1);
-        if (!IsHome && !IsSandboxLanding)
+        if (!IsHome && !IsSandboxLanding && placeholder is null)
         {
             Grid.SetRow(scroll, 0);
             _scenarioScroll = scroll;

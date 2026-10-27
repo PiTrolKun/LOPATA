@@ -6,7 +6,7 @@ public sealed record ScenarioNavigationNode(
     string Id, ScenarioNavigationKind Kind, string? ParentId,
     string TitleKey, string DescriptionKey, string Icon,
     bool IsAvailable, string EntryTargetId,
-    IReadOnlyList<string> Tags, IReadOnlyList<string> RelatedIds);
+    IReadOnlyList<string> Tags, IReadOnlyList<string> RelatedIds, bool IsPlaceholder = false);
 
 public sealed record ScenarioNavigationTag(string Id, string TitleKey, string DescriptionKey, string TargetId);
 
@@ -23,6 +23,7 @@ public static class ScenarioNavigationCatalog
     public const string Finance = "finance";
     public const string Capture = "screen_capture";
     public const string ImageGeneration = "image_generation";
+    public const string VideoGeneration = "video_generation";
     public const string VectorGeneration = "vector_generation";
     public const string VectorEditor = "vector_editor";
     public const string ImageUtility = "image_utility";
@@ -64,9 +65,12 @@ public static class ScenarioNavigationCatalog
             tags: ["video_editor", "video_narration", "video_subtitles", "video_svg"], related: [VectorGeneration, Capture]),
         Node(ImageUtility, ScenarioNavigationKind.Scenario, "utilities_images", "ImageUtility.Title", "ImageUtility.Description", "tools",
             tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
-        Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
+        Node("creation_video", ScenarioNavigationKind.Group, Creation, "Navigation.Video", "", "create"),
         Node("creation_images", ScenarioNavigationKind.Group, Creation, "Navigation.Images", "", "create"),
         Node("creation_music", ScenarioNavigationKind.Group, Creation, "Music.Group", "", "create"),
+        Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
+        Node(VideoGeneration, ScenarioNavigationKind.Scenario, "creation_video", "VideoGeneration.Title", "VideoGeneration.Description", "create",
+            tags: ["video_generation", "video_concept", "video_concept_ai", "video_development", "video_world", "video_assistant_warmup", "video_reference_prompts", "video_storyboard", "video_preparation_export", "video_generator_plan"]),
         Node(Music, ScenarioNavigationKind.Scenario, "creation_music", "Music.Title", "Music.Description", "create",
             tags: ["music_preparation", "music_ace_ideas", "music_ace_retake", "music_score_plans", "music_score_editor", "music_score_sections", "music_midi", "music_melody", "music_wishes", "music_performers", "music_text_tools", "music_rhyme", "music_rhyme_creative", "music_player", "music_lyrics_sync", "music_status", "music_generation", "music_expert", "music_presets", "music_models", "music_formats", "music_metadata", "music_stems", "music_audio_cover", "music_audio_references", "music_audio_processing", "music_cover", "music_examples", "music_studio", "music_tuning", "music_diffrhythm", "music_heartmula", "music_model_remove", "music_poetry", "music_poetry_sessions", "music_poetry_assembly", "music_poetry_reasoning", "music_poetry_search", "music_lyrics_library", "music_lora"], related: []),
         Node(ImageGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Generation.Title", "Generation.Description", "create",
@@ -101,6 +105,8 @@ public static class ScenarioNavigationCatalog
         Tag("video_linked_selection", VideoEditor), Tag("video_audio_stretch", VideoEditor), Tag("video_waveform", VideoEditor),
         Tag("video_project_archive", VideoEditor), Tag("video_expanded_preview", VideoEditor),
         Tag("video_background_music", VideoEditor), Tag("video_narrator_models", VideoEditor),
+        Tag("video_generation", VideoGeneration), Tag("video_concept", VideoGeneration), Tag("video_concept_ai", VideoGeneration), Tag("video_development", VideoGeneration), Tag("video_world", VideoGeneration), Tag("video_assistant_warmup", VideoGeneration), Tag("video_reference_prompts", VideoGeneration),
+        Tag("video_storyboard", VideoGeneration), Tag("video_preparation_export", VideoGeneration), Tag("video_generator_plan", VideoGeneration),
         Tag("music_preparation", Music), Tag("music_ace_ideas", Music), Tag("music_ace_retake", Music), Tag("music_score_plans", Music), Tag("music_score_editor", Music), Tag("music_score_sections", Music), Tag("music_midi", Music), Tag("music_melody", Music),
         Tag("music_poetry", Music), Tag("music_poetry_sessions", Music), Tag("music_poetry_assembly", Music),
         Tag("music_generation", Music), Tag("music_poetry_reasoning", Music), Tag("music_lyrics_sync", Music), Tag("music_poetry_search", Music),
@@ -136,7 +142,7 @@ public static class ScenarioNavigationCatalog
         Nodes.Where(node => node.ParentId == parentId);
 
     private static ScenarioNavigationNode Node(string id, ScenarioNavigationKind kind, string? parent,
-        string title, string hint, string icon, bool available = true, string[]? tags = null, string[]? related = null) =>
+        string title, string hint, string icon, bool available = true, string[]? tags = null, string[]? related = null, bool placeholder = false) =>
         new(id, kind, parent, title, hint, icon, available, id,
-            Array.AsReadOnly(tags ?? []), Array.AsReadOnly(related ?? []));
+            Array.AsReadOnly(tags ?? []), Array.AsReadOnly(related ?? []), placeholder);
 }

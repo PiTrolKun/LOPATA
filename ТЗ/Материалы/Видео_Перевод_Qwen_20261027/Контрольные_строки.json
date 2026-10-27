@@ -1,0 +1,23 @@
+[
+  {
+    "model": "executor",
+    "keepsCyrillicBrand": true,
+    "keepsLatinBrand": true,
+    "keepsRussianLine": true,
+    "draft3HasTranslatedPromptRules": false
+  },
+  {
+    "model": "core",
+    "keepsCyrillicBrand": true,
+    "keepsLatinBrand": true,
+    "keepsRussianLine": false,
+    "draft3HasTranslatedPromptRules": true
+  },
+  {
+    "model": "profile-katarau",
+    "keepsCyrillicBrand": false,
+    "keepsLatinBrand": true,
+    "keepsRussianLine": true,
+    "draft3HasTranslatedPromptRules": false
+  }
+]

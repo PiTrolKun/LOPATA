@@ -10,6 +10,7 @@ public partial class MainWindow
         WorkStartPage.Children.Remove(PreviousWorkExpander);
         ScenarioNavigationPage.AttachSandboxHistory(PreviousWorkExpander);
         ScenarioNavigationPage.StateChanged += RefreshScenarioNavigationState;
+        ScenarioNavigationPage.VideoPreparationCreated += ConfigureVideoConcept;
         ScenarioNavigationPage.ScenarioRequested += id =>
         {
             CapturePage.Visibility = Visibility.Collapsed;
@@ -83,6 +84,9 @@ public partial class MainWindow
     private void RefreshScenarioNavigationState()
     {
         if (WorkStartPage.Visibility != Visibility.Visible) return;
+        BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation ? Visibility.Collapsed : Visibility.Visible;
+        if (ScenarioNavigationPage.IsVideoPreparation) { StatusText.Text = ""; return; }
+        if (ScenarioNavigationPage.PlaceholderScenarioId is not null) { StatusText.Text = L("Navigation.Soon"); return; }
         if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (VectorPage.Visibility == Visibility.Visible || MusicPage.Visibility == Visibility.Visible || FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible || GenerationPage.Visibility == Visibility.Visible || ImageUtilityPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.IsSandboxLanding) RefreshPreviousSessions();
