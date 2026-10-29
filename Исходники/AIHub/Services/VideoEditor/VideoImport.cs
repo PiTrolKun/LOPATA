@@ -23,6 +23,7 @@ internal static class VideoImport
             asset.Kind = "svg"; asset.Models = AIHub.Services.VectorEditor.VectorEditorSvg.Facts([svg], DateTimeOffset.UtcNow).Models.ToList(); return asset;
         }
         using var probe = await VideoRuntime.ProbeAsync(path, token);
+        asset.Models = VideoImportProvenance.Models(probe.RootElement).ToList();
         var streams = probe.RootElement.GetProperty("streams").EnumerateArray().ToArray();
         MediaStreamChoice Choice(JsonElement stream) {
             var index = stream.GetProperty("index").GetInt32(); var lang = "und"; var name = "";

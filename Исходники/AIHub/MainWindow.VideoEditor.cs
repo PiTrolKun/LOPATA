@@ -36,7 +36,13 @@ public partial class MainWindow
             }
             else ShowVideoEditor(project, request.Path);
         }
-        catch (Exception error) { VideoErrors.Report(error); System.Windows.MessageBox.Show(L("VideoEditor.OpenFailed"), L("VideoEditor.Title"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning); }
+        catch (Exception error)
+        {
+            VideoErrors.Report(error);
+            var preparation = Path.GetExtension(request.Path).Equals(".lopataAIVid", StringComparison.OrdinalIgnoreCase);
+            System.Windows.MessageBox.Show(this, L(preparation ? "VideoPrep.OpenFailed" : "VideoEditor.OpenFailed"),
+                L(preparation ? "VideoPrep.Caption" : "VideoEditor.Title"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        }
         finally { _videoFileGate.Release(); }
     }
     private readonly VideoWork _videoEditorWork = new();

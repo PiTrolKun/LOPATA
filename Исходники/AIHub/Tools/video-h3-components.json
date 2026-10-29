@@ -1,0 +1,272 @@
+[
+  {
+    "Id": "video-h3-models",
+    "Name": "MiniMax H3 Ref2VA · INT8 + encoder / VAE",
+    "Repository": "Comfy-Org/MiniMax-H3",
+    "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "License": "MiniMax H3 Community License; Apache-2.0 (Qwen encoder)",
+    "Files": [
+      {
+        "RelativePath": "diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "SizeBytes": 20970379616,
+        "Sha256": "9255f52b6677845ad238f20dfaafa94727053694127ab7f255c048f0f9365779",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "SizeBytes": 27141342152,
+        "Sha256": "bc2ced0fbea64757fa9acddccfc0b3f4819d1dcf1da6c124d690d368be283923",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "vae/minimax_h3_video_vae_int8_convrot.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/vae/minimax_h3_video_vae_int8_convrot.safetensors",
+        "SizeBytes": 2811065184,
+        "Sha256": "52a2c8c73583c86e4f41cdcce3a6ad0ea562987bc0bf3d60a0cef5f5c8e60c0e",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "vae/minimax_h3_audio_vae_fp32.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/vae/minimax_h3_audio_vae_fp32.safetensors",
+        "SizeBytes": 605254808,
+        "Sha256": "8e505d95dd1561d47abd43d4238fd40d9bb1ae9e147ed0a4cba778d76ae4db48",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "vae/minimax_h3_video_vae_fp16.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/vae/minimax_h3_video_vae_fp16.safetensors",
+        "SizeBytes": 5207808496,
+        "Sha256": "7c1f131492e7eddacaac9069a61b81bdd39de5cc96561e677c5eab1cdce5e522",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-comfy",
+    "Name": "Comfy-Org/ComfyUI · source archive",
+    "Repository": "Comfy-Org/ComfyUI",
+    "Revision": "426f5eea52a7ece1dd599fff4cb6cd1f352ddd24",
+    "License": "GPL-3.0",
+    "Files": [
+      {
+        "RelativePath": "comfy.zip",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-comfy--426f5eea52a7ece1dd599fff4cb6cd1f352ddd24--comfy.zip",
+        "SizeBytes": 13595371,
+        "Sha256": "01f381c8330f5c5bec9bd3d4c651e8b53b45ffb70020b9e1e947fc63f93a1548",
+        "IsRequired": true,
+        "UpstreamUrl": "https://codeload.github.com/Comfy-Org/ComfyUI/zip/426f5eea52a7ece1dd599fff4cb6cd1f352ddd24"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-timeline",
+    "Name": "chanon/comfyui-obvpm-timeline · source archive",
+    "Repository": "chanon/comfyui-obvpm-timeline",
+    "Revision": "068a97b4786daef8d67277fe323297fb86d54a3f",
+    "License": "GPL-3.0",
+    "Files": [
+      {
+        "RelativePath": "timeline.zip",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-timeline--068a97b4786daef8d67277fe323297fb86d54a3f--timeline.zip",
+        "SizeBytes": 1052207,
+        "Sha256": "a9a976c0bb66a5c570628bfd524cf8fcc19400e7a1789f015f120631e4729729",
+        "IsRequired": true,
+        "UpstreamUrl": "https://codeload.github.com/chanon/comfyui-obvpm-timeline/zip/068a97b4786daef8d67277fe323297fb86d54a3f"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-workflow",
+    "Name": "obvpm H3 Ref2VA · workflow 007A",
+    "Repository": "chanon/comfyui-obvpm-timeline",
+    "Revision": "068a97b4786daef8d67277fe323297fb86d54a3f",
+    "License": "GPL-3.0",
+    "Files": [
+      {
+        "RelativePath": "h3_obvpm_timeline_r2v_v0.1.4-007A.json",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-workflow--068a97b4786daef8d67277fe323297fb86d54a3f--h3_obvpm_timeline_r2v_v0.1.4-007A.json",
+        "SizeBytes": 160768,
+        "Sha256": "c30214c92bc72a0d1e3c7e631e8a77a5edd1fa3eb42f186f7c036c9fa0dc4a04",
+        "IsRequired": true,
+        "UpstreamUrl": "https://raw.githubusercontent.com/chanon/comfyui-obvpm-timeline/068a97b4786daef8d67277fe323297fb86d54a3f/workflows/h3_obvpm_timeline_r2v_v0.1.4-007A.json"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-obvpm",
+    "Name": "chanon/comfyui-obvpm · source archive",
+    "Repository": "chanon/comfyui-obvpm",
+    "Revision": "baf0aa8f3cd220b1b882e91a7145e96d1af90300",
+    "License": "GPL-3.0",
+    "Files": [
+      {
+        "RelativePath": "obvpm.zip",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-obvpm--baf0aa8f3cd220b1b882e91a7145e96d1af90300--obvpm.zip",
+        "SizeBytes": 2583450,
+        "Sha256": "d32246f8da2acf7186a3368dd0497c8f6a59a92f4fe78f9743a721a0175ba234",
+        "IsRequired": true,
+        "UpstreamUrl": "https://codeload.github.com/chanon/comfyui-obvpm/zip/baf0aa8f3cd220b1b882e91a7145e96d1af90300"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-kjnodes",
+    "Name": "kijai/ComfyUI-KJNodes · source archive",
+    "Repository": "kijai/ComfyUI-KJNodes",
+    "Revision": "2371136d2fa6fd0914e514cd99b36dabe5db9adf",
+    "License": "GPL-3.0",
+    "Files": [
+      {
+        "RelativePath": "kjnodes.zip",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-kjnodes--2371136d2fa6fd0914e514cd99b36dabe5db9adf--kjnodes.zip",
+        "SizeBytes": 1171689,
+        "Sha256": "38b95d3186cbaca9e6b38117176661b9fab96b2d4fd09a9ea7c021e7a9254d23",
+        "IsRequired": true,
+        "UpstreamUrl": "https://codeload.github.com/kijai/ComfyUI-KJNodes/zip/2371136d2fa6fd0914e514cd99b36dabe5db9adf"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-upscaler",
+    "Name": "LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler · source archive",
+    "Repository": "LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler",
+    "Revision": "40316cf008b2fd8663263270669eb4da23f89d2c",
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "upscaler.zip",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-upscaler--40316cf008b2fd8663263270669eb4da23f89d2c--upscaler.zip",
+        "SizeBytes": 8897912,
+        "Sha256": "2e8bb5f235bf1f6b80e95345fd365812242e139653b1d6eacaf5f0fe86822883",
+        "IsRequired": true,
+        "UpstreamUrl": "https://codeload.github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler/zip/40316cf008b2fd8663263270669eb4da23f89d2c"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-turbo",
+    "Name": "Larryvrh/ComfyUI-MiniMax-H3-Turbo · source files",
+    "Repository": "Larryvrh/ComfyUI-MiniMax-H3-Turbo",
+    "Revision": "4274783a23afcfdbea3b4876cb79effd6c510785",
+    "License": "Apache-2.0",
+    "Files": [
+      {
+        "RelativePath": "LICENSE",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-turbo--4274783a23afcfdbea3b4876cb79effd6c510785--LICENSE",
+        "SizeBytes": 11358,
+        "Sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "IsRequired": true,
+        "UpstreamUrl": "https://raw.githubusercontent.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo/4274783a23afcfdbea3b4876cb79effd6c510785/LICENSE"
+      },
+      {
+        "RelativePath": "README.md",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-turbo--4274783a23afcfdbea3b4876cb79effd6c510785--README.md",
+        "SizeBytes": 6044,
+        "Sha256": "1676b6cd2804c43ce6c7c822d0a5c6a33bea1ce728449fa0d44ebf0f07583e3d",
+        "IsRequired": true,
+        "UpstreamUrl": "https://raw.githubusercontent.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo/4274783a23afcfdbea3b4876cb79effd6c510785/README.md"
+      },
+      {
+        "RelativePath": "__init__.py",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-turbo--4274783a23afcfdbea3b4876cb79effd6c510785--__init__.py",
+        "SizeBytes": 26363,
+        "Sha256": "a22f222f11dfc337552371f7f288bf5928cb1fa80a6afb3f24075a8315d02f06",
+        "IsRequired": true,
+        "UpstreamUrl": "https://raw.githubusercontent.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo/4274783a23afcfdbea3b4876cb79effd6c510785/__init__.py"
+      },
+      {
+        "RelativePath": "example_workflows/minimax_h3_t2v_turbo.json",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-turbo--4274783a23afcfdbea3b4876cb79effd6c510785--example_workflows__minimax_h3_t2v_turbo.json",
+        "SizeBytes": 22311,
+        "Sha256": "7371dfc10b6794607db817c5df17e6614f7c27e35ebd7f3231d71bc445eafd08",
+        "IsRequired": true,
+        "UpstreamUrl": "https://raw.githubusercontent.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo/4274783a23afcfdbea3b4876cb79effd6c510785/example_workflows/minimax_h3_t2v_turbo.json"
+      },
+      {
+        "RelativePath": "h3_silu_temb_grid.safetensors",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-turbo--4274783a23afcfdbea3b4876cb79effd6c510785--h3_silu_temb_grid.safetensors",
+        "SizeBytes": 5510600,
+        "Sha256": "30eb3c2cc7fb6b470d9717ff840d359313ac27cd64b705e32da1baa10f72d6a8",
+        "IsRequired": true,
+        "UpstreamUrl": "https://raw.githubusercontent.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo/4274783a23afcfdbea3b4876cb79effd6c510785/h3_silu_temb_grid.safetensors"
+      },
+      {
+        "RelativePath": "pyproject.toml",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-turbo--4274783a23afcfdbea3b4876cb79effd6c510785--pyproject.toml",
+        "SizeBytes": 413,
+        "Sha256": "b4f49884a0cbb068ae0720612599486515d2b6f257c462d9621addada893ef7c",
+        "IsRequired": true,
+        "UpstreamUrl": "https://raw.githubusercontent.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo/4274783a23afcfdbea3b4876cb79effd6c510785/pyproject.toml"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-spectrum",
+    "Name": "xmarre/ComfyUI-Spectrum-MiniMax-H3 · source archive",
+    "Repository": "xmarre/ComfyUI-Spectrum-MiniMax-H3",
+    "Revision": "806fe498d574a726fecb8818917f00a4b993fd77",
+    "License": "GPL-3.0",
+    "Files": [
+      {
+        "RelativePath": "spectrum.zip",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-spectrum--806fe498d574a726fecb8818917f00a4b993fd77--spectrum.zip",
+        "SizeBytes": 636346,
+        "Sha256": "949eb9410fd1dfcf812843af2c92bcdc81a7732cc30c60c9f8b4e244b106684f",
+        "IsRequired": true,
+        "UpstreamUrl": "https://codeload.github.com/xmarre/ComfyUI-Spectrum-MiniMax-H3/zip/806fe498d574a726fecb8818917f00a4b993fd77"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-source-rgthree",
+    "Name": "rgthree/rgthree-comfy · source archive",
+    "Repository": "rgthree/rgthree-comfy",
+    "Revision": "d7297b42f0fa78bec1c0411478f887423c249502",
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "rgthree.zip",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-source-rgthree--d7297b42f0fa78bec1c0411478f887423c249502--rgthree.zip",
+        "SizeBytes": 4107313,
+        "Sha256": "5c2a782da18771c6bddcedfbaaa111daa85b649f903f3d9622db521201d431bb",
+        "IsRequired": true,
+        "UpstreamUrl": "https://codeload.github.com/rgthree/rgthree-comfy/zip/d7297b42f0fa78bec1c0411478f887423c249502"
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-upscale-model",
+    "Name": "LBH-123-AI/Minimax_h3_latent_Upscaler",
+    "Repository": "LBH-123-AI/Minimax_h3_latent_Upscaler",
+    "Revision": "3f941d5d182014dd5c0a5e16330420ee2d4aa0c6",
+    "License": "Apache-2.0",
+    "Files": [
+      {
+        "RelativePath": "latent_upscale_models/minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors",
+        "SourceUrl": "https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler/resolve/3f941d5d182014dd5c0a5e16330420ee2d4aa0c6/minimax_h3_latent_upscaler_3d_conv_v1/minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors",
+        "SizeBytes": 690592672,
+        "Sha256": "043e5a48e161610ef6c3ea974645220354d06fa618abca15f76d084812eb55c2",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "video-h3-preview-model",
+    "Name": "Kijai/MiniMax-H3-TAE",
+    "Repository": "Kijai/MiniMax-H3-TAE",
+    "Revision": "a213ac8bf2f148b4f32372279a7f207846978900",
+    "License": "Apache-2.0",
+    "Files": [
+      {
+        "RelativePath": "vae_approx/taeh3.safetensors",
+        "SourceUrl": "https://github.com/PiTrolKun/LOPATA/releases/download/h3-components-20261029/video-h3-preview-model--a213ac8bf2f148b4f32372279a7f207846978900--vae_approx__taeh3.safetensors",
+        "SizeBytes": 9791388,
+        "Sha256": "f0f60fa072089997f817402098c2fd90777cb2660dd79cf5df42fc1e3e08e527",
+        "IsRequired": true,
+        "UpstreamUrl": "https://huggingface.co/Kijai/MiniMax-H3-TAE/resolve/a213ac8bf2f148b4f32372279a7f207846978900/vae_approx/taeh3.safetensors"
+      }
+    ]
+  }
+]

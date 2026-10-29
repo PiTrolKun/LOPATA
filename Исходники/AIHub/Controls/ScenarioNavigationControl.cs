@@ -113,6 +113,7 @@ public sealed class ScenarioNavigationControl : UserControl
             if (VideoPreparation is null)
             {
                 VideoPreparation = new VideoPreparationControl(_localize);
+                VideoPreparation.HomeRequested += ShowHome;
                 VideoPreparationCreated?.Invoke(VideoPreparation);
                 VideoPreparation.BackRequested += () =>
                 {

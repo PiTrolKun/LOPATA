@@ -78,3 +78,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Original upstream KittenTTS license retains its exact bytes.
 Исходники/AIHub/Licenses/texts/VideoNarrator-Kitten2-LICENSE.txt -text -eol -whitespace
+
+# Pinned H3 vendor licences retain original bytes and whitespace.
+Исходники/AIHub/Licenses/texts/video-h3-* -text -eol -whitespace

@@ -15,6 +15,7 @@ public sealed partial class VideoPreparationControl
 {
     public bool Next()
     {
+        if (_generatorPage is not null) return false;
         if (ConceptBusy || PendingConcept) return false;
         if (Session.Project.Form.Length == 0) return false;
         var current = Session.Project.CurrentStep;
@@ -41,6 +42,7 @@ public sealed partial class VideoPreparationControl
     }
     public bool BackStepIfNeeded()
     {
+        if (_generatorPage is not null) { _generatorPage.RequestBack(); return true; }
         if (_shotsBusy || _shotsStarting || _finishingBusy) return false;
         if (Session.Project.CurrentStep == "form") return false;
         var current = Session.Project.CurrentStep;
@@ -51,12 +53,14 @@ public sealed partial class VideoPreparationControl
     }
     public bool Checkpoint()
     {
+        if (_generatorPage?.CanCheckpoint() == false) return false;
         _autosave.Stop();
         try { Session.Checkpoint(); _statusKey = ""; RefreshStatus(); RefreshConceptHistory(); RefreshWorldHistory(); return true; }
         catch (Exception error) when (IsStorageError(error)) { ShowError(error); return false; }
     }
     public bool Save()
     {
+        if (_generatorPage?.CanCheckpoint() == false) return false;
         if (Session.Project.CurrentStep == "storyboard" && _boardInvalidDuration) { _statusKey = "BoardDurationInvalid"; RefreshStatus(); return false; }
         if (_shotsInvalidDuration) { _statusKey = "ShotsDurationInvalid"; RefreshStatus(); return false; }
         if (Session.ArchivePath is null) { MissingLocation(); return false; }
@@ -105,6 +109,8 @@ public sealed partial class VideoPreparationControl
     public bool OpenPath(string path)
     {
         if (string.Equals(Session.ArchivePath, Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase)) return true;
+        if (_generatorPage?.Busy == true) return false;
+        if (_generatorPage?.RequestExit() == false) return false;
         if (ConceptBusy || PendingConcept) return false;
         if (!ConfirmReplace()) return false;
         try
@@ -118,6 +124,9 @@ public sealed partial class VideoPreparationControl
         _openingProject = true;
         try
         {
+            // Explorer attaches the wizard to an already visible host. Wait for WPF
+            // layout before asking for an open route; hidden-work protection stays on.
+            await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded, token);
             // A shell request may arrive after the initial warmup has already begun.
             // Only cancel pure warmup; never interrupt generation or replace its source.
             _warmCancel?.Cancel();
@@ -176,5 +185,6 @@ public sealed partial class VideoPreparationControl
         _statusKey = error.Message.StartsWith("VideoPrep.", StringComparison.Ordinal) ? error.Message[10..] : "IoError";
         if (T(_statusKey).StartsWith("VideoPrep.", StringComparison.Ordinal)) _statusKey = "IoError";
         RefreshStatus();
+        _generatorPage?.NotifyWorkspace(T(_statusKey));
     }
 }

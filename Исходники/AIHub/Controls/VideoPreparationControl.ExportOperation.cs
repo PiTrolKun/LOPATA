@@ -36,7 +36,7 @@ public sealed partial class VideoPreparationControl
         var hash = Convert.ToHexStringLower(SHA256.HashData(archive));
         var job = restored?.Input.Deserialize<ExportRequest>() ?? new(Guid.NewGuid().ToString("N"), p.Id, Session.ArchivePath!, Path.GetFullPath(directory), hash);
         if (job.ArchiveSha256 != hash) throw new BackgroundOperationWaitingException("VideoPrep.ExportChanged");
-        _finishingBusy = true; _finishOperationKey = "ExportWorking";
+        _finishingBusy = true; _finishOperationKey = "ExportWorking"; _generatorPage?.SetWorkspaceBusy(true);
         using var cancel = CancellationTokenSource.CreateLinkedTokenSource(token, ApplicationBackgroundOperations.ExitToken); _finishingCancel = cancel; Render();
         try
         {
@@ -49,7 +49,7 @@ public sealed partial class VideoPreparationControl
         }
         catch (OperationCanceledException) { _statusKey = "FinishCanceled"; }
         catch (Exception e) { ConceptError(e); }
-        finally { _finishingBusy = false; _finishingCancel = null; Render(); }
+        finally { _finishingBusy = false; _finishingCancel = null; _generatorPage?.SetWorkspaceBusy(false); Render(); }
     }
     public async Task ResumeExportAsync(BackgroundOperationState state, CancellationToken token)
     {

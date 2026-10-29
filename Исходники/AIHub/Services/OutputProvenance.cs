@@ -18,12 +18,15 @@ public sealed record OutputProvenance
     public string Scenario { get; init; } = "";
     public DateTimeOffset ExportedUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? CreatedUtc { get; init; }
+    public double? GenerationSeconds { get; init; }
     public string ModelHistory { get; init; } = "not-applicable";
     public string ModelScope { get; init; } = "output";
     public OutputModelUse[] Models { get; init; } = [];
     public static OutputProvenance Capture(string kind) => new() { Scenario = "screen-capture/" + kind, CreatedUtc = DateTimeOffset.UtcNow };
     public string Json()
     {
+        if (GenerationSeconds is { } seconds && (!double.IsFinite(seconds) || seconds < 0))
+            throw new InvalidDataException("Invalid generation duration.");
         foreach (var model in Models)
             foreach (var value in new[] { model.Id, model.Name, model.Revision, model.Role })
                 if (value is null || value.Length > 1024 || Path.IsPathFullyQualified(value) || value.Any(char.IsControl))

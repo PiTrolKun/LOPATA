@@ -90,7 +90,9 @@ internal static class PinnedFileTreeVerifier
             token.ThrowIfCancellationRequested();
             if (leases.ContainsKey(path)) return;
             RejectReparse(path);
-            var handle = CreateFileW(path, 0x80, 1, IntPtr.Zero, 3, 0x02000000, IntPtr.Zero);
+            var nativePath = path.StartsWith(@"\\?\", StringComparison.Ordinal) ? path
+                : path.StartsWith(@"\\", StringComparison.Ordinal) ? @"\\?\UNC\" + path[2..] : @"\\?\" + path;
+            var handle = CreateFileW(nativePath, 0x80, 1, IntPtr.Zero, 3, 0x02000000, IntPtr.Zero);
             if (handle.IsInvalid) { var error = Marshal.GetLastWin32Error(); handle.Dispose(); throw new IOException("Cannot lease verification directory: " + path, new Win32Exception(error)); }
             leases.Add(path, handle); RejectReparse(path);
         }

@@ -18,16 +18,25 @@ internal sealed class VideoPreparationWindow : Window
     private readonly Button _verify, _download;
     private bool _busy, _closing;
     internal VideoPreparationWindow(Window owner, Func<string, string> localize, string name,
-        Func<bool, IProgress<ManagedModelDownloadProgress>, CancellationToken, Task<bool>> prepare, CancellationToken token)
+        Func<bool, IProgress<ManagedModelDownloadProgress>, CancellationToken, Task<bool>> prepare, CancellationToken token, string? details = null)
     {
         _prepare = prepare; _l = localize; _cancel = CancellationTokenSource.CreateLinkedTokenSource(token);
         MusicWishUi.PrepareWindow(this, T("ModelPreparation"), "VideoEditor.Preparation", 760); Height = 380; MinHeight = 300;
         Owner = owner; Resources.MergedDictionaries.Insert(0, owner.Resources);
-        var panel = new StackPanel { Margin = new(24) }; panel.Children.Add(MusicWishUi.Text(name, true)); panel.Children.Add(MusicWishUi.Text(T("PreparationHint"))); panel.Children.Add(_status); panel.Children.Add(_progress);
+        var panel = new StackPanel { Margin = new(24) }; panel.Children.Add(MusicWishUi.Text(name, true)); panel.Children.Add(MusicWishUi.Text(T("PreparationHint")));
+        if (details is not null)
+        {
+            Height = 650;
+            panel.Children.Add(new ScrollViewer { Content = MusicWishUi.Text(details), Height = 245,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
+        }
+        _status.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+        panel.Children.Add(_status); panel.Children.Add(_progress);
         var actions = new WrapPanel();
         _verify = MusicWishUi.Button(T("VerifyModels"), "VideoEditor.Preparation.Verify", () => _ = ExecuteAsync(false));
         _download = MusicWishUi.Button(T("DownloadModels"), "VideoEditor.Preparation.Download", () => _ = ExecuteAsync(true));
-        actions.Children.Add(_verify); actions.Children.Add(_download); actions.Children.Add(MusicWishUi.Button(T("CancelPreparation"), "VideoEditor.Preparation.Cancel", Close)); panel.Children.Add(actions); Content = panel;
+        actions.Children.Add(_verify); actions.Children.Add(_download); actions.Children.Add(MusicWishUi.Button(T("CancelPreparation"), "VideoEditor.Preparation.Cancel", Close)); panel.Children.Add(actions);
+        Content = details is null ? panel : new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         Loaded += (_, _) => _ = ExecuteAsync(false);
         Closing += (_, e) => { if (_busy) { e.Cancel = true; _closing = true; _cancel.Cancel(); } };
         Closed += (_, _) => { _cancel.Cancel(); _cancel.Dispose(); };

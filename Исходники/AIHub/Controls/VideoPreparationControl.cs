@@ -65,6 +65,11 @@ public sealed partial class VideoPreparationControl : UserControl
     }
     private void Render()
     {
+        if (_generatorPage is not null)
+        {
+            LiterarySpellChecking.ReleaseTree(Content as DependencyObject);
+            _generatorPage.Configure(_localize); Content = _generatorPage; return;
+        }
         // Keep .54 archives readable, but the model settings page is no longer a wizard step.
         if (Session.Project.CurrentStep == "generator") Session.Project.CurrentStep = "finish";
         if (_boardPreview is not null && (_boardPreviewProject != Session.Project.Id || Session.Project.CurrentStep != "storyboard")) { _boardPreview.Close(); _boardPreview = null; }

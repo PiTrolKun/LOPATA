@@ -21,7 +21,8 @@ public sealed class VideoGeneratorChoiceWindow : Window
         list.SetResourceReference(System.Windows.Controls.ListBox.BackgroundProperty, "PanelBrush");
         list.SetResourceReference(System.Windows.Controls.ListBox.ForegroundProperty, "TextPrimaryBrush");
         list.SetResourceReference(System.Windows.Controls.ListBox.BorderBrushProperty, "LineBrush");
-        list.SelectedItem = VideoGeneratorPlan.Candidates.FirstOrDefault(c => c.Id == selected) ?? VideoGeneratorPlan.Candidates.FirstOrDefault();
+        list.SelectedItem = VideoGeneratorPlan.Candidates.FirstOrDefault(c => c.Id == selected)
+            ?? VideoGeneratorPlan.Candidates.FirstOrDefault(c => c.Id == VideoH3Catalog.ModelId);
         AutomationProperties.SetAutomationId(list, "VideoPrep.ModelPicker.List"); page.Children.Add(list);
         var buttons = new WrapPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(0, 14, 0, 0) };
         var apply = VideoReferenceWindowUi.Button(T("ModelPickerApply"), "ModelPicker.Apply", () =>

@@ -227,11 +227,23 @@ public sealed class SegmentedModelFileDownloader
             request,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
-        if (existingBytes > 0 && response.StatusCode != HttpStatusCode.PartialContent)
-        {
-            throw new InvalidDataException("The source does not support safe continuation of this partial model file.");
-        }
         response.EnsureSuccessStatusCode();
+        if (existingBytes > 0 && response.StatusCode == HttpStatusCode.OK)
+        {
+            if (response.Content.Headers.ContentLength is { } fullLength && fullLength != expectedSize)
+                throw new InvalidDataException("The complete replacement response has an unexpected size.");
+            var restart = new AggregateProgressReporter(card, file, completedCardBytes, 0, progress);
+            restart.Report("restarting", file.RelativePath);
+            await ModelDownloadRestart.ReplacePartialAsync(partialPath, file,
+                staging => CopyResponseAsync(response, staging, expectedSize, restart, cancellationToken), cancellationToken);
+            return;
+        }
+        if (response.StatusCode == HttpStatusCode.PartialContent
+            && (response.Content.Headers.ContentRange is not { } range || range.From != existingBytes
+                || range.To != expectedSize - 1 || range.Length != expectedSize))
+            throw new InvalidDataException("The source returned an unexpected continuation range.");
+        if (response.StatusCode is not (HttpStatusCode.OK or HttpStatusCode.PartialContent))
+            throw new InvalidDataException("The source did not return a file response.");
         var reporter = new AggregateProgressReporter(card, file, completedCardBytes, existingBytes, progress);
         await CopyResponseAsync(response, partialPath, expectedSize - existingBytes, reporter, cancellationToken);
         if (GetFileLength(partialPath) != expectedSize)

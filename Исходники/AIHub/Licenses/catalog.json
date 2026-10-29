@@ -4478,5 +4478,230 @@
     "Texts": [
       "texts/VideoNarrator-Chatterbox-LICENSE.txt"
     ]
+  },
+  {
+    "Id": "video-h3-models",
+    "Name": "MiniMax H3 Ref2VA · INT8 + encoder / VAE",
+    "Version": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Author": "Comfy-Org/MiniMax-H3",
+    "License": "MiniMax H3 Community License; Apache-2.0 (Qwen encoder)",
+    "Source": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "093a695c7112056b5c752b3f68173bf71f080a8e2e70490f2a853b03b32cf745",
+    "Texts": [
+      "texts/video-h3-model-LICENSE.txt",
+      "texts/video-h3-qwen-LICENSE.txt"
+    ],
+    "Ru": "H3: лицензия исключает ЕС, Великобританию, США и Южную Корею; для них требуется отдельное разрешение. Действуют дополнительные коммерческие условия и обязанности распространения. Ознакомление не предоставляет отдельную коммерческую лицензию. Энкодер основан на Qwen3-VL; оригинальные условия приложены.",
+    "En": "H3 excludes the EU, UK, USA and South Korea from its licensed territory; separate permission is required there. Additional commercial and redistribution terms apply. Acknowledgement does not grant a separate commercial licence. The encoder is based on Qwen3-VL; original terms are attached."
+  },
+  {
+    "Id": "video-h3-source-comfy",
+    "Name": "Comfy-Org/ComfyUI · source archive",
+    "Version": "426f5eea52a7ece1dd599fff4cb6cd1f352ddd24",
+    "Author": "Comfy-Org/ComfyUI",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/Comfy-Org/ComfyUI/tree/426f5eea52a7ece1dd599fff4cb6cd1f352ddd24",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "Texts": [
+      "texts/video-h3-comfy-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-source-timeline",
+    "Name": "chanon/comfyui-obvpm-timeline · source archive",
+    "Version": "068a97b4786daef8d67277fe323297fb86d54a3f",
+    "Author": "chanon/comfyui-obvpm-timeline",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/chanon/comfyui-obvpm-timeline/tree/068a97b4786daef8d67277fe323297fb86d54a3f",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "Texts": [
+      "texts/video-h3-timeline-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-workflow",
+    "Name": "obvpm H3 Ref2VA · workflow 007A",
+    "Version": "068a97b4786daef8d67277fe323297fb86d54a3f",
+    "Author": "chanon/comfyui-obvpm-timeline",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/chanon/comfyui-obvpm-timeline/tree/068a97b4786daef8d67277fe323297fb86d54a3f",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "Texts": [
+      "texts/video-h3-timeline-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-source-obvpm",
+    "Name": "chanon/comfyui-obvpm · source archive",
+    "Version": "baf0aa8f3cd220b1b882e91a7145e96d1af90300",
+    "Author": "chanon/comfyui-obvpm",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/chanon/comfyui-obvpm/tree/baf0aa8f3cd220b1b882e91a7145e96d1af90300",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "Texts": [
+      "texts/video-h3-obvpm-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-source-kjnodes",
+    "Name": "kijai/ComfyUI-KJNodes · source archive",
+    "Version": "2371136d2fa6fd0914e514cd99b36dabe5db9adf",
+    "Author": "kijai/ComfyUI-KJNodes",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/kijai/ComfyUI-KJNodes/tree/2371136d2fa6fd0914e514cd99b36dabe5db9adf",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "Texts": [
+      "texts/video-h3-kjnodes-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-source-upscaler",
+    "Name": "LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler · source archive",
+    "Version": "40316cf008b2fd8663263270669eb4da23f89d2c",
+    "Author": "LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler",
+    "License": "MIT",
+    "Source": "https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler/tree/40316cf008b2fd8663263270669eb4da23f89d2c",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "86805fe49f63c8957e4427f7e7f26fba687c6cea05fa9249bf36f9d3316a0734",
+    "Texts": [
+      "texts/video-h3-upscaler-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-source-turbo",
+    "Name": "Larryvrh/ComfyUI-MiniMax-H3-Turbo · source files",
+    "Version": "4274783a23afcfdbea3b4876cb79effd6c510785",
+    "Author": "Larryvrh/ComfyUI-MiniMax-H3-Turbo",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/Larryvrh/ComfyUI-MiniMax-H3-Turbo/tree/4274783a23afcfdbea3b4876cb79effd6c510785",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "Texts": [
+      "texts/video-h3-turbo-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-source-spectrum",
+    "Name": "xmarre/ComfyUI-Spectrum-MiniMax-H3 · source archive",
+    "Version": "806fe498d574a726fecb8818917f00a4b993fd77",
+    "Author": "xmarre/ComfyUI-Spectrum-MiniMax-H3",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/xmarre/ComfyUI-Spectrum-MiniMax-H3/tree/806fe498d574a726fecb8818917f00a4b993fd77",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "1971f52704b3eba9020175f2ccf1f55bef2a3179bfb2d09dd49fed7bbbc2437d",
+    "Texts": [
+      "texts/video-h3-spectrum-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-source-rgthree",
+    "Name": "rgthree/rgthree-comfy · source archive",
+    "Version": "d7297b42f0fa78bec1c0411478f887423c249502",
+    "Author": "rgthree/rgthree-comfy",
+    "License": "MIT",
+    "Source": "https://github.com/rgthree/rgthree-comfy/tree/d7297b42f0fa78bec1c0411478f887423c249502",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "2b1c4883340df4fa1dbb8b2cbb9da748279b641571933b3759cefe45f7888844",
+    "Texts": [
+      "texts/video-h3-rgthree-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-upscale-model",
+    "Name": "LBH-123-AI/Minimax_h3_latent_Upscaler",
+    "Version": "3f941d5d182014dd5c0a5e16330420ee2d4aa0c6",
+    "Author": "LBH-123-AI/Minimax_h3_latent_Upscaler",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/LBH-123-AI/Minimax_h3_latent_Upscaler/tree/3f941d5d182014dd5c0a5e16330420ee2d4aa0c6",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "Texts": [
+      "texts/video-h3-apache-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-preview-model",
+    "Name": "Kijai/MiniMax-H3-TAE",
+    "Version": "a213ac8bf2f148b4f32372279a7f207846978900",
+    "Author": "Kijai/MiniMax-H3-TAE",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/Kijai/MiniMax-H3-TAE/tree/a213ac8bf2f148b4f32372279a7f207846978900",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "Texts": [
+      "texts/video-h3-apache-LICENSE.txt"
+    ],
+    "Ru": "Сохраняются оригинальные лицензии и уведомления поставщика. Получение файлов не подтверждает установку среды или испытание видеогенератора. Ускорители не включены автоматически.",
+    "En": "Original provider licences and notices apply. Acquired files do not confirm environment installation or successful video generation. Accelerators are not enabled automatically."
+  },
+  {
+    "Id": "video-h3-runtime-libraries",
+    "Name": "H3 · pinned ComfyUI Python dependencies",
+    "Version": "a9a4a53662df025a01ab3d51693f8e4560182074",
+    "Author": "Upstream Python package authors",
+    "License": "Apache-2.0; MIT; BSD; LGPL-3.0-or-later; GPL-2.0-or-later for bundled x264/x265; original notices",
+    "Source": "https://github.com/Comfy-Org/ComfyUI/tree/426f5eea52a7ece1dd599fff4cb6cd1f352ddd24",
+    "Checked": "2026-10-28",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "46F338D775350EA912B15FEE58485B5AF9BF681ECEC118177BA88FFB185C9B47",
+    "Texts": [
+      "texts/video-h3-python-NOTICES.txt",
+      "texts/GPL-3.0-or-later.txt",
+      "texts/FFmpeg-8.1-GPL2.txt",
+      "texts/video-h3-LGPL-3.0.txt"
+    ],
+    "Ru": "Изолированные закреплённые зависимости ComfyUI. Оригинальные LICENSE/NOTICE сохраняются вместе с пакетами. Модель H3 и Python/PyTorch имеют отдельные условия. Набор шаблонных медиа не поставляется. PyAV: BSD-3-Clause; встроенный FFmpeg сообщает LGPL-3.0-or-later, библиотеки x264/x265 имеют отдельные GPL-условия. Все исходные уведомления wheel сохраняются. Пакет не меняет кодеки остальных сценариев.",
+    "En": "Isolated pinned ComfyUI dependencies. Original LICENSE/NOTICE files are retained with packages. H3 and Python/PyTorch have separate terms. Template media are not shipped. PyAV is BSD-3-Clause; its bundled FFmpeg reports LGPL-3.0-or-later, and x264/x265 libraries have separate GPL terms. Original wheel notices are retained. Other scenarios keep their existing codecs."
   }
 ]

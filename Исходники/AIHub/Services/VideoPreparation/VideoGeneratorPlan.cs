@@ -9,6 +9,7 @@ public sealed record VideoGeneratorSettings(string ModelId, int Width, int Heigh
 public sealed record VideoGeneratorChoice(string Id, DateTimeOffset SavedUtc, VideoGeneratorSettings Settings);
 public sealed class VideoGeneratorPlan
 {
+    public VideoH3WorkspaceState? H3 { get; set; }
     public bool FinalReached { get; set; }
     public string PreparationStep { get; set; } = "storyboard";
     public VideoGeneratorSettings? Draft { get; set; }
@@ -38,6 +39,10 @@ public sealed class VideoGeneratorPlan
         var ids = new HashSet<string>();
         foreach (var h in g.History!) { if (h is null || !Guid.TryParseExact(h.Id, "N", out _) || !ids.Add(h.Id) || h.SavedUtc == default) Invalid(); ValidateSettings(h!.Settings); }
         if (g.SelectedId != "" && !ids.Contains(g.SelectedId)) Invalid();
+        VideoH3WorkspaceState.Validate(g.H3);
+        if (g.H3 is { } generation) VideoH3Run.Validate(p, generation.Runs);
+        if (g.H3 is { } h3 && h3.Plans.Values.SelectMany(v => v.VideoReferenceRoles.Concat(v.AudioReferenceRoles))
+            .Any(role => p.Attachments.Count(a => a.Role == role) != 1)) Invalid();
     }
     [System.Diagnostics.CodeAnalysis.DoesNotReturn] private static void Invalid() => throw new InvalidDataException("VideoPrep.InvalidArchive");
 }

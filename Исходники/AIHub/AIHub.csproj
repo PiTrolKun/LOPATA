@@ -62,6 +62,13 @@
     </Content>
     <EmbeddedResource Include="Tools\ace-xl-python-files.json" LogicalName="AIHub.AcePythonManifest" />
     <EmbeddedResource Include="Tools\music-stems-components.json" LogicalName="AIHub.MusicStemsManifest" />
+    <EmbeddedResource Include="Tools\video-h3-components.json" LogicalName="AIHub.VideoH3Manifest" />
+    <EmbeddedResource Include="Tools\video-h3-runtime.json.gz" LogicalName="AIHub.VideoH3RuntimeManifest" />
+    <EmbeddedResource Include="Tools\h3_worker.py" LogicalName="AIHub.H3Worker" />
+    <EmbeddedResource Include="Tools\h3_native.py" LogicalName="AIHub.H3Native" />
+    <EmbeddedResource Include="Tools\h3_memory.py" LogicalName="AIHub.H3Memory" />
+    <EmbeddedResource Include="Tools\h3_assemble.py" LogicalName="AIHub.H3Assemble" />
+    <EmbeddedResource Include="Tools\h3_refinement_cache.py" LogicalName="AIHub.H3RefinementCache" />
     <EmbeddedResource Include="Tools\image-generation-manifest.json" LogicalName="AIHub.ImageGenerationManifest" />
     <EmbeddedResource Include="Tools\metadata-exiftool-files.json" LogicalName="AIHub.MetadataExifToolManifest" />
     <Content Include="..\..\Runtime\Metadata\ExifTool-13.59\exiftool-13.59_64\**\*" Link="MetadataRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
