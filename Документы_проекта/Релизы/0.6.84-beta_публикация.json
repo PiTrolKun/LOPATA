@@ -1,0 +1,132 @@
+{
+  "server": {
+    "version": "0.6.84-beta",
+    "sourceCommit": "b69395a8970caec0ea9512cea2228da19c822802",
+    "url": "https://github.com/PiTrolKun/LOPATA/releases/tag/v0.6.84-beta",
+    "draft": false,
+    "prerelease": true,
+    "publishedAt": "2026-10-30T14:39:30Z",
+    "assetsVerified": 19,
+    "uploadBytes": 238348116,
+    "assets": [
+      {
+        "name": "engine-set-001.signed.json",
+        "size": 1351868,
+        "sha256": "feb8cde5dc5a73481c1508db6babffbda01b9c74bca36130bd2ccd5eab1a2250"
+      },
+      {
+        "name": "engine-set-002.signed.json",
+        "size": 734611,
+        "sha256": "777fb280bba7c959badd57cf4bcc8531eb01cc80329a45b18161aef34954e505"
+      },
+      {
+        "name": "lopata-files.json",
+        "size": 3576837,
+        "sha256": "9c936bdb6f0d4294b182622f8a5b1ed22c81caeb270d405c829c7265d25e171b"
+      },
+      {
+        "name": "lopata-fresh-files.json",
+        "size": 3064648,
+        "sha256": "ab58a7117e0a7f53ea46e2ab7189166932fa889f07019a8114de53ebbe16e252"
+      },
+      {
+        "name": "pkg-2a7255d91bb0f838fb68ba7203ab052581e2f32a7a3857126487a3e675b3518a.zip",
+        "size": 11465121,
+        "sha256": "2a7255d91bb0f838fb68ba7203ab052581e2f32a7a3857126487a3e675b3518a"
+      },
+      {
+        "name": "pkg-31c05010f3b724f85318343797aae0f784d543fcb66d1c0ff3cca4361f6f4a95.zip",
+        "size": 16160936,
+        "sha256": "31c05010f3b724f85318343797aae0f784d543fcb66d1c0ff3cca4361f6f4a95"
+      },
+      {
+        "name": "pkg-57c5afb86edbf00aaa5b1a885684e43a63da9a4b0ef7514e43795375861c0480.zip",
+        "size": 11299425,
+        "sha256": "57c5afb86edbf00aaa5b1a885684e43a63da9a4b0ef7514e43795375861c0480"
+      },
+      {
+        "name": "pkg-628676ceca20292ea34aaba64d1bdb2302af780c186865085ed5e152cf6fa855.zip",
+        "size": 10504482,
+        "sha256": "628676ceca20292ea34aaba64d1bdb2302af780c186865085ed5e152cf6fa855"
+      },
+      {
+        "name": "pkg-62eb803bbbb4b7d98eb9c11a11da69a9df725ea5b37b29ac246f4f3e1ad4bd45.zip",
+        "size": 7672048,
+        "sha256": "62eb803bbbb4b7d98eb9c11a11da69a9df725ea5b37b29ac246f4f3e1ad4bd45"
+      },
+      {
+        "name": "pkg-662d4ef6cc13b534877a0c65e4a36011637150c3e6171ed03d8f047a3f6262f0.zip",
+        "size": 5078184,
+        "sha256": "662d4ef6cc13b534877a0c65e4a36011637150c3e6171ed03d8f047a3f6262f0"
+      },
+      {
+        "name": "pkg-7449ce7366d3a629cd57174e6b80395847e7489a1e77be6e257c0b1a52adbbe2.zip",
+        "size": 9176841,
+        "sha256": "7449ce7366d3a629cd57174e6b80395847e7489a1e77be6e257c0b1a52adbbe2"
+      },
+      {
+        "name": "pkg-8612a2240f58885592611ae0bf504893d01c13b2a30fec96611ee5f6326d6032.zip",
+        "size": 25840069,
+        "sha256": "8612a2240f58885592611ae0bf504893d01c13b2a30fec96611ee5f6326d6032"
+      },
+      {
+        "name": "pkg-a5780125fa54de6c92b854aaf41bef4d6a7028d33e55a0333c163f506542f8a0.zip",
+        "size": 46212660,
+        "sha256": "a5780125fa54de6c92b854aaf41bef4d6a7028d33e55a0333c163f506542f8a0"
+      },
+      {
+        "name": "pkg-c216316a35bbac8e76460a3b9c70cad5c4651379949def4f779c82e80ec99a4d.zip",
+        "size": 11416567,
+        "sha256": "c216316a35bbac8e76460a3b9c70cad5c4651379949def4f779c82e80ec99a4d"
+      },
+      {
+        "name": "pkg-c5b5468fb7b72366982e3f95b7d3aa91a8f0c919a799d52f475c69f16548d686.zip",
+        "size": 8736703,
+        "sha256": "c5b5468fb7b72366982e3f95b7d3aa91a8f0c919a799d52f475c69f16548d686"
+      },
+      {
+        "name": "pkg-ca6570a5919640280a184e2a4278844e25c07240112c18674f9dc4bb1eb4f381.zip",
+        "size": 4464683,
+        "sha256": "ca6570a5919640280a184e2a4278844e25c07240112c18674f9dc4bb1eb4f381"
+      },
+      {
+        "name": "pkg-ce80a248381c10202bfd63ad852cb5a5174a11e6383b611c8c1675d9094bbea0.zip",
+        "size": 7763403,
+        "sha256": "ce80a248381c10202bfd63ad852cb5a5174a11e6383b611c8c1675d9094bbea0"
+      },
+      {
+        "name": "pkg-df66b5e51256c4cbb313e5f8fd1781201c237e35a7b9632e70376ef833cb6bba.zip",
+        "size": 44191778,
+        "sha256": "df66b5e51256c4cbb313e5f8fd1781201c237e35a7b9632e70376ef833cb6bba"
+      },
+      {
+        "name": "pkg-f5d8e75419c3fde4ac903b1539ac30567b342a4549b3d134927140cb6e9a04f6.zip",
+        "size": 9637252,
+        "sha256": "f5d8e75419c3fde4ac903b1539ac30567b342a4549b3d134927140cb6e9a04f6"
+      }
+    ]
+  },
+  "package": {
+    "version": "0.6.84-beta",
+    "sourceCommit": "b69395a8970caec0ea9512cea2228da19c822802",
+    "previousFiles": 6719,
+    "transitionFiles": 6729,
+    "freshFiles": 5562,
+    "removedPreviousFiles": 0,
+    "engineAndBackendFilesUnchanged": 2916,
+    "originalNoticesUnchanged": 640,
+    "bundledCalibreFilesVerified": 1356,
+    "officeArchiveBytes": 509639004,
+    "officeArchiveSha256": "a62b1fd486b1ada21db71eb6d5108612b2be1c1b060e6591fe3ca24fa5283cd2",
+    "newPackages": 15,
+    "newPackageBytes": 229620152,
+    "newZipEntriesVerified": 2500,
+    "scoreRuntimeFilesVerified": 62,
+    "scoreLicenseCorrect": true,
+    "protectedPathsUnchanged": true,
+    "fullInstallerBuilt": false,
+    "videoRuntimeFilesVerified": 30,
+    "bundledSampleWavs": 19,
+    "narratorSourceFilesVerified": 7
+  }
+}
