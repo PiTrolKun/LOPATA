@@ -1,0 +1,330 @@
+[
+  {
+    "profile": "minimax-h3-w4a8",
+    "runId": "0c149d5109e2420fb2482435c8818a90",
+    "settings": {
+      "RunMode": "review",
+      "RetryCount": 1,
+      "OutputHeight": 0,
+      "TargetSeconds": 0,
+      "ClipSeconds": 5,
+      "Aspect": "9:16",
+      "Width": 480,
+      "Height": 864,
+      "Steps": 8,
+      "Seed": 12345,
+      "AudioMode": "native",
+      "ReferenceSize": "match",
+      "Continuation": "auto",
+      "ContextFrames": 39,
+      "AudioContextFrames": 0,
+      "PinMode": "masked",
+      "MaskHold": 0,
+      "MaskRampFrames": 0,
+      "Sampler": "res_multistep",
+      "Scheduler": "simple",
+      "VideoShift": 12,
+      "AudioShift": 3,
+      "Attention": "pytorch",
+      "Spectrum": false,
+      "Turbo": "off",
+      "TurboFile": "",
+      "TurboStrength": 1,
+      "ContentLoraFile": "",
+      "ContentLoraStrength": 1,
+      "MemoryMode": "auto",
+      "VramReserveGb": 2,
+      "WindowSeconds": 1,
+      "OverlapSeconds": 0.25,
+      "DecodeSeconds": 5,
+      "Upscale": false,
+      "UpscaleMegapixels": 2,
+      "RefineAmount": 0.2,
+      "RefineSteps": 10,
+      "PreserveAudio": true,
+      "Crf": 19,
+      "ExportName": "video"
+    },
+    "models": [
+      {
+        "Id": "video-h3lite-models/minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "Name": "minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "Revision": "f5c3b1d5a63e008a691fca1b6096fd57a5307536",
+        "Role": "video and audio diffusion"
+      },
+      {
+        "Id": "video-h3lite-encoder/qwen3vl_4b_int4_convrot.safetensors",
+        "Name": "qwen3vl_4b_int4_convrot.safetensors",
+        "Revision": "2ea2566f0a61baeb0bbdad0a3037e43012481788",
+        "Role": "text and image encoder"
+      },
+      {
+        "Id": "video-h3lite-projection/mmh3-4b-ClipProj-v3.1-mlp.safetensors",
+        "Name": "mmh3-4b-ClipProj-v3.1-mlp.safetensors",
+        "Revision": "2ebdbcdc27a29a9607efdb221a9afcb9a0cdd808",
+        "Role": "encoder projection"
+      },
+      {
+        "Id": "video-h3lite-vaes/vae/minimax_h3_video_vae_int8_convrot.safetensors",
+        "Name": "vae/minimax_h3_video_vae_int8_convrot.safetensors",
+        "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+        "Role": "decoder"
+      },
+      {
+        "Id": "video-h3lite-vaes/vae/minimax_h3_audio_vae_fp32.safetensors",
+        "Name": "vae/minimax_h3_audio_vae_fp32.safetensors",
+        "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+        "Role": "decoder"
+      },
+      {
+        "Id": "video-h3lite-source-clipproj/clipproj.zip",
+        "Name": "clipproj.zip",
+        "Revision": "c01ba8fb8f41b4f2094dbd0b185cdc238fb6134c",
+        "Role": "runtime"
+      },
+      {
+        "Id": "video-h3-source-comfy/comfy.zip",
+        "Name": "comfy.zip",
+        "Revision": "426f5eea52a7ece1dd599fff4cb6cd1f352ddd24",
+        "Role": "runtime"
+      },
+      {
+        "Id": "video-h3-source-timeline/timeline.zip",
+        "Name": "timeline.zip",
+        "Revision": "068a97b4786daef8d67277fe323297fb86d54a3f",
+        "Role": "runtime"
+      }
+    ],
+    "duration": 5.166666666666667,
+    "physicalTestExitCode": 0,
+    "pipelineSeconds": 140.9509108,
+    "totalTestSeconds": 400.9923984,
+    "peakProcessGpuDedicatedBytes": 19986186240.0,
+    "peakIndividualWorkingSetBytes": 18927718400.0,
+    "peakTreeWorkingSetBytes": 18667339776.0,
+    "peakTreePrivateBytes": 45038854144.0,
+    "peakProcessGpuSharedBytes": 90177536.0,
+    "peakSystemRamBytes": 40805957632.0,
+    "peakGpuTotalUsedBytes": 25048207360.0,
+    "baselineSystemRamBytes": 23875346432.0,
+    "baselineGpuBytes": 4412727296.0,
+    "medianSampleIntervalSeconds": 0.5145607,
+    "maxSampleIntervalSeconds": 0.7033672,
+    "peakTorchAllocatedBytes": 16958232576.0,
+    "maxTorchReservedSnapshotBytes": 19539165184.0,
+    "stagePeaks": [
+      {
+        "stage": "loading-text-encoder",
+        "seconds": 0.4734649,
+        "samples": 1,
+        "peakTreeWorkingSetBytes": 1542402048.0,
+        "peakTreePrivateBytes": 6867816448.0,
+        "peakProcessGpuDedicatedBytes": 352473088.0,
+        "peakProcessGpuSharedBytes": 77594624.0
+      },
+      {
+        "stage": "loading-vae",
+        "seconds": 0.7273066,
+        "samples": 1,
+        "peakTreeWorkingSetBytes": 3585323008.0,
+        "peakTreePrivateBytes": 11932352512.0,
+        "peakProcessGpuDedicatedBytes": 352473088.0,
+        "peakProcessGpuSharedBytes": 77594624.0
+      },
+      {
+        "stage": "conditioning",
+        "seconds": 5.7525843,
+        "samples": 11,
+        "peakTreeWorkingSetBytes": 6245769216.0,
+        "peakTreePrivateBytes": 15820763136.0,
+        "peakProcessGpuDedicatedBytes": 7061340160.0,
+        "peakProcessGpuSharedBytes": 90177536.0
+      },
+      {
+        "stage": "loading-diffusion",
+        "seconds": 0.3586965,
+        "samples": 0,
+        "peakTreeWorkingSetBytes": null,
+        "peakTreePrivateBytes": null,
+        "peakProcessGpuDedicatedBytes": null,
+        "peakProcessGpuSharedBytes": null
+      },
+      {
+        "stage": "sampling",
+        "seconds": 110.987693,
+        "samples": 209,
+        "peakTreeWorkingSetBytes": 18667339776.0,
+        "peakTreePrivateBytes": 45038854144.0,
+        "peakProcessGpuDedicatedBytes": 19986186240.0,
+        "peakProcessGpuSharedBytes": 90177536.0
+      },
+      {
+        "stage": "decoding",
+        "seconds": 22.6511655,
+        "samples": 43,
+        "peakTreeWorkingSetBytes": 18604711936.0,
+        "peakTreePrivateBytes": 31361781760.0,
+        "peakProcessGpuDedicatedBytes": 5161308160.0,
+        "peakProcessGpuSharedBytes": 90177536.0
+      }
+    ]
+  },
+  {
+    "profile": "minimax-h3",
+    "runId": "1e50057ca7c34dbf9f53219407034375",
+    "settings": {
+      "RunMode": "review",
+      "RetryCount": 1,
+      "OutputHeight": 0,
+      "TargetSeconds": 0,
+      "ClipSeconds": 5,
+      "Aspect": "9:16",
+      "Width": 480,
+      "Height": 864,
+      "Steps": 8,
+      "Seed": 12345,
+      "AudioMode": "native",
+      "ReferenceSize": "match",
+      "Continuation": "auto",
+      "ContextFrames": 39,
+      "AudioContextFrames": 0,
+      "PinMode": "masked",
+      "MaskHold": 0,
+      "MaskRampFrames": 0,
+      "Sampler": "res_multistep",
+      "Scheduler": "simple",
+      "VideoShift": 12,
+      "AudioShift": 3,
+      "Attention": "pytorch",
+      "Spectrum": false,
+      "Turbo": "off",
+      "TurboFile": "",
+      "TurboStrength": 1,
+      "ContentLoraFile": "",
+      "ContentLoraStrength": 1,
+      "MemoryMode": "auto",
+      "VramReserveGb": 2,
+      "WindowSeconds": 1,
+      "OverlapSeconds": 0.25,
+      "DecodeSeconds": 5,
+      "Upscale": false,
+      "UpscaleMegapixels": 2,
+      "RefineAmount": 0.2,
+      "RefineSteps": 10,
+      "PreserveAudio": true,
+      "Crf": 19,
+      "ExportName": "video"
+    },
+    "models": [
+      {
+        "Id": "video-h3-models/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "Name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+        "Role": "video and audio diffusion"
+      },
+      {
+        "Id": "video-h3-models/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "Name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+        "Role": "text and image encoder"
+      },
+      {
+        "Id": "video-h3-models/minimax_h3_video_vae_int8_convrot.safetensors",
+        "Name": "minimax_h3_video_vae_int8_convrot.safetensors",
+        "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+        "Role": "video decoder"
+      },
+      {
+        "Id": "video-h3-models/minimax_h3_audio_vae_fp32.safetensors",
+        "Name": "minimax_h3_audio_vae_fp32.safetensors",
+        "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+        "Role": "audio decoder"
+      },
+      {
+        "Id": "video-h3-source-comfy",
+        "Name": "Comfy-Org/ComfyUI · source archive",
+        "Revision": "426f5eea52a7ece1dd599fff4cb6cd1f352ddd24",
+        "Role": "runtime"
+      },
+      {
+        "Id": "video-h3-source-timeline",
+        "Name": "chanon/comfyui-obvpm-timeline · source archive",
+        "Revision": "068a97b4786daef8d67277fe323297fb86d54a3f",
+        "Role": "runtime"
+      }
+    ],
+    "duration": 5.166666666666667,
+    "physicalTestExitCode": 0,
+    "pipelineSeconds": 123.7233246,
+    "totalTestSeconds": 329.6176112,
+    "peakProcessGpuDedicatedBytes": 21581832192.0,
+    "peakIndividualWorkingSetBytes": 29943414784.0,
+    "peakTreeWorkingSetBytes": 28510785536.0,
+    "peakTreePrivateBytes": 51521499136.0,
+    "peakProcessGpuSharedBytes": 25860341760.0,
+    "peakSystemRamBytes": 58065182720.0,
+    "peakGpuTotalUsedBytes": 25334960128.0,
+    "baselineSystemRamBytes": 22110617600.0,
+    "baselineGpuBytes": 4409909248.0,
+    "medianSampleIntervalSeconds": 0.5149034,
+    "maxSampleIntervalSeconds": 0.6974405,
+    "peakTorchAllocatedBytes": null,
+    "maxTorchReservedSnapshotBytes": null,
+    "stagePeaks": [
+      {
+        "stage": "loading-text-encoder",
+        "seconds": 0.4086002,
+        "samples": 1,
+        "peakTreeWorkingSetBytes": 1254375424.0,
+        "peakTreePrivateBytes": 4959436800.0,
+        "peakProcessGpuDedicatedBytes": 352473088.0,
+        "peakProcessGpuSharedBytes": 77594624.0
+      },
+      {
+        "stage": "loading-vae",
+        "seconds": 0.2985668,
+        "samples": 0,
+        "peakTreeWorkingSetBytes": null,
+        "peakTreePrivateBytes": null,
+        "peakProcessGpuDedicatedBytes": null,
+        "peakProcessGpuSharedBytes": null
+      },
+      {
+        "stage": "conditioning",
+        "seconds": 7.4797668,
+        "samples": 14,
+        "peakTreeWorkingSetBytes": 28510785536.0,
+        "peakTreePrivateBytes": 51521499136.0,
+        "peakProcessGpuDedicatedBytes": 20857827328.0,
+        "peakProcessGpuSharedBytes": 25860341760.0
+      },
+      {
+        "stage": "loading-diffusion",
+        "seconds": 0.1049099,
+        "samples": 0,
+        "peakTreeWorkingSetBytes": null,
+        "peakTreePrivateBytes": null,
+        "peakProcessGpuDedicatedBytes": null,
+        "peakProcessGpuSharedBytes": null
+      },
+      {
+        "stage": "sampling",
+        "seconds": 92.9527636,
+        "samples": 174,
+        "peakTreeWorkingSetBytes": 24148652032.0,
+        "peakTreePrivateBytes": 47927558144.0,
+        "peakProcessGpuDedicatedBytes": 21581832192.0,
+        "peakProcessGpuSharedBytes": 21057171456.0
+      },
+      {
+        "stage": "decoding",
+        "seconds": 22.4787173,
+        "samples": 42,
+        "peakTreeWorkingSetBytes": 27605422080.0,
+        "peakTreePrivateBytes": 48983003136.0,
+        "peakProcessGpuDedicatedBytes": 19588620288.0,
+        "peakProcessGpuSharedBytes": 23765696512.0
+      }
+    ]
+  }
+]

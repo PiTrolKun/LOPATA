@@ -18,7 +18,8 @@ public static class ComponentAuditFailures
         foreach (var current in errors)
         {
             // A rejected literal-preservation response is a known model-output error, not an installation failure.
-            if (current.Message is "VideoPrep.TranslationLiteralLost" or "VideoPrep.AiContextLimit" or "VideoPrep.ShotsInvalidReply") return false;
+            if (current.Message is "VideoPrep.TranslationLiteralLost" or "VideoPrep.AiContextLimit" or "VideoPrep.ShotsInvalidReply"
+                or "VideoPrep.ShotsDuplicateReply" or "VideoPrep.ShotsQualityFailed") return false;
             if (current is OperationCanceledException or OutOfMemoryException or HttpRequestException or SocketException or ArgumentException
                 or BackgroundOperationWaitingException or ImageAnalysisContextExhaustedException or LiteraryRamReserveException) return false;
             var text = current.Message.ToLowerInvariant();

@@ -23,6 +23,7 @@ public sealed class VideoShotsTests
     }
     internal static VideoConceptAnswer Answer(VideoConceptRequest r)
     {
+        if (r.Purpose == VideoShotsQuality.Purpose) return new("{\"valid\":true,\"issues\":[]}", "", "", VideoConceptTests.Model);
         object body;
         if (r.Purpose == VideoShotsProtocol.Outline) body = new { scenes = new[] {
             new { id = "", name = "Часы", intent = "Кот завершает работу", cardIds = Array.Empty<string>(), referenceIds = Array.Empty<string>() },
@@ -53,9 +54,9 @@ public sealed class VideoShotsTests
         Assert.HasCount(2, p.Shots!.Candidates[0].Scenes); Assert.HasCount(1, p.Shots.Candidates[0].Scenes[0].Shots); Assert.IsEmpty(p.Shots.Scenes);
         var loaded = VideoPreparationArchive.Load(job.ProjectPath, files.File("opened")); assistant.Run = (r, _) => Task.FromResult(Answer(r));
         await VideoShotsWork.RunAsync(job, loaded, assistant, receipts, () => Task.CompletedTask, null, null, default);
-        Assert.AreEqual(4, assistant.Calls); Assert.IsTrue(VideoShots.Ready(loaded)); Assert.HasCount(2, loaded.Shots!.Scenes); loaded.Validate();
+        Assert.AreEqual(6, assistant.Calls); Assert.IsTrue(VideoShots.Ready(loaded)); Assert.HasCount(2, loaded.Shots!.Scenes); loaded.Validate();
         await VideoShotsWork.RunAsync(job, loaded, assistant, receipts, () => Task.CompletedTask, null, null, default);
-        Assert.AreEqual(4, assistant.Calls); Assert.HasCount(1, loaded.Shots.History);
+        Assert.AreEqual(6, assistant.Calls); Assert.HasCount(1, loaded.Shots.History);
     }
     [TestMethod]
     public async Task LateReplyAndExplicitSelectionKeepManualDraftAndUndoHistory()
@@ -170,7 +171,7 @@ public sealed class VideoShotsTests
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(6)); await controller.PauseAsync();
             Assert.AreEqual(AIHub.Models.BackgroundOperationPhase.Paused, controller.State!.Phase); Assert.HasCount(2, p.Shots!.Candidates[0].Scenes);
             await controller.ResumeAsync(default); await run.WaitAsync(TimeSpan.FromSeconds(10));
-            Assert.IsTrue(VideoShots.Ready(p)); Assert.HasCount(1, p.Shots.History); Assert.AreEqual(4, assistant.Calls);
+            Assert.IsTrue(VideoShots.Ready(p)); Assert.HasCount(1, p.Shots.History); Assert.AreEqual(6, assistant.Calls);
             Assert.AreEqual(AIHub.Models.BackgroundOperationPhase.Completed, controller.State.Phase);
         }
         finally { ApplicationBackgroundOperations.Current = previous; }

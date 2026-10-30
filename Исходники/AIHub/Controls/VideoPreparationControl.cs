@@ -65,6 +65,16 @@ public sealed partial class VideoPreparationControl : UserControl
     }
     private void Render()
     {
+        if (_vacePage is not null)
+        {
+            LiterarySpellChecking.ReleaseTree(Content as DependencyObject);
+            _vacePage.Configure(_localize); Content = _vacePage; return;
+        }
+        if (_ltxPreparationPage is not null)
+        {
+            LiterarySpellChecking.ReleaseTree(Content as DependencyObject);
+            _ltxPreparationPage.Configure(_localize); Content = _ltxPreparationPage; return;
+        }
         if (_generatorPage is not null)
         {
             LiterarySpellChecking.ReleaseTree(Content as DependencyObject);
@@ -190,6 +200,7 @@ public sealed partial class VideoPreparationControl : UserControl
         AutomationProperties.SetAutomationId(_status, "VideoPrep.Status");
         AutomationProperties.SetLiveSetting(_status, AutomationLiveSetting.Polite);
         footer.Children.Add(_status); Grid.SetRow(footer, 3); root.Children.Add(footer);
+        BuildWarmupOverlay(root);
         Content = root; Adapt(); RefreshStatus();
         if (_locationError) _locationZone.BorderBrush = new SolidColorBrush(Colors.IndianRed);
         ScheduleShots();

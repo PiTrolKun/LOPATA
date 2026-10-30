@@ -151,6 +151,49 @@ public sealed class VideoWorldTests
         VideoWorld.Review(p); Assert.IsTrue(VideoWorld.SourceCurrent(p));
         Assert.ThrowsExactly<InvalidDataException>(() => VideoWorld.Apply(p, o)); Assert.HasCount(1, w.Cards);
     }
+    internal static void AddMetadataOnlyRevision(VideoPreparationProject p)
+    {
+        var w = p.World!;
+        w.Cards[0].Text.Provenance = w.Cards[0].Text.Provenance with { GenerationSeconds = 1 };
+        var version = new VideoWorldRevision(Guid.NewGuid().ToString("N"), VideoWorld.SerializeCards(w.Cards), w.Context, DateTimeOffset.UtcNow);
+        w.History.Add(version); w.RevisionId = version.Id; w.Working.ContextRevisionId = version.Id;
+        VideoConceptHistory.Capture(w.Working);
+    }
+    [TestMethod]
+    public void ProvenanceSchemaAndAssistantSettingsDoNotInvalidateTheApprovedWorld()
+    {
+        var p = VideoPreparationFinishTests.ReadyProject(); var w = p.World!;
+        var id = w.RevisionId; var working = w.Working.IdeaRevisionId;
+        var old = System.Text.Json.Nodes.JsonNode.Parse(w.History.Last().Cards)!;
+        foreach (var card in old.AsArray()) card!["Text"]!["Provenance"]!.AsObject().Remove("GenerationSeconds");
+        w.History[^1] = w.History[^1] with { Cards = old.ToJsonString() };
+        w.Cards[0].Text.Provenance = w.Cards[0].Text.Provenance with { GenerationSeconds = 12, ProgramVersion = "test" };
+        w.Cards[0].Text.AssistantModelId = "core"; w.Cards[0].Text.ImprovementFreedom = 3;
+        VideoWorld.Capture(p);
+        Assert.AreEqual(id, w.RevisionId); Assert.AreEqual(working, w.Working.IdeaRevisionId);
+        Assert.IsTrue(VideoTranslationHistory.IsCurrent(w.Working)); Assert.IsTrue(VideoPreparationReadiness.Ready(p));
+        w.Cards[0].Fixed += " Keep the clock."; VideoWorld.Capture(p);
+        Assert.AreNotEqual(id, w.RevisionId); Assert.IsFalse(VideoTranslationHistory.IsCurrent(w.Working));
+    }
+    [TestMethod]
+    [DataRow("metadata")] [DataRow("name")] [DataRow("text")] [DataRow("fixed")] [DataRow("source")]
+    public void ReopeningRestoresOnlyAnEquivalentPreviouslyApprovedWorkingSource(string change)
+    {
+        using var files = new VideoPreparationTests.TestFiles(); var p = VideoPreparationFinishTests.ReadyProject(); var w = p.World!;
+        var source = w.Working.IdeaRevisionId; var translation = w.Working.TranslationRevisionId;
+        AddMetadataOnlyRevision(p);
+        if (change == "name") w.Cards[0].Name += " changed";
+        if (change == "text") w.Cards[0].Text.IdeaText += " changed";
+        if (change == "fixed") w.Cards[0].Fixed += " changed";
+        if (change == "source") p.Development!.EnglishText += " changed";
+        var history = w.History.Count; var translations = w.Working.TranslationHistory.Count;
+        Assert.IsFalse(VideoTranslationHistory.IsCurrent(w.Working));
+        var session = new VideoPreparationSession(files.File("recovery")); session.ApplyLoaded(p, files.File("saved.lopataAIVid"));
+        Assert.AreEqual(change == "metadata", VideoTranslationHistory.IsCurrent(w.Working));
+        if (change == "metadata") { Assert.AreEqual(source, w.Working.IdeaRevisionId); Assert.IsTrue(session.IsDirty); }
+        Assert.AreEqual(translation, w.Working.TranslationRevisionId); Assert.HasCount(translations, w.Working.TranslationHistory);
+        Assert.IsGreaterThanOrEqualTo(history, w.History.Count); p.Validate();
+    }
     [TestMethod]
     public void SchemaRejectsMalformedAndDuplicateFieldsAndMissingGeneralCard()
     {

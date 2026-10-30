@@ -20,6 +20,10 @@ public partial class MainWindow
             _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0);
         control.ConfigureH3Tray(() => TryHideToTray(true));
         control.ConfigureH3Editor(async path => { OpenVideoEditorUtility(); if (_videoEditor is not null) await _videoEditor.ImportGeneratedAsync(path); });
+        control.ConfigureVaceGeneration(_storageSettings.Models.Locations.Select(l => l.Path).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? "",
+            _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0);
+        control.ConfigureVaceTray(() => TryHideToTray(true));
+        control.ConfigureVaceEditor(async path => { OpenVideoEditorUtility(); if (_videoEditor is not null) await _videoEditor.ImportGeneratedAsync(path); });
         control.ConfigureReferenceDrawing(_storageSettings.Models.Locations.Select(l => l.Path).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? "",
             _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0, () => _userProfile.DisplayName, OpenManualReferenceDrawing);
     }
@@ -43,6 +47,7 @@ public partial class MainWindow
     {
         _backgroundOperations!.Register(VideoConceptWork.Kind, (state, token) => OpenVideoConcept().ResumeConceptAsync(state, token));
         _backgroundOperations.Register(VideoH3Job.Kind, (state, token) => OpenVideoConcept().ResumeH3Async(state, token));
+        _backgroundOperations.Register(VideoVaceJob.Kind, (state, token) => OpenVideoConcept().ResumeVaceAsync(state, token));
         _backgroundOperations.Register(VideoTranslationProtocol.Kind, (state, token) => OpenVideoConcept().ResumeConceptAsync(state, token));
         _backgroundOperations.Register(VideoDevelopment.Kind, (state, token) => OpenVideoConcept().ResumeConceptAsync(state, token));
         _backgroundOperations.Register(VideoDevelopment.TranslationKind, (state, token) => OpenVideoConcept().ResumeConceptAsync(state, token));
@@ -58,7 +63,7 @@ public partial class MainWindow
         _backgroundOperations.Changed += () =>
         {
             if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(() =>
-            { ScenarioNavigationPage.VideoPreparation?.RefreshConceptOperationState(); ScenarioNavigationPage.VideoPreparation?.RefreshRuntimeStatus(); ScenarioNavigationPage.VideoPreparation?.RefreshH3OperationState(); });
+            { ScenarioNavigationPage.VideoPreparation?.RefreshConceptOperationState(); ScenarioNavigationPage.VideoPreparation?.RefreshRuntimeStatus(); ScenarioNavigationPage.VideoPreparation?.RefreshH3OperationState(); ScenarioNavigationPage.VideoPreparation?.RefreshVaceOperationState(); });
         };
     }
 
@@ -67,6 +72,7 @@ public partial class MainWindow
         var saved = _backgroundOperations!.LoadResult(notice.Id); if (saved is null) return false;
         RestoreFromTray();
         if (saved.Kind == VideoH3Job.Kind) return OpenVideoConcept().ShowH3Result(saved);
+        if (saved.Kind == VideoVaceJob.Kind) return OpenVideoConcept().ShowVaceResult(saved);
         if (saved.Kind == VideoConceptWarmup.Kind) { OpenVideoConcept().RefreshRuntimeStatus(); return true; }
         if (saved.Kind == VideoReferenceWork.Kind) return OpenVideoConcept().ShowReferencePlanResult(saved);
         if (saved.Kind == VideoPreparationControl.ExportKind) return OpenVideoConcept().ShowExportResult(saved);

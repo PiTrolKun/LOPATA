@@ -4703,5 +4703,128 @@
     ],
     "Ru": "Изолированные закреплённые зависимости ComfyUI. Оригинальные LICENSE/NOTICE сохраняются вместе с пакетами. Модель H3 и Python/PyTorch имеют отдельные условия. Набор шаблонных медиа не поставляется. PyAV: BSD-3-Clause; встроенный FFmpeg сообщает LGPL-3.0-or-later, библиотеки x264/x265 имеют отдельные GPL-условия. Все исходные уведомления wheel сохраняются. Пакет не меняет кодеки остальных сценариев.",
     "En": "Isolated pinned ComfyUI dependencies. Original LICENSE/NOTICE files are retained with packages. H3 and Python/PyTorch have separate terms. Template media are not shipped. PyAV is BSD-3-Clause; its bundled FFmpeg reports LGPL-3.0-or-later, and x264/x265 libraries have separate GPL terms. Original wheel notices are retained. Other scenarios keep their existing codecs."
+  },
+  {
+    "Id": "video-ltx25-models",
+    "Name": "LTX-2.5 Distilled 22B Comfy INT8 ConvRot + Gemma4 / Conv VAE / audio VAE / spatial upscaler",
+    "Version": "49b093a39c19169a8a81721dcc541e07e945232f",
+    "Author": "Lightricks Ltd.; Google Gemma and upstream contributors",
+    "License": "LTX-2.x Community License Agreement (2026-08-11); upstream attribution and acceptable-use terms apply",
+    "Source": "https://huggingface.co/Lightricks/LTX-2.5/tree/49b093a39c19169a8a81721dcc541e07e945232f",
+    "Checked": "2026-10-29",
+    "Ru": "Отдельно скачиваемый комплект пяти файлов: Distilled INT8 ConvRot, специальный энкодер Gemma4 с проекциями LTX, Conv video VAE, audio VAE и spatial upscaler. INT8-файлы предназначены для ComfyUI; код исполнителя и его зависимости имеют отдельные условия и этим этапом не устанавливаются. Лицензия LTX-2.x от 11.08.2026 включает ограничения допустимого использования и распространения: при годовой выручке от 10 млн долларов с учётом связанных лиц требуется отдельная лицензия с указанными в оригинале исключениями. Attachment A, п.20 отдельно требует коммерческую лицензию для прямо конкурирующих продуктов; применимость к Видеомастерской и права публичной поставки ещё не подтверждены. Ознакомление не предоставляет отсутствующих прав. Сохраняйте лицензии, атрибуции, обозначение AI-происхождения и встроенные отметки; не отключайте watermark/provenance. Это не безусловная Apache/MIT-лицензия всего комплекта. Пользователь самостоятельно принимает условия gated-репозитория Hugging Face и предоставляет доступ Read token; подтверждение в ЛОПАТЕ не заменяет согласие у источника. Крупные веса не входят в программу и не зеркалируются от имени ЛОПАТЫ.",
+    "En": "Separately downloaded five-file bundle: Distilled INT8 ConvRot, the LTX-specific Gemma4 encoder with projections, Conv video VAE, audio VAE and spatial upscaler. The INT8 files target ComfyUI; executor code and dependencies have separate terms and are not installed at this stage. The LTX-2.x agreement dated 2026-08-11 includes use and redistribution restrictions: entities with annual revenue of at least USD 10 million, including related entities, require a separate license subject to the original exceptions. Attachment A item 20 separately requires a commercial license for directly competing products; applicability to Video Workshop and rights for public delivery have not been established. Acknowledgement does not grant missing rights. Preserve licenses, attribution, AI-origin disclosure and embedded notices; do not disable watermarking or provenance. The entire bundle is not unconditionally Apache/MIT licensed. The user must personally accept the Hugging Face gated-repository terms and provide Read-token access; acknowledgement in LOPATA does not replace consent at the source. Large model weights are not bundled or mirrored by LOPATA.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "312F24794F02591E2DF7D5F67EB21119F66762FB62CB5E142A6785FE3B4A9AD9",
+    "Texts": [
+      "texts/VideoLtx25-LTX-2.x-Community-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-vace13-models",
+    "Name": "Wan2.1 VACE 1.3B FP16 + UMT5-XXL FP8 scaled + Wan2.1 VAE",
+    "Version": "123acf1cc74bccbb9bfff8ac1ee72edc08c2341d",
+    "Author": "Alibaba Tongyi Lab / Wan-AI and VACE contributors; Google UMT5; Comfy-Org repackaging contributors",
+    "License": "Apache-2.0 (VACE/Wan model and VAE; Google UMT5 upstream; Comfy-Org model-card declaration)",
+    "Source": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/tree/123acf1cc74bccbb9bfff8ac1ee72edc08c2341d",
+    "Checked": "2026-10-29",
+    "Ru": "Отдельно скачиваемый комплект трёх файлов для модели wan-vace-1.3b: окончательная Wan2.1 VACE 1.3B FP16, текстовый энкодер UMT5-XXL FP8 scaled и Wan2.1 VAE. Preview-веса и другие модели из общего репозитория в комплект не входят. Источники: Comfy-Org/Wan_2.1_ComfyUI_repackaged, ревизия 123acf1cc74bccbb9bfff8ac1ee72edc08c2341d; исходная модель Wan-AI/Wan2.1-VACE-1.3B; Wan-Video/Wan2.1; Google google/umt5-xxl и google-research/multilingual-t5. Проверенные источники объявляют Apache-2.0. Сохраняйте оригинальные лицензии, авторские и иные применимые уведомления; при изменении файлов обозначайте изменения. Отдельный NOTICE в проверенных репозиториях и списках файлов не обнаружен; если поставщик добавит NOTICE, его применимые сведения необходимо сохранить. Квантизация и перепаковка не отменяют условия исходных компонентов. На дату проверки выбранные файлы доступны без обязательной внешней регистрации, токена и Hugging Face gate. Веса не включаются в программу и скачиваются только по команде пользователя. Этот этап подготавливает только файлы: код ComfyUI, среда, зависимости и фактическая генерация имеют отдельную проверку и здесь не устанавливаются и не запускаются. Наличие файлов не означает испытанную работоспособность модели или готовое продление видео.",
+    "En": "Separately downloaded three-file bundle for model wan-vace-1.3b: final Wan2.1 VACE 1.3B FP16, UMT5-XXL FP8 scaled text encoder and Wan2.1 VAE. Preview weights and other models in the shared repository are excluded. Sources: Comfy-Org/Wan_2.1_ComfyUI_repackaged revision 123acf1cc74bccbb9bfff8ac1ee72edc08c2341d; original Wan-AI/Wan2.1-VACE-1.3B; Wan-Video/Wan2.1; Google google/umt5-xxl and google-research/multilingual-t5. The checked sources declare Apache-2.0. Preserve original licenses, copyright and other applicable notices; mark changed files. No separate NOTICE was found in the checked repositories and file inventories; applicable notices must be preserved if an upstream NOTICE is provided later. Quantization and repackaging do not remove upstream conditions. At the check date, the selected files are available without mandatory external registration, a token or a Hugging Face gate. Weights are not bundled with the application and are downloaded only on user command. This stage prepares files only: ComfyUI code, environment, dependencies and actual generation require separate checks and are neither installed nor run here. File availability does not establish tested model execution or working video continuation.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "D38216051A46A7FF4BD8F1A89C96815025386CEBE938831060010549DBDE2C47",
+    "Texts": [
+      "texts/video-vace13-vace-wan-LICENSE.txt",
+      "texts/video-vace13-wan21-LICENSE.txt",
+      "texts/video-vace13-umt5-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-h3lite-models",
+    "Name": "H3 Ref2VA · Pruned W4A8",
+    "Version": "f5c3b1d5a63e008a691fca1b6096fd57a5307536",
+    "Author": "Kijai/MiniMax-H3-experimental",
+    "License": "MiniMax H3 Community License Agreement",
+    "Source": "https://huggingface.co/Kijai/MiniMax-H3-experimental/tree/f5c3b1d5a63e008a691fca1b6096fd57a5307536",
+    "Checked": "2026-10-30",
+    "Ru": "Экспериментальный комплект для локальной проверки, скачивается отдельно и не входит в установщик. H3 сохраняет оригинальные условия MiniMax; квантизация не меняет лицензию исходной модели. Подготовка файлов не является проверкой генерации или потребления памяти.",
+    "En": "Experimental local-evaluation bundle, downloaded separately and not bundled with the installer. Original MiniMax terms continue to apply to H3; quantization does not replace the upstream model license. File acquisition does not validate generation or memory use.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "F377A0EC09B09075939D77823B614D12077D5FA18A8446AB4FE9D3EDD30B2587",
+    "Texts": [
+      "texts/video-h3-model-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-h3lite-encoder",
+    "Name": "Qwen3-VL-4B · INT4 ConvRot",
+    "Version": "2ea2566f0a61baeb0bbdad0a3037e43012481788",
+    "Author": "Merserk/qwen3vl-4b-int4-convrot",
+    "License": "Apache-2.0 (Qwen); MIT declared by converter, separate text unavailable",
+    "Source": "https://huggingface.co/Merserk/qwen3vl-4b-int4-convrot/tree/2ea2566f0a61baeb0bbdad0a3037e43012481788",
+    "Checked": "2026-10-30",
+    "Ru": "Qwen3-VL-4B INT4 ConvRot от Merserk. Исходная Qwen3-VL-4B-Instruct: Apache-2.0; приложен оригинальный текст Qwen. Карточка конвертации объявляет MIT, но отдельный текст MIT и описание происхождения конвертации не опубликованы. Это неизвестное зафиксировано; ознакомление не предоставляет отсутствующих прав. Только отдельное скачивание для проверки, в установщик и наш репозиторий веса не включаются.",
+    "En": "Merserk Qwen3-VL-4B INT4 ConvRot. Upstream Qwen3-VL-4B-Instruct is Apache-2.0; the original Qwen terms are included. The conversion card declares MIT but publishes no separate MIT text or conversion provenance. This gap remains unresolved; acknowledgement does not grant missing rights. Separate download for evaluation only; weights are not bundled or redistributed by us.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "312900945C5E5D52344171546B54D757B2F9EB423F743B00643ED13FDBF08472",
+    "Texts": [
+      "texts/video-h3-qwen-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-h3lite-projection",
+    "Name": "ClipProj 4B · v3.1 MLP",
+    "Version": "2ebdbcdc27a29a9607efdb221a9afcb9a0cdd808",
+    "Author": "NicoLab28/ClipProj-MiniMax-H3",
+    "License": "MIT; upstream model terms apply",
+    "Source": "https://huggingface.co/NicoLab28/ClipProj-MiniMax-H3/tree/2ebdbcdc27a29a9607efdb221a9afcb9a0cdd808",
+    "Checked": "2026-10-30",
+    "Ru": "Экспериментальный комплект для локальной проверки, скачивается отдельно и не входит в установщик. H3 сохраняет оригинальные условия MiniMax; квантизация не меняет лицензию исходной модели. Подготовка файлов не является проверкой генерации или потребления памяти. Матрица ClipProj заявлена под MIT. Автор прямо указывает неопределённость правового статуса матриц, полученных из активаций двух моделей, и исследовательское назначение; сохраняются условия Qwen и MiniMax. Это не подтверждение прав на самостоятельное распространение матриц.",
+    "En": "Experimental local-evaluation bundle, downloaded separately and not bundled with the installer. Original MiniMax terms continue to apply to H3; quantization does not replace the upstream model license. File acquisition does not validate generation or memory use. ClipProj declares MIT. Its author explicitly notes the uncertain legal status of matrices derived from two models activations and supplies them for research; Qwen and MiniMax terms remain applicable. This is not a redistribution-rights certification.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "B3440E1DF6FDADE971C9300B8F6A09F90E4169A7437048F8D4291D22F09FF71B",
+    "Texts": [
+      "texts/video-h3lite-clipproj-MIT.txt",
+      "texts/video-h3-model-LICENSE.txt",
+      "texts/video-h3-qwen-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-h3lite-vaes",
+    "Name": "H3 video VAE · INT8 / audio VAE · FP32",
+    "Version": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Author": "Comfy-Org/MiniMax-H3",
+    "License": "MiniMax H3 Community License Agreement",
+    "Source": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Checked": "2026-10-30",
+    "Ru": "Экспериментальный комплект для локальной проверки, скачивается отдельно и не входит в установщик. H3 сохраняет оригинальные условия MiniMax; квантизация не меняет лицензию исходной модели. Подготовка файлов не является проверкой генерации или потребления памяти.",
+    "En": "Experimental local-evaluation bundle, downloaded separately and not bundled with the installer. Original MiniMax terms continue to apply to H3; quantization does not replace the upstream model license. File acquisition does not validate generation or memory use.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "F377A0EC09B09075939D77823B614D12077D5FA18A8446AB4FE9D3EDD30B2587",
+    "Texts": [
+      "texts/video-h3-model-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-h3lite-source-clipproj",
+    "Name": "ComfyUI-ClipProj · source archive (not installed)",
+    "Version": "c01ba8fb8f41b4f2094dbd0b185cdc238fb6134c",
+    "Author": "nicolab28/ComfyUI-ClipProj",
+    "License": "MIT",
+    "Source": "https://github.com/nicolab28/ComfyUI-ClipProj/tree/c01ba8fb8f41b4f2094dbd0b185cdc238fb6134c",
+    "Checked": "2026-10-30",
+    "Ru": "Экспериментальный комплект для локальной проверки, скачивается отдельно и не входит в установщик. H3 сохраняет оригинальные условия MiniMax; квантизация не меняет лицензию исходной модели. Подготовка файлов не является проверкой генерации или потребления памяти.",
+    "En": "Experimental local-evaluation bundle, downloaded separately and not bundled with the installer. Original MiniMax terms continue to apply to H3; quantization does not replace the upstream model license. File acquisition does not validate generation or memory use.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "B65647C34BFA0A456747FC186F11893237D7ED8C4EDD4CBDCA45488C83188657",
+    "Texts": [
+      "texts/video-h3lite-clipproj-MIT.txt"
+    ]
   }
 ]

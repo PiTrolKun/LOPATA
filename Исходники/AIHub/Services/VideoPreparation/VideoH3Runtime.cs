@@ -4,16 +4,16 @@ using AIHub.Models;
 namespace AIHub.Services.VideoPreparation;
 
 internal sealed record VideoH3Environment(ManagedPythonSelection Python, string Libraries, string Comfy, string Timeline,
-    string Upscaler, string Spectrum, string Turbo, IReadOnlyList<ManagedModelArtifactCard> Cards);
+    string Upscaler, string Spectrum, string Turbo, IReadOnlyList<ManagedModelArtifactCard> Cards, string? ClipProj = null);
 
 /// <summary>Isolated, immutable source/wheel trees. Shared runtimes and downloaded originals are never edited.</summary>
 internal static class VideoH3Runtime
 {
     private static readonly SemaphoreSlim Gate = new(1);
-    internal static async Task<VideoH3Environment> PrepareAsync(string modelsRoot, int connections, CancellationToken token, Action<string> log, ManagedModelLibraryStore? library = null)
+    internal static async Task<VideoH3Environment> PrepareAsync(string modelsRoot, int connections, CancellationToken token, Action<string> log, ManagedModelLibraryStore? library = null, bool lite = false)
     {
         using var operation = ComponentAudit.CaptureOperation(); using var auditLog = ComponentAudit.CaptureLog(log);
-        var cards = VideoH3Catalog.Cards(modelsRoot).ToList(); var libraries = VideoH3RuntimeCatalog.Card(modelsRoot); cards.Add(libraries);
+        var cards = lite ? VideoH3LiteCatalog.Cards(modelsRoot).Concat(VideoH3Catalog.Cards(modelsRoot).Where(c => VideoH3RuntimeCatalog.Data.Trees.ContainsKey(c.ModelArtifactId))).ToList() : VideoH3Catalog.Cards(modelsRoot).ToList(); var libraries = VideoH3RuntimeCatalog.Card(modelsRoot); cards.Add(libraries);
         await ComponentLicenseGate.EnsureAsync(cards.Select(c => c.ModelArtifactId).ToArray(), token);
         var store = library ?? new ManagedModelLibraryStore();
         using var downloads = new ManagedModelAcquisitionService(store) { MaximumParallelConnections = connections };
@@ -26,20 +26,29 @@ internal static class VideoH3Runtime
             if (checkedCard.Status != ManagedModelStatuses.Installed) throw new IOException("VideoPrep.H3FilesRequired");
         }
         // Acquisition does not stand in for the first use audit of a new installation.
-        foreach (var c in cards.Where(c => c.ModelArtifactId.EndsWith("-models", StringComparison.Ordinal) || c.ModelArtifactId.EndsWith("-model", StringComparison.Ordinal)))
+        foreach (var c in cards.Where(c => c.ModelArtifactId.EndsWith("-models", StringComparison.Ordinal) || c.ModelArtifactId.EndsWith("-model", StringComparison.Ordinal) || lite && c.ModelArtifactId.StartsWith("video-h3lite-", StringComparison.Ordinal) && c.ModelArtifactId != "video-h3lite-source-clipproj"))
             await RuntimeFileAudit.VerifyAsync("Video.H3.Launch." + c.ModelArtifactId, c.InstallDirectory, c.Revision,
                 c.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray(), token, log);
         var python = await ManagedPythonRuntime.ResolveAsync("auto", token, log: log);
         var root = Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3", VideoH3RuntimeCatalog.Data.Revision);
+        string? clipProj = null;
         await Gate.WaitAsync(token);
         try
         {
             await Tree(libraries, "libraries", VideoH3RuntimeCatalog.Data.Library, true);
             foreach (var c in cards.Where(c => VideoH3RuntimeCatalog.Data.Trees.ContainsKey(c.ModelArtifactId)))
                 await Tree(c, c.ModelArtifactId, VideoH3RuntimeCatalog.Data.Trees[c.ModelArtifactId], false);
+            if (lite)
+            {
+                var source = cards.Single(c => c.ModelArtifactId == "video-h3lite-source-clipproj");
+                using var data = typeof(VideoH3Runtime).Assembly.GetManifestResourceStream("AIHub.VideoH3LiteSourceTree")!;
+                var inventory = System.Text.Json.JsonSerializer.Deserialize<PinnedTreeFile[]>(data)!;
+                await Tree(source, source.ModelArtifactId, inventory, false);
+                clipProj = Path.Combine(root, source.ModelArtifactId, source.Revision, inventory[0].Path.Split('/')[0]);
+            }
         }
         finally { Gate.Release(); }
-        return new(python, Path.Combine(root, "libraries", libraries.Revision, "Lib", "site-packages"), Source("comfy"), Source("timeline"), Source("upscaler"), Source("spectrum"), Source("turbo"), cards);
+        return new(python, Path.Combine(root, "libraries", libraries.Revision, "Lib", "site-packages"), Source("comfy"), Source("timeline"), Source("upscaler"), Source("spectrum"), Source("turbo"), cards, clipProj);
 
         string Source(string name) { var id = "video-h3-source-" + name; return Path.Combine(root, id, cards.Single(c => c.ModelArtifactId == id).Revision, VideoH3RuntimeCatalog.Data.Folders[id]); }
         async Task Tree(ManagedModelArtifactCard card, string name, PinnedTreeFile[] inventory, bool wheels)

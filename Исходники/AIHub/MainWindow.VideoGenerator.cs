@@ -8,11 +8,15 @@ public partial class MainWindow
 {
     private void PrepareVideoGenerator(VideoPreparationControl control, VideoGeneratorSettings settings)
     {
-        if (settings.ModelId != VideoH3Catalog.ModelId) { control.ShowGeneratorPreparationResult(false); return; }
+        if (settings.ModelId is not (VideoH3Catalog.ModelId or VideoH3LiteCatalog.ModelId or VideoVaceCatalog.ModelId))
+        { control.ShowGeneratorPreparationResult(false); return; }
         try
         {
             var root = _storageSettings.Models.Locations.Select(l => l.Path?.Trim()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? "";
-            control.ShowH3Preparation(root, _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0);
+            var connections = _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0;
+            if (settings.ModelId == VideoVaceCatalog.ModelId)
+                control.ShowVacePreparation(root, connections);
+            else control.ShowH3Preparation(root, connections, lite: settings.ModelId == VideoH3LiteCatalog.ModelId);
         }
         catch (OperationCanceledException) { }
         catch (Exception error)

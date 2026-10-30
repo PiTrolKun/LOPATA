@@ -42,6 +42,7 @@ public sealed class VideoShotCandidate
     public bool Complete { get; set; }
     public List<VideoScenePlan> Scenes { get; set; } = [];
     public List<OutputModelUse> Models { get; set; } = [];
+    public Dictionary<string, string> ReviewedScenes { get; set; } = [];
 }
 public sealed class VideoShotTranslation
 {
@@ -154,7 +155,9 @@ public static class VideoShots
         foreach (var c in d.Candidates!)
         {
             if (c is null || !Id(c.Id) || !ids.Add(c.Id) || c.Freedom is < 1 or > 3 || c.Source is null || c.Source.Length != 64
-                || c.BaseSnapshot is null || c.BaseSnapshot.Length > 8_000_000 || c.Models is null || c.RequestIdentity is null || c.RequestIdentity.Length > 64) Invalid();
+                || c.BaseSnapshot is null || c.BaseSnapshot.Length > 8_000_000 || c.Models is null || c.RequestIdentity is null || c.RequestIdentity.Length > 64
+                || c.ReviewedScenes is null || c.ReviewedScenes.Count > 4096
+                || c.ReviewedScenes.Any(pair => !Id(pair.Key) || pair.Value is null || pair.Value.Length != 64)) Invalid();
             ValidateScenes(c!.Scenes); ValidateScenes(JsonSerializer.Deserialize<List<VideoScenePlan>>(c.BaseSnapshot)!); _ = new OutputProvenance { Models = c.Models.ToArray() }.Json();
         }
         ids.Clear();

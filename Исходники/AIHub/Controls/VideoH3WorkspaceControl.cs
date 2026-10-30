@@ -16,6 +16,8 @@ internal sealed partial class VideoH3WorkspaceControl : UserControl
     private readonly VideoPreparationProject _project;
     private readonly Action _changed;
     private readonly VideoH3WorkspaceState _state;
+    private readonly string _modelId;
+    private bool Lite => _modelId == VideoH3LiteCatalog.ModelId;
     private VideoH3Settings S => _state.Settings;
     private readonly Dictionary<string, string> _drafts = [];
     private readonly HashSet<string> _invalid = [];
@@ -42,10 +44,10 @@ internal sealed partial class VideoH3WorkspaceControl : UserControl
     internal event Action? PauseGenerationRequested;
     internal event Action<DateTimeOffset>? ScheduleGenerationRequested;
     internal event Action<string>? SendEditorRequested;
-    internal VideoH3WorkspaceControl(Func<string, string> localize, VideoPreparationProject? project = null, Action? changed = null)
+    internal VideoH3WorkspaceControl(Func<string, string> localize, VideoPreparationProject? project = null, Action? changed = null, string modelId = VideoH3Catalog.ModelId)
     {
         _l = localize; _project = project ?? new(); _changed = changed ?? (() => { });
-        _state = VideoH3WorkspaceState.FromProject(_project);
+        _modelId = modelId; _state = VideoH3WorkspaceState.FromProject(_project, modelId);
         _state.Settings.RunMode = "automatic";
         _language = T("H3WorkspaceHome");
         AutomationProperties.SetAutomationId(this, "VideoH3.Workspace");
@@ -68,8 +70,8 @@ internal sealed partial class VideoH3WorkspaceControl : UserControl
         if (_externalBusy || _invalid.Count > 0) { Notify(T("H3SettingsInvalid")); return false; }
         try { VideoH3WorkspaceState.Validate(_state); }
         catch (InvalidDataException) { Notify(T("H3SettingsInvalid")); return false; }
-        if (JsonSerializer.Serialize(_state) != JsonSerializer.Serialize(_project.Generator?.H3))
-        { (_project.Generator ??= new()).H3 = VideoShots.Copy(_state); _changed(); }
+        if (JsonSerializer.Serialize(_state) != JsonSerializer.Serialize(VideoH3WorkspaceState.Get(_project, _modelId)))
+        { VideoH3WorkspaceState.Set(_project, _modelId, VideoShots.Copy(_state)); _changed(); }
         return true;
     }
     private void Changed()
@@ -107,7 +109,7 @@ internal sealed partial class VideoH3WorkspaceControl : UserControl
         root.RowDefinitions.Add(new() { Height = GridLength.Auto }); root.RowDefinitions.Add(new());
         root.RowDefinitions.Add(new() { Height = new GridLength(110) }); root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var heading = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 14) };
-        var title = Label("MiniMax H3"); title.FontSize = 28; title.FontWeight = FontWeights.SemiBold; heading.Children.Add(title);
+        var title = Label(Lite ? VideoH3LiteCatalog.Name : "MiniMax H3"); title.FontSize = 28; title.FontWeight = FontWeights.SemiBold; heading.Children.Add(title);
         var change = ActionButton("H3ChangeModel", "ChangeModel", () => Request(ChangeModelRequested));
         change.BorderThickness = new Thickness(0); change.Background = System.Windows.Media.Brushes.Transparent;
         change.Content = "⇄"; change.ToolTip = T("H3ChangeModel"); AutomationProperties.SetName(change, T("H3ChangeModel")); heading.Children.Add(change); root.Children.Add(heading);

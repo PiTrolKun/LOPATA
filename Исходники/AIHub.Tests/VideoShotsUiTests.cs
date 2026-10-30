@@ -49,10 +49,12 @@ public sealed class VideoShotsUiTests
             Assert.IsFalse(Find<Button>(control, "VideoPrep.Next").IsEnabled); Assert.IsFalse(control.BackStepIfNeeded());
             assistant.Release.SetResult();
             for (var i = 0; i < 100 && !VideoShots.Ready(control.Session.Project); i++) await Task.Delay(20);
-            await Task.Delay(30); var p = control.Session.Project; Assert.IsTrue(VideoShots.Ready(p)); Assert.AreEqual(3, assistant.Calls);
+            for (var i = 0; i < 150 && !ScenarioNavigationTests.LogicalDescendants(control).OfType<TextBox>()
+                .Any(e => AutomationProperties.GetAutomationId(e) == "VideoPrep.ShotsStart"); i++) await Task.Delay(20);
+            var p = control.Session.Project; Assert.IsTrue(VideoShots.Ready(p)); Assert.AreEqual(5, assistant.Calls);
             var field = Find<TextBox>(control, "VideoPrep.ShotsStart"); Assert.IsTrue(SpellCheck.GetIsEnabled(field)); field.Text = "Моя ручная правка";
             Assert.IsTrue(control.Save()); Assert.IsTrue(control.BackStepIfNeeded()); Assert.AreEqual("references", p.CurrentStep);
-            Assert.IsTrue(control.Next()); await Task.Delay(70); Assert.AreEqual(3, assistant.Calls);
+            Assert.IsTrue(control.Next()); await Task.Delay(70); Assert.AreEqual(5, assistant.Calls);
             Assert.AreEqual("Моя ручная правка", Find<TextBox>(control, "VideoPrep.ShotsStart").Text);
             Assert.IsFalse(ScenarioNavigationTests.LogicalDescendants(control).OfType<Button>().Any(e => AutomationProperties.GetAutomationId(e) == "VideoPrep.ShotsSavedOptions"));
         }

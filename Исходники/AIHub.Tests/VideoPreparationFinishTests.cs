@@ -34,14 +34,48 @@ public sealed class VideoPreparationFinishTests
         b.Frames.Reverse(); b.Frames[0].Seconds = 7; VideoStoryboard.Capture(p);
         Assert.IsTrue(VideoStoryboard.MoveVersion(p, -1)); Assert.AreEqual(original, b.Frames[0].Id);
         Assert.IsTrue(VideoStoryboard.MoveVersion(p, 1)); Assert.AreEqual(7, b.Frames[0].Seconds);
-        VideoGeneratorPlan.SaveChoice(p, new("ltx-2.5", 1280, 720, 24, -1, "manual notes"));
+        VideoGeneratorPlan.SaveChoice(p, new("minimax-h3", 1280, 720, 24, -1, "manual notes"));
         VideoPreparationArchive.Save(p, f.File("project.lopataAIVid")); var loaded = VideoPreparationArchive.Load(f.File("project.lopataAIVid"), f.File("opened"));
         Assert.IsTrue(VideoGeneratorPlan.CanResume(loaded)); Assert.AreEqual(7, loaded.Storyboard!.Frames[0].Seconds);
         loaded.Shots!.Scenes[0].Shots[0].Start += " changed";
         Assert.IsFalse(VideoStoryboard.Current(loaded)); Assert.IsFalse(VideoPreparationReadiness.Ready(loaded));
         VideoStoryboard.Synchronize(loaded); Assert.AreEqual(7, loaded.Storyboard.Frames[0].Seconds);
         loaded.Shots.Scenes[0].Shots.RemoveAt(0); VideoStoryboard.Synchronize(loaded);
-        Assert.IsFalse(VideoPreparationReadiness.BoardReady(loaded)); loaded.Validate();
+        Assert.IsTrue(VideoPreparationReadiness.BoardReady(loaded)); loaded.Validate();
+    }
+    [TestMethod]
+    [DataRow("ltx-2.5")]
+    [DataRow("wan-vace-1.3b")]
+    public void RetiredModelArchivePreservesHistoryAndAttachmentsWithoutEnablingResume(string modelId)
+    {
+        using var f = new VideoPreparationTests.TestFiles(); var p = ReadyProject();
+        var choice = VideoGeneratorPlan.SaveChoice(p, new(modelId, 1280, 720, 24, 42, "old settings"));
+        byte[] original = [1, 4, 9, 16]; var attachment = f.File("reference.bin");
+        File.WriteAllBytes(attachment, original); p.Attachments.Add(new(attachment, "user-reference"));
+        var path = f.File("legacy.lopataAIVid"); VideoPreparationArchive.Save(p, path);
+        var before = SHA256.HashData(File.ReadAllBytes(path));
+        var loaded = VideoPreparationArchive.Load(path, f.File("opened")); loaded.Validate();
+        Assert.IsFalse(VideoGeneratorPlan.IsAvailable(modelId));
+        Assert.IsFalse(VideoGeneratorPlan.CanResume(loaded));
+        Assert.AreEqual(choice, VideoGeneratorPlan.Selected(loaded));
+        Assert.AreEqual(p.Storyboard!.Frames.Count, loaded.Storyboard!.Frames.Count);
+        CollectionAssert.AreEqual(original, File.ReadAllBytes(loaded.Attachments.Single(a => a.Role == "user-reference").Path));
+        CollectionAssert.AreEqual(before, SHA256.HashData(File.ReadAllBytes(path)));
+        CollectionAssert.AreEqual(new[] { "minimax-h3", VideoH3LiteCatalog.ModelId }, VideoGeneratorPlan.AvailableCandidates.Select(c => c.Id).ToArray());
+    }
+    [TestMethod]
+    public void VaceChoiceRoundTripsWithoutReplacingPreviousModelHistory()
+    {
+        using var f = new VideoPreparationTests.TestFiles(); var p = ReadyProject();
+        var h3 = VideoGeneratorPlan.SaveChoice(p, new("minimax-h3", 480, 864, 24, 42, "saved H3"));
+        var retired = VideoGeneratorPlan.SaveChoice(p, new("ltx-2.5", 1280, 720, 24, -1, "old choice"));
+        var vace = VideoGeneratorPlan.SaveChoice(p, new("wan-vace-1.3b", 832, 480, 16, -1, "files only"));
+        var path = f.File("vace.lopataAIVid"); VideoPreparationArchive.Save(p, path);
+        var loaded = VideoPreparationArchive.Load(path, f.File("vace-opened")); loaded.Validate();
+        Assert.AreEqual(vace, VideoGeneratorPlan.Selected(loaded));
+        Assert.IsFalse(VideoGeneratorPlan.CanResume(loaded));
+        CollectionAssert.AreEqual(new[] { h3, retired, vace }, loaded.Generator!.History.ToArray());
+        Assert.IsFalse(loaded.Provenance.Models.Any(m => m.Id == "wan-vace-1.3b"), "Selection is not a generation receipt.");
     }
     [TestMethod]
     public void ResumeRequiresSavedHistoryNotJustDraftAndNeverClaimsGeneration()

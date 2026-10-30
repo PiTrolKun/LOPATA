@@ -90,7 +90,7 @@ public sealed partial class VideoPreparationControl
     {
         if (Session.Project.CurrentStep != "world" || Session.Project.World is not { } w) return;
         var i = w.History.FindIndex(v => v.Id == w.RevisionId);
-        var draft = i >= 0 && w.History[i].Cards != VideoWorld.SerializeCards(w.Cards);
+        var draft = i >= 0 && !VideoWorld.MatchesSnapshot(w.History[i].Cards, w.Cards);
         if (_worldUndo is not null) _worldUndo.IsEnabled = !ConceptBusy && !PendingConcept && (i > 0 || draft);
         if (_worldRedo is not null) _worldRedo.IsEnabled = !ConceptBusy && !PendingConcept && i + 1 < w.History.Count;
         if (_worldVersion is not null) _worldVersion.Text = string.Format(T("Version"), i + 1, w.History.Count);

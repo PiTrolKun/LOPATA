@@ -112,6 +112,53 @@ public sealed class VideoWorldUiTests
         Find<Button>(control, "VideoPrep.WorldPropose").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); await finished.Task;
         await Task.Delay(100); Assert.HasCount(1, control.Session.Project.World!.Cards); Assert.AreEqual("", control.Session.Project.World.Cards[0].Text.IdeaText); owner.Close();
     });
+    [TestMethod]
+    public Task SavedWorldEditCanCheckpointAndClose() => OnUi(() =>
+    {
+        using var files = new VideoPreparationTests.TestFiles();
+        var control = Create(files, new VideoConceptTests.FakeAssistant());
+        Find<TextBox>(control, "VideoPrep.WorldName").Text = "Мастерская после правки";
+        Assert.IsTrue(control.Session.IsDirty);
+        Assert.IsTrue(control.CanClose()); Assert.IsFalse(control.Session.IsDirty);
+        var saved = VideoPreparationArchive.Load(control.Session.ArchivePath!, files.File("closed-opened"));
+        Assert.AreEqual("Мастерская после правки", saved.World!.Cards[0].Name);
+        return Task.CompletedTask;
+    });
+    [TestMethod]
+    public Task FailedSaveAllowsExplicitDiscardButCancelKeepsProjectOpen() => OnUi(() =>
+    {
+        using var files = new VideoPreparationTests.TestFiles();
+        var control = Create(files, new VideoConceptTests.FakeAssistant());
+        var original = System.IO.File.ReadAllBytes(control.Session.ArchivePath!);
+        control.Session.Project.Attachments.Add(new(files.File("missing.png"), "reference")); control.Session.Changed();
+        foreach (var buttonId in new[] { 2, 7 }) // IDCANCEL, IDNO in the actual native save question.
+        {
+            var clicked = false; var thread = GetCurrentThreadId();
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+            timer.Tick += (_, _) => EnumThreadWindows(thread, (window, _) =>
+            {
+                var name = new System.Text.StringBuilder(64); GetClassName(window, name, name.Capacity);
+                if (name.ToString() != "#32770" || GetDlgItem(window, 7) == IntPtr.Zero) return true;
+                clicked = PostMessage(GetDlgItem(window, buttonId), 0x00F5, IntPtr.Zero, IntPtr.Zero); return false;
+            }, IntPtr.Zero);
+            timer.Start();
+            try { Assert.AreEqual(buttonId == 7, control.CanClose()); Assert.IsTrue(clicked); }
+            finally { timer.Stop(); }
+        }
+        CollectionAssert.AreEqual(original, System.IO.File.ReadAllBytes(control.Session.ArchivePath!));
+        return Task.CompletedTask;
+    });
+    private delegate bool WindowVisitor(IntPtr window, IntPtr state);
+    [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool EnumThreadWindows(uint thread, WindowVisitor visitor, IntPtr state);
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern int GetClassName(IntPtr window, System.Text.StringBuilder name, int capacity);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern IntPtr GetDlgItem(IntPtr window, int id);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool PostMessage(IntPtr window, uint message, IntPtr wparam, IntPtr lparam);
     // Native Windows spell checking retains STA callbacks. Keep one dispatcher alive for the test process,
     // rather than destroying its thread while those callbacks are still owned by Windows.
     private static readonly Lazy<Dispatcher> UiDispatcher = new(() =>

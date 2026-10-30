@@ -18,7 +18,7 @@ internal sealed partial class VideoH3WorkspaceControl
     internal void ReloadResults()
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(ReloadResults); return; }
-        _state.Runs = VideoShots.Copy(_project.Generator?.H3?.Runs ?? []); FilterResults();
+        _state.Runs = VideoShots.Copy(VideoH3WorkspaceState.Get(_project, _modelId)?.Runs ?? []); FilterResults();
     }
     private void FilterResults()
     {

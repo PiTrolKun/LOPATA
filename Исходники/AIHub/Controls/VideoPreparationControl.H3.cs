@@ -48,7 +48,7 @@ public sealed partial class VideoPreparationControl
         if (ConceptBusy || PendingConcept || !Save()) return;
         try
         {
-            var job = VideoH3Job.Create(Session.Project, Session.ArchivePath!, _h3ModelsRoot, _h3Connections) with { ScheduledUtc = scheduledUtc };
+            var job = VideoH3Job.Create(Session.Project, Session.ArchivePath!, _h3ModelsRoot, _h3Connections, VideoGeneratorPlan.Selected(Session.Project)?.Settings.ModelId ?? VideoH3Catalog.ModelId) with { ScheduledUtc = scheduledUtc };
             Session.Changed(); await Task.Run(() => Session.Checkpoint()); _generatorPage?.RefreshResults();
             await RunH3Async(job, null, ApplicationBackgroundOperations.ExitToken);
         }
@@ -107,12 +107,12 @@ public sealed partial class VideoPreparationControl
         var request = state.Input.Deserialize<VideoH3Job>() ?? throw new InvalidDataException("VideoPrep.InvalidArchive");
         if (ConceptBusy || !OpenPath(request.ArchivePath) || Session.Project.Id != request.ProjectId)
             throw new BackgroundOperationWaitingException("VideoPrep.AiWrongProject");
-        var run = VideoH3WorkspaceState.Ensure(Session.Project).Runs.SingleOrDefault(r => r.Id == request.Run.Id)
+        var run = VideoH3WorkspaceState.Ensure(Session.Project, request.ModelId).Runs.SingleOrDefault(r => r.Id == request.Run.Id)
             ?? throw new InvalidDataException("VideoPrep.H3ChangedProject");
         if (run.Complete)
             return await ApplicationBackgroundOperations.RunAsync(VideoH3Job.Kind, T("H3Generated"), Session.ArchivePath, request,
                 _ => Task.FromResult(Session.ArchivePath!), token, state);
-        var fresh = VideoH3Job.Create(Session.Project, Session.ArchivePath!, _h3ModelsRoot, _h3Connections);
+        var fresh = VideoH3Job.Create(Session.Project, Session.ArchivePath!, _h3ModelsRoot, _h3Connections, request.ModelId);
         if (fresh.Run.Id != run.Id || fresh.Run.InputHash != request.Run.InputHash)
         {
             fresh = await VideoH3FinalizationRecovery.CreateAsync(request, fresh, Session.Project, token);

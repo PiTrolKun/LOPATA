@@ -30,33 +30,29 @@ internal static class VideoH3Runner
             var size = input.Length; files.Add(new(name, size, Convert.ToHexString(SHA256.HashData(input))));
         }
         await RuntimeFileAudit.VerifyAsync("Video.H3.Adapter", Path.Combine(AppContext.BaseDirectory, "Tools"), ApplicationBuildVersion.Value, files, token, log);
-        var environment = await VideoH3Runtime.PrepareAsync(job.ModelsRoot, job.Connections, token, log, library);
+        var lite = job.ModelId == VideoH3LiteCatalog.ModelId;
+        _ = VideoH3WorkspaceState.Get(project, job.ModelId);
+        var environment = await VideoH3Runtime.PrepareAsync(job.ModelsRoot, job.Connections, token, log, library, lite);
         await VideoRuntime.PrepareAsync(token);
         var directory = DirectoryFor(job.Run.Id); var output = Path.Combine(directory, "output"); Directory.CreateDirectory(output);
         foreach (var folder in new[] { "input", "temp" }) Directory.CreateDirectory(Path.Combine(directory, folder));
         await RestoreFiles(project, job.Run, output, token);
-        var models = Models(environment, false);
+        var models = lite ? VideoH3Profile.Facts(environment) : Models(environment, false);
         if (job.FinalizeOnly)
             await VerifyFinalizationModels(job.Run, output, models, token);
         var facts = new OutputProvenance { Scenario = "video-generation/minimax-h3", ModelHistory = "recorded-inference", Models = models };
-        var modelRoot = environment.Cards.Single(c => c.ModelArtifactId == "video-h3-models").InstallDirectory;
+
         var payload = new
         {
-            job.Run.Id, job.Run.InputHash, job.Settings, job.Items, job.Run.Takes, job.FinalizeOnly, Probe = probeOnly,
+            job.ModelId, job.Run.Id, job.Run.InputHash, job.Settings, job.Items, job.Run.Takes, job.FinalizeOnly, Probe = probeOnly,
             ElapsedBeforeAttempt = job.Run.GenerationSeconds is null ? (double?)null : elapsed(),
             WorkStartedAtUtc = DateTimeOffset.UtcNow,
             Output = output, Input = Path.Combine(directory, "input"), Temp = Path.Combine(directory, "temp"),
             Ffmpeg = Path.Combine(VideoRuntime.DirectoryPath, "ffmpeg.exe"), Provenance = facts,
-            UpscaleProvenance = facts with { Models = Models(environment, true) },
-            Environment = new { environment.Libraries, environment.Comfy, environment.Timeline, environment.Upscaler, environment.Spectrum, environment.Turbo, environment.Python.Device },
-            ModelFolders = new Dictionary<string, string>
-            {
-                ["diffusion_models"] = Path.Combine(modelRoot, "diffusion_models"), ["text_encoders"] = Path.Combine(modelRoot, "text_encoders"), ["vae"] = Path.Combine(modelRoot, "vae"),
-                ["vae_approx"] = Path.Combine(environment.Cards.Single(c => c.ModelArtifactId == "video-h3-preview-model").InstallDirectory, "vae_approx"),
-                ["latent_upscale_models"] = Path.Combine(environment.Cards.Single(c => c.ModelArtifactId == "video-h3-upscale-model").InstallDirectory, "latent_upscale_models")
-            },
-            Models = new { Diffusion = "minimax_h3_ref2va_pruned_int8_convrot.safetensors", Encoder = "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
-                VideoVae = "minimax_h3_video_vae_int8_convrot.safetensors", AudioVae = "minimax_h3_audio_vae_fp32.safetensors" }
+            UpscaleProvenance = facts with { Models = lite ? models : Models(environment, true) },
+            Environment = new { environment.Libraries, environment.Comfy, environment.Timeline, environment.Upscaler, environment.Spectrum, environment.Turbo, environment.ClipProj, environment.Python.Device },
+            ModelFolders = VideoH3Profile.Folders(environment, lite),
+            Models = VideoH3Profile.Models(lite)
         };
         var requestPath = Path.Combine(directory, "request.json"); await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
         var info = new ProcessStartInfo(environment.Python.Python) { UseShellExecute = false, CreateNoWindow = true,

@@ -28,7 +28,7 @@ public static partial class VideoPreparationArchive
             using var existing = ZipFile.OpenRead(path);
             if (ReadManifest(existing).Project.Id != project.Id) throw new IOException("VideoPrep.ProtectedFile");
         }
-        var copy = project.Clone();
+        var copy = VideoWorldArchiveSnapshots.Clone(project);
         copy.Provenance = project.Provenance with { ProgramVersion = new OutputProvenance().ProgramVersion,
             ExportedUtc = DateTimeOffset.UtcNow, CreatedUtc = project.CreatedUtc };
         if (copy.Development is not null || copy.World is not null || copy.Shots is not null) VideoTranslationHistory.UpdateProvenance(copy);
@@ -67,8 +67,10 @@ public static partial class VideoPreparationArchive
                         if (before.Length != length || before.LastWriteTimeUtc != modified) throw new IOException("VideoPrep.SourceChanged");
                         members.Add(new(pair.Value, length, hash));
                     }
-                    var data = JsonSerializer.SerializeToUtf8Bytes(new Manifest(Format, 1, copy, members.ToArray()));
-                    if (data.Length > ManifestLimit) throw new InvalidDataException("VideoPrep.InvalidArchive");
+                    // Older readers must reject unsupported state and lossless compressed world snapshots.
+                    var schema = VideoWorldArchiveSnapshots.HasHistory(copy) ? 4 : copy.Generator?.H3Lite is not null ? 3 : copy.Generator?.Vace is null ? 1 : 2;
+                    var data = JsonSerializer.SerializeToUtf8Bytes(new Manifest(Format, schema, copy, members.ToArray()), VideoWorldArchiveSnapshots.Options);
+                    if (data.Length > ManifestLimit) throw new InvalidDataException("VideoPrep.ProjectDescriptionTooLarge");
                     using var manifest = zip.CreateEntry("project.json", CompressionLevel.Optimal).Open(); manifest.Write(data);
                 }
                 output.Flush(true);
@@ -86,8 +88,12 @@ public static partial class VideoPreparationArchive
         if (entry.Length > ManifestLimit) throw new InvalidDataException("VideoPrep.InvalidArchive");
         using var input = entry.Open(); using var memory = new MemoryStream();
         VideoProjectArchive.Copy(input, memory, entry.Length, CancellationToken.None);
-        var manifest = JsonSerializer.Deserialize<Manifest>(memory.ToArray()) ?? throw new InvalidDataException("VideoPrep.InvalidArchive");
-        if (manifest.Format != Format || manifest.Schema != 1 || manifest.Project is null || manifest.Files is null
+        var manifest = JsonSerializer.Deserialize<Manifest>(memory.ToArray(), VideoWorldArchiveSnapshots.Options) ?? throw new InvalidDataException("VideoPrep.InvalidArchive");
+        if (manifest.Format != Format || manifest.Schema is not (1 or 2 or 3 or 4) || manifest.Project is null || manifest.Files is null
+            || manifest.Schema == 4 && !VideoWorldArchiveSnapshots.HasHistory(manifest.Project)
+            || manifest.Schema < 4 && (manifest.Schema == 3) != (manifest.Project.Generator?.H3Lite is not null)
+            || manifest.Schema == 2 && manifest.Project.Generator?.Vace is null
+            || manifest.Schema == 1 && manifest.Project.Generator?.Vace is not null
             || manifest.Files.Length > 100000) throw new InvalidDataException("VideoPrep.InvalidArchive");
         manifest.Project.Validate(); return manifest;
     }

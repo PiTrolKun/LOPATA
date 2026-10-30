@@ -16,6 +16,8 @@ public static class VideoPreparationReadiness
         Add(p.World is null || p.World.Cards.Count == 0 || p.World.Cards.Any(c => string.IsNullOrWhiteSpace(c.Name) || string.IsNullOrWhiteSpace(c.Text.IdeaText)), "CheckWorld", "world");
         Add(p.World is not null && (!VideoWorld.SourceCurrent(p) || !VideoTranslationHistory.IsCurrent(p.World.Working)), "CheckWorldTranslation", "world_translation");
         Add(!VideoShots.Ready(p) || !VideoShots.Current(p), "CheckShots", "shots");
+        foreach (var scene in p.Shots?.Scenes ?? [])
+            Add(VideoShotsQuality.HasDuplicates(scene), "CheckShotsDuplicates", "shots", detail: scene.Name);
         Add(p.Shots is null || p.Shots.Scenes.Any(s => !VideoShots.TranslationCurrent(p.Shots, s) || !VideoShots.SameStructure(s, VideoShots.SelectedTranslation(p.Shots, s.Id)?.Scene)), "CheckShotsTranslation", "shots_translation");
         Add(p.References is null || p.References.Choice == "", "CheckReferences", "references");
         foreach (var binding in p.References?.Bindings ?? []) Add(VideoReferences.NeedsReview(p, binding), "CheckReferenceReview", "references", detail: binding.CardName);

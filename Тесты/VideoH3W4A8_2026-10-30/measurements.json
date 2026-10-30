@@ -1,0 +1,74 @@
+{
+  "run_id": "fa34a563286543b6a690bf40e605c91e",
+  "seconds": 12.25,
+  "frames": 294,
+  "dimensions": [
+    416,
+    256
+  ],
+  "steps": 8,
+  "seed": 12345,
+  "first_audit_included_seconds": 416.7,
+  "peak_torch_allocated": 15782902784,
+  "max_torch_reserved": 18064867328,
+  "max_observed_process_rss": 7556583424,
+  "parent_sha_verified": true,
+  "resources": [
+    {
+      "kind": "resources",
+      "stage": "after-conditioning",
+      "process_rss": 5814013952,
+      "allocated": 9830400,
+      "reserved": 25165824,
+      "peak": 5970799616
+    },
+    {
+      "kind": "resources",
+      "stage": "diffusion-resident",
+      "process_rss": 7084253184,
+      "allocated": 11860977152,
+      "reserved": 12085886976,
+      "peak": 11870722048
+    },
+    {
+      "kind": "resources",
+      "stage": "sampled",
+      "process_rss": 7480115200,
+      "allocated": 11861108224,
+      "reserved": 16777216000,
+      "peak": 14454396416
+    },
+    {
+      "kind": "resources",
+      "stage": "after-conditioning",
+      "process_rss": 5814566912,
+      "allocated": 9830400,
+      "reserved": 25165824,
+      "peak": 5970799616
+    },
+    {
+      "kind": "resources",
+      "stage": "diffusion-resident",
+      "process_rss": 7084855296,
+      "allocated": 11860977152,
+      "reserved": 12085886976,
+      "peak": 11870722048
+    },
+    {
+      "kind": "resources",
+      "stage": "sampled",
+      "process_rss": 7556583424,
+      "allocated": 11861108224,
+      "reserved": 16777216000,
+      "peak": 14466582528
+    },
+    {
+      "kind": "resources",
+      "stage": "sampled",
+      "process_rss": 6930173952,
+      "allocated": 11860829696,
+      "reserved": 18064867328,
+      "peak": 15782902784
+    }
+  ]
+}

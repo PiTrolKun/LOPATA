@@ -13,12 +13,13 @@ public sealed partial class VideoPreparationControl
     private string _boardPreviewProject = "";
     private bool _boardInvalidDuration;
     private TextBlock? _boardSummary;
+    private System.Windows.Controls.ComboBox? _boardImageChoice;
     private sealed record BoardImageChoice(string Id, string Name) { public override string ToString() => Name; }
     private void BuildStoryboard(StackPanel page)
     {
         if (BuildFinishProgress(page)) return;
-        var p = Session.Project; var wasNew = p.Storyboard is null; var b = VideoStoryboard.Ensure(p);
-        if (wasNew) { Session.Changed(); _autosave.Start(); }
+        var p = Session.Project; var previousRevision = p.Storyboard?.RevisionId; var b = VideoStoryboard.Ensure(p);
+        if (previousRevision != b.RevisionId) { Session.Changed(); _autosave.Start(); }
         _boardInvalidDuration = false;
         page.Children.Add(Text("BoardHint"));
         if (!VideoStoryboard.Current(p)) page.Children.Add(Text("BoardStale"));
@@ -30,6 +31,7 @@ public sealed partial class VideoPreparationControl
             _boardPreview.Closed += (_, _) => _boardPreview = null; _boardPreview.Show();
         }));
         actions.Children.Add(Action("BoardSynchronize", () => { VideoStoryboard.Synchronize(p); Changed(); Checkpoint(); Render(); }));
+        actions.Children.Add(Action("BoardPlanOrder", () => { VideoStoryboard.Synchronize(p, restorePlanOrder: true); Changed(); Checkpoint(); Render(); }));
         foreach (var delta in new[] { -1, 1 })
         { var button = Action(delta == -1 ? "BoardUndo" : "BoardRedo", () => { if (VideoStoryboard.MoveVersion(p, delta)) { Changed(); Checkpoint(); Render(); } }); button.Content = delta == -1 ? "←" : "→"; actions.Children.Add(button); }
         page.Children.Add(actions); BuildBoardAudio(page);
@@ -40,6 +42,7 @@ public sealed partial class VideoPreparationControl
             var pair = VideoStoryboard.Plans(p).FirstOrDefault(x => x.Shot.Id == frame.ShotId); var currentStart = start; start += frame.Seconds;
             var button = Action("BoardChooseFrame", () => { b.SelectedId = frame.Id; Render(); });
             button.Content = $"{b.Frames.IndexOf(frame) + 1}. {pair.Shot?.Name ?? T("BoardMissingPlan")}\n{currentStart:0.###}–{start:0.###} s";
+            button.ContextMenu = BoardFrameMenu(frame);
             System.Windows.Automation.AutomationProperties.SetAutomationId(button, "VideoPrep.Board.Frame." + frame.Id); left.Children.Add(button);
         }
         var scroll = new ScrollViewer { Content = left, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalAlignment = VerticalAlignment.Top };
@@ -49,6 +52,9 @@ public sealed partial class VideoPreparationControl
         if (selected is null) { editor.Children.Add(Text("BoardNoFrames")); return; } b.SelectedId = selected.Id;
         var plan = VideoStoryboard.Plans(p).FirstOrDefault(x => x.Shot.Id == selected.ShotId);
         var title = Text("BoardMissingPlan", true); title.Text = plan.Shot?.Name ?? title.Text; editor.Children.Add(title);
+        var manual = new WrapPanel();
+        manual.Children.Add(Action("BoardEditPlan", () => EditBoardPlan(selected)));
+        manual.Children.Add(Action("BoardClearImage", () => ClearBoardImage(selected))); editor.Children.Add(manual);
         if (plan.Shot is not null) { var action = Text("ShotsStart"); action.Text = plan.Shot.Start + "\n→ " + plan.Shot.End; editor.Children.Add(action); }
         var duration = new ExampleTextInput(T("ShotsDuration"), T("ShotsDurationExample"), "VideoPrep.Board.Duration");
         duration.Input.Text = selected.Seconds.ToString("R", CultureInfo.InvariantCulture);
@@ -64,6 +70,7 @@ public sealed partial class VideoPreparationControl
         choices.AddRange((p.References?.Images ?? []).Select(i => new BoardImageChoice(i.Id, BoardImageName(p, i))));
         if (selected.ImageId != "" && choices.All(c => c.Id != selected.ImageId)) choices.Add(new(selected.ImageId, T("BoardMissingImage")));
         var imageChoice = new System.Windows.Controls.ComboBox { ItemsSource = choices, SelectedItem = choices.First(c => c.Id == selected.ImageId), Margin = new Thickness(0, 4, 0, 10) };
+        _boardImageChoice = imageChoice;
         System.Windows.Automation.AutomationProperties.SetAutomationId(imageChoice, "VideoPrep.Board.Image");
         imageChoice.SelectionChanged += (_, _) => { if (imageChoice.SelectedItem is BoardImageChoice c) { selected.ImageId = c.Id; Changed(); Checkpoint(); Render(); } };
         editor.Children.Add(Text("BoardImage")); editor.Children.Add(imageChoice);

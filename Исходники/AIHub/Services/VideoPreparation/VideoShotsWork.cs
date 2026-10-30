@@ -41,7 +41,8 @@ public static class VideoShotsWork
             foreach (var id in job.CandidateIds)
             {
                 var candidate = d.Candidates.Single(c => c.Id == id);
-                VideoConceptRequest Request(string purpose, string suffix, string text) => new(StableId(id + ":" + suffix), p.Id, job.ProjectPath, id,
+                VideoConceptRequest Request(string purpose, string suffix, string text) => new(StableId(id + ":" + VideoShotsProtocol.Version + ":" + suffix
+                    + ":" + VideoShots.Hash(text + JsonSerializer.Serialize(candidate.Scenes.Select(s => new { s.Id, s.Name, s.Intent })))), p.Id, job.ProjectPath, id,
                     text, job.Form, job.ModelId, job.ModelPath, candidate.Freedom, VideoShotsProtocol.Version, job.EngineSetId, purpose,
                     ContextText: job.Source, ResponseLanguage: job.Language,
                     ContextOriginal: JsonSerializer.Serialize(candidate.Scenes.Select(s => new { s.Id, s.Name, s.Intent })));
@@ -56,13 +57,38 @@ public static class VideoShotsWork
                         try { a = assistant is IVideoShotsProgress streaming ? await streaming.GenerateShotsAsync(r, reasoning, attempt) : await assistant.GenerateAsync(r, attempt); }
                         finally { await VideoConceptRuntimeLifecycle.AfterAsync(assistant); }
                         attempt.ThrowIfCancellationRequested(); VideoConceptProtocol.Validate(a);
-                        if (r.Purpose == VideoShotsProtocol.Outline) _ = VideoShotsProtocol.ReadOutline(a.Text, r.ContextText); else _ = VideoShotsProtocol.ReadScene(a.Text, r);
+                        if (r.Purpose == VideoShotsProtocol.Outline) _ = VideoShotsProtocol.ReadOutline(a.Text, r.ContextText);
+                        else if (r.Purpose == VideoShotsQuality.Purpose) _ = VideoShotsQuality.Read(a.Text);
+                        else _ = VideoShotsProtocol.ReadScene(a.Text, r);
                         receipts.Save(r, a);
                     }
                     if (!candidate.Models.Contains(a.Model)) candidate.Models.Add(a.Model); return a;
                     }
-                    catch (InvalidDataException error) when (error.Message is "VideoPrep.ShotsInvalidReply" or "VideoPrep.TranslationLiteralLost")
+                    catch (InvalidDataException error) when (error.Message is "VideoPrep.ShotsInvalidReply" or "VideoPrep.ShotsDuplicateReply" or "VideoPrep.TranslationLiteralLost")
                     { throw new BackgroundOperationFailedException(error.Message); }
+                }
+                async Task<VideoScenePlan> ReviewScene(VideoScenePlan scene, VideoConceptRequest generate, int number, int count)
+                {
+                    var signature = VideoShots.Hash(VideoShotsProtocol.Version + JsonSerializer.Serialize(scene));
+                    if (candidate.ReviewedScenes.TryGetValue(scene.Id, out var checkedSignature) && checkedSignature == signature) return scene;
+                    for (var pass = 0; pass < 2; pass++)
+                    {
+                        stage?.Invoke("ShotsReviewing", number, count);
+                        var review = Request(VideoShotsQuality.Purpose, "review:" + scene.Id + ":" + pass,
+                            JsonSerializer.Serialize(scene));
+                        var report = await Answer(review); var problems = VideoShotsQuality.Read(report.Text);
+                        if (problems.Length == 0)
+                        { candidate.ReviewedScenes[scene.Id] = VideoShots.Hash(VideoShotsProtocol.Version + JsonSerializer.Serialize(scene)); return scene; }
+                        if (pass == 1 || generate.Purpose == VideoShotsProtocol.Edit || generate.TargetText.Length > 0)
+                            throw new BackgroundOperationFailedException("VideoPrep.ShotsQualityFailed");
+                        stage?.Invoke("ShotsCorrecting", number, count);
+                        var retry = generate with { Id = StableId(generate.Id + ":quality-correction"),
+                            TargetText = string.Join("\n", problems) };
+                        scene = VideoShotsProtocol.ReadScene((await Answer(retry)).Text, retry);
+                        candidate.Scenes[candidate.Scenes.FindIndex(s => s.Id == scene.Id)] = scene;
+                        await checkpoint();
+                    }
+                    throw new InvalidOperationException();
                 }
                 if (job.Translation)
                 {
@@ -98,7 +124,8 @@ public static class VideoShotsWork
                     input.Shots = input.Shots.Where(t => t.Id == job.EditShotId).ToList();
                     stage?.Invoke("ShotsImproving", 1, 1); var r = Request(VideoShotsProtocol.Edit, "edit", JsonSerializer.Serialize(input)) with
                     { TargetText = JsonSerializer.Serialize(scene.Shots.Where(t => t.Id != job.EditShotId).Select(t => new { t.Name, t.Start, t.End, t.Camera, t.Light })) }; var a = await Answer(r);
-                    var improved = VideoShotsProtocol.ReadScene(a.Text, r).Shots.Single(); scene.Shots[scene.Shots.FindIndex(t => t.Id == improved.Id)] = improved;
+                    var reviewed = await ReviewScene(VideoShotsProtocol.ReadScene(a.Text, r), r, 1, 1);
+                    var improved = reviewed.Shots.Single(); scene.Shots[scene.Shots.FindIndex(t => t.Id == improved.Id)] = improved;
                     candidate.Scenes = all; candidate.Complete = true;
                 }
                 else
@@ -111,11 +138,20 @@ public static class VideoShotsWork
                     }
                     for (var i = 0; i < candidate.Scenes.Count; i++)
                     {
-                        var scene = candidate.Scenes[i]; if (scene.Shots.Count > 0) continue;
-                        stage?.Invoke("ShotsBuildingScene", i + 1, candidate.Scenes.Count);
+                        var scene = candidate.Scenes[i];
                         var r = Request(VideoShotsProtocol.Scene, "scene:" + scene.Id, JsonSerializer.Serialize(scene));
-                        var a = await Answer(r); var filled = VideoShotsProtocol.ReadScene(a.Text, r);
-                        candidate.Scenes[i] = filled; await checkpoint();
+                        if (scene.Shots.Count == 0)
+                        {
+                            stage?.Invoke("ShotsBuildingScene", i + 1, candidate.Scenes.Count);
+                            try { scene = VideoShotsProtocol.ReadScene((await Answer(r)).Text, r); }
+                            catch (BackgroundOperationFailedException e) when (e.Message == "VideoPrep.ShotsDuplicateReply")
+                            {
+                                r = r with { Id = StableId(r.Id + ":duplicate-correction"), TargetText = "Удали повторяющиеся планы одного действия. Нужны разные события, не перефразирования одного кадра." };
+                                scene = VideoShotsProtocol.ReadScene((await Answer(r)).Text, r);
+                            }
+                        }
+                        candidate.Scenes[i] = scene; await checkpoint();
+                        candidate.Scenes[i] = await ReviewScene(scene, r, i + 1, candidate.Scenes.Count); await checkpoint();
                     }
                     candidate.Complete = true;
                 }

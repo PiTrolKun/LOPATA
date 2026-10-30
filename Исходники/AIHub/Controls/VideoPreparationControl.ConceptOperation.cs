@@ -16,7 +16,7 @@ public sealed partial class VideoPreparationControl
     private bool _conceptDialogOpen;
     private CancellationTokenSource? _conceptCancel;
     private BackgroundOperationPhase? _lastConceptPhase;
-    private bool ConceptBusy => _h3Busy || _finishingBusy || _shotsStarting || _shotsBusy || _drawingBusy || _referenceImporting || _conceptBusy || _worldBusy || _warming || _loadingConceptModels || _conceptDialogOpen || _checkingNarrativeLanguage;
+    private bool ConceptBusy => _vaceBusy || _h3Busy || _finishingBusy || _shotsStarting || _shotsBusy || _drawingBusy || _referenceImporting || _conceptBusy || _worldBusy || _warming || _loadingConceptModels || _conceptDialogOpen || _checkingNarrativeLanguage;
     private bool ConceptResultVisible => IsVisible && Window.GetWindow(this) is { IsActive: true, WindowState: not WindowState.Minimized };
     private BackgroundOperationState? PendingConceptState => ApplicationBackgroundOperations.Current is { } controller
         ? new[] { controller.State }.Concat(controller.PausedOperations).FirstOrDefault(s => s?.Kind is VideoConceptWork.Kind or VideoTranslationProtocol.Kind or VideoDevelopment.Kind or VideoDevelopment.TranslationKind or VideoWorld.Kind or VideoWorld.CardKind or VideoWorld.TranslationKind

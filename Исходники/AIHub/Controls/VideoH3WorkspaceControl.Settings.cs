@@ -57,16 +57,24 @@ internal sealed partial class VideoH3WorkspaceControl
         Pick(engine, "H3Scheduler", S.Scheduler, ["simple", "beta"], v => S.Scheduler = v, true);
         Preset(engine, "H3VideoShift", S.VideoShift, [1, 3, 6, 8, 10, 12, 16, 20, 30, 40], v => S.VideoShift = (int)v);
         Preset(engine, "H3AudioShift", S.AudioShift, [1, 2, 3, 6, 8, 12, 20, 40], v => S.AudioShift = (int)v);
-        Pick(engine, "H3Attention", S.Attention, ["pytorch", "sage"], v => S.Attention = v, true);
+        Pick(engine, "H3Attention", S.Attention, Lite ? ["pytorch"] : ["pytorch", "sage"], v => S.Attention = v, true);
+        if (!Lite)
+        {
         Check(engine, "H3Spectrum", S.Spectrum, v => S.Spectrum = v);
         Check(engine, "H3KitchenUnavailable", false, _ => { }, false);
         Check(engine, "H3SparseUnavailable", false, _ => { }, false); Hint(engine, "H3AccelerationHint");
+        }
         var memory = Group(_settings, "H3MemoryGroup");
         Pick(memory, "H3Memory", S.MemoryMode, ["auto", "gpu", "offload"], v => S.MemoryMode = v);
         Preset(memory, "H3Reserve", S.VramReserveGb, [0, 1, 2, 3, 4, 6, 8, 12, 16], v => S.VramReserveGb = v);
+        if (!Lite)
+        {
         Preset(memory, "H3Window", S.WindowSeconds, [1, 2, 3, 5, 8, 10, 15], v => S.WindowSeconds = v);
         Preset(memory, "H3Overlap", S.OverlapSeconds, [0, .25, .5, 1, 1.3, 2, 3, 5], v => S.OverlapSeconds = v);
-        Preset(memory, "H3DecodeWindow", S.DecodeSeconds, [1, 2, 3, 5, 8, 10, 15], v => S.DecodeSeconds = v); Hint(memory, "H3MemoryHint");
+        }
+        Preset(memory, "H3DecodeWindow", S.DecodeSeconds, [1, 2, 3, 5, 8, 10, 15], v => S.DecodeSeconds = v); Hint(memory, Lite ? "H3LiteMemoryHint" : "H3MemoryHint");
+        if (!Lite)
+        {
         var upscale = Group(_settings, "H3UpscaleGroup");
         Check(upscale, "H3Upscale", S.Upscale, v => S.Upscale = v);
         Preset(upscale, "H3UpscaleSize", S.UpscaleMegapixels, [.5, 1, 2, 3, 4, 6, 8], v => S.UpscaleMegapixels = v);
@@ -75,6 +83,7 @@ internal sealed partial class VideoH3WorkspaceControl
         Check(upscale, "H3KeepAudio", S.PreserveAudio, v => S.PreserveAudio = v);
         Check(upscale, "H3TemporalChunking", true, _ => { }, false); Hint(upscale, "H3UpscaleHint");
 
+        }
         _building = building;
     }
     private void SetResolution(double megapixels)

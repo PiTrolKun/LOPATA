@@ -15,6 +15,7 @@ internal sealed class VideoH3PreparationControl : UserControl
     private Func<string, string> _l;
     private readonly string _root;
     private readonly Func<IVideoH3Preparation> _create;
+    private readonly bool _lite;
     private readonly IReadOnlyList<ManagedModelArtifactCard> _cards;
     private readonly VideoH3DownloadState _state;
     private readonly Dictionary<VideoH3FileRow, (TextBlock Status, TextBlock Size)> _rows = [];
@@ -40,11 +41,11 @@ internal sealed class VideoH3PreparationControl : UserControl
     internal event Action? BackRequested;
     internal event Action? HomeRequested;
     internal VideoH3PreparationControl(Func<string, string> localize, string root, int connections,
-        Func<IVideoH3Preparation>? create = null)
+        Func<IVideoH3Preparation>? create = null, bool lite = false)
     {
-        _l = localize; _root = root;
+        _l = localize; _root = root; _lite = lite;
         SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");
-        _create = create ?? (() => new VideoH3Preparation(root) { ParallelConnections = connections });
+        _create = create ?? (() => new VideoH3Preparation(root, cards: lite ? VideoH3LiteCatalog.Cards(root) : null) { ParallelConnections = connections });
         using (var source = _create()) { _cards = source.Cards; _state = new(_cards); _state.Refresh(source.Inspect()); }
         AutomationProperties.SetAutomationId(this, "VideoH3.Preparation");
         Build(); Loaded += (_, _) => { if (!Busy && !_workspaceActive) _ = RunAsync(false); };
@@ -67,7 +68,7 @@ internal sealed class VideoH3PreparationControl : UserControl
         {
             if (_workspace is null)
             {
-                _workspace = CreateWorkspace?.Invoke() ?? new VideoH3WorkspaceControl(_l);
+                _workspace = CreateWorkspace?.Invoke() ?? new VideoH3WorkspaceControl(_l, modelId: _lite ? VideoH3LiteCatalog.ModelId : VideoH3Catalog.ModelId);
                 _workspace.BackRequested += RequestBack;
                 _workspace.HomeRequested += () => HomeRequested?.Invoke();
             }
@@ -76,8 +77,9 @@ internal sealed class VideoH3PreparationControl : UserControl
         var root = new Grid { Margin = new Thickness(8) };
         root.RowDefinitions.Add(new() { Height = GridLength.Auto }); root.RowDefinitions.Add(new()); root.RowDefinitions.Add(new() { Height = GridLength.Auto });
         var heading = new StackPanel();
-        heading.Children.Add(Text(_l("Navigation.Creation") + "  ›  " + _l("Navigation.Video") + "  ›  MiniMax H3", heading: true));
-        heading.Children.Add(Text(T("H3PageTitle"), heading: true)); heading.Children.Add(Text(T("H3PageHint")));
+        heading.Children.Add(Text(_l("Navigation.Creation") + "  ›  " + _l("Navigation.Video") + "  ›  " + (_lite ? VideoH3LiteCatalog.Name : "MiniMax H3"), heading: true));
+        heading.Children.Add(Text(T(_lite ? "H3LitePageTitle" : "H3PageTitle"), heading: true));
+        heading.Children.Add(Text(T(_lite ? "H3LitePageHint" : "H3PageHint")));
         heading.Children.Add(Text(string.Format(T("H3PageStorage"), _root), "VideoH3.Storage")); root.Children.Add(heading);
         var list = new StackPanel(); _rows.Clear();
         foreach (var card in _cards)
@@ -101,6 +103,7 @@ internal sealed class VideoH3PreparationControl : UserControl
         _progress = new() { Height = 7, Maximum = 100, Margin = new Thickness(0, 5, 0, 10) }; footer.Children.Add(_progress);
         var actions = new WrapPanel();
         actions.Children.Add(Button("H3PageBack", "VideoH3.Back", RequestBack));
+        if (_lite) actions.Children.Add(Button("H3WorkspaceHome", "VideoH3.Home", RequestHome));
         _verify = Button("H3PageVerify", "VideoH3.Verify", () => _ = RunAsync(false)); actions.Children.Add(_verify);
         _download = Button("H3PageDownload", "VideoH3.Download", () => _ = RunAsync(true)); actions.Children.Add(_download);
         _stop = Button("H3PageStop", "VideoH3.Cancel", () => _cancel?.Cancel()); actions.Children.Add(_stop);
@@ -113,6 +116,12 @@ internal sealed class VideoH3PreparationControl : UserControl
         DockPanel.SetDock(_next, Dock.Right); navigation.Children.Add(_next); navigation.Children.Add(actions);
         footer.Children.Add(navigation); Grid.SetRow(footer, 2); root.Children.Add(footer); Content = root; Refresh();
     }
+    private void RequestHome()
+    {
+        if (Busy) { _returnAfterCancel = true; _homeAfterCancel = true; _cancel?.Cancel(); }
+        else HomeRequested?.Invoke();
+    }
+    private bool _homeAfterCancel;
     internal void Configure(Func<string, string> localize) { _l = localize; Build(); }
     internal void RequestBack()
     {
@@ -157,7 +166,7 @@ internal sealed class VideoH3PreparationControl : UserControl
                 _state.Apply(p); _statusKey = p.Stage switch { "downloading" => "H3PageDownloading", "restarting" => "H3PageRestarting", _ => "H3PageChecking" }; Refresh();
             }), _cancel.Token);
             _cancel.Token.ThrowIfCancellationRequested(); _ready = ready; _state.Refresh(preparation.Inspect(), ready);
-            _statusKey = ready ? "H3FilesReady" : "H3PageMissing";
+            _statusKey = ready ? (_lite ? "H3LiteFilesReady" : "H3FilesReady") : "H3PageMissing";
         }
         catch (OperationCanceledException) { _statusKey = "H3PageCancelled"; if (preparation is not null) _state.Refresh(preparation.Inspect()); }
         catch (Exception error)
@@ -168,7 +177,12 @@ internal sealed class VideoH3PreparationControl : UserControl
         finally
         {
             preparation?.Dispose(); Busy = false; _cancel.Dispose(); _cancel = null; Refresh();
-            if (_returnAfterCancel) { _returnAfterCancel = false; BackRequested?.Invoke(); }
+            if (_returnAfterCancel)
+            {
+                _returnAfterCancel = false;
+                if (_homeAfterCancel) { _homeAfterCancel = false; HomeRequested?.Invoke(); }
+                else BackRequested?.Invoke();
+            }
         }
     }
 }

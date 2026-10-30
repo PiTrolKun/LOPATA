@@ -37,7 +37,7 @@ public sealed class VideoWorldDocument
 }
 
 /// <summary>Stable card identities, reversible whole-world snapshots and proposals separate from accepted content.</summary>
-public static class VideoWorld
+public static partial class VideoWorld
 {
     public const string Purpose = "world_options", CardPurpose = "world_card", TranslationPurpose = "world_translation";
     public const string Kind = "video.preparation.world", CardKind = "video.preparation.world_card", TranslationKind = "video.preparation.world_translation";
@@ -105,9 +105,9 @@ public static class VideoWorld
             .Concat(w.Working.TranslationHistory.Where(v => v.Model is not null).Select(v => v.Model!)).Distinct().ToList();
         var cards = SerializeCards(w.Cards);
         var selected = w.History.FirstOrDefault(v => v.Id == w.RevisionId);
-        if (selected?.Cards != cards || selected.Context != w.Context)
+        if (selected is null || !MatchesSnapshot(selected.Cards, w.Cards) || selected.Context != w.Context)
         { var v = new VideoWorldRevision(Guid.NewGuid().ToString("N"), cards, w.Context, DateTimeOffset.UtcNow); w.History.Add(v); w.RevisionId = v.Id; }
-        var text = string.Join("\n\n", w.Cards.Select(c => $"{c.Kind}: «{c.Name}»\n{c.Text.IdeaText}" + (c.Fixed.Length == 0 ? "" : "\nKeep: " + c.Fixed)));
+        var text = WorkingText(w.Cards);
         w.Working.Form = p.Form; w.Working.ContextRevisionId = w.RevisionId; w.Working.ContextText = w.Context;
         w.Working.IdeaText = text; VideoConceptHistory.Capture(w.Working); VideoTranslationHistory.Capture(w.Working);
     }
@@ -115,7 +115,7 @@ public static class VideoWorld
     {
         if (direction is not (-1 or 1)) throw new ArgumentOutOfRangeException(nameof(direction));
         var w = p.World!; var previous = w.History.FindIndex(v => v.Id == w.RevisionId);
-        var draft = previous >= 0 && (w.History[previous].Cards != SerializeCards(w.Cards) || w.History[previous].Context != w.Context);
+        var draft = previous >= 0 && (!MatchesSnapshot(w.History[previous].Cards, w.Cards) || w.History[previous].Context != w.Context);
         Capture(p);
         var index = draft ? direction == -1 ? previous : previous + 1 : w.History.FindIndex(v => v.Id == w.RevisionId) + direction;
         if (index < 0 || index >= w.History.Count) return false;

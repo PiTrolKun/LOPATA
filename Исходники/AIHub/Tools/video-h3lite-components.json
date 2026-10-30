@@ -1,0 +1,89 @@
+[
+  {
+    "Id": "video-h3lite-models",
+    "Name": "H3 Ref2VA · Pruned W4A8",
+    "Repository": "Kijai/MiniMax-H3-experimental",
+    "Revision": "f5c3b1d5a63e008a691fca1b6096fd57a5307536",
+    "License": "MiniMax H3 Community License Agreement",
+    "Files": [
+      {
+        "RelativePath": "minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "SourceUrl": "https://huggingface.co/Kijai/MiniMax-H3-experimental/resolve/f5c3b1d5a63e008a691fca1b6096fd57a5307536/minimax_h3_ref2va_pruned_w4a8_mixed.safetensors",
+        "SizeBytes": 11770657048,
+        "Sha256": "de2c6c29c4ee702b45e48e40daae3834aeee58ab681c732d9152589a87c89910",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "video-h3lite-encoder",
+    "Name": "Qwen3-VL-4B · INT4 ConvRot",
+    "Repository": "Merserk/qwen3vl-4b-int4-convrot",
+    "Revision": "2ea2566f0a61baeb0bbdad0a3037e43012481788",
+    "License": "Apache-2.0 (Qwen); MIT declared by converter, separate text unavailable",
+    "Files": [
+      {
+        "RelativePath": "qwen3vl_4b_int4_convrot.safetensors",
+        "SourceUrl": "https://huggingface.co/Merserk/qwen3vl-4b-int4-convrot/resolve/2ea2566f0a61baeb0bbdad0a3037e43012481788/qwen3vl_4b_int4_convrot.safetensors",
+        "SizeBytes": 2814694400,
+        "Sha256": "3eba63c87657b10f4eb2ca3f3949ee85e62287e1c3e37e0530c98f005c6be324",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "video-h3lite-projection",
+    "Name": "ClipProj 4B · v3.1 MLP",
+    "Repository": "NicoLab28/ClipProj-MiniMax-H3",
+    "Revision": "2ebdbcdc27a29a9607efdb221a9afcb9a0cdd808",
+    "License": "MIT; upstream model terms apply",
+    "Files": [
+      {
+        "RelativePath": "mmh3-4b-ClipProj-v3.1-mlp.safetensors",
+        "SourceUrl": "https://huggingface.co/NicoLab28/ClipProj-MiniMax-H3/resolve/2ebdbcdc27a29a9607efdb221a9afcb9a0cdd808/mmh3-4b-ClipProj-v3.1-mlp.safetensors",
+        "SizeBytes": 503423800,
+        "Sha256": "902a9b96ed041aedf7463251c59d917fba94963b944dd3196c00b23ff0f2b6b0",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "video-h3lite-vaes",
+    "Name": "H3 video VAE · INT8 / audio VAE · FP32",
+    "Repository": "Comfy-Org/MiniMax-H3",
+    "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "License": "MiniMax H3 Community License Agreement",
+    "Files": [
+      {
+        "RelativePath": "vae/minimax_h3_video_vae_int8_convrot.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/vae/minimax_h3_video_vae_int8_convrot.safetensors",
+        "SizeBytes": 2811065184,
+        "Sha256": "52a2c8c73583c86e4f41cdcce3a6ad0ea562987bc0bf3d60a0cef5f5c8e60c0e",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "vae/minimax_h3_audio_vae_fp32.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/vae/minimax_h3_audio_vae_fp32.safetensors",
+        "SizeBytes": 605254808,
+        "Sha256": "8e505d95dd1561d47abd43d4238fd40d9bb1ae9e147ed0a4cba778d76ae4db48",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "video-h3lite-source-clipproj",
+    "Name": "ComfyUI-ClipProj · source archive (not installed)",
+    "Repository": "nicolab28/ComfyUI-ClipProj",
+    "Revision": "c01ba8fb8f41b4f2094dbd0b185cdc238fb6134c",
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "clipproj.zip",
+        "SourceUrl": "https://codeload.github.com/nicolab28/ComfyUI-ClipProj/zip/c01ba8fb8f41b4f2094dbd0b185cdc238fb6134c",
+        "SizeBytes": 1582000,
+        "Sha256": "5db98923f741bafd1beb56649df23a0f7981055ab482b3c34da9778083e995df",
+        "IsRequired": true
+      }
+    ]
+  }
+]

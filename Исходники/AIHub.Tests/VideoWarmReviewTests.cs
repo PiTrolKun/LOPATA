@@ -87,9 +87,14 @@ public sealed class VideoWarmReviewTests
         public event Action? RuntimeChanged;
         public VideoConceptRuntimeInfo? RuntimeInfo { get; private set; }
         public readonly List<VideoConceptModelRequest> WarmRequests = [];
+        public TaskCompletionSource? WarmGate;
         public int Generations;
-        public Task WarmAsync(VideoConceptModelRequest r, CancellationToken token)
-        { token.ThrowIfCancellationRequested(); WarmRequests.Add(r); RuntimeInfo = new(100, r.ModelId, "Vulkan", "GPU", "Gpu", 65, 8192); RuntimeChanged?.Invoke(); return Task.CompletedTask; }
+        public async Task WarmAsync(VideoConceptModelRequest r, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested(); WarmRequests.Add(r);
+            if (WarmGate is { } gate) await gate.Task.WaitAsync(token);
+            RuntimeInfo = new(100, r.ModelId, "Vulkan", "GPU", "Gpu", 65, 8192); RuntimeChanged?.Invoke();
+        }
         public Task RetireAsync() { RuntimeInfo = null; RuntimeChanged?.Invoke(); return Task.CompletedTask; }
         public Task<VideoConceptAnswer> GenerateAsync(VideoConceptRequest r, CancellationToken token) { Generations++; return Task.FromResult(VideoWorldTests.Answer()); }
     }
@@ -103,6 +108,78 @@ public sealed class VideoWarmReviewTests
         for (var i = 0; i < 100 && resident.WarmRequests.Count == 0; i++) await Task.Delay(10);
         Assert.AreEqual("executor", resident.WarmRequests.Single().ModelId); Assert.AreEqual(0, resident.Generations);
         Assert.IsTrue(Find<TextBlock>(control, "VideoPrep.RuntimeStatus").Text.Contains("Полный GPU")); owner.Close();
+    });
+    [TestMethod]
+    [DataRow("complete", "ru")] [DataRow("complete", "en")]
+    [DataRow("cancel", "ru")] [DataRow("fail", "ru")]
+    [DataRow("pause", "ru")]
+    public Task WarmupRingCoversThePageAndClearsAtTheEnd(string outcome, string language) => OnUi(async () =>
+    {
+        using var files = new VideoPreparationTests.TestFiles(); var control = Control(files, out var l);
+        l.Load(language); control.Configure(l.T);
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resident = new Resident { WarmGate = gate };
+        var previousController = ApplicationBackgroundOperations.Current;
+        var controller = outcome == "pause" ? new BackgroundOperationController(new(files.File("operation.json"))) : null;
+        if (controller is not null)
+        {
+            ApplicationBackgroundOperations.Current = controller;
+            controller.Changed += control.RefreshRuntimeStatus;
+        }
+        control.ConfigureConceptAssistant(resident, _ => Task.FromResult<IReadOnlyList<VideoConceptChoice>>([
+            new("executor", VideoConceptModels.Name("executor"), new DebugModelInfo { Path = files.File("test.gguf"), Format = "gguf", IsRunnable = true }, true, "AiGpuEstimate")]));
+        var owner = new Window { Content = control, Width = 1100, Height = 850, ShowInTaskbar = false };
+        var dark = language == "ru";
+        owner.Resources["PanelBrush"] = dark ? System.Windows.Media.Brushes.MidnightBlue : System.Windows.Media.Brushes.White;
+        owner.Resources["LineBrush"] = System.Windows.Media.Brushes.SlateGray;
+        owner.Resources["AccentBrush"] = System.Windows.Media.Brushes.RoyalBlue;
+        owner.Resources["TextPrimaryBrush"] = dark ? System.Windows.Media.Brushes.White : System.Windows.Media.Brushes.Black;
+        owner.Resources["UiCardTitleFontSize"] = 22d;
+        try
+        {
+            owner.Show();
+            for (var i = 0; i < 100 && resident.WarmRequests.Count == 0; i++) await Task.Delay(10);
+            owner.UpdateLayout();
+            var ring = Find<StartupBusyControl>(control, "VideoPrep.WarmupOverlay");
+            Assert.IsTrue(ring.IsVisible); Assert.IsFalse(ring.IsHitTestVisible);
+            Assert.AreEqual(l.T("VideoPrep.WarmLoading"), ring.Message);
+            var root = (Grid)control.Content;
+            Assert.AreEqual(root.RowDefinitions.Count, Grid.GetRowSpan(ring));
+            Assert.AreEqual(root.ActualWidth, ring.ActualWidth, 1d);
+            Assert.AreEqual(root.ActualHeight, ring.ActualHeight, 1d);
+            Assert.IsTrue(Find<Button>(control, "VideoPrep.WarmCancel").IsEnabled);
+            if (controller is not null)
+            {
+                await controller.PauseAsync().WaitAsync(TimeSpan.FromSeconds(5));
+                control.RefreshRuntimeStatus();
+                Assert.IsFalse(ring.IsVisible);
+                await controller.ResumeAsync(default);
+                for (var i = 0; i < 100 && resident.WarmRequests.Count < 2; i++) await Task.Delay(10);
+                control.RefreshRuntimeStatus();
+                Assert.IsTrue(ring.IsVisible);
+            }
+            if (Environment.GetEnvironmentVariable("LOPATA_WARMUP_EVIDENCE") is { Length: > 0 } evidence)
+            {
+                System.IO.Directory.CreateDirectory(evidence);
+                var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)root.ActualWidth, (int)root.ActualHeight, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                bitmap.Render(root); var png = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                png.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                using var file = System.IO.File.Create(System.IO.Path.Combine(evidence, $"warmup-{language}-{outcome}.png")); png.Save(file);
+            }
+            if (outcome == "cancel") Find<Button>(control, "VideoPrep.WarmCancel").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            else if (outcome == "fail") gate.SetException(new InvalidOperationException("test warmup failure"));
+            else gate.SetResult();
+            // Completion can hide the ring before the final render removes its visual tree.
+            for (var i = 0; i < 100 && ScenarioNavigationTests.LogicalDescendants(control).OfType<StartupBusyControl>().Any(); i++) await Task.Delay(10);
+            Assert.IsFalse(ring.IsVisible);
+            Assert.IsFalse(ScenarioNavigationTests.LogicalDescendants(control).OfType<StartupBusyControl>().Any());
+            Assert.AreEqual(0, resident.Generations);
+        }
+        finally
+        {
+            gate.TrySetCanceled(); owner.Close();
+            if (controller is not null) { controller.Changed -= control.RefreshRuntimeStatus; ApplicationBackgroundOperations.Current = previousController; }
+        }
     });
     [TestMethod]
     public async Task IndependentOptionsDoNotRetireTheResidentBetweenCalls()

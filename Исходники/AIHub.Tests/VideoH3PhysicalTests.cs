@@ -15,11 +15,13 @@ public sealed class VideoH3PhysicalTests
         var directory = Environment.GetEnvironmentVariable("LOPATA_H3_PHYSICAL_DIRECTORY");
         if (models is null || directory is null) { Assert.Inconclusive("Opt-in installed H3 test."); return; }
         Directory.CreateDirectory(directory);
+        var modelId = Environment.GetEnvironmentVariable("LOPATA_H3_PHYSICAL_PROFILE") ?? VideoH3Catalog.ModelId;
+        var lite = modelId == VideoH3LiteCatalog.ModelId;
         using var audit = ComponentAudit.UseTestStore(Path.Combine(directory, "audit"), enabled: false);
         var project = VideoPreparationFinishTests.ReadyProject(); project.Title = "H3 native smoke test";
         project.Storyboard!.Frames = project.Storyboard.Frames.Take(1).ToList(); project.CurrentStep = "finish";
-        var h3 = VideoH3WorkspaceState.Ensure(project);
-        h3.Settings = new() { RunMode = "automatic", Width = 416, Height = 256, Steps = 8, ClipSeconds = 5, TargetSeconds = 12, Seed = 12345 };
+        var h3 = VideoH3WorkspaceState.Ensure(project, modelId);
+        h3.Settings = new() { RunMode = "automatic", Width = 416, Height = 256, Steps = 8, ClipSeconds = 5, TargetSeconds = 12, Seed = 12345, MemoryMode = lite ? "gpu" : "auto" };
         h3.Plans[project.Storyboard.Frames[0].ShotId] = new()
         {
             Prompt = "A fixed close shot of a small brass clock on a wooden desk, warm studio light, gentle dust in the air, steady camera, a continuous shot.",
@@ -55,7 +57,7 @@ public sealed class VideoH3PhysicalTests
             var imported = await VideoReferenceFiles.ImportAsync(image, Path.Combine(directory, "image-" + project.Id));
             project.References!.Images.Add(imported.Image); project.Attachments.Add(new(imported.Path, imported.Image.AttachmentRole));
             h3.Plans[project.Storyboard.Frames[0].ShotId].ReferenceIds = [imported.Image.Id];
-            h3.Settings.RunMode = "review"; h3.Settings.TargetSeconds = 5;
+            h3.Settings.RunMode = lite ? "automatic" : "review"; h3.Settings.TargetSeconds = lite ? 12 : 5;
         }
         var existing = Environment.GetEnvironmentVariable("LOPATA_H3_PHYSICAL_ARCHIVE");
         var archive = existing ?? Path.Combine(directory, "smoke-" + project.Id + ".lopataAIVid");
@@ -76,7 +78,7 @@ public sealed class VideoH3PhysicalTests
             settings.Upscale = true; settings.UpscaleMegapixels = .25; settings.RefineSteps = 2;
             settings.WindowSeconds = 1; settings.OverlapSeconds = .25;
         }
-        var job = VideoH3Job.Create(project, archive, models, 8);
+        var job = VideoH3Job.Create(project, archive, models, 8, modelId);
         if (upscaling)
         {
             // The independent refinement fixture reuses already verified real
@@ -109,7 +111,7 @@ public sealed class VideoH3PhysicalTests
             Assert.IsTrue(output.StartsWith(VideoH3Runner.DirectoryFor(originalId) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
             Directory.Move(output, output + "-before-recovery");
             project = VideoPreparationArchive.Load(archive, Path.Combine(directory, "reopened-" + project.Id));
-            job = VideoH3Job.Create(project, archive, models, 8); Assert.AreEqual(originalId, job.Run.Id);
+            job = VideoH3Job.Create(project, archive, models, 8, modelId); Assert.AreEqual(originalId, job.Run.Id);
             await VideoH3Runner.RunAsync(job, project, () => { VideoPreparationArchive.Save(project, archive); return Task.CompletedTask; },
                 Log, CancellationToken.None, library: new ManagedModelLibraryStore(Path.Combine(directory, "library")));
         }
@@ -121,7 +123,7 @@ public sealed class VideoH3PhysicalTests
                 Assert.AreEqual(1, job.Run.Takes.Count); Assert.AreEqual(1, job.Run.Results.Count);
                 Assert.AreEqual("fragment", job.Run.Results[0].Kind); return;
             }
-            if (image is not null)
+            if (image is not null && !lite)
             {
                 Assert.IsTrue(job.Run.Complete); Assert.AreEqual(1, job.Run.Takes.Count);
                 Assert.AreEqual(1, job.Run.Results.Count); Assert.AreEqual("fragment", job.Run.Results[0].Kind);

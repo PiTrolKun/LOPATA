@@ -21,7 +21,7 @@ public sealed partial class VideoPreparationControl
         {
             var label = Text(issue.Key); if (issue.Detail.Length > 0) label.Text += " · " + issue.Detail;
             label.Text = (issue.Blocking ? "● " : "○ ") + label.Text; page.Children.Add(label);
-            var go = Action("PackageFix", () => { if (Checkpoint()) { Session.Project.CurrentStep = issue.Step; Session.Changed(); Checkpoint(); Render(); ScheduleWarmup(); } });
+            var go = Action("PackageFix", () => { if (Checkpoint()) { Session.Project.CurrentStep = issue.Step; Render(); ScheduleWarmup(); } });
             go.Content = T("PackageFix") + ": " + T("Step." + issue.Step); page.Children.Add(go);
         }
         page.Children.Add(Action("PackageRecheck", Render));
@@ -34,7 +34,10 @@ public sealed partial class VideoPreparationControl
         actions.Children.Add(Action("FinishExport", () => _ = ExportPreparationAsync()));
         actions.Children.Add(Action("FinishChooseModel", () => ChooseFinishModel())); page.Children.Add(actions);
         if (VideoGeneratorPlan.Selected(Session.Project) is { } selected)
-        { var label = Text("FinishSelectedModel"); label.Text = string.Format(T("FinishSelectedModel"), VideoConceptModelName(selected.Settings.ModelId)); page.Children.Add(label); }
+        {
+            var label = Text("FinishSelectedModel"); label.Text = string.Format(T("FinishSelectedModel"), VideoConceptModelName(selected.Settings.ModelId)); page.Children.Add(label);
+            if (!VideoGeneratorPlan.IsAvailable(selected.Settings.ModelId)) page.Children.Add(Text("GeneratorUnavailable"));
+        }
         if (_lastExportPath is not null) { var result = Text("ExportDone"); result.Text += "\n" + _lastExportPath; page.Children.Add(result); }
     }
     public event Action<VideoGeneratorSettings>? GeneratorRequested;
@@ -49,20 +52,23 @@ public sealed partial class VideoPreparationControl
         try { accepted = BackgroundUserDecision.ShowDialog(dialog, this, ApplicationBackgroundOperations.ExitToken) == true; }
         finally { _conceptDialogOpen = false; }
         if (!accepted || dialog.SelectedModelId is not { } id || !ReferenceEquals(p, Session.Project)) return false;
-        var settings = (selected ?? new VideoGeneratorSettings(id, 1280, 720, 24, -1, "")) with { ModelId = id };
+        var settings = VideoGeneratorPlan.SettingsForModel(p, id);
         VideoGeneratorPlan.SaveChoice(p, settings); Session.Changed();
         var saved = Save(); Render(); return saved;
     }
     private bool ContinueFromFinish()
     {
         if (!VideoPreparationReadiness.Ready(Session.Project)) { _statusKey = "PackageNotReady"; RefreshStatus(); return false; }
-        if (VideoGeneratorPlan.Selected(Session.Project) is null && !ChooseFinishModel()) return false;
-        if (!Save()) return false;
+        if ((VideoGeneratorPlan.Selected(Session.Project) is not { } selected || !VideoGeneratorPlan.IsAvailable(selected.Settings.ModelId))
+            && !ChooseFinishModel()) return false;
+        if ((Session.IsDirty || Session.ArchivePath is null) && !Save()) return false;
         return OpenSelectedGenerator();
     }
     private bool OpenSelectedGenerator()
     {
         var selected = VideoGeneratorPlan.Selected(Session.Project)!;
+        if (!VideoGeneratorPlan.IsAvailable(selected.Settings.ModelId))
+        { _statusKey = "GeneratorUnavailable"; RefreshStatus(); return false; }
         if (GeneratorRequested is { } next) { next(selected.Settings); return true; }
         _statusKey = "GeneratorNextPending"; RefreshStatus(); return false;
     }
@@ -78,7 +84,10 @@ public sealed partial class VideoPreparationControl
     public string? AskOpenRoute(VideoPreparationProject candidate)
     {
         if (candidate.Generator?.FinalReached != true && candidate.CurrentStep is not ("finish" or "generator")) return candidate.CurrentStep;
-        var dialog = new VideoPreparationDecisionWindow(Window.GetWindow(this), _localize, "OpenRouteTitle", T("OpenRouteQuestion"),
+        var question = T("OpenRouteQuestion");
+        if (VideoGeneratorPlan.Selected(candidate) is { } selected && !VideoGeneratorPlan.IsAvailable(selected.Settings.ModelId))
+            question += "\n\n" + T("GeneratorUnavailable");
+        var dialog = new VideoPreparationDecisionWindow(Window.GetWindow(this), _localize, "OpenRouteTitle", question,
             ("OpenRouteGenerator", "generator"), ("OpenRoutePreparation", "preparation"), ("OpenRouteCancel", "cancel"));
         var generator = ScenarioButton(dialog, "VideoPrep.Decision.generator"); generator.IsEnabled = VideoGeneratorPlan.CanResume(candidate);
         if (BackgroundUserDecision.ShowDialog(dialog, this, ApplicationBackgroundOperations.ExitToken) != true || dialog.Choice == "cancel") return null;

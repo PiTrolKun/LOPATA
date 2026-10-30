@@ -38,18 +38,22 @@ public static class VideoStoryboard
     public static string Source(VideoPreparationProject p) => VideoShots.Hash(VideoShots.Snapshot(p.Shots?.Scenes ?? []));
     public static VideoStoryboardDocument Ensure(VideoPreparationProject p)
     {
-        if (p.Storyboard is not null) return p.Storyboard;
+        if (p.Storyboard is { } existing) return existing;
         p.Storyboard = new(); Synchronize(p); return p.Storyboard;
     }
     public static bool Current(VideoPreparationProject p) => p.Storyboard is { } b && b.Source == Source(p);
-    public static void Synchronize(VideoPreparationProject p)
+    public static void Synchronize(VideoPreparationProject p, bool restorePlanOrder = false)
     {
         var b = p.Storyboard ??= new(); Capture(p);
-        foreach (var (_, shot) in Plans(p))
+        var plans = Plans(p).ToArray(); var ids = plans.Select(x => x.Shot.Id).ToHashSet();
+        b.Frames.RemoveAll(f => !ids.Contains(f.ShotId));
+        foreach (var (_, shot) in plans)
             if (!b.Frames.Any(f => f.ShotId == shot.Id)) b.Frames.Add(new() { ShotId = shot.Id,
                 Seconds = shot.Duration > 0 ? shot.Duration : 5, Estimated = shot.Duration == 0,
-                ImageId = shot.ReferenceIds.FirstOrDefault() ?? "" });
-        b.Source = Source(p); if (b.SelectedId == "") b.SelectedId = b.Frames.FirstOrDefault()?.Id ?? ""; Capture(p);
+                ImageId = "" });
+        if (restorePlanOrder)
+        { var frames = b.Frames.ToDictionary(f => f.ShotId); b.Frames = plans.Select(x => frames[x.Shot.Id]).ToList(); }
+        b.Source = Source(p); if (!b.Frames.Any(f => f.Id == b.SelectedId)) b.SelectedId = b.Frames.FirstOrDefault()?.Id ?? ""; Capture(p);
     }
     private static string Snapshot(VideoStoryboardDocument b) => JsonSerializer.Serialize(new State(b.Source, b.Frames, b.Audio));
     private sealed record State(string Source, List<VideoBoardFrame> Frames, VideoBoardAudio? Audio);

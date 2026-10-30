@@ -6,10 +6,10 @@ public sealed partial class VideoPreparationControl
 {
     private VideoH3PreparationControl? _generatorPage;
     public event Action? HomeRequested;
-    internal VideoH3PreparationControl ShowH3Preparation(string root, int connections, Func<IVideoH3Preparation>? create = null)
+    internal VideoH3PreparationControl ShowH3Preparation(string root, int connections, Func<IVideoH3Preparation>? create = null, bool lite = false)
     {
-        var page = new VideoH3PreparationControl(_localize, root, connections, create);
-        page.CreateWorkspace = () => CreateH3Workspace(page);
+        var page = new VideoH3PreparationControl(_localize, root, connections, create, lite);
+        page.CreateWorkspace = () => CreateH3Workspace(page, lite ? VideoH3LiteCatalog.ModelId : VideoH3Catalog.ModelId);
         page.HomeRequested += () =>
         {
             if (ReferenceEquals(page, _generatorPage) && Checkpoint()) HomeRequested?.Invoke();
@@ -21,10 +21,10 @@ public sealed partial class VideoPreparationControl
         };
         _generatorPage = page; Render(); return page;
     }
-    private VideoH3WorkspaceControl CreateH3Workspace(VideoH3PreparationControl page)
+    private VideoH3WorkspaceControl CreateH3Workspace(VideoH3PreparationControl page, string modelId)
     {
         var workspace = new VideoH3WorkspaceControl(_localize, Session.Project, () =>
-        { Session.Changed(); _autosave.Stop(); _autosave.Start(); });
+        { Session.Changed(); _autosave.Stop(); _autosave.Start(); }, modelId);
         workspace.SaveRequested += () => { if (Save()) workspace.Notify(T("H3SettingsSaved")); else if (_statusKey.Length > 0) workspace.Notify(T(_statusKey)); };
         workspace.CancelExportRequested += () => { _finishingCancel?.Cancel(); CancelConcept(); };
         workspace.GenerateRequested += () => _ = GenerateH3Async();
@@ -38,7 +38,7 @@ public sealed partial class VideoPreparationControl
         workspace.ChangeModelRequested += () =>
         {
             if (!Checkpoint() || !ChooseFinishModel()) return;
-            if (VideoGeneratorPlan.Selected(Session.Project)?.Settings.ModelId == VideoH3Catalog.ModelId) return;
+            if (VideoGeneratorPlan.Selected(Session.Project)?.Settings.ModelId == modelId) return;
             page.RequestExit(); OpenSelectedGenerator();
         };
         workspace.ExportRequested += async () =>

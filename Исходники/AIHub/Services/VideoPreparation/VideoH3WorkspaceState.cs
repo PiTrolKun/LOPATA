@@ -63,12 +63,28 @@ public sealed class VideoH3WorkspaceState
     public VideoH3Settings Settings { get; set; } = new();
     public string SelectedShotId { get; set; } = "";
     public Dictionary<string, VideoH3PlanSettings> Plans { get; set; } = [];
-    public static VideoH3WorkspaceState Ensure(VideoPreparationProject p) => (p.Generator ??= new()).H3 ??= new();
-    public static VideoH3WorkspaceState FromProject(VideoPreparationProject p)
+    public static VideoH3WorkspaceState? Get(VideoPreparationProject p, string modelId) => modelId switch
     {
-        if (p.Generator?.H3 is { } existing) return VideoShots.Copy(existing);
+        VideoH3Catalog.ModelId => p.Generator?.H3,
+        VideoH3LiteCatalog.ModelId => p.Generator?.H3Lite,
+        _ => throw new InvalidDataException("VideoPrep.GeneratorSettingsInvalid")
+    };
+    public static void Set(VideoPreparationProject p, string modelId, VideoH3WorkspaceState state)
+    {
+        _ = Get(p, modelId); var g = p.Generator ??= new();
+        if (modelId == VideoH3LiteCatalog.ModelId) g.H3Lite = state; else g.H3 = state;
+    }
+    public static VideoH3WorkspaceState Ensure(VideoPreparationProject p, string modelId = VideoH3Catalog.ModelId)
+    {
+        if (Get(p, modelId) is { } existing) return existing;
+        var created = modelId == VideoH3LiteCatalog.ModelId ? FromProject(p, modelId) : new VideoH3WorkspaceState();
+        Set(p, modelId, created); return created;
+    }
+    public static VideoH3WorkspaceState FromProject(VideoPreparationProject p, string modelId = VideoH3Catalog.ModelId)
+    {
+        if (Get(p, modelId) is { } existing) return VideoShots.Copy(existing);
         var state = new VideoH3WorkspaceState();
-        if (VideoGeneratorPlan.Selected(p)?.Settings is { ModelId: "minimax-h3" } selected)
+        if (VideoGeneratorPlan.Selected(p)?.Settings is { } selected && selected.ModelId == modelId)
         {
             state.Settings.Width = (selected.Width + 31) / 32 * 32;
             state.Settings.Height = (selected.Height + 31) / 32 * 32;
@@ -76,6 +92,7 @@ public sealed class VideoH3WorkspaceState
             state.Settings.Aspect = Aspects.MinBy(a =>
             { var ratio = a.Split(':').Select(double.Parse).ToArray(); return Math.Abs(ratio[0] / ratio[1] - selected.Width / (double)selected.Height); })!;
         }
+        if (modelId == VideoH3LiteCatalog.ModelId) { Resolution(state.Settings, .4); state.Settings.MemoryMode = "gpu"; }
         return state;
     }
     public static readonly string[] Operations = ["auto", "new", "extend", "prepend", "bridge", "loop"];

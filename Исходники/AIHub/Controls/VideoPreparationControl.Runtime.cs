@@ -13,8 +13,29 @@ public sealed partial class VideoPreparationControl
     private string _warmOperationId = "", _warmError = "";
     private CancellationTokenSource? _warmCancel;
     private TextBlock? _runtimeStatus;
+    private StartupBusyControl? _warmOverlay;
     private IVideoConceptResident? Resident => _assistant as IVideoConceptResident;
     private bool ShotsOwnWarmup => _shotsStarting || _shotsBusy || Session.Project.CurrentStep == "shots" && Session.Project.Shots?.Attempted != true;
+    private void BuildWarmupOverlay(Grid root)
+    {
+        _warmOverlay = null;
+        if (!_warming) return;
+        // Keep the existing pause/cancel controls and text inputs reachable.
+        _warmOverlay = new StartupBusyControl { Message = T("WarmLoading"), IsHitTestVisible = false };
+        System.Windows.Automation.AutomationProperties.SetAutomationId(_warmOverlay, "VideoPrep.WarmupOverlay");
+        Grid.SetRowSpan(_warmOverlay, root.RowDefinitions.Count);
+        System.Windows.Controls.Panel.SetZIndex(_warmOverlay, 10);
+        root.Children.Add(_warmOverlay);
+        RefreshWarmupOverlay();
+    }
+    private void RefreshWarmupOverlay()
+    {
+        if (_warmOverlay is null) return;
+        var state = ApplicationBackgroundOperations.Current?.State;
+        var stopped = state?.Id == _warmOperationId && state.Phase is BackgroundOperationPhase.Paused
+            or BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled;
+        _warmOverlay.Visibility = _warming && !stopped ? Visibility.Visible : Visibility.Collapsed;
+    }
     private void ScheduleWarmup()
     {
         if (_drawingStage || Session.Project.CurrentStep is "storyboard" or "package" or "finish" or "generator" || ShotsOwnWarmup || _openingProject || _warmScheduled || _warming || Resident is null) return;
@@ -43,6 +64,7 @@ public sealed partial class VideoPreparationControl
     public void RefreshRuntimeStatus()
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(RefreshRuntimeStatus); return; }
+        RefreshWarmupOverlay();
         if (_runtimeStatus is not null)
         {
             var state = ApplicationBackgroundOperations.Current?.State;

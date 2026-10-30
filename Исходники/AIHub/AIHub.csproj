@@ -63,8 +63,13 @@
     <EmbeddedResource Include="Tools\ace-xl-python-files.json" LogicalName="AIHub.AcePythonManifest" />
     <EmbeddedResource Include="Tools\music-stems-components.json" LogicalName="AIHub.MusicStemsManifest" />
     <EmbeddedResource Include="Tools\video-h3-components.json" LogicalName="AIHub.VideoH3Manifest" />
+    <EmbeddedResource Include="Tools\video-h3lite-components.json" LogicalName="AIHub.VideoH3LiteManifest" />
+    <EmbeddedResource Include="Tools\video-h3lite-source-tree.json" LogicalName="AIHub.VideoH3LiteSourceTree" />
     <EmbeddedResource Include="Tools\video-h3-runtime.json.gz" LogicalName="AIHub.VideoH3RuntimeManifest" />
     <EmbeddedResource Include="Tools\h3_worker.py" LogicalName="AIHub.H3Worker" />
+    <EmbeddedResource Include="Tools\vace_worker.py" LogicalName="AIHub.VaceWorker" />
+    <EmbeddedResource Include="Tools\vace_native.py" LogicalName="AIHub.VaceNative" />
+    <EmbeddedResource Include="Tools\vace_media.py" LogicalName="AIHub.VaceMedia" />
     <EmbeddedResource Include="Tools\h3_native.py" LogicalName="AIHub.H3Native" />
     <EmbeddedResource Include="Tools\h3_memory.py" LogicalName="AIHub.H3Memory" />
     <EmbeddedResource Include="Tools\h3_assemble.py" LogicalName="AIHub.H3Assemble" />

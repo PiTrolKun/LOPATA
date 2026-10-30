@@ -42,6 +42,7 @@ def continuity_window(requested, available, mode):
 class NativeH3:
     def __init__(self, request, emit):
         self.request, self.emit = request, emit
+        self.lite = request.get("ModelId") == "minimax-h3-w4a8"
         self.settings = s = request["Settings"]
         env = request["Environment"]
         sys.path.insert(0, env["Libraries"])
@@ -56,7 +57,11 @@ class NativeH3:
         elif device.startswith("cuda:"):
             sys.argv.extend(["--cuda-device", device.split(":")[1]])
         if s["MemoryMode"] == "gpu":
-            sys.argv.append("--gpu-only")
+            sys.argv.extend(["--disable-dynamic-vram", "--highvram"] if self.lite else ["--gpu-only"])
+        elif self.lite:
+            sys.argv.append("--disable-dynamic-vram")
+            if s["MemoryMode"] == "offload":
+                sys.argv.append("--lowvram")
         elif s["MemoryMode"] == "offload":
             sys.argv.extend(["--disable-dynamic-vram", "--lowvram"])
         if s["Attention"] != "pytorch":
@@ -77,7 +82,8 @@ class NativeH3:
                 names = request["Models"]
                 weights = [("diffusion_models", names["Diffusion"]), ("text_encoders", names["Encoder"]),
                            ("vae", names["VideoVae"]), ("vae", names["AudioVae"])]
-                required = sum((Path(request["ModelFolders"][category]) / name).stat().st_size for category, name in weights)
+                sizes = [(Path(request["ModelFolders"][category]) / name).stat().st_size for category, name in weights]
+                required = max(sizes) if self.lite else sum(sizes)
                 required += max(2, s["VramReserveGb"]) * 1024**3
                 if required > total:
                     raise ValueError("VideoPrep.H3GpuCapacity")
@@ -93,6 +99,7 @@ class NativeH3:
         folder_paths.set_temp_directory(request["Temp"])
         for category, directory in request["ModelFolders"].items():
             folder_paths.add_model_folder_path(category, directory)
+        self.clipproj = load_package("lopata_h3_clipproj", env["ClipProj"]) if self.lite else None
         self.timeline = load_package("lopata_h3_timeline", env["Timeline"])
         from comfy_extras.nodes_minimax_h3 import MiniMaxH3ReferenceToVideo, MiniMaxH3SigmaShift
         from comfy_extras.nodes_lt import LTXVSeparateAVLatent, LTXVConcatAVLatent
@@ -142,10 +149,29 @@ class NativeH3:
         emit("hardware", device=str(torch.device(device)), torch=torch.__version__,
              available=str(__import__("comfy.model_management", fromlist=["get_torch_device"]).get_torch_device()))
 
+    def load_clip(self):
+        clip = self.nodes.CLIPLoader().load_clip(self.request["Models"]["Encoder"], "krea2" if self.lite else "minimax", "default")[0]
+        if self.lite:
+            clip = self.clipproj.NODE_CLASS_MAPPINGS["ClipProjApply"]().apply(clip, self.request["Models"]["Projection"])[0]
+        return clip
+
+    def resource_snapshot(self, stage):
+        if not self.lite:
+            return
+        import psutil
+        backend = getattr(self.torch, self.request["Environment"]["Device"].split(":")[0], None)
+        info = psutil.Process().memory_info()
+        values = dict(stage=stage, process_rss=info.rss, process_peak_rss=getattr(info, "peak_wset", info.rss))
+        if backend is not None and hasattr(backend, "memory_allocated"):
+            device = self.request["Environment"]["Device"]
+            values.update(allocated=backend.memory_allocated(device), reserved=backend.memory_reserved(device),
+                          peak=backend.max_memory_allocated(device))
+        self.emit("resources", **values)
+
     def load(self, conditioning_only=False):
         n, s = self.nodes, self.settings
         self.emit("stage", text="loading-text-encoder")
-        self.clip = n.CLIPLoader().load_clip(self.request["Models"]["Encoder"], "minimax", "default")[0]
+        self.clip = self.load_clip()
         self.emit("stage", text="loading-vae")
         self.video_vae = n.VAELoader().load_vae(self.request["Models"]["VideoVae"])[0]
         self.audio_vae = n.VAELoader().load_vae(self.request["Models"]["AudioVae"])[0]
@@ -165,6 +191,10 @@ class NativeH3:
         from lopata_h3_timeline.nodes_joint import _CLASSIC_SLACK_MB
         headroom = sampling_headroom(s, self.memory_mode, _CLASSIC_SLACK_MB)
         self.model = self.classes["H3VramHeadroom"]().patch(model, True, headroom, True)[0]
+        if self.lite and s["MemoryMode"] == "gpu":
+            import comfy.model_management as memory
+            memory.load_models_gpu([self.model], force_full_load=True)
+            self.resource_snapshot("diffusion-resident")
 
     def image_refs(self, paths):
         import numpy as np
@@ -190,7 +220,7 @@ class NativeH3:
             key = (item["Prompt"], tuple(item["Images"]), s["Width"], s["Height"], frames, s["ReferenceSize"])
             if key != self._condition_key:
                 if self.clip is None:
-                    self.clip = self.nodes.CLIPLoader().load_clip(self.request["Models"]["Encoder"], "minimax", "default")[0]
+                    self.clip = self.load_clip()
                 self._conditioned = self.encode.execute(self.clip, item["Prompt"], s["Width"], s["Height"], frames,
                     s["ReferenceSize"], self.video_vae, self.audio_vae, ref_images=self.image_refs(item["Images"]))
                 self._condition_key = key
@@ -199,6 +229,9 @@ class NativeH3:
                 memory.unload_all_models()
                 gc.collect()
                 memory.soft_empty_cache()
+                if self.lite:
+                    self.clipproj.NODE_CLASS_MAPPINGS["ClipProjFree"]().free("all models")
+                    self.resource_snapshot("after-conditioning")
             conditioning, latent = copy.deepcopy(tuple(self._conditioned))
             if self.model is None:
                 self.load_diffusion()
@@ -241,6 +274,11 @@ class NativeH3:
             self.emit("stage", text="sampling")
             samples = self.nodes.KSampler().sample(self.model, item["Seed"], s["Steps"], 1.0,
                 s["Sampler"], s["Scheduler"], conditioning, conditioning, latent, denoise=1.0)[0]
+            if self.lite:
+                self.resource_snapshot("sampled")
+                import comfy.model_management as memory
+                memory.unload_all_models()
+                memory.soft_empty_cache()
             video, sound = self.separate.execute(samples)
             self.emit("stage", text="decoding")
             images = self.nodes.VAEDecodeTiled().decode(self.video_vae, video, tile_size=512, overlap=64,

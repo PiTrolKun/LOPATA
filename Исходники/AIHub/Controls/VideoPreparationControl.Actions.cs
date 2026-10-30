@@ -15,7 +15,7 @@ public sealed partial class VideoPreparationControl
 {
     public bool Next()
     {
-        if (_generatorPage is not null) return false;
+        if (_generatorPage is not null || _ltxPreparationPage is not null || _vacePage is not null) return false;
         if (ConceptBusy || PendingConcept) return false;
         if (Session.Project.Form.Length == 0) return false;
         var current = Session.Project.CurrentStep;
@@ -29,30 +29,42 @@ public sealed partial class VideoPreparationControl
         if (current is "translation" or "development_translation" or "world_translation" && !HasTranslationForNext()) return false;
         if (!WorldReviewed()) return false;
         if (!DevelopmentReviewed()) return false;
-        if (!Save()) return false;
+        if (Session.ArchivePath is null) { MissingLocation(); return false; }
+        ClearLocationError();
         Session.Project.CurrentStep = VideoPreparationProject.Steps[Array.IndexOf(VideoPreparationProject.Steps, current) + 1];
+        var boardChanged = false;
+        if (Session.Project.CurrentStep == "storyboard" && Session.Project.Storyboard is { } board)
+        { var revision = board.RevisionId; VideoStoryboard.Synchronize(Session.Project); boardChanged = revision != board.RevisionId; }
+        var createsContent = IsDevelopmentStep && Session.Project.Development is null
+            || IsWorldStep && Session.Project.World is null
+            || Session.Project.CurrentStep == "storyboard" && Session.Project.Storyboard is null
+            || Session.IsNewStep(Session.Project.CurrentStep);
         if (IsDevelopmentStep) VideoDevelopment.Ensure(Session.Project);
         if (IsWorldStep) VideoWorld.Ensure(Session.Project);
         if (Session.Project.CurrentStep == "storyboard") VideoStoryboard.Ensure(Session.Project);
         if (Session.Project.CurrentStep == "finish")
-        { var g = Session.Project.Generator ??= new(); g.FinalReached = true; g.PreparationStep = "package"; }
-        Session.Changed();
+        { var g = Session.Project.Generator ??= new(); createsContent |= !g.FinalReached || g.PreparationStep != "package"; g.FinalReached = true; g.PreparationStep = "package"; }
+        // Save new progress once; revisiting an existing step does not rewrite its media.
+        if (createsContent || boardChanged) Session.Changed();
         if (!Checkpoint()) { Session.Project.CurrentStep = current; Session.Changed(); return false; }
         Render(); return true;
     }
     public bool BackStepIfNeeded()
     {
+        if (_vacePage is not null) { _vacePage.RequestBack(); return true; }
+        if (_ltxPreparationPage is not null) { _ltxPreparationPage.RequestBack(); return true; }
         if (_generatorPage is not null) { _generatorPage.RequestBack(); return true; }
         if (_shotsBusy || _shotsStarting || _finishingBusy) return false;
         if (Session.Project.CurrentStep == "form") return false;
         var current = Session.Project.CurrentStep;
         Session.Project.CurrentStep = VideoPreparationProject.Steps[Math.Max(0, Array.IndexOf(VideoPreparationProject.Steps, current) - 1)];
-        Session.Changed();
         if (!Checkpoint()) { Session.Project.CurrentStep = current; Session.Changed(); }
         Render(); return true;
     }
     public bool Checkpoint()
     {
+        if (_vacePage?.CanCheckpoint() == false) return false;
+        if (_ltxPreparationPage?.CanCheckpoint() == false) return false;
         if (_generatorPage?.CanCheckpoint() == false) return false;
         _autosave.Stop();
         try { Session.Checkpoint(); _statusKey = ""; RefreshStatus(); RefreshConceptHistory(); RefreshWorldHistory(); return true; }
@@ -60,6 +72,8 @@ public sealed partial class VideoPreparationControl
     }
     public bool Save()
     {
+        if (_vacePage?.CanCheckpoint() == false) return false;
+        if (_ltxPreparationPage?.CanCheckpoint() == false) return false;
         if (_generatorPage?.CanCheckpoint() == false) return false;
         if (Session.Project.CurrentStep == "storyboard" && _boardInvalidDuration) { _statusKey = "BoardDurationInvalid"; RefreshStatus(); return false; }
         if (_shotsInvalidDuration) { _statusKey = "ShotsDurationInvalid"; RefreshStatus(); return false; }
@@ -109,6 +123,10 @@ public sealed partial class VideoPreparationControl
     public bool OpenPath(string path)
     {
         if (string.Equals(Session.ArchivePath, Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase)) return true;
+        if (_vacePage?.Busy == true) return false;
+        if (_vacePage?.RequestExit() == false) return false;
+        if (_ltxPreparationPage?.Busy == true) return false;
+        if (_ltxPreparationPage?.RequestExit() == false) return false;
         if (_generatorPage?.Busy == true) return false;
         if (_generatorPage?.RequestExit() == false) return false;
         if (ConceptBusy || PendingConcept) return false;
@@ -144,7 +162,7 @@ public sealed partial class VideoPreparationControl
         _autosave.Stop(); Session.New(); _conceptChoices = []; _lastConceptPhase = null;
         ClearLocationError(); _statusKey = ""; Render();
     }
-    private bool ConfirmReplace()
+    private bool ConfirmReplace(bool allowDiscardWithoutRecovery = false)
     {
         if (!Session.HasContent || !Session.IsDirty && Session.ArchivePath is not null) return true;
         var owner = Window.GetWindow(this);
@@ -154,14 +172,16 @@ public sealed partial class VideoPreparationControl
         if (result == MessageBoxResult.No)
         {
             try { Session.Checkpoint(userArchive: false); return true; }
-            catch (Exception error) when (IsStorageError(error)) { ShowError(error); return false; }
+            catch (Exception error) when (IsStorageError(error)) { ShowError(error); return allowDiscardWithoutRecovery; }
         }
         return Session.ArchivePath is null ? ChooseLocation() : Save();
     }
     public bool CanClose()
     {
-        if (Session.ArchivePath is not null && !Checkpoint()) return false;
-        return ConfirmReplace();
+        if (_vacePage?.CanCheckpoint() == false || _ltxPreparationPage?.CanCheckpoint() == false
+            || _generatorPage?.CanCheckpoint() == false) return false;
+        if (Session.ArchivePath is not null && Checkpoint()) return true;
+        return ConfirmReplace(allowDiscardWithoutRecovery: true);
     }
     private void MissingLocation()
     {

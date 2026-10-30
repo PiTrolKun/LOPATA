@@ -23,7 +23,7 @@ public sealed partial class VideoConceptAssistant : IVideoShotsProgress
             var payload = JsonSerializer.Serialize(new
             {
                 model = "local", messages = new[] { new { role = "system", content = system }, new { role = "user", content = input } },
-                max_tokens = budget, temperature = request.Purpose == VideoShotsProtocol.Translate ? .2 : .65, top_p = .9,
+                max_tokens = budget, temperature = request.Purpose is VideoShotsProtocol.Translate or VideoShotsQuality.Purpose ? .2 : .65, top_p = .9,
                 seed = 42, stream = true, cache_prompt = false,
                 chat_template_kwargs = new { enable_thinking = request.Purpose != VideoShotsProtocol.Translate && MusicPoetryReasoning.SupportsId(request.ModelId) },
                 reasoning_format = "deepseek", response_format = VideoShotsProtocol.Schema(request)
@@ -32,9 +32,10 @@ public sealed partial class VideoConceptAssistant : IVideoShotsProgress
             using var doc = JsonDocument.Parse(response); var choice = doc.RootElement.GetProperty("choices")[0];
             if (choice.GetProperty("finish_reason").GetString() != "stop") throw new InvalidDataException("VideoPrep.ShotsInvalidReply");
             var text = choice.GetProperty("message").GetProperty("content").GetString()!;
-            var answer = new VideoConceptAnswer(text, "", "", _baseIdentity! with { Role = request.Purpose == VideoShotsProtocol.Translate ? "video shots translation" : "video scenes and shots" });
+            var answer = new VideoConceptAnswer(text, "", "", _baseIdentity! with { Role = request.Purpose == VideoShotsQuality.Purpose ? "video scene review" : request.Purpose == VideoShotsProtocol.Translate ? "video shots translation" : "video scenes and shots" });
             VideoConceptProtocol.Validate(answer);
             if (request.Purpose == VideoShotsProtocol.Outline) _ = VideoShotsProtocol.ReadOutline(answer.Text, request.ContextText);
+            else if (request.Purpose == VideoShotsQuality.Purpose) _ = VideoShotsQuality.Read(answer.Text);
             else _ = VideoShotsProtocol.ReadScene(answer.Text, request);
             return answer;
         }

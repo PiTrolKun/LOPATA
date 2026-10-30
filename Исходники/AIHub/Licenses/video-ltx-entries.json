@@ -1,0 +1,19 @@
+[
+  {
+    "Id": "video-ltx25-models",
+    "Name": "LTX-2.5 Distilled 22B Comfy INT8 ConvRot + Gemma4 / Conv VAE / audio VAE / spatial upscaler",
+    "Version": "49b093a39c19169a8a81721dcc541e07e945232f",
+    "Author": "Lightricks Ltd.; Google Gemma and upstream contributors",
+    "License": "LTX-2.x Community License Agreement (2026-08-11); upstream attribution and acceptable-use terms apply",
+    "Source": "https://huggingface.co/Lightricks/LTX-2.5/tree/49b093a39c19169a8a81721dcc541e07e945232f",
+    "Checked": "2026-10-29",
+    "Ru": "Отдельно скачиваемый комплект пяти файлов: Distilled INT8 ConvRot, специальный энкодер Gemma4 с проекциями LTX, Conv video VAE, audio VAE и spatial upscaler. INT8-файлы предназначены для ComfyUI; код исполнителя и его зависимости имеют отдельные условия и этим этапом не устанавливаются. Лицензия LTX-2.x от 11.08.2026 включает ограничения допустимого использования и распространения: при годовой выручке от 10 млн долларов с учётом связанных лиц требуется отдельная лицензия с указанными в оригинале исключениями. Attachment A, п.20 отдельно требует коммерческую лицензию для прямо конкурирующих продуктов; применимость к Видеомастерской и права публичной поставки ещё не подтверждены. Ознакомление не предоставляет отсутствующих прав. Сохраняйте лицензии, атрибуции, обозначение AI-происхождения и встроенные отметки; не отключайте watermark/provenance. Это не безусловная Apache/MIT-лицензия всего комплекта. Пользователь самостоятельно принимает условия gated-репозитория Hugging Face и предоставляет доступ Read token; подтверждение в ЛОПАТЕ не заменяет согласие у источника. Крупные веса не входят в программу и не зеркалируются от имени ЛОПАТЫ.",
+    "En": "Separately downloaded five-file bundle: Distilled INT8 ConvRot, the LTX-specific Gemma4 encoder with projections, Conv video VAE, audio VAE and spatial upscaler. The INT8 files target ComfyUI; executor code and dependencies have separate terms and are not installed at this stage. The LTX-2.x agreement dated 2026-08-11 includes use and redistribution restrictions: entities with annual revenue of at least USD 10 million, including related entities, require a separate license subject to the original exceptions. Attachment A item 20 separately requires a commercial license for directly competing products; applicability to Video Workshop and rights for public delivery have not been established. Acknowledgement does not grant missing rights. Preserve licenses, attribution, AI-origin disclosure and embedded notices; do not disable watermarking or provenance. The entire bundle is not unconditionally Apache/MIT licensed. The user must personally accept the Hugging Face gated-repository terms and provide Read-token access; acknowledgement in LOPATA does not replace consent at the source. Large model weights are not bundled or mirrored by LOPATA.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "312F24794F02591E2DF7D5F67EB21119F66762FB62CB5E142A6785FE3B4A9AD9",
+    "Texts": [
+      "texts/VideoLtx25-LTX-2.x-Community-LICENSE.txt"
+    ]
+  }
+]

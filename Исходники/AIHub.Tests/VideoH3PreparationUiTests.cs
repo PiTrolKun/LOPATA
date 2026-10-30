@@ -62,15 +62,15 @@ public sealed class VideoH3PreparationUiTests
         finally { dialog.Close(); owner.Close(); }
     }).Task.WaitAsync(TimeSpan.FromSeconds(30));
     [TestMethod]
-    public Task ConfiguringTwiceRoutesOnceAndDoesNotReplaceSavedLtxChoice() => Ui.Value.InvokeAsync(() =>
+    public Task ConfiguringTwiceRoutesOnceAndDoesNotReplaceSavedH3Choice() => Ui.Value.InvokeAsync(() =>
     {
         using var f = new VideoPreparationTests.TestFiles(); var p = VideoPreparationFinishTests.ReadyProject(); p.CurrentStep = "finish";
-        VideoGeneratorPlan.SaveChoice(p, new("ltx-2.5", 1280, 720, 24, -1, ""));
+        VideoGeneratorPlan.SaveChoice(p, new("minimax-h3", 1280, 720, 24, -1, ""));
         var path = f.File("p.lopataAIVid"); VideoPreparationArchive.Save(p, path); var session = new VideoPreparationSession(f.File("recovery")); session.Load(path);
         var l = new LocalizationService(); l.Load("ru"); var control = new VideoPreparationControl(l.T, session);
         var calls = 0; control.ConfigureGeneratorPreparation(_ => calls += 100); control.ConfigureGeneratorPreparation(s =>
-        { calls++; Assert.AreEqual("ltx-2.5", s.ModelId); });
+        { calls++; Assert.AreEqual("minimax-h3", s.ModelId); });
         Assert.IsTrue(control.Next()); Assert.AreEqual(1, calls); Assert.AreEqual("finish", session.Project.CurrentStep);
-        Assert.AreEqual("ltx-2.5", VideoGeneratorPlan.Selected(session.Project)!.Settings.ModelId);
+        Assert.AreEqual("minimax-h3", VideoGeneratorPlan.Selected(session.Project)!.Settings.ModelId);
     }).Task.WaitAsync(TimeSpan.FromSeconds(30));
 }
