@@ -85,7 +85,7 @@ public sealed class MusicScoreController : IDisposable
         if(ApplicationBackgroundOperations.Current is {HasPending:true,State.Kind:MusicScorePlanWork.Kind} pending) {
             await pending.ResumeAsync(ApplicationBackgroundOperations.ExitToken);return;
         }
-        if(ApplicationBackgroundOperations.Current?.BlocksNewWork==true)throw new InvalidOperationException("Music.Generation.OtherOperation");
+        if(ApplicationBackgroundOperations.Current is {BlocksNewWork:true} blocker){blocker.ReportBlocked();throw new InvalidOperationException("Music.Generation.OtherOperation");}
         if(!MusicScorePipeline.Supported(_view.Generation.Variation))throw new InvalidDataException("Music.Score.Unsupported");
         var input=_view.Projects.Capture();var expert=input.Expert.Snapshot();expert.Values["cot"]=cot=="melody"?1:0;
         var flags=State with {Enabled=false,Selected=[],Versions=[],PendingWorkId=null};
@@ -141,7 +141,7 @@ public sealed class MusicScoreController : IDisposable
             if(MessageBox.Show(Window.GetWindow(_view),_l("Music.Score.StopThenSongs"),_l("Music.Score.Plans"),MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes)return;
             _stopAfterCurrent=true;await _run!;
         }
-        if(ApplicationBackgroundOperations.Current?.BlocksNewWork==true)throw new InvalidOperationException("Music.Score.WaitPlans");
+        if(ApplicationBackgroundOperations.Current is {BlocksNewWork:true} blocker){blocker.ReportBlocked();throw new InvalidOperationException("Music.Score.WaitPlans");}
         var state=State with {Enabled=true};
         if(!EnsureMode(state))return;
         MusicScorePipeline.Validate(state,_view.Generation.Variation,Expert,_view.Generation.AudioTask,_view.Generation.Melody,Lyrics);

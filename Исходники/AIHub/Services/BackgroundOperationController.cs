@@ -11,6 +11,8 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
     private readonly AsyncLocal<string?> _scope = new();
     private readonly Dictionary<string, Func<BackgroundOperationState, CancellationToken, Task>> _restorers = [];
     private CancellationTokenSource? _attempt;
+    private CancellationTokenSource? _runCancellation;
+    private bool _emergencyStopRequested;
     private TaskCompletionSource? _paused, _resume;
     private bool _pauseRequested, _running;
     private bool _auxiliaryRunning;
@@ -59,6 +61,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
         {
             if (_state is null || IsFinal(_state.Phase)) return;
             Persist(_state with { Phase = BackgroundOperationPhase.Waiting,
+                RequiresDecision = _emergencyStopRequested || _state.RequiresDecision,
                 UserPaused = _state.UserPaused || _pauseRequested, ElapsedSeconds = _running ? Elapsed : _state.ElapsedSeconds });
         }
         NotifyChanged();
@@ -98,8 +101,11 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         if (IsInOperationScope) return await execute(lifetime);
+        using var runCancellation = CancellationTokenSource.CreateLinkedTokenSource(lifetime);
+        lifetime = runCancellation.Token;
         lock (_gate)
         {
+            if (_emergencyStopRequested) throw new OperationCanceledException("Background.Stop.InProgress");
             if (_running || _auxiliaryRunning) throw new InvalidOperationException("Another model operation is active.");
             if (_loadFailed) throw new InvalidOperationException("A damaged background checkpoint requires review before starting a new operation.");
             if (_state is { Phase: not (BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled) }
@@ -107,7 +113,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
             Persist(input with { Phase = BackgroundOperationPhase.Running, UserPaused = false, RequiresDecision = false, Detail = null,
                 Notice = _state?.Notice ?? input.Notice, Notices = _state?.Notices ?? input.Notices,
                 NeedsAttention = _state?.NeedsAttention ?? input.NeedsAttention });
-            _running = true; _pauseRequested = false;
+            _running = true; _pauseRequested = false; _runCancellation = runCancellation;
             _idle = new(TaskCreationOptions.RunContinuationsAsynchronously);
             _previousElapsed = input.ElapsedSeconds; _elapsed.Restart();
         }
@@ -125,6 +131,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
                 T result = default!;
                 try { result = await execute(attempt.Token); }
                 catch (OperationCanceledException) when (!lifetime.IsCancellationRequested && PauseRequested) { }
+                lifetime.ThrowIfCancellationRequested();
                 BackgroundOperationNotice? notice = null;
                 bool finished;
                 lock (_gate)
@@ -170,15 +177,17 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
         }
         catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
         {
-            await releaseModels();
+            if (!EmergencyStopRequested) await releaseModels();
             lock (_gate) Persist(_state! with { Phase = BackgroundOperationPhase.Waiting,
+                RequiresDecision = _emergencyStopRequested || _state!.RequiresDecision,
                 UserPaused = _state!.UserPaused || _pauseRequested, ElapsedSeconds = Elapsed });
             throw;
         }
         catch (Exception error)
         {
-            ComponentAuditFailures.Report(error);
-            var terminal = error is BackgroundOperationFailedException;
+            var emergencyStop = EmergencyStopRequested;
+            if (!emergencyStop) ComponentAuditFailures.Report(error);
+            var terminal = error is BackgroundOperationFailedException && !emergencyStop;
             if (terminal) {
                 try { await releaseModels(); }
                 catch (Exception releaseError) {
@@ -197,16 +206,18 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
                 catch (Exception saveError) { OwnedProcessRegistry.Log("background_checkpoint_failed", "Application", detail: saveError.GetType().Name); }
                 _paused?.TrySetException(error);
             }
+            if (emergencyStop) throw new OperationCanceledException("Background.Stop.InProgress", error, lifetime);
             throw;
         }
         finally
         {
-            lock (_gate) { _attempt = null; _running = false; _elapsed.Stop(); _idle.TrySetResult(); }
+            lock (_gate) { _attempt = null; _runCancellation = null; _running = false; _elapsed.Stop(); _idle.TrySetResult(); }
             _scope.Value = null; NotifyChanged();
         }
     }
 
     private bool PauseRequested { get { lock (_gate) return _pauseRequested; } }
+    private bool EmergencyStopRequested { get { lock (_gate) return _emergencyStopRequested; } }
     private double Elapsed => _previousElapsed + _elapsed.Elapsed.TotalSeconds;
     private static bool IsFinal(BackgroundOperationPhase phase) => phase is BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled;
     private void NotifyChanged()
@@ -231,7 +242,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
         CancellationTokenSource? attempt = null;
         lock (_gate)
         {
-            if (_state is null || IsFinal(_state.Phase)) return;
+            if (_emergencyStopRequested || _state is null || IsFinal(_state.Phase)) return;
             if (!_running)
             {
                 if (_state is not null) Persist(_state with { UserPaused = true, Phase = BackgroundOperationPhase.Paused });
@@ -259,6 +270,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
         BackgroundOperationState? state;
         lock (_gate)
         {
+            if (_emergencyStopRequested) throw new OperationCanceledException("Background.Stop.InProgress");
             if (_resume is not null) { _resume.TrySetResult(); return; }
             state = _state;
             if (state is null || _running || IsFinal(state.Phase)) return;
@@ -272,7 +284,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
             catch (Exception error) when (!token.IsCancellationRequested)
             {
                 lock (_gate)
-                    if (_state?.Id == state!.Id && !_running && !IsFinal(_state.Phase))
+                    if (!_emergencyStopRequested && _state?.Id == state!.Id && !_running && !IsFinal(_state.Phase))
                         Persist(_state with { Phase = BackgroundOperationPhase.Waiting, RequiresDecision = true, Detail = error.GetType().Name });
                 NotifyChanged(); throw;
             }
@@ -283,7 +295,7 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
     {
         lock (_gate)
         {
-            if (_running || _state is null || _state.UserPaused
+            if (_emergencyStopRequested || _running || _state is null || _state.UserPaused
                 || IsFinal(_state.Phase)) return;
             Persist(_state with { Phase = enabled ? BackgroundOperationPhase.Countdown : BackgroundOperationPhase.Waiting });
         }
@@ -310,6 +322,46 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
             if (_running) throw new InvalidOperationException("Cancel the active operation before discarding it.");
             if (expectedId is not null && _state?.Id != expectedId) return;
             if (_state is not null && !IsFinal(_state.Phase)) Persist(_state with { Phase = BackgroundOperationPhase.Canceled, UserPaused = false });
+        }
+        NotifyChanged();
+    }
+
+    internal bool ConfirmPausedRetirement()
+    {
+        lock (_gate)
+        {
+            if (_emergencyStopRequested || _running || _auxiliaryRunning || _state is not { UserPaused: true, RequiresDecision: true,
+                Phase: BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Paused }) return false;
+            // The scheduler has just confirmed retirement under its exclusive lease.
+            // Keep the failure detail and all inputs; the user pause forbids auto-resume.
+            Persist(_state with { Phase = BackgroundOperationPhase.Paused, RequiresDecision = false });
+        }
+        NotifyChanged(); return true;
+    }
+
+    internal Task RequestEmergencyStopAsync()
+    {
+        CancellationTokenSource? cancellation;
+        lock (_gate)
+        {
+            if (_state is null || IsFinal(_state.Phase)) return Task.CompletedTask;
+            _emergencyStopRequested = true; _pauseRequested = true;
+            _paused?.TrySetCanceled();
+            Persist(_state with { Phase = BackgroundOperationPhase.Pausing, UserPaused = true, RequiresDecision = true });
+            cancellation = _runCancellation;
+        }
+        NotifyChanged();
+        try { return cancellation?.CancelAsync() ?? Task.CompletedTask; }
+        catch (ObjectDisposedException) when (!IsRunning) { return Task.CompletedTask; }
+    }
+
+    internal void ConfirmEmergencyStop()
+    {
+        lock (_gate)
+        {
+            if (_running || _auxiliaryRunning) throw new InvalidOperationException("Background.Stop.NotIdle");
+            if (_state is not null && !IsFinal(_state.Phase))
+                Persist(_state with { Phase = BackgroundOperationPhase.Canceled, UserPaused = true, RequiresDecision = false });
         }
         NotifyChanged();
     }

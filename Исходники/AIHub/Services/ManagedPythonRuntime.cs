@@ -7,6 +7,9 @@ namespace AIHub.Services;
 internal sealed record ManagedPythonSelection(ComponentCatalogEntry Entry, PythonRuntimeProfile Profile,
     string Python, string Device, long FreeBytes, string Reason);
 
+internal sealed class ManagedPythonGpuProbeFailedException(IEnumerable<Exception> failures)
+    : IOException("The prepared GPU profiles could not be verified; CPU fallback was not selected.", new AggregateException(failures));
+
 /// <summary>Only the first-launch manager installs libraries. Execution selects verified existing profiles.</summary>
 internal static partial class ManagedPythonRuntime
 {
@@ -21,7 +24,7 @@ internal static partial class ManagedPythonRuntime
     internal static string CpuDirectory => new ComponentManager().GetInstallDirectory(ComponentCatalog.Find(HardwareRuntimeCatalog.PythonCpuId)!);
 
     internal static async Task<ManagedPythonSelection> ResolveAsync(string requested, CancellationToken token,
-        IReadOnlySet<string>? allowedProfiles = null, Action<string>? log = null)
+        IReadOnlySet<string>? allowedProfiles = null, Action<string>? log = null, bool requireReliableGpuProbe = false)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         using var auditLog = ComponentAudit.CaptureLog(log);
@@ -29,6 +32,7 @@ internal static partial class ManagedPythonRuntime
         var manager = new ComponentManager();
         var statuses = manager.GetStatus();
         var gpu = new List<ManagedPythonSelection>();
+        var failures = new List<PythonHardwareProbeException>();
         if (requested != "cpu")
         {
             foreach (var id in GpuProfiles)
@@ -58,10 +62,10 @@ internal static partial class ManagedPythonRuntime
                         probe.Device, probe.FreeBytes, probe.Reason));
                 }
                 catch (PythonHardwareProbeException error)
-                { new ComponentEventLog().Write("python_hardware_probe_failed", new { id, error.Message }); }
+                { failures.Add(error); new ComponentEventLog().Write("python_hardware_probe_failed", new { id, error.Message }); }
             }
         }
-        if (gpu.Count > 0) return gpu.OrderByDescending(item => item.FreeBytes).First();
+        if (SelectGpu(gpu, failures, requireReliableGpuProbe) is { } selected) return selected;
         if (requested is not ("auto" or "cpu")) throw new PythonHardwareProbeException("The requested GPU is unavailable in the prepared Python profiles.");
         var cpu = statuses.Single(item => item.Entry.Id == HardwareRuntimeCatalog.PythonCpuId);
         if (!cpu.IsAvailable) throw new IOException("Prepare Python hardware libraries through the main-window downloader first.");
@@ -72,6 +76,15 @@ internal static partial class ManagedPythonRuntime
         var cpuProbe = await ManagedPythonHardwareProbe.ReadAsync(PythonRuntimeProfile.Cpu, root, "cpu", token);
         return new(cpu.Entry, PythonRuntimeProfile.Cpu, Path.Combine(root, "python.exe"), "cpu", cpuProbe.FreeBytes,
             requested == "cpu" ? "Requested CPU" : "No compatible prepared GPU; using CPU");
+    }
+
+    internal static ManagedPythonSelection? SelectGpu(IReadOnlyList<ManagedPythonSelection> candidates,
+        IReadOnlyList<PythonHardwareProbeException> failures, bool requireReliableGpuProbe)
+    {
+        if (candidates.Count > 0) return candidates.OrderByDescending(item => item.FreeBytes).First();
+        // A crashed discovery process is not evidence that the machine has no GPU.
+        if (requireReliableGpuProbe && failures.Count > 0) throw new ManagedPythonGpuProbeFailedException(failures);
+        return null;
     }
 
     internal static async Task<IReadOnlyList<PythonGpuSnapshot>> ListGpuDevicesAsync(CancellationToken token)

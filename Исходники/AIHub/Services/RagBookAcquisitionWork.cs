@@ -36,8 +36,9 @@ public sealed class RagBookAcquisitionWork(BackgroundOperationController? backgr
         if (restored is not null && Read(restored) is var saved
             && (!string.Equals(saved.ModelsRoot, request.ModelsRoot, StringComparison.OrdinalIgnoreCase) || saved.Download != request.Download || !saved.Ids.SequenceEqual(request.Ids)))
             throw new InvalidDataException("Book acquisition resume does not match its checkpoint.");
-        if (background is { BlocksNewWork: true } && background.State?.Id != restored?.Id)
-            throw new BackgroundOperationWaitingException("RagBooks.OtherOperation");
+        if (background is { BlocksNewWork: true } && background.State?.Id != restored?.Id) {
+            background.ReportBlocked(); throw new BackgroundOperationWaitingException("RagBooks.OtherOperation");
+        }
         // A declined initial acknowledgement must not leave a phantom pending operation.
         if (restored is null && request.Download) await ComponentLicenseGate.EnsureAsync(request.Ids, token);
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, ApplicationBackgroundOperations.ExitToken);

@@ -25,7 +25,7 @@ public sealed partial class MusicCoverController
     private async Task GenerateAsync(string? prompt = null, bool force = false, string? artist = null, string? title = null, string? jobId = null)
     {
         if (_disposed || _active is not null) return;
-        if (ApplicationBackgroundOperations.Current?.BlocksNewWork == true) throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        if (ApplicationBackgroundOperations.Current is { BlocksNewWork: true } blocker) { blocker.ReportBlocked(); throw new InvalidOperationException("Music.Poetry.OtherOperation"); }
         var options = _view.Generation.Options;
         artist ??= _window?.Artist ?? options.Artist; title ??= _window?.SongTitle ?? options.Title;
         var previous = _store.Latest(artist, title);
@@ -41,7 +41,7 @@ public sealed partial class MusicCoverController
         var style = jobId is not null ? job!.Style : current ? _view.Wishes.RequestStyle : job?.Style ?? previous?.Input.Style ?? "";
         var input = new MusicCoverInput(Guid.NewGuid().ToString("N"), artist, title, lyrics, style, root, textModel?.Path ?? "", id, prompt);
         if (!await EnsureComponentsAsync(root) || _disposed || _active is not null) return;
-        if (ApplicationBackgroundOperations.Current?.BlocksNewWork == true) throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        if (ApplicationBackgroundOperations.Current is { BlocksNewWork: true } preparedBlocker) { preparedBlocker.ReportBlocked(); throw new InvalidOperationException("Music.Poetry.OtherOperation"); }
         _store.Create(input); await RunAsync(input, ApplicationBackgroundOperations.ExitToken);
     }
     public async Task ResumeAsync(BackgroundOperationState state, CancellationToken token)

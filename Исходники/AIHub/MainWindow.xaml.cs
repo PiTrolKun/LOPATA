@@ -514,6 +514,7 @@ public partial class MainWindow : Window
         HeaderProductNameText.Text = L("App.ProductName");
         HeaderSubtitleText.Text = L("App.Subtitle");
         ProfileButton.ToolTip = L("Header.ProfileTooltip");
+        LocalizeEmergencyStop();
         SettingsButton.ToolTip = L("Header.SettingsTooltip");
         GlobalFileViewerButton.ToolTip = L("Header.FileViewerTooltip");
         AutomationProperties.SetName(GlobalFileViewerButton, L("Header.FileViewerTooltip"));

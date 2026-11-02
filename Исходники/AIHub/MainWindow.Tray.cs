@@ -44,6 +44,7 @@ public partial class MainWindow
         {
             CheckpointRagBooks();
             if (ScenarioNavigationPage.VideoPreparation?.Checkpoint() == false) throw new System.IO.IOException("Video preparation checkpoint failed.");
+            if (ScenarioNavigationPage.SongClip?.Checkpoint() == false) throw new System.IO.IOException("Song-clip checkpoint failed.");
             CheckpointVectorEditors();
             if (!LiteraryPage.CheckpointBackgroundState()) throw new System.IO.IOException("Literary checkpoint was not confirmed.");
             _backgroundOperations?.CheckpointForExit();

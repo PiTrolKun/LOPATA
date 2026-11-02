@@ -68,6 +68,49 @@ public sealed class ManagedModelRemovalService
         return new ManagedModelRemovalResult(removedBytes, removed);
     }
 
+    // Explicit, reviewed removal for predefined scenario packages. The pinned
+    // catalog definition stays pinned; arbitrary paths and user-owned cards are rejected.
+    internal ManagedModelRemovalResult RemoveScenarioFiles(string modelArtifactId,
+        IReadOnlyCollection<string> relativePaths, bool includePartialFiles)
+    {
+        var card = _store.Load(modelArtifactId) ?? throw new InvalidOperationException("Unknown scenario component.");
+        if (!card.IsManaged || card.IsSystem || card.Origin != ManagedModelOrigins.PredefinedScenario
+            || _usageGuard.IsActive(modelArtifactId) || card.Status == ManagedModelStatuses.InUse)
+            throw new InvalidOperationException("The scenario component is protected or in use.");
+        var root = Path.GetFullPath(card.ModelsRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var install = Path.GetFullPath(card.InstallDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!install.StartsWith(root, StringComparison.OrdinalIgnoreCase) || install == root)
+            throw new InvalidOperationException("Refusing removal outside model storage.");
+        var allowed = card.Files.Select(f => f.RelativePath).ToHashSet(StringComparer.Ordinal);
+        if (relativePaths.Count == 0 || relativePaths.Any(p => !allowed.Contains(p)))
+            throw new InvalidDataException("Only reviewed manifest files may be removed.");
+        foreach(var relative in relativePaths) Lopata.Updates.SafeUpdatePath.ValidateRelative(relative);
+        var paths = relativePaths.Select(p => GetContainedPath(install, p)).ToArray();
+        var targets = paths.SelectMany(p => includePartialFiles
+            ? new[] { p }.Concat(SegmentedModelFileDownloader.GetPartialArtifactPaths(p)) : [p]).ToArray();
+        foreach (var path in targets) {
+            if (!path.StartsWith(install, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Unsafe partial file.");
+            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
+        }
+        var removed = new List<string>(); long bytes = 0;
+        try {
+            foreach (var path in targets) {
+                if (_usageGuard.IsActive(modelArtifactId)) throw new InvalidOperationException("Component became active.");
+                bytes += DeleteExactFile(path, removed);
+            }
+        }
+        finally {
+            if (removed.Count > 0) {
+                ComponentAudit.Invalidate(card.InstallDirectory);
+                card.StoredBytes = card.Files.Sum(f => File.Exists(GetContainedPath(install, f.RelativePath))
+                    ? new FileInfo(GetContainedPath(install, f.RelativePath)).Length : 0);
+                card.Status = card.StoredBytes == 0 ? ManagedModelStatuses.FilesRemoved : ManagedModelStatuses.NeedsVerification;
+                _store.ResetInstallationReceipt(card.ModelArtifactId,card.Status,card.StoredBytes);
+            }
+        }
+        return new(bytes, removed);
+    }
+
     private void EnsureRemovalAllowed(ManagedModelArtifactCard card)
     {
         if (!card.IsManaged || !card.CanRemoveFiles)

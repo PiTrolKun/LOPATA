@@ -787,3 +787,54 @@ experiment. OmniSVG weights, model cards, executable adapter and bundled decoder
 were removed at the user's request. No OmniSVG runtime is shipped in 0.6.7-dev.
 Existing generated results and diagnostic reports are retained as historical data.
 Legacy test-overlay wheels are developer-only; shared Python profiles remain unchanged.
+
+
+## Song-to-clip / H3 Motion Context Music (optional downloaded source, 2026-10-31)
+
+ComfyUI-H3-Motion-Context-MultiRef by seitanism, NikoDemon80 and contributors,
+revision 361624fb406b63eb6694442eac6c895fc1533a70, GPL-3.0:
+https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef
+Original license: `Исходники/AIHub/Licenses/texts/song-clip-h3-motion-GPL-3.0.txt`.
+The optional node source is acquired separately with pinned file hashes; it is
+not a replacement license for the shared MiniMax H3, Qwen or ComfyUI components.
+The current adapter uses the upstream masked song context and seam generator,
+with LOPATA-owned atomic disk checkpoints and serial assembly. It reuses the
+existing Ref2VA INT8 / Qwen 32B / VAE bundle. The initial integration uses the
+base model at 20 steps without the optional Turbo LoRA; it is not an exact
+reproduction of the example's eight-step Turbo profile. No upstream source
+is silently patched or distributed as an official MiniMax implementation.
+
+## Song-to-clip / Glitchframe (optional downloaded components, 2026-10-31)
+
+Pinned Glitchframe source: OlaProeis/Glitchframe a9660508fdbbfbc6243f570d71bbd2af8ee5b111,
+MIT; bundled fonts have separate SIL Open Font License notices. SDXL base 1.0:
+stabilityai/stable-diffusion-xl-base-1.0 462165984030d82259a11f4367a4eed129e94a7b,
+CreativeML Open RAIL++-M; use restrictions apply. Isolated Python wheels retain their
+individual licenses/notices. Original texts: `Исходники/AIHub/Licenses/texts/song-clip-glitch-source.txt`,
+`song-clip-glitch-sdxl.txt`, `song-clip-glitch-libraries.txt`. File-level URLs, sizes and
+SHA-256 are pinned in Tools/song-clip-glitch-components.json. These optional terms
+use the shared component-license gate. The upstream pipeline is called in a separate
+process; its bundled Gradio UI is not started. Downloaded upstream originals are unmodified.
+
+
+## Song-to-clip / InfiniteTalk on Wan2.1 (optional components, 2026-11-01)
+
+InfiniteTalk: https://github.com/MeiGen-AI/InfiniteTalk (Apache-2.0).
+The author-recommended Comfy integration is Kijai/ComfyUI-WanVideoWrapper,
+revision 088128b224242e110d3906c6750e9a3a348a659b (Apache-2.0):
+https://github.com/kijai/ComfyUI-WanVideoWrapper/tree/088128b224242e110d3906c6750e9a3a348a659b
+Wan2.1 I2V GGUF Q4_K_M (city96) and InfiniteTalk Single GGUF Q4_K_M (Kijai),
+UMT5 FP8, Wan VAE and CLIP Vision retain the model suppliers' Apache-2.0 terms.
+Wav2Vec2 Chinese Base and the Kijai safetensors model cards declare MIT; neither
+repository supplies a separate original full copyright notice. This absence is
+explicitly recorded; no copyright holder has been invented. Exact source URLs,
+revisions, sizes and hashes are in the optional component manifests.
+
+Full Apache terms and per-wheel notices are included in
+Исходники/AIHub/Licenses/texts/song-clip-infinitetalk-*. All new components use
+the ordinary license gate and ComponentAudit. No arbitrary pip install, cloud
+service, credential or implicit model download is used by the worker.
+The native sampler and conditioning remain upstream; LOPATA adds input-bound
+atomic window checkpointing, exact revision validation and full original-song
+assembly. This persistence adapter is a LOPATA modification, not an upstream
+claim. No vocal-separation weights without clear license were added.

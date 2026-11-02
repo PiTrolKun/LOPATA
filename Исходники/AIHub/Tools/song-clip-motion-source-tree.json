@@ -1,0 +1,107 @@
+[
+  {
+    "Path": "LICENSE",
+    "Size": 35181,
+    "Sha256": "b2c78f993af4c9b9095c4c7219d4f1f3e70189d37e64aa9b57e93226f6133bc0"
+  },
+  {
+    "Path": "README.md",
+    "Size": 4840,
+    "Sha256": "2f974d09d944d5066c2fe7e2508fa5d58852136af63ce21ec2486a18bf89e446"
+  },
+  {
+    "Path": "WORKFLOW_PREREQUISITES.md",
+    "Size": 12674,
+    "Sha256": "c3d47cab8694a898f420ebaebc727e6ae5cedc25d07051a6e5f3e598d621f232"
+  },
+  {
+    "Path": "__init__.py",
+    "Size": 670,
+    "Sha256": "fee3dc933481a70c3d663e01e38e7c8c3388994a17e369f1aab9c92dd872dbc6"
+  },
+  {
+    "Path": "example_workflows/NEW - Music Video.json",
+    "Size": 498848,
+    "Sha256": "92f7e40451f74f8f0ec147ed731a6ff209fb11bbf17aa253b3103f99aa0798a5"
+  },
+  {
+    "Path": "existing_video_extension.py",
+    "Size": 78381,
+    "Sha256": "787910aaf84e4b9a3dc9837ebc1cb47c7068b58098d9275b2771c1b10a532b15"
+  },
+  {
+    "Path": "h3_audio_grid.py",
+    "Size": 3993,
+    "Sha256": "01ee13f96aadab2ce38fd62b24c80f6d1a2e3b5e2d0297fed32f6d3cfa3cae71"
+  },
+  {
+    "Path": "h3_audio_vae_compat.py",
+    "Size": 2111,
+    "Sha256": "72e97ee6fa289816617b9ab74417d476170dd3457d9b700621c157f44cc53c08"
+  },
+  {
+    "Path": "h3_auto_crop32.py",
+    "Size": 4431,
+    "Sha256": "f13050e2c6a5932d30a2937b5fe49075c492bb3a74153f56649926048f41588b"
+  },
+  {
+    "Path": "h3_compat.py",
+    "Size": 8874,
+    "Sha256": "43ef8f4110ec1b619fe59d26f1404dfbbe2f5c76c66812dbe924cc1b40a15d5d"
+  },
+  {
+    "Path": "h3_mask_compat.py",
+    "Size": 25443,
+    "Sha256": "7d8e746c9cb2e76898e0ecafa0c1c17027e6a3d8aab4fc40b3e5667c4827cc15"
+  },
+  {
+    "Path": "h3_mask_payload_compat.py",
+    "Size": 7247,
+    "Sha256": "484d50a3f4c822b92d117ff36e07dc8ff419ad7e7758f3b810c5c921e45f8107"
+  },
+  {
+    "Path": "h3_mask_precision.py",
+    "Size": 21660,
+    "Sha256": "a617f7a308134d9c755448ad20b2ffe3289a1b3a9d3351fbdb2af6e27f1fb5a8"
+  },
+  {
+    "Path": "h3_mask_velocity.py",
+    "Size": 5283,
+    "Sha256": "06847c06062863bb8d7453d607f4a59e7c42b5efec54fc5bb4ee840146450d7b"
+  },
+  {
+    "Path": "h3_masked_bridge.py",
+    "Size": 19098,
+    "Sha256": "43300a827ce421fb690b658051d4de9e543771c7975a18bf8f47c25f0fbb255d"
+  },
+  {
+    "Path": "h3_song_audio_context.py",
+    "Size": 19371,
+    "Sha256": "714840dbba03eb6b327cd48c81368bad50e94810572037edf2ba8521d0ebbb27"
+  },
+  {
+    "Path": "h3_streaming_vhs.py",
+    "Size": 47043,
+    "Sha256": "47c252b760d345debb0a0f39510a8da690a7f3240f3af303605eee5c61a2719e"
+  },
+  {
+    "Path": "h3_timing.py",
+    "Size": 2529,
+    "Sha256": "01f9f2f91c8a22f7a183d1605789a118448d78efe0e778d8957e4b5538292094"
+  },
+  {
+    "Path": "h3_v2v_fractional.py",
+    "Size": 21385,
+    "Sha256": "d678fd44db058b1e61f06797c41323a01648836eb39655327b039bfbd0b3efd5"
+  },
+  {
+    "Path": "h3_workflow_utilities.py",
+    "Size": 5740,
+    "Sha256": "260f52321ed07a1d90ae7c36d4e7e0f3d62eefc051b39e34f0b4cbc14a8dcdf9"
+  },
+  {
+    "Path": "nodes.py",
+    "Size": 78645,
+    "Sha256": "f77ab57089c09023ca219039e6b099cc71780d6842bbed30b031c44b2eb20b2f"
+  }
+]

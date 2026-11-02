@@ -1,0 +1,96 @@
+[
+  {
+    "Id": "song-clip-infinitetalk-models",
+    "Name": "Wan2.1 I2V 14B · Q4_K_M",
+    "Repository": "city96/Wan2.1-I2V-14B-480P-gguf",
+    "Revision": "b4b6b3b3f0f64975fb33b1d5d1a46ca24e065f03",
+    "License": "Apache-2.0",
+    "Files": [
+      {
+        "RelativePath": "wan2.1-i2v-14b-480p-Q4_K_M.gguf",
+        "SizeBytes": 11341184384,
+        "Sha256": "d91f7139acadb42ea05cdf97b311e5099f714f11fbe4d90916500e2f53cbba82",
+        "SourceUrl": "https://huggingface.co/city96/Wan2.1-I2V-14B-480P-gguf/resolve/b4b6b3b3f0f64975fb33b1d5d1a46ca24e065f03/wan2.1-i2v-14b-480p-Q4_K_M.gguf",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-single",
+    "Name": "InfiniteTalk Single · Q4_K_M",
+    "Repository": "Kijai/WanVideo_comfy_GGUF",
+    "Revision": "8418a4ed00314a49f44b73a0d43d40aa539264da",
+    "License": "Apache-2.0",
+    "Files": [
+      {
+        "RelativePath": "InfiniteTalk/Wan2_1-InfiniteTalk_Single_Q4_K_M.gguf",
+        "SizeBytes": 1403374240,
+        "Sha256": "1cf24985c792e1876513aa7916193efaff7e5de92decd0f5ddb4e1c405571e53",
+        "SourceUrl": "https://huggingface.co/Kijai/WanVideo_comfy_GGUF/resolve/8418a4ed00314a49f44b73a0d43d40aa539264da/InfiniteTalk/Wan2_1-InfiniteTalk_Single_Q4_K_M.gguf",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-shared",
+    "Name": "Wan2.1 · UMT5 FP8 / VAE / CLIP Vision",
+    "Repository": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Revision": "123acf1cc74bccbb9bfff8ac1ee72edc08c2341d",
+    "License": "Apache-2.0",
+    "Files": [
+      {
+        "RelativePath": "split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "SizeBytes": 6735906897,
+        "Sha256": "c3355d30191f1f066b26d93fba017ae9809dce6c627dda5f6a66eaa651204f68",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/123acf1cc74bccbb9bfff8ac1ee72edc08c2341d/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "split_files/vae/wan_2.1_vae.safetensors",
+        "SizeBytes": 253815318,
+        "Sha256": "2fc39d31359a4b0a64f55876d8ff7fa8d780956ae2cb13463b0223e15148976b",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/123acf1cc74bccbb9bfff8ac1ee72edc08c2341d/split_files/vae/wan_2.1_vae.safetensors",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "split_files/clip_vision/clip_vision_h.safetensors",
+        "SizeBytes": 1264219396,
+        "Sha256": "64a7ef761bfccbadbaa3da77366aac4185a6c58fa5de5f589b42a65bcc21f161",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/123acf1cc74bccbb9bfff8ac1ee72edc08c2341d/split_files/clip_vision/clip_vision_h.safetensors",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-wav2vec",
+    "Name": "Wav2Vec2 Chinese Base · FP16",
+    "Repository": "Kijai/wav2vec2_safetensors",
+    "Revision": "87847d3bc53702afda44078249e7c33e867827c4",
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "wav2vec2-chinese-base_fp16.safetensors",
+        "SizeBytes": 190115368,
+        "Sha256": "000813e441020f18cff844c969d2d5d4adc2a5ce46b2db1f23950b05d88805b4",
+        "SourceUrl": "https://huggingface.co/Kijai/wav2vec2_safetensors/resolve/87847d3bc53702afda44078249e7c33e867827c4/wav2vec2-chinese-base_fp16.safetensors",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-source",
+    "Name": "ComfyUI-WanVideoWrapper · InfiniteTalk",
+    "Repository": "kijai/ComfyUI-WanVideoWrapper",
+    "Revision": "088128b224242e110d3906c6750e9a3a348a659b",
+    "License": "Apache-2.0",
+    "Files": [
+      {
+        "RelativePath": "wrapper.zip",
+        "SizeBytes": 19168405,
+        "Sha256": "2d071807fa2ab1b1b2e77f1e5b2241dffd9d369691645012848fcdb7cb506616",
+        "SourceUrl": "https://codeload.github.com/kijai/ComfyUI-WanVideoWrapper/zip/088128b224242e110d3906c6750e9a3a348a659b",
+        "IsRequired": true
+      }
+    ]
+  }
+]

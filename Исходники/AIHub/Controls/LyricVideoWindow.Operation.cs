@@ -49,7 +49,7 @@ public sealed partial class LyricVideoWindow
     {
         if (_session is null || _exportWork is { IsCompleted: false }) return;
         if (ApplicationBackgroundOperations.Current is { } controller && (controller.IsRunning || controller.BlocksNewWork))
-        { _status.Text = _l("LyricVideo.OtherOperation"); return; }
+        { controller.ReportBlocked(); _status.Text = _l("LyricVideo.OtherOperation"); return; }
         var options = _settings.Options; options.Validate();
         var dialog = new Microsoft.Win32.SaveFileDialog { Title = _l("LyricVideo.Export"), Filter = "MP4|*.mp4", DefaultExt = ".mp4",
             FileName = Path.GetFileNameWithoutExtension(_config.Song) + ".mp4", InitialDirectory = Path.GetDirectoryName(_config.Song), OverwritePrompt = true };

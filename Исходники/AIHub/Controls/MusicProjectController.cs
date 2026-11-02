@@ -155,7 +155,10 @@ public sealed class MusicProjectController
     }
     public void SwitchModel(string variation, string? verifiedHardware = null)
     {
-        if (!_view.Session.CanChangeModel) throw new InvalidOperationException(_l("Music.Projects.Busy"));
+        if (!_view.Session.CanChangeModel) {
+            ApplicationBackgroundOperations.Current?.ReportBlocked();
+            throw new InvalidOperationException(_l("Music.Projects.Busy"));
+        }
         if (!MusicModelVariants.Supported(variation)) throw new InvalidDataException("Unsupported model variation.");
         _modelSettings[_view.Generation.Variation] = _view.Generation.ExpertSettings;
         var previous = _view.Generation.ExpertSettings;

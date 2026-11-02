@@ -170,7 +170,7 @@ public sealed partial class MusicRhymeController
     private void EnsureGenerationAvailable()
     {
         if (_active is not null) throw new InvalidOperationException("Music.Rhyme.Running");
-        if (ApplicationBackgroundOperations.Current?.BlocksNewWork == true) throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        if (ApplicationBackgroundOperations.Current is { BlocksNewWork: true } blocker) { blocker.ReportBlocked(); throw new InvalidOperationException("Music.Poetry.OtherOperation"); }
     }
     private void LaunchGeneration(MusicRhymeStep step) => _ = RunGenerationHandledAsync(step);
     private async Task RunGenerationHandledAsync(MusicRhymeStep step)

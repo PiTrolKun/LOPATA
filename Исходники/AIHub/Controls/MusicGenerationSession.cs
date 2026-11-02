@@ -157,7 +157,7 @@ public sealed class MusicGenerationSession : IDisposable
         {
             if (_controller is { HasPending: true, State.Kind: MusicGenerationRunner.BackgroundKind } || _controller?.BlocksNewWork == true)
             {
-                if (_controller.State?.Kind != MusicGenerationRunner.BackgroundKind) { _view.Status.AppendLog(_l("Music.Generation.OtherOperation")); return; }
+                if (_controller.State?.Kind != MusicGenerationRunner.BackgroundKind) { _controller.ReportBlocked(); _view.Status.AppendLog(_l("Music.Generation.OtherOperation")); return; }
                 if (_controller.State.Phase == BackgroundOperationPhase.Running) await _controller.PauseAsync();
                 else if (_controller.State.Phase != BackgroundOperationPhase.Pausing) await _controller.ResumeAsync(ApplicationBackgroundOperations.ExitToken);
                 return;
@@ -216,7 +216,10 @@ public sealed class MusicGenerationSession : IDisposable
     }
     private async Task RepeatAsync(MusicTrack track)
     {
-        if (_working || _starting || _controller?.IsRunning == true || _controller?.BlocksNewWork == true || track.JobId is null) return;
+        if (_working || _starting || _controller?.IsRunning == true || _controller?.BlocksNewWork == true || track.JobId is null) {
+            if (!_working && !_starting && _controller?.BlocksNewWork == true) _controller.ReportBlocked();
+            return;
+        }
         MusicGenerationJob? submitted = null;
         try
         {

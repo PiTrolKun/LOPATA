@@ -21,19 +21,7 @@ public partial class MainWindow
     {
         ImageUtilityPage.ViewFileRequested += path =>
             _fileViewerService.Open(this, path, _appSettings.FileViewer, _isDarkTheme, _localizationService);
-        ImageUtilityPage.IsVisibleChanged += (_, _) =>
-        {
-            if (ImageUtilityPage.IsVisible)
-            {
-                WorkStartPage.MaxWidth = double.PositiveInfinity;
-                WorkStartPage.Margin = new Thickness(18, 16, 18, 16);
-            }
-            else
-            {
-                WorkStartPage.SetResourceReference(MaxWidthProperty, "UiMainContentMaxWidth");
-                WorkStartPage.SetResourceReference(MarginProperty, "UiPageMargin");
-            }
-        };
+        ImageUtilityPage.IsVisibleChanged += (_, _) => RefreshWorkStartWorkspaceLayout();
         _backgroundOperations!.Register(ImageUtilityQueue.BackgroundKind, async (state, token) =>
         { ConfigureImageUtility(); await ImageUtilityPage.ResumeAsync(state, token); });
         _backgroundOperations.Changed += () =>

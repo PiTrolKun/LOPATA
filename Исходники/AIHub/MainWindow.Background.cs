@@ -19,6 +19,7 @@ public partial class MainWindow
     {
         _backgroundOperations = new(new(System.IO.Path.Combine(AppDataPaths.BaseDirectory, "Background", "operation.json")));
         ApplicationBackgroundOperations.Current = _backgroundOperations;
+        InitializeEmergencyStop();
         ApplicationBackgroundOperations.ExitToken = _backgroundLifetime.Token;
         _backgroundOperations.Register(Controls.LiteraryStudioControl.BackgroundKind,
             (state, token) => LiteraryPage.ResumeBackgroundStudioAsync(state, token));
@@ -37,6 +38,7 @@ public partial class MainWindow
         RegisterLyricVideoBackgroundOperation();
         RegisterVideoEditorOperations();
         RegisterVideoConceptBackgroundOperations();
+        RegisterSongClipBackgroundOperations();
         RegisterBookSmartBackgroundOperation();
         RegisterLyricLibraryBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
@@ -318,6 +320,10 @@ public partial class MainWindow
                 OpenImageUtilityScenario(); ImageUtilityPage.Restore(notice.Project);
                 _backgroundOperations!.Acknowledge(notice.Id);
                 return;
+            }
+            if (notice.Kind is Services.SongClip.SongClipAttempt.Kind or Services.SongClip.H3MusicRunner.Kind or Services.SongClip.InfiniteTalkRunner.Kind)
+            {
+                RestoreFromTray(); var songClip=OpenSongClip(); if(notice.Project is {} projectId)songClip.OpenProject(projectId); _backgroundOperations!.Acknowledge(notice.Id); return;
             }
             if (notice.Kind is Services.VideoPreparation.VideoConceptWork.Kind or Services.VideoPreparation.VideoTranslationProtocol.Kind
                 or Services.VideoPreparation.VideoDevelopment.Kind or Services.VideoPreparation.VideoDevelopment.TranslationKind

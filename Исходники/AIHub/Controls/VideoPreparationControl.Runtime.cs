@@ -79,7 +79,7 @@ public sealed partial class VideoPreparationControl
     private async Task WarmDefaultAsync()
     {
         if (_drawingStage || Session.Project.CurrentStep is "storyboard" or "package" or "finish" or "generator" || ShotsOwnWarmup || ConceptBusy || Resident is null || _openingProject || _warming || !IsVisible) return;
-        if (ApplicationBackgroundOperations.Current?.BlocksNewWork == true) { _warmDeferred = true; _warmError = "WarmDeferred"; Render(); return; }
+        if (ApplicationBackgroundOperations.Current is { BlocksNewWork: true } blocker) { blocker.ReportBlocked(); _warmDeferred = true; _warmError = "WarmDeferred"; Render(); return; }
         _warming = true; _warmError = ""; Render();
         _warmCancel = CancellationTokenSource.CreateLinkedTokenSource(ApplicationBackgroundOperations.ExitToken);
         try

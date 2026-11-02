@@ -355,6 +355,38 @@
                     <Button x:Name="GenerationClearButton" Content="⌫" Visibility="Collapsed"
                             Style="{StaticResource ThemeButtonStyle}" Margin="0,0,10,0"
                             Click="GenerationClearButton_Click" AutomationProperties.AutomationId="Generation.Header.Clear" />
+                    <Button x:Name="EmergencyStopButton"
+                            Width="{DynamicResource UiThemeButtonSize}" Height="{DynamicResource UiThemeButtonSize}"
+                            Margin="0,0,14,0" Padding="0" Cursor="Hand"
+                            ToolTip="Сбросить фоновые задачи"
+                            AutomationProperties.AutomationId="EmergencyStopButton"
+                            AutomationProperties.Name="Сбросить фоновые задачи"
+                            Click="EmergencyStopButton_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Grid Background="Transparent">
+                                    <Viewbox Margin="1" Stretch="Uniform">
+                                        <Canvas Width="48" Height="48">
+                                            <Polygon x:Name="StopFace" Points="14,2 34,2 46,14 46,34 34,46 14,46 2,34 2,14"
+                                                     Fill="#C62828" Stroke="White" StrokeThickness="2.2" StrokeLineJoin="Round" />
+                                            <TextBlock Text="STOP" Foreground="White" FontFamily="Segoe UI" FontWeight="ExtraBold"
+                                                       FontSize="11" TextAlignment="Center" TextWrapping="NoWrap"
+                                                       Width="34" Canvas.Left="7" Canvas.Top="16" />
+                                            <Polygon x:Name="StopFocus" Points="14,0 34,0 48,14 48,34 34,48 14,48 0,34 0,14"
+                                                     Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeDashArray="2,1"
+                                                     Visibility="Collapsed" />
+                                        </Canvas>
+                                    </Viewbox>
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="StopFace" Property="Fill" Value="#E53935" /></Trigger>
+                                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="StopFace" Property="Fill" Value="#9E1B1B" /></Trigger>
+                                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="StopFocus" Property="Visibility" Value="Visible" /></Trigger>
+                                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5" /></Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                     <Button x:Name="ProfileButton"
                             Content="👤"
                             Style="{StaticResource ThemeButtonStyle}"

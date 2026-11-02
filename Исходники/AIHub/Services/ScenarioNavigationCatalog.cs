@@ -24,6 +24,7 @@ public static class ScenarioNavigationCatalog
     public const string Capture = "screen_capture";
     public const string ImageGeneration = "image_generation";
     public const string VideoGeneration = "video_generation";
+    public const string SongClip = "song_clip";
     public const string VectorGeneration = "vector_generation";
     public const string VectorEditor = "vector_editor";
     public const string ImageUtility = "image_utility";
@@ -71,6 +72,7 @@ public static class ScenarioNavigationCatalog
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
         Node(VideoGeneration, ScenarioNavigationKind.Scenario, "creation_video", "VideoGeneration.Title", "VideoGeneration.Description", "create",
             tags: ["video_generation", "video_concept", "video_concept_ai", "video_development", "video_world", "video_assistant_warmup", "video_reference_prompts", "video_storyboard", "video_preparation_export", "video_generator_plan", "video_h3_preparation"]),
+        Node(SongClip, ScenarioNavigationKind.Scenario, "creation_video", "SongClip.Title", "SongClip.Description", "create", tags: ["song_clip"]),
         Node(Music, ScenarioNavigationKind.Scenario, "creation_music", "Music.Title", "Music.Description", "create",
             tags: ["music_preparation", "music_ace_ideas", "music_ace_retake", "music_score_plans", "music_score_editor", "music_score_sections", "music_midi", "music_melody", "music_wishes", "music_performers", "music_text_tools", "music_rhyme", "music_rhyme_creative", "music_player", "music_lyrics_sync", "music_status", "music_generation", "music_expert", "music_presets", "music_models", "music_formats", "music_metadata", "music_stems", "music_audio_cover", "music_audio_references", "music_audio_processing", "music_cover", "music_examples", "music_studio", "music_tuning", "music_diffrhythm", "music_heartmula", "music_model_remove", "music_poetry", "music_poetry_sessions", "music_poetry_assembly", "music_poetry_reasoning", "music_poetry_search", "music_lyrics_library", "music_lora"], related: []),
         Node(ImageGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Generation.Title", "Generation.Description", "create",
@@ -100,6 +102,7 @@ public static class ScenarioNavigationCatalog
         Tag("engine_sets", Creation),
         Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),
         Tag("book_view", BookConversion), Tag("book_editor", BookConversion), Tag("book_smart", BookConversion), Tag("book_logs", BookConversion),
+        Tag("song_clip", SongClip),
         Tag("lyric_video", LyricVideo), Tag("matrix_rain", LyricVideo), Tag("video_rain_text", LyricVideo),
         Tag("video_editor", VideoEditor), Tag("video_narration", VideoEditor), Tag("video_subtitles", VideoEditor), Tag("video_svg", VideoEditor),
         Tag("video_linked_selection", VideoEditor), Tag("video_audio_stretch", VideoEditor), Tag("video_waveform", VideoEditor),
@@ -130,7 +133,7 @@ public static class ScenarioNavigationCatalog
         Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", "utilities_images"),
         Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility),
         Tag("github_releases", Publisher), Tag("vk_publishing", Publisher), Tag("publishing_queue", Publisher),
-        Tag("audio_convert", Utilities), Tag("audio_shell", Utilities), Tag("rag_books", RagBooks), Tag("rag_lexicon", RagBooks), Tag("stress_tables", RagBooks), Tag("file_metadata", Metadata), Tag("background_pause", Utilities)
+        Tag("audio_convert", Utilities), Tag("audio_shell", Utilities), Tag("rag_books", RagBooks), Tag("rag_lexicon", RagBooks), Tag("stress_tables", RagBooks), Tag("file_metadata", Metadata), Tag("background_pause", Utilities), Tag("emergency_stop", Utilities)
     ]);
 
     public static ScenarioNavigationTag GetTag(string id) => CloudTags.First(tag => tag.Id == id);

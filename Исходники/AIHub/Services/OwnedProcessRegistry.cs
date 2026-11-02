@@ -11,7 +11,7 @@ public sealed class OwnedProcessRegistry : IDisposable
     public static OwnedProcessRegistry Shared { get; } = new();
     private readonly object _gate = new();
     private readonly Dictionary<int, Entry> _entries = [];
-    private bool _disposed;
+    private bool _disposed, _emergencyActive, _emergencyBlocked;
     public static string LogDirectory => Path.Combine(AppDataPaths.BaseDirectory, "Diagnostics", "Processes");
     private static readonly object LogGate = new();
     private sealed record Entry(Process Monitor, WindowsProcessJob Job, string Component, DateTime Started);
@@ -29,6 +29,7 @@ public sealed class OwnedProcessRegistry : IDisposable
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+            GuardStart(component);
             if (process.StartInfo.UseShellExecute) throw new ArgumentException("External shell launches cannot be owned workers.");
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
@@ -59,6 +60,7 @@ public sealed class OwnedProcessRegistry : IDisposable
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+            GuardStart(component);
             var job = new WindowsProcessJob();
             try
             {
@@ -124,6 +126,66 @@ public sealed class OwnedProcessRegistry : IDisposable
         lock (_gate) {
             // Only a pinned identity started by this registry may be stopped.
             return _entries.TryGetValue(pid, out var entry) ? entry.Job.TerminateAndWaitAsync() : Task.CompletedTask;
+        }
+    }
+
+    internal static bool IsEmergencyExempt(string component) => component.StartsWith("VoiceInput.", StringComparison.Ordinal);
+    private void GuardStart(string component)
+    {
+        if ((_emergencyActive || _emergencyBlocked) && !IsEmergencyExempt(component))
+            throw new InvalidOperationException("Background.Stop.InProgress");
+    }
+
+    internal IReadOnlyList<EmergencyStopWorker> EmergencyWorkers()
+    {
+        lock (_gate) return _entries.Where(pair => !IsEmergencyExempt(pair.Value.Component))
+            .Select(pair => new EmergencyStopWorker(pair.Key, pair.Value.Component, pair.Value.Started)).ToArray();
+    }
+
+    internal EmergencyLease FreezeForEmergencyStop(IReadOnlyList<EmergencyStopWorker> reviewed)
+    {
+        lock (_gate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            if (_emergencyActive) throw new InvalidOperationException("Background.Stop.InProgress");
+            var identities = reviewed.ToHashSet();
+            var current = _entries.Where(pair => !IsEmergencyExempt(pair.Value.Component)).ToArray();
+            if (current.Any(pair => !identities.Contains(new(pair.Key, pair.Value.Component, pair.Value.Started))))
+                throw new InvalidOperationException("Background.Stop.PlanChanged");
+            _emergencyActive = true;
+            return new(this, current.Select(pair => new EmergencyStopWorker(pair.Key, pair.Value.Component, pair.Value.Started)).ToArray());
+        }
+    }
+
+    internal sealed class EmergencyLease(OwnedProcessRegistry owner, EmergencyStopWorker[] workers) : IDisposable
+    {
+        private bool _mutated, _complete;
+        internal void MarkStopping() => _mutated = true;
+        internal Task StopAndWaitAsync()
+        {
+            lock (owner._gate)
+            {
+                // The registry pins a process and its Job at start. An exited/reused PID
+                // can never redirect this operation to another process or to dictation.
+                var tasks = new List<Task>();
+                foreach (var worker in workers)
+                {
+                    if (!owner._entries.TryGetValue(worker.Pid, out var entry)) continue;
+                    if (entry.Component != worker.Component || entry.Started != worker.Started)
+                        throw new InvalidOperationException("Background.Stop.PlanChanged");
+                    tasks.Add(entry.Job.TerminateAndWaitAsync());
+                }
+                return Task.WhenAll(tasks);
+            }
+        }
+        internal void Complete() => _complete = true;
+        public void Dispose()
+        {
+            lock (owner._gate)
+            {
+                owner._emergencyActive = false;
+                if (_mutated) owner._emergencyBlocked = !_complete;
+            }
         }
     }
 

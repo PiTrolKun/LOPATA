@@ -193,6 +193,11 @@ public sealed class ManagedModelLibraryStore
 
     internal void ResetMusicInstallationReceipt(string artifactId, string status, long storedBytes)
     {
+        ResetInstallationReceipt(artifactId,status,storedBytes);
+    }
+
+    internal void ResetInstallationReceipt(string artifactId, string status, long storedBytes)
+    {
         var card = Load(artifactId) ?? throw new InvalidOperationException("Model card disappeared during removal.");
         card.Status = status; card.StoredBytes = storedBytes;
         card.LastVerifiedAt = null; card.RuntimeVerifiedAt = null; card.LastError = "";

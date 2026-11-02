@@ -23,6 +23,9 @@ public sealed class ScenarioNavigationControl : UserControl
     public string? PlaceholderScenarioId { get; private set; }
     public VideoPreparationControl? VideoPreparation { get; private set; }
     public bool IsVideoPreparation { get; private set; }
+    public SongClipControl? SongClip { get; private set; }
+    public bool IsSongClip { get; private set; }
+    public event Action<SongClipControl>? SongClipCreated;
     public bool IsHome => SelectedDirectionId is null;
     public event Action<string>? ScenarioRequested;
     public event Action? StateChanged;
@@ -54,6 +57,7 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsSongClip) { if (SongClip?.Checkpoint() == false) return true; IsSongClip = false; Render(); return true; }
         if (IsVideoPreparation)
         {
             if (VideoPreparation!.BackStepIfNeeded()) return true;
@@ -78,6 +82,8 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        if (SongClip?.Checkpoint() == false) return;
+        IsSongClip = false;
         if (VideoPreparation?.Checkpoint() == false) return;
         IsVideoPreparation = false;
         PlaceholderScenarioId = null;
@@ -89,6 +95,8 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
+        if (SongClip?.Checkpoint() == false) return;
+        IsSongClip = false;
         var node = ScenarioNavigationCatalog.Get(id);
         if (node.Kind != ScenarioNavigationKind.Direction || !node.IsAvailable) return;
         if (VideoPreparation?.Checkpoint() == false) return;
@@ -108,6 +116,18 @@ public sealed class ScenarioNavigationControl : UserControl
         PlaceholderScenarioId = null;
         IsSandboxLanding = false;
         IsVideoPreparation = id == ScenarioNavigationCatalog.VideoGeneration;
+        IsSongClip = id == ScenarioNavigationCatalog.SongClip;
+        if (IsSongClip)
+        {
+            if (SongClip is null)
+            {
+                SongClip = new SongClipControl(_localize);
+                SongClip.HomeRequested += ShowHome;
+                SongClip.BackRequested += () => { IsSongClip = false; Render(); };
+                SongClipCreated?.Invoke(SongClip);
+            }
+            Render(); return;
+        }
         if (IsVideoPreparation)
         {
             if (VideoPreparation is null)
@@ -179,6 +199,8 @@ public sealed class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (Content == SongClip) Content = null;
+        if (IsSongClip) { Content = SongClip; StateChanged?.Invoke(); return; }
         if (Content == VideoPreparation) Content = null;
         if (IsVideoPreparation)
         {

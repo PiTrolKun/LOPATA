@@ -1,0 +1,179 @@
+[
+  {
+    "Id": "song-clip-h3-motion-source",
+    "Name": "H3 Motion Context MultiRef \u00B7 Music Video \u00B7 GPL-3.0",
+    "Repository": "seitanism/ComfyUI-H3-Motion-Context-MultiRef",
+    "Revision": "361624fb406b63eb6694442eac6c895fc1533a70",
+    "License": "GPL-3.0-only",
+    "Files": [
+      {
+        "RelativePath": "LICENSE",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/LICENSE",
+        "SizeBytes": 35181,
+        "Sha256": "b2c78f993af4c9b9095c4c7219d4f1f3e70189d37e64aa9b57e93226f6133bc0",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "README.md",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/README.md",
+        "SizeBytes": 4840,
+        "Sha256": "2f974d09d944d5066c2fe7e2508fa5d58852136af63ce21ec2486a18bf89e446",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "WORKFLOW_PREREQUISITES.md",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/WORKFLOW_PREREQUISITES.md",
+        "SizeBytes": 12674,
+        "Sha256": "c3d47cab8694a898f420ebaebc727e6ae5cedc25d07051a6e5f3e598d621f232",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "__init__.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/__init__.py",
+        "SizeBytes": 670,
+        "Sha256": "fee3dc933481a70c3d663e01e38e7c8c3388994a17e369f1aab9c92dd872dbc6",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "example_workflows/NEW - Music Video.json",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/example_workflows/NEW%20-%20Music%20Video.json",
+        "SizeBytes": 498848,
+        "Sha256": "92f7e40451f74f8f0ec147ed731a6ff209fb11bbf17aa253b3103f99aa0798a5",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "existing_video_extension.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/existing_video_extension.py",
+        "SizeBytes": 78381,
+        "Sha256": "787910aaf84e4b9a3dc9837ebc1cb47c7068b58098d9275b2771c1b10a532b15",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_audio_grid.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_audio_grid.py",
+        "SizeBytes": 3993,
+        "Sha256": "01ee13f96aadab2ce38fd62b24c80f6d1a2e3b5e2d0297fed32f6d3cfa3cae71",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_audio_vae_compat.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_audio_vae_compat.py",
+        "SizeBytes": 2111,
+        "Sha256": "72e97ee6fa289816617b9ab74417d476170dd3457d9b700621c157f44cc53c08",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_auto_crop32.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_auto_crop32.py",
+        "SizeBytes": 4431,
+        "Sha256": "f13050e2c6a5932d30a2937b5fe49075c492bb3a74153f56649926048f41588b",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_compat.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_compat.py",
+        "SizeBytes": 8874,
+        "Sha256": "43ef8f4110ec1b619fe59d26f1404dfbbe2f5c76c66812dbe924cc1b40a15d5d",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_mask_compat.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_mask_compat.py",
+        "SizeBytes": 25443,
+        "Sha256": "7d8e746c9cb2e76898e0ecafa0c1c17027e6a3d8aab4fc40b3e5667c4827cc15",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_mask_payload_compat.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_mask_payload_compat.py",
+        "SizeBytes": 7247,
+        "Sha256": "484d50a3f4c822b92d117ff36e07dc8ff419ad7e7758f3b810c5c921e45f8107",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_mask_precision.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_mask_precision.py",
+        "SizeBytes": 21660,
+        "Sha256": "a617f7a308134d9c755448ad20b2ffe3289a1b3a9d3351fbdb2af6e27f1fb5a8",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_mask_velocity.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_mask_velocity.py",
+        "SizeBytes": 5283,
+        "Sha256": "06847c06062863bb8d7453d607f4a59e7c42b5efec54fc5bb4ee840146450d7b",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_masked_bridge.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_masked_bridge.py",
+        "SizeBytes": 19098,
+        "Sha256": "43300a827ce421fb690b658051d4de9e543771c7975a18bf8f47c25f0fbb255d",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_song_audio_context.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_song_audio_context.py",
+        "SizeBytes": 19371,
+        "Sha256": "714840dbba03eb6b327cd48c81368bad50e94810572037edf2ba8521d0ebbb27",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_streaming_vhs.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_streaming_vhs.py",
+        "SizeBytes": 47043,
+        "Sha256": "47c252b760d345debb0a0f39510a8da690a7f3240f3af303605eee5c61a2719e",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_timing.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_timing.py",
+        "SizeBytes": 2529,
+        "Sha256": "01f9f2f91c8a22f7a183d1605789a118448d78efe0e778d8957e4b5538292094",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_v2v_fractional.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_v2v_fractional.py",
+        "SizeBytes": 21385,
+        "Sha256": "d678fd44db058b1e61f06797c41323a01648836eb39655327b039bfbd0b3efd5",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "h3_workflow_utilities.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/h3_workflow_utilities.py",
+        "SizeBytes": 5740,
+        "Sha256": "260f52321ed07a1d90ae7c36d4e7e0f3d62eefc051b39e34f0b4cbc14a8dcdf9",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "nodes.py",
+        "SourceUrl": "https://raw.githubusercontent.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef/361624fb406b63eb6694442eac6c895fc1533a70/nodes.py",
+        "SizeBytes": 78645,
+        "Sha256": "f77ab57089c09023ca219039e6b099cc71780d6842bbed30b031c44b2eb20b2f",
+        "Purpose": "pinned-motion-source",
+        "IsRequired": true
+      }
+    ]
+  }
+]

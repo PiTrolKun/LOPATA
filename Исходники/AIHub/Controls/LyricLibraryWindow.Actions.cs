@@ -94,8 +94,9 @@ public sealed partial class LyricLibraryWindow
     }
     private static void CheckMutation()
     {
-        if (ApplicationBackgroundOperations.Current?.BlocksNewWork == true)
-            throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        if (ApplicationBackgroundOperations.Current is { BlocksNewWork: true } blocker) {
+            blocker.ReportBlocked(); throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        }
     }
     private Task SmartSearchAsync() => RunAsync(async token => {
         if (!LeaveEntry()) return;

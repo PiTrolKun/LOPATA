@@ -1,0 +1,187 @@
+[
+  {
+    "Id": "song-clip-h3-any-song-source",
+    "Name": "H3 Any Song v20 · MIT",
+    "Repository": "mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video",
+    "Revision": "37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1",
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "__init__.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/__init__.py",
+        "SizeBytes": 32692,
+        "Sha256": "6d60a669b1acacbc0c6a38af203ead6bd14ddc8475e52de30873d470cce5b09c",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": ".gitignore",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/.gitignore",
+        "SizeBytes": 315,
+        "Sha256": "c213eb00fe4a23a3e1398576bd2574a8a8065519e932b2e0fe442016c54ecce9",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "audio_preprocessor.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/audio_preprocessor.py",
+        "SizeBytes": 12191,
+        "Sha256": "267abaf9dc9b84a20680f583e4d28912682d2328a708712223c62f915d4510a2",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "CHANGELOG.md",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/CHANGELOG.md",
+        "SizeBytes": 839,
+        "Sha256": "c8453e4b441d5fec35bb37d2a66d18951fca9b3edbe721f4580201a83b4fe49b",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "CONTRIBUTING.md",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/CONTRIBUTING.md",
+        "SizeBytes": 648,
+        "Sha256": "7ab34cf87ba212a315ae3ec834a8d885b65aafeff2a8dc50fc2a57d948702327",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "director_batch.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/director_batch.py",
+        "SizeBytes": 11253,
+        "Sha256": "7607d031198c967def6cdb091b3801d6709ed45439577b1dfc08eb7932941276",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "director_cloud.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/director_cloud.py",
+        "SizeBytes": 31226,
+        "Sha256": "acbf2705d2c9c945b4be7fda5d789bb923e5421fd5db24258b1682b1877a37e6",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "director_local.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/director_local.py",
+        "SizeBytes": 14462,
+        "Sha256": "146699ea1d0cbeba9fb6b571a779ccd8a421410a2fb1bd688a2867bad83bd857",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "director_parser.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/director_parser.py",
+        "SizeBytes": 23770,
+        "Sha256": "f7361bae46bee5b1f1b4372114acb6ec30d365cf8c58d68755d7bf068d004bd4",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "director_state.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/director_state.py",
+        "SizeBytes": 7980,
+        "Sha256": "4ea1af9e9498479e83cd39b39aab4a59d8f026062384329fa55701eee71bcaee",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "LICENSE",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/LICENSE",
+        "SizeBytes": 1069,
+        "Sha256": "72380798af61d6131287b0dd3c8dc5345535df641002fece3a02d7ef109c5f8e",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "motion_library/metadata.json",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/motion_library/metadata.json",
+        "SizeBytes": 711,
+        "Sha256": "f7bfc5c5bc360a92c5450c3d63530d2981d151aa9dff0a060b41993660f6f802",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "motion_loader.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/motion_loader.py",
+        "SizeBytes": 2320,
+        "Sha256": "68e5832055efd7fe1bbb1b205b4c3e17e9fc99faaa155ea190910c476d2fbb06",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "pyproject.toml",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/pyproject.toml",
+        "SizeBytes": 673,
+        "Sha256": "583918f2c28d478dd9d2f4f9d977735ffb870606a4e8aa3e1ade0d5f537017e6",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "README.md",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/README.md",
+        "SizeBytes": 9129,
+        "Sha256": "78d9ec6bbbf656e5b76319e44f02420af4534075d07356e6c55a101591644e85",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "requirements-local-director.txt",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/requirements-local-director.txt",
+        "SizeBytes": 79,
+        "Sha256": "194403213933f3b182668df3e7c9776c8aa4d5e274c9b6080d5ce7fdd448e210",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "requirements.txt",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/requirements.txt",
+        "SizeBytes": 129,
+        "Sha256": "fbead841e606894fe02e142c1c3389e48d7574c029198c1713d304fdee7d2629",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "runtime_compat.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/runtime_compat.py",
+        "SizeBytes": 1608,
+        "Sha256": "78d2dc6d981bcccc4e8f7a9e0ea6e4f9192d82a0e7bc91f31a23edb34aca1cbf",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "schemas.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/schemas.py",
+        "SizeBytes": 4784,
+        "Sha256": "af343764ec9ba9980365c02bc96fe2e0880866f6c71214b21ba25c69cd5ec4a6",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "SECURITY.md",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/SECURITY.md",
+        "SizeBytes": 803,
+        "Sha256": "74d557ac677616cf15fb689b01f0afca35cf0397b39554a60ba045c9e9674889",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "validate_workflow.py",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/validate_workflow.py",
+        "SizeBytes": 16856,
+        "Sha256": "55054944b27c219b9efc2625c78b8a50422b536bbd7e0059fcb8d2129d9518ad",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "workflows/minimax_h3_any_song_v20.json",
+        "SourceUrl": "https://raw.githubusercontent.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1/workflows/minimax_h3_any_song_v20.json",
+        "SizeBytes": 146708,
+        "Sha256": "ec3baed3334301728310d145ac244d24d92eef26a78c8ec47bcbe77473cd383f",
+        "Purpose": "pinned-any-song-source",
+        "IsRequired": true
+      }
+    ]
+  }
+]

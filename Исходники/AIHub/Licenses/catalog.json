@@ -4826,5 +4826,245 @@
     "Texts": [
       "texts/video-h3lite-clipproj-MIT.txt"
     ]
+  },
+  {
+    "Id": "song-clip-glitch-source",
+    "Name": "Glitchframe · pinned source",
+    "Version": "a9660508fdbbfbc6243f570d71bbd2af8ee5b111",
+    "Author": "OlaProeis/Glitchframe",
+    "License": "MIT",
+    "Source": "https://github.com/OlaProeis/Glitchframe",
+    "Checked": "2026-10-30",
+    "Ru": "Компонент сценария «Песня → клип». Действуют оригинальные условия и уведомления поставщиков. SDXL имеет ограничения OpenRAIL++-M.",
+    "En": "Song-to-clip component. Original supplier terms and notices apply. SDXL includes OpenRAIL++-M use restrictions.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "0953E56379C01765E892A295BB0BEB4EA8938CBDFA0C823BE01D170649239058",
+    "Texts": [
+      "texts/song-clip-glitch-source.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-glitch-sdxl",
+    "Name": "SDXL 1.0 · FP16",
+    "Version": "462165984030d82259a11f4367a4eed129e94a7b",
+    "Author": "stabilityai/stable-diffusion-xl-base-1.0",
+    "License": "OpenRAIL++-M",
+    "Source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0",
+    "Checked": "2026-10-30",
+    "Ru": "Компонент сценария «Песня → клип». Действуют оригинальные условия и уведомления поставщиков. SDXL имеет ограничения OpenRAIL++-M.",
+    "En": "Song-to-clip component. Original supplier terms and notices apply. SDXL includes OpenRAIL++-M use restrictions.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "743B0CA6F7FCF01C0D3A8E5A4A15B2FF17EF9820FCE24025F77D1350A948AA2A",
+    "Texts": [
+      "texts/song-clip-glitch-sdxl.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-glitch-libraries",
+    "Name": "Glitchframe · isolated Python libraries",
+    "Version": "24bd6332a0dc5be0c4e2b926285e710a87809799",
+    "Author": "pypi/Glitchframe-pipeline",
+    "License": "Mixed permissive licenses; individual notices in wheels",
+    "Source": "https://github.com/OlaProeis/Glitchframe",
+    "Checked": "2026-10-30",
+    "Ru": "Компонент сценария «Песня → клип». Действуют оригинальные условия и уведомления поставщиков. SDXL имеет ограничения OpenRAIL++-M.",
+    "En": "Song-to-clip component. Original supplier terms and notices apply. SDXL includes OpenRAIL++-M use restrictions.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "453A1DC5AC5DEBE1069452E998351D5EF6A94A215EDCA218B06DEE841B195721",
+    "Texts": [
+      "texts/song-clip-glitch-libraries.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-h3-motion-source",
+    "Name": "H3 Motion Context MultiRef · Music workflow",
+    "Version": "361624fb406b63eb6694442eac6c895fc1533a70",
+    "Author": "seitanism, NikoDemon80 and contributors",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef",
+    "Checked": "2026-10-31",
+    "Ru": "Дополнительные исходники музыкального конвейера H3. Скачиваются отдельно. Оригинальные условия MiniMax H3, кодировщика и остальных общих компонентов сохраняются; лицензия узлов их не заменяет.",
+    "En": "Additional source for the H3 music pipeline, downloaded separately. Original MiniMax H3, encoder and shared-component terms continue to apply; the node-pack license does not replace them.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "3331D28D94DE8F4202491D8E0979F2B33EE3D77723479C9F9D50C53AFA80E1D3",
+    "Texts": [
+      "texts/song-clip-h3-motion-GPL-3.0.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-h3-any-song-source",
+    "Name": "H3 Any Song · Montage workflow",
+    "Version": "37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1",
+    "Author": "mohammednabarawy and contributors",
+    "License": "MIT",
+    "Source": "https://github.com/mohammednabarawy/ComfyUI-MiniMax-H3-Music-Video/tree/37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1",
+    "Checked": "2026-11-01",
+    "Ru": "Исходники монтажного музыкального конвейера скачиваются отдельно. Используются анализ ритма, маршрутизация референсов и составление запросов. Облачный Director не запускается; код не предоставляет права на общие веса H3 и остальные компоненты. Оригинальный MIT LICENSE включён.",
+    "En": "The montage music workflow source is downloaded separately. Beat analysis, reference routing and prompt composition are used. The cloud Director is not invoked; this code license does not replace the H3 model or shared-component terms. Original MIT LICENSE included.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "54AD44FA7749FABF5F0533243EB9EAEE6C15A956C54FF046B7758F679A65D515",
+    "Texts": [
+      "texts/song-clip-h3-any-song-MIT.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-geek-models",
+    "Name": "MiniMax H3 FL2VA · pruned INT8",
+    "Version": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Author": "Comfy-Org/MiniMax-H3",
+    "License": "MiniMax H3 Community License; Apache-2.0 (Qwen encoder)",
+    "Source": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "093a695c7112056b5c752b3f68173bf71f080a8e2e70490f2a853b03b32cf745",
+    "Texts": [
+      "texts/video-h3-model-LICENSE.txt",
+      "texts/video-h3-qwen-LICENSE.txt"
+    ],
+    "Ru": "H3: лицензия исключает ЕС, Великобританию, США и Южную Корею; для них требуется отдельное разрешение. Действуют дополнительные коммерческие условия и обязанности распространения. Ознакомление не предоставляет отдельную коммерческую лицензию. Энкодер основан на Qwen3-VL; оригинальные условия приложены.",
+    "En": "H3 excludes the EU, UK, USA and South Korea from its licensed territory; separate permission is required there. Additional commercial and redistribution terms apply. Acknowledgement does not grant a separate commercial licence. The encoder is based on Qwen3-VL; original terms are attached."
+  },
+  {
+    "Id": "song-clip-geek-shared-models",
+    "Name": "MiniMax H3 · shared encoder and VAEs",
+    "Version": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Author": "Comfy-Org/MiniMax-H3",
+    "License": "MiniMax H3 Community License; Apache-2.0 (Qwen encoder)",
+    "Source": "https://huggingface.co/Comfy-Org/MiniMax-H3/tree/e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "Checked": "2026-10-27",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "093a695c7112056b5c752b3f68173bf71f080a8e2e70490f2a853b03b32cf745",
+    "Texts": [
+      "texts/video-h3-model-LICENSE.txt",
+      "texts/video-h3-qwen-LICENSE.txt"
+    ],
+    "Ru": "H3: лицензия исключает ЕС, Великобританию, США и Южную Корею; для них требуется отдельное разрешение. Действуют дополнительные коммерческие условия и обязанности распространения. Ознакомление не предоставляет отдельную коммерческую лицензию. Энкодер основан на Qwen3-VL; оригинальные условия приложены.",
+    "En": "H3 excludes the EU, UK, USA and South Korea from its licensed territory; separate permission is required there. Additional commercial and redistribution terms apply. Acknowledgement does not grant a separate commercial licence. The encoder is based on Qwen3-VL; original terms are attached."
+  },
+  {
+    "Id": "song-clip-geek-source",
+    "Name": "Geekatplay Music-to-Video",
+    "Version": "0482233d865c23e888e3046c592c40cf61fd5c57",
+    "Author": "Geekatplay Studio (Vladimir Chopine)",
+    "License": "MIT",
+    "Source": "https://github.com/GeekatplayStudio/ComfyUI-Music-to-Video/tree/0482233d865c23e888e3046c592c40cf61fd5c57",
+    "Checked": "2026-11-01",
+    "Ru": "Исходники анализа песни, построения опорных кадров и переходов MiniMax H3. ЛОПАТА использует локальный Qwen и SDXL; облачные сервисы, LTX и скрытые загрузки не запускаются. Условия SDXL, H3 и общих компонентов сохраняются.",
+    "En": "Song analysis, storyboard cards and MiniMax H3 transitions. LOPATA uses local Qwen and SDXL; no cloud services, LTX or implicit downloads. SDXL, H3 and shared-component terms continue to apply.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "3AC364191B1A5F08CB324769C2CA4085E29A922B5F093FD17030C597421D8F84",
+    "Texts": [
+      "texts/song-clip-geek-MIT.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-models",
+    "Name": "Wan2.1 I2V 14B · Q4_K_M",
+    "Version": "b4b6b3b3f0f64975fb33b1d5d1a46ca24e065f03",
+    "Author": "city96/Wan2.1-I2V-14B-480P-gguf",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/city96/Wan2.1-I2V-14B-480P-gguf/tree/b4b6b3b3f0f64975fb33b1d5d1a46ca24e065f03",
+    "Checked": "2026-11-01",
+    "Ru": "Отдельно скачиваемый компонент InfiniteTalk на базе Wan2.1. Используется локально для аудиоанимации одного исполнителя. Оригинальные лицензии и уведомления поставщиков приложены; исходная песня и референс остаются пользовательскими материалами.",
+    "En": "Separately downloaded InfiniteTalk component based on Wan2.1. Used locally for audio-driven single-performer animation. Original supplier licenses and notices are included; the song and reference remain user materials.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4",
+    "Texts": [
+      "texts/song-clip-infinitetalk-Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-single",
+    "Name": "InfiniteTalk Single · Q4_K_M",
+    "Version": "8418a4ed00314a49f44b73a0d43d40aa539264da",
+    "Author": "Kijai/WanVideo_comfy_GGUF",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/Kijai/WanVideo_comfy_GGUF/tree/8418a4ed00314a49f44b73a0d43d40aa539264da",
+    "Checked": "2026-11-01",
+    "Ru": "Отдельно скачиваемый компонент InfiniteTalk на базе Wan2.1. Используется локально для аудиоанимации одного исполнителя. Оригинальные лицензии и уведомления поставщиков приложены; исходная песня и референс остаются пользовательскими материалами.",
+    "En": "Separately downloaded InfiniteTalk component based on Wan2.1. Used locally for audio-driven single-performer animation. Original supplier licenses and notices are included; the song and reference remain user materials.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4",
+    "Texts": [
+      "texts/song-clip-infinitetalk-Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-shared",
+    "Name": "Wan2.1 · UMT5 FP8 / VAE / CLIP Vision",
+    "Version": "123acf1cc74bccbb9bfff8ac1ee72edc08c2341d",
+    "Author": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/tree/123acf1cc74bccbb9bfff8ac1ee72edc08c2341d",
+    "Checked": "2026-11-01",
+    "Ru": "Отдельно скачиваемый компонент InfiniteTalk на базе Wan2.1. Используется локально для аудиоанимации одного исполнителя. Оригинальные лицензии и уведомления поставщиков приложены; исходная песня и референс остаются пользовательскими материалами.",
+    "En": "Separately downloaded InfiniteTalk component based on Wan2.1. Used locally for audio-driven single-performer animation. Original supplier licenses and notices are included; the song and reference remain user materials.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4",
+    "Texts": [
+      "texts/song-clip-infinitetalk-Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-wav2vec",
+    "Name": "Wav2Vec2 Chinese Base · FP16",
+    "Version": "87847d3bc53702afda44078249e7c33e867827c4",
+    "Author": "Kijai/wav2vec2_safetensors",
+    "License": "MIT",
+    "Source": "https://huggingface.co/Kijai/wav2vec2_safetensors/tree/87847d3bc53702afda44078249e7c33e867827c4",
+    "Checked": "2026-11-01",
+    "Ru": "Отдельно скачиваемый компонент InfiniteTalk на базе Wan2.1. Используется локально для аудиоанимации одного исполнителя. Оригинальные лицензии и уведомления поставщиков приложены; исходная песня и референс остаются пользовательскими материалами.",
+    "En": "Separately downloaded InfiniteTalk component based on Wan2.1. Used locally for audio-driven single-performer animation. Original supplier licenses and notices are included; the song and reference remain user materials.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "65F7DCF4641FDC4EFA81A9BCCFC418A238DBA7D99F20252AB3C7C826D39A8E42",
+    "Texts": [
+      "texts/song-clip-infinitetalk-wav2vec-MIT.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-source",
+    "Name": "ComfyUI-WanVideoWrapper · InfiniteTalk",
+    "Version": "088128b224242e110d3906c6750e9a3a348a659b",
+    "Author": "kijai/ComfyUI-WanVideoWrapper",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/kijai/ComfyUI-WanVideoWrapper/tree/088128b224242e110d3906c6750e9a3a348a659b",
+    "Checked": "2026-11-01",
+    "Ru": "Отдельно скачиваемый компонент InfiniteTalk на базе Wan2.1. Используется локально для аудиоанимации одного исполнителя. Оригинальные лицензии и уведомления поставщиков приложены; исходная песня и референс остаются пользовательскими материалами.",
+    "En": "Separately downloaded InfiniteTalk component based on Wan2.1. Used locally for audio-driven single-performer animation. Original supplier licenses and notices are included; the song and reference remain user materials.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "C71D239DF91726FC519C6EB72D318EC65820627232B2F796219E87DCF35D0AB4",
+    "Texts": [
+      "texts/song-clip-infinitetalk-wrapper-Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-infinitetalk-libraries",
+    "Name": "InfiniteTalk · isolated Python libraries",
+    "Version": "a634dcf34c80fbb8f9d5b558c869102b0f78a931",
+    "Author": "kijai/ComfyUI-WanVideoWrapper",
+    "License": "Apache-2.0; MIT; BSD; upstream notices",
+    "Source": "https://github.com/kijai/ComfyUI-WanVideoWrapper/tree/088128b224242e110d3906c6750e9a3a348a659b",
+    "Checked": "2026-11-01",
+    "Ru": "Отдельно скачиваемый компонент InfiniteTalk на базе Wan2.1. Используется локально для аудиоанимации одного исполнителя. Оригинальные лицензии и уведомления поставщиков приложены; исходная песня и референс остаются пользовательскими материалами.",
+    "En": "Separately downloaded InfiniteTalk component based on Wan2.1. Used locally for audio-driven single-performer animation. Original supplier licenses and notices are included; the song and reference remain user materials.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "4FCAAE7B079F201A013425F83B6745014023D0FDBA3D5C3C892DF7069E010BFB",
+    "Texts": [
+      "texts/song-clip-infinitetalk-runtime-NOTICES.txt"
+    ]
   }
 ]

@@ -41,7 +41,7 @@ public sealed class MusicAceIdeaController:IDisposable
     public async Task PlanAsync(int count) {
         if(Running)return;
         if(ApplicationBackgroundOperations.Current is {HasPending:true,State.Kind:MusicAceIdeaWork.Kind} pending){await pending.ResumeAsync(ApplicationBackgroundOperations.ExitToken);return;}
-        if(ApplicationBackgroundOperations.Current?.BlocksNewWork==true)throw new InvalidOperationException("Music.Generation.OtherOperation");
+        if(ApplicationBackgroundOperations.Current is {BlocksNewWork:true} blocker){blocker.ReportBlocked();throw new InvalidOperationException("Music.Generation.OtherOperation");}
         if(!MusicAceCatalog.IsAce(view.Generation.Variation))throw new InvalidDataException("Music.AceIdeas.Unsupported");
         if(State.Ideas.Length+count>128)throw new InvalidDataException("Music.AceIdeas.HistoryFull");
         if(!view.Editor.TryGetGenerationText(out var lyrics))return;
@@ -108,7 +108,7 @@ public sealed class MusicAceIdeaController:IDisposable
     }
     public async Task RenderAsync(bool preview) {
         if(Running)throw new InvalidOperationException("Music.AceIdeas.Wait");
-        if(ApplicationBackgroundOperations.Current?.BlocksNewWork==true)throw new InvalidOperationException("Music.Generation.OtherOperation");
+        if(ApplicationBackgroundOperations.Current is {BlocksNewWork:true} blocker){blocker.ReportBlocked();throw new InvalidOperationException("Music.Generation.OtherOperation");}
         var state=State with {Enabled=true};CheckCurrent(state);
         var count=preview?1:state.Selected.Length*view.Generation.Options.Variants;
         if(count>8)throw new InvalidDataException("Music.Score.TooManySongs");

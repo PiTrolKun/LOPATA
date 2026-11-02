@@ -1,0 +1,41 @@
+[
+  {
+    "Id": "song-clip-geek-source",
+    "Name": "Geekatplay Music-to-Video · MIT",
+    "Repository": "GeekatplayStudio/ComfyUI-Music-to-Video",
+    "Revision": "0482233d865c23e888e3046c592c40cf61fd5c57",
+    "License": "MIT",
+    "Files": [
+      {
+        "RelativePath": "nodes.py",
+        "SourceUrl": "https://raw.githubusercontent.com/GeekatplayStudio/ComfyUI-Music-to-Video/0482233d865c23e888e3046c592c40cf61fd5c57/nodes.py",
+        "SizeBytes": 328244,
+        "Sha256": "fdb5563f39cd8e62367d62919cabca209dd7fa4421d649d9e9ab6397f303a972",
+        "IsRequired": true
+      },
+      {
+        "RelativePath": "LICENSE",
+        "SourceUrl": "https://raw.githubusercontent.com/GeekatplayStudio/ComfyUI-Music-to-Video/0482233d865c23e888e3046c592c40cf61fd5c57/LICENSE",
+        "SizeBytes": 1093,
+        "Sha256": "3ac364191b1a5f08cb324769c2ca4085e29a922b5f093fd17030c597421d8f84",
+        "IsRequired": true
+      }
+    ]
+  },
+  {
+    "Id": "song-clip-geek-models",
+    "Name": "MiniMax H3 FL2VA · pruned INT8",
+    "Repository": "Comfy-Org/MiniMax-H3",
+    "Revision": "e5eb578a89295337b8ff433a035929ce0279e0b6",
+    "License": "MiniMax H3 model terms",
+    "Files": [
+      {
+        "RelativePath": "diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "SourceUrl": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "SizeBytes": 20970379616,
+        "Sha256": "e889202c41dafb67b10d67b97f0d8541508036a6090af23425a5c2615d03c47a",
+        "IsRequired": true
+      }
+    ]
+  }
+]

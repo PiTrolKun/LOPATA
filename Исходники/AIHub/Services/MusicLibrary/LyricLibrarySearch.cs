@@ -17,8 +17,9 @@ public sealed class LyricLibrarySearch(LyricLibraryStore store, string modelsRoo
         LyricArtistSelection? artistSelection = null)
     {
         if (string.IsNullOrWhiteSpace(query) || query.Length > 2000) throw new InvalidDataException("Music.Library.InvalidQuery");
-        if (!sharedOperation && ApplicationBackgroundOperations.Current?.BlocksNewWork == true)
-            throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        if (!sharedOperation && ApplicationBackgroundOperations.Current is { BlocksNewWork: true } blocker) {
+            blocker.ReportBlocked(); throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        }
         var snapshot = await Task.Run(store.Snapshot, token);
         token.ThrowIfCancellationRequested();
         if ((artistSelection ?? LyricArtistSelection.Resolve(snapshot.Entries, query)) is { } artist)

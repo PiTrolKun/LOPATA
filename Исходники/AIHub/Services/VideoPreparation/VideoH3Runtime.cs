@@ -10,10 +10,10 @@ internal sealed record VideoH3Environment(ManagedPythonSelection Python, string 
 internal static class VideoH3Runtime
 {
     private static readonly SemaphoreSlim Gate = new(1);
-    internal static async Task<VideoH3Environment> PrepareAsync(string modelsRoot, int connections, CancellationToken token, Action<string> log, ManagedModelLibraryStore? library = null, bool lite = false)
+    internal static async Task<VideoH3Environment> PrepareAsync(string modelsRoot, int connections, CancellationToken token, Action<string> log, ManagedModelLibraryStore? library = null, bool lite = false, bool requireReliableGpuProbe = false, IReadOnlyList<ManagedModelArtifactCard>? profile = null)
     {
         using var operation = ComponentAudit.CaptureOperation(); using var auditLog = ComponentAudit.CaptureLog(log);
-        var cards = lite ? VideoH3LiteCatalog.Cards(modelsRoot).Concat(VideoH3Catalog.Cards(modelsRoot).Where(c => VideoH3RuntimeCatalog.Data.Trees.ContainsKey(c.ModelArtifactId))).ToList() : VideoH3Catalog.Cards(modelsRoot).ToList(); var libraries = VideoH3RuntimeCatalog.Card(modelsRoot); cards.Add(libraries);
+        var cards = lite ? VideoH3LiteCatalog.Cards(modelsRoot).Concat(VideoH3Catalog.Cards(modelsRoot).Where(c => VideoH3RuntimeCatalog.Data.Trees.ContainsKey(c.ModelArtifactId))).ToList() : VideoH3Catalog.Cards(modelsRoot).ToList(); var libraries = VideoH3RuntimeCatalog.Card(modelsRoot); if (profile is not null) cards = profile.Where(c => c.ModelArtifactId != VideoH3RuntimeCatalog.Id).ToList(); cards.Add(libraries);
         await ComponentLicenseGate.EnsureAsync(cards.Select(c => c.ModelArtifactId).ToArray(), token);
         var store = library ?? new ManagedModelLibraryStore();
         using var downloads = new ManagedModelAcquisitionService(store) { MaximumParallelConnections = connections };
@@ -29,7 +29,7 @@ internal static class VideoH3Runtime
         foreach (var c in cards.Where(c => c.ModelArtifactId.EndsWith("-models", StringComparison.Ordinal) || c.ModelArtifactId.EndsWith("-model", StringComparison.Ordinal) || lite && c.ModelArtifactId.StartsWith("video-h3lite-", StringComparison.Ordinal) && c.ModelArtifactId != "video-h3lite-source-clipproj"))
             await RuntimeFileAudit.VerifyAsync("Video.H3.Launch." + c.ModelArtifactId, c.InstallDirectory, c.Revision,
                 c.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray(), token, log);
-        var python = await ManagedPythonRuntime.ResolveAsync("auto", token, log: log);
+        var python = await ManagedPythonRuntime.ResolveAsync("auto", token, log: log, requireReliableGpuProbe: requireReliableGpuProbe);
         var root = Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3", VideoH3RuntimeCatalog.Data.Revision);
         string? clipProj = null;
         await Gate.WaitAsync(token);

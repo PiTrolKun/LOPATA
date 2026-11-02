@@ -132,7 +132,10 @@ public sealed partial class MusicCoverController : IDisposable
     public MusicCoverEntry Entry(string artist, string title) => _store.Read(artist, title);
     internal async Task ChooseAsync(MusicCoverRun run, string path)
     {
-        if (Busy || ApplicationBackgroundOperations.Current?.BlocksNewWork == true) throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        if (Busy || ApplicationBackgroundOperations.Current?.BlocksNewWork == true) {
+            if (!Busy) ApplicationBackgroundOperations.Current?.ReportBlocked();
+            throw new InvalidOperationException("Music.Poetry.OtherOperation");
+        }
         using var lease = ApplicationBackgroundOperations.Current?.BeginAuxiliary();
         var selection = _store.Confirm(run.Input, path);
         var applied = true;

@@ -238,6 +238,10 @@ public sealed partial class MusicPreparationControl : UserControl, IDisposable
             operation.Token.ThrowIfCancellationRequested();
             _ready = _preparation.LyricsComponentsReady && _cards.Count == MusicModelVariants.Cards(_root, _variation).Count && _cards.All(c => c.Status == ManagedModelStatuses.Installed);
             _statusKey = _ready ? "Music.Preparation.Ready" : "Music.Preparation.Missing";
+            // A prior explicit pause can require another retirement attempt after
+            // a failure. Confirm that release before probing or changing music models.
+            if (open && _ready && ApplicationBackgroundOperations.Current is { } background)
+                await background.RetryPausedRetirementAsync(ApplicationBackgroundOperations.RetireModelsAsync);
             if (open && _ready && _variation == MusicModelVariants.Bf16)
                 _preparedHardware = await MusicBf16Worker.ProbeAsync(_root, operation.Token,
                     line => { if (line.StartsWith("[Audit]", StringComparison.Ordinal)) ReportAuditPreparation(line, operation);

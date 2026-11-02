@@ -11,20 +11,29 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     private readonly Dictionary<string, BackgroundOperationNotice> _notices = [];
     private readonly HashSet<string> _acknowledged = [];
     private BackgroundOperationExecution? _selected;
-    private bool _auxiliary, _loadFailed;
+    private bool _auxiliary, _loadFailed, _emergencyStopping, _emergencyFailed;
+    private long _auxiliaryVersion;
     private string? _resumingId;
     private TaskCompletionSource _auxiliaryIdle = CompletedSource();
+    private readonly Dictionary<CancellationTokenSource, Task> _restoring = [];
     public event Action? Changed;
     public event Action<BackgroundOperationNotice>? Completed;
+    public event Action? WorkBlocked;
+    public void ReportBlocked()
+    {
+        foreach (Action listener in WorkBlocked?.GetInvocationList() ?? [])
+            try { listener(); } catch (Exception error) { OwnedProcessRegistry.Log("background_observer_failed", "Application", detail: error.GetType().Name); }
+    }
+    private InvalidOperationException Blocked(string message) { ReportBlocked(); return new(message); }
 
     private static TaskCompletionSource CompletedSource()
     { var value = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); value.SetResult(); return value; }
     private static bool Final(BackgroundOperationState? state) => state?.Phase is BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled;
     private static bool Parked(BackgroundOperationExecution job) => job.State is { UserPaused: true, RequiresDecision: false, Phase: BackgroundOperationPhase.Paused }
         || !job.IsRunning && job.State is { UserPaused: true, RequiresDecision: false, Phase: BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Countdown };
-    private bool Busy => _auxiliary || _resumingId is not null || _jobs.Values.Any(job => job.IsRunning && !Parked(job));
+    private bool Busy => _emergencyStopping || _auxiliary || _resumingId is not null || _jobs.Values.Any(job => job.IsRunning && !Parked(job));
     public bool IsRunning { get { lock (_gate) return Busy; } }
-    public bool BlocksNewWork { get { lock (_gate) return _loadFailed || Busy || _jobs.Values.Any(job => job.HasPending && !Parked(job)); } }
+    public bool BlocksNewWork { get { lock (_gate) return _emergencyFailed || _loadFailed || Busy || _jobs.Values.Any(job => job.HasPending && !Parked(job)); } }
     public bool HasPending { get { lock (_gate) return _selected?.HasPending == true; } }
     public bool CanRestore { get { lock (_gate) return _selected?.State is { } state && _restorers.ContainsKey(state.Kind); } }
     internal bool IsInOperationScope { get { lock (_gate) return _jobs.Values.Any(job => job.IsInOperationScope); } }
@@ -33,6 +42,9 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     { get { lock (_gate) return _jobs.Values.Where(job => job.HasPending && Parked(job)).Select(job => job.State!).OrderBy(state => state.UpdatedUtc).ToArray(); } }
     public BackgroundOperationState? LoadResult(string id) => store.LoadResult(id);
     public bool HasLiveOperation(string id) { lock (_gate) return _jobs.GetValueOrDefault(id)?.IsRunning == true; }
+    public IReadOnlyList<BackgroundOperationState> PendingOperations
+    { get { lock (_gate) return _jobs.Values.Where(job => job.HasPending).Select(job => job.State!).OrderBy(state => state.Id).ToArray(); } }
+    internal (bool Active, long Version) AuxiliaryState { get { lock (_gate) return (_auxiliary, _auxiliaryVersion); } }
 
     private BackgroundOperationState? VisibleState()
     {
@@ -80,11 +92,43 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     { lock (_gate) { _restorers.Add(kind, restore); foreach (var job in _jobs.Values) job.Register(kind, restore); } }
     public BackgroundOperationState? FindOperation(string kind)
     { lock (_gate) return _selected?.State?.Kind == kind ? _selected.State : _jobs.Values.Select(job => job.State).LastOrDefault(state => state?.Kind == kind && !Final(state)); }
+    public IReadOnlyList<BackgroundOperationState> FindOperations(string kind, string project)
+    {
+        lock (_gate) return _jobs.Values.Select(job => job.State)
+            .Where(state => state?.Kind == kind && state.Project == project && !Final(state))
+            .OrderByDescending(state => state!.UpdatedUtc).Select(state => state!).ToArray();
+    }
+    public async Task RetryPausedRetirementAsync(Func<Task> releaseModels)
+    {
+        BackgroundOperationExecution[] waiting;
+        lock (_gate)
+        {
+            if (_emergencyFailed || _loadFailed || Busy || _jobs.Values.Any(job => job.HasPending && !Parked(job)
+                && job.State?.UserPaused != true)) return;
+            waiting = _jobs.Values.Where(job => !job.IsRunning && job.State is { UserPaused: true, RequiresDecision: true,
+                Phase: BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Paused }).ToArray();
+            if (waiting.Length == 0) return;
+            // Hold the compute lease throughout asynchronous retirement. A failed
+            // release must remain blocking, even when no execution task is running.
+            _auxiliary = true; ++_auxiliaryVersion; _auxiliaryIdle = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+        Notify();
+        try
+        {
+            await releaseModels();
+            foreach (var job in waiting) job.ConfirmPausedRetirement();
+        }
+        finally
+        {
+            lock (_gate) { _auxiliary = false; _auxiliaryIdle.TrySetResult(); }
+            Notify();
+        }
+    }
     public void Load()
     {
         lock (_gate)
         {
-            if (Busy || _jobs.Values.Any(job => job.IsRunning)) throw new InvalidOperationException("Cannot reload running operations.");
+            if (_emergencyFailed || Busy || _jobs.Values.Any(job => job.IsRunning)) throw Blocked("Cannot reload running operations.");
             try
             {
                 var selected = store.Load();
@@ -128,13 +172,14 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         }
         lock (_gate)
         {
+            if (_emergencyStopping || _emergencyFailed) throw Blocked("Background.Stop.InProgress");
             if (_jobs.Values.FirstOrDefault(job => job.IsInOperationScope) is { } nested) execution = nested;
             else
             {
                 if (_loadFailed || _auxiliary || _resumingId is not null && _resumingId != input.Id
                     || _jobs.Values.Any(job => job.IsRunning && !Parked(job))
                     || _jobs.Values.Any(job => job.HasPending && !Parked(job) && job.State?.Id != input.Id))
-                    throw new InvalidOperationException("Another background operation requires attention or is running.");
+                    throw Blocked("Another background operation requires attention or is running.");
                 Collect(_selected?.State);
                 execution = _jobs.TryGetValue(input.Id, out var previous) ? previous : Add(input, false);
                 _selected = execution;
@@ -149,8 +194,8 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     {
         lock (_gate)
         {
-            if (BlocksNewWork) throw new InvalidOperationException("Music.Poetry.OtherOperation");
-            _auxiliary = true; _auxiliaryIdle = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (BlocksNewWork) throw Blocked("Music.Poetry.OtherOperation");
+            _auxiliary = true; ++_auxiliaryVersion; _auxiliaryIdle = new(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         Notify(); return new Lease(this);
     }
@@ -178,22 +223,27 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     public Task ResumeAsync(CancellationToken token) => ResumeAsync(null, token);
     public async Task ResumeAsync(string? id, CancellationToken token)
     {
+        using var restoreCancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
         BackgroundOperationExecution? job;
+        TaskCompletionSource resumeIdle;
         lock (_gate)
         {
+            if (_emergencyStopping || _emergencyFailed) throw Blocked("Background.Stop.InProgress");
             job = id is null ? _selected : _jobs.GetValueOrDefault(id);
             if (job?.HasPending != true) return;
             if (_resumingId == job.State!.Id) return;
-            if (_resumingId is not null) throw new InvalidOperationException("Music.Poetry.OtherOperation");
+            if (_resumingId is not null) throw Blocked("Music.Poetry.OtherOperation");
             if (job.State?.Phase == BackgroundOperationPhase.Running) return;
             if (_auxiliary || _jobs.Values.Any(other => !ReferenceEquals(other, job) && (other.IsRunning && !Parked(other) || other.HasPending && !Parked(other))))
-                throw new InvalidOperationException("Music.Poetry.OtherOperation");
+                throw Blocked("Music.Poetry.OtherOperation");
             _selected = job;
+            resumeIdle = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _restoring.Add(restoreCancellation, resumeIdle.Task);
             _resumingId = job.State!.Id; store.Save(VisibleState()!);
         }
         Notify();
-        try { await job.ResumeAsync(token); }
-        finally { lock (_gate) if (_resumingId == job.State!.Id && (!job.IsRunning || job.State.Phase != BackgroundOperationPhase.Paused)) _resumingId = null; Notify(); }
+        try { await job.ResumeAsync(restoreCancellation.Token); }
+        finally { lock (_gate) { if (_resumingId == job.State!.Id && (!job.IsRunning || job.State.Phase != BackgroundOperationPhase.Paused)) _resumingId = null; _restoring.Remove(restoreCancellation); resumeIdle.TrySetResult(); } Notify(); }
     }
     public void SetCountdown(bool enabled) { BackgroundOperationExecution? job; lock (_gate) job = _selected; job?.SetCountdown(enabled); }
     public void Acknowledge(string id)
@@ -206,9 +256,52 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     }
     public void DiscardPending(string? expectedId = null)
     {
-        BackgroundOperationExecution? job; lock (_gate) job = expectedId is null ? _selected : _jobs.GetValueOrDefault(expectedId);
+        BackgroundOperationExecution? job; lock (_gate) { if (_emergencyStopping || _emergencyFailed) return; job = expectedId is null ? _selected : _jobs.GetValueOrDefault(expectedId); }
         job?.DiscardPending(expectedId);
     }
     public bool FailWaiting(string expectedId, string reason)
-    { BackgroundOperationExecution? job; lock (_gate) job = _jobs.GetValueOrDefault(expectedId); return job?.FailWaiting(expectedId, reason) == true; }
+    { BackgroundOperationExecution? job; lock (_gate) { if (_emergencyStopping || _emergencyFailed) return false; job = _jobs.GetValueOrDefault(expectedId); } return job?.FailWaiting(expectedId, reason) == true; }
+
+    internal EmergencyLease BeginEmergencyStop(EmergencyStopPlan plan)
+    {
+        lock (_gate)
+        {
+            if (_emergencyStopping || _loadFailed) throw Blocked("Background.Stop.InProgress");
+            var reviewed = plan.Tasks.ToDictionary(task => task.Id, StringComparer.Ordinal);
+            var current = _jobs.Values.Where(job => job.HasPending).ToArray();
+            if (current.Any(job => !reviewed.TryGetValue(job.State!.Id, out var shown)
+                    || shown.Kind != job.State.Kind || shown.Title != job.State.Title)
+                || _auxiliary && (!plan.HasAuxiliary || plan.AuxiliaryVersion != _auxiliaryVersion))
+                throw Blocked("Background.Stop.PlanChanged");
+            _emergencyStopping = true;
+            return new(this, current, _auxiliaryIdle.Task, _restoring.ToArray());
+        }
+    }
+    internal sealed class EmergencyLease(BackgroundOperationController owner, BackgroundOperationExecution[] jobs,
+        Task auxiliaryIdle, KeyValuePair<CancellationTokenSource, Task>[] restoring) : IDisposable
+    {
+        private bool _mutated, _complete;
+        internal Task RequestAsync()
+        {
+            _mutated = true;
+            return Task.WhenAll(jobs.Select(job => job.RequestEmergencyStopAsync())
+                .Concat(restoring.Select(pair => CancelRestoreAsync(pair.Key))));
+        }
+        private static Task CancelRestoreAsync(CancellationTokenSource source)
+        {
+            try { return source.CancelAsync(); }
+            catch (ObjectDisposedException) { return Task.CompletedTask; }
+        }
+        internal Task IdleAsync() => Task.WhenAll(jobs.Select(job => job.WaitForIdleAsync()).Append(auxiliaryIdle).Concat(restoring.Select(pair => pair.Value)));
+        internal void Complete()
+        {
+            foreach (var job in jobs) job.ConfirmEmergencyStop();
+            _complete = true;
+        }
+        public void Dispose()
+        {
+            lock (owner._gate) { owner._emergencyStopping = false; if (_mutated) owner._emergencyFailed = !_complete; }
+            owner.Notify();
+        }
+    }
 }

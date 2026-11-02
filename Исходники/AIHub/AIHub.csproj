@@ -63,6 +63,36 @@
     <EmbeddedResource Include="Tools\ace-xl-python-files.json" LogicalName="AIHub.AcePythonManifest" />
     <EmbeddedResource Include="Tools\music-stems-components.json" LogicalName="AIHub.MusicStemsManifest" />
     <EmbeddedResource Include="Tools\video-h3-components.json" LogicalName="AIHub.VideoH3Manifest" />
+    <EmbeddedResource Include="Tools\song-clip-glitch-components.json" LogicalName="AIHub.SongClip.Components" />
+    <EmbeddedResource Include="Tools\song-clip-glitch-library-tree.json" LogicalName="AIHub.SongClip.LibraryTree" />
+    <EmbeddedResource Include="Tools\song-clip-glitch-source-tree.json" LogicalName="AIHub.SongClip.SourceTree" />
+    <EmbeddedResource Include="Tools\song_clip_glitch.py" LogicalName="AIHub.SongClip.Worker" />
+    <Content Include="Tools\song_clip_glitch.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\song-clip-infinitetalk-components.json" LogicalName="AIHub.SongClip.InfiniteTalkComponents" />
+    <EmbeddedResource Include="Tools\song-clip-infinitetalk-runtime.json.gz" LogicalName="AIHub.SongClip.InfiniteTalkRuntime" />
+    <EmbeddedResource Include="Tools\song_clip_infinitetalk.py" LogicalName="AIHub.SongClip.InfiniteWorker" />
+    <EmbeddedResource Include="Tools\song_clip_infinitetalk_native.py" LogicalName="AIHub.SongClip.InfiniteNative" />
+    <EmbeddedResource Include="Tools\song_clip_infinitetalk_state.py" LogicalName="AIHub.SongClip.InfiniteState" />
+    <Content Include="Tools\song_clip_infinitetalk.py;Tools\song_clip_infinitetalk_native.py;Tools\song_clip_infinitetalk_state.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\song-clip-geek-components.json" LogicalName="AIHub.SongClip.GeekComponents" />
+    <EmbeddedResource Include="Tools\song-clip-geek-source-tree.json" LogicalName="AIHub.SongClip.GeekTree" />
+    <EmbeddedResource Include="Tools\song_clip_geek.py" LogicalName="AIHub.SongClip.GeekWorker" />
+    <EmbeddedResource Include="Tools\song_clip_geek_native.py" LogicalName="AIHub.SongClip.GeekNative" />
+    <EmbeddedResource Include="Tools\song_clip_geek_state.py" LogicalName="AIHub.SongClip.GeekState" />
+    <Content Include="Tools\song_clip_geek.py;Tools\song_clip_geek_native.py;Tools\song_clip_geek_state.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\song-clip-motion-components.json" LogicalName="AIHub.SongClip.MotionComponents" />
+    <EmbeddedResource Include="Tools\song-clip-motion-source-tree.json" LogicalName="AIHub.SongClip.MotionTree" />
+    <EmbeddedResource Include="Tools\song_clip_motion.py" LogicalName="AIHub.SongClip.MotionWorker" />
+    <EmbeddedResource Include="Tools\song_clip_motion_state.py" LogicalName="AIHub.SongClip.MotionState" />
+    <EmbeddedResource Include="Tools\song-clip-montage-components.json" LogicalName="AIHub.SongClip.MontageComponents" />
+    <EmbeddedResource Include="Tools\song-clip-montage-source-tree.json" LogicalName="AIHub.SongClip.MontageTree" />
+    <EmbeddedResource Include="Tools\song_clip_montage.py" LogicalName="AIHub.SongClip.MontageWorker" />
+    <EmbeddedResource Include="Tools\song_clip_montage_state.py" LogicalName="AIHub.SongClip.MontageState" />
+    <EmbeddedResource Include="Tools\song_clip_montage_media.py" LogicalName="AIHub.SongClip.MontageMedia" />
+    <Content Include="Tools\song_clip_montage.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\song_clip_montage_state.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\song_clip_montage_media.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\song_clip_motion.py;Tools\song_clip_motion_state.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\video-h3lite-components.json" LogicalName="AIHub.VideoH3LiteManifest" />
     <EmbeddedResource Include="Tools\video-h3lite-source-tree.json" LogicalName="AIHub.VideoH3LiteSourceTree" />
     <EmbeddedResource Include="Tools\video-h3-runtime.json.gz" LogicalName="AIHub.VideoH3RuntimeManifest" />

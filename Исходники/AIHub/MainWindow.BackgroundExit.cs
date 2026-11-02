@@ -8,6 +8,7 @@ public partial class MainWindow
     {
         CheckpointRagBooks();
         CheckpointVectorEditors();
+        if (ScenarioNavigationPage.SongClip?.Checkpoint() == false) throw new System.IO.IOException("Song-clip checkpoint failed.");
         if (_musicPoetryWindow?.SaveForExit() == false) throw new System.IO.IOException("Songwriting session was not saved.");
         // Confirm the durable record before canceling. A failed write must leave the
         // application open, rather than silently promising a resumable exit.
