@@ -51,7 +51,8 @@ public static class LlamaRuntimeSelector
         SelectAsync(InstalledBundles(engineSetId), requiredGpuBytes, forceCpu, log, token);
 
     internal static async Task<LlamaRuntimeSelection> SelectAsync(IReadOnlyList<LlamaRuntimeBundle> bundles,
-        long requiredGpuBytes, bool forceCpu, Action<string> log, CancellationToken token)
+        long requiredGpuBytes, bool forceCpu, Action<string> log, CancellationToken token,
+        long preferredFullGpuBytes = 0, Func<RuntimeDevice, RuntimeDevice?>? sampleDevice = null)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         using var auditLog = ComponentAudit.CaptureLog(log);
@@ -79,13 +80,24 @@ public static class LlamaRuntimeSelector
                 ready.Add(bundle);
                 if (bundle.Backend == "CPU") continue;
                 var inventory = await RuntimeDeviceProbe.RunAsync(bundle.Server, "--list-devices", token);
-                var device = RuntimeDeviceProbe.ChooseGpu(RuntimeDeviceProbe.ParseDevices(inventory), requiredGpuBytes);
-                if (device is not null) candidates.Add(new(bundle, device));
+                var devices = RuntimeDeviceProbe.ParseDevices(inventory);
+                if (sampleDevice is null)
+                {
+                    var device = RuntimeDeviceProbe.ChooseGpu(devices, requiredGpuBytes);
+                    if (device is not null) candidates.Add(new(bundle, device));
+                }
+                else
+                    foreach (var device in devices)
+                        if (sampleDevice(device) is { } measured && measured.TotalBytes > 0
+                            && measured.FreeBytes >= requiredGpuBytes && measured.FreeBytes <= measured.TotalBytes)
+                            candidates.Add(new(bundle, measured));
             }
             catch (Exception error) when (error is IOException or InvalidOperationException or TimeoutException or System.ComponentModel.Win32Exception)
             { log($"Runtime {bundle.Backend} unavailable: {error.Message}"); }
         }
-        var selected = candidates.OrderByDescending(item => item.Device!.FreeBytes)
+        var selected = candidates.OrderByDescending(item => preferredFullGpuBytes > 0 && item.Device!.FreeBytes >= preferredFullGpuBytes)
+            .ThenByDescending(item => preferredFullGpuBytes > 0 && item.Device!.TotalBytes >= preferredFullGpuBytes)
+            .ThenByDescending(item => item.Device!.FreeBytes)
             .ThenBy(item => item.Bundle.Backend == "CUDA" ? 0 : 1).FirstOrDefault();
         selected ??= ready.FirstOrDefault(bundle => bundle.Backend == "CPU") is { } cpu ? new(cpu, null) : null;
         if (selected is null) throw new IOException("No verified compatible llama.cpp runtime is available. Prepare hardware libraries first.");

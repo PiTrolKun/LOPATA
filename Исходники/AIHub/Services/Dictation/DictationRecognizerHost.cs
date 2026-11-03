@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace AIHub.Services.Dictation;
 
-public sealed class DictationRecognizerHost : IAsyncDisposable
+public sealed class DictationRecognizerHost(string? operationComponent = null) : IAsyncDisposable
 {
     private Process? _process;
     private Task? _reader,_stderr;
@@ -25,7 +25,7 @@ public sealed class DictationRecognizerHost : IAsyncDisposable
             WorkingDirectory=AppContext.BaseDirectory
         };
         info.ArgumentList.Add("--dictation-worker");
-        var process=OwnedProcessRegistry.Shared.Start(info,"VoiceInput.Parakeet");_process=process;
+        var process=OwnedProcessRegistry.Shared.Start(info,operationComponent ?? "VoiceInput.Parakeet");_process=process;
         var ready=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);_ready=ready;
         _reader=Read(process,ready);
         _stderr=Task.Run(async()=>{while(await process.StandardError.ReadLineAsync() is {} _) { /* Native diagnostics may contain model text: do not persist them. */ }});
@@ -40,10 +40,10 @@ public sealed class DictationRecognizerHost : IAsyncDisposable
             while(await process.StandardOutput.ReadLineAsync() is {} line) {
                 using var doc=JsonDocument.Parse(line);var row=doc.RootElement;
                 switch(row.GetProperty("type").GetString()) {
-                    case "ready":ready.TrySetResult();OwnedProcessRegistry.Log("dictation_ready","VoiceInput",process.Id);break;
+                    case "ready":ready.TrySetResult();OwnedProcessRegistry.Log("dictation_ready",operationComponent ?? "VoiceInput",process.Id);break;
                     case "result":
                         if(_pending.TryRemove(row.GetProperty("id").GetInt64(),out var result))result.TrySetResult(row.GetProperty("text").GetString()??"");
-                        OwnedProcessRegistry.Log("dictation_decode","VoiceInput",process.Id,"elapsedMs="+row.GetProperty("decodeMs").GetDouble().ToString("F1",System.Globalization.CultureInfo.InvariantCulture));break;
+                        OwnedProcessRegistry.Log("dictation_decode",operationComponent ?? "VoiceInput",process.Id,"elapsedMs="+row.GetProperty("decodeMs").GetDouble().ToString("F1",System.Globalization.CultureInfo.InvariantCulture));break;
                     case "error":throw new InvalidDataException(row.GetProperty("message").GetString());
                 }
             }

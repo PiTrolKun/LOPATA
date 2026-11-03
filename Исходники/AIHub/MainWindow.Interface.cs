@@ -267,6 +267,7 @@ public partial class MainWindow
         Resources["UiBundleContentMaxWidth"] = bundleWidth;
         WorkStartContentRow.Height = new GridLength(1, GridUnitType.Star);
         ScenarioNavigationPage?.UpdateResponsiveLayout();
+        if (ScenarioNavigationPage?.IsLetItOutChat == true) RefreshWorkStartWorkspaceLayout();
         ImageAnalysisBundleSelectorPage?.UpdateResponsiveLayout(width);
     }
 

@@ -355,6 +355,9 @@
                     <Button x:Name="GenerationClearButton" Content="⌫" Visibility="Collapsed"
                             Style="{StaticResource ThemeButtonStyle}" Margin="0,0,10,0"
                             Click="GenerationClearButton_Click" AutomationProperties.AutomationId="Generation.Header.Clear" />
+                    <Button x:Name="ChatSpeechSettingsButton" Content="🔊" Visibility="Collapsed"
+                            Style="{StaticResource ThemeButtonStyle}" Margin="0,0,10,0"
+                            Click="ChatSpeechSettings_Click" AutomationProperties.AutomationId="LetItOut.Speech.Settings" />
                     <Button x:Name="EmergencyStopButton"
                             Width="{DynamicResource UiThemeButtonSize}" Height="{DynamicResource UiThemeButtonSize}"
                             Margin="0,0,14,0" Padding="0" Cursor="Hand"
@@ -3480,12 +3483,31 @@
                                 Margin="16,0,0,0"
                                 Opacity="0.42"
                                 ToolTip="Память ядра неактивна">
+                        <Button x:Name="CoreMemoryTrimButton" Style="{x:Null}"
+                                Background="Transparent" BorderThickness="0" Padding="0"
+                                IsEnabled="False" Cursor="Hand" VerticalAlignment="Center"
+                                AutomationProperties.AutomationId="CoreMemory.Trim"
+                                Click="CoreMemoryTrimButton_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="BrainFocusBorder" Background="Transparent"
+                                            BorderBrush="Transparent" BorderThickness="1" CornerRadius="3">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter TargetName="BrainFocusBorder" Property="BorderBrush" Value="{DynamicResource TextSecondaryBrush}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
                         <TextBlock x:Name="CoreMemoryIconText"
                                    Text="🧠"
                                    FontFamily="Segoe UI Emoji, Segoe UI Symbol, Segoe UI"
                                    FontSize="{DynamicResource UiFont16}"
                                    VerticalAlignment="Center"
                                    Margin="0,0,8,0" />
+                        </Button>
                         <ProgressBar x:Name="CoreMemoryProgressBar"
                                      Width="112"
                                      Height="8"

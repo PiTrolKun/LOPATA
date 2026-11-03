@@ -1,3 +1,12 @@
+## 2026-11-04 — optional Gemma chat vision projector
+
+Let it out can download `mmproj-F16.gguf` (1,193,058,784 bytes) from
+https://huggingface.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF/tree/7b92b5b28818151e8669af2e45e88d6086f490dd
+Google upstream / Unsloth GGUF declares Apache-2.0. The standard license is
+retained in `Licenses/texts/Apache-2.0.txt` and the optional module is registered
+in the shared license catalogue. Keep the license and applicable notices when
+redistributing. The module is downloaded separately, not bundled with the installer.
+No new document/image parser dependencies were added.
 ## 2026-10-22 — static SVG rendering
 
 LOPATA bundles the official Windows x64 resvg 0.47.0 CLI (MIT OR Apache-2.0).

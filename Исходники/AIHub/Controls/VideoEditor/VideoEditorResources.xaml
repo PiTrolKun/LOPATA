@@ -29,6 +29,24 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+        <!-- The native disabled ListBox template substitutes a system white fill.
+             Keep the actual panel and text in the owner's palette while synthesis locks selection. -->
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBox">
+            <Border x:Name="ListFrame" Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                <ScrollViewer Focusable="False" CanContentScroll="True" Padding="{TemplateBinding Padding}"
+                              HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                              VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                    <ItemsPresenter/>
+                </ScrollViewer>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter TargetName="ListFrame" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
     </Style>
     <Style TargetType="ListBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>

@@ -15,7 +15,8 @@ public sealed partial class LlamaServerRuntimeService
     private TimeSpan? _poetryStartupTimeout;
     private MusicPoetryReasoningOptions _poetryReasoning = MusicPoetryReasoningOptions.Disabled;
     private Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? _poetryGpuAdmission;
-    private int RequestedContextTokens => _poetryContextTokens ?? CoreContextRuntimeLimits.CurrentBackendContextLimit;
+    private int RequestedContextTokens => _letItOutEnabled ? _letItOutContextTokens
+        : _poetryContextTokens ?? CoreContextRuntimeLimits.CurrentBackendContextLimit;
     internal async Task<int> PreparePoetryAsync(DebugModelInfo model, CancellationToken token, string? reasoningMode = null,
         MusicPoetryReasoningPreference? reasoningPreference = null, int? requestedContextTokens = null,
         MusicPoetryReasoningOptions? reasoningOptions = null, TimeSpan? startupTimeout = null,

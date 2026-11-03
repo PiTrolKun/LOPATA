@@ -16,10 +16,19 @@ public static class DictationTargetPicker
     public static IDictationTextTarget? Automatic(nint foreground,IDictationTextTarget? selected)
     {
         // UIA providers belong to other processes: never synchronously probe them on our UI thread.
+        var window=System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(w=>new WindowInteropHelper(w).Handle==foreground&&!IsWidget(w));
+        return Automatic(window,foreground,selected);
+    }
+    internal static IDictationTextTarget? Automatic(Window? window,nint foreground,IDictationTextTarget? selected)
+    {
+        IReadOnlyList<IDictationTargetProvider> registered=window is null?[]:RegisteredDictationTarget.In(window);
+        var focused=registered.FirstOrDefault(provider=>provider.EditorFocused);
+        if(focused is not null)return focused.CreateDictationTarget();
         if(selected?.WindowHandle==foreground&&(selected is ExternalDictationTarget||selected.Available))return selected;
-        var window=System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w=>new WindowInteropHelper(w).Handle==foreground&&!IsWidget(w));
         if(window is null)return null;
-        var editors=DictationTextTarget.Editors(window);return editors.Count==1?new DictationTextTarget(editors[0]):null;
+        var editors=DictationTextTarget.Editors(window);
+        if(editors.Count+registered.Count!=1)return null;
+        return registered.Count==1?registered[0].CreateDictationTarget():new DictationTextTarget(editors[0]);
     }
     public static async Task<IDictationTextTarget?> ChooseAsync(Window owner,Func<string,string> text,CancellationToken token)
     {
@@ -48,6 +57,8 @@ public static class DictationTargetPicker
         var window=System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w=>new WindowInteropHelper(w).Handle==foreground&&!IsWidget(w));
         if(window is not null) {
             var hit=window.InputHitTest(window.PointFromScreen(new System.Windows.Point(point.X,point.Y))) as DependencyObject;
+            var registered=RegisteredDictationTarget.From(hit)??RegisteredDictationTarget.AtPoint(window,new System.Windows.Point(point.X,point.Y));
+            if(registered is not null)return registered.CreateDictationTarget();
             var editor=DictationTextTarget.EditorFrom(hit);if(editor is not null)return new DictationTextTarget(editor);
             throw new InvalidOperationException("Dictation.UnsupportedTarget");
         }

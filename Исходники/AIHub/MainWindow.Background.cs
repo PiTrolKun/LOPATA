@@ -39,6 +39,8 @@ public partial class MainWindow
         RegisterVideoEditorOperations();
         RegisterVideoConceptBackgroundOperations();
         RegisterSongClipBackgroundOperations();
+        RegisterLetItOutBackgroundOperation();
+        RegisterChatSpeech();
         RegisterBookSmartBackgroundOperation();
         RegisterLyricLibraryBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
@@ -63,6 +65,7 @@ public partial class MainWindow
         });
         try {
             _backgroundOperations.Load(); ImageGenerationFailureRecovery.Recover(_backgroundOperations);
+            ChatSpeechWork.RecoverFailedAttempts(_backgroundOperations);
             Services.VectorGraphics.VectorWork.RecoverFailedContent(_backgroundOperations);
             MusicDiffRhythmFailureRecovery.Recover(_backgroundOperations, MusicGenerationJobs.Default);
         }
@@ -221,6 +224,14 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind == ChatSpeechWork.Kind)
+            {
+                OpenChatSpeechFolder(); _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind is LetItOutChatWork.Kind or LetItOutChatRuntime.MemoryWorkKind or LetItOutChatRuntime.TreeWorkKind)
+            {
+                ViewLetItOutResult(notice); return;
+            }
             if (notice.Kind == Services.Books.Smart.BookSmartWork.Kind)
             {
                 var result = _backgroundOperations!.LoadResult(notice.Id) ?? _backgroundOperations.State!;

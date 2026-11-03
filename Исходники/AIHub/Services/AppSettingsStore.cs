@@ -31,6 +31,7 @@ public sealed class AppSettingsStore
             settings.VectorGraphics ??= new();
             settings.ScreenCapture ??= new();
             settings.Dictation ??= new();
+            settings.ChatSpeech ??= new();
             settings.ScreenCapture.Normalize();
             settings.CoreVoice ??= new CoreVoiceSettings();
             settings.CoreAutonomy ??= new CoreAutonomySettings();

@@ -44,9 +44,11 @@ internal sealed partial class VideoVoiceWindow : Window
     private string L(string key) => _l("VideoEditor.Voices." + key);
 
     internal VideoVoiceWindow(Window owner, Func<string, string> localize, VideoNarratorChoice initial, bool global,
-        Func<VideoModelNeed, CancellationToken, Task<VideoPreparedModels?>>? prepare, ManagedModelLibraryStore? library = null)
+        Func<VideoModelNeed, CancellationToken, Task<VideoPreparedModels?>>? prepare, ManagedModelLibraryStore? library = null,
+        VideoVoiceWindowExtension? extension = null)
     {
-        Owner = owner; _l = localize; _prepare = prepare; _store = library ?? new(); _canTargetSelection = !global;
+        Owner = owner; _l = localize; _prepare = prepare; _store = library ?? new(); _canTargetSelection = extension is not null || !global;
+        _extension = extension;
         MusicWishUi.PrepareWindow(this, _l("VideoEditor.VoiceSettings"), "VideoEditor.Voices.Window", 1050);
         Height = 760; MinWidth = 800; MinHeight = 600; WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Resources.MergedDictionaries.Add(owner.Resources); SetResourceReference(BackgroundProperty, "WindowBackgroundBrush"); SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
@@ -55,6 +57,12 @@ internal sealed partial class VideoVoiceWindow : Window
         ScrollViewer.SetHorizontalScrollBarVisibility(_models, ScrollBarVisibility.Disabled);
         _drafts[initial.Id] = initial; _global.IsChecked = global; _global.Content = _l("VideoEditor.GlobalVoice");
         _global.ToolTip = L("ScopeHint");
+        if (extension is not null)
+        {
+            Title = extension.Title; _global.Content = extension.ToggleLabel; _global.ToolTip = extension.ToggleLabel;
+            foreach (var pair in extension.Profiles) _drafts[pair.Key] = pair.Value;
+            _trial.Text = extension.TestPhrase(initial.Language); _trial.IsReadOnly = true; _trialPanel.Visibility = Visibility.Visible;
+        }
         _preset.ItemsSource = new[] { new PresetChoice("stable", L("Stable")), new PresetChoice("expressive", L("Expressive")) }; _preset.DisplayMemberPath = "Name";
         _device.ItemsSource = new[] { new PresetChoice("auto", L("Auto")), new PresetChoice("gpu", L("Gpu")), new PresetChoice("cpu", L("Cpu")) }; _device.DisplayMemberPath = "Name"; _device.SelectedValuePath = "Id";
         _language.DisplayMemberPath = "Name"; _language.SelectedValuePath = "Id";
@@ -91,11 +99,20 @@ internal sealed partial class VideoVoiceWindow : Window
         _download.Content = L("Download"); _remove.Content = L("Remove");
         _download.Click += (_, _) => Run(DownloadAsync); _remove.Click += (_, _) => Run(RemoveAsync);
         actions.Children.Add(_download); actions.Children.Add(_remove); _details.Children.Add(actions);
+        if (_extension is not null)
+        {
+            var folder = new Button { Content = _l("ChatSpeech.Folder"), Margin = new(8, 0, 0, 0) };
+            System.Windows.Automation.AutomationProperties.SetAutomationId(folder, "ChatSpeech.Folder");
+            folder.Click += (_, _) => { try { _extension.OpenFolder(); } catch (Exception error) { _status.Text = Error(error); } };
+            actions.Children.Add(folder);
+        }
         AddField("Speaker", _speaker); AddField("Language", _language); AddField("Device", _device);
         AddField("Rate", _rate); AddField("Style", _style); AddField("Steps", _steps); AddField("Preset", _preset); _details.Children.Add(_global);
         _sample.Margin = new(0, 12, 0, 8); _details.Children.Add(_sample);
         var check = new Button { Content = L("CheckVoice"), Margin = new(0, 5, 0, 8) };
-        check.Click += (_, _) => _trialPanel.Visibility = _trialPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        check.Click += (_, _) => { if (_extension is not null) Run(TrialAsync);
+            else _trialPanel.Visibility = _trialPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible; };
+        System.Windows.Automation.AutomationProperties.SetAutomationId(check, "ChatSpeech.Test");
         _details.Children.Add(check); _details.Children.Add(_trialPanel); _trialPanel.Children.Add(_trial);
         var buttons = new StackPanel { Orientation = Orientation.Horizontal };
         _generate.Content = L("Synthesize"); _play.Content = L("Play"); _stop.Content = L("Stop");
@@ -103,6 +120,7 @@ internal sealed partial class VideoVoiceWindow : Window
         foreach (var b in new[] { _generate, _play, _stop }) { b.Margin = new(0, 8, 8, 8); buttons.Children.Add(b); }
         _trialPanel.Children.Add(buttons); _trialPanel.Children.Add(new TextBlock { Text = L("TrialSafe"), TextWrapping = TextWrapping.Wrap });
         _speaker.SelectionChanged += (_, _) => InvalidatePreview(); _language.SelectionChanged += (_, _) => InvalidatePreview();
+        _language.SelectionChanged += (_, _) => { if (_extension is not null && _language.SelectedValue is string language) _trial.Text = _extension.TestPhrase(language); };
         _device.SelectionChanged += (_, _) => InvalidatePreview(); _rate.TextChanged += (_, _) => InvalidatePreview();
         _style.TextChanged += (_, _) => InvalidatePreview(); _steps.TextChanged += (_, _) => InvalidatePreview(); _trial.TextChanged += (_, _) => InvalidatePreview();
         _preset.SelectionChanged += (_, _) => InvalidatePreview();
@@ -160,7 +178,7 @@ internal sealed partial class VideoVoiceWindow : Window
     {
         var m = Model; var available = !_busy && m is { Blocked: null };
         _models.IsEnabled = !_busy; _apply.IsEnabled = available; _download.IsEnabled = available && _prepare is not null; _generate.IsEnabled = available;
-        _remove.IsEnabled = available && m is not null && !m.Id.StartsWith("kokoro-", StringComparison.Ordinal) && _store.Load(VideoNarratorCatalog.ArtifactId(m.Id)) is not null;
+        _remove.IsEnabled = available && m is not null && (_extension is not null || !m.Id.StartsWith("kokoro-", StringComparison.Ordinal)) && _store.Load(VideoNarratorCatalog.ArtifactId(m.Id)) is not null;
         _play.IsEnabled = !_busy && _audio is not null;
         foreach (var button in _exampleButtons) button.IsEnabled = !_busy && button.Tag is VideoNarratorSample;
         _speaker.IsEnabled = _language.IsEnabled = _trial.IsEnabled = available;
@@ -171,7 +189,8 @@ internal sealed partial class VideoVoiceWindow : Window
         foreach (var model in VideoNarratorCatalog.Models)
             if (_cardStatuses.TryGetValue(model.Id, out var status)) status.Text = model.Blocked is not null ? L("Pending") : Installed(model) ? L("Installed") : L("Missing");
     }
-    private string Error(Exception error) => error.Message.StartsWith("VideoEditor.", StringComparison.Ordinal) ? _l(error.Message) : error.Message;
+    private string Error(Exception error) => error.Message.StartsWith("VideoEditor.", StringComparison.Ordinal)
+        || error.Message.StartsWith("ChatSpeech.", StringComparison.Ordinal) ? _l(error.Message) : error.Message;
     private async void Run(Func<Task> action)
     {
         using var audit = ComponentAudit.CaptureOperation();
@@ -188,19 +207,25 @@ internal sealed partial class VideoVoiceWindow : Window
         var prepared = await _prepare(new("speech", [choice.Id]), Token);
         if (prepared is not null) _status.Text = L("Prepared");
     }
-    private Task RemoveAsync()
+    private async Task RemoveAsync()
     {
         var m = Model!;
         if (System.Windows.MessageBox.Show(this, L("RemoveConfirm"), m.Name, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
         {
+            if (_extension is not null) await _extension.BeforeRemove();
             var guard = new DelegateModelUsageGuard(_ => ApplicationBackgroundOperations.Current?.HasPending == true);
             new ManagedModelRemovalService(_store, guard).RemoveFiles(VideoNarratorCatalog.ArtifactId(m.Id), includePartialFiles: true);
             _status.Text = L("Removed");
         }
-        return Task.CompletedTask;
     }
     private async Task TrialAsync()
     {
+        if (_extension is not null)
+        {
+            var trialChoice = ReadChoice(); InvalidatePreview(); _status.Text = L("Speaking");
+            _audio = await _extension.Generate(trialChoice, _trial.Text, Token); Token.ThrowIfCancellationRequested();
+            _sample.Text = L("SampleReady"); _status.Text = L("TrialReady"); Play(); return;
+        }
         if (ApplicationBackgroundOperations.Current?.HasPending == true) throw new InvalidOperationException("VideoEditor.Busy");
         var choice = ReadChoice(); if (string.IsNullOrWhiteSpace(_trial.Text)) { _status.Text = L("EnterText"); return; }
         if (_prepare is not null && await _prepare(new("speech", [choice.Id]), Token) is null) return;

@@ -74,6 +74,72 @@ public sealed class ScenarioNavigationTests
     });
 
     [TestMethod]
+    public Task LetItOutCardRequiresHostPreparationBeforeOpeningChat() => Sta(() =>
+    {
+        var control = Create("ru", 1, true);
+        var node = ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.LetItOut);
+        Assert.AreEqual("experiment_chats", node.ParentId);
+        var group = ScenarioNavigationCatalog.Get(node.ParentId!);
+        Assert.AreEqual(ScenarioNavigationKind.Group, group.Kind);
+        Assert.AreEqual(ScenarioNavigationCatalog.Experiments, group.ParentId);
+        var requests = new List<string>(); control.ScenarioRequested += requests.Add;
+        var created = 0; control.LetItOutChatCreated += _ => created++;
+        control.SelectDirection(ScenarioNavigationCatalog.Experiments);
+        var card = LogicalDescendants(control).OfType<Button>().Single(button =>
+            System.Windows.Automation.AutomationProperties.GetAutomationId(button) == "Navigation.let_it_out");
+        card.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        CollectionAssert.AreEqual(new[] { ScenarioNavigationCatalog.LetItOut }, requests);
+        Assert.IsFalse(control.IsLetItOutChat);
+        Assert.IsNull(control.LetItOutChat);
+        Assert.AreEqual(0, created); // Cancelling preparation never creates a chat or starts a model.
+        Assert.AreEqual(ScenarioNavigationCatalog.Experiments, control.SelectedDirectionId);
+
+        control.ShowLetItOutChat();
+        var chat = control.LetItOutChat;
+        Assert.IsNotNull(chat);
+        Assert.IsTrue(control.IsLetItOutChat);
+        Assert.AreSame(chat, control.Content);
+        control.Configure(key => key);
+        Assert.AreSame(chat, control.Content);
+        Assert.AreEqual(1, created);
+        Assert.IsTrue(control.GoBack());
+        Assert.IsFalse(control.IsLetItOutChat);
+        Assert.AreEqual(ScenarioNavigationCatalog.Experiments, control.SelectedDirectionId);
+        control.OpenScenario(ScenarioNavigationCatalog.LetItOut);
+        Assert.IsFalse(control.IsLetItOutChat); // Re-entry still goes through preparation.
+        control.ShowLetItOutChat();
+        Assert.AreSame(chat, control.Content);
+        Assert.AreEqual(1, created);
+    });
+
+    [TestMethod]
+    public Task LetItOutCloudEntryReturnsToOriginAndKeepsChatInstance() => Sta(() =>
+    {
+        var control = Create("en", 1, false);
+        var requests = new List<string>(); control.ScenarioRequested += requests.Add;
+        var tag = ScenarioNavigationCatalog.GetTag("let_it_out");
+        Assert.AreEqual(ScenarioNavigationCatalog.LetItOut, tag.TargetId);
+        control.SelectDirection(ScenarioNavigationCatalog.Creation);
+        control.NavigateFromTag(tag);
+        CollectionAssert.AreEqual(new[] { ScenarioNavigationCatalog.LetItOut }, requests);
+        Assert.IsNull(control.LetItOutChat);
+        control.ShowLetItOutChat();
+        var chat = control.LetItOutChat;
+        Assert.IsTrue(control.GoBack());
+        Assert.AreEqual(ScenarioNavigationCatalog.Creation, control.SelectedDirectionId);
+        Assert.IsFalse(control.IsLetItOutChat);
+        control.ShowLetItOutChat();
+        control.ShowHome();
+        Assert.IsTrue(control.IsHome);
+        Assert.IsFalse(control.IsLetItOutChat);
+        control.ShowLetItOutChat();
+        Assert.AreSame(chat, control.Content);
+        control.SelectDirection(ScenarioNavigationCatalog.Utilities);
+        Assert.IsFalse(control.IsLetItOutChat);
+        Assert.AreNotSame(chat, control.Content);
+    });
+
+    [TestMethod]
     [DataRow("ru", 1200d, 1d, true, 2)]
     [DataRow("en", 1200d, 1.5d, false, 2)]
     [DataRow("ru", 500d, 1.5d, true, 1)]

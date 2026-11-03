@@ -21,6 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Content\ChatComposer.js" LogicalName="AIHub.ChatComposerScript" />
+    <EmbeddedResource Include="Content\LetItOutSystem.txt" LogicalName="AIHub.LetItOutSystem" />
     <Content Include="Tools\VideoNarrators\**\*" Exclude="Tools\VideoNarrators\**\__pycache__\**;Tools\VideoNarrators\**\*.pyc" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Assets\VideoNarratorSamples\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\VideoEditor\ffmpeg-8.1.3-editor-1\**\*" Link="VideoEditorRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

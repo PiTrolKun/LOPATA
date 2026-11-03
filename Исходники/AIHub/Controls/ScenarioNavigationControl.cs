@@ -26,6 +26,9 @@ public sealed class ScenarioNavigationControl : UserControl
     public SongClipControl? SongClip { get; private set; }
     public bool IsSongClip { get; private set; }
     public event Action<SongClipControl>? SongClipCreated;
+    public LetItOutChatControl? LetItOutChat { get; private set; }
+    public bool IsLetItOutChat { get; private set; }
+    public event Action<LetItOutChatControl>? LetItOutChatCreated;
     public bool IsHome => SelectedDirectionId is null;
     public event Action<string>? ScenarioRequested;
     public event Action? StateChanged;
@@ -57,6 +60,12 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsLetItOutChat)
+        {
+            IsLetItOutChat = false;
+            if (!ReturnFromScenario()) Render();
+            return true;
+        }
         if (IsSongClip) { if (SongClip?.Checkpoint() == false) return true; IsSongClip = false; Render(); return true; }
         if (IsVideoPreparation)
         {
@@ -86,6 +95,7 @@ public sealed class ScenarioNavigationControl : UserControl
         IsSongClip = false;
         if (VideoPreparation?.Checkpoint() == false) return;
         IsVideoPreparation = false;
+        IsLetItOutChat = false;
         PlaceholderScenarioId = null;
         _tagReturnDirection = null;
         SelectedDirectionId = null;
@@ -101,6 +111,7 @@ public sealed class ScenarioNavigationControl : UserControl
         if (node.Kind != ScenarioNavigationKind.Direction || !node.IsAvailable) return;
         if (VideoPreparation?.Checkpoint() == false) return;
         IsVideoPreparation = false;
+        IsLetItOutChat = false;
         PlaceholderScenarioId = null;
         SelectedDirectionId = id;
         IsSandboxLanding = false;
@@ -117,6 +128,14 @@ public sealed class ScenarioNavigationControl : UserControl
         IsSandboxLanding = false;
         IsVideoPreparation = id == ScenarioNavigationCatalog.VideoGeneration;
         IsSongClip = id == ScenarioNavigationCatalog.SongClip;
+        IsLetItOutChat = false;
+        if (id == ScenarioNavigationCatalog.LetItOut)
+        {
+            // The host verifies the existing core before explicitly opening the chat.
+            Render();
+            ScenarioRequested?.Invoke(node.EntryTargetId);
+            return;
+        }
         if (IsSongClip)
         {
             if (SongClip is null)
@@ -154,6 +173,22 @@ public sealed class ScenarioNavigationControl : UserControl
             Render();
         }
         else ScenarioRequested?.Invoke(node.EntryTargetId);
+    }
+
+    public void ShowLetItOutChat()
+    {
+        SelectedDirectionId = ScenarioNavigationCatalog.Experiments;
+        PlaceholderScenarioId = null;
+        IsSandboxLanding = IsVideoPreparation = IsSongClip = false;
+        if (LetItOutChat is null)
+        {
+            LetItOutChat = new LetItOutChatControl(_localize);
+            LetItOutChat.HomeRequested += ShowHome;
+            LetItOutChat.BackRequested += () => GoBack();
+            LetItOutChatCreated?.Invoke(LetItOutChat);
+        }
+        IsLetItOutChat = true;
+        Render();
     }
 
     public void NavigateFromTag(ScenarioNavigationTag tag)
@@ -199,6 +234,12 @@ public sealed class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (Content == LetItOutChat) Content = null;
+        if (IsLetItOutChat)
+        {
+            LetItOutChat!.Configure(_localize);
+            Content = LetItOutChat; StateChanged?.Invoke(); return;
+        }
         if (Content == SongClip) Content = null;
         if (IsSongClip) { Content = SongClip; StateChanged?.Invoke(); return; }
         if (Content == VideoPreparation) Content = null;

@@ -5,7 +5,7 @@ namespace AIHub;
 
 public partial class MainWindow
 {
-    private async Task<VideoPreparedModels?> PrepareVideoModelsAsync(VideoEditorWindow owner, VideoModelNeed need, CancellationToken token)
+    private async Task<VideoPreparedModels?> PrepareVideoModelsAsync(System.Windows.Window owner, VideoModelNeed need, CancellationToken token)
     {
         var root = need.ModelsRoot ?? _storageSettings.Models.Locations.Select(l => l.Path?.Trim()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? "";
         using var preparation = new VideoModelPreparation { ParallelConnections = _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0 };

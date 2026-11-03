@@ -220,6 +220,8 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     { lock (_gate) return _jobs.GetValueOrDefault(id)?.WaitForIdleAsync() ?? Task.CompletedTask; }
     public Task PauseAsync()
     { BackgroundOperationExecution? job; lock (_gate) job = _selected; return job?.PauseAsync() ?? Task.CompletedTask; }
+    public Task PauseAsync(string id)
+    { BackgroundOperationExecution? job; lock (_gate) job = _jobs.GetValueOrDefault(id); return job?.PauseAsync() ?? Task.CompletedTask; }
     public Task ResumeAsync(CancellationToken token) => ResumeAsync(null, token);
     public async Task ResumeAsync(string? id, CancellationToken token)
     {

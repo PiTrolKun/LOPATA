@@ -87,11 +87,16 @@ internal static class SongClipMontageProtocol
         ValidateInput(attempt, analysis); SongClipReferenceBrief.Validate(roles, attempt);
         var source = SongClipVisualProtocol.Source(attempt);
         var direction = attempt.Settings.Prompt == new SongClipSettings().Prompt ? "" : attempt.Settings.Prompt;
+        // Keep the whole song for meaning, but send timed cues only for this batch.
+        // All other cues remain in the immutable source and are bound to their own slots by the host.
+        var cues = source.Timings.Where(cue => slots.Any(slot =>
+            cue.StartSeconds >= slot.StartSeconds - .000001 && cue.StartSeconds < slot.EndSeconds)).ToArray();
         return JsonSerializer.Serialize(new {
             task = "Create varied lyric-grounded montage shots for these exact beat-derived slots",
             analysis.DurationSeconds, framesPerSecond = analysis.Fps, songTitle = attempt.Name,
-            songStyle = source.Style, lyricsLines = source.Lines, songSections = source.Sections, knownTimingCues = source.Timings,
-            timingCoverage = source.Timings.Length == 0 ? "unknown; thematic anchors only" : "known markers only; coverage may be partial",
+            songStyle = source.Style, lyricsLines = source.Lines, songSections = source.Sections, knownTimingCues = cues,
+            timingCoverage = source.Timings.Length == 0 ? "unknown; thematic anchors only"
+                : "known markers for current slots only; other source timings are retained by the host; coverage may be partial",
             creativeDirection = direction, semanticAnchor, references = roles ?? [], acceptedGlobalStyle = acceptedStyle,
             acceptedPreviousShots = previous.TakeLast(2).ToArray(),
             slots = slots.Select(slot => new { slot.Index, slot.StartSeconds, slot.DurationSeconds, lyricAnchors = Anchors(source, slot) })

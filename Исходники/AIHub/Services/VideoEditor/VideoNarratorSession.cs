@@ -51,6 +51,9 @@ internal sealed class VideoNarratorSession : IDisposable
             }
             await process.WaitForExitAsync(token).ConfigureAwait(false);
             if (_stderr is not null) await _stderr.ConfigureAwait(false);
+            var failure = $"pid={process.Id}; exit=0x{process.ExitCode:X8}; device={runtime.Device}; profile={runtime.Profile.Flavor()}";
+            Append("Narrator native exit: " + failure);
+            OwnedProcessRegistry.Log("narrator_native_exit", component, detail: failure);
             throw new IOException("Narrator exited with code " + process.ExitCode + ": " + Tail());
         }
         catch { Stop(); throw; }

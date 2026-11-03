@@ -3,6 +3,10 @@ import json
 import os
 from pathlib import Path
 import sys
+import faulthandler
+
+# Retain a Python stack in worker.log if an upstream native library terminates.
+faulthandler.enable()
 
 
 def configure(overlay, expanded, flavor, device='cpu'):

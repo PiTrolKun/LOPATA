@@ -69,6 +69,7 @@ public partial class MainWindow
         var window = new Window { Owner = System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive) ?? this,
             Title = L("licenses.title"), Width = 820, Height = 620,
             MinWidth = 500, MinHeight = 350, WindowStartupLocation = WindowStartupLocation.CenterOwner };
+        Controls.ModalDialogPointer.Configure(window);
         window.SetResourceReference(BackgroundProperty, "WindowBackgroundBrush");
         var panel = new DockPanel { Margin = new Thickness(18) };
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right };

@@ -266,6 +266,8 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
 
     public void Stop()
     {
+        _letItOutMemory?.Dispose(); _letItOutMemory = null;
+        if (_letItOutEnabled) _letItOutMode?.Invoke("Auto");
         if (_process is null)
         {
             return;
@@ -327,6 +329,11 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
             await CoreModelManager.VerifyPathForUseAsync(model.Path, cancellationToken, log);
             await ExecutorModelInstaller.VerifyPathForUseAsync(model.Path, cancellationToken, log);
             var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), cancellationToken);
+            if (_letItOutEnabled)
+            {
+                await StartLetItOutPlacementAsync(model, memory, log, cancellationToken, forceCpuFallback);
+                return;
+            }
             if (_poetryJournal is not null)
             {
                 await StartPoetryPlacementAsync(model, memory, log, cancellationToken, forceCpuFallback);
@@ -408,6 +415,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         AddArgument(startInfo, "--reasoning");
         AddArgument(startInfo, _poetryReasoning.Enabled ? "on" : "off");
         AddArgument(startInfo, "--no-webui");
+        if (_letItOutEnabled) AddLetItOutArguments(startInfo);
         if (_poetryJournal is not null)
         {
             AddArgument(startInfo, "--reasoning-format"); AddArgument(startInfo, "deepseek");

@@ -30,7 +30,11 @@ public sealed partial class VideoConceptAssistant
             // The caller owns the response schema and required reserve. Never cut
             // the input or reduce the output budget to make a partial plan appear valid.
             if ((long)used + maxTokens + 256 > _capacity)
+            {
+                OwnedProcessRegistry.Log("video_structured_context_limit", "VideoPreparation",
+                    detail: $"capacity={_capacity};input={used};requiredOutput={maxTokens};headroom=256");
                 throw new BackgroundOperationFailedException("VideoPrep.AiContextLimit");
+            }
             var payload = JsonSerializer.Serialize(new
             {
                 model = "local",

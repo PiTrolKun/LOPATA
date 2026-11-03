@@ -86,6 +86,7 @@ public partial class MainWindow
                     // Dictation belongs to MainWindow and has a separate lifecycle.
                     await BackgroundEmergencyStop.ExecuteAsync(controller, OwnedProcessRegistry.Shared, plan,
                         () => ApplicationBackgroundOperations.RetireModelsExceptAsync(this), _backgroundLifetime.Token);
+                    CancelChatSpeech();
                     _backgroundCountdown.Cancel();
                     controller.SetCountdown(false);
                     _emergencyStopAttention = false;

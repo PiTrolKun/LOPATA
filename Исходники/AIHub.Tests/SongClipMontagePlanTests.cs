@@ -294,6 +294,39 @@ public sealed class SongClipMontagePlanTests
         Assert.ThrowsExactly<InvalidDataException>(() => (fixture.Analysis with { BeatTimes = [2, 1] }).Validate());
     }
 
+    [TestMethod]
+    public void BatchKeepsWholeSongAndOnlyItsExactTimingCues()
+    {
+        using var fixture = new Fixture(12);
+        var attempt = fixture.Attempt with { Lyrics = "Первая строка.\nВторая строка.\nФинальная строка.",
+            Timings = "[00:00.00]Первая строка.\n[00:05.00]Вторая строка.\n[00:10.00]Финальная строка." };
+        for (var offset = 0; offset < fixture.Analysis.Slots.Length; offset++) {
+            using var document = JsonDocument.Parse(SongClipMontageProtocol.Input(attempt, fixture.Analysis,
+                [fixture.Analysis.Slots[offset]], null, [], "", null));
+            var root = document.RootElement;
+            CollectionAssert.AreEqual(SongClipVisualProtocol.Source(attempt).Lines,
+                root.GetProperty("lyricsLines").EnumerateArray().Select(row => row.GetString()).ToArray());
+            var cues = root.GetProperty("knownTimingCues");
+            Assert.AreEqual(1, cues.GetArrayLength());
+            Assert.AreEqual((double)(offset * 5), cues[0].GetProperty("startSeconds").GetDouble());
+            Assert.AreEqual(cues[0].GetProperty("text").GetString(),
+                root.GetProperty("slots")[0].GetProperty("lyricAnchors")[0].GetString());
+        }
+    }
+
+    [TestMethod]
+    public void TimedSongWithAnInstrumentalBatchKeepsNoInventedCuesOrAnchors()
+    {
+        using var fixture = new Fixture(12);
+        var attempt = fixture.Attempt with { Timings = "[00:00.00]Кот чинит старые часы.\n[00:10.00]Потом выходит встречать рассвет." };
+        using var document = JsonDocument.Parse(SongClipMontageProtocol.Input(attempt, fixture.Analysis,
+            [fixture.Analysis.Slots[1]], null, [], "", null));
+        Assert.AreEqual(0, document.RootElement.GetProperty("knownTimingCues").GetArrayLength());
+        Assert.AreEqual(0, document.RootElement.GetProperty("slots")[0].GetProperty("lyricAnchors").GetArrayLength());
+        Assert.Contains("current slots only", document.RootElement.GetProperty("timingCoverage").GetString()!);
+        Assert.AreEqual(2, document.RootElement.GetProperty("lyricsLines").GetArrayLength());
+    }
+
     private static int First(string body) => JsonNode.Parse(body)!["slots"]![0]!["index"]!.GetValue<int>();
     private static int RegexCount(string value, string literal) => System.Text.RegularExpressions.Regex.Matches(value, System.Text.RegularExpressions.Regex.Escape(literal)).Count;
     private static SongClipReferenceRole[] Roles() => [new(1, "performer", "The singer performs while the cats from the song act nearby."),

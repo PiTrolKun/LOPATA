@@ -6,7 +6,7 @@ namespace AIHub.Services;
 /// <summary>Storage spans are upper bounds, including tensor padding; no quantization-size guesses.</summary>
 internal sealed record LlamaLayerPlacement(long FixedBytes, IReadOnlyList<long> LayerBytes)
 {
-    internal static LlamaLayerPlacement Read(string path, LiteraryModelMemoryMetadata metadata)
+    internal static LlamaLayerPlacement Read(string path, LiteraryModelMemoryMetadata metadata, bool expertsOnly = false)
     {
         if (metadata.TensorCount is 0 or > 1_000_000) throw new InvalidDataException("Invalid GGUF tensor count.");
         using var stream = File.OpenRead(path);
@@ -31,7 +31,7 @@ internal sealed record LlamaLayerPlacement(long FixedBytes, IReadOnlyList<long> 
                 if (end <= 4 || !int.TryParse(name.AsSpan(4, end - 4), out layer)
                     || layer < 0 || layer >= metadata.BlockCount) throw new InvalidDataException("Invalid tensor layer.");
             }
-            tensors.Add((offset, layer));
+            tensors.Add((offset, expertsOnly && !name.Contains("_exps.", StringComparison.Ordinal) ? -1 : layer));
             if (stream.Position > 64 * 1024 * 1024) throw new InvalidDataException("Excessive tensor directory.");
         }
         var dataStart = checked((stream.Position + metadata.Alignment - 1) / metadata.Alignment * metadata.Alignment);

@@ -46,8 +46,7 @@ public sealed partial class LlamaServerRuntimeService
                 if (chunk.Text.Length != 0) visibleOutput = true;
                 progress.Report(chunk);
             });
-            return await NativeInferenceRecovery.ExecuteAsync(
-                async () =>
+            async Task<T> Attempt()
                 {
                     token.ThrowIfCancellationRequested();
                     _hardwareStartupFailure = false;
@@ -83,7 +82,10 @@ public sealed partial class LlamaServerRuntimeService
                         }
                         throw;
                     }
-                },
+                }
+            // The scenario preserves a failed private turn for explicit resume; it never repeats a completion automatically.
+            if (_letItOutEnabled) return await Attempt();
+            return await NativeInferenceRecovery.ExecuteAsync(Attempt,
                 () => _selectedRuntime?.UsesGpu == true, () => _hardwareStartupFailure,
                 () => visibleOutput, () => _poetryJournal is null ? ModelProcessRetirement.StopAsync(_process, Stop) : RetirePoetryForRecoveryAsync(),
                 () => EnsureStartedAsync(model, log, token, forceCpuFallback: true), log, token,

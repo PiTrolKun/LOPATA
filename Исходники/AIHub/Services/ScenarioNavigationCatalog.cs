@@ -36,6 +36,7 @@ public static class ScenarioNavigationCatalog
     public const string VideoEditor = "video_editor";
     public const string BookConversion = "text_to_book";
     public const string Dictation = "voice_input";
+    public const string LetItOut = "let_it_out";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -82,6 +83,9 @@ public static class ScenarioNavigationCatalog
         Node("analysis_images", ScenarioNavigationKind.Group, Analysis, "Navigation.Images", "", "analyze"),
         Node("experiment_tests", ScenarioNavigationKind.Group, Experiments, "Navigation.Tests", "", "experiment"),
         Node("experiment_finance", ScenarioNavigationKind.Group, Experiments, "Finance.Group", "", "finance"),
+        Node("experiment_chats", ScenarioNavigationKind.Group, Experiments, "Navigation.Chats", "", "experiment"),
+        Node(LetItOut, ScenarioNavigationKind.Scenario, "experiment_chats", "LetItOut.Title", "LetItOut.Description", "experiment",
+            tags: ["let_it_out", "let_it_out_memory", "let_it_out_tree", "let_it_out_speech", "let_it_out_attachments", "let_it_out_audio", "let_it_out_recall", "let_it_out_export"]),
         Node(Finance, ScenarioNavigationKind.Scenario, "experiment_finance", "Finance.Title", "Finance.Description", "finance",
             tags: ["finance", "budget", "expenses", "income", "external_coverage", "financial_behavior", "savings_discussion"], related: []),
         Node(Literary, ScenarioNavigationKind.Scenario, "creation_literature", "Literary.Title", "Literary.Description", "create",
@@ -103,6 +107,14 @@ public static class ScenarioNavigationCatalog
         Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),
         Tag("book_view", BookConversion), Tag("book_editor", BookConversion), Tag("book_smart", BookConversion), Tag("book_logs", BookConversion),
         Tag("song_clip", SongClip),
+        Tag("let_it_out", LetItOut),
+        Tag("let_it_out_memory", LetItOut),
+        Tag("let_it_out_tree", LetItOut),
+        Tag("let_it_out_speech", LetItOut),
+        Tag("let_it_out_attachments", LetItOut),
+        Tag("let_it_out_audio", LetItOut),
+        Tag("let_it_out_recall", LetItOut),
+        Tag("let_it_out_export", LetItOut),
         Tag("lyric_video", LyricVideo), Tag("matrix_rain", LyricVideo), Tag("video_rain_text", LyricVideo),
         Tag("video_editor", VideoEditor), Tag("video_narration", VideoEditor), Tag("video_subtitles", VideoEditor), Tag("video_svg", VideoEditor),
         Tag("video_linked_selection", VideoEditor), Tag("video_audio_stretch", VideoEditor), Tag("video_waveform", VideoEditor),

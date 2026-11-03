@@ -7,6 +7,7 @@ public sealed class AppSettings
     public VectorGenerationOptions VectorGraphics { get; set; } = new();
     public ScreenCaptureSettings ScreenCapture { get; set; } = new();
     public DictationSettings Dictation { get; set; } = new();
+    public ChatSpeechSettings ChatSpeech { get; set; } = new();
     public bool DetailedLiteraryDiagnostics { get; set; } = true;
     public ApplicationUpdateSettings Updates { get; set; } = new();
     public string LanguageCode { get; set; } = "ru";

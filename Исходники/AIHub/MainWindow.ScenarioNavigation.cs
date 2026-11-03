@@ -13,7 +13,8 @@ public partial class MainWindow
         ScenarioNavigationPage.IsVisibleChanged += (_, _) => RefreshWorkStartWorkspaceLayout();
         ScenarioNavigationPage.VideoPreparationCreated += ConfigureVideoConcept;
         ScenarioNavigationPage.SongClipCreated += ConfigureSongClip;
-        ScenarioNavigationPage.ScenarioRequested += id =>
+        ScenarioNavigationPage.LetItOutChatCreated += ConfigureLetItOutChat;
+        ScenarioNavigationPage.ScenarioRequested += async id =>
         {
             CapturePage.Visibility = Visibility.Collapsed;
             GenerationPage.Visibility = Visibility.Collapsed;
@@ -28,6 +29,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.LetItOut:
+                    await OpenLetItOutAsync();
+                    break;
                 case ScenarioNavigationCatalog.Dictation:
                     DockDictation();
                     break;
@@ -87,8 +91,8 @@ public partial class MainWindow
     {
         RefreshWorkStartWorkspaceLayout();
         if (WorkStartPage.Visibility != Visibility.Visible) return;
-        BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip ? Visibility.Collapsed : Visibility.Visible;
-        if (ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip) { StatusText.Text = ""; return; }
+        BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat ? Visibility.Collapsed : Visibility.Visible;
+        if (ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.PlaceholderScenarioId is not null) { StatusText.Text = L("Navigation.Soon"); return; }
         if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (VectorPage.Visibility == Visibility.Visible || MusicPage.Visibility == Visibility.Visible || FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible || GenerationPage.Visibility == Visibility.Visible || ImageUtilityPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }

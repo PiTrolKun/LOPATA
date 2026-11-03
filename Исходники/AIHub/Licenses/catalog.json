@@ -5066,5 +5066,39 @@
     "Texts": [
       "texts/song-clip-infinitetalk-runtime-NOTICES.txt"
     ]
+  },
+  {
+    "Id": "model-gemma4-26b-a4b-it-qat-udq4kxl",
+    "Name": "Gemma 4 26B A4B Instruct QAT UD-Q4_K_XL",
+    "Version": "7b92b5b28818151e8669af2e45e88d6086f490dd",
+    "Author": "Google; GGUF quantization by Unsloth",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF/tree/7b92b5b28818151e8669af2e45e88d6086f490dd",
+    "Checked": "2026-11-03",
+    "Ru": "Текстовая модель сценария «Если накипело». Исходная модель Google и GGUF от Unsloth заявлены под Apache-2.0. Сохраняйте лицензию и уведомления при распространении. Ответы модели требуют самостоятельной оценки.",
+    "En": "Text model for Let it out. Google upstream and Unsloth GGUF declare Apache-2.0. Preserve the license and notices when redistributing. Model answers require your own judgment.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "FD8879342F6942EF4F69A551655CF2C674A5D158E15BE0D8C7605A09F453FE66",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "model-gemma4-26b-a4b-vision-f16",
+    "Name": "Gemma 4 26B A4B vision projector F16",
+    "Version": "7b92b5b28818151e8669af2e45e88d6086f490dd",
+    "Author": "Google; GGUF conversion by Unsloth",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF/tree/7b92b5b28818151e8669af2e45e88d6086f490dd",
+    "Checked": "2026-11-04",
+    "Ru": "Модуль анализа изображений для Gemma в чате «Если накипело». Скачивается отдельно из того же закреплённого репозитория Unsloth. Карточка поставщика заявляет Apache-2.0; сохраняйте лицензию и уведомления при распространении. Не добавляет распознавание звука.",
+    "En": "Image projector for Gemma in Let it out. Downloaded separately from the same pinned Unsloth repository. The provider declares Apache-2.0; retain the license and notices when redistributing. Does not add audio recognition.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "17D43C0D30EF92C86A078C5A952C17B5EB1525AE03204ED61344D625AD1A276B",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
   }
 ]

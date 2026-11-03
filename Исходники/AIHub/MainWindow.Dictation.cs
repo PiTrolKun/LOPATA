@@ -53,6 +53,11 @@ public partial class MainWindow
             var target=_dictationTarget??throw new InvalidOperationException("Dictation.TargetLost");
             try {
                 if(target is ExternalDictationTarget external)await external.ApplyAsync(chunk.Segment,text,chunk.Final,_dictationLifetime.Token);
+                else if(target is IAsyncDictationTextTarget embedded)
+                    await Dispatcher.InvokeAsync(async()=>{
+                        if(_dictationAcceptInput&&!_dictationDisposed)
+                            await embedded.ApplyAsync(chunk.Segment,text,chunk.Final,_dictationLifetime.Token);
+                    }).Task.Unwrap();
                 else await Dispatcher.InvokeAsync(()=>{if(_dictationAcceptInput&&!_dictationDisposed)target.Apply(chunk.Segment,text,chunk.Final);});
             }
             catch{_dictationUndelivered=text;_dictationAcceptInput=false;throw;}

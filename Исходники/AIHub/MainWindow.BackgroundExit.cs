@@ -8,6 +8,9 @@ public partial class MainWindow
     {
         CheckpointRagBooks();
         CheckpointVectorEditors();
+        if (ScenarioNavigationPage.LetItOutChat?.SaveConversationForExit() == false)
+            throw new System.IO.IOException("Conversation history was not saved.");
+        if (ScenarioNavigationPage.LetItOutChat is { } memoryChat) await memoryChat.CloseMemoryForExitAsync();
         if (ScenarioNavigationPage.SongClip?.Checkpoint() == false) throw new System.IO.IOException("Song-clip checkpoint failed.");
         if (_musicPoetryWindow?.SaveForExit() == false) throw new System.IO.IOException("Songwriting session was not saved.");
         // Confirm the durable record before canceling. A failed write must leave the
