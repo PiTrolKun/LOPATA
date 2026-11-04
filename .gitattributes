@@ -84,3 +84,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Pinned upscale vendor notices retain original bytes and whitespace.
 Исходники/AIHub/Licenses/texts/video-upscale-* -text -eol -whitespace
+
+# Supplied upscale concept is retained without text normalization.
+ТЗ/Архив/LOPATA_идея_игрового_AI_Remaster_видео.md -text -eol -whitespace
