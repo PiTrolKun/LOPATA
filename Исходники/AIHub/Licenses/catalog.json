@@ -5100,5 +5100,159 @@
     "Texts": [
       "texts/Apache-2.0.txt"
     ]
+  },
+  {
+    "Id": "video-upscale-flash-runtime",
+    "Name": "FlashVSR+ Python CUDA runtime",
+    "Version": "3.10.18 / 2.7.0 cu128",
+    "Author": "Upstream authors",
+    "License": "PSF; BSD; Apache-2.0; MIT; NVIDIA CUDA",
+    "Source": "https://pytorch.org/",
+    "Checked": "2026-11-04",
+    "Ru": "Отдельный runtime, без изменений системного Python. Условия вложенных библиотек и NVIDIA сохраняются.",
+    "En": "Separate runtime; system Python remains unchanged. Included dependency and NVIDIA terms apply.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "405D526D4196286CD2664CB0DA121081E59E314C4D9E59CC6D5F0A1C466EB5B3",
+    "Texts": [
+      "texts/video-upscale-runtime-NOTICES.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-flash-source",
+    "Name": "FlashVSR+ T8 ModelHandle",
+    "Version": "ac60d1e3",
+    "Author": "Upstream authors",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/T8mars/Comfyui-Flashvsr-Plus-T8",
+    "Checked": "2026-11-04",
+    "Ru": "Готовая интеграция T8. ЛОПАТА добавляет ввод/вывод и FFV1 без изменения нейронного алгоритма.",
+    "En": "Ready T8 integration. LOPATA adds I/O and FFV1 without changing the neural algorithm.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "945B151EE073E7522C4CAEDED4E127F8806920F809AE86CD99E8F58B6881E27F",
+    "Texts": [
+      "texts/video-upscale-flash-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-flash-turbo-int8",
+    "Name": "FlashVSR+ turbo int8",
+    "Version": "pinned-20261104",
+    "Author": "Upstream authors",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/ruchangyao/FlashVSR_plus",
+    "Checked": "2026-11-04",
+    "Ru": "Веса FlashVSR; вариант скачивается отдельно. Нейронное восстановление может изменять детали.",
+    "En": "FlashVSR weights; downloaded per variant. Neural restoration may alter details.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "EA4C5D1DD406D836B42208528E80F9AA836CD95ECA4DF56C2D1B3DDC4F9A93EE",
+    "Texts": [
+      "texts/video-upscale-flash-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-flash-turbo-float",
+    "Name": "FlashVSR+ turbo float",
+    "Version": "pinned-20261104",
+    "Author": "Upstream authors",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/ruchangyao/FlashVSR_plus",
+    "Checked": "2026-11-04",
+    "Ru": "Веса FlashVSR; вариант скачивается отдельно. Нейронное восстановление может изменять детали.",
+    "En": "FlashVSR weights; downloaded per variant. Neural restoration may alter details.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "EA4C5D1DD406D836B42208528E80F9AA836CD95ECA4DF56C2D1B3DDC4F9A93EE",
+    "Texts": [
+      "texts/video-upscale-flash-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-flash-base-int8",
+    "Name": "FlashVSR+ base int8",
+    "Version": "pinned-20261104",
+    "Author": "Upstream authors",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/ruchangyao/FlashVSR_plus",
+    "Checked": "2026-11-04",
+    "Ru": "Веса FlashVSR; вариант скачивается отдельно. Нейронное восстановление может изменять детали.",
+    "En": "FlashVSR weights; downloaded per variant. Neural restoration may alter details.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "EA4C5D1DD406D836B42208528E80F9AA836CD95ECA4DF56C2D1B3DDC4F9A93EE",
+    "Texts": [
+      "texts/video-upscale-flash-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-flash-base-float",
+    "Name": "FlashVSR+ base float",
+    "Version": "pinned-20261104",
+    "Author": "Upstream authors",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/ruchangyao/FlashVSR_plus",
+    "Checked": "2026-11-04",
+    "Ru": "Веса FlashVSR; вариант скачивается отдельно. Нейронное восстановление может изменять детали.",
+    "En": "FlashVSR weights; downloaded per variant. Neural restoration may alter details.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "EA4C5D1DD406D836B42208528E80F9AA836CD95ECA4DF56C2D1B3DDC4F9A93EE",
+    "Texts": [
+      "texts/video-upscale-flash-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-flash-v1-int8",
+    "Name": "FlashVSR+ v1 int8",
+    "Version": "pinned-20261104",
+    "Author": "Upstream authors",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/ruchangyao/FlashVSR_plus",
+    "Checked": "2026-11-04",
+    "Ru": "Веса FlashVSR; вариант скачивается отдельно. Нейронное восстановление может изменять детали.",
+    "En": "FlashVSR weights; downloaded per variant. Neural restoration may alter details.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "EA4C5D1DD406D836B42208528E80F9AA836CD95ECA4DF56C2D1B3DDC4F9A93EE",
+    "Texts": [
+      "texts/video-upscale-flash-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-flash-v1-float",
+    "Name": "FlashVSR+ v1 float",
+    "Version": "pinned-20261104",
+    "Author": "Upstream authors",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/ruchangyao/FlashVSR_plus",
+    "Checked": "2026-11-04",
+    "Ru": "Веса FlashVSR; вариант скачивается отдельно. Нейронное восстановление может изменять детали.",
+    "En": "FlashVSR weights; downloaded per variant. Neural restoration may alter details.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "EA4C5D1DD406D836B42208528E80F9AA836CD95ECA4DF56C2D1B3DDC4F9A93EE",
+    "Texts": [
+      "texts/video-upscale-flash-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "video-upscale-visual-enhancer",
+    "Name": "Visual Enhancer CLI",
+    "Version": "21.0",
+    "Author": "Upstream authors",
+    "License": "Merserk Source License; third-party terms",
+    "Source": "https://github.com/Merserk/dlss5-visual-enhancer/releases/tag/v21.0",
+    "Checked": "2026-11-04",
+    "Ru": "Проприетарный внешний исполнитель: скачивается только с официального канала автора. Перепаковка и зеркалирование без разрешения запрещены. Использование результатов допускается по условиям автора и вложенных компонентов.",
+    "En": "Proprietary external tool downloaded only from the author’s official channel. Repackaging or mirroring requires permission. Outputs may be used under the author and third-party terms.",
+    "Basic": false,
+    "Delivery": "optional-download",
+    "Terms": "DBC2E5F7A8B9A7C8B69BBAE88CD9D50CA0A522337A9E127EB1649EBC2402A48F",
+    "Texts": [
+      "texts/video-upscale-ve-LICENSE.txt",
+      "texts/video-upscale-ve-THIRD-PARTY-NOTICES.txt"
+    ]
   }
 ]

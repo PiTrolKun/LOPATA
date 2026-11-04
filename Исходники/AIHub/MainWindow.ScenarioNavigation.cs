@@ -44,6 +44,9 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.VideoEditor:
                     OpenVideoEditorUtility();
                     break;
+                case ScenarioNavigationCatalog.VideoUpscale:
+                    OpenUpscaleUtility();
+                    break;
                 case ScenarioNavigationCatalog.Metadata:
                     OpenMetadataUtility();
                     break;

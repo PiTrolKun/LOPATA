@@ -105,3 +105,6 @@ __pycache__/
 
 # Private lyrics and model-comparison evidence; publish only the test mechanics/protocol.
 /_tmp/music-library-implementation/
+
+# Private upscale test media and generated evidence
+/Тесты/VideoUpscaleStand/private/

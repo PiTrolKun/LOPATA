@@ -81,3 +81,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Pinned H3 vendor licences retain original bytes and whitespace.
 Исходники/AIHub/Licenses/texts/video-h3-* -text -eol -whitespace
+
+# Pinned upscale vendor notices retain original bytes and whitespace.
+Исходники/AIHub/Licenses/texts/video-upscale-* -text -eol -whitespace

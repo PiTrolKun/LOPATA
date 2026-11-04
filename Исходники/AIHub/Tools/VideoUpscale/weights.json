@@ -1,0 +1,90 @@
+[
+  {
+    "Role": "turbo_dit",
+    "RelativePath": "turbo/dit.safetensors",
+    "SourceUrl": "https://huggingface.co/ruchangyao/FlashVSR_plus/resolve/46b79520946ac67dec94d1566490690953c7debc/turbo/dit.safetensors",
+    "SizeBytes": 5676070392,
+    "Sha256": "7862b92178176fa3aebc34c6c071daca6b56ab1dddb8e7ff9a01c47f5226ec8b",
+    "Purpose": "model"
+  },
+  {
+    "Role": "turbo_lq",
+    "RelativePath": "turbo/lq_proj_in.safetensors",
+    "SourceUrl": "https://huggingface.co/ruchangyao/FlashVSR_plus/resolve/46b79520946ac67dec94d1566490690953c7debc/turbo/lq_proj_in.safetensors",
+    "SizeBytes": 1151384272,
+    "Sha256": "e77b378ae12342eefbb58f924256f362a151b93ce73dd32808fcdaca9c051496",
+    "Purpose": "model"
+  },
+  {
+    "Role": "base_dit",
+    "RelativePath": "base/dit.safetensors",
+    "SourceUrl": "https://huggingface.co/ruchangyao/FlashVSR_plus/resolve/46b79520946ac67dec94d1566490690953c7debc/base/dit.safetensors",
+    "SizeBytes": 5676070392,
+    "Sha256": "58d64c1f1b3a559bafb69bb014f3ab2745e800c89435afdc154966eb96bc7459",
+    "Purpose": "model"
+  },
+  {
+    "Role": "base_lq",
+    "RelativePath": "base/lq_proj_in.safetensors",
+    "SourceUrl": "https://huggingface.co/ruchangyao/FlashVSR_plus/resolve/46b79520946ac67dec94d1566490690953c7debc/base/lq_proj_in.safetensors",
+    "SizeBytes": 1151384272,
+    "Sha256": "a1fe997f19060171db8dd4d58c30debc78ddfcc357b63481798792a38a356d8d",
+    "Purpose": "model"
+  },
+  {
+    "Role": "tiny",
+    "RelativePath": "TCDecoder.ckpt",
+    "SourceUrl": "https://huggingface.co/ruchangyao/FlashVSR_plus/resolve/46b79520946ac67dec94d1566490690953c7debc/TCDecoder.ckpt",
+    "SizeBytes": 189018333,
+    "Sha256": "e224bdcf2f52745cbf4d393ff5374c2ba09e90285d5d19062d2bf63b915b6161",
+    "Purpose": "model"
+  },
+  {
+    "Role": "vae",
+    "RelativePath": "Wan2.1_VAE.pth",
+    "SourceUrl": "https://huggingface.co/ruchangyao/FlashVSR_plus/resolve/46b79520946ac67dec94d1566490690953c7debc/Wan2.1_VAE.pth",
+    "SizeBytes": 507609880,
+    "Sha256": "38071ab59bd94681c686fa51d75a1968f64e470262043be31f7a094e442fd981",
+    "Purpose": "model"
+  },
+  {
+    "Role": "v1_dit",
+    "RelativePath": "v1/dit.safetensors",
+    "SourceUrl": "https://huggingface.co/JunhaoZhuang/FlashVSR-v1.1/resolve/27561b186ded3402d7c975f4fd722e2885b6135f/diffusion_pytorch_model_streaming_dmd.safetensors",
+    "SizeBytes": 5676070392,
+    "Sha256": "bd28180edcf3446c028e32fc6b731a80bf7e4da2ab4caac3186b9499964d37be",
+    "Purpose": "model"
+  },
+  {
+    "Role": "v1_lq",
+    "RelativePath": "v1/LQ_proj_in.ckpt",
+    "SourceUrl": "https://huggingface.co/JunhaoZhuang/FlashVSR-v1.1/resolve/27561b186ded3402d7c975f4fd722e2885b6135f/LQ_proj_in.ckpt",
+    "SizeBytes": 575694948,
+    "Sha256": "d6d011cdaaba6a52645086caa08fa04124e746f6ca568140a24007591142bfd2",
+    "Purpose": "model"
+  },
+  {
+    "Role": "turbo_int8_convrot",
+    "RelativePath": "turbo/dit_int8_convrot.safetensors",
+    "SourceUrl": "https://huggingface.co/t8star/Flashvsr-Plus-Comfy/resolve/56c806f1357d90c8a0b4b054e21bcefe3cb9ac1d/turbo/dit_int8_convrot.safetensors",
+    "SizeBytes": 1448886272,
+    "Sha256": "14150f06a5661e6da479f7583766c55e310e16cf3ce538ba56dc70188f03d773",
+    "Purpose": "model"
+  },
+  {
+    "Role": "base_int8_convrot",
+    "RelativePath": "base/dit_int8_convrot.safetensors",
+    "SourceUrl": "https://huggingface.co/t8star/Flashvsr-Plus-Comfy/resolve/56c806f1357d90c8a0b4b054e21bcefe3cb9ac1d/base/dit_int8_convrot.safetensors",
+    "SizeBytes": 1448886272,
+    "Sha256": "beaa478bf63717df2a73e472e1a1383a2731b8f6556fa29afd95410249256732",
+    "Purpose": "model"
+  },
+  {
+    "Role": "v1_int8_convrot",
+    "RelativePath": "v1/dit_int8_convrot.safetensors",
+    "SourceUrl": "https://huggingface.co/t8star/Flashvsr-Plus-Comfy/resolve/56c806f1357d90c8a0b4b054e21bcefe3cb9ac1d/v1/dit_int8_convrot.safetensors",
+    "SizeBytes": 1448886264,
+    "Sha256": "4b0bb12bd5e6466b4432b95d98e10e55f4579a5de5a4f0276fae725369ff4317",
+    "Purpose": "model"
+  }
+]

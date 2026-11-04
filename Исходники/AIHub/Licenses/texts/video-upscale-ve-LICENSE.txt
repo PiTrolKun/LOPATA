@@ -1,0 +1,379 @@
+MERSERK SOURCE LICENSE
+Version 1.0
+
+Copyright (c) 2026 Merserk.
+All rights reserved.
+
+IMPORTANT: This is a source-available proprietary license, not an open-source
+license as defined by the Open Source Initiative.
+
+PLAIN-LANGUAGE SUMMARY (NON-BINDING)
+
+Visual Enhancer may be used for personal, professional, and commercial work.
+You may earn money from images, videos, services, and other content created or
+processed with the Software. Source code made available by Merserk may be
+inspected and privately modified.
+
+You may not, without prior written permission from Merserk, redistribute,
+mirror, repackage, rebrand, sell, sublicense, publish modified builds of, or
+place the Software on another store, marketplace, download service, or similar
+distribution channel.
+
+Third-party components are governed by their own licenses.
+
+This summary is provided only for convenience. The terms below control.
+
+
+1. DEFINITIONS
+
+1.1 "Licensor" means Merserk, the copyright holder of the Covered Software.
+
+1.2 "You" means the individual or legal entity exercising rights under this
+License.
+
+1.3 "Covered Software" means the Visual Enhancer source code, executable code,
+documentation, original assets, and other materials owned by the Licensor and
+distributed with this License.
+
+1.4 "Third-Party Components" means software, source code, libraries, SDKs,
+models, binaries, headers, tools, or other materials owned by third parties,
+including components from NVIDIA, FFmpeg, Qt/PySide, Python, and other
+third-party projects.
+
+1.5 "Official Distribution Channels" means repositories, websites, stores,
+services, or download locations that the Licensor expressly identifies as
+official sources for Visual Enhancer.
+
+1.6 "Outputs" means images, videos, audio-visual works, data, renders, files, or
+other content created, processed, transformed, enhanced, or exported using the
+Software.
+
+1.7 "Written Permission" means an express written authorization issued by the
+Licensor through an official contact method, repository, agreement, or other
+verifiable written communication.
+
+
+2. OWNERSHIP
+
+2.1 The Covered Software is licensed, not sold.
+
+2.2 The Licensor retains all right, title, and interest in and to the Covered
+Software, including copyright and other intellectual-property rights, except for
+rights in Third-Party Components.
+
+2.3 No ownership interest in the Covered Software is transferred to You.
+
+2.4 Rights not expressly granted by this License are reserved by the Licensor.
+
+
+3. LICENSE GRANT
+
+Subject to Your compliance with this License, the Licensor grants You a
+worldwide, royalty-free, non-exclusive license to:
+
+a. download, install, and run the Covered Software;
+
+b. use the Covered Software for personal purposes;
+
+c. use the Covered Software for professional and commercial purposes;
+
+d. use the Covered Software to perform paid work or provide services to clients;
+
+e. create, process, enhance, render, transform, and export Outputs, including
+   Outputs from which You earn revenue;
+
+f. use the Covered Software internally within Your business or organization;
+
+g. permit Your employees and contractors to use the Covered Software solely on
+   Your behalf and under Your responsibility;
+
+h. inspect and study source code that the Licensor makes publicly available;
+
+i. privately modify such source code for Your own internal use; and
+
+j. make reasonable backup copies solely for Your own use.
+
+The rights in this Section do not include any right to redistribute, resell,
+sublicense, repackage, or publicly release the Covered Software except where
+this License expressly permits it.
+
+
+4. COMMERCIAL USE OF OUTPUTS
+
+4.1 Commercial use of Outputs is permitted.
+
+4.2 Without limitation, You may use the Covered Software to:
+
+a. create monetized videos, streams, films, images, or other media;
+
+b. perform paid image or video editing and processing;
+
+c. process content for clients;
+
+d. use the Covered Software in a commercial production workflow; and
+
+e. sell or license Outputs that You otherwise have the legal right to use,
+   sell, or license.
+
+4.3 The Licensor does not claim ownership of an Output merely because that
+Output was processed using the Covered Software.
+
+4.4 You remain responsible for rights in Your input materials and for complying
+with any third-party licenses, laws, or contractual restrictions applicable to
+Your Outputs.
+
+
+5. REDISTRIBUTION RESTRICTIONS
+
+Except with Written Permission from the Licensor or where applicable law
+requires otherwise, You may not:
+
+a. copy or distribute the Covered Software to third parties;
+
+b. upload, mirror, host, or republish the Covered Software on another website,
+   repository, file host, cloud-storage share, download service, or similar
+   location;
+
+c. distribute source code, executable builds, installers, portable packages,
+   archives, or substantial portions of the Covered Software;
+
+d. distribute modified versions, derivative builds, patches that contain
+   substantial portions of the Covered Software, or repackaged versions;
+
+e. create or operate an unofficial distribution channel for the Covered
+   Software; or
+
+f. provide copies of the Covered Software as part of another product or bundle.
+
+You may freely share links that direct users to an Official Distribution
+Channel.
+
+
+6. NO RESALE, SUBLICENSING, OR MARKETPLACE DISTRIBUTION
+
+Except with Written Permission from the Licensor, You may not:
+
+a. sell copies of the Covered Software;
+
+b. rent, lease, sublicense, or transfer rights in the Covered Software;
+
+c. charge a fee for access to copies of the Covered Software;
+
+d. list, publish, or distribute the Covered Software through Steam, the
+   Microsoft Store, Epic Games Store, itch.io, another software marketplace,
+   package repository, or similar service;
+
+e. repackage the Covered Software as Your own product;
+
+f. distribute a modified or renamed version of the Covered Software as a
+   separate product; or
+
+g. bundle the Covered Software with another paid or commercial product for
+   distribution.
+
+
+7. HOSTED AND REMOTE ACCESS
+
+7.1 You may use the Covered Software internally to provide editing,
+processing, rendering, or similar services to clients.
+
+7.2 Except with Written Permission from the Licensor, You may not operate a
+hosted, cloud, remote-access, Software-as-a-Service, application-service, or
+similar service whose primary purpose is to provide third parties with access
+to the Covered Software itself, its user interface, or substantially equivalent
+functionality.
+
+7.3 This Section does not prohibit a normal commercial workflow in which You
+use the Covered Software Yourself and deliver only Outputs or services to a
+client.
+
+
+8. PRIVATE MODIFICATIONS
+
+8.1 You may privately modify source code made available by the Licensor for
+Your own personal, professional, or internal organizational use.
+
+8.2 Private modification does not transfer ownership of the original Covered
+Software to You.
+
+8.3 Except with Written Permission from the Licensor, You may not publish,
+distribute, sell, sublicense, or release modified builds of the Covered
+Software.
+
+
+9. PUBLIC SOURCE REPOSITORIES AND CONTRIBUTIONS
+
+9.1 If the Covered Software is hosted in a public repository on GitHub or a
+similar service, You may use the hosting service's normal viewing and forking
+features to the extent required or permitted by that service's applicable terms.
+
+9.2 A repository fork does not grant You any additional right to redistribute,
+sell, rebrand, mirror, or publish executable releases of the Covered Software.
+
+9.3 You may submit patches, pull requests, issue attachments, or source-code
+changes to an Official Distribution Channel for the purpose of proposing a
+contribution to the project.
+
+9.4 You may quote small, reasonably necessary portions of publicly available
+source code for discussion, review, security reporting, education, or
+documentation, provided that You do not use this exception to reconstruct or
+redistribute the Covered Software or a substantial portion of it.
+
+9.5 Submission of a contribution does not automatically transfer copyright
+ownership to the Licensor. The Licensor may require a separate contributor
+agreement before accepting or incorporating a contribution.
+
+
+10. NO REBRANDING OR MISREPRESENTATION
+
+Except with Written Permission from the Licensor, You may not:
+
+a. remove or obscure copyright, licensing, authorship, or proprietary notices
+   from the Covered Software;
+
+b. represent Yourself or another party as the original developer, owner, or
+   official distributor of Visual Enhancer;
+
+c. present an unofficial or modified build as an official release; or
+
+d. use the Covered Software in a way that falsely implies sponsorship,
+   endorsement, partnership, or approval by the Licensor.
+
+
+11. TRADEMARKS AND BRANDING
+
+11.1 This License does not grant permission to use the Licensor's names,
+product names, logos, trademarks, service marks, or visual branding except as
+reasonably necessary to truthfully identify the Software or its origin.
+
+11.2 No permission is granted to use such branding in a manner that implies
+official status, sponsorship, endorsement, or affiliation where none exists.
+
+11.3 Third-party names and trademarks, including NVIDIA, DLSS, RTX, AMD,
+FFmpeg, Qt, Python, and others, remain the property of their respective owners
+and are not licensed by this License.
+
+
+12. PROPRIETARY COMPONENTS
+
+12.1 Components owned by the Licensor that are distributed only in binary or
+object-code form remain proprietary.
+
+12.2 Except to the extent applicable law expressly permits otherwise, You may
+not reverse engineer, decompile, disassemble, defeat technical protections of,
+or create unauthorized derivative works from the Licensor's proprietary
+binary-only components.
+
+
+13. THIRD-PARTY COMPONENTS
+
+13.1 Third-Party Components are not licensed under the Merserk Source License
+unless a component expressly states otherwise.
+
+13.2 Each Third-Party Component remains subject to its own copyright, license,
+redistribution requirements, notices, and other legal terms.
+
+13.3 If this License conflicts with the applicable license for a Third-Party
+Component, the third-party license controls with respect to that component.
+
+13.4 Nothing in this License grants You rights in NVIDIA, AMD, FFmpeg,
+Qt/PySide, Python, or any other third-party technology beyond the rights granted
+by the applicable third-party owner or license.
+
+13.5 See THIRD-PARTY-NOTICES.txt distributed with the Software for additional
+information.
+
+
+14. COMPLIANCE WITH LAW AND MANDATORY RIGHTS
+
+14.1 You must use the Covered Software in compliance with applicable law.
+
+14.2 Nothing in this License is intended to restrict rights that applicable law
+expressly grants to You and that cannot legally be waived or restricted by
+contract.
+
+
+15. TERMINATION
+
+15.1 Your rights under this License automatically terminate if You materially
+violate its terms.
+
+15.2 For an unintentional first violation that is capable of being cured, the
+Licensor may restore Your license if You fully correct the violation within
+thirty (30) days after receiving written notice from the Licensor.
+
+15.3 Termination does not eliminate claims, remedies, or obligations arising
+from conduct that occurred before termination.
+
+15.4 Sections concerning ownership, restrictions, disclaimers, limitation of
+liability, third-party rights, and any provisions that by their nature should
+survive termination will survive termination.
+
+
+16. DISCLAIMER OF WARRANTY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COVERED SOFTWARE IS
+PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING, WITHOUT LIMITATION,
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE,
+NON-INFRINGEMENT, ACCURACY, RELIABILITY, OR AVAILABILITY.
+
+YOU USE THE COVERED SOFTWARE AT YOUR OWN RISK.
+
+
+17. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR SHALL NOT BE
+LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE, OR
+CONSEQUENTIAL DAMAGES, OR FOR LOSS OF DATA, PROFITS, REVENUE, BUSINESS,
+OPPORTUNITY, OR GOODWILL, ARISING OUT OF OR RELATED TO THE COVERED SOFTWARE OR
+THIS LICENSE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+NOTHING IN THIS SECTION EXCLUDES OR LIMITS LIABILITY THAT CANNOT LEGALLY BE
+EXCLUDED OR LIMITED UNDER APPLICABLE LAW.
+
+
+18. SEVERABILITY
+
+If any provision of this License is held to be invalid, illegal, or
+unenforceable, that provision will be limited or modified only to the minimum
+extent necessary, and the remaining provisions will continue in effect.
+
+
+19. NO WAIVER
+
+Failure by the Licensor to enforce any provision of this License does not waive
+the right to enforce that provision or any other provision later.
+
+
+20. VERSION-SPECIFIC LICENSING
+
+20.1 This License applies only to versions of the Covered Software distributed
+with this License.
+
+20.2 Versions previously distributed under another license remain governed by
+the license applicable to those versions when they were distributed.
+
+20.3 The Licensor may release future versions under revised or different
+license terms.
+
+
+21. ADDITIONAL PERMISSIONS
+
+The Licensor may grant additional permissions, redistribution rights,
+commercial distribution rights, OEM rights, sublicensing rights, or other
+rights through a separate written agreement. Such permission applies only to
+the person or entity to whom it is granted and does not modify this License for
+other users.
+
+
+22. ENTIRE LICENSE
+
+This License states the permissions granted by the Licensor for the Covered
+Software, except where a separate written agreement between the Licensor and a
+particular licensee expressly provides otherwise.
+
+
+MERSERK SOURCE LICENSE 1.0
+Copyright (c) 2026 Merserk.
+All rights reserved.

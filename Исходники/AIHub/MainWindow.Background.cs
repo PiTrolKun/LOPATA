@@ -37,6 +37,7 @@ public partial class MainWindow
         RegisterImageShellBackgroundOperation();
         RegisterLyricVideoBackgroundOperation();
         RegisterVideoEditorOperations();
+        RegisterUpscaleOperations();
         RegisterVideoConceptBackgroundOperations();
         RegisterSongClipBackgroundOperations();
         RegisterLetItOutBackgroundOperation();
@@ -258,6 +259,17 @@ public partial class MainWindow
                     var result = System.IO.Path.Combine(Services.VideoEditor.VideoProjectStore.Work(project.Id), "Operations", request.Id, "result.lopataVideo");
                     OpenVideoEditorUtility(System.IO.File.Exists(result) ? result : request.ProjectPath);
                 }
+                _backgroundOperations.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == Services.VideoUpscale.UpscalePipeline.Kind || notice.Kind == Services.VideoUpscale.UpscaleAssembly.PartialKind)
+            {
+                var state = _backgroundOperations!.LoadResult(notice.Id) ?? _backgroundOperations.State!;
+                var checkpoint = System.Text.Json.JsonSerializer.Deserialize<Services.VideoUpscale.UpscaleCheckpoint>(state.Input);
+                if (checkpoint is null) return;
+                var job = Services.VideoUpscale.UpscaleStore.Load<Services.VideoUpscale.UpscaleJob>(checkpoint.JobFile);
+                RestoreFromTray();
+                if (System.IO.File.Exists(job.Output)) _fileViewerService.Open(this, job.Output, _appSettings.FileViewer, _isDarkTheme, _localizationService);
+                else OpenUpscaleUtility(job.Project);
                 _backgroundOperations.Acknowledge(notice.Id); return;
             }
             if (notice.Kind == MusicRhymeWork.Kind)

@@ -25,6 +25,9 @@
     <EmbeddedResource Include="Content\LetItOutSystem.txt" LogicalName="AIHub.LetItOutSystem" />
     <Content Include="Tools\VideoNarrators\**\*" Exclude="Tools\VideoNarrators\**\__pycache__\**;Tools\VideoNarrators\**\*.pyc" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Assets\VideoNarratorSamples\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\VideoUpscale\**\*" Exclude="Tools\VideoUpscale\**\__pycache__\**;Tools\VideoUpscale\**\*.pyc" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\VideoUpscale\ffmpeg-8.1.3-upscale-2\**\*" Link="VideoUpscaleRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\VideoUpscale\ffmpeg-files.json" LogicalName="AIHub.VideoUpscaleFfmpeg" />
     <Content Include="..\..\Runtime\VideoEditor\ffmpeg-8.1.3-editor-1\**\*" Link="VideoEditorRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\video-editor-runtime-files.json" LogicalName="AIHub.VideoEditorRuntimeManifest" />
     <EmbeddedResource Include="Content\VideoEditorPreview.js" LogicalName="AIHub.VideoEditorPreviewScript" />
@@ -231,6 +234,10 @@
   <Target Name="CheckCaptureRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\Capture\FFmpeg-8.1\bundle\ffmpeg.exe') Or !Exists('..\..\Runtime\Capture\FFmpeg-8.1\bundle\provenance.json')"
            Text="Bundled capture runtime is missing. Run Инструменты/prepare-capture-runtime.ps1 before building LOPATA." />
+  </Target>
+  <Target Name="CheckVideoUpscaleRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\VideoUpscale\ffmpeg-8.1.3-upscale-2\ffmpeg.exe') Or !Exists('Tools\VideoUpscale\ffmpeg-files.json')"
+           Text="Bundled video upscale FFmpeg is missing. Follow Инструменты/VideoUpscaleRuntime/README.md." />
   </Target>
   <Target Name="CheckDictationRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\sherpa-onnx.dll') Or !Exists('..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\sherpa-onnx-c-api.dll') Or !Exists('..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\onnxruntime.dll')" Text="Dictation CPU runtime is missing. Run Инструменты/prepare-dictation-runtime.ps1 before building LOPATA." />

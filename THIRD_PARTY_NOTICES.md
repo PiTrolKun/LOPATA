@@ -847,3 +847,23 @@ The native sampler and conditioning remain upstream; LOPATA adds input-bound
 atomic window checkpointing, exact revision validation and full original-song
 assembly. This persistence adapter is a LOPATA modification, not an upstream
 claim. No vocal-separation weights without clear license were added.
+
+## Video upscale utility (0.7.22-dev)
+
+The utility bundles an additional, independently audited LGPL FFmpeg 8.1.3
+build (lopata-video-upscale-2), using the same original dependency terms as the
+existing video FFmpeg build. Build configuration and upstream source are retained
+with the runtime; see Инструменты/VideoUpscaleRuntime. No GPL/nonfree FFmpeg
+configure flags are enabled. The editor's existing runtime is unchanged.
+
+Optional FlashVSR+ uses upstream T8 ModelHandle (Apache-2.0) and pinned upstream
+weights, with a separately downloaded CPython/PyTorch CUDA environment. LOPATA's
+adapter handles validated I/O, lossless writing and checkpoints, not a replacement
+neural algorithm. Original notices and runtime dependency licences are retained
+in Licenses/texts/video-upscale-*. No system Python modification or pip setup runs.
+
+Optional Visual Enhancer CLI v21.0 is acquired directly from its author's official
+release, subject to its full custom licence and NVIDIA component terms. It is
+not bundled with LOPATA or mirrored. LOPATA neither copies its implementation nor
+claims redistribution rights in the experimental NR SDK. The original licence
+and THIRD-PARTY-NOTICES are preserved verbatim and presented by the optional gate.

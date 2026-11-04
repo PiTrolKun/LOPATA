@@ -34,6 +34,7 @@ public static class ScenarioNavigationCatalog
     public const string Metadata = "file_metadata";
     public const string LyricVideo = "music_video";
     public const string VideoEditor = "video_editor";
+    public const string VideoUpscale = "video_upscale";
     public const string BookConversion = "text_to_book";
     public const string Dictation = "voice_input";
     public const string LetItOut = "let_it_out";
@@ -65,6 +66,8 @@ public static class ScenarioNavigationCatalog
             tags: ["lyric_video", "matrix_rain", "video_rain_text"], related: [Music]),
         Node(VideoEditor, ScenarioNavigationKind.Scenario, "utilities_video", "VideoEditor.Title", "VideoEditor.Description", "tools",
             tags: ["video_editor", "video_narration", "video_subtitles", "video_svg"], related: [VectorGeneration, Capture]),
+        Node(VideoUpscale, ScenarioNavigationKind.Scenario, "utilities_video", "VideoUpscale.Title", "VideoUpscale.Description", "tools",
+            tags: ["video_upscale", "video_upscale_preview", "video_upscale_chain"], related: [VideoEditor]),
         Node(ImageUtility, ScenarioNavigationKind.Scenario, "utilities_images", "ImageUtility.Title", "ImageUtility.Description", "tools",
             tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
         Node("creation_video", ScenarioNavigationKind.Group, Creation, "Navigation.Video", "", "create"),
@@ -107,6 +110,7 @@ public static class ScenarioNavigationCatalog
         Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),
         Tag("book_view", BookConversion), Tag("book_editor", BookConversion), Tag("book_smart", BookConversion), Tag("book_logs", BookConversion),
         Tag("song_clip", SongClip),
+        Tag("video_upscale", VideoUpscale), Tag("video_upscale_preview", VideoUpscale), Tag("video_upscale_chain", VideoUpscale),
         Tag("let_it_out", LetItOut),
         Tag("let_it_out_memory", LetItOut),
         Tag("let_it_out_tree", LetItOut),
