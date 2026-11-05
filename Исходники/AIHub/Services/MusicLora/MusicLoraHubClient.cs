@@ -91,12 +91,12 @@ internal sealed class MusicLoraHubClient : IDisposable
             yield return page;
         }
     }
-    internal async Task<byte[]> FileAsync(string url, CancellationToken token)
+    internal async Task<byte[]> FileAsync(string url, CancellationToken token, int limit = 130000)
     {
         await _requests.WaitAsync(token);
         try {
         using var request = new HttpRequestMessage(HttpMethod.Get, url); using var response = await SendAsync(request, token);
-        return await LimitedAsync(response, 130000, token);
+        return await LimitedAsync(response, limit, token);
         } finally { _requests.Release(); }
     }
     internal async Task<string> TextAsync(string repo, string revision, string path, CancellationToken token)
@@ -115,12 +115,14 @@ internal sealed class MusicLoraHubClient : IDisposable
         return bytes;
         } finally { _requests.Release(); }
     }
-    internal async Task<JsonElement> HeaderAsync(string url, long size, CancellationToken token)
+    internal async Task<JsonElement> HeaderAsync(string url, long size, CancellationToken token, bool validateMusic = true)
     {
         var prefix = await RangeAsync(url, 0, 7, size, token); var length = BinaryPrimitives.ReadUInt64LittleEndian(prefix);
         if (length is < 2 or > 2000000 || length + 8 >= (ulong)size) throw new InvalidDataException("Music.Lora.Search.InvalidHeader");
         using var json = JsonDocument.Parse(await RangeAsync(url, 8, (long)length + 7, size, token));
-        MusicLoraTensorRules.ValidateStorage(json.RootElement, size - (long)length - 8); return json.RootElement.Clone();
+        if (validateMusic) MusicLoraTensorRules.ValidateStorage(json.RootElement, size - (long)length - 8);
+        else ImageLora.ImageLoraTensorRules.ValidateStorage(json.RootElement, size - (long)length - 8);
+        return json.RootElement.Clone();
     }
     public void Dispose() { _http.Dispose(); _requests.Dispose(); }
 }

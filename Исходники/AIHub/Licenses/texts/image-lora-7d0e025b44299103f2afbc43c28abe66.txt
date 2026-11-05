@@ -1,0 +1,78 @@
+Source: https://huggingface.co/suayptalha/Z-Image-Turbo-Realism-LoRA/tree/8dc179cb56844d4ddc6e4527c30e98347eeae971
+Declared license: apache-2.0
+
+---
+tags:
+- text-to-image
+- lora
+- diffusers
+- template:diffusion-lora
+- realism
+widget:
+- output:
+    url: images/mpzr-wsdQmgxbZIfP8bfb.png
+  text: >-
+    Realism, gritty portrait of a mechanic covered in grease and oil, wiping
+    sweat from forehead, inside a dim garage, metallic textures in background,
+    intense gaze, smoke in the air, volumetric lighting, raw and unfiltered.
+- output:
+    url: images/n4aSpqa-YFXYo4dtcIg4W.png
+  text: >-
+    Realism, sun-drenched portrait of a freckled redhead girl laughing in a
+    sunflower field during golden hour, lens flare, hair blowing in the wind,
+    soft focus background, authentic and candid moment, warm color palette.
+- output:
+    url: images/potNK0JwrjpBkYcyfXeuk.png
+  text: >-
+    Realism, vibrant portrait of an indigenous woman with traditional face paint
+    and intricate bead jewelry, standing in a lush jungle, dappled sunlight
+    filtering through leaves, intense and proud expression, hyper-realistic
+    details.
+- output:
+    url: images/H5bKsoLB0XN94M3DSehKA.png
+  text: >-
+    Realism, professional studio fashion portrait of a model wearing haute
+    couture, neutral grey background, softbox lighting, sharp focus, high
+    fashion makeup, elegant pose, 85mm lens, ultra-realistic skin texture.
+- output:
+    url: images/e0jniT3rwHoaTzcK4V73n.png
+  text: >-
+    Realism, dramatic profile shot of a man in a dimly lit room, only half of
+    the face illuminated by a single candle, strong chiaroscuro effect,
+    mysterious atmosphere, sharp focus on the eye, renaissance painting style
+    lighting.
+- output:
+    url: images/9QFq0p9Xv2C0kihLBj1ev.png
+  text: >-
+    Realism, a fashionable young woman walking through a rainy Tokyo street at
+    night, neon lights reflecting on wet pavement, wearing a transparent
+    raincoat, bokeh background, cinematic lighting, shot on 35mm lens, moody
+    atmosphere.
+base_model: Tongyi-MAI/Z-Image-Turbo
+instance_prompt: Realism
+license: apache-2.0
+datasets:
+- opendiffusionai/cc12m-4mp-realistic
+---
+# Z-Image-Turbo-Realism-LoRA
+
+<Gallery />
+
+This is a LoRA fine-tuned adapter for the [Z-Image-Turbo](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo) model, trained on the [hand-selected subset of the well known C12M dataset](https://huggingface.co/datasets/opendiffusionai/cc12m-4mp-realistic). It specializes in generating high-quality ultra-realistic images.
+
+## Features
+
+* Generates **ultra-realistic scenes** in a consistent style.
+* LoRA adapter — lightweight and easy to use with the base Z-Image-Turbo model.
+* Compatible with Hugging Face `diffusers` pipelines.
+
+## Trigger words
+
+You should use `Realism` to trigger the image generation.
+
+
+## Download model
+
+
+[Download](/suayptalha/Z-Image-Turbo-Realism-LoRA/tree/main) them in the Files & versions tab.
+

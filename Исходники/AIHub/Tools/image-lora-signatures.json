@@ -1,0 +1,2022 @@
+{
+  "z-image": {
+    "diffusion_model.layers.0.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.0.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.0.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.0.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.0.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.0.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.0.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.0.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.1.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.1.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.1.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.1.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.1.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.1.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.1.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.1.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.10.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.10.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.10.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.10.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.10.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.10.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.10.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.10.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.11.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.11.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.11.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.11.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.11.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.11.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.11.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.11.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.12.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.12.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.12.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.12.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.12.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.12.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.12.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.12.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.13.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.13.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.13.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.13.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.13.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.13.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.13.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.13.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.14.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.14.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.14.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.14.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.14.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.14.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.14.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.14.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.15.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.15.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.15.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.15.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.15.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.15.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.15.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.15.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.16.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.16.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.16.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.16.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.16.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.16.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.16.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.16.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.17.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.17.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.17.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.17.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.17.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.17.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.17.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.17.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.18.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.18.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.18.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.18.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.18.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.18.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.18.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.18.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.19.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.19.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.19.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.19.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.19.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.19.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.19.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.19.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.2.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.2.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.2.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.2.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.2.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.2.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.2.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.2.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.20.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.20.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.20.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.20.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.20.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.20.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.20.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.20.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.21.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.21.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.21.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.21.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.21.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.21.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.21.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.21.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.22.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.22.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.22.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.22.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.22.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.22.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.22.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.22.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.23.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.23.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.23.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.23.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.23.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.23.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.23.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.23.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.24.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.24.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.24.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.24.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.24.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.24.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.24.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.24.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.25.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.25.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.25.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.25.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.25.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.25.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.25.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.25.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.26.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.26.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.26.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.26.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.26.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.26.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.26.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.26.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.27.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.27.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.27.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.27.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.27.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.27.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.27.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.27.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.28.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.28.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.28.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.28.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.28.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.28.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.28.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.28.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.29.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.29.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.29.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.29.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.29.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.29.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.29.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.29.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.3.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.3.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.3.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.3.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.3.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.3.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.3.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.3.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.4.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.4.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.4.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.4.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.4.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.4.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.4.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.4.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.5.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.5.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.5.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.5.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.5.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.5.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.5.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.5.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.6.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.6.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.6.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.6.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.6.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.6.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.6.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.6.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.7.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.7.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.7.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.7.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.7.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.7.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.7.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.7.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.8.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.8.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.8.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.8.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.8.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.8.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.8.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.8.feed_forward.w3": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.9.adaLN_modulation.0": [
+      256,
+      15360
+    ],
+    "diffusion_model.layers.9.attention.to_k": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.9.attention.to_out.0": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.9.attention.to_q": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.9.attention.to_v": [
+      3840,
+      3840
+    ],
+    "diffusion_model.layers.9.feed_forward.w1": [
+      3840,
+      10240
+    ],
+    "diffusion_model.layers.9.feed_forward.w2": [
+      10240,
+      3840
+    ],
+    "diffusion_model.layers.9.feed_forward.w3": [
+      3840,
+      10240
+    ]
+  },
+  "krea": {
+    "transformer.final_layer.linear": [
+      6144,
+      64
+    ],
+    "transformer.img_in": [
+      64,
+      6144
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.attn.to_gate": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.attn.to_k": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.attn.to_out.0": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.attn.to_q": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.attn.to_v": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.ff.down": [
+      6912,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.ff.gate": [
+      2560,
+      6912
+    ],
+    "transformer.text_fusion.layerwise_blocks.0.ff.up": [
+      2560,
+      6912
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.attn.to_gate": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.attn.to_k": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.attn.to_out.0": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.attn.to_q": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.attn.to_v": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.ff.down": [
+      6912,
+      2560
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.ff.gate": [
+      2560,
+      6912
+    ],
+    "transformer.text_fusion.layerwise_blocks.1.ff.up": [
+      2560,
+      6912
+    ],
+    "transformer.text_fusion.projector": [
+      12,
+      1
+    ],
+    "transformer.text_fusion.refiner_blocks.0.attn.to_gate": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.0.attn.to_k": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.0.attn.to_out.0": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.0.attn.to_q": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.0.attn.to_v": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.0.ff.down": [
+      6912,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.0.ff.gate": [
+      2560,
+      6912
+    ],
+    "transformer.text_fusion.refiner_blocks.0.ff.up": [
+      2560,
+      6912
+    ],
+    "transformer.text_fusion.refiner_blocks.1.attn.to_gate": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.1.attn.to_k": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.1.attn.to_out.0": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.1.attn.to_q": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.1.attn.to_v": [
+      2560,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.1.ff.down": [
+      6912,
+      2560
+    ],
+    "transformer.text_fusion.refiner_blocks.1.ff.gate": [
+      2560,
+      6912
+    ],
+    "transformer.text_fusion.refiner_blocks.1.ff.up": [
+      2560,
+      6912
+    ],
+    "transformer.time_embed.linear_1": [
+      256,
+      6144
+    ],
+    "transformer.time_embed.linear_2": [
+      6144,
+      6144
+    ],
+    "transformer.time_mod_proj": [
+      6144,
+      36864
+    ],
+    "transformer.transformer_blocks.0.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.0.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.0.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.0.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.0.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.0.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.0.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.0.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.1.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.1.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.1.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.1.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.1.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.1.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.1.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.1.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.10.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.10.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.10.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.10.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.10.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.10.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.10.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.10.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.11.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.11.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.11.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.11.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.11.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.11.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.11.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.11.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.12.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.12.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.12.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.12.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.12.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.12.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.12.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.12.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.13.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.13.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.13.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.13.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.13.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.13.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.13.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.13.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.14.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.14.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.14.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.14.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.14.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.14.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.14.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.14.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.15.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.15.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.15.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.15.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.15.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.15.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.15.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.15.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.16.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.16.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.16.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.16.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.16.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.16.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.16.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.16.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.17.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.17.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.17.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.17.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.17.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.17.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.17.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.17.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.18.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.18.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.18.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.18.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.18.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.18.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.18.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.18.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.19.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.19.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.19.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.19.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.19.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.19.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.19.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.19.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.2.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.2.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.2.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.2.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.2.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.2.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.2.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.2.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.20.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.20.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.20.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.20.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.20.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.20.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.20.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.20.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.21.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.21.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.21.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.21.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.21.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.21.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.21.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.21.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.22.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.22.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.22.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.22.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.22.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.22.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.22.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.22.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.23.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.23.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.23.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.23.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.23.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.23.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.23.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.23.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.24.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.24.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.24.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.24.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.24.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.24.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.24.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.24.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.25.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.25.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.25.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.25.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.25.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.25.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.25.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.25.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.26.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.26.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.26.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.26.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.26.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.26.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.26.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.26.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.27.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.27.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.27.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.27.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.27.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.27.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.27.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.27.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.3.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.3.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.3.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.3.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.3.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.3.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.3.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.3.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.4.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.4.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.4.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.4.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.4.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.4.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.4.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.4.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.5.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.5.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.5.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.5.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.5.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.5.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.5.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.5.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.6.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.6.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.6.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.6.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.6.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.6.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.6.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.6.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.7.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.7.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.7.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.7.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.7.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.7.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.7.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.7.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.8.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.8.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.8.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.8.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.8.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.8.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.8.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.8.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.9.attn.to_gate": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.9.attn.to_k": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.9.attn.to_out.0": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.9.attn.to_q": [
+      6144,
+      6144
+    ],
+    "transformer.transformer_blocks.9.attn.to_v": [
+      6144,
+      1536
+    ],
+    "transformer.transformer_blocks.9.ff.down": [
+      16384,
+      6144
+    ],
+    "transformer.transformer_blocks.9.ff.gate": [
+      6144,
+      16384
+    ],
+    "transformer.transformer_blocks.9.ff.up": [
+      6144,
+      16384
+    ],
+    "transformer.txt_in.linear_1": [
+      2560,
+      6144
+    ],
+    "transformer.txt_in.linear_2": [
+      6144,
+      6144
+    ]
+  }
+}

@@ -28,6 +28,8 @@ public static class ImageGenerationMetadata
             $"Steps: {model.Steps}, Sampler: {model.Sampler}, CFG scale: {model.Cfg}, Seed: {seed}, Size: {size}, Model: {model.Name}");
         if (model.ClipSkip > 0) parameters += FormattableString.Invariant($", Clip skip: {model.ClipSkip}");
         if (model.Id == "krea") parameters += ", Flow shift: 1.15";
+        if (runtime?.Loras.Length > 0) parameters += ", LoRA: " + string.Join("; ", runtime.Loras.Select(l =>
+            l.Repository + "@" + l.Revision + ":" + l.Strength.ToString(CultureInfo.InvariantCulture)));
 
         XNamespace rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
         XNamespace dc = "http://purl.org/dc/elements/1.1/";
@@ -57,6 +59,9 @@ public static class ImageGenerationMetadata
             FlowShift = model.Id == "krea" ? (double?)1.15 : null,
             Backend = "stable-diffusion.cpp", BackendCommit = runtime?.BackendCommit,
             Runtime = runtime, RuntimeHistory = runtime is null ? "unknown" : "executed-receipt",
+            AppliedLoras = runtime?.Loras ?? [],
+            LoraPrompt = runtime?.Loras.Length > 0 ? string.Join(", ", runtime.Loras.Select(l => l.Trigger).Where(t => t.Length > 0 && !request.Prompt.Contains(t, StringComparison.OrdinalIgnoreCase))
+                .Distinct().Append(request.Prompt)) : null,
             DiffusionFlashAttention = true, OffloadToCpu = runtime is null ? (bool?)null : false, VaeTiling = true,
             // Engine delivery is recorded above from the actual attempt; static model weights stay separate.
             Components = model.Components.Where(id => id != "generation-runtime").Select(id =>

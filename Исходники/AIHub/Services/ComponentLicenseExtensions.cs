@@ -10,7 +10,7 @@ internal static class ComponentLicenseExtensions
     private sealed record Document(ComponentLicenseEntry Entry, string Text);
     private static readonly object Gate = new();
     private static string DirectoryPath => Path.Combine(AppDataPaths.BaseDirectory, "Licenses", "Extensions");
-    private static bool Safe(string id) => Regex.IsMatch(id, @"\Amusic-lora-found-[a-f0-9]{32}\z");
+    private static bool Safe(string id) => Regex.IsMatch(id, @"\A(?:music|image)-lora-found-[a-f0-9]{32}\z");
     internal static void Register(ComponentLicenseEntry entry, string text)
     {
         if (!Safe(entry.Id) || entry.Basic || entry.Texts.Length != 1 || entry.Texts[0] != "extensions/" + entry.Id
@@ -33,7 +33,7 @@ internal static class ComponentLicenseExtensions
         lock (Gate) {
             if (!Directory.Exists(DirectoryPath)) return [];
             var result = new List<Document>();
-            foreach (var path in Directory.EnumerateFiles(DirectoryPath, "music-lora-found-*.json").Take(4000)) {
+            foreach (var path in Directory.EnumerateFiles(DirectoryPath, "*-lora-found-*.json").Take(8000)) {
                 try {
                     if (new FileInfo(path).Length > 500000) continue;
                     var d = JsonSerializer.Deserialize<Document>(File.ReadAllText(path));

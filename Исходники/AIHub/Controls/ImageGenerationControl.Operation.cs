@@ -7,6 +7,7 @@ namespace AIHub.Controls;
 
 public sealed partial class ImageGenerationControl
 {
+    private string[] _activeLoraArtifacts = [];
     private static bool IsGenerationOperation(string kind) => kind is ImageGenerationCatalog.BackgroundKind or ImagePromptAssistant.BackgroundKind or ImageReferenceAnalyzer.BackgroundKind;
     private bool HasPendingGeneration() => ApplicationBackgroundOperations.Current is { HasPending: true, State: { } state } && IsGenerationOperation(state.Kind);
     private async Task PauseResumeAsync()
@@ -21,8 +22,10 @@ public sealed partial class ImageGenerationControl
     {
         if (_busy || HasPendingGeneration() || _promptBox is null || string.IsNullOrWhiteSpace(_promptBox.Text)) return;
         var request = new ImageGenerationRequest(Guid.NewGuid().ToString("N"), _modelId, _promptBox.Text, _width, _height,
-            Enumerable.Range(0, _count).Select(_ => (long)RandomNumberGenerator.GetInt32(int.MaxValue)).ToArray(), _modelsRoot, _sessionDirectory!);
+            Enumerable.Range(0, _count).Select(_ => (long)RandomNumberGenerator.GetInt32(int.MaxValue)).ToArray(), _modelsRoot, _sessionDirectory!) {
+                Loras = AIHub.Services.ImageLora.ImageLoraCatalog.Capture(_settings.Loras, _modelId) };
         ImageGenerationCatalog.Validate(request);
+        AIHub.Services.ImageLora.ImageLoraCatalog.ValidateRawPrompt(request.Prompt);
         if (!EnsureOutputFolder()) return;
         request = WithDelivery(request);
         ImageGenerationSessionStore.AddTurn(request); // Publish the accepted raw prompt before preparation or model work.
@@ -49,6 +52,7 @@ public sealed partial class ImageGenerationControl
     }
     private async Task GenerateAsync(ImageGenerationRequest request, CancellationToken token, BackgroundOperationState? restored = null)
     {
+        _activeLoraArtifacts = request.Loras.Select(u => "image-lora-found-" + u.Id).ToArray();
         _busy = true; _cancel = CancellationTokenSource.CreateLinkedTokenSource(token); Status(L("Generating")); Render();
         try
         {
@@ -64,6 +68,6 @@ public sealed partial class ImageGenerationControl
         }
         catch (OperationCanceledException) { Status(L("Canceled")); }
         catch (Exception error) { Error(error); }
-        finally { _busy = false; _cancel.Dispose(); _cancel = null; Render(); }
+        finally { _busy = false; _activeLoraArtifacts = []; _cancel.Dispose(); _cancel = null; Render(); }
     }
 }

@@ -1,0 +1,39 @@
+Source: https://huggingface.co/cptsl/NOBODY_JOY/tree/96797c1c9955ddb93273d8d8cfa025b26ffe72fa
+Declared license: cc-by-4.0
+
+---
+tags:
+- text-to-image
+- lora
+- diffusers
+- template:diffusion-lora
+widget:
+- output:
+    url: images/NOBOY_JOY.png
+  text: '-'
+base_model: Tongyi-MAI/Z-Image-Turbo
+instance_prompt: Nobody_Joy
+license: cc-by-4.0
+---
+# Nobody_Joy_Uncensored
+
+<Gallery />
+
+## Model description 
+
+Copy for tests
+
+Original here:
+https:&#x2F;&#x2F;civitai.com&#x2F;models&#x2F;2197035&#x2F;nobodyjoy-uncensored-z-image-turbo
+
+## Trigger words
+
+You should use `Nobody_Joy` to trigger the image generation.
+
+
+## Download model
+
+
+[Download](/cptsl/NOBODY_JOY/tree/main) them in the Files & versions tab.
+
+

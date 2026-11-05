@@ -1,0 +1,325 @@
+[
+  {
+    "Id": "image-lora-found-89ea7ee74140ac2c28c6bb4935c4d0dd",
+    "Name": "Classic Painting",
+    "Version": "e873cc474ce517d49d09ed1f64358ff43660b276",
+    "Author": "renderartist",
+    "License": "apache-2.0",
+    "Source": "https://huggingface.co/renderartist/Classic-Painting-Z-Image-Turbo-LoRA",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "0AC9DCA31B7C0CDEAC4317B1D577B66DFE7DF22ECC7CCB9435C511DA448ECBAB",
+    "Texts": [
+      "texts/image-lora-89ea7ee74140ac2c28c6bb4935c4d0dd.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-7d0e025b44299103f2afbc43c28abe66",
+    "Name": "Realism",
+    "Version": "8dc179cb56844d4ddc6e4527c30e98347eeae971",
+    "Author": "suayptalha",
+    "License": "apache-2.0",
+    "Source": "https://huggingface.co/suayptalha/Z-Image-Turbo-Realism-LoRA",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "82C43A35885468BD8636082926DF845E25CE3E5958FDB643565B54CC91AC479F",
+    "Texts": [
+      "texts/image-lora-7d0e025b44299103f2afbc43c28abe66.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-076b406fb2239a6fa489d9113fd80522",
+    "Name": "Pixel Art Style",
+    "Version": "0a5092d1619664d94a5a36784f92db84b3ae62bd",
+    "Author": "tarn59",
+    "License": "apache-2.0",
+    "Source": "https://huggingface.co/tarn59/pixel_art_style_lora_z_image_turbo",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "C9E817741FE465DF16CEA818E14C5CFA47C1AA26101684178C30CFB0B1ADFEC4",
+    "Texts": [
+      "texts/image-lora-076b406fb2239a6fa489d9113fd80522.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-4570a6a861d703c548ecaf40db7661a8",
+    "Name": "Anna Character",
+    "Version": "8442558ea83ddd3938087da6d6fb3d22d69065f7",
+    "Author": "Ccadic",
+    "License": "apache-2.0",
+    "Source": "https://huggingface.co/Ccadic/Anna-ZImage-Turbo-LoRA",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "91C1BADFED682E23D773634C850F5C84C3FECB25284E8342854E29A3D25BBEAF",
+    "Texts": [
+      "texts/image-lora-4570a6a861d703c548ecaf40db7661a8.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-e618b667d12f68dea0c6ea9656a9222c",
+    "Name": "NOBODY_JOY",
+    "Version": "96797c1c9955ddb93273d8d8cfa025b26ffe72fa",
+    "Author": "cptsl",
+    "License": "cc-by-4.0",
+    "Source": "https://huggingface.co/cptsl/NOBODY_JOY",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "B59D45A6B46683CCE06054AC716472C3CC83D034E2A7571CB20172B11F1CC9E5",
+    "Texts": [
+      "texts/image-lora-e618b667d12f68dea0c6ea9656a9222c.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-d0d87325f46c0baff3e34a901d1dd26d",
+    "Name": "cyberrealistic_zit_v5_r64",
+    "Version": "aa6f02578d3b016034023e0fa16d93531f1652d3",
+    "Author": "forbiddenmichael",
+    "License": "other",
+    "Source": "https://huggingface.co/forbiddenmichael/uncensored-studio-adapters",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4F10A109B110AEC2A0DBE42327A16964CA4887BC7CA0B9033D8EA171864EE2A4",
+    "Texts": [
+      "texts/image-lora-d0d87325f46c0baff3e34a901d1dd26d.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-cfc99a8b370d751969b4b44ecf277052",
+    "Name": "cyberrealistic_zit_v7_r64",
+    "Version": "aa6f02578d3b016034023e0fa16d93531f1652d3",
+    "Author": "forbiddenmichael",
+    "License": "other",
+    "Source": "https://huggingface.co/forbiddenmichael/uncensored-studio-adapters",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4F10A109B110AEC2A0DBE42327A16964CA4887BC7CA0B9033D8EA171864EE2A4",
+    "Texts": [
+      "texts/image-lora-cfc99a8b370d751969b4b44ecf277052.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-f3c02eb03790db8fb7c53575baa46402",
+    "Name": "cyberrealistic_zit_v7m_r64",
+    "Version": "aa6f02578d3b016034023e0fa16d93531f1652d3",
+    "Author": "forbiddenmichael",
+    "License": "other",
+    "Source": "https://huggingface.co/forbiddenmichael/uncensored-studio-adapters",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4F10A109B110AEC2A0DBE42327A16964CA4887BC7CA0B9033D8EA171864EE2A4",
+    "Texts": [
+      "texts/image-lora-f3c02eb03790db8fb7c53575baa46402.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-7ebd0d591c718c55acc6171a85751095",
+    "Name": "pornmaster_zit_v35_r64",
+    "Version": "aa6f02578d3b016034023e0fa16d93531f1652d3",
+    "Author": "forbiddenmichael",
+    "License": "other",
+    "Source": "https://huggingface.co/forbiddenmichael/uncensored-studio-adapters",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4F10A109B110AEC2A0DBE42327A16964CA4887BC7CA0B9033D8EA171864EE2A4",
+    "Texts": [
+      "texts/image-lora-7ebd0d591c718c55acc6171a85751095.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-0991eed4f91001db9daafb3560ab9766",
+    "Name": "pornmaster_zit_v35m_r64",
+    "Version": "aa6f02578d3b016034023e0fa16d93531f1652d3",
+    "Author": "forbiddenmichael",
+    "License": "other",
+    "Source": "https://huggingface.co/forbiddenmichael/uncensored-studio-adapters",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4F10A109B110AEC2A0DBE42327A16964CA4887BC7CA0B9033D8EA171864EE2A4",
+    "Texts": [
+      "texts/image-lora-0991eed4f91001db9daafb3560ab9766.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-f204b70d223c7fd0c7df192b3dc0cd4c",
+    "Name": "Darkbrush",
+    "Version": "af7645f3502694cfc9fd69b9c2dca113344df33d",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-darkbrush",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4689D184F2C2BEDA22082A430D4E350D1270340E96D76B1A64C90803FDC7143C",
+    "Texts": [
+      "texts/image-lora-f204b70d223c7fd0c7df192b3dc0cd4c.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-5c16273716293925aff1b4a8d6a3aabd",
+    "Name": "Retro Anime",
+    "Version": "23336fcff3bac43028918a2df795fbb63fdc1ff3",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-retroanime",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4928874F8EA51D72410AE4EC8CC32E67CFECB5FC5AEF9F528D4361E29EBB5B8A",
+    "Texts": [
+      "texts/image-lora-5c16273716293925aff1b4a8d6a3aabd.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-f2f8a914ceb385f97c3e01f669b0c902",
+    "Name": "Soft Watercolor",
+    "Version": "12ff680b14a869b0e72f225bbdb237ad244b6a94",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-softwatercolor",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "8E27377E3BCA2C0AAB6FD637B146C0B41F8A9C2FB4B6A571877F91A3488981B6",
+    "Texts": [
+      "texts/image-lora-f2f8a914ceb385f97c3e01f669b0c902.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-35b27fc13762da13396c797db53fe826",
+    "Name": "Vintage Tarot",
+    "Version": "5fb7c2f1d6b7a8a35aca940dbe8c5c02ba85fb3f",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-vintagetarot",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "C5605CBC7167ED7CF35264637BE50AC4DBBE6707409328B71B64E91C8061871B",
+    "Texts": [
+      "texts/image-lora-35b27fc13762da13396c797db53fe826.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-bd0950f946264cfe29f88dfb9ad9d651",
+    "Name": "Neon Drip",
+    "Version": "27b1c13a6feb68fe9abc71dc3dbc813fe6af408c",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-neondrip",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "D7D64EBEC5AFE1C95FC076AEC7BC03068D8AB61697AEA827997223FE99C093B9",
+    "Texts": [
+      "texts/image-lora-bd0950f946264cfe29f88dfb9ad9d651.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-ed3bdedbc5ce3eaee9884ba075ef5fae",
+    "Name": "Sunset Blur",
+    "Version": "bbc39e05cb5b59f60b00d9cca027495d91f2e10a",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-sunsetblur",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "C0C81342790A2DDF39DB07C2D873568A94F1EF1B0784398FB7CE14B0C441C33D",
+    "Texts": [
+      "texts/image-lora-ed3bdedbc5ce3eaee9884ba075ef5fae.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-35aa56666c4040a6abb601e86d9271d2",
+    "Name": "Rainy Window",
+    "Version": "b071a8c4201655dcf175e9b5f8ab66db93525747",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-rainywindow",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "AA55907EB66F0C3B3DEBD0901F976405CBFD6D9FDCAF63271C34193CD5ACDD37",
+    "Texts": [
+      "texts/image-lora-35aa56666c4040a6abb601e86d9271d2.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-1d552869694f013a6fe8cea055c408c7",
+    "Name": "Dot Matrix",
+    "Version": "47f962a5690534f99a8341d37f10ea6322a0c34a",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-dotmatrix",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "F172D582EC6BD8966D6CBC7B6B63F57B9931E9B7266C09A5EC8449B727AD1E40",
+    "Texts": [
+      "texts/image-lora-1d552869694f013a6fe8cea055c408c7.txt"
+    ]
+  },
+  {
+    "Id": "image-lora-found-490abbd1e94341215862612d3b8adc0a",
+    "Name": "Kids Drawing",
+    "Version": "0103d1c5f33d5b6d1c7226c879d5debc6d136121",
+    "Author": "krea",
+    "License": "other",
+    "Source": "https://huggingface.co/krea/Krea-2-LoRA-kidsdrawing",
+    "Checked": "2026-11-05",
+    "Ru": "Дополнение для генерации изображений. Изучите условия автора; результат предстоит проверить.",
+    "En": "Image generation adapter. Review the author's terms; output quality remains to be tested.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "8661EEA06C03AEEE1F03FB6BB9D5FB794694C930946F59F11E42982B46AACA6F",
+    "Texts": [
+      "texts/image-lora-490abbd1e94341215862612d3b8adc0a.txt"
+    ]
+  }
+]

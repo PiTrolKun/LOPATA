@@ -21,6 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Tools\image-loras.json" LogicalName="AIHub.ImageLoras" />
+    <EmbeddedResource Include="Tools\image-lora-signatures.json" LogicalName="AIHub.ImageLoraSignatures" />
     <EmbeddedResource Include="Content\ChatComposer.js" LogicalName="AIHub.ChatComposerScript" />
     <EmbeddedResource Include="Content\LetItOutSystem.txt" LogicalName="AIHub.LetItOutSystem" />
     <Content Include="Tools\VideoNarrators\**\*" Exclude="Tools\VideoNarrators\**\__pycache__\**;Tools\VideoNarrators\**\*.pyc" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

@@ -1,0 +1,206 @@
+Source: https://huggingface.co/Ccadic/Anna-ZImage-Turbo-LoRA/tree/8442558ea83ddd3938087da6d6fb3d22d69065f7
+Declared license: apache-2.0
+
+---
+license: apache-2.0
+base_model: Tongyi-MAI/Z-Image-Turbo
+base_model_relation: adapter
+pipeline_tag: text-to-image
+library_name: diffusers
+language:
+- en
+tags:
+- lora
+- z-image
+- z-image-turbo
+- character
+- photorealistic
+- comfyui
+- virtual-actress
+- safetensors
+- diffusers
+- identity-lora
+- woman
+- actress
+- comfyui_workflow
+- template:diffusion-lora
+- fictional-character
+- cinematic
+- ai-toolkit
+---
+
+# Anna — Cinematic Virtual Actress
+
+![Anna — Cinematic Virtual Actress](examples/02_EXPRESSIONS/EXP_00_NEUTRAL.png)
+**Anna** is an original fictional female character created for cinematic storytelling, virtual production, concept art and consistent character generation.
+
+This Character LoRA was trained for **[Tongyi-MAI/Z-Image-Turbo](https://huggingface.co/Tongyi-MAI/Z-Image-Turbo)**. It is designed to preserve Anna's recognizable facial identity across different camera angles, expressions, hairstyles, clothes, lighting conditions, locations and historical or science-fiction settings.
+
+Anna has a mature Mediterranean appearance, very dark brown hair, gray-green hazel eyes and a calm, intelligent and self-assured cinematic presence. She is intended to function as a reusable virtual actress rather than as a single fixed portrait.
+
+> Anna is an original fictional character and is not intended to represent any real person.
+
+## Technical information
+
+| Item | Value |
+|---|---|
+| Public name | Anna — Cinematic Virtual Actress |
+| Type | Character LoRA |
+| Base model | Z-Image Turbo |
+| Trigger word | `ana_biosyn` |
+| Recommended initial strength | `0.8–1.0` — still being evaluated |
+| Steps | 8–9 |
+| Guidance | 1 |
+| Training resolution | 512–768 |
+| Recommended generation resolution | 768–1024 |
+| Format | Safetensors BF16 |
+| Tested interface | ComfyUI |
+| Character type | Original fictional character |
+
+> Note: the tested ComfyUI workflow uses Guidance 1.  
+> When using the official Diffusers `ZImagePipeline`, use `guidance_scale=0.0`.
+
+## What this LoRA does
+
+The LoRA adds Anna's identity to Z-Image Turbo. It can be used to generate:
+
+- close-up and medium cinematic portraits;
+- three-quarter and profile views;
+- full-body compositions;
+- different facial expressions and emotions;
+- contemporary, historical and science-fiction costumes;
+- natural daylight, studio lighting and dramatic cinematic lighting;
+- recurring images of the same character for storyboards, films and visual narratives.
+
+The LoRA controls the **character identity**. The surrounding scene, clothing, pose, expression, camera and lighting should still be described in the prompt.
+
+## Installation in ComfyUI
+
+1. Download `ANA_IDENTITY_ZIMAGE_V1.safetensors`.
+2. Copy it into:
+
+   ```text
+   ComfyUI/models/loras/
+   ```
+
+3. Restart ComfyUI, or refresh its model list.
+4. Load **Z-Image Turbo** as the base model.
+5. Add a LoRA Loader node and select `ANA_IDENTITY_ZIMAGE_V1.safetensors`.
+6. Start with a LoRA strength between `0.8` and `1.0`.
+7. Include the trigger `ana_biosyn` near the beginning of the prompt.
+
+## Recommended settings
+
+| Setting | Recommended value |
+|---|---|
+| Base model | `Tongyi-MAI/Z-Image-Turbo` |
+| LoRA strength | `0.8–1.0` |
+| Sampling steps | `8–9` |
+| Guidance | `1` |
+| Sampler | FlowMatch-compatible Z-Image workflow |
+| Resolution | 768–1024 pixels on the principal dimension |
+
+These are starting values rather than absolute requirements. A lower strength can give the prompt more freedom, while a higher strength can reinforce Anna's identity.
+
+## Trigger word
+
+```text
+ana_biosyn
+```
+
+For best identity retention, use `ana_biosyn woman` close to the beginning of the prompt.
+
+## Example prompts
+
+### Natural close-up
+
+```text
+close-up cinematic photograph of ana_biosyn woman, calm neutral expression,
+direct eye contact, loose dark brown hair, pale blue cotton shirt, modern apartment,
+soft window daylight, realistic skin texture, shallow depth of field,
+natural cinematic color grading
+```
+
+### Science-fiction scene
+
+```text
+ana_biosyn woman inside a vast futuristic archive, intelligent and determined gaze,
+dark green technical uniform, translucent data displays, restrained cinematic lighting,
+subtle atmospheric haze, realistic skin, highly detailed science-fiction film still
+```
+
+### Historical character
+
+```text
+ana_biosyn woman as a nineteenth-century scientific explorer, chest-up portrait,
+authentic period clothing, leather field notebook, soft natural window light,
+realistic skin texture, cinematic historical drama
+```
+
+### Emotional scene
+
+```text
+cinematic portrait of ana_biosyn woman, restrained sadness, moist gray-green eyes,
+subtle natural tears, windswept dark hair, overcast coastal landscape,
+realistic emotional expression, dramatic film still
+```
+
+## Prompting advice
+
+- Put `ana_biosyn woman` near the beginning of the prompt.
+- Describe the desired framing explicitly: `close-up`, `chest-up`, `three-quarter view`, `profile` or `full-body`.
+- Describe expression, clothing, lighting and location separately.
+- If the identity becomes too dominant or the pose too rigid, reduce the LoRA strength.
+- If facial identity becomes too weak, move the trigger earlier and slightly increase the strength.
+- For comparisons, keep the same prompt and seed while changing only the LoRA strength.
+
+## Current limitations
+
+- Identity consistency can vary in very distant full-body shots.
+- Extreme camera angles, heavy facial occlusion or highly stylized rendering may reduce resemblance.
+- Complex scenes containing several similar female characters can cause identity mixing.
+- Recommended strength is still being evaluated and may be refined in a later version.
+- Results depend on the exact ComfyUI Z-Image Turbo workflow and its model versions.
+
+## Training summary
+
+- Architecture: Z-Image Turbo Character LoRA
+- Training steps: 2,000
+- LoRA rank / alpha: 16 / 16
+- Training precision: BF16
+- Optimizer: AdamW 8-bit
+- Noise scheduler: FlowMatch
+- Text encoder training: disabled
+- Training objective: balanced character identity preservation
+
+## File
+
+```text
+ANA_IDENTITY_ZIMAGE_V1.safetensors
+```
+
+Only the `.safetensors` file is required for inference. Training caches, optimizer states and source datasets are not required.
+
+## Intended use
+
+This LoRA is intended for lawful creative uses including cinematic previsualization, original fiction, storyboards, concept art, virtual production and experimentation with consistent fictional characters.
+
+Users are responsible for the images they generate and for complying with applicable laws, platform rules and the license of the base model. Do not use the model to impersonate a real person or to create misleading representations presented as authentic events.
+
+## License
+
+This repository is released under the **Apache License 2.0**. Use of the LoRA also remains subject to the terms applicable to the Z-Image Turbo base model.
+
+## Creator
+
+Created and trained by **Philippe Cadic**.
+
+- Hugging Face: [Ccadic](https://huggingface.co/Ccadic)
+- X / Twitter: [@sulfuroid](https://x.com/sulfuroid)
+
+© 2026 Philippe Cadic. Released under the Apache License 2.0.
+
+## Version
+
+**v1.0** — Initial public release.
+

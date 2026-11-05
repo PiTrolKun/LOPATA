@@ -19,9 +19,14 @@ public sealed record ImageGenerationRequest(string Id, string ModelId, string Pr
     public int OutputLongestSide { get; init; }
     // Captured when submitted. A resumed native job cannot silently change executors.
     public string? EngineSetId { get; init; }
+    public AIHub.Services.ImageLora.ImageLoraUse[] Loras { get; init; } = [];
 }
 public sealed record ImageGenerationRuntimeReceipt(string EngineSetId, string RuntimeVersion,
-    string BackendCommit, string Backend, string ComponentId);
+    string BackendCommit, string Backend, string ComponentId)
+{
+    public ImageLoraApplied[] Loras { get; init; } = [];
+}
+public sealed record ImageLoraApplied(string Id, string Repository, string Revision, string Sha256, double Strength, string Trigger);
 public sealed record ImageGenerationMetadataOptions(string Author, string Scenario = "image-generation/simple");
 public sealed record ImageGenerationResult(int Index, string FileName, long Seed, bool Reviewed = false)
 {

@@ -1,0 +1,51 @@
+Source: https://huggingface.co/tarn59/pixel_art_style_lora_z_image_turbo/tree/0a5092d1619664d94a5a36784f92db84b3ae62bd
+Declared license: apache-2.0
+
+---
+tags:
+- text-to-image
+- lora
+- diffusers
+- template:diffusion-lora
+widget:
+- output:
+    url: images/ComfyUI_00310_ (1).png
+  text: '-'
+- output:
+    url: images/ComfyUI_00305_ (1).png
+  text: '-'
+- output:
+    url: images/ComfyUI_00285_.png
+  text: '-'
+- output:
+    url: images/ComfyUI_00282_ (1).png
+  text: '-'
+- output:
+    url: images/ComfyUI_00277_.png
+  text: '-'
+- output:
+    url: images/ComfyUI_00273_.png
+  text: '-'
+- output:
+    url: images/ComfyUI_00268_.png
+  text: '-'
+base_model: Tongyi-MAI/Z-Image-Turbo
+instance_prompt: Pixel art style.
+license: apache-2.0
+---
+# Pixel Art Style
+
+<Gallery />
+
+
+## Trigger words
+
+You should use `Pixel art style.` to trigger the image generation.
+
+
+## Download model
+
+
+[Download](/tarn59/pixel_art_style_lora_z_image_turbo/tree/main) them in the Files & versions tab.
+
+

@@ -23,6 +23,7 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, string? executableOverride = null)
     {
         var model = ImageGenerationCatalog.Get(request.ModelId);
+        ImageLora.ImageLoraCatalog.ValidateRawPrompt(request.Prompt);
         var executable = executableOverride ?? ImageGenerationInstallation.Executable(cards);
         var info = new ProcessStartInfo(executable) { WorkingDirectory = Path.GetDirectoryName(executable),
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
@@ -40,6 +41,11 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         if (model.Id == "krea") Arg("--flow-shift", 1.15); // Native Krea denoiser uses the author's mu directly.
         info.ArgumentList.Add("--offload-to-cpu");
         info.ArgumentList.Add("--vae-tiling");
+        ImageLora.ImageLoraCatalog.ValidateUses(request.Loras, request.ModelId);
+        if (request.Loras.Length > 0) {
+            Arg("--lora-model-dir", Path.Combine(request.ModelsRoot, "ImageLoRA"));
+            Arg("--lora-apply-mode", "at_runtime");
+        }
         return info;
     }
     public async Task GenerateAsync(ImageGenerationRequest request, int index,
@@ -69,7 +75,11 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         }
         await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_" + index + ".runtime.log"), result.Log, token);
         if (result.ExitCode != 0) throw new BackgroundOperationFailedException("Generation.RuntimeError");
-        return new(selection.EngineSetId, selection.Version, selection.Revision, selection.Backend, selection.ComponentId);
+        if (request.Loras.Length > 0 && (LoraRejected(result.Log) || !LorasApplied(result.Log, request.Loras)))
+            throw new BackgroundOperationFailedException("Generation.Lora.NotApplied");
+        return new(selection.EngineSetId, selection.Version, selection.Revision, selection.Backend, selection.ComponentId) {
+            Loras = request.Loras.Select(u => { var d = ImageLora.ImageLoraCatalog.Find(u.Id);
+                return new ImageLoraApplied(u.Id, d.Repository, u.Revision, d.Files.Single().Sha256, u.Strength, d.Trigger); }).ToArray() };
     }
 
     internal static ProcessStartInfo ManagedCommand(ImageGenerationRequest request, int index,
@@ -94,6 +104,16 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
     }
 
     internal static bool IsHardwareFailure(string log) => NativeHardwareFailure.IsRecoverable(log);
+    internal static bool LoraRejected(string log) => System.Text.RegularExpressions.Regex.IsMatch(log,
+        @"unused lora tensor|skipp(?:ed|ing)[^\r\n]*lora|(?:failed|unable|cannot|could not)[^\r\n]*lora|lora[^\r\n]*(?:not found|failed|incompatible|mismatch)|Only \([^\r\n]+LoRA tensors|LOPATA_LORA_REJECTED",
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+    internal static bool LorasApplied(string log, ImageLora.ImageLoraUse[] uses)
+    {
+        var lines = log.Replace('\\','/').Split('\n');
+        return uses.All(u => lines.Any(line => line.Contains("/" + u.Id + "/" + u.Revision[..12] + "/adapter.safetensors", StringComparison.OrdinalIgnoreCase)
+            && System.Text.RegularExpressions.Regex.Match(line, @"\((\d+)\s*/\s*(\d+)\) LoRA tensors have been applied") is { Success: true } match
+            && match.Groups[1].Value == match.Groups[2].Value && match.Groups[1].Value != "0"));
+    }
 
     private static async Task<(int ExitCode, string Log)> AttemptAsync(ImageGenerationRequest request, int index,
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output,
@@ -117,10 +137,15 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
     }
     private static async Task<string> DrainAsync(StreamReader reader)
     {
-        var tail = new StringBuilder(); var buffer = new char[4096]; int count;
+        var tail = new StringBuilder(); var buffer = new char[4096]; int count; var rejected = false; var previous = "";
+        var applied = new HashSet<string>(StringComparer.Ordinal);
         while ((count = await reader.ReadAsync(buffer)) > 0)
-        { tail.Append(buffer, 0, count); if (tail.Length > 65536) tail.Remove(0, tail.Length - 65536); }
-        return tail.ToString();
+        { var chunk = previous + new string(buffer, 0, count); rejected |= LoraRejected(chunk);
+            foreach (var line in chunk.Split('\n').Where(line => line.Contains("LoRA tensors have been applied", StringComparison.Ordinal)))
+                if (applied.Count < 64) applied.Add(line.Trim());
+            previous = chunk[^Math.Min(chunk.Length, 4096)..];
+            tail.Append(buffer, 0, count); if (tail.Length > 65536) tail.Remove(0, tail.Length - 65536); }
+        return (rejected ? "LOPATA_LORA_REJECTED\n" : "") + string.Join('\n', applied) + "\n" + tail;
     }
 }
 
@@ -131,6 +156,8 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
         IReadOnlyList<ManagedModelArtifactCard> cards, Action? changed, CancellationToken token)
     {
         ImageGenerationCatalog.Validate(request);
+        ImageLora.ImageLoraCatalog.ValidateRawPrompt(request.Prompt);
+        ImageLora.ImageLoraCatalog.ValidateUses(request.Loras, request.ModelId);
         if (!ImageOutputDimensions.IsSupported(request.OutputLongestSide)) throw new ArgumentException("Generation.InvalidOutputSize");
         if (_worker is ImageGenerationNativeWorker)
         {
@@ -141,9 +168,15 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
             NativeRuntimeReleasePolicy.ValidateSetId(capturedSet);
             request = request with { EngineSetId = capturedSet };
         }
+        using var loraLease = _worker is ImageGenerationNativeWorker
+            ? await ImageLora.ImageLoraAssets.AcquireAsync(request.ModelsRoot, request.Loras, request.ModelId, token) : null;
         ImageGenerationSessionStore.AddTurn(request);
         var promptFile = Path.Combine(request.SessionDirectory, request.Id + ".input.txt");
         await File.WriteAllTextAsync(promptFile, request.Prompt, new UTF8Encoding(false), token);
+        if (request.Loras.Length > 0) {
+            promptFile = Path.Combine(request.SessionDirectory, request.Id + ".lora-input.txt");
+            await File.WriteAllTextAsync(promptFile, ImageLora.ImageLoraCatalog.EffectivePrompt(request.Prompt, request.Loras), new UTF8Encoding(false), token);
+        }
         for (var i = 0; i < request.Seeds.Length; i++)
         {
             token.ThrowIfCancellationRequested();

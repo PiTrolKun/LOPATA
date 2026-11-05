@@ -103,7 +103,10 @@ public sealed partial class ImageGenerationControl
             foreach (var n in new[] { 1, 2, 3, 4 }) { var option = new MenuItem { Header = "×" + n }; option.Click += (_, _) => { _count = n; Render(); }; menu.Items.Add(option); }
             ShowMenu(variants, menu);
         }; toolbar.Children.Add(variants);
-        toolbar.Children.Add(OutputSizeButton(enabled)); return toolbar;
+        toolbar.Children.Add(OutputSizeButton(enabled));
+        var loraCount = _settings.Loras.Enabled ? (_settings.Loras.ByModel.GetValueOrDefault(_modelId) ?? []).Count(c => c.Enabled && c.Strength > 0) : 0;
+        var lora = Icon("Lora.Title", "LoRA" + (loraCount > 0 ? " · " + loraCount : ""), OpenLorasAsync, "Lora", enabled);
+        lora.Opacity = loraCount > 0 ? 1 : .6; toolbar.Children.Add(lora); return toolbar;
     }
 
     private void CustomSize()

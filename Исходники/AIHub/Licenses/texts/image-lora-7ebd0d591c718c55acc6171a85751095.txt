@@ -1,0 +1,36 @@
+Source: https://huggingface.co/forbiddenmichael/uncensored-studio-adapters/tree/aa6f02578d3b016034023e0fa16d93531f1652d3
+Declared license: other
+
+---
+license: other
+base_model: Tongyi-MAI/Z-Image-Turbo
+tags: [lora, z-image, z-image-turbo, adapter]
+---
+
+# Uncensored Studio adapters
+
+Rank-64 adapters extracted from community fine-tunes of Z-Image Turbo against
+the plain base (Comfy-Org/z_image_turbo, bf16): low-rank SVD of the weight
+difference over the 30 transformer layers (attention q, k, v, out; feed-forward
+w1, w2, w3; adaLN modulation). Norm and bias changes are not carried. They let
+a checkpoint's look run on a hosted Z-Image Turbo adapter endpoint, pay per
+image. Use at scale 1.0, 8 to 9 steps, guidance 0.
+
+All credit for each fine-tune goes to its author; each file's metadata names
+its source. Extraction script: scripts/extract-zimage-adapter.py in the
+Uncensored Studio repository (https://uncensored-studio.art).
+
+| File | Source | Author | Signal kept at rank 64 (median) | Licence note |
+| --- | --- | --- | --- | --- |
+| cyberrealistic_zit_v5_r64.safetensors | CyberRealistic Z-Image Turbo v5.0 (bf16), civitai.com/models/2218365 | Cyberdelia | 0.90 | Civitai: Image, Rent, Sell, SellMerge |
+| cyberrealistic_zit_v7m_r64.safetensors | CyberRealistic Z-Image Turbo v7.0 (fp8 source, base rounded to fp8 first) | Cyberdelia | 0.25 | same |
+| cyberrealistic_zit_v7_r64.safetensors | CyberRealistic Z-Image Turbo v7.0 (fp8 source, plain subtraction) | Cyberdelia | 0.21 | same |
+| pornmaster_zit_v35m_r64.safetensors | PornMaster Z-Image Turbo V3.5 (fp8 source, base rounded to fp8 first), civitai.com/models/2270401 | PornMaster | 0.48 | Civitai: Image, RentCivit; no Sell. Not for paid routes |
+| pornmaster_zit_v35_r64.safetensors | PornMaster Z-Image Turbo V3.5 (fp8 source, plain subtraction) | PornMaster | 0.33 | same |
+
+An fp8 source file carries rounding noise that a low-rank extraction cannot
+separate from the fine-tune; bf16 sources give far higher capture. Prefer the
+bf16-derived files where one exists. The v4 adapter lives at
+forbiddenmichael/cyberrealistic-zit-v4-adapter.
+
+

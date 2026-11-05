@@ -34,7 +34,7 @@ public sealed partial class ImageGenerationControl : UserControl
     public event Action? WorkspaceChanged;
     public bool IsChat => _page == 2;
     public bool CanChangeModel => !_busy && !HasPendingGeneration();
-    public void ConfigureOutput(ImageGenerationSettings settings, Action save) { _settings = settings; _saveSettings = save; }
+    public void ConfigureOutput(ImageGenerationSettings settings, Action save) { _settings = settings; _settings.Loras ??= new(); _saveSettings = save; }
     public void ConfigureMetadata(Func<string?> author) => _metadataAuthor = author;
     public ImageGenerationControl() : this(new ImageGenerationInstallation(), new()) { }
     public ImageGenerationControl(ImageGenerationInstallation installation, ImageGenerationRuntime runtime)
@@ -64,7 +64,7 @@ public sealed partial class ImageGenerationControl : UserControl
     }
     public void Localize(Func<string, string> localize, string language = "ru") { _l = localize; _languageCode = language; if (_statusKey is not null) _statusText = L(_statusKey); Render(); }
     public void DownloadConnections(int value) => _installation.MaximumParallelConnections = value;
-    public bool UsesArtifact(string id) => _busy && (ImageGenerationCatalog.Get(_modelId).Components.Contains(id) || id == ManagedModelCatalog.OmniBetaArtifactId);
+    public bool UsesArtifact(string id) => _busy && (ImageGenerationCatalog.Get(_modelId).Components.Contains(id) || id == ManagedModelCatalog.OmniBetaArtifactId || _activeLoraArtifacts.Contains(id));
     public void RefreshBackgroundStatus()
     {
         if (ApplicationBackgroundOperations.Current?.State is { } state && IsGenerationOperation(state.Kind) && _busy)
