@@ -1,0 +1,58 @@
+{
+  "titleRu": "Первый путь",
+  "titleEn": "The first road",
+  "skyColor": "#87CEEB",
+  "horizonColor": "#B0E0E6",
+  "groundColor": "#ADD8E6",
+  "roadColor": "#D3D3D3",
+  "markColor": "#FFA500",
+  "horizonShapes": [
+    { "kind": "path", "x": 0, "y": 256, "width": 256, "height": 128, "data": "M 0 256 C 128 240 256 256 256 256 Z", "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 }
+  ],
+  "groundShapes": [
+    { "kind": "rect", "x": 0, "y": 0, "width": 256, "height": 128, "data": null, "fill": "#ADD8E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 },
+    { "kind": "rect", "x": 0, "y": 128, "width": 256, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 }
+  ],
+  "roadsideObjects": [
+    {
+      "name": "Levitating Greenhouse",
+      "shapes": [
+        { "kind": "path", "x": 256, "y": 192, "width": 32, "height": 64, "data": "M 256 192 C 288 184 320 200 320 256 Z", "fill": "#B0E0E6", "stroke": "#87CEEB", "strokeWidth": 2, "opacity": 1 },
+        { "kind": "rect", "x": 240, "y": 184, "width": 32, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 },
+        { "kind": "rect", "x": 280, "y": 184, "width": 32, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 }
+      ]
+    },
+    {
+      "name": "Submerged Mechanical Garden",
+      "shapes": [
+        { "kind": "path", "x": 80, "y": 256, "width": 192, "height": 64, "data": "M 80 256 C 128 248 160 256 160 256 Z", "fill": "#B0E0E6", "stroke": "#87CEEB", "strokeWidth": 2, "opacity": 1 },
+        { "kind": "rect", "x": 96, "y": 248, "width": 64, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 },
+        { "kind": "rect", "x": 152, "y": 248, "width": 64, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 }
+      ]
+    },
+    {
+      "name": "Broken Observatory",
+      "shapes": [
+        { "kind": "path", "x": 128, "y": 192, "width": 64, "height": 32, "data": "M 128 192 C 144 184 160 200 160 256 Z", "fill": "#B0E0E6", "stroke": "#87CEEB", "strokeWidth": 2, "opacity": 1 },
+        { "kind": "rect", "x": 136, "y": 184, "width": 16, "height": 16, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 },
+        { "kind": "rect", "x": 152, "y": 184, "width": 16, "height": 16, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 }
+      ]
+    },
+    {
+      "name": "Giant Fossil",
+      "shapes": [
+        { "kind": "path", "x": 256, "y": 192, "width": 128, "height": 64, "data": "M 256 192 C 280 184 304 200 304 256 Z", "fill": "#B0E0E6", "stroke": "#87CEEB", "strokeWidth": 2, "opacity": 1 },
+        { "kind": "rect", "x": 264, "y": 184, "width": 32, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 },
+        { "kind": "rect", "x": 296, "y": 184, "width": 32, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 }
+      ]
+    },
+    {
+      "name": "Warp Gate",
+      "shapes": [
+        { "kind": "path", "x": 80, "y": 256, "width": 32, "height": 64, "data": "M 80 256 C 112 248 144 256 144 256 Z", "fill": "#B0E0E6", "stroke": "#87CEEB", "strokeWidth": 2, "opacity": 1 },
+        { "kind": "rect", "x": 96, "y": 248, "width": 32, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 },
+        { "kind": "rect", "x": 128, "y": 248, "width": 32, "height": 32, "data": null, "fill": "#B0E0E6", "stroke": "none", "strokeWidth": 0, "opacity": 1 }
+      ]
+    }
+  ]
+}

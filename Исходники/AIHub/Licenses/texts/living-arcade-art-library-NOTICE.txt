@@ -1,0 +1,28 @@
+Living Arcade additive art library / Дополнительная библиотека «Живой аркады»
+Catalog revision: 2026-11-06.1
+
+CC0 originals: Glitch (Tiny Speck; SVG conversion bart), 8-Bit Dungeon
+(Jamie Cross), Shape Characters (Kenney), Blue Bird (mirex), Cartoon Jester
+(laetissima), Cartoon Vector Characters (laetissima).
+Original files, author notices, source pages, the CC0 legal code and download
+hashes accompany the library in Assets/LivingArcade/Library/licenses and sources.
+Prepared PNGs and Kenney assemblies are adaptations; originals remain unchanged.
+Glitch logos/trademarks and imitations of proprietary game characters are excluded.
+
+Selected original tank and dragon drawings were generated in LOPATA's local
+research with Gemma 4 26B A4B Instruct QAT (Unsloth UD-Q4_K_XL). Their actual
+model revision and provenance accompany each catalog entry and prepared PNG.
+These generated drawings are not attributed to the CC0 authors or marked CC0.
+Gemma model terms: https://ai.google.dev/gemma/terms
+
+Sources:
+https://opengameart.org/content/glitch-inhabitants-and-cubimals-svg
+https://github.com/tinyspeck/glitch-items
+https://jamiecross.itch.io/8-bit-dungeon-tilesetsprites
+https://kenney.nl/assets/shape-characters
+https://opengameart.org/content/blue-bird-for-jump-and-run-arcade
+https://opengameart.org/content/cartoon-jester
+https://opengameart.org/content/cartoon-vector-characters
+
+Эта библиотека дополняет процедурную графику и собственные рисунки моделей.
+Она не меняет лицензию ЛОПАТЫ и условия отдельно скачиваемых моделей.

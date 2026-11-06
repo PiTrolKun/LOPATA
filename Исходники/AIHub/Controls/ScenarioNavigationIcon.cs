@@ -12,6 +12,7 @@ internal static class ScenarioNavigationIcon
     {
         var geometry = name switch
         {
+            "gamepad" => "M6,7 L18,7 Q21,7 22,11 L23,17 Q23,21 20,20 L16,17 L8,17 L4,20 Q1,21 1,17 L2,11 Q3,7 6,7 Z M5,11 L5,15 M3,13 L7,13 M17,11 L17.1,11 M20,14 L20.1,14",
             "create" => "M4,17 L16,5 Q17,4 18,5 L20,7 Q21,8 20,9 L8,21 L3,22 Z M14,7 L18,11 M4,17 L8,21 M3,22 L8,21",
             "analyze" => "M16,10 A6,6 0 1 1 4,10 A6,6 0 1 1 16,10 M14.5,14.5 L21,21 M7,10 L9,12 L13,8",
             "experiment" => "M9,3 L15,3 M10,3 L10,10 L4,19 Q3,22 6,22 L18,22 Q21,22 20,19 L14,10 L14,3 M7,15 L17,15 M9,18 L9.1,18 M14,19 L14.1,19",

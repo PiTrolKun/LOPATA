@@ -35,6 +35,8 @@ public static partial class ManagedModelCatalog
         return
         [
             CreateCore(modelsRoot),
+            CreateLivingArcadeMain(modelsRoot),
+            CreateLivingArcadeArtist(modelsRoot),
             CreateLetItOut(LetItOutModel.ModelsRoot(settings) ?? modelsRoot),
             CreateLetItOutVision(LetItOutModel.ModelsRoot(settings) ?? modelsRoot),
             CreateKimiMedium(modelsRoot),

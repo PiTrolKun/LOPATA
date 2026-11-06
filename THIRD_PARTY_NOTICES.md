@@ -867,3 +867,34 @@ release, subject to its full custom licence and NVIDIA component terms. It is
 not bundled with LOPATA or mirrored. LOPATA neither copies its implementation nor
 claims redistribution rights in the experimental NR SDK. The original licence
 and THIRD-PARTY-NOTICES are preserved verbatim and presented by the optional gate.
+
+## Living Arcade / Qwen2.5-Coder (optional models, 2026-11-06)
+
+The private experimental game uses the official Qwen GGUF releases:
+Qwen/Qwen2.5-Coder-7B-Instruct-GGUF, revision
+13fb94bfda8c8cf22497dc57b78f391a9acb426a, under Apache-2.0;
+Qwen/Qwen2.5-Coder-3B-Instruct-GGUF, revision
+f74adce6aa16316c625447af059dbebe4983757c, under the Qwen Research License.
+Exact model files, sizes and SHA-256 hashes are pinned in the managed catalog.
+Weights are downloaded separately from the author and remain unmodified.
+
+The 3B agreement defines permitted non-commercial use as research or evaluation;
+free distribution of LOPATA does not itself authorize other uses. Commercial use
+requires the licensor's separate permission. The game is an experiment in local
+procedural game design; the player has no model-material editor or export feature.
+This scope does not replace or expand the original licence rights.
+Qwen is licensed under the Qwen RESEARCH LICENSE AGREEMENT, Copyright (c) Alibaba Cloud. All Rights Reserved.
+
+The original model-specific LICENSE files and the required 3B attribution notice
+are retained under Исходники/AIHub/Licenses/texts/living-arcade-qwen25-coder*.
+Both models use the ordinary optional component licence gate and ComponentAudit.
+The additive Living Arcade art library retains the complete checked CC0 packs by
+Tiny Speck/bart, Jamie Cross, Kenney, mirex and laetissima. Original sources,
+licence notices and the CC0 legal code are bundled in Assets/LivingArcade/Library.
+Prepared images, animations and Kenney assemblies are identified as adaptations.
+Two selected original local Gemma research drawings carry separate model provenance;
+they are not marked CC0 or attributed to the CC0 artists. Proprietary game-character
+imitations are excluded. See Licenses/texts/living-arcade-art-library-NOTICE.txt.
+
+LOPATA's own GPL-3.0-or-later licence is unchanged. Only bounded validated level
+JSON is consumed; generated executable code and arbitrary asset downloads are not run.

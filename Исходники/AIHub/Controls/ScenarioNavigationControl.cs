@@ -9,7 +9,7 @@ using UserControl = System.Windows.Controls.UserControl;
 namespace AIHub.Controls;
 
 /// <summary>Navigation presentation only; existing scenario handlers own project/model lifecycles.</summary>
-public sealed class ScenarioNavigationControl : UserControl
+public sealed partial class ScenarioNavigationControl : UserControl
 {
     private Func<string, string> _localize = key => key;
     private readonly ContentControl _historyHost = new();
@@ -60,6 +60,13 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsLivingArcade)
+        {
+            LivingArcade?.SuspendForNavigation();
+            IsLivingArcade = false;
+            ShowHome();
+            return true;
+        }
         if (IsLetItOutChat)
         {
             IsLetItOutChat = false;
@@ -91,6 +98,8 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        LivingArcade?.SuspendForNavigation();
+        IsLivingArcade = false;
         if (SongClip?.Checkpoint() == false) return;
         IsSongClip = false;
         if (VideoPreparation?.Checkpoint() == false) return;
@@ -105,6 +114,8 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
+        LivingArcade?.SuspendForNavigation();
+        IsLivingArcade = false;
         if (SongClip?.Checkpoint() == false) return;
         IsSongClip = false;
         var node = ScenarioNavigationCatalog.Get(id);
@@ -120,6 +131,13 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public void OpenScenario(string id)
     {
+        if (id == ScenarioNavigationCatalog.LivingArcade)
+        {
+            ScenarioRequested?.Invoke(id);
+            return;
+        }
+        LivingArcade?.SuspendForNavigation();
+        IsLivingArcade = false;
         var node = ScenarioNavigationCatalog.Get(id);
         if (node.Kind != ScenarioNavigationKind.Scenario || !node.IsAvailable) return;
         var group = ScenarioNavigationCatalog.Get(node.ParentId!);
@@ -177,6 +195,8 @@ public sealed class ScenarioNavigationControl : UserControl
 
     public void ShowLetItOutChat()
     {
+        LivingArcade?.SuspendForNavigation();
+        IsLivingArcade = false;
         SelectedDirectionId = ScenarioNavigationCatalog.Experiments;
         PlaceholderScenarioId = null;
         IsSandboxLanding = IsVideoPreparation = IsSongClip = false;
@@ -234,6 +254,12 @@ public sealed class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (Content == LivingArcade) Content = null;
+        if (IsLivingArcade)
+        {
+            LivingArcade!.Configure(_localize);
+            Content = LivingArcade; StateChanged?.Invoke(); return;
+        }
         if (Content == LetItOutChat) Content = null;
         if (IsLetItOutChat)
         {
@@ -278,6 +304,7 @@ public sealed class ScenarioNavigationControl : UserControl
             foreach (var node in ScenarioNavigationCatalog.Children(null))
                 _tiles.Children.Add(Card(node, () => SelectDirection(node.Id), direction: true));
             body.Children.Add(_tiles);
+            body.Children.Add(CreateArcadeEntrance());
         }
         else if (placeholder is not null)
         {

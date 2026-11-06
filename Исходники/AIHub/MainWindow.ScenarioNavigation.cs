@@ -10,6 +10,7 @@ public partial class MainWindow
         WorkStartPage.Children.Remove(PreviousWorkExpander);
         ScenarioNavigationPage.AttachSandboxHistory(PreviousWorkExpander);
         ScenarioNavigationPage.StateChanged += RefreshScenarioNavigationState;
+        ScenarioNavigationPage.StateChanged += RefreshLivingArcadeHeader;
         ScenarioNavigationPage.IsVisibleChanged += (_, _) => RefreshWorkStartWorkspaceLayout();
         ScenarioNavigationPage.VideoPreparationCreated += ConfigureVideoConcept;
         ScenarioNavigationPage.SongClipCreated += ConfigureSongClip;
@@ -29,6 +30,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.LivingArcade:
+                    await OpenLivingArcadeAsync();
+                    break;
                 case ScenarioNavigationCatalog.LetItOut:
                     await OpenLetItOutAsync();
                     break;
@@ -94,8 +98,8 @@ public partial class MainWindow
     {
         RefreshWorkStartWorkspaceLayout();
         if (WorkStartPage.Visibility != Visibility.Visible) return;
-        BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat ? Visibility.Collapsed : Visibility.Visible;
-        if (ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat) { StatusText.Text = ""; return; }
+        BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade ? Visibility.Collapsed : Visibility.Visible;
+        if (ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.PlaceholderScenarioId is not null) { StatusText.Text = L("Navigation.Soon"); return; }
         if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (VectorPage.Visibility == Visibility.Visible || MusicPage.Visibility == Visibility.Visible || FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible || GenerationPage.Visibility == Visibility.Visible || ImageUtilityPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }

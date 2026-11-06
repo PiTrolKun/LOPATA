@@ -1,0 +1,20 @@
+{
+  "id": "bluebird",
+  "title": "Blue Bird",
+  "author": "mirex",
+  "license": "CC0-1.0",
+  "sourceUrl": "https://opengameart.org/content/blue-bird-for-jump-and-run-arcade",
+  "upstreamUrl": "https://opengameart.org/content/blue-bird-for-jump-and-run-arcade",
+  "evidence": [
+    "licenses/bluebird/source-page.html"
+  ],
+  "originalArchives": [
+    {
+      "filename": "eateat_bird1.zip",
+      "bytes": 11828,
+      "sha256": "097071733748403aa4ee043c1b2804b53c1a5f034ac69a3ab401334c750c10b3"
+    }
+  ],
+  "modifications": "Original source files unchanged. Prepared PNGs normalized by LOPATA; animation cycles replay author-drawn poses. Static movement is a runtime transform, not author-drawn walking.",
+  "exclusions": ""
+}

@@ -1,0 +1,21 @@
+{
+  "id": "jamie",
+  "title": "8-Bit Dungeon",
+  "author": "Jamie Cross",
+  "license": "CC0-1.0",
+  "sourceUrl": "https://jamiecross.itch.io/8-bit-dungeon-tilesetsprites",
+  "upstreamUrl": "https://jamiecross.itch.io/8-bit-dungeon-tilesetsprites",
+  "evidence": [
+    "licenses/jamie/source-page.html",
+    "licenses/jamie/License.txt"
+  ],
+  "originalArchives": [
+    {
+      "filename": "8-Bit-Dungeon-Tiles.zip",
+      "bytes": 4571174,
+      "sha256": "7f5e9a26d87ad6fd8087d144c4f50ff0a851aa2b94c57db959207512d747baaf"
+    }
+  ],
+  "modifications": "Original source files unchanged. Prepared PNGs normalized by LOPATA; animation cycles replay author-drawn poses. Static movement is a runtime transform, not author-drawn walking.",
+  "exclusions": ""
+}

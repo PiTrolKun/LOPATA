@@ -523,5 +523,12 @@
     "Terms": "FACD09133944D9675B337B40C8DAC4B2DC3C850644FA4AF6EBD8E61E2AF8C7EF",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
+  },
+  {
+    "Id": "living-arcade-art-library",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "7652CB23C320C981B56712E18A3482C3365CC378D85045B77EF73EC205CB6EEB",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
   }
 ]

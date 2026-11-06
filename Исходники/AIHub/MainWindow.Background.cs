@@ -41,6 +41,7 @@ public partial class MainWindow
         RegisterVideoConceptBackgroundOperations();
         RegisterSongClipBackgroundOperations();
         RegisterLetItOutBackgroundOperation();
+        RegisterLivingArcadeBackgroundOperations();
         RegisterChatSpeech();
         RegisterBookSmartBackgroundOperation();
         RegisterLyricLibraryBackgroundOperation();
@@ -225,6 +226,8 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind is Services.LivingArcade.LivingArcadeGeneration.Kind or Services.LivingArcade.LivingArcadeGeneration.WarmupKind or Services.LivingArcade.LivingArcadeGeneration.FirstEventsKind)
+            { ViewLivingArcadeResult(notice); return; }
             if (notice.Kind == ChatSpeechWork.Kind)
             {
                 OpenChatSpeechFolder(); _backgroundOperations!.Acknowledge(notice.Id); return;

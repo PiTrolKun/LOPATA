@@ -1,0 +1,4 @@
+Qwen is licensed under the Qwen RESEARCH LICENSE AGREEMENT, Copyright (c) Alibaba Cloud. All Rights Reserved.
+
+Source: https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/tree/f74adce6aa16316c625447af059dbebe4983757c
+The downloaded GGUF model is an unmodified upstream original. LOPATA supplies its own bounded game-data adapter.

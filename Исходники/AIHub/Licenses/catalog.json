@@ -5577,5 +5577,58 @@
     "Texts": [
       "texts/image-lora-490abbd1e94341215862612d3b8adc0a.txt"
     ]
+  },
+  {
+    "Id": "model-qwen25-coder7b-q4km",
+    "Name": "Qwen2.5-Coder 7B Instruct GGUF Q4_K_M · Living Arcade",
+    "Version": "13fb94bfda8c8cf22497dc57b78f391a9acb426a",
+    "Author": "Alibaba Cloud / Qwen",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/tree/13fb94bfda8c8cf22497dc57b78f391a9acb426a",
+    "Checked": "2026-11-06",
+    "Ru": "Официальный GGUF Qwen, скачивается отдельно. Дизайн, описание механик и проверка игровых уровней в исследовательской «Живой аркаде». Оригинальная Apache License 2.0 сохранена без изменений. Модель не получает доступ к файлам, сети или запуску программ: используются только проверяемые определения игрового уровня. Условия модели действуют отдельно от лицензии ЛОПАТЫ.",
+    "En": "Official Qwen GGUF, downloaded separately. Level design, declarative mechanics and review in the experimental Living Arcade. The original Apache License 2.0 is retained unmodified. The model has no file, network or process execution access; only validated game-level data are used. Model terms are separate from LOPATA's licence.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "278F294D7C8B5F758B3AAE718AC6A21B644822E1576CEA3E2FC3660936D90449",
+    "Texts": [
+      "texts/living-arcade-qwen25-coder7b-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "model-qwen25-coder3b-q4km",
+    "Name": "Qwen2.5-Coder 3B Instruct GGUF Q4_K_M · Living Arcade",
+    "Version": "f74adce6aa16316c625447af059dbebe4983757c",
+    "Author": "Alibaba Cloud / Qwen",
+    "License": "Qwen Research",
+    "Source": "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/tree/f74adce6aa16316c625447af059dbebe4983757c",
+    "Checked": "2026-11-06",
+    "Ru": "Qwen Research License разрешает только некоммерческие исследования и оценку. Бесплатность приложения сама по себе не разрешает любое использование; для коммерческого использования требуется отдельное разрешение Alibaba Cloud. Модель скачивается отдельно для исследования генеративной игры «Живая аркада»: оформляет игровые фигуры, небольшой музыкальный мотив и мини-события. Пользователь играет; редактора или экспорта модельных материалов здесь нет. Такое назначение не отменяет оригинальные ограничения. Оригинальный договор и обязательное уведомление сохранены; лицензия ЛОПАТЫ не меняется.",
+    "En": "The Qwen Research License permits non-commercial research and evaluation only. A free application does not authorize every use; commercial use requires separate permission from Alibaba Cloud. The model is downloaded separately for research into the Living Arcade generative game: visual styles, a short musical motif and mini-events. The user plays; no model-material editor or export is provided. This purpose does not override the original restrictions. The original agreement and required attribution notice are retained; LOPATA's licence is unchanged.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "A6D79B5828A784BE2C989EB845E906108501F2357915F158CF715105733ED190",
+    "Texts": [
+      "texts/living-arcade-qwen25-coder3b-LICENSE.txt",
+      "texts/living-arcade-qwen25-coder3b-NOTICE.txt"
+    ]
+  },
+  {
+    "Id": "living-arcade-art-library",
+    "Name": "Living Arcade additive art library",
+    "Version": "2026-11-06.1",
+    "Author": "Tiny Speck; bart; Jamie Cross; Kenney; mirex; laetissima; LOPATA",
+    "License": "CC0-1.0 (original packs); generated research artwork",
+    "Source": "https://opengameart.org/content/glitch-inhabitants-and-cubimals-svg",
+    "Checked": "2026-11-06",
+    "Ru": "Встроенная библиотека персонажей, авторских поз и частей. Оригиналы свободных наборов, авторы и CC0 сохранены. Отдельные оригинальные рисунки исследования имеют собственное происхождение; они не приписываются авторам CC0. Библиотека дополняет процедурную генерацию и рисунки моделей.",
+    "En": "Bundled characters, authored poses and parts. Original free packs, authors and CC0 are retained. Selected original research drawings carry their own provenance and are not attributed to CC0 authors. The library complements procedural and model-created art.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/living-arcade-art-library-NOTICE.txt",
+      "texts/living-arcade-art-library-CC0.txt"
+    ],
+    "Terms": "7652CB23C320C981B56712E18A3482C3365CC378D85045B77EF73EC205CB6EEB"
   }
 ]

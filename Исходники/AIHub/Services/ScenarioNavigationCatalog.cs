@@ -38,6 +38,7 @@ public static class ScenarioNavigationCatalog
     public const string BookConversion = "text_to_book";
     public const string Dictation = "voice_input";
     public const string LetItOut = "let_it_out";
+    public const string LivingArcade = "living_arcade";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -87,6 +88,9 @@ public static class ScenarioNavigationCatalog
         Node("experiment_tests", ScenarioNavigationKind.Group, Experiments, "Navigation.Tests", "", "experiment"),
         Node("experiment_finance", ScenarioNavigationKind.Group, Experiments, "Finance.Group", "", "finance"),
         Node("experiment_chats", ScenarioNavigationKind.Group, Experiments, "Navigation.Chats", "", "experiment"),
+        Node("experiment_games", ScenarioNavigationKind.Group, Experiments, "Arcade.Group", "", "gamepad"),
+        Node(LivingArcade, ScenarioNavigationKind.Scenario, "experiment_games", "Arcade.Title", "Arcade.Description", "gamepad",
+            tags: ["living_arcade", "living_arcade_levels", "living_arcade_saves", "living_arcade_audio", "living_arcade_art", "living_arcade_scenery", "living_arcade_mechanics", "living_arcade_perspective"]),
         Node(LetItOut, ScenarioNavigationKind.Scenario, "experiment_chats", "LetItOut.Title", "LetItOut.Description", "experiment",
             tags: ["let_it_out", "let_it_out_memory", "let_it_out_tree", "let_it_out_speech", "let_it_out_attachments", "let_it_out_audio", "let_it_out_recall", "let_it_out_export"]),
         Node(Finance, ScenarioNavigationKind.Scenario, "experiment_finance", "Finance.Title", "Finance.Description", "finance",
@@ -105,6 +109,14 @@ public static class ScenarioNavigationCatalog
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
+        new ScenarioNavigationTag("living_arcade", "Arcade.Title", "Arcade.Description", LivingArcade),
+        new ScenarioNavigationTag("living_arcade_levels", "Arcade.Tag.Levels", "Arcade.Tag.LevelsHelp", LivingArcade),
+        new ScenarioNavigationTag("living_arcade_saves", "Arcade.Tag.Saves", "Arcade.Tag.SavesHelp", LivingArcade),
+        new ScenarioNavigationTag("living_arcade_audio", "Arcade.Tag.Audio", "Arcade.Tag.AudioHelp", LivingArcade),
+        new ScenarioNavigationTag("living_arcade_art", "Arcade.Tag.Art", "Arcade.Tag.ArtHelp", LivingArcade),
+        new ScenarioNavigationTag("living_arcade_scenery", "Arcade.Tag.Scenery", "Arcade.Tag.SceneryHelp", LivingArcade),
+        new ScenarioNavigationTag("living_arcade_perspective", "Arcade.Tag.Perspective", "Arcade.PerspectiveHelp", LivingArcade),
+        new ScenarioNavigationTag("living_arcade_mechanics", "Arcade.Tag.Mechanics", "Arcade.Tag.MechanicsHelp", LivingArcade),
         new ScenarioNavigationTag("voice_input","Dictation.Title","Dictation.Help",Dictation),
         Tag("engine_sets", Creation),
         Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),

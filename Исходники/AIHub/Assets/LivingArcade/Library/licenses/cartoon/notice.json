@@ -1,0 +1,20 @@
+{
+  "id": "cartoon",
+  "title": "Cartoon Vector Characters",
+  "author": "tzunghaor; submitted by qubodup",
+  "license": "CC0-1.0",
+  "sourceUrl": "https://opengameart.org/content/cartoon-vector-characters",
+  "upstreamUrl": "https://openclipart.org/user-detail/tzunghaor",
+  "evidence": [
+    "licenses/cartoon/source-page.html"
+  ],
+  "originalArchives": [
+    {
+      "filename": "tzunghaor-vector-chars.7z",
+      "bytes": 449715,
+      "sha256": "ac397825c1ffe0bd8586472cf9f843d44b803b60ad7ec20f6141d9a2c71ae6a6"
+    }
+  ],
+  "modifications": "Original source files unchanged. Prepared PNGs normalized by LOPATA; animation cycles replay author-drawn poses. Static movement is a runtime transform, not author-drawn walking.",
+  "exclusions": ""
+}

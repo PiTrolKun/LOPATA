@@ -1,0 +1,11 @@
+{
+  "id": "research",
+  "title": "LOPATA reviewed visual research",
+  "author": "LOPATA; generated with Gemma",
+  "license": "LOPATA-generated",
+  "sourceUrl": "https://huggingface.co/unsloth/gemma-4-26B-A4B-it-qat-GGUF",
+  "upstreamUrl": "https://ai.google.dev/gemma/terms",
+  "noticePath": "licenses/research/notice.json",
+  "modifications": "Selected non-franchise model outputs from the one-hour local study. These are not CC0 third-party originals; no human authorship of the drawing is asserted. Generation model/revision is recorded in each entry and prepared PNG.",
+  "excluded": "Mario, Sonic, Mega Man, Pac-Man and other franchise imitations; malformed SVG and visually unconvincing candidates."
+}

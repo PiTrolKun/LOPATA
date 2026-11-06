@@ -84,7 +84,7 @@ public sealed partial class LlamaServerRuntimeService
                     }
                 }
             // The scenario preserves a failed private turn for explicit resume; it never repeats a completion automatically.
-            if (_letItOutEnabled) return await Attempt();
+            if (_letItOutEnabled || _disableAutomaticInferenceRetry) return await Attempt();
             return await NativeInferenceRecovery.ExecuteAsync(Attempt,
                 () => _selectedRuntime?.UsesGpu == true, () => _hardwareStartupFailure,
                 () => visibleOutput, () => _poetryJournal is null ? ModelProcessRetirement.StopAsync(_process, Stop) : RetirePoetryForRecoveryAsync(),

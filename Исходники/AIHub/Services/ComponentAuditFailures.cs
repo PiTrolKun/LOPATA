@@ -20,6 +20,11 @@ public static class ComponentAuditFailures
             // A rejected literal-preservation response is a known model-output error, not an installation failure.
             if (current.Message is "VideoPrep.TranslationLiteralLost" or "VideoPrep.AiContextLimit" or "VideoPrep.ShotsInvalidReply"
                 or "VideoPrep.ShotsDuplicateReply" or "VideoPrep.ShotsQualityFailed" or "LetItOut.ModelChanged") return false;
+            if (current.Message is "Arcade.Ai.InvalidOutput" or "Arcade.Ai.IncompleteOutput" or "Arcade.Ai.ContextTooSmall"
+                or "Arcade.Ai.Rejected" or "Arcade.Ai.TimedOut" or "Arcade.Ai.InvalidCheckpoint"
+                or "LivingArcade.InvalidLevel" or "LivingArcade.LevelCostExceeded" or "LivingArcade.LevelProbeFailed"
+                or "LivingArcade.DeletedRun" or "LivingArcade.LevelNotReady" or "LivingArcade.SaveConflict"
+                or "LivingArcade.InvalidSave" or "LivingArcade.SlotsFull" or "LivingArcade.InvalidName") return false;
             if (current is OperationCanceledException or OutOfMemoryException or HttpRequestException or SocketException or ArgumentException
                 or BackgroundOperationWaitingException or ImageAnalysisContextExhaustedException or LiteraryRamReserveException) return false;
             var text = current.Message.ToLowerInvariant();

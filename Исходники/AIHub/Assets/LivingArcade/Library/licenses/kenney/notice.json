@@ -1,0 +1,21 @@
+{
+  "id": "kenney",
+  "title": "Shape Characters 1.0",
+  "author": "Kenney",
+  "license": "CC0-1.0",
+  "sourceUrl": "https://kenney.nl/assets/shape-characters",
+  "upstreamUrl": "https://kenney.nl/assets/shape-characters",
+  "evidence": [
+    "licenses/kenney/source-page.html",
+    "licenses/kenney/License.txt"
+  ],
+  "originalArchives": [
+    {
+      "filename": "shape-characters.zip",
+      "bytes": 546442,
+      "sha256": "6d56877922af39e0ac9153c057c9cff1654973567514a32ae86454e37a2dfb93"
+    }
+  ],
+  "modifications": "Original source files unchanged. Prepared PNGs normalized by LOPATA; animation cycles replay author-drawn poses. Static movement is a runtime transform, not author-drawn walking.",
+  "exclusions": ""
+}

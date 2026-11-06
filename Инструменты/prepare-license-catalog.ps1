@@ -1,4 +1,4 @@
-﻿param([switch]$RefreshTexts, [string]$AppendEntries = '')
+param([switch]$RefreshTexts, [string]$AppendEntries = '')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 $dest=Join-Path $root 'Исходники/AIHub/Licenses'
@@ -151,7 +151,7 @@ foreach($pair in @(@('builtin.dotnet','microsoft.netcore.app.runtime.win-x64'),@
   }
  }
 }
-foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','music-diffrhythm-entries.json','hardware-runtime-entries.json','executor-chat-entries.json','poetry-profile-entries.json','rag-book-entries.json','rhyme-entries.json','metadata-entries.json','books-entries.json','book-smart-entries.json')){
+foreach($entryFile in @('image-generation-entries.json','image-utility-entries.json','music-entries.json','music-preferences-entries.json','music-audio-entries.json','music-bf16-entries.json','music-studio-entries.json','music-ace-entries.json','music-diffrhythm-entries.json','hardware-runtime-entries.json','executor-chat-entries.json','poetry-profile-entries.json','rag-book-entries.json','rhyme-entries.json','metadata-entries.json','books-entries.json','book-smart-entries.json','living-arcade-models-entries.json','living-arcade-art-entries.json')){
  $scenarioEntries=Join-Path $dest $entryFile
  if(Test-Path $scenarioEntries){
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
@@ -181,6 +181,8 @@ $basic=@($entries | Where-Object Basic)
 $text="ЛОПАТА / LOPATA — лицензии компонентов`r`nПодтверждая ознакомление, вы обязуетесь соблюдать применимые условия. Это не изменяет лицензии и не предоставляет отсутствующих прав.`r`n`r`n"
 foreach($e in $basic){$delivery=if($e.Delivery -eq 'bundled'){'Входит в установку'}else{'Скачивается отдельно'};$text+="$($e.Name) — $($e.License)`r`n$delivery`r`n$($e.Author)`r`n$($e.Ru)`r`nПроверено: $($e.Checked)`r`n$($e.Source)`r`n`r`n"}
 foreach($f in @($basic.Texts | Select-Object -Unique)){$text+="`r`n$f`r`n"+[IO.File]::ReadAllText((Join-Path $dest $f))}
+$text=[regex]::Replace($text,'[ \t]+(?=\r?$)','',[Text.RegularExpressions.RegexOptions]::Multiline)
+$text=$text.Replace([string][char]9,'    ')
 [IO.File]::WriteAllText("$dest/installer.txt",$text,[Text.UTF8Encoding]::new($true))
 @($basic | ForEach-Object {[ordered]@{Id=$_.Id;AcceptedAt='__ACCEPTED_AT__';Terms=$_.Terms;AppVersion='__APP_VERSION__';Source='installer'}}) | ConvertTo-Json -Depth 5 | Set-Content "$dest/installer-receipt.json" -Encoding ascii
 Write-Host "Prepared $($entries.Count) license entries. Review catalog and installer text before shipping."

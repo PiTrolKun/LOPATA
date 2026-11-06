@@ -1,0 +1,26 @@
+{
+  "id": "glitch",
+  "title": "Glitch: inhabitants and cubimals",
+  "author": "Tiny Speck; SVG conversion by bart",
+  "license": "CC0-1.0",
+  "sourceUrl": "https://opengameart.org/content/glitch-inhabitants-and-cubimals-svg",
+  "upstreamUrl": "https://github.com/tinyspeck/glitch-items",
+  "evidence": [
+    "licenses/glitch/source-page.html",
+    "licenses/glitch/upstream-README.md"
+  ],
+  "originalArchives": [
+    {
+      "filename": "cubimals.7z",
+      "bytes": 176773,
+      "sha256": "4a807bdd5a934a9138408ee397d69845fe96459102ba9fc0804d5544cffac9a9"
+    },
+    {
+      "filename": "inhabitants_0.7z",
+      "bytes": 1923775,
+      "sha256": "500a071467db5f0bfc6bbfb8532d0516da8ca9e99a2448dfa2278c3c6dbd3922"
+    }
+  ],
+  "modifications": "Original source files unchanged. Prepared PNGs normalized by LOPATA; animation cycles replay author-drawn poses. Static movement is a runtime transform, not author-drawn walking.",
+  "exclusions": "Glitch logos and trademarks are not licensed by its CC0 dedication."
+}

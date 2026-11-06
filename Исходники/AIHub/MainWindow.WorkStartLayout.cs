@@ -8,7 +8,7 @@ public partial class MainWindow
     {
         // Local visibility preserves the selected workspace layout while the window is hidden.
         var useWorkspaceLayout = ImageUtilityPage.Visibility == Visibility.Visible ||
-            (ScenarioNavigationPage.Visibility == Visibility.Visible && ScenarioNavigationPage.IsSongClip);
+            (ScenarioNavigationPage.Visibility == Visibility.Visible && (ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLivingArcade));
         if (ScenarioNavigationPage.Visibility == Visibility.Visible && ScenarioNavigationPage.IsLetItOutChat)
         {
             WorkStartPage.MaxWidth = double.PositiveInfinity;

@@ -1,0 +1,20 @@
+[
+  {
+    "Id": "living-arcade-art-library",
+    "Name": "Living Arcade additive art library",
+    "Version": "2026-11-06.1",
+    "Author": "Tiny Speck; bart; Jamie Cross; Kenney; mirex; laetissima; LOPATA",
+    "License": "CC0-1.0 (original packs); generated research artwork",
+    "Source": "https://opengameart.org/content/glitch-inhabitants-and-cubimals-svg",
+    "Checked": "2026-11-06",
+    "Ru": "Встроенная библиотека персонажей, авторских поз и частей. Оригиналы свободных наборов, авторы и CC0 сохранены. Отдельные оригинальные рисунки исследования имеют собственное происхождение; они не приписываются авторам CC0. Библиотека дополняет процедурную генерацию и рисунки моделей.",
+    "En": "Bundled characters, authored poses and parts. Original free packs, authors and CC0 are retained. Selected original research drawings carry their own provenance and are not attributed to CC0 authors. The library complements procedural and model-created art.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/living-arcade-art-library-NOTICE.txt",
+      "texts/living-arcade-art-library-CC0.txt"
+    ],
+    "Terms": "7652CB23C320C981B56712E18A3482C3365CC378D85045B77EF73EC205CB6EEB"
+  }
+]

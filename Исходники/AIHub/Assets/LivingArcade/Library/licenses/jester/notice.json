@@ -1,0 +1,14 @@
+{
+  "id": "jester",
+  "title": "Cartoon Jester",
+  "author": "laetissima",
+  "license": "CC0-1.0",
+  "sourceUrl": "https://opengameart.org/content/cartoon-jester",
+  "upstreamUrl": "https://opengameart.org/content/cartoon-jester",
+  "evidence": [
+    "licenses/jester/source-page.html"
+  ],
+  "originalArchives": [],
+  "modifications": "Original source files unchanged. Prepared PNGs normalized by LOPATA; animation cycles replay author-drawn poses. Static movement is a runtime transform, not author-drawn walking.",
+  "exclusions": ""
+}
