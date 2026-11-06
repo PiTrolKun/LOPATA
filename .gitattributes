@@ -87,3 +87,9 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Supplied upscale concept is retained without text normalization.
 ТЗ/Архив/LOPATA_идея_игрового_AI_Remaster_видео.md -text -eol -whitespace
+
+# The Arcade library is audited against a byte-exact SHA256 manifest.
+# Preserve its catalog, original art, notices and prepared frames in fresh checkouts.
+Исходники/AIHub/Assets/LivingArcade/Library/** -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/living-arcade-* -text -eol -whitespace
+"ТЗ/Архив/ЛОПАТА — «Живая аркада» бесконечная игра с генеративным геймдизайном.md" -text -eol -whitespace
