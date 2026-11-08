@@ -1,3 +1,22 @@
+## 2026-11-09 — Unicode character library and typing suggestions
+
+LOPATA bundles a generated character and emoji catalogue from Unicode 18.0.0
+UnicodeData, Blocks, DerivedName and emoji-test, and Russian/English emoji annotations
+and Russian/English currency names from Unicode CLDR release-49.
+These data are distributed under Unicode License V3, SPDX Unicode-3.0.
+The complete original notice and license are retained in
+`Исходники/AIHub/Licenses/texts/Unicode-18.0-CLDR49.txt` and shipped with the application.
+Sources: https://www.unicode.org/Public/18.0.0/ucd/ReadMe.txt,
+https://www.unicode.org/Public/18.0.0/emoji/emoji-test.txt,
+https://github.com/unicode-org/cldr/tree/release-49/common,
+https://www.unicode.org/license.txt.
+The modified catalogue excludes control commands, unassigned positions,
+surrogates and private-use characters, and combines standard emoji sequences
+with translated names and search keywords. No font files are redistributed.
+Source hashes, generated-file hash and versions are pinned in
+`Tools/OfficeUnicode/manifest.json`; the reproducible developer script is
+`Инструменты/OfficeSymbols/build_unicode.py`.
+
 ## 2026-11-04 — optional Gemma chat vision projector
 
 Let it out can download `mmproj-F16.gguf` (1,193,058,784 bytes) from
@@ -898,3 +917,8 @@ imitations are excluded. See Licenses/texts/living-arcade-art-library-NOTICE.txt
 
 LOPATA's own GPL-3.0-or-later licence is unchanged. Only bounded validated level
 JSON is consumed; generated executable code and arbitrary asset downloads are not run.
+
+
+## Office text editor
+
+The local DOCX editor uses EigenPal Core 2.35.0 (Apache-2.0), bundled font substitutes and supporting libraries. Component, font and dependency notices ship in [OfficeTextSurface notices](Исходники/AIHub/Licenses/texts/OfficeTextSurface-2.35.0-NOTICES.txt) and alongside the runtime assets.

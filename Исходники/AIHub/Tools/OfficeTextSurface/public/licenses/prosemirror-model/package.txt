@@ -1,0 +1,2 @@
+prosemirror-model 1.25.13
+MIT

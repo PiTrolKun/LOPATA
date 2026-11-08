@@ -8,6 +8,7 @@ namespace AIHub.Services.VideoEditor;
 internal sealed class UpstreamVideoNarrator(string id, ManagedModelLibraryStore? library = null) : IVideoNarrator, IConfiguredVideoNarrator, IVideoNarratorProgress
 {
     public event Action<double>? Progress;
+    internal Func<OutputModelUse, Task>? BeforeInference { get; set; }
     private readonly ManagedModelLibraryStore _store = library ?? new();
     private readonly VideoNarratorSession _session = new();
     private sealed record CachedRuntime(string Key, string Policy, ManagedPythonSelection Runtime, int Context);
@@ -69,13 +70,14 @@ internal sealed class UpstreamVideoNarrator(string id, ManagedModelLibraryStore?
             runtime_identity = RuntimeFileAudit.Revision(runtimeCard.Revision, runtimeCard.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray()),
             device_policy = options.Device, execution_device = runtime.Device, hardware_profile = runtime.Profile.Flavor(),
             hardware_revision = runtime.Profile.TorchVersion() }), token);
+        var facts = new OutputModelUse(model.ModelArtifactId, model.DisplayName + " · " + speaker + " · " + language, model.Revision, "narration speech synthesis");
+        if (BeforeInference is { } notify) await notify(facts);
         await _session.RunAsync(runtime, overlay, expanded, modelKey + "|" + context, request, output, "VideoEditor.Narrator." + id, token, value => Progress?.Invoke(value));
         _cachedRuntime = new(modelKey, options.Device, runtime, context);
         token.ThrowIfCancellationRequested();
         using (var wave = new NAudio.Wave.WaveFileReader(output))
             if (wave.Length <= 0 || wave.TotalTime <= TimeSpan.Zero || wave.WaveFormat.Encoding != NAudio.Wave.WaveFormatEncoding.Pcm
                 || wave.WaveFormat.BitsPerSample != 16) throw new InvalidDataException("Narrator returned invalid PCM16 audio.");
-        var facts = new OutputModelUse(model.ModelArtifactId, model.DisplayName + " · " + speaker + " · " + language, model.Revision, "narration speech synthesis");
         var marked = Path.Combine(work, "narration.wav");
         var dependencies = new List<OutputModelUse> { new(runtimeCard.ModelArtifactId, runtimeCard.DisplayName, runtimeCard.Revision, "speech runtime"),
             id == "kitten2" && runtime.Device == "cpu" ? new(runtime.Entry.Id, "Python interpreter", PinnedPythonWheelSet.PythonVersion, "speech interpreter")

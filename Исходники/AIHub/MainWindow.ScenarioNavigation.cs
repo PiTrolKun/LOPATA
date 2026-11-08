@@ -42,6 +42,12 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.BookConversion:
                     OpenBookConversionUtility();
                     break;
+                case ScenarioNavigationCatalog.OfficeReader:
+                    OpenOfficeReader();
+                    break;
+                case ScenarioNavigationCatalog.OfficeEditor:
+                    OpenOfficeEditor();
+                    break;
                 case ScenarioNavigationCatalog.LyricVideo:
                     OpenLyricVideoUtility();
                     break;

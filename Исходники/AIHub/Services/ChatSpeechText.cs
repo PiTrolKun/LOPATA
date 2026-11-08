@@ -52,9 +52,9 @@ internal static class ChatSpeechText
         return text.Trim();
     }
 
-    internal static IReadOnlyList<string> Parts(string text, int maximum = 600)
+    internal static IReadOnlyList<string> Parts(string text, int maximum = 600, bool stripMarkup = true)
     {
-        text = Plain(text); var parts = new List<string>();
+        text = stripMarkup ? Plain(text) : text.Trim(); var parts = new List<string>();
         while (text.Length > maximum)
         {
             var split = text.LastIndexOfAny(['.', '!', '?', '\n', ';'], maximum - 1, maximum / 2);

@@ -1,0 +1,19 @@
+html,body { margin: 0; height: 100%; }
+body { background:#edf0f6; overflow:hidden; }
+body.workspace-dark { background:#182232; }
+#viewport { box-sizing:border-box; width:100%; height:100%; overflow:auto; position:relative; padding:16px; }
+#document { position:relative; margin-inline:auto; color-scheme:only light; }
+#document:focus { outline:none; }
+#document .docx-pages { margin-inline:auto; }
+#document .docx-page { background-color:#fff; color:#171c24; box-shadow:0 1px 6px #101b2b40; }
+.lopata-misspelled { border-bottom: 2px dotted #c43a48; box-sizing:border-box; }
+.lopata-spelling-menu { position:fixed; z-index:999; padding:4px; background:white; border:1px solid #96a0b2; box-shadow:0 3px 12px #0003; }
+.lopata-spelling-menu button { display:block; width:100%; text-align:start; background:white; border:0; padding:5px 12px; }
+.lopata-spelling-menu button:hover,.lopata-spelling-menu button:focus { background:#e3efff; }
+
+.lopata-symbol-suggestions { position:fixed; z-index:1000; display:flex; flex-wrap:wrap; gap:4px; max-width:min(580px,calc(100vw - 16px)); padding:8px; border:1px solid #ccd3df; border-radius:12px; background:#fff; color:#202735; box-shadow:0 4px 18px #0003; }
+.lopata-symbol-suggestions button { font:28px "Segoe UI Emoji","Segoe UI Symbol",sans-serif; min-width:44px; height:44px; padding:4px; border:0; border-radius:7px; background:transparent; color:inherit; cursor:pointer; }
+.lopata-symbol-suggestions button:hover,.lopata-symbol-suggestions button.active { background:#dceaff; }
+.lopata-symbol-suggestions small { width:100%; font:11px "Segoe UI",sans-serif; opacity:.75; padding:3px; }
+.workspace-dark .lopata-symbol-suggestions { background:#172132; color:#f1f4fa; border-color:#3a465c; }
+.workspace-dark .lopata-symbol-suggestions button:hover,.workspace-dark .lopata-symbol-suggestions button.active { background:#293954; }

@@ -1,0 +1,2 @@
+is-unsafe 2.0.3
+MIT

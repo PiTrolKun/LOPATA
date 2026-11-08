@@ -46,10 +46,13 @@ public partial class MainWindow
         _imageShellIntegrationSwitch = _settingsCards.Switch("WindowsIntegration.Enabled", "Settings.ImageShellIntegration", SetImageShellIntegration);
         _bookShellIntegrationSwitch = _settingsCards.Switch("WindowsIntegration.BooksEnabled", "Settings.BookShellIntegration", SetBookShellIntegration);
         _vectorEditorSwitch = _settingsCards.Switch("Vector.Editor.Enabled", "Settings.VectorEditorEnabled", SetVectorEditorEnabled);
+        _readerShellSwitch = _settingsCards.Switch("Reader.Windows.Enabled", "Settings.ReaderIntegration", SetReaderIntegration);
         var windowsIntegration = _settingsCards.Card(_settingsCards.Label("WindowsIntegration.Title", true),
             _imageShellIntegrationSwitch, _settingsCards.Label("WindowsIntegration.Help"),
             _bookShellIntegrationSwitch, _settingsCards.Label("WindowsIntegration.BooksHelp"),
-            _vectorEditorSwitch, _settingsCards.Label("Vector.Editor.EnabledHelp"));
+            _vectorEditorSwitch, _settingsCards.Label("Vector.Editor.EnabledHelp"),
+            _readerShellSwitch, _settingsCards.Label("Reader.Windows.Help"),
+            _settingsCards.Action("Settings.ReaderFormats", "Reader.Windows.Formats", (_, _) => OpenReaderWindowsSettings()));
         var folders = _settingsCards.Card(_settingsCards.Label("Settings.Navigation.Folders", true), OpenImagesFolderButton);
         _generationSettings.Configure(_appSettings.ImageGeneration, L);
         _generationSettings.Changed += () => _appSettingsStore.Save(_appSettings);
@@ -91,6 +94,7 @@ public partial class MainWindow
         Target("autoresume", "general", "Settings.Behavior.AutoResume", "Settings.Behavior.AutoResumeHelp", _autoResumeSwitch);
         Target("windows-integration", "general", "WindowsIntegration.Title", "WindowsIntegration.Help", _imageShellIntegrationSwitch);
         Target("book-windows-integration", "general", "WindowsIntegration.BooksEnabled", "WindowsIntegration.BooksHelp", _bookShellIntegrationSwitch);
+        Target("reader-windows-integration", "general", "Reader.Windows.Formats", "Reader.Windows.Help", _readerShellSwitch);
         Target("svg-editor", "general", "Vector.Editor.Enabled", "Vector.Editor.EnabledHelp", _vectorEditorSwitch);
         Target("folders", "general", "ImageInput.Folder", "Settings.Navigation.Folders", OpenImagesFolderButton);
         Target("generation-folder", "general", "Generation.OutputFolder", "Generation.ChooseFolder", _generationSettings);

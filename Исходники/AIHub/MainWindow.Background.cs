@@ -43,6 +43,10 @@ public partial class MainWindow
         RegisterLetItOutBackgroundOperation();
         RegisterLivingArcadeBackgroundOperations();
         RegisterChatSpeech();
+        _backgroundOperations.Register(Services.OfficeReader.ReaderSpeechWork.Kind, (_, _) =>
+            Task.FromException(new BackgroundOperationFailedException("Reader.Speech.Expired")));
+        _backgroundOperations.Register(Services.OfficeReader.ReaderTranslationWork.Kind, (_, _) =>
+            Task.FromException(new BackgroundOperationFailedException("Reader.Translation.Expired")));
         RegisterBookSmartBackgroundOperation();
         RegisterLyricLibraryBackgroundOperation();
         _backgroundOperations.Register(MusicGenerationRunner.BackgroundKind, (state, token) =>
@@ -68,6 +72,8 @@ public partial class MainWindow
         try {
             _backgroundOperations.Load(); ImageGenerationFailureRecovery.Recover(_backgroundOperations);
             ChatSpeechWork.RecoverFailedAttempts(_backgroundOperations);
+            Services.OfficeReader.ReaderSpeechWork.DiscardOrphans(_backgroundOperations);
+            Services.OfficeReader.ReaderTranslationWork.DiscardOrphans(_backgroundOperations);
             Services.VectorGraphics.VectorWork.RecoverFailedContent(_backgroundOperations);
             MusicDiffRhythmFailureRecovery.Recover(_backgroundOperations, MusicGenerationJobs.Default);
         }

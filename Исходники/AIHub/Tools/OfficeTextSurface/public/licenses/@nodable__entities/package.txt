@@ -1,0 +1,2 @@
+@nodable/entities 3.1.0
+MIT

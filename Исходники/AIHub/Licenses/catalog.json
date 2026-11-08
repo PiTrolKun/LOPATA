@@ -5630,5 +5630,57 @@
       "texts/living-arcade-art-library-CC0.txt"
     ],
     "Terms": "7652CB23C320C981B56712E18A3482C3365CC378D85045B77EF73EC205CB6EEB"
+  },
+  {
+    "Id": "reader.djvulibre",
+    "Name": "DjVuLibre command-line decoder",
+    "Version": "3.5.29",
+    "Author": "DjVuLibre contributors; IJG; libtiff and zlib contributors",
+    "License": "GPL-2.0-or-later; IJG; libtiff; zlib",
+    "Source": "https://djvu.sourceforge.net/",
+    "Checked": "2026-11-07",
+    "Ru": "Декодер DjVu для просмотра страниц без ИИ и OCR. Официальная сборка для Windows x86; требуется установленный Microsoft Visual C++ Runtime x86. Запускается отдельным процессом. Оригиналы не изменяются. Тексты лицензий и ссылки на соответствующие исходники сохранены.",
+    "En": "DjVu page decoding without AI or OCR. Official Windows x86 build; requires the installed Microsoft Visual C++ Runtime x86. Runs as a separate process. Originals stay unchanged. License texts and corresponding-source links are retained.",
+    "Delivery": "bundled",
+    "Basic": false,
+    "Terms": "36D0FD444AD710C32B37F7FAD666D707B529F7B8205FD27E86AE778FC01484DA",
+    "Texts": [
+      "texts/OfficeReader-DjVuLibre-GPL2.txt",
+      "texts/OfficeReader-DjVuLibre-NOTICE.txt"
+    ]
+  },
+  {
+    "Id": "office.text-surface",
+    "Name": "LOPATA text editor · EigenPal Core",
+    "Version": "2.35.0",
+    "Author": "EigenPal; authors of the bundled fonts and libraries",
+    "License": "Apache-2.0; MIT; Zlib; OFL-1.1; GUST Font License / LPPL and upstream notices",
+    "Source": "https://github.com/eigenpal/docx-editor",
+    "Checked": "2026-11-08",
+    "Ru": "Локальный редактор DOCX, шрифты для отображения документов и библиотеки из комплекта поставки. Полные тексты условий и сведения об авторах приложены.",
+    "En": "Local DOCX editing, document fonts and bundled libraries. The full licenses and author notices are included.",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/OfficeTextSurface-2.35.0-NOTICES.txt"
+    ],
+    "Terms": "36889F0F4C5CD9C5A854036E5BDA2DE27C8959A5C6E2B166E503F41948DE6D35"
+  },
+  {
+    "Id": "office.unicode-data",
+    "Name": "Unicode character and emoji database",
+    "Version": "18.0.0; CLDR 49",
+    "Author": "Unicode, Inc. and contributors",
+    "License": "Unicode-3.0",
+    "Source": "https://www.unicode.org/Public/18.0.0/",
+    "Checked": "2026-11-09",
+    "Ru": "Встроенный каталог знаков Unicode и emoji с русскими названиями CLDR. Поставляется с программой, используется без сети. Оригинальное уведомление Unicode License v3 приложено.",
+    "En": "Bundled Unicode character and emoji catalogue with Russian CLDR annotations. Works offline. The original Unicode License v3 notice is included.",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Texts": [
+      "texts/Unicode-18.0-CLDR49.txt"
+    ],
+    "Terms": "2CEBBE810FE18377328DB2831C5D1A36CF6B599F75ABB30201D512BB0BD10A2E"
   }
 ]

@@ -122,6 +122,7 @@ public sealed class CoreAutonomySettings
 
 public sealed class FileViewerSettings
 {
+    public bool ReaderWindowsIntegrationEnabled { get; set; } = true;
     public bool PreferInternalViewers { get; set; } = true;
 
     public Dictionary<string, bool> PreferInternalByExtension { get; set; } =

@@ -48,6 +48,8 @@ public partial class MainWindow
         _dictationWidget.PressRequested+=()=>{_dictationHoldRequested=true;_ = GuardDictationAsync(StartDictationAsync);};
         _dictationWidget.ReleaseRequested+=()=>{_dictationHoldRequested=false;_dictationIntent=false;_ = GuardDictationAsync(StopDictationAsync);};
         _dictationWidget.PreviewMouseLeftButtonDown+=(_,_)=>_dictationForeground=DictationTargetPicker.ActiveWindow;
+        _dictation.RecognizeForTarget = (chunk, recognize) => _dictationTarget is IDictationInferenceTarget observing
+            ? observing.RecognizeAsync(chunk, recognize) : recognize();
         _dictation.TextReady=async(chunk,text)=>{
             if(_dictationDisposed||!_dictationAcceptInput)return;
             var target=_dictationTarget??throw new InvalidOperationException("Dictation.TargetLost");
@@ -141,6 +143,8 @@ public partial class MainWindow
             if(_dictationTarget is ExternalDictationTarget external)await external.ActivateAsync(_dictationLifetime.Token);
             if(!_dictationIntent)return;
             _dictationTarget.Reset();_dictationUndelivered="";_dictationAcceptInput=true;
+            if (_dictationTarget is IDictationInferenceTarget observing)
+                observing.BindStop(() => ReferenceEquals(_dictationTarget, observing) ? StopDictationAsync() : Task.CompletedTask);
             _dictation.Start(_appSettings.Dictation.DeviceNumber);
         }finally{_dictationStarting=false;RefreshDictation();}
     }

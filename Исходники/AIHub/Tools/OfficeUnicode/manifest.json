@@ -1,0 +1,1848 @@
+{
+  "Version": "18.0.0",
+  "Cldr": "49",
+  "Count": 175578,
+  "Emoji": 3972,
+  "Blocks": [
+    {
+      "First": 0,
+      "Last": 127,
+      "Name": "Basic Latin"
+    },
+    {
+      "First": 128,
+      "Last": 255,
+      "Name": "Latin-1 Supplement"
+    },
+    {
+      "First": 256,
+      "Last": 383,
+      "Name": "Latin Extended-A"
+    },
+    {
+      "First": 384,
+      "Last": 591,
+      "Name": "Latin Extended-B"
+    },
+    {
+      "First": 592,
+      "Last": 687,
+      "Name": "IPA Extensions"
+    },
+    {
+      "First": 688,
+      "Last": 767,
+      "Name": "Spacing Modifier Letters"
+    },
+    {
+      "First": 768,
+      "Last": 879,
+      "Name": "Combining Diacritical Marks"
+    },
+    {
+      "First": 880,
+      "Last": 1023,
+      "Name": "Greek and Coptic"
+    },
+    {
+      "First": 1024,
+      "Last": 1279,
+      "Name": "Cyrillic"
+    },
+    {
+      "First": 1280,
+      "Last": 1327,
+      "Name": "Cyrillic Supplement"
+    },
+    {
+      "First": 1328,
+      "Last": 1423,
+      "Name": "Armenian"
+    },
+    {
+      "First": 1424,
+      "Last": 1535,
+      "Name": "Hebrew"
+    },
+    {
+      "First": 1536,
+      "Last": 1791,
+      "Name": "Arabic"
+    },
+    {
+      "First": 1792,
+      "Last": 1871,
+      "Name": "Syriac"
+    },
+    {
+      "First": 1872,
+      "Last": 1919,
+      "Name": "Arabic Supplement"
+    },
+    {
+      "First": 1920,
+      "Last": 1983,
+      "Name": "Thaana"
+    },
+    {
+      "First": 1984,
+      "Last": 2047,
+      "Name": "NKo"
+    },
+    {
+      "First": 2048,
+      "Last": 2111,
+      "Name": "Samaritan"
+    },
+    {
+      "First": 2112,
+      "Last": 2143,
+      "Name": "Mandaic"
+    },
+    {
+      "First": 2144,
+      "Last": 2159,
+      "Name": "Syriac Supplement"
+    },
+    {
+      "First": 2160,
+      "Last": 2207,
+      "Name": "Arabic Extended-B"
+    },
+    {
+      "First": 2208,
+      "Last": 2303,
+      "Name": "Arabic Extended-A"
+    },
+    {
+      "First": 2304,
+      "Last": 2431,
+      "Name": "Devanagari"
+    },
+    {
+      "First": 2432,
+      "Last": 2559,
+      "Name": "Bengali"
+    },
+    {
+      "First": 2560,
+      "Last": 2687,
+      "Name": "Gurmukhi"
+    },
+    {
+      "First": 2688,
+      "Last": 2815,
+      "Name": "Gujarati"
+    },
+    {
+      "First": 2816,
+      "Last": 2943,
+      "Name": "Oriya"
+    },
+    {
+      "First": 2944,
+      "Last": 3071,
+      "Name": "Tamil"
+    },
+    {
+      "First": 3072,
+      "Last": 3199,
+      "Name": "Telugu"
+    },
+    {
+      "First": 3200,
+      "Last": 3327,
+      "Name": "Kannada"
+    },
+    {
+      "First": 3328,
+      "Last": 3455,
+      "Name": "Malayalam"
+    },
+    {
+      "First": 3456,
+      "Last": 3583,
+      "Name": "Sinhala"
+    },
+    {
+      "First": 3584,
+      "Last": 3711,
+      "Name": "Thai"
+    },
+    {
+      "First": 3712,
+      "Last": 3839,
+      "Name": "Lao"
+    },
+    {
+      "First": 3840,
+      "Last": 4095,
+      "Name": "Tibetan"
+    },
+    {
+      "First": 4096,
+      "Last": 4255,
+      "Name": "Myanmar"
+    },
+    {
+      "First": 4256,
+      "Last": 4351,
+      "Name": "Georgian"
+    },
+    {
+      "First": 4352,
+      "Last": 4607,
+      "Name": "Hangul Jamo"
+    },
+    {
+      "First": 4608,
+      "Last": 4991,
+      "Name": "Ethiopic"
+    },
+    {
+      "First": 4992,
+      "Last": 5023,
+      "Name": "Ethiopic Supplement"
+    },
+    {
+      "First": 5024,
+      "Last": 5119,
+      "Name": "Cherokee"
+    },
+    {
+      "First": 5120,
+      "Last": 5759,
+      "Name": "Unified Canadian Aboriginal Syllabics"
+    },
+    {
+      "First": 5760,
+      "Last": 5791,
+      "Name": "Ogham"
+    },
+    {
+      "First": 5792,
+      "Last": 5887,
+      "Name": "Runic"
+    },
+    {
+      "First": 5888,
+      "Last": 5919,
+      "Name": "Tagalog"
+    },
+    {
+      "First": 5920,
+      "Last": 5951,
+      "Name": "Hanunoo"
+    },
+    {
+      "First": 5952,
+      "Last": 5983,
+      "Name": "Buhid"
+    },
+    {
+      "First": 5984,
+      "Last": 6015,
+      "Name": "Tagbanwa"
+    },
+    {
+      "First": 6016,
+      "Last": 6143,
+      "Name": "Khmer"
+    },
+    {
+      "First": 6144,
+      "Last": 6319,
+      "Name": "Mongolian"
+    },
+    {
+      "First": 6320,
+      "Last": 6399,
+      "Name": "Unified Canadian Aboriginal Syllabics Extended"
+    },
+    {
+      "First": 6400,
+      "Last": 6479,
+      "Name": "Limbu"
+    },
+    {
+      "First": 6480,
+      "Last": 6527,
+      "Name": "Tai Le"
+    },
+    {
+      "First": 6528,
+      "Last": 6623,
+      "Name": "New Tai Lue"
+    },
+    {
+      "First": 6624,
+      "Last": 6655,
+      "Name": "Khmer Symbols"
+    },
+    {
+      "First": 6656,
+      "Last": 6687,
+      "Name": "Buginese"
+    },
+    {
+      "First": 6688,
+      "Last": 6831,
+      "Name": "Tai Tham"
+    },
+    {
+      "First": 6832,
+      "Last": 6911,
+      "Name": "Combining Diacritical Marks Extended"
+    },
+    {
+      "First": 6912,
+      "Last": 7039,
+      "Name": "Balinese"
+    },
+    {
+      "First": 7040,
+      "Last": 7103,
+      "Name": "Sundanese"
+    },
+    {
+      "First": 7104,
+      "Last": 7167,
+      "Name": "Batak"
+    },
+    {
+      "First": 7168,
+      "Last": 7247,
+      "Name": "Lepcha"
+    },
+    {
+      "First": 7248,
+      "Last": 7295,
+      "Name": "Ol Chiki"
+    },
+    {
+      "First": 7296,
+      "Last": 7311,
+      "Name": "Cyrillic Extended-C"
+    },
+    {
+      "First": 7312,
+      "Last": 7359,
+      "Name": "Georgian Extended"
+    },
+    {
+      "First": 7360,
+      "Last": 7375,
+      "Name": "Sundanese Supplement"
+    },
+    {
+      "First": 7376,
+      "Last": 7423,
+      "Name": "Vedic Extensions"
+    },
+    {
+      "First": 7424,
+      "Last": 7551,
+      "Name": "Phonetic Extensions"
+    },
+    {
+      "First": 7552,
+      "Last": 7615,
+      "Name": "Phonetic Extensions Supplement"
+    },
+    {
+      "First": 7616,
+      "Last": 7679,
+      "Name": "Combining Diacritical Marks Supplement"
+    },
+    {
+      "First": 7680,
+      "Last": 7935,
+      "Name": "Latin Extended Additional"
+    },
+    {
+      "First": 7936,
+      "Last": 8191,
+      "Name": "Greek Extended"
+    },
+    {
+      "First": 8192,
+      "Last": 8303,
+      "Name": "General Punctuation"
+    },
+    {
+      "First": 8304,
+      "Last": 8351,
+      "Name": "Superscripts and Subscripts"
+    },
+    {
+      "First": 8352,
+      "Last": 8399,
+      "Name": "Currency Symbols"
+    },
+    {
+      "First": 8400,
+      "Last": 8447,
+      "Name": "Combining Diacritical Marks for Symbols"
+    },
+    {
+      "First": 8448,
+      "Last": 8527,
+      "Name": "Letterlike Symbols"
+    },
+    {
+      "First": 8528,
+      "Last": 8591,
+      "Name": "Number Forms"
+    },
+    {
+      "First": 8592,
+      "Last": 8703,
+      "Name": "Arrows"
+    },
+    {
+      "First": 8704,
+      "Last": 8959,
+      "Name": "Mathematical Operators"
+    },
+    {
+      "First": 8960,
+      "Last": 9215,
+      "Name": "Miscellaneous Technical"
+    },
+    {
+      "First": 9216,
+      "Last": 9279,
+      "Name": "Control Pictures"
+    },
+    {
+      "First": 9280,
+      "Last": 9311,
+      "Name": "Optical Character Recognition"
+    },
+    {
+      "First": 9312,
+      "Last": 9471,
+      "Name": "Enclosed Alphanumerics"
+    },
+    {
+      "First": 9472,
+      "Last": 9599,
+      "Name": "Box Drawing"
+    },
+    {
+      "First": 9600,
+      "Last": 9631,
+      "Name": "Block Elements"
+    },
+    {
+      "First": 9632,
+      "Last": 9727,
+      "Name": "Geometric Shapes"
+    },
+    {
+      "First": 9728,
+      "Last": 9983,
+      "Name": "Miscellaneous Symbols"
+    },
+    {
+      "First": 9984,
+      "Last": 10175,
+      "Name": "Dingbats"
+    },
+    {
+      "First": 10176,
+      "Last": 10223,
+      "Name": "Miscellaneous Mathematical Symbols-A"
+    },
+    {
+      "First": 10224,
+      "Last": 10239,
+      "Name": "Supplemental Arrows-A"
+    },
+    {
+      "First": 10240,
+      "Last": 10495,
+      "Name": "Braille Patterns"
+    },
+    {
+      "First": 10496,
+      "Last": 10623,
+      "Name": "Supplemental Arrows-B"
+    },
+    {
+      "First": 10624,
+      "Last": 10751,
+      "Name": "Miscellaneous Mathematical Symbols-B"
+    },
+    {
+      "First": 10752,
+      "Last": 11007,
+      "Name": "Supplemental Mathematical Operators"
+    },
+    {
+      "First": 11008,
+      "Last": 11263,
+      "Name": "Miscellaneous Symbols and Arrows"
+    },
+    {
+      "First": 11264,
+      "Last": 11359,
+      "Name": "Glagolitic"
+    },
+    {
+      "First": 11360,
+      "Last": 11391,
+      "Name": "Latin Extended-C"
+    },
+    {
+      "First": 11392,
+      "Last": 11519,
+      "Name": "Coptic"
+    },
+    {
+      "First": 11520,
+      "Last": 11567,
+      "Name": "Georgian Supplement"
+    },
+    {
+      "First": 11568,
+      "Last": 11647,
+      "Name": "Tifinagh"
+    },
+    {
+      "First": 11648,
+      "Last": 11743,
+      "Name": "Ethiopic Extended"
+    },
+    {
+      "First": 11744,
+      "Last": 11775,
+      "Name": "Cyrillic Extended-A"
+    },
+    {
+      "First": 11776,
+      "Last": 11903,
+      "Name": "Supplemental Punctuation"
+    },
+    {
+      "First": 11904,
+      "Last": 12031,
+      "Name": "CJK Radicals Supplement"
+    },
+    {
+      "First": 12032,
+      "Last": 12255,
+      "Name": "Kangxi Radicals"
+    },
+    {
+      "First": 12272,
+      "Last": 12287,
+      "Name": "Ideographic Description Characters"
+    },
+    {
+      "First": 12288,
+      "Last": 12351,
+      "Name": "CJK Symbols and Punctuation"
+    },
+    {
+      "First": 12352,
+      "Last": 12447,
+      "Name": "Hiragana"
+    },
+    {
+      "First": 12448,
+      "Last": 12543,
+      "Name": "Katakana"
+    },
+    {
+      "First": 12544,
+      "Last": 12591,
+      "Name": "Bopomofo"
+    },
+    {
+      "First": 12592,
+      "Last": 12687,
+      "Name": "Hangul Compatibility Jamo"
+    },
+    {
+      "First": 12688,
+      "Last": 12703,
+      "Name": "Kanbun"
+    },
+    {
+      "First": 12704,
+      "Last": 12735,
+      "Name": "Bopomofo Extended"
+    },
+    {
+      "First": 12736,
+      "Last": 12783,
+      "Name": "CJK Strokes"
+    },
+    {
+      "First": 12784,
+      "Last": 12799,
+      "Name": "Katakana Phonetic Extensions"
+    },
+    {
+      "First": 12800,
+      "Last": 13055,
+      "Name": "Enclosed CJK Letters and Months"
+    },
+    {
+      "First": 13056,
+      "Last": 13311,
+      "Name": "CJK Compatibility"
+    },
+    {
+      "First": 13312,
+      "Last": 19903,
+      "Name": "CJK Unified Ideographs Extension A"
+    },
+    {
+      "First": 19904,
+      "Last": 19967,
+      "Name": "Yijing Hexagram Symbols"
+    },
+    {
+      "First": 19968,
+      "Last": 40959,
+      "Name": "CJK Unified Ideographs"
+    },
+    {
+      "First": 40960,
+      "Last": 42127,
+      "Name": "Yi Syllables"
+    },
+    {
+      "First": 42128,
+      "Last": 42191,
+      "Name": "Yi Radicals"
+    },
+    {
+      "First": 42192,
+      "Last": 42239,
+      "Name": "Lisu"
+    },
+    {
+      "First": 42240,
+      "Last": 42559,
+      "Name": "Vai"
+    },
+    {
+      "First": 42560,
+      "Last": 42655,
+      "Name": "Cyrillic Extended-B"
+    },
+    {
+      "First": 42656,
+      "Last": 42751,
+      "Name": "Bamum"
+    },
+    {
+      "First": 42752,
+      "Last": 42783,
+      "Name": "Modifier Tone Letters"
+    },
+    {
+      "First": 42784,
+      "Last": 43007,
+      "Name": "Latin Extended-D"
+    },
+    {
+      "First": 43008,
+      "Last": 43055,
+      "Name": "Syloti Nagri"
+    },
+    {
+      "First": 43056,
+      "Last": 43071,
+      "Name": "Common Indic Number Forms"
+    },
+    {
+      "First": 43072,
+      "Last": 43135,
+      "Name": "Phags-pa"
+    },
+    {
+      "First": 43136,
+      "Last": 43231,
+      "Name": "Saurashtra"
+    },
+    {
+      "First": 43232,
+      "Last": 43263,
+      "Name": "Devanagari Extended"
+    },
+    {
+      "First": 43264,
+      "Last": 43311,
+      "Name": "Kayah Li"
+    },
+    {
+      "First": 43312,
+      "Last": 43359,
+      "Name": "Rejang"
+    },
+    {
+      "First": 43360,
+      "Last": 43391,
+      "Name": "Hangul Jamo Extended-A"
+    },
+    {
+      "First": 43392,
+      "Last": 43487,
+      "Name": "Javanese"
+    },
+    {
+      "First": 43488,
+      "Last": 43519,
+      "Name": "Myanmar Extended-B"
+    },
+    {
+      "First": 43520,
+      "Last": 43615,
+      "Name": "Cham"
+    },
+    {
+      "First": 43616,
+      "Last": 43647,
+      "Name": "Myanmar Extended-A"
+    },
+    {
+      "First": 43648,
+      "Last": 43743,
+      "Name": "Tai Viet"
+    },
+    {
+      "First": 43744,
+      "Last": 43775,
+      "Name": "Meetei Mayek Extensions"
+    },
+    {
+      "First": 43776,
+      "Last": 43823,
+      "Name": "Ethiopic Extended-A"
+    },
+    {
+      "First": 43824,
+      "Last": 43887,
+      "Name": "Latin Extended-E"
+    },
+    {
+      "First": 43888,
+      "Last": 43967,
+      "Name": "Cherokee Supplement"
+    },
+    {
+      "First": 43968,
+      "Last": 44031,
+      "Name": "Meetei Mayek"
+    },
+    {
+      "First": 44032,
+      "Last": 55215,
+      "Name": "Hangul Syllables"
+    },
+    {
+      "First": 55216,
+      "Last": 55295,
+      "Name": "Hangul Jamo Extended-B"
+    },
+    {
+      "First": 55296,
+      "Last": 56191,
+      "Name": "High Surrogates"
+    },
+    {
+      "First": 56192,
+      "Last": 56319,
+      "Name": "High Private Use Surrogates"
+    },
+    {
+      "First": 56320,
+      "Last": 57343,
+      "Name": "Low Surrogates"
+    },
+    {
+      "First": 57344,
+      "Last": 63743,
+      "Name": "Private Use Area"
+    },
+    {
+      "First": 63744,
+      "Last": 64255,
+      "Name": "CJK Compatibility Ideographs"
+    },
+    {
+      "First": 64256,
+      "Last": 64335,
+      "Name": "Alphabetic Presentation Forms"
+    },
+    {
+      "First": 64336,
+      "Last": 65023,
+      "Name": "Arabic Presentation Forms-A"
+    },
+    {
+      "First": 65024,
+      "Last": 65039,
+      "Name": "Variation Selectors"
+    },
+    {
+      "First": 65040,
+      "Last": 65055,
+      "Name": "Vertical Forms"
+    },
+    {
+      "First": 65056,
+      "Last": 65071,
+      "Name": "Combining Half Marks"
+    },
+    {
+      "First": 65072,
+      "Last": 65103,
+      "Name": "CJK Compatibility Forms"
+    },
+    {
+      "First": 65104,
+      "Last": 65135,
+      "Name": "Small Form Variants"
+    },
+    {
+      "First": 65136,
+      "Last": 65279,
+      "Name": "Arabic Presentation Forms-B"
+    },
+    {
+      "First": 65280,
+      "Last": 65519,
+      "Name": "Halfwidth and Fullwidth Forms"
+    },
+    {
+      "First": 65520,
+      "Last": 65535,
+      "Name": "Specials"
+    },
+    {
+      "First": 65536,
+      "Last": 65663,
+      "Name": "Linear B Syllabary"
+    },
+    {
+      "First": 65664,
+      "Last": 65791,
+      "Name": "Linear B Ideograms"
+    },
+    {
+      "First": 65792,
+      "Last": 65855,
+      "Name": "Aegean Numbers"
+    },
+    {
+      "First": 65856,
+      "Last": 65935,
+      "Name": "Ancient Greek Numbers"
+    },
+    {
+      "First": 65936,
+      "Last": 65999,
+      "Name": "Ancient Symbols"
+    },
+    {
+      "First": 66000,
+      "Last": 66047,
+      "Name": "Phaistos Disc"
+    },
+    {
+      "First": 66176,
+      "Last": 66207,
+      "Name": "Lycian"
+    },
+    {
+      "First": 66208,
+      "Last": 66271,
+      "Name": "Carian"
+    },
+    {
+      "First": 66272,
+      "Last": 66303,
+      "Name": "Coptic Epact Numbers"
+    },
+    {
+      "First": 66304,
+      "Last": 66351,
+      "Name": "Old Italic"
+    },
+    {
+      "First": 66352,
+      "Last": 66383,
+      "Name": "Gothic"
+    },
+    {
+      "First": 66384,
+      "Last": 66431,
+      "Name": "Old Permic"
+    },
+    {
+      "First": 66432,
+      "Last": 66463,
+      "Name": "Ugaritic"
+    },
+    {
+      "First": 66464,
+      "Last": 66527,
+      "Name": "Old Persian"
+    },
+    {
+      "First": 66560,
+      "Last": 66639,
+      "Name": "Deseret"
+    },
+    {
+      "First": 66640,
+      "Last": 66687,
+      "Name": "Shavian"
+    },
+    {
+      "First": 66688,
+      "Last": 66735,
+      "Name": "Osmanya"
+    },
+    {
+      "First": 66736,
+      "Last": 66815,
+      "Name": "Osage"
+    },
+    {
+      "First": 66816,
+      "Last": 66863,
+      "Name": "Elbasan"
+    },
+    {
+      "First": 66864,
+      "Last": 66927,
+      "Name": "Caucasian Albanian"
+    },
+    {
+      "First": 66928,
+      "Last": 67007,
+      "Name": "Vithkuqi"
+    },
+    {
+      "First": 67008,
+      "Last": 67071,
+      "Name": "Todhri"
+    },
+    {
+      "First": 67072,
+      "Last": 67455,
+      "Name": "Linear A"
+    },
+    {
+      "First": 67456,
+      "Last": 67519,
+      "Name": "Latin Extended-F"
+    },
+    {
+      "First": 67584,
+      "Last": 67647,
+      "Name": "Cypriot Syllabary"
+    },
+    {
+      "First": 67648,
+      "Last": 67679,
+      "Name": "Imperial Aramaic"
+    },
+    {
+      "First": 67680,
+      "Last": 67711,
+      "Name": "Palmyrene"
+    },
+    {
+      "First": 67712,
+      "Last": 67759,
+      "Name": "Nabataean"
+    },
+    {
+      "First": 67808,
+      "Last": 67839,
+      "Name": "Hatran"
+    },
+    {
+      "First": 67840,
+      "Last": 67871,
+      "Name": "Phoenician"
+    },
+    {
+      "First": 67872,
+      "Last": 67903,
+      "Name": "Lydian"
+    },
+    {
+      "First": 67904,
+      "Last": 67935,
+      "Name": "Sidetic"
+    },
+    {
+      "First": 67968,
+      "Last": 67999,
+      "Name": "Meroitic Hieroglyphs"
+    },
+    {
+      "First": 68000,
+      "Last": 68095,
+      "Name": "Meroitic Cursive"
+    },
+    {
+      "First": 68096,
+      "Last": 68191,
+      "Name": "Kharoshthi"
+    },
+    {
+      "First": 68192,
+      "Last": 68223,
+      "Name": "Old South Arabian"
+    },
+    {
+      "First": 68224,
+      "Last": 68255,
+      "Name": "Old North Arabian"
+    },
+    {
+      "First": 68288,
+      "Last": 68351,
+      "Name": "Manichaean"
+    },
+    {
+      "First": 68352,
+      "Last": 68415,
+      "Name": "Avestan"
+    },
+    {
+      "First": 68416,
+      "Last": 68447,
+      "Name": "Inscriptional Parthian"
+    },
+    {
+      "First": 68448,
+      "Last": 68479,
+      "Name": "Inscriptional Pahlavi"
+    },
+    {
+      "First": 68480,
+      "Last": 68527,
+      "Name": "Psalter Pahlavi"
+    },
+    {
+      "First": 68608,
+      "Last": 68687,
+      "Name": "Old Turkic"
+    },
+    {
+      "First": 68736,
+      "Last": 68863,
+      "Name": "Old Hungarian"
+    },
+    {
+      "First": 68864,
+      "Last": 68927,
+      "Name": "Hanifi Rohingya"
+    },
+    {
+      "First": 68928,
+      "Last": 69007,
+      "Name": "Garay"
+    },
+    {
+      "First": 69216,
+      "Last": 69247,
+      "Name": "Rumi Numeral Symbols"
+    },
+    {
+      "First": 69248,
+      "Last": 69311,
+      "Name": "Yezidi"
+    },
+    {
+      "First": 69312,
+      "Last": 69375,
+      "Name": "Arabic Extended-C"
+    },
+    {
+      "First": 69376,
+      "Last": 69423,
+      "Name": "Old Sogdian"
+    },
+    {
+      "First": 69424,
+      "Last": 69487,
+      "Name": "Sogdian"
+    },
+    {
+      "First": 69488,
+      "Last": 69551,
+      "Name": "Old Uyghur"
+    },
+    {
+      "First": 69552,
+      "Last": 69599,
+      "Name": "Chorasmian"
+    },
+    {
+      "First": 69600,
+      "Last": 69631,
+      "Name": "Elymaic"
+    },
+    {
+      "First": 69632,
+      "Last": 69759,
+      "Name": "Brahmi"
+    },
+    {
+      "First": 69760,
+      "Last": 69839,
+      "Name": "Kaithi"
+    },
+    {
+      "First": 69840,
+      "Last": 69887,
+      "Name": "Sora Sompeng"
+    },
+    {
+      "First": 69888,
+      "Last": 69967,
+      "Name": "Chakma"
+    },
+    {
+      "First": 69968,
+      "Last": 70015,
+      "Name": "Mahajani"
+    },
+    {
+      "First": 70016,
+      "Last": 70111,
+      "Name": "Sharada"
+    },
+    {
+      "First": 70112,
+      "Last": 70143,
+      "Name": "Sinhala Archaic Numbers"
+    },
+    {
+      "First": 70144,
+      "Last": 70223,
+      "Name": "Khojki"
+    },
+    {
+      "First": 70272,
+      "Last": 70319,
+      "Name": "Multani"
+    },
+    {
+      "First": 70320,
+      "Last": 70399,
+      "Name": "Khudawadi"
+    },
+    {
+      "First": 70400,
+      "Last": 70527,
+      "Name": "Grantha"
+    },
+    {
+      "First": 70528,
+      "Last": 70655,
+      "Name": "Tulu-Tigalari"
+    },
+    {
+      "First": 70656,
+      "Last": 70783,
+      "Name": "Newa"
+    },
+    {
+      "First": 70784,
+      "Last": 70879,
+      "Name": "Tirhuta"
+    },
+    {
+      "First": 71040,
+      "Last": 71167,
+      "Name": "Siddham"
+    },
+    {
+      "First": 71168,
+      "Last": 71263,
+      "Name": "Modi"
+    },
+    {
+      "First": 71264,
+      "Last": 71295,
+      "Name": "Mongolian Supplement"
+    },
+    {
+      "First": 71296,
+      "Last": 71375,
+      "Name": "Takri"
+    },
+    {
+      "First": 71376,
+      "Last": 71423,
+      "Name": "Myanmar Extended-C"
+    },
+    {
+      "First": 71424,
+      "Last": 71503,
+      "Name": "Ahom"
+    },
+    {
+      "First": 71680,
+      "Last": 71759,
+      "Name": "Dogra"
+    },
+    {
+      "First": 71840,
+      "Last": 71935,
+      "Name": "Warang Citi"
+    },
+    {
+      "First": 71936,
+      "Last": 72031,
+      "Name": "Dives Akuru"
+    },
+    {
+      "First": 72096,
+      "Last": 72191,
+      "Name": "Nandinagari"
+    },
+    {
+      "First": 72192,
+      "Last": 72271,
+      "Name": "Zanabazar Square"
+    },
+    {
+      "First": 72272,
+      "Last": 72367,
+      "Name": "Soyombo"
+    },
+    {
+      "First": 72368,
+      "Last": 72383,
+      "Name": "Unified Canadian Aboriginal Syllabics Extended-A"
+    },
+    {
+      "First": 72384,
+      "Last": 72447,
+      "Name": "Pau Cin Hau"
+    },
+    {
+      "First": 72448,
+      "Last": 72543,
+      "Name": "Devanagari Extended-A"
+    },
+    {
+      "First": 72544,
+      "Last": 72575,
+      "Name": "Sharada Supplement"
+    },
+    {
+      "First": 72640,
+      "Last": 72703,
+      "Name": "Sunuwar"
+    },
+    {
+      "First": 72704,
+      "Last": 72815,
+      "Name": "Bhaiksuki"
+    },
+    {
+      "First": 72816,
+      "Last": 72895,
+      "Name": "Marchen"
+    },
+    {
+      "First": 72960,
+      "Last": 73055,
+      "Name": "Masaram Gondi"
+    },
+    {
+      "First": 73056,
+      "Last": 73135,
+      "Name": "Gunjala Gondi"
+    },
+    {
+      "First": 73136,
+      "Last": 73199,
+      "Name": "Tolong Siki"
+    },
+    {
+      "First": 73200,
+      "Last": 73215,
+      "Name": "Bengali Supplement"
+    },
+    {
+      "First": 73440,
+      "Last": 73471,
+      "Name": "Makasar"
+    },
+    {
+      "First": 73472,
+      "Last": 73567,
+      "Name": "Kawi"
+    },
+    {
+      "First": 73648,
+      "Last": 73663,
+      "Name": "Lisu Supplement"
+    },
+    {
+      "First": 73664,
+      "Last": 73727,
+      "Name": "Tamil Supplement"
+    },
+    {
+      "First": 73728,
+      "Last": 74751,
+      "Name": "Cuneiform"
+    },
+    {
+      "First": 74752,
+      "Last": 74879,
+      "Name": "Cuneiform Numbers and Punctuation"
+    },
+    {
+      "First": 74880,
+      "Last": 75087,
+      "Name": "Early Dynastic Cuneiform"
+    },
+    {
+      "First": 75088,
+      "Last": 75407,
+      "Name": "Archaic Cuneiform Numerals"
+    },
+    {
+      "First": 77712,
+      "Last": 77823,
+      "Name": "Cypro-Minoan"
+    },
+    {
+      "First": 77824,
+      "Last": 78895,
+      "Name": "Egyptian Hieroglyphs"
+    },
+    {
+      "First": 78896,
+      "Last": 78943,
+      "Name": "Egyptian Hieroglyph Format Controls"
+    },
+    {
+      "First": 78944,
+      "Last": 82943,
+      "Name": "Egyptian Hieroglyphs Extended-A"
+    },
+    {
+      "First": 82944,
+      "Last": 83583,
+      "Name": "Anatolian Hieroglyphs"
+    },
+    {
+      "First": 90368,
+      "Last": 90431,
+      "Name": "Gurung Khema"
+    },
+    {
+      "First": 92160,
+      "Last": 92735,
+      "Name": "Bamum Supplement"
+    },
+    {
+      "First": 92736,
+      "Last": 92783,
+      "Name": "Mro"
+    },
+    {
+      "First": 92784,
+      "Last": 92879,
+      "Name": "Tangsa"
+    },
+    {
+      "First": 92880,
+      "Last": 92927,
+      "Name": "Bassa Vah"
+    },
+    {
+      "First": 92928,
+      "Last": 93071,
+      "Name": "Pahawh Hmong"
+    },
+    {
+      "First": 93504,
+      "Last": 93567,
+      "Name": "Kirat Rai"
+    },
+    {
+      "First": 93760,
+      "Last": 93855,
+      "Name": "Medefaidrin"
+    },
+    {
+      "First": 93856,
+      "Last": 93919,
+      "Name": "Beria Erfe"
+    },
+    {
+      "First": 93952,
+      "Last": 94111,
+      "Name": "Miao"
+    },
+    {
+      "First": 94176,
+      "Last": 94207,
+      "Name": "Ideographic Symbols and Punctuation"
+    },
+    {
+      "First": 94208,
+      "Last": 100351,
+      "Name": "Tangut"
+    },
+    {
+      "First": 100352,
+      "Last": 101119,
+      "Name": "Tangut Components"
+    },
+    {
+      "First": 101120,
+      "Last": 101631,
+      "Name": "Khitan Small Script"
+    },
+    {
+      "First": 101632,
+      "Last": 101759,
+      "Name": "Tangut Supplement"
+    },
+    {
+      "First": 101760,
+      "Last": 101887,
+      "Name": "Tangut Components Supplement"
+    },
+    {
+      "First": 101888,
+      "Last": 102815,
+      "Name": "Jurchen"
+    },
+    {
+      "First": 102816,
+      "Last": 102879,
+      "Name": "Jurchen Radicals"
+    },
+    {
+      "First": 110576,
+      "Last": 110591,
+      "Name": "Kana Extended-B"
+    },
+    {
+      "First": 110592,
+      "Last": 110847,
+      "Name": "Kana Supplement"
+    },
+    {
+      "First": 110848,
+      "Last": 110895,
+      "Name": "Kana Extended-A"
+    },
+    {
+      "First": 110896,
+      "Last": 110959,
+      "Name": "Small Kana Extension"
+    },
+    {
+      "First": 110960,
+      "Last": 111359,
+      "Name": "Nushu"
+    },
+    {
+      "First": 113664,
+      "Last": 113823,
+      "Name": "Duployan"
+    },
+    {
+      "First": 113824,
+      "Last": 113839,
+      "Name": "Shorthand Format Controls"
+    },
+    {
+      "First": 117760,
+      "Last": 118463,
+      "Name": "Symbols for Legacy Computing Supplement"
+    },
+    {
+      "First": 118464,
+      "Last": 118527,
+      "Name": "Miscellaneous Symbols Supplement"
+    },
+    {
+      "First": 118528,
+      "Last": 118735,
+      "Name": "Znamenny Musical Notation"
+    },
+    {
+      "First": 118784,
+      "Last": 119039,
+      "Name": "Byzantine Musical Symbols"
+    },
+    {
+      "First": 119040,
+      "Last": 119295,
+      "Name": "Musical Symbols"
+    },
+    {
+      "First": 119296,
+      "Last": 119375,
+      "Name": "Ancient Greek Musical Notation"
+    },
+    {
+      "First": 119376,
+      "Last": 119439,
+      "Name": "Musical Symbols Supplement"
+    },
+    {
+      "First": 119488,
+      "Last": 119519,
+      "Name": "Kaktovik Numerals"
+    },
+    {
+      "First": 119520,
+      "Last": 119551,
+      "Name": "Mayan Numerals"
+    },
+    {
+      "First": 119552,
+      "Last": 119647,
+      "Name": "Tai Xuan Jing Symbols"
+    },
+    {
+      "First": 119648,
+      "Last": 119679,
+      "Name": "Counting Rod Numerals"
+    },
+    {
+      "First": 119808,
+      "Last": 120831,
+      "Name": "Mathematical Alphanumeric Symbols"
+    },
+    {
+      "First": 120832,
+      "Last": 121519,
+      "Name": "Sutton SignWriting"
+    },
+    {
+      "First": 121600,
+      "Last": 121855,
+      "Name": "Miscellaneous Symbols and Arrows Extended"
+    },
+    {
+      "First": 122624,
+      "Last": 122879,
+      "Name": "Latin Extended-G"
+    },
+    {
+      "First": 122880,
+      "Last": 122927,
+      "Name": "Glagolitic Supplement"
+    },
+    {
+      "First": 122928,
+      "Last": 123023,
+      "Name": "Cyrillic Extended-D"
+    },
+    {
+      "First": 123136,
+      "Last": 123215,
+      "Name": "Nyiakeng Puachue Hmong"
+    },
+    {
+      "First": 123536,
+      "Last": 123583,
+      "Name": "Toto"
+    },
+    {
+      "First": 123584,
+      "Last": 123647,
+      "Name": "Wancho"
+    },
+    {
+      "First": 124112,
+      "Last": 124159,
+      "Name": "Nag Mundari"
+    },
+    {
+      "First": 124368,
+      "Last": 124415,
+      "Name": "Ol Onal"
+    },
+    {
+      "First": 124608,
+      "Last": 124671,
+      "Name": "Tai Yo"
+    },
+    {
+      "First": 124896,
+      "Last": 124927,
+      "Name": "Ethiopic Extended-B"
+    },
+    {
+      "First": 124928,
+      "Last": 125151,
+      "Name": "Mende Kikakui"
+    },
+    {
+      "First": 125184,
+      "Last": 125279,
+      "Name": "Adlam"
+    },
+    {
+      "First": 126064,
+      "Last": 126143,
+      "Name": "Indic Siyaq Numbers"
+    },
+    {
+      "First": 126208,
+      "Last": 126287,
+      "Name": "Ottoman Siyaq Numbers"
+    },
+    {
+      "First": 126464,
+      "Last": 126719,
+      "Name": "Arabic Mathematical Alphabetic Symbols"
+    },
+    {
+      "First": 126976,
+      "Last": 127023,
+      "Name": "Mahjong Tiles"
+    },
+    {
+      "First": 127024,
+      "Last": 127135,
+      "Name": "Domino Tiles"
+    },
+    {
+      "First": 127136,
+      "Last": 127231,
+      "Name": "Playing Cards"
+    },
+    {
+      "First": 127232,
+      "Last": 127487,
+      "Name": "Enclosed Alphanumeric Supplement"
+    },
+    {
+      "First": 127488,
+      "Last": 127743,
+      "Name": "Enclosed Ideographic Supplement"
+    },
+    {
+      "First": 127744,
+      "Last": 128511,
+      "Name": "Miscellaneous Symbols and Pictographs"
+    },
+    {
+      "First": 128512,
+      "Last": 128591,
+      "Name": "Emoticons"
+    },
+    {
+      "First": 128592,
+      "Last": 128639,
+      "Name": "Ornamental Dingbats"
+    },
+    {
+      "First": 128640,
+      "Last": 128767,
+      "Name": "Transport and Map Symbols"
+    },
+    {
+      "First": 128768,
+      "Last": 128895,
+      "Name": "Alchemical Symbols"
+    },
+    {
+      "First": 128896,
+      "Last": 129023,
+      "Name": "Geometric Shapes Extended"
+    },
+    {
+      "First": 129024,
+      "Last": 129279,
+      "Name": "Supplemental Arrows-C"
+    },
+    {
+      "First": 129280,
+      "Last": 129535,
+      "Name": "Supplemental Symbols and Pictographs"
+    },
+    {
+      "First": 129536,
+      "Last": 129647,
+      "Name": "Chess Symbols"
+    },
+    {
+      "First": 129648,
+      "Last": 129791,
+      "Name": "Symbols and Pictographs Extended-A"
+    },
+    {
+      "First": 129792,
+      "Last": 130047,
+      "Name": "Symbols for Legacy Computing"
+    },
+    {
+      "First": 131072,
+      "Last": 173791,
+      "Name": "CJK Unified Ideographs Extension B"
+    },
+    {
+      "First": 173824,
+      "Last": 177983,
+      "Name": "CJK Unified Ideographs Extension C"
+    },
+    {
+      "First": 177984,
+      "Last": 178207,
+      "Name": "CJK Unified Ideographs Extension D"
+    },
+    {
+      "First": 178208,
+      "Last": 183983,
+      "Name": "CJK Unified Ideographs Extension E"
+    },
+    {
+      "First": 183984,
+      "Last": 191471,
+      "Name": "CJK Unified Ideographs Extension F"
+    },
+    {
+      "First": 191472,
+      "Last": 192095,
+      "Name": "CJK Unified Ideographs Extension I"
+    },
+    {
+      "First": 194560,
+      "Last": 195103,
+      "Name": "CJK Compatibility Ideographs Supplement"
+    },
+    {
+      "First": 196608,
+      "Last": 201551,
+      "Name": "CJK Unified Ideographs Extension G"
+    },
+    {
+      "First": 201552,
+      "Last": 205743,
+      "Name": "CJK Unified Ideographs Extension H"
+    },
+    {
+      "First": 205744,
+      "Last": 210047,
+      "Name": "CJK Unified Ideographs Extension J"
+    },
+    {
+      "First": 249856,
+      "Last": 261183,
+      "Name": "Seal"
+    },
+    {
+      "First": 917504,
+      "Last": 917631,
+      "Name": "Tags"
+    },
+    {
+      "First": 917760,
+      "Last": 917999,
+      "Name": "Variation Selectors Supplement"
+    },
+    {
+      "First": 983040,
+      "Last": 1048575,
+      "Name": "Supplementary Private Use Area-A"
+    },
+    {
+      "First": 1048576,
+      "Last": 1114111,
+      "Name": "Supplementary Private Use Area-B"
+    }
+  ],
+  "Sources": [
+    {
+      "file": "UnicodeData.txt",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt",
+      "bytes": 2243593,
+      "sha256": "0736451de439ae7baf1425136617da495e09ee5afbe6e394374db7009ea08950"
+    },
+    {
+      "file": "Blocks.txt",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/Blocks.txt",
+      "bytes": 11906,
+      "sha256": "a58f8d322f3c5e254f9f97b1cbf76a454a7e02de6ac35619a5e4f27aaabfd553"
+    },
+    {
+      "file": "DerivedName.txt",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/extracted/DerivedName.txt",
+      "bytes": 1931286,
+      "sha256": "ac6cf808ea4ee29323031d5ba9449de13da51398a3f5ce401546d8fceb976df7"
+    },
+    {
+      "file": "emoji-test.txt",
+      "url": "https://www.unicode.org/Public/18.0.0/emoji/emoji-test.txt",
+      "bytes": 671655,
+      "sha256": "8f3735cda1f92a779d78af67cf86066bb1f07143dc22f2ac29394d9bc57ab21a"
+    },
+    {
+      "file": "unicode-license.txt",
+      "url": "https://www.unicode.org/license.txt",
+      "bytes": 1995,
+      "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
+    },
+    {
+      "file": "ru.xml",
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-49/common/annotations/ru.xml",
+      "bytes": 427256,
+      "sha256": "4567afe74b0b65a1f07ce259867cd9b4b30901d56b8464be5d748873f97e792c"
+    },
+    {
+      "file": "ru-derived.xml",
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-49/common/annotationsDerived/ru.xml",
+      "bytes": 756249,
+      "sha256": "509fc079decc3ae19a0fbdd7426d5cdd8dfc3d3038dc473115882f052b23f5f3"
+    },
+    {
+      "file": "currencies-ru.xml",
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-49/common/main/ru.xml",
+      "bytes": 975269,
+      "sha256": "560c49327a1ccf53fe680be779718b7a67cc304ca0044c9d8a7a571d90e05502"
+    },
+    {
+      "file": "currencies-en.xml",
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-49/common/main/en.xml",
+      "bytes": 486056,
+      "sha256": "f8cbf26964d0e349fc96d9e5a56292edcbaab25c8e64177ca4f111773dfb79cf"
+    },
+    {
+      "file": "en.xml",
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-49/common/annotations/en.xml",
+      "bytes": 296588,
+      "sha256": "14d0e9bb5003c085250df4ac7bd7ba1e26d92e74174d7a3a2f42dc16e07fb155"
+    },
+    {
+      "file": "en-derived.xml",
+      "url": "https://raw.githubusercontent.com/unicode-org/cldr/release-49/common/annotationsDerived/en.xml",
+      "bytes": 550107,
+      "sha256": "a4a6c1a4c341d94179cb116623c5f44c47400a5bc55da483423ef7430ecf622e"
+    }
+  ],
+  "Files": [
+    {
+      "Path": "characters.tsv.gz",
+      "Size": 1600703,
+      "Sha256": "c5724d139ce6f6ccb5a808ea404a07d246b8ad3883c8903df2e0e4c37f69142d"
+    }
+  ]
+}

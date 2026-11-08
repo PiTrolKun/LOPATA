@@ -16,6 +16,12 @@ internal interface IAsyncDictationTextTarget : IDictationTextTarget
     Task ApplyAsync(int segment, string text, bool final, CancellationToken token);
 }
 
+internal interface IDictationInferenceTarget
+{
+    void BindStop(Func<Task> stop);
+    Task<string> RecognizeAsync(DictationChunk chunk, Func<Task<string>> recognize);
+}
+
 internal static class RegisteredDictationTarget
 {
     private static readonly DependencyProperty ProviderProperty = DependencyProperty.RegisterAttached(

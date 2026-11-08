@@ -1,0 +1,70 @@
+{
+  "Version": "3.5.29",
+  "Files": [
+    {
+      "Name": "COPYING.txt",
+      "Bytes": 18431,
+      "Sha256": "189b1af95d661151e054cea10c91b3d754e4de4d3fecfb074c1fb29476f7167b"
+    },
+    {
+      "Name": "COPYRIGHT.txt",
+      "Bytes": 3065,
+      "Sha256": "aca12808fc2c0c9d67ac550bc52864863eff8c92d3fc505fdf16d3a5903dbdb6"
+    },
+    {
+      "Name": "ddjvu.exe",
+      "Bytes": 80384,
+      "Sha256": "5a3dba5d3630ea8947ddbc78fc470468cec1fe0b05d9ddd5957ccf00cf1f58bb"
+    },
+    {
+      "Name": "libdjvulibre.dll",
+      "Bytes": 1134080,
+      "Sha256": "d0c5f982096b9da04d018c7a966e3aa417a0d9e8790cd88a6b5a388a5c1108ea"
+    },
+    {
+      "Name": "libjpeg-README.txt",
+      "Bytes": 19945,
+      "Sha256": "4cf9c190f184019b61c36bcc49d4a24ffeb2a838c6f1690d6c4db14cfb2d0478"
+    },
+    {
+      "Name": "libjpeg.dll",
+      "Bytes": 122880,
+      "Sha256": "978b9e30220e06e4be405ea415be5ead9f77cfba547b705b60bc9935f20c2e4e"
+    },
+    {
+      "Name": "libtiff-COPYRIGHT.txt",
+      "Bytes": 1146,
+      "Sha256": "fbd6fed7938541d2c809c0826225fc85e551fdbfa8732b10f0c87e0847acafd7"
+    },
+    {
+      "Name": "libtiff.dll",
+      "Bytes": 346624,
+      "Sha256": "3cd71ed52e14fceaecaebe8582e91a46ca35808077f4470f56b5a569b0aa8f74"
+    },
+    {
+      "Name": "libz.dll",
+      "Bytes": 76800,
+      "Sha256": "7029b0041b505446668b6ed41435255e41ce225fd934639ff6518e4f506100d2"
+    },
+    {
+      "Name": "win32-jpeg-README.txt",
+      "Bytes": 121,
+      "Sha256": "f0a68c66c1e31caa3f38378a86cecde4307e18fdf6db0edbc3cf5c1c998bf864"
+    },
+    {
+      "Name": "win32-tiff-README.txt",
+      "Bytes": 158,
+      "Sha256": "6a32a4e3ee9def5cf0f1c91b6239439c2bd9a3e182adb0b96b253ad548e4c089"
+    },
+    {
+      "Name": "win32-zlib-README.txt",
+      "Bytes": 125,
+      "Sha256": "2fa736d406ff8894826005cd04e3a95a18ccda2654fdaf6cd35c447b7d057287"
+    },
+    {
+      "Name": "zlib-LICENSE.txt",
+      "Bytes": 1002,
+      "Sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243"
+    }
+  ]
+}

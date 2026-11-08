@@ -60,6 +60,7 @@ internal sealed partial class VideoVoiceWindow : Window
         if (extension is not null)
         {
             Title = extension.Title; _global.Content = extension.ToggleLabel; _global.ToolTip = extension.ToggleLabel;
+            if (!extension.ShowToggle) _global.Visibility = Visibility.Collapsed;
             foreach (var pair in extension.Profiles) _drafts[pair.Key] = pair.Value;
             _trial.Text = extension.TestPhrase(initial.Language); _trial.IsReadOnly = true; _trialPanel.Visibility = Visibility.Visible;
         }
@@ -133,9 +134,15 @@ internal sealed partial class VideoVoiceWindow : Window
     }
     private void Populate()
     {
-        foreach (var m in VideoNarratorCatalog.Models)
+        var models = _extension?.DefaultModelId is { } defaultId
+            ? VideoNarratorCatalog.Models.OrderByDescending(m => m.Id == defaultId).ThenByDescending(m => Installed(m)).ThenBy(m => m.Name).ToArray()
+            : VideoNarratorCatalog.Models;
+        foreach (var m in models)
         {
-            var card = new StackPanel { Margin = new(8) }; card.Children.Add(new TextBlock { Text = m.Name, FontWeight = FontWeights.SemiBold });
+            var name = m.Name;
+            if (_extension?.ModelSize is { } size)
+                name += " · " + size(m.Id);
+            var card = new StackPanel { Margin = new(8) }; card.Children.Add(new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap, FontWeight = FontWeights.SemiBold });
             card.Children.Add(new TextBlock { Text = string.Join(" / ", m.Languages), TextWrapping = TextWrapping.Wrap });
             var status = new TextBlock { Text = m.Blocked is not null ? L("Pending") : Installed(m) ? L("Installed") : L("Missing"), TextWrapping = TextWrapping.Wrap };
             _cardStatuses[m.Id] = status; card.Children.Add(status);
@@ -143,7 +150,8 @@ internal sealed partial class VideoVoiceWindow : Window
             _models.Items.Add(new ListBoxItem { Content = card, Tag = m, HorizontalContentAlignment = System.Windows.HorizontalAlignment.Stretch });
         }
     }
-    private bool Installed(VideoNarratorModel model) => _store.Load(VideoNarratorCatalog.ArtifactId(model.Id))?.Status == AIHub.Models.ManagedModelStatuses.Installed;
+    private bool Installed(VideoNarratorModel model) => _extension?.FilesPresent is { } present ? present(model.Id)
+        : _store.Load(VideoNarratorCatalog.ArtifactId(model.Id))?.Status == AIHub.Models.ManagedModelStatuses.Installed;
     private void LoadModel()
     {
         _player.Stop(); InvalidatePreview(); var m = Model; if (m is null) return;

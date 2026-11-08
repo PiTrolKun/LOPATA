@@ -19,7 +19,14 @@ public static class BookOutputMetadata
     private static readonly XNamespace Lopata = "https://lopata.app/ns/provenance/1.0/";
     private static readonly Encoding Utf8 = new UTF8Encoding(false, true);
 
-    public static async Task WriteAndVerifyAsync(string path, string format, OutputProvenance facts, CancellationToken token, Encoding? outputEncoding = null)
+    public static Task WriteAndVerifyAsync(string path, string format, OutputProvenance facts, CancellationToken token,
+        Encoding? outputEncoding = null) => StampAndVerifyAsync(path, format, facts, token, outputEncoding, convertedEpub: true);
+
+    internal static Task WriteEditedNativeAsync(string path, string format, OutputProvenance facts, CancellationToken token) =>
+        StampAndVerifyAsync(path, format, facts, token, outputEncoding: null, convertedEpub: false);
+
+    private static async Task StampAndVerifyAsync(string path, string format, OutputProvenance facts, CancellationToken token,
+        Encoding? outputEncoding, bool convertedEpub)
     {
         token.ThrowIfCancellationRequested();
         var json = facts.Json();
@@ -35,49 +42,65 @@ public static class BookOutputMetadata
                 }
                 break;
             case "epub": case "kepub":
-                WriteEpub(path, facts, json);
+                WriteEpub(path, facts, json, convertedEpub);
                 using (var zip = ZipFile.OpenRead(path))
                 {
-                    var opf = ReadXml(zip.GetEntry(PackagePath(zip)) ?? throw Missing());
+                    var opf = ReadXml(zip.GetEntry(PackagePath(zip)) ?? throw Missing(), bookDoctype: true);
                     Require(opf.Descendants(Opf + "meta").Any(e => ((string?)e.Attribute("property") == "lopata:provenance" && e.Value == json)
                         || ((string?)e.Attribute("name") == Property && (string?)e.Attribute("content") == json)));
                 }
                 break;
             case "fb2":
             {
-                var doc = ReadXml(path);
+                var doc = ReadXml(path, bookDoctype: true);
                 var description = doc.Root?.Element(Fb + "description") ?? throw Missing();
-                var info = description.Element(Fb + "document-info") ?? throw Missing();
-                var program = info.Element(Fb + "program-used");
-                if (program is null)
+                var info = description.Element(Fb + "document-info");
+                if (info != null)
                 {
-                    program = new(Fb + "program-used");
-                    var date = info.Element(Fb + "date");
-                    if (date is null) throw Missing();
-                    date.AddBeforeSelf(program);
+                    var program = info.Element(Fb + "program-used");
+                    if (program is null)
+                    {
+                        program = new(Fb + "program-used");
+                        var next = info.Elements().FirstOrDefault(e => e.Name != Fb + "author");
+                        if (next == null) info.Add(program); else next.AddBeforeSelf(program);
+                    }
+                    var producer = "LOPATA " + facts.ProgramVersion;
+                    if (!program.Value.Contains(producer, StringComparison.Ordinal))
+                        program.Value = string.IsNullOrWhiteSpace(program.Value) ? producer : program.Value + "; " + producer;
                 }
-                var producer = "LOPATA " + facts.ProgramVersion;
-                if (!program.Value.Contains(producer, StringComparison.Ordinal)) program.Value = string.IsNullOrWhiteSpace(program.Value) ? producer : program.Value + "; " + producer;
                 foreach (var previous in description.Elements(Fb + "custom-info").Where(e => (string?)e.Attribute("info-type") == Property).ToArray()) previous.Remove();
                 var custom = new XElement(Fb + "custom-info", new XAttribute("info-type", Property), json);
                 var output = description.Elements(Fb + "output").FirstOrDefault();
                 if (output is null) description.Add(custom); else output.AddBeforeSelf(custom);
                 SaveXml(path, doc);
-                Require(ReadXml(path).Descendants(Fb + "custom-info").Any(e => (string?)e.Attribute("info-type") == Property && e.Value == json));
+                Require(ReadXml(path, bookDoctype: true).Descendants(Fb + "custom-info").Any(e => (string?)e.Attribute("info-type") == Property && e.Value == json));
                 break;
             }
-            case "odt":
+            case "odp": case "odt":
             {
                 XNamespace office = "urn:oasis:names:tc:opendocument:xmlns:office:1.0", meta = "urn:oasis:names:tc:opendocument:xmlns:meta:1.0";
                 using (var zip = ZipFile.Open(path, ZipArchiveMode.Update))
                 {
-                    var entry = zip.GetEntry("meta.xml") ?? throw Missing();
-                    var doc = ReadXml(entry);
+                    var entry = zip.GetEntry("meta.xml");
+                    var doc = entry != null ? ReadXml(entry) : new XDocument(new XElement(office + "document-meta",
+                        new XAttribute(office + "version", "1.2"), new XElement(office + "meta")));
                     var values = doc.Root?.Element(office + "meta") ?? throw Missing();
                     foreach (var old in values.Elements(meta + "user-defined").Where(e => (string?)e.Attribute(meta + "name") == Property).ToArray()) old.Remove();
                     values.Add(new XElement(meta + "user-defined", new XAttribute(meta + "name", Property), new XAttribute(meta + "value-type", "string"), json));
                     values.SetElementValue(meta + "generator", "LOPATA " + facts.ProgramVersion);
                     ReplaceXml(zip, "meta.xml", doc);
+                    if (entry == null)
+                    {
+                        XNamespace manifest = "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0";
+                        var listing = ReadXml(zip.GetEntry("META-INF/manifest.xml") ?? throw Missing());
+                        if (listing.Root?.Name != manifest + "manifest") throw Missing();
+                        if (!listing.Root.Elements(manifest + "file-entry").Any(e => (string?)e.Attribute(manifest + "full-path") == "meta.xml"))
+                        {
+                            listing.Root.Add(new XElement(manifest + "file-entry", new XAttribute(manifest + "full-path", "meta.xml"),
+                                new XAttribute(manifest + "media-type", "text/xml")));
+                            ReplaceXml(zip, "META-INF/manifest.xml", listing);
+                        }
+                    }
                 }
                 using var result = ZipFile.OpenRead(path);
                 Require(ReadXml(result.GetEntry("meta.xml") ?? throw Missing()).Descendants(meta + "user-defined").Any(e => (string?)e.Attribute(meta + "name") == Property && e.Value == json));
@@ -181,6 +204,36 @@ public static class BookOutputMetadata
         }
     }
 
+    internal static string? ReadNativeProvenance(string path, string extension)
+    {
+        using var input = File.OpenRead(path);
+        return ReadNativeProvenance(input, extension);
+    }
+
+    internal static string? ReadNativeProvenance(Stream input, string extension)
+    {
+        if (extension == ".fb2")
+        {
+            using var reader = XmlReader.Create(input, XmlSettings(bookDoctype: true));
+            return XDocument.Load(reader, LoadOptions.PreserveWhitespace).Root?.Element(Fb + "description")
+                ?.Elements(Fb + "custom-info").FirstOrDefault(e => (string?)e.Attribute("info-type") == Property)?.Value;
+        }
+        using var zip = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: true);
+        if (extension == ".epub")
+        {
+            var opf = ReadXml(zip.GetEntry(PackagePath(zip)) ?? throw Missing(), bookDoctype: true);
+            var record = opf.Root?.Element(Opf + "metadata")?.Elements(Opf + "meta")
+                .FirstOrDefault(e => (string?)e.Attribute("property") == "lopata:provenance" || (string?)e.Attribute("name") == Property);
+            return (string?)record?.Attribute("content") ?? record?.Value;
+        }
+        if (extension == ".odp" && zip.GetEntry("meta.xml") is { } entry)
+        {
+            XNamespace meta = "urn:oasis:names:tc:opendocument:xmlns:meta:1.0";
+            return ReadXml(entry).Descendants(meta + "user-defined").FirstOrDefault(e => (string?)e.Attribute(meta + "name") == Property)?.Value;
+        }
+        return null;
+    }
+
     private static bool PdfContains(string path, string json)
     {
         using var doc = UglyToad.PdfPig.PdfDocument.Open(path);
@@ -197,11 +250,11 @@ public static class BookOutputMetadata
         return result.ToString();
     }
 
-    private static void WriteEpub(string path, OutputProvenance facts, string json)
+    private static void WriteEpub(string path, OutputProvenance facts, string json, bool converted)
     {
         using var zip = ZipFile.Open(path, ZipArchiveMode.Update);
         var name = PackagePath(zip);
-        var document = ReadXml(zip.GetEntry(name) ?? throw Missing());
+        var document = ReadXml(zip.GetEntry(name) ?? throw Missing(), bookDoctype: true);
         var root = document.Root ?? throw Missing();
         var metadata = root.Element(Opf + "metadata") ?? throw Missing();
         if (((string?)root.Attribute("version"))?.StartsWith("2", StringComparison.Ordinal) == true)
@@ -219,7 +272,8 @@ public static class BookOutputMetadata
             new XElement(Opf + "meta", new XAttribute("property", "dcterms:modified"), facts.ExportedUtc.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture)));
         // calibre's Kobo adapter adds reader scripts but does not always mark their
         // XHTML manifest items. EPUB 3 requires this declaration for scripted content.
-        foreach (var item in root.Element(Opf + "manifest")?.Elements(Opf + "item") ?? [])
+        var convertedItems = converted ? root.Element(Opf + "manifest")?.Elements(Opf + "item") : null;
+        foreach (var item in convertedItems ?? [])
         {
             if ((string?)item.Attribute("media-type") != "application/xhtml+xml") continue;
             var href = (string?)item.Attribute("href");
@@ -245,18 +299,22 @@ public static class BookOutputMetadata
         return path;
     }
 
-    private static XDocument ReadXml(ZipArchiveEntry entry)
+    private static XDocument ReadXml(ZipArchiveEntry entry, bool bookDoctype = false)
     {
         if (entry.Length > 16 * 1024 * 1024) throw new InvalidDataException("BookConverter.Error.MetadataTooLarge");
-        using var input = entry.Open(); using var reader = XmlReader.Create(input, XmlSettings());
+        using var input = entry.Open(); using var reader = XmlReader.Create(input, XmlSettings(bookDoctype));
         return XDocument.Load(reader, LoadOptions.PreserveWhitespace);
     }
-    private static XDocument ReadXml(string path)
+    private static XDocument ReadXml(string path, bool bookDoctype = false)
     {
-        using var input = File.OpenRead(path); using var reader = XmlReader.Create(input, XmlSettings());
+        using var input = File.OpenRead(path); using var reader = XmlReader.Create(input, XmlSettings(bookDoctype));
         return XDocument.Load(reader, LoadOptions.PreserveWhitespace);
     }
-    private static XmlReaderSettings XmlSettings() => new() { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 256L * 1024 * 1024 };
+    private static XmlReaderSettings XmlSettings(bool bookDoctype = false) => new()
+    {
+        DtdProcessing = bookDoctype ? DtdProcessing.Parse : DtdProcessing.Prohibit, XmlResolver = null,
+        MaxCharactersFromEntities = 256 * 1024, MaxCharactersInDocument = 256L * 1024 * 1024
+    };
     private static void ReplaceXml(ZipArchive zip, string name, XDocument document)
     {
         zip.GetEntry(name)?.Delete();

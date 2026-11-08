@@ -1,0 +1,72 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style TargetType="MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource ReaderText}"/>
+        <Setter Property="Padding" Value="9,5"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem">
+            <Grid>
+                <Border x:Name="Frame" Background="Transparent" Padding="{TemplateBinding Padding}">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="18"/><ColumnDefinition/><ColumnDefinition Width="14"/></Grid.ColumnDefinitions>
+                        <TextBlock x:Name="Check" Text="✓" Visibility="Collapsed"/>
+                        <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True"/>
+                        <TextBlock x:Name="Arrow" Grid.Column="2" Text="›" Visibility="Collapsed"/>
+                    </Grid>
+                </Border>
+                <Popup x:Name="PART_Popup" Placement="Right" IsOpen="{TemplateBinding IsSubmenuOpen}" AllowsTransparency="True" Focusable="False">
+                    <Border Background="{DynamicResource ReaderPanel}" BorderBrush="{DynamicResource ReaderLine}" BorderThickness="1" Padding="4">
+                        <ScrollViewer MaxHeight="650" CanContentScroll="True"><ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/></ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource ReaderHover}"/></Trigger>
+                <Trigger Property="IsSubmenuOpen" Value="True"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource ReaderHover}"/></Trigger>
+                <Trigger Property="IsChecked" Value="True"><Setter TargetName="Check" Property="Visibility" Value="Visible"/></Trigger>
+                <Trigger Property="HasItems" Value="True"><Setter TargetName="Arrow" Property="Visibility" Value="Visible"/></Trigger>
+                <Trigger Property="Role" Value="TopLevelHeader"><Setter TargetName="PART_Popup" Property="Placement" Value="Bottom"/><Setter TargetName="Check" Property="Width" Value="0"/><Setter TargetName="Arrow" Property="Width" Value="0"/></Trigger>
+                <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource ReaderText}"/>
+        <Setter Property="Padding" Value="9,6"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem">
+            <Border x:Name="Frame" Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource ReaderHover}"/></Trigger>
+                <Trigger Property="IsSelected" Value="True"><Setter TargetName="Frame" Property="Background" Value="{DynamicResource ReaderHover}"/></Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource ReaderText}"/>
+        <Setter Property="Background" Value="{DynamicResource ReaderPanel}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ReaderLine}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
+            <Grid>
+                <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                    <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{DynamicResource ReaderPanel}" BorderBrush="{DynamicResource ReaderLine}" BorderThickness="1" CornerRadius="6">
+                            <TextBlock Text="⌄" Foreground="{DynamicResource ReaderText}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        </Border>
+                    </ControlTemplate></ToggleButton.Template>
+                </ToggleButton>
+                <ContentPresenter x:Name="Selection" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                  Margin="10,8,26,8" VerticalAlignment="Center"/>
+                <TextBox x:Name="PART_EditableTextBox" Visibility="Collapsed" Background="Transparent" BorderThickness="0" Margin="7,0,25,0" VerticalContentAlignment="Center"/>
+                <Popup x:Name="PART_Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False">
+                    <Border Background="{DynamicResource ReaderPanel}" BorderBrush="{DynamicResource ReaderLine}" BorderThickness="1" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                        <ScrollViewer MaxHeight="290" CanContentScroll="True"><ItemsPresenter/></ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsEditable" Value="True"><Setter TargetName="Selection" Property="Visibility" Value="Collapsed"/><Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/></Trigger>
+                <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
+</ResourceDictionary>

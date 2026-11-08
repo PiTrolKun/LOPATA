@@ -26,9 +26,9 @@ public sealed class FinancialModelRuntime : IDisposable
     public Task<string> GenerateAsync(DebugModelInfo model, string system, string prompt, int maxTokens, CancellationToken token) =>
         GenerateConversationAsync(model, system, [new("user", prompt)], maxTokens, token, exploratory: false);
 
-    public async Task<string> GenerateConversationAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory = true, Action<string>? truncated = null)
+    public async Task<string> GenerateConversationAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory = true, Action<string>? truncated = null, Func<Task>? beforeSend = null)
     {
-        try { return await GenerateConversationCoreAsync(model, system, messages, maxTokens, token, exploratory, truncated); }
+        try { return await GenerateConversationCoreAsync(model, system, messages, maxTokens, token, exploratory, truncated, beforeSend: beforeSend); }
         catch (OperationCanceledException) { await RetireAsync(); throw; }
     }
 
@@ -40,7 +40,7 @@ public sealed class FinancialModelRuntime : IDisposable
         catch (OperationCanceledException) { await RetireAsync(); throw; }
     }
 
-    private async Task<string> GenerateConversationCoreAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory, Action<string>? truncated, bool userOnly = false)
+    private async Task<string> GenerateConversationCoreAsync(DebugModelInfo model, string system, IReadOnlyList<FinancialDiscussionMessage> messages, int maxTokens, CancellationToken token, bool exploratory, Action<string>? truncated, bool userOnly = false, Func<Task>? beforeSend = null)
     {
         if (!File.Exists(model.Path)) throw new BackgroundOperationWaitingException("Finance.ModelMissing");
         // Thinking BIN models spend the same generation budget on reasoning and the final answer.
@@ -63,6 +63,7 @@ public sealed class FinancialModelRuntime : IDisposable
             using var counts = JsonDocument.Parse(await countResponse.Content.ReadAsStringAsync(token));
             if (counts.RootElement.GetProperty("tokens").GetArrayLength() + maxTokens + 128 > CoreContextRuntimeLimits.CurrentBackendContextLimit)
                 throw new BackgroundOperationWaitingException("Finance.ContextTooSmall");
+            if (beforeSend is not null) await beforeSend();
             return ParseResponse(await _llama.GeneratePrivateJsonAsync(model, requestJson, token), generationBudget, truncated);
         }
         else
@@ -71,6 +72,7 @@ public sealed class FinancialModelRuntime : IDisposable
             await PrepareBinAsync(model.Path, token); endpoint = $"http://{IPAddress.Loopback}:{_port}";
         }
         using var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+        if (beforeSend is not null) await beforeSend();
         using var response = await _http.PostAsync(endpoint + "/v1/chat/completions", content, token);
         response.EnsureSuccessStatusCode();
         return ParseResponse(await response.Content.ReadAsStringAsync(token), generationBudget, truncated);

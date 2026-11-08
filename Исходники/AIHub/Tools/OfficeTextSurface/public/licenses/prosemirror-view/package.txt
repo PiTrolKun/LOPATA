@@ -1,0 +1,2 @@
+prosemirror-view 1.42.9
+MIT

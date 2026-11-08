@@ -21,6 +21,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Tools\OfficeUnicode\characters.tsv.gz" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\OfficeUnicode\manifest.json" LogicalName="AIHub.OfficeUnicodeManifest" />
+    <Content Include="Tools\OfficeTextSurface\public\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\OfficeTextSurface\files.json" LogicalName="AIHub.OfficeTextSurfaceManifest" />
+    <Content Include="Tools\OfficeEditor\*.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Tools\office_reader_export.py;Tools\office_reader_pdf.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\reader-djvu-files.json" LogicalName="AIHub.ReaderDjvuManifest" />
+    <Content Include="..\..\Runtime\OfficeReader\djvulibre-3.5.29\*" Link="OfficeReaderRuntime\DjVuLibre\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\OfficeReader\sources\*" Link="OfficeReaderRuntime\Sources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\image-loras.json" LogicalName="AIHub.ImageLoras" />
     <EmbeddedResource Include="Tools\image-lora-signatures.json" LogicalName="AIHub.ImageLoraSignatures" />
     <EmbeddedResource Include="Content\ChatComposer.js" LogicalName="AIHub.ChatComposerScript" />
@@ -176,6 +185,9 @@
     <EmbeddedResource Include="Content\VectorEditorCommands.js" LogicalName="AIHub.VectorEditorCommands" />
     <EmbeddedResource Include="Content\VectorEditorPlastic.js" LogicalName="AIHub.VectorEditorPlastic" />
     <Content Include="Assets\SvgFileIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\ReaderFileIcon.ico;Assets\ReaderFileIcon.svg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\OfficeProjectFileIcon.ico;Assets\OfficeProjectFileIcon.svg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Resource Include="Assets\OfficeProjectFileIcon.ico" />
     <Content Include="Assets\VideoFileIcon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Assets\AIVideoFileIcon.ico;Assets\AIVideoFileIcon.svg" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Resource Include="Assets\AIVideoFileIcon.ico" />

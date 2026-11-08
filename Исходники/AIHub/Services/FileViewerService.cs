@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using AIHub.Models;
+using AIHub.Controls.OfficeReader;
 using WpfMessageBox = System.Windows.MessageBox;
 
 namespace AIHub.Services;
@@ -14,7 +15,8 @@ public sealed class FileViewerService
         ".txt", ".log", ".json", ".xml", ".csv", ".tsv", ".md", ".markdown", ".yaml", ".yml",
         ".html", ".htm", ".svg", ".css", ".cs", ".js", ".ts", ".py", ".cpp", ".h", ".sql",
         ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".wdp",
-        ".docx", ".pptx", ".xlsx", ".xlsm", ".pdf", ".epub",
+        ".docx", ".doc", ".odt", ".rtf", ".pptx", ".ppt", ".odp", ".xlsx", ".xlsm", ".xls", ".ods", ".pdf", ".epub",
+        ".fb2", ".mobi", ".azw", ".azw3", ".kepub", ".cbz", ".cbr", ".djvu", ".djv",
         ".mp3", ".wav", ".wma", ".mp4", ".wmv", ".avi",
         ".zip", ".7z", ".rar", ".tar", ".gz", ".tgz",
         ".eml", ".mime", ".sqlite", ".sqlite3", ".db"
@@ -22,6 +24,7 @@ public sealed class FileViewerService
 
     private readonly Dictionary<string, FileViewerWindow> _openWindows =
         new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<ReaderWindowGroup> _readerWindows = [];
 
     public string? SelectFile(Window owner, LocalizationService localization)
     {
@@ -55,7 +58,11 @@ public sealed class FileViewerService
         }
 
         var extension = Path.GetExtension(fullPath);
-        if (CanOpenInternally(extension, settings))
+        var internalViewer = CanOpenInternally(extension, settings);
+        if (internalViewer && UsesReader(fullPath) && settings.ReaderWindowsIntegrationEnabled
+            && !settings.PreferInternalByExtension.ContainsKey(extension))
+            internalViewer = OfficeReader.ReaderAssociationDiscovery.PreferInternal(extension, settings, OfficeReader.ReaderAssociationDiscovery.Read(extension));
+        if (internalViewer)
         {
             OpenInternal(owner, fullPath, isDarkTheme, localization);
             return;
@@ -77,6 +84,7 @@ public sealed class FileViewerService
 
     public void ApplyTheme(bool isDarkTheme)
     {
+        foreach (var reader in _readerWindows) reader.ApplyTheme(isDarkTheme);
         foreach (var window in _openWindows.Values.ToList())
         {
             window.ApplyTheme(isDarkTheme);
@@ -105,6 +113,11 @@ public sealed class FileViewerService
         bool isDarkTheme,
         LocalizationService localization)
     {
+        if (UsesReader(path))
+        {
+            var group = ReaderWindowGroup.For(owner, localization.T, isDarkTheme);
+            _readerWindows.Add(group); group.Open(path); return;
+        }
         if (_openWindows.TryGetValue(path, out var existing) && existing.IsLoaded)
         {
             if (existing.WindowState == WindowState.Minimized)
@@ -123,6 +136,11 @@ public sealed class FileViewerService
         window.Closed += (_, _) => _openWindows.Remove(path);
         window.Show();
     }
+
+    public static bool UsesReader(string path) => Path.GetExtension(path).ToLowerInvariant() is
+        ".docx" or ".doc" or ".odt" or ".rtf" or ".pptx" or ".ppt" or ".odp" or ".xlsx" or ".xlsm" or ".xls" or ".ods" or
+        ".pdf" or ".epub" or ".fb2" or ".mobi" or ".azw" or ".azw3" or ".kepub" or ".cbz" or ".cbr" or ".djvu" or ".djv"
+        || path.EndsWith(".fb2.zip", StringComparison.OrdinalIgnoreCase);
 
     private void OfferFallback(
         Window owner,

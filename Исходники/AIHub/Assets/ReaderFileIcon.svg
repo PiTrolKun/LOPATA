@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><desc>Author: Петр</desc><metadata id="lopata-provenance">{"Schema":1,"Program":"LOPATA","ProgramVersion":"0.7.40-dev","Scenario":"vector-graphics/generation","ExportedUtc":"2026-11-07T17:45:27.2284534+00:00","CreatedUtc":"2026-11-07T17:04:52.1413627+00:00","GenerationSeconds":null,"ModelHistory":"recorded","ModelScope":"output","Models":[{"Id":"model-qwen3-8-27b-ridge-37bpw","Name":"Qwen3.8-27B-Ridge 3.7 bpw","Revision":"486faa5f2032ff99bdc8993ade1b8fff13d1464c","Role":"SVG text generation"},{"Id":"llama.cpp","Name":"llama.cpp Vulkan","Revision":"620d2225cc436ab0b001e3200e590e3b286ef9ab","Role":"text inference; engine set 002"}]}</metadata>
+  <defs>
+    <linearGradient id="frameGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4d525a" />
+      <stop offset="0.45" stop-color="#23262b" />
+      <stop offset="1" stop-color="#0f1114" />
+    </linearGradient>
+    <linearGradient id="ornGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#cfd6de" />
+      <stop offset="0.5" stop-color="#8b939d" />
+      <stop offset="1" stop-color="#5a6068" />
+    </linearGradient>
+    <linearGradient id="pgL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f3f5f7" />
+      <stop offset="0.7" stop-color="#c9ced4" />
+      <stop offset="1" stop-color="#a6adb4" />
+    </linearGradient>
+    <linearGradient id="pgR" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a6adb4" />
+      <stop offset="0.3" stop-color="#c9ced4" />
+      <stop offset="1" stop-color="#f3f5f7" />
+    </linearGradient>
+    <radialGradient id="greenGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#39ff8e" stop-opacity="0.5" />
+      <stop offset="0.6" stop-color="#39ff8e" stop-opacity="0.16" />
+      <stop offset="1" stop-color="#39ff8e" stop-opacity="0" />
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.2" result="b" />
+      <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+    <clipPath id="shovel">
+      <path d="M247 140 L265 140 L265 306 C293 306 306 322 308 342 L308 372 C308 396 286 410 256 410 C226 410 204 396 204 372 L204 342 C206 322 219 306 247 306 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Frame with Gothic ornaments -->
+  <path fill-rule="evenodd" fill="url(#frameGrad)" stroke="#3c4046" stroke-width="1.5" d="M16 40 Q16 16 40 16 H472 Q496 16 496 40 V472 Q496 496 472 496 H40 Q16 496 16 472 Z            M52 66 Q52 52 66 52 H446 Q460 52 460 66 V446 Q460 460 446 460 H66 Q52 460 52 446 Z" />
+  <path d="M52 66 Q52 52 66 52 H446 Q460 52 460 66 V446 Q460 460 446 460 H66 Q52 460 52 446 Z" fill="#0b0c10" stroke="#7a828c" stroke-width="2" />
+
+  <g>
+    <path d="M30 84 C30 52 52 30 84 30 C74 46 64 50 54 50 C66 40 76 36 88 32" fill="none" stroke="#aeb6c0" stroke-width="3" />
+    <path d="M46 66 C40 52 46 40 56 40 C54 50 60 56 68 58 C58 64 50 66 46 66 Z" fill="url(#ornGrad)" />
+    <path d="M40 32 L48 40 L40 48 L32 40 Z" fill="#cfd6de" />
+  </g>
+  <g transform="rotate(90 256 256)">
+    <path d="M30 84 C30 52 52 30 84 30 C74 46 64 50 54 50 C66 40 76 36 88 32" fill="none" stroke="#aeb6c0" stroke-width="3" />
+    <path d="M46 66 C40 52 46 40 56 40 C54 50 60 56 68 58 C58 64 50 66 46 66 Z" fill="url(#ornGrad)" />
+    <path d="M40 32 L48 40 L40 48 L32 40 Z" fill="#cfd6de" />
+  </g>
+  <g transform="rotate(180 256 256)">
+    <path d="M30 84 C30 52 52 30 84 30 C74 46 64 50 54 50 C66 40 76 36 88 32" fill="none" stroke="#aeb6c0" stroke-width="3" />
+    <path d="M46 66 C40 52 46 40 56 40 C54 50 60 56 68 58 C58 64 50 66 46 66 Z" fill="url(#ornGrad)" />
+    <path d="M40 32 L48 40 L40 48 L32 40 Z" fill="#cfd6de" />
+  </g>
+  <g transform="rotate(270 256 256)">
+    <path d="M30 84 C30 52 52 30 84 30 C74 46 64 50 54 50 C66 40 76 36 88 32" fill="none" stroke="#aeb6c0" stroke-width="3" />
+    <path d="M46 66 C40 52 46 40 56 40 C54 50 60 56 68 58 C58 64 50 66 46 66 Z" fill="url(#ornGrad)" />
+    <path d="M40 32 L48 40 L40 48 L32 40 Z" fill="#cfd6de" />
+  </g>
+  <path d="M256 26 L264 34 L256 42 L248 34 Z" fill="#aeb6c0" />
+  <path d="M256 470 L264 478 L256 486 L248 478 Z" fill="#aeb6c0" />
+  <path d="M26 256 L34 264 L42 256 L34 248 Z" fill="#aeb6c0" />
+  <path d="M470 256 L478 264 L486 256 L478 248 Z" fill="#aeb6c0" />
+
+  <!-- Open book: silver pages -->
+  <path d="M118 352 C168 342 226 346 256 368 L256 360 C226 338 168 334 118 344 Z" fill="#9aa1a8" />
+  <path d="M394 352 C344 342 286 346 256 368 L256 360 C286 338 344 334 394 344 Z" fill="#9aa1a8" />
+  <path d="M118 344 C168 334 226 338 256 360 L256 352 C226 330 168 326 118 336 Z" fill="#b9bec4" />
+  <path d="M394 344 C344 334 286 338 256 360 L256 352 C286 330 344 326 394 336 Z" fill="#b9bec4" />
+  <path d="M256 190 C226 174 168 170 118 180 L118 336 C168 326 226 330 256 352 Z" fill="url(#pgL)" />
+  <path d="M256 190 C286 174 344 170 394 180 L394 336 C344 326 286 330 256 352 Z" fill="url(#pgR)" />
+  <path d="M136 212 C170 202 214 200 244 210 M136 240 C170 230 214 228 244 238 M136 268 C170 258 214 256 244 266 M136 296 C170 286 214 284 244 294" fill="none" stroke="#8a9098" stroke-width="2" opacity="0.5" />
+  <path d="M376 212 C342 202 298 200 268 210 M376 240 C342 230 298 228 268 238 M376 268 C342 258 298 256 268 266 M376 296 C342 286 298 284 268 294" fill="none" stroke="#8a9098" stroke-width="2" opacity="0.5" />
+  <path d="M256 190 V352" stroke="#6d747c" stroke-width="2" opacity="0.6" />
+
+  <!-- Green glow over pages -->
+  <ellipse cx="256" cy="275" rx="125" ry="150" fill="url(#greenGlow)" />
+
+  <!-- Shovel formed of Matrix symbol streams -->
+  <g clip-path="url(#shovel)" filter="url(#glow)" font-family="monospace" font-size="15">
+    <text x="210" y="134" fill="#1f9e53"><tspan x="210">7</tspan><tspan x="210" dy="16">Q</tspan><tspan x="210" dy="16">K</tspan><tspan x="210" dy="16">3</tspan><tspan x="210" dy="16">M</tspan><tspan x="210" dy="16">9</tspan><tspan x="210" dy="16">B</tspan><tspan x="210" dy="16">2</tspan><tspan x="210" dy="16">D</tspan><tspan x="210" dy="16">5</tspan><tspan x="210" dy="16">N</tspan><tspan x="210" dy="16">8</tspan><tspan x="210" dy="16">F</tspan><tspan x="210" dy="16">1</tspan><tspan x="210" dy="16">H</tspan><tspan x="210" dy="16">4</tspan><tspan x="210" dy="16">J</tspan><tspan x="210" dy="16">6</tspan><tspan x="210" dy="16">P</tspan></text>
+    <text x="223" y="134" fill="#43d97f"><tspan x="223">B</tspan><tspan x="223" dy="16">4</tspan><tspan x="223" dy="16">N</tspan><tspan x="223" dy="16">8</tspan><tspan x="223" dy="16">F</tspan><tspan x="223" dy="16">1</tspan><tspan x="223" dy="16">H</tspan><tspan x="223" dy="16">4</tspan><tspan x="223" dy="16">J</tspan><tspan x="223" dy="16">6</tspan><tspan x="223" dy="16">P</tspan><tspan x="223" dy="16">2</tspan><tspan x="223" dy="16">X</tspan><tspan x="223" dy="16">9</tspan><tspan x="223" dy="16">L</tspan><tspan x="223" dy="16">3</tspan><tspan x="223" dy="16">W</tspan><tspan x="223" dy="16">7</tspan><tspan x="223" dy="16">Y</tspan></text>
+    <text x="236" y="134" fill="#8effb0"><tspan x="236">H</tspan><tspan x="236" dy="16">4</tspan><tspan x="236" dy="16">J</tspan><tspan x="236" dy="16">6</tspan><tspan x="236" dy="16">P</tspan><tspan x="236" dy="16">2</tspan><tspan x="236" dy="16">X</tspan><tspan x="236" dy="16">9</tspan><tspan x="236" dy="16">L</tspan><tspan x="236" dy="16">3</tspan><tspan x="236" dy="16">W</tspan><tspan x="236" dy="16">7</tspan><tspan x="236" dy="16">Y</tspan><tspan x="236" dy="16">5</tspan><tspan x="236" dy="16">K</tspan><tspan x="236" dy="16">1</tspan><tspan x="236" dy="16">M</tspan><tspan x="236" dy="16">8</tspan><tspan x="236" dy="16">Q</tspan></text>
+    <text x="249" y="134" fill="#2ee57a"><tspan x="249">P</tspan><tspan x="249" dy="16">2</tspan><tspan x="249" dy="16">X</tspan><tspan x="249" dy="16">9</tspan><tspan x="249" dy="16">L</tspan><tspan x="249" dy="16">3</tspan><tspan x="249" dy="16">W</tspan><tspan x="249" dy="16">7</tspan><tspan x="249" dy="16">Y</tspan><tspan x="249" dy="16">5</tspan><tspan x="249" dy="16">K</tspan><tspan x="249" dy="16">1</tspan><tspan x="249" dy="16">M</tspan><tspan x="249" dy="16">8</tspan><tspan x="249" dy="16">Q</tspan><tspan x="249" dy="16">4</tspan><tspan x="249" dy="16">N</tspan><tspan x="249" dy="16">6</tspan><tspan x="249" dy="16">B</tspan></text>
+    <text x="262" y="134" fill="#a8ffc4"><tspan x="262">X</tspan><tspan x="262" dy="16">9</tspan><tspan x="262" dy="16">L</tspan><tspan x="262" dy="16">3</tspan><tspan x="262" dy="16">W</tspan><tspan x="262" dy="16">7</tspan><tspan x="262" dy="16">Y</tspan><tspan x="262" dy="16">5</tspan><tspan x="262" dy="16">K</tspan><tspan x="262" dy="16">1</tspan><tspan x="262" dy="16">M</tspan><tspan x="262" dy="16">8</tspan><tspan x="262" dy="16">Q</tspan><tspan x="262" dy="16">4</tspan><tspan x="262" dy="16">N</tspan><tspan x="262" dy="16">6</tspan><tspan x="262" dy="16">B</tspan><tspan x="262" dy="16">2</tspan><tspan x="262" dy="16">F</tspan></text>
+    <text x="275" y="134" fill="#2ee57a"><tspan x="275">L</tspan><tspan x="275" dy="16">3</tspan><tspan x="275" dy="16">W</tspan><tspan x="275" dy="16">7</tspan><tspan x="275" dy="16">Y</tspan><tspan x="275" dy="16">5</tspan><tspan x="275" dy="16">K</tspan><tspan x="275" dy="16">1</tspan><tspan x="275" dy="16">M</tspan><tspan x="275" dy="16">8</tspan><tspan x="275" dy="16">Q</tspan><tspan x="275" dy="16">4</tspan><tspan x="275" dy="16">N</tspan><tspan x="275" dy="16">6</tspan><tspan x="275" dy="16">B</tspan><tspan x="275" dy="16">2</tspan><tspan x="275" dy="16">F</tspan><tspan x="275" dy="16">8</tspan><tspan x="275" dy="16">H</tspan></text>
+    <text x="288" y="134" fill="#8effb0"><tspan x="288">W</tspan><tspan x="288" dy="16">7</tspan><tspan x="288" dy="16">Y</tspan><tspan x="288" dy="16">5</tspan><tspan x="288" dy="16">K</tspan><tspan x="288" dy="16">1</tspan><tspan x="288" dy="16">M</tspan><tspan x="288" dy="16">8</tspan><tspan x="288" dy="16">Q</tspan><tspan x="288" dy="16">4</tspan><tspan x="288" dy="16">N</tspan><tspan x="288" dy="16">6</tspan><tspan x="288" dy="16">B</tspan><tspan x="288" dy="16">2</tspan><tspan x="288" dy="16">F</tspan><tspan x="288" dy="16">8</tspan><tspan x="288" dy="16">H</tspan><tspan x="288" dy="16">3</tspan><tspan x="288" dy="16">J</tspan></text>
+    <text x="301" y="134" fill="#1f9e53"><tspan x="301">K</tspan><tspan x="301" dy="16">1</tspan><tspan x="301" dy="16">M</tspan><tspan x="301" dy="16">8</tspan><tspan x="301" dy="16">Q</tspan><tspan x="301" dy="16">4</tspan><tspan x="301" dy="16">N</tspan><tspan x="301" dy="16">6</tspan><tspan x="301" dy="16">B</tspan><tspan x="301" dy="16">2</tspan><tspan x="301" dy="16">F</tspan><tspan x="301" dy="16">8</tspan><tspan x="301" dy="16">H</tspan><tspan x="301" dy="16">3</tspan><tspan x="301" dy="16">J</tspan><tspan x="301" dy="16">9</tspan><tspan x="301" dy="16">L</tspan><tspan x="301" dy="16">5</tspan><tspan x="301" dy="16">P</tspan></text>
+    <text x="249" y="182" fill="#f2fff6">K</text>
+    <text x="262" y="150" fill="#f2fff6">L</text>
+    <text x="288" y="230" fill="#f2fff6">Q</text>
+    <text x="223" y="298" fill="#f2fff6">P</text>
+    <text x="236" y="340" fill="#f2fff6">5</text>
+    <text x="275" y="372" fill="#f2fff6">F</text>
+  </g>
+  <path d="M247 140 L265 140 L265 306 C293 306 306 322 308 342 L308 372 C308 396 286 410 256 410 C226 410 204 396 204 372 L204 342 C206 322 219 306 247 306 Z" fill="none" stroke="#6dffab" stroke-width="2" opacity="0.55" filter="url(#glow)" />
+
+  <!-- Floating digital particles -->
+  <g filter="url(#glow)" fill="#7dffb0">
+    <circle cx="150" cy="150" r="2" opacity="0.9" />
+    <circle cx="372" cy="180" r="2.5" opacity="0.8" />
+    <circle cx="140" cy="300" r="1.8" opacity="0.7" />
+    <circle cx="380" cy="330" r="2" opacity="0.85" />
+    <circle cx="170" cy="385" r="1.5" opacity="0.6" />
+    <circle cx="340" cy="140" r="1.6" opacity="0.7" />
+    <circle cx="392" cy="250" r="1.4" opacity="0.6" />
+    <circle cx="122" cy="240" r="1.6" opacity="0.7" />
+    <circle cx="312" cy="430" r="2" opacity="0.8" />
+    <circle cx="210" cy="122" r="1.8" opacity="0.75" />
+  </g>
+</svg>

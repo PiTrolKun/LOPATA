@@ -19,6 +19,7 @@ public sealed class DictationSession : IAsyncDisposable
     public bool Ready=>_host.Ready;
     public double Level=>_audio?.Level??0;
     public Func<DictationChunk,string,Task>? TextReady { get; set; }
+    internal Func<DictationChunk, Func<Task<string>>, Task<string>>? RecognizeForTarget { get; set; }
     public event Action<Exception>? Failed;
     public event Action? Changed;
     public DictationSession(){_drained.TrySetResult();_pump=Task.Run(Pump);}
@@ -49,7 +50,8 @@ public sealed class DictationSession : IAsyncDisposable
                 lock(_gate){chunk=_queue.First?.Value;if(chunk is not null)_queue.RemoveFirst();}
                 if(chunk is null)continue;
                 try {
-                    var text=await _host.DecodeAsync(chunk.Pcm,_lifetime.Token);
+                    Task<string> Recognize() => _host.DecodeAsync(chunk.Pcm, _lifetime.Token);
+                    var text = RecognizeForTarget is { } observe ? await observe(chunk, Recognize) : await Recognize();
                     if(TextReady is {} apply)await apply(chunk,text);
                 }
                 catch(OperationCanceledException) when(_lifetime.IsCancellationRequested){break;}

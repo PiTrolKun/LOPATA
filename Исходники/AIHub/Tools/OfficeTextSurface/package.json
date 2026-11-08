@@ -1,0 +1,1 @@
+{"name":"lopata-office-text-surface","private":true,"type":"module","version":"1.0.0","scripts":{"build":"node build.mjs"},"dependencies":{"@docx-editor.dev/core":"2.35.0","@docx-editor.dev/fonts":"2.35.0","@docx-editor.dev/i18n":"2.35.0"},"devDependencies":{"esbuild":"0.25.12"}}

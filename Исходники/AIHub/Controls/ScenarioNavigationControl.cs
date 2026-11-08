@@ -327,7 +327,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
             foreach (var group in ScenarioNavigationCatalog.Children(SelectedDirectionId))
             {
                 body.Children.Add(Text(_localize(group.TitleKey), "UiSectionFontSize", title: true));
-                foreach (var scenario in ScenarioNavigationCatalog.Children(group.Id))
+                foreach (var scenario in ScenarioNavigationCatalog.ScenarioCards(group.Id))
                     body.Children.Add(Card(scenario, () => OpenScenario(scenario.Id), direction: false));
             }
         }

@@ -1,0 +1,2 @@
+prosemirror-state 1.4.4
+MIT

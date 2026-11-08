@@ -1,4 +1,4 @@
-namespace AIHub.Services;
+﻿namespace AIHub.Services;
 
 public enum ScenarioNavigationKind { Direction, Group, Scenario }
 
@@ -36,6 +36,8 @@ public static class ScenarioNavigationCatalog
     public const string VideoEditor = "video_editor";
     public const string VideoUpscale = "video_upscale";
     public const string BookConversion = "text_to_book";
+    public const string OfficeReader = "office_reader";
+    public const string OfficeEditor = "office_editor";
     public const string Dictation = "voice_input";
     public const string LetItOut = "let_it_out";
     public const string LivingArcade = "living_arcade";
@@ -47,6 +49,8 @@ public static class ScenarioNavigationCatalog
         Node(Experiments, ScenarioNavigationKind.Direction, null, "Navigation.Experiments", "Navigation.ExperimentsHint", "experiment"),
         Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause", "component_audit"]),
         Node("utilities_text", ScenarioNavigationKind.Group, Utilities, "BookConverter.Group", "", "tools"),
+        Node(OfficeReader, ScenarioNavigationKind.Scenario, "utilities_text", "Reader.Entry", "Reader.Description", "tools", tags: ["office_reader", "office_reader_ai", "office_reader_speech", "office_reader_translation", "office_document_summary"]),
+        Node(OfficeEditor, ScenarioNavigationKind.Scenario, "utilities_text", "OfficeEditor.Entry", "OfficeEditor.Description", "tools", tags: ["office_editor", "office_editor_capture", "office_editor_project", "office_project_sheets", "office_project_journals", "office_workbook_formulas", "office_book_editing", "office_slide_editing","office_paragraph_translation", "office_document_summary", "office_selection_actions", "office_editor_web_search", "office_special_characters", "office_symbol_suggestions"]),
         Node(Dictation,ScenarioNavigationKind.Scenario,"utilities_text","Dictation.Title","Dictation.Help","tools",tags:["voice_input"]),
         Node(BookConversion, ScenarioNavigationKind.Scenario, "utilities_text", "BookConverter.Title", "BookConverter.Description", "tools",
             tags: ["text_to_book", "book_merge", "book_shell", "book_view", "book_editor", "book_smart", "book_logs"], related: [RagBooks]),
@@ -119,6 +123,24 @@ public static class ScenarioNavigationCatalog
         new ScenarioNavigationTag("living_arcade_mechanics", "Arcade.Tag.Mechanics", "Arcade.Tag.MechanicsHelp", LivingArcade),
         new ScenarioNavigationTag("voice_input","Dictation.Title","Dictation.Help",Dictation),
         Tag("engine_sets", Creation),
+        Tag("office_reader", OfficeReader),
+        new ScenarioNavigationTag("office_editor", "OfficeEditor.Entry", "OfficeEditor.Description", OfficeEditor),
+        new ScenarioNavigationTag("office_editor_capture", "OfficeEditor.Capture", "OfficeEditor.CaptureTip", OfficeEditor),
+        new ScenarioNavigationTag("office_editor_project", "OfficeEditor.Project", "OfficeEditor.ProjectDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_project_sheets", "OfficeEditor.ProjectSheets", "OfficeEditor.SheetsDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_project_journals", "OfficeEditor.ProjectJournals", "OfficeEditor.JournalsDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_workbook_formulas", "OfficeEditor.WorkbookFormulas", "OfficeEditor.WorkbookFormulasDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_book_editing", "OfficeEditor.NativeBooks", "OfficeEditor.NativeBooksDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_slide_editing", "OfficeEditor.NativeSlidesTitle", "OfficeEditor.NativeSlidesDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_paragraph_translation","OfficeEditor.ReviewTitle","OfficeEditor.ReviewTranslationHint",OfficeEditor),
+        new ScenarioNavigationTag("office_special_characters", "OfficeSymbols.Title", "OfficeSymbols.Description", OfficeEditor),
+        new ScenarioNavigationTag("office_symbol_suggestions", "OfficeSymbols.SuggestionsTitle", "OfficeSymbols.SuggestionsDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_editor_web_search", "OfficeRephrase.Search", "OfficeRephrase.SearchDescription", OfficeEditor),
+        new ScenarioNavigationTag("office_selection_actions", "OfficeRephrase.Title", "OfficeRephrase.Description", OfficeEditor),
+        new ScenarioNavigationTag("office_document_summary", "OfficeSummary.Title", "OfficeSummary.Description", OfficeEditor),
+        Tag("office_reader_ai", OfficeReader),
+        Tag("office_reader_speech", OfficeReader),
+        Tag("office_reader_translation", OfficeReader),
         Tag("text_to_book", BookConversion), Tag("book_merge", BookConversion), Tag("book_shell", BookConversion),
         Tag("book_view", BookConversion), Tag("book_editor", BookConversion), Tag("book_smart", BookConversion), Tag("book_logs", BookConversion),
         Tag("song_clip", SongClip),
@@ -171,6 +193,9 @@ public static class ScenarioNavigationCatalog
 
     public static IEnumerable<ScenarioNavigationNode> Children(string? parentId) =>
         Nodes.Where(node => node.ParentId == parentId);
+
+    public static IEnumerable<ScenarioNavigationNode> ScenarioCards(string groupId) =>
+        Children(groupId).Where(node => node.Id is not (OfficeReader or Dictation));
 
     private static ScenarioNavigationNode Node(string id, ScenarioNavigationKind kind, string? parent,
         string title, string hint, string icon, bool available = true, string[]? tags = null, string[]? related = null, bool placeholder = false) =>

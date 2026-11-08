@@ -93,3 +93,14 @@ Runtime/MusicHeartMuLa/source.zip binary
 Исходники/AIHub/Assets/LivingArcade/Library/** -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/living-arcade-* -text -eol -whitespace
 "ТЗ/Архив/ЛОПАТА — «Живая аркада» бесконечная игра с генеративным геймдизайном.md" -text -eol -whitespace
+
+# Office assets are a byte-exact audited payload.
+Исходники/AIHub/Tools/OfficeTextSurface/public/** -text -eol -whitespace
+Исходники/AIHub/Tools/OfficeUnicode/characters.tsv.gz -text -eol
+Исходники/AIHub/Tools/OfficeUnicode/manifest.json text eol=lf
+Исходники/AIHub/Licenses/texts/OfficeTextSurface-* -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/Unicode-18.0-CLDR49.txt -text -eol -whitespace
+
+Исходники/AIHub/Licenses/texts/books-djvu* -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/OfficeReader-DjVuLibre-GPL2.txt -text -eol -whitespace
+Исходники/AIHub/Licenses/texts/OfficeReader-DjVuLibre-NOTICE.txt -text -eol -whitespace

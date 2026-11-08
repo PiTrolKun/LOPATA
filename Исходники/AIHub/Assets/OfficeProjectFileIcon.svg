@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><desc>Author: Петр</desc><metadata id="lopata-provenance">{"Schema":1,"Program":"LOPATA","ProgramVersion":"0.7.46-dev","Scenario":"vector-graphics/generation","ExportedUtc":"2026-11-08T00:46:43.2748001+00:00","CreatedUtc":"2026-11-07T23:04:03.6430413+00:00","GenerationSeconds":null,"ModelHistory":"recorded","ModelScope":"output","Models":[{"Id":"model-qwen3-8-27b-ridge-37bpw","Name":"Qwen3.8-27B-Ridge 3.7 bpw","Revision":"486faa5f2032ff99bdc8993ade1b8fff13d1464c","Role":"SVG text generation"},{"Id":"llama.cpp","Name":"llama.cpp Vulkan","Revision":"620d2225cc436ab0b001e3200e590e3b286ef9ab","Role":"text inference; engine set 002"}]}</metadata>
+  <defs>
+    <linearGradient id="docGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="0.55" stop-color="#F2F4F6" />
+      <stop offset="1" stop-color="#D9DEE3" />
+    </linearGradient>
+    <linearGradient id="foldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F7F9FA" />
+      <stop offset="1" stop-color="#C8CED5" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#43E0A2" />
+      <stop offset="0.5" stop-color="#17B884" />
+      <stop offset="1" stop-color="#079A6C" />
+    </linearGradient>
+    <radialGradient id="glowGrad" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#34D399" stop-opacity="0.85" />
+      <stop offset="0.45" stop-color="#34D399" stop-opacity="0.35" />
+      <stop offset="1" stop-color="#34D399" stop-opacity="0" />
+    </radialGradient>
+    <filter id="soften" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" />
+    </filter>
+    <clipPath id="codeClip">
+      <path d="M123 70 L133 70 L133 136 L123 136 Z" />
+      <path d="M108 134 L148 134 L148 158 Q148 182 140 192 Q133 199 128 200 Q123 199 116 192 Q108 182 108 158 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Document sheet -->
+  <path d="M64 20 L168 20 L208 60 L208 220 Q208 236 192 236 L64 236 Q48 236 48 220 L48 36 Q48 20 64 20 Z" fill="url(#docGrad)" stroke="#97A0A7" stroke-width="5" stroke-linejoin="round" />
+
+  <!-- Folded corner -->
+  <path d="M168 20 L208 60 L168 60 Z" fill="url(#foldGrad)" stroke="#97A0A7" stroke-width="4" stroke-linejoin="round" />
+
+  <!-- Soft green glow on lower page -->
+  <ellipse cx="128" cy="214" rx="82" ry="38" fill="url(#glowGrad)" filter="url(#soften)" />
+
+  <!-- Text lines, left side -->
+  <rect x="60" y="95" width="38" height="7" rx="3.5" fill="#C7CDD3" />
+  <rect x="60" y="117" width="38" height="7" rx="3.5" fill="#C7CDD3" />
+  <rect x="60" y="139" width="38" height="7" rx="3.5" fill="#C7CDD3" />
+
+  <!-- Text lines, right side -->
+  <rect x="158" y="95" width="38" height="7" rx="3.5" fill="#C7CDD3" />
+  <rect x="158" y="117" width="38" height="7" rx="3.5" fill="#C7CDD3" />
+  <rect x="158" y="139" width="38" height="7" rx="3.5" fill="#C7CDD3" />
+
+  <!-- Shovel: blade -->
+  <path d="M108 134 L148 134 L148 158 Q148 182 140 192 Q133 199 128 200 Q123 199 116 192 Q108 182 108 158 Z" fill="url(#greenGrad)" stroke="#077A55" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Shovel: shaft -->
+  <path d="M123 70 L133 70 L133 136 L123 136 Z" fill="url(#greenGrad)" stroke="#077A55" stroke-width="2.5" />
+
+  <!-- Shovel: D-handle -->
+  <path d="M119 48 L137 48 Q150 48 150 61 L150 61 Q150 74 137 74 L119 74 Q106 74 106 61 L106 61 Q106 48 119 48 Z            M126 54 L130 54 Q136 54 136 60 L136 62 Q136 68 130 68 L126 68 Q120 68 120 62 L120 60 Q120 54 126 54 Z" fill="url(#greenGrad)" fill-rule="evenodd" stroke="#077A55" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Blade sheen -->
+  <rect x="112" y="140" width="4" height="52" rx="2" fill="#FFFFFF" opacity="0.22" />
+
+  <!-- Matrix code rain inside shovel -->
+  <g clip-path="url(#codeClip)" font-family="monospace" font-size="11" text-anchor="middle">
+    <text x="115" y="84" fill="#ECFDF5" opacity="0.95">0</text>
+    <text x="115" y="98" fill="#ECFDF5" opacity="0.8">1</text>
+    <text x="115" y="112" fill="#C4F9DE" opacity="0.85">1</text>
+    <text x="115" y="126" fill="#ECFDF5" opacity="0.7">0</text>
+    <text x="115" y="140" fill="#ECFDF5" opacity="0.95">1</text>
+    <text x="115" y="154" fill="#C4F9DE" opacity="0.8">0</text>
+    <text x="115" y="168" fill="#ECFDF5" opacity="0.85">1</text>
+    <text x="115" y="182" fill="#C4F9DE" opacity="0.7">0</text>
+
+    <text x="123" y="76" fill="#ECFDF5" opacity="0.7">1</text>
+    <text x="123" y="90" fill="#C4F9DE" opacity="0.95">0</text>
+    <text x="123" y="104" fill="#ECFDF5" opacity="0.85">1</text>
+    <text x="123" y="118" fill="#ECFDF5" opacity="0.8">0</text>
+    <text x="123" y="132" fill="#C4F9DE" opacity="0.95">1</text>
+    <text x="123" y="146" fill="#ECFDF5" opacity="0.85">0</text>
+    <text x="123" y="160" fill="#ECFDF5" opacity="0.95">1</text>
+    <text x="123" y="174" fill="#C4F9DE" opacity="0.8">0</text>
+    <text x="123" y="188" fill="#ECFDF5" opacity="0.85">1</text>
+
+    <text x="131" y="82" fill="#C4F9DE" opacity="0.85">1</text>
+    <text x="131" y="96" fill="#ECFDF5" opacity="0.95">0</text>
+    <text x="131" y="110" fill="#ECFDF5" opacity="0.8">1</text>
+    <text x="131" y="124" fill="#C4F9DE" opacity="0.95">0</text>
+    <text x="131" y="138" fill="#ECFDF5" opacity="0.85">1</text>
+    <text x="131" y="152" fill="#C4F9DE" opacity="0.95">0</text>
+    <text x="131" y="166" fill="#ECFDF5" opacity="0.8">1</text>
+    <text x="131" y="180" fill="#ECFDF5" opacity="0.95">0</text>
+    <text x="131" y="194" fill="#C4F9DE" opacity="0.7">1</text>
+
+    <text x="139" y="76" fill="#ECFDF5" opacity="0.8">0</text>
+    <text x="139" y="90" fill="#C4F9DE" opacity="0.85">1</text>
+    <text x="139" y="104" fill="#ECFDF5" opacity="0.7">0</text>
+    <text x="139" y="118" fill="#ECFDF5" opacity="0.95">1</text>
+    <text x="139" y="132" fill="#C4F9DE" opacity="0.85">0</text>
+    <text x="139" y="146" fill="#ECFDF5" opacity="0.8">1</text>
+    <text x="139" y="160" fill="#C4F9DE" opacity="0.95">0</text>
+    <text x="139" y="174" fill="#ECFDF5" opacity="0.85">1</text>
+    <text x="139" y="188" fill="#C4F9DE" opacity="0.7">0</text>
+
+    <!-- Short digital dashes -->
+    <rect x="118" y="100.5" width="6" height="2" rx="1" fill="#B9F5DA" opacity="0.8" />
+    <rect x="134" y="114.5" width="6" height="2" rx="1" fill="#B9F5DA" opacity="0.7" />
+    <rect x="117" y="166.5" width="6" height="2" rx="1" fill="#B9F5DA" opacity="0.8" />
+    <rect x="134" y="168.5" width="6" height="2" rx="1" fill="#B9F5DA" opacity="0.7" />
+    <rect x="121" y="148.5" width="6" height="2" rx="1" fill="#E9FDF6" opacity="0.75" />
+  </g>
+</svg>

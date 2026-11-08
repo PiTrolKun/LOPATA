@@ -49,9 +49,32 @@ public partial class MainWindow
     }
 
     private bool ShowComponentLicenses(IReadOnlyList<ComponentLicenseEntry> entries, bool accept)
+        => ShowComponentLicenses(this, System.Windows.Application.Current.Windows.OfType<Window>(),
+            _componentLicenses!, L, _localizationService.CurrentLanguageCode == "ru", entries, accept);
+
+    internal static bool ShowComponentLicenses(Window fallbackOwner, IEnumerable<Window> windows,
+        ComponentLicenseService licenses, Func<string, string> L, bool russian,
+        IReadOnlyList<ComponentLicenseEntry> entries, bool accept)
     {
-        if (accept) Controls.BackgroundUserDecision.RequireVisible(this);
-        var russian = _localizationService.CurrentLanguageCode == "ru";
+        static bool OfficeWindow(Window? window)
+        {
+            for (; window is not null; window = window.Owner)
+                if (window is Controls.OfficeReader.ReaderWindow) return true;
+            return false;
+        }
+        var officeTerms = entries.Count > 0 && entries.All(entry =>
+            entry.Id is "office.text-surface" or "viewer.webview2" or "nuget.Microsoft.Web.WebView2" or
+                "runtime.libreoffice" or "nuget.PdfPig" or "nuget.SharpCompress" or
+                "nuget.SkiaSharp" or "nuget.SkiaSharp.NativeAssets.Win32" or Services.OfficeEditor.OfficeUnicodeCatalog.Component);
+        var candidates = windows.ToArray();
+        var owner = candidates.FirstOrDefault(w => w.IsActive)
+            ?? (officeTerms ? candidates.LastOrDefault(w => w.IsVisible && OfficeWindow(w)) : null) ?? fallbackOwner;
+        if (accept)
+        {
+            // A file opened from Explorer can have a visible office window while the
+            // main application remains in the tray. Keep its first-use prompt there.
+            Controls.BackgroundUserDecision.RequireVisible(officeTerms && OfficeWindow(owner) ? owner : fallbackOwner);
+        }
         string Describe(ComponentLicenseEntry entry)
         {
             var content = new StringBuilder();
@@ -62,11 +85,11 @@ public partial class MainWindow
             content.AppendLine(L("licenses.checked") + " " + entry.Checked);
             content.AppendLine(entry.Source).AppendLine();
             foreach (var file in entry.Texts)
-                content.AppendLine(_componentLicenses!.ReadText(file)).AppendLine();
+                content.AppendLine(licenses.ReadText(file)).AppendLine();
             if (entry.Texts.Length == 0) content.AppendLine(L("licenses.source_only"));
             return content.ToString();
         }
-        var window = new Window { Owner = System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive) ?? this,
+        var window = new Window { Owner = owner,
             Title = L("licenses.title"), Width = 820, Height = 620,
             MinWidth = 500, MinHeight = 350, WindowStartupLocation = WindowStartupLocation.CenterOwner };
         Controls.ModalDialogPointer.Configure(window);

@@ -254,6 +254,7 @@ public partial class MainWindow : Window
         _debugChatWindow?.ApplyTheme(_isDarkTheme);
         _sessionTreeWindow?.ApplyTheme(_isDarkTheme);
         _fileViewerService.ApplyTheme(_isDarkTheme);
+        AIHub.Controls.OfficeReader.ReaderWindowGroup.For(this, L, _isDarkTheme).ApplyTheme(_isDarkTheme);
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
@@ -485,7 +486,7 @@ public partial class MainWindow : Window
             _appSettings.CoreAutonomy.MaximumIndependentSearchSeconds);
         if (!_appSettings.LanguageWasChosen)
         {
-            if (App.ImageShellLaunch || App.AudioShellLaunch || App.VectorFileLaunch) IsVisibleChanged += DeferredStartupLanguageChoice;
+            if (App.ImageShellLaunch || App.AudioShellLaunch || App.VectorFileLaunch || App.ReaderFileLaunch) IsVisibleChanged += DeferredStartupLanguageChoice;
             else ChooseStartupLanguage();
         }
 

@@ -336,6 +336,7 @@ public partial class MainWindow
             _processShutdownPending = true;
             try
             {
+                if (!await CloseOfficeEditorsAsync()) { _fullExitRequested = false; return; }
                 if (_gifTask is { } gifTask) { StopGif(); await gifTask; }
                 if (_videoTask is { } videoTask) { StopCaptureRecording(); await videoTask; }
                 await StopBackgroundForExitAsync();

@@ -67,6 +67,10 @@ public static partial class BookConverterRuntime
         var expected = document.RootElement.GetProperty("Files").EnumerateArray().Select(f => new PinnedTreeFile(
             f.GetProperty("Name").GetString()!, f.GetProperty("Bytes").GetInt64(), f.GetProperty("Sha256").GetString()!)).ToArray();
         if (expected.Length == 0) throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid");
-        await RuntimeFileAudit.VerifyAsync("Books.LibreOffice", root, LibreOfficeVersion, expected, token);
+        try { await RuntimeFileAudit.VerifyAsync("Books.LibreOffice", root, LibreOfficeVersion, expected, token); }
+        catch (IOException error) when (error is FileNotFoundException or DirectoryNotFoundException)
+        {
+            throw new InvalidDataException("BookConverter.Error.OfficeBundleInvalid", error);
+        }
     }
 }

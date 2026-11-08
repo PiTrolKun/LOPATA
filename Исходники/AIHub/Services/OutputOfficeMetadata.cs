@@ -21,6 +21,13 @@ public static class OutputOfficeMetadata
         extended.Properties.Application = new("LOPATA");
         Write(doc, doc.CustomFilePropertiesPart ?? doc.AddCustomFilePropertiesPart(), facts, null);
     }
+    public static void Write(PresentationDocument doc, OutputProvenance facts)
+    {
+        var extended = doc.ExtendedFilePropertiesPart ?? doc.AddExtendedFilePropertiesPart();
+        extended.Properties ??= new();
+        extended.Properties.Application = new("LOPATA");
+        Write(doc, doc.CustomFilePropertiesPart ?? doc.AddCustomFilePropertiesPart(), facts, null);
+    }
     private static void Write(OpenXmlPackage doc, CustomFilePropertiesPart custom, OutputProvenance facts, string? author)
     {
         if (!string.IsNullOrWhiteSpace(author)) doc.PackageProperties.Creator = author;

@@ -1,0 +1,2 @@
+prosemirror-keymap 1.2.3
+MIT
