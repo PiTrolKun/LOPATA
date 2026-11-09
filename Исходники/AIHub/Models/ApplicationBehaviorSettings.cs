@@ -16,6 +16,10 @@ public sealed class ApplicationBehaviorSettings
 
     public bool ImageShellIntegrationEnabled { get; set; } = true;
 
+    public bool CollectionIntegrationEnabled { get; set; } = true;
+
+    public List<string> CollectionFolders { get; set; } = [];
+
     public bool VectorEditorEnabled { get; set; } = true;
 
     public bool VectorEditorInsertOnCanvas { get; set; }

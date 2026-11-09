@@ -28,6 +28,7 @@ public static partial class ExecutorDocxExporter
         {
             WriteDocument(temporaryPath, result.Markdown, provenance);
             File.Move(temporaryPath, fullPath, overwrite: true);
+            if (provenance is not null) CollectionExportJournal.Record(fullPath, provenance.Scenario);
         }
         finally
         {

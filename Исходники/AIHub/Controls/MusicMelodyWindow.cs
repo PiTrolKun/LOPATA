@@ -153,11 +153,16 @@ public sealed class MusicMelodyWindow : Window
     }
     private void Export() {
         SyncTempo(); var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "MIDI|*.mid", FileName = "Melody.mid", AddExtension = true };
-        if (dialog.ShowDialog(this) == true) { MusicMidiFile.Write(dialog.FileName,_editor.Current); _status.Text = L("Saved"); }
+        if (dialog.ShowDialog(this) == true) { SaveUserMelody(dialog.FileName,_editor.Current,false); _status.Text = L("Saved"); }
     }
     private void SaveProject() {
         SyncTempo(); var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "LOPATA Melody|*.lopata-melody.json", FileName = "Melody.lopata-melody.json" };
-        if (dialog.ShowDialog(this) == true) { MusicMidiFile.SaveProject(dialog.FileName,_editor.Current with { Enabled = _enabled.IsChecked == true }); _status.Text = L("Saved"); }
+        if (dialog.ShowDialog(this) == true) { SaveUserMelody(dialog.FileName,_editor.Current with { Enabled = _enabled.IsChecked == true },true); _status.Text = L("Saved"); }
+    }
+    internal static void SaveUserMelody(string path, MusicMelody melody, bool project)
+    {
+        if (project) MusicMidiFile.SaveProject(path,melody); else MusicMidiFile.Write(path,melody);
+        CollectionExportJournal.Record(path,"music/melody");
     }
     private async Task PreviewAsync() {
         if (_previewing) return; _previewing = true;

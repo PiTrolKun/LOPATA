@@ -100,6 +100,7 @@ public static partial class VideoProjectArchive
                 output.Flush(true);
             }
             token.ThrowIfCancellationRequested(); VideoProjectStore.VerifySources(project); File.Move(temporary, path, true); progress?.Report(1);
+            CollectionExportJournal.Record(path, "video-editor/project");
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

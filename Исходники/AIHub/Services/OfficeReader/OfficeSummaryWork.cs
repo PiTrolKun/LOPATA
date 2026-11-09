@@ -62,6 +62,7 @@ internal static class OfficeSummaryWork
             await File.WriteAllTextAsync(temporary, "<!-- LOPATA " + facts.Json() + " -->\n\n" + result.Text,
                 new System.Text.UTF8Encoding(false), token);
             token.ThrowIfCancellationRequested(); File.Move(temporary, path, true);
+            CollectionExportJournal.Record(path, facts.Scenario);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

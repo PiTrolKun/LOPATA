@@ -108,3 +108,6 @@ __pycache__/
 
 # Private upscale test media and generated evidence
 /Тесты/VideoUpscaleStand/private/
+
+# Local developer runtime, restored separately from pinned component data.
+/Runtime/VideoEditor/

@@ -35,9 +35,9 @@ public static class UpdatePlanner
             var path = roots.Resolve(file);
             if (Directory.Exists(path)) throw new IOException("A directory occupies an update file path: " + file.Key);
             owned.TryGetValue(file.Key, out var old);
-            if (old is not null && EngineSetRetention.IsVersioned(file)
+            if (old is not null && (EngineSetRetention.IsVersioned(file) || CollectionPayloadRetention.IsVersioned(file))
                 && (old.Size != file.Size || old.Sha256 != file.Sha256))
-                throw new InvalidDataException("An engine set identifier cannot change its published content: " + file.Key);
+                throw new InvalidDataException("A versioned component identifier cannot change its published content: " + file.Key);
             var exists = File.Exists(path);
             if (exists && await MatchesAsync(path, file, token))
             {
@@ -53,7 +53,7 @@ public static class UpdatePlanner
             token.ThrowIfCancellationRequested();
             // Optional engine versions outlive the application manifest that originally delivered them.
             // They are verified against their separate signed catalog when selected, never auto-deleted.
-            if (EngineSetRetention.PreserveAfterUpdate(old)) continue;
+            if (EngineSetRetention.PreserveAfterUpdate(old) || CollectionPayloadRetention.IsVersioned(old)) continue;
             var path = roots.Resolve(old);
             if (Directory.Exists(path)) throw new IOException("Owned file replaced with a directory: " + old.Key);
             if (!File.Exists(path)) continue;

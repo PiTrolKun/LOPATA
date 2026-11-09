@@ -26,7 +26,11 @@ public sealed class VideoPreparationSession(string? recoveryRoot = null)
         if (!IsDirty) return;
         VideoDevelopment.Capture(Project); VideoReferencePlans.Capture(Project); VideoShots.Capture(Project); VideoStoryboard.Capture(Project);
         if (!RecoveryCurrent) { VideoPreparationArchive.Save(Project, RecoveryPath); RecoveryCurrent = true; }
-        if (userArchive && ArchivePath is not null) { VideoPreparationArchive.Save(Project, ArchivePath); IsDirty = false; }
+        if (userArchive && ArchivePath is not null)
+        {
+            VideoPreparationArchive.Save(Project, ArchivePath); IsDirty = false;
+            CollectionExportJournal.Record(ArchivePath, Project.Provenance.Scenario);
+        }
         RememberStep();
     }
     public void Save(string path)
@@ -36,6 +40,7 @@ public sealed class VideoPreparationSession(string? recoveryRoot = null)
         if (!RecoveryCurrent) { VideoPreparationArchive.Save(Project, RecoveryPath); RecoveryCurrent = true; }
         VideoPreparationArchive.Save(Project, full);
         ArchivePath = full; IsDirty = false;
+        CollectionExportJournal.Record(full, Project.Provenance.Scenario);
         RememberStep();
     }
     public void Load(string path, bool recovery = false)

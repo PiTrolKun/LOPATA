@@ -44,7 +44,7 @@ public static class ImageGenerationMetadata
                 new XElement(dc + "creator", new XElement(rdf + "Seq", new XElement(rdf + "li", author))),
                 Alternative(dc + "description", request.Prompt), Alternative(exif + "UserComment", request.Prompt),
                 new XElement(dc + "subject", new XElement(rdf + "Bag", keywords.Select(k => new XElement(rdf + "li", k)))),
-                new XElement(xmp + "CreatorTool", producer),
+                new XElement(xmp + "CreatorTool", "LOPATA"),
                 new XElement(xmp + "CreateDate", createdAt.ToString("O", CultureInfo.InvariantCulture)),
                 new XElement(exif + "DateTimeOriginal", createdAt.ToString("O", CultureInfo.InvariantCulture)))));
         var structured = JsonSerializer.Serialize(new
@@ -75,7 +75,8 @@ public static class ImageGenerationMetadata
         {
             ["XML:com.adobe.xmp"] = xml.ToString(SaveOptions.DisableFormatting),
             ["Title"] = title, ["Author"] = author, ["Description"] = request.Prompt,
-            ["Software"] = producer, ["Creation Time"] = createdAt.ToString("O", CultureInfo.InvariantCulture),
+            ["Software"] = "LOPATA", ["Creation Time"] = createdAt.ToString("O", CultureInfo.InvariantCulture),
+            ["LOPATA_PRODUCER"] = producer,
             ["Keywords"] = string.Join("; ", keywords), ["parameters"] = parameters, ["LOPATA"] = structured
         };
         EngineSetMetadataIdentity.AddTags(fields, runtime?.EngineSetId);

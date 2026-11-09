@@ -60,6 +60,8 @@ internal sealed class UpdateHost(Action<string> status)
             await new UpdateTransaction(installation.Roots(), Keys, installation.StateDirectory).RegisterInstalledAsync(signed, token);
             installation.Save();
             new PreparedUpdateStore(installation.StateDirectory, Keys).Clear();
+            status(HostText.Get("UpdateHost.InitializingCollection"));
+            await CollectionInstallation.InitializeAsync(installation, signed, Keys, HostText.Get, token);
             return;
         }
         var state = InstalledUpdateState.Read() ?? throw new IOException("The transition installer has not registered this installation.");
@@ -93,6 +95,24 @@ internal sealed class UpdateHost(Action<string> status)
         }
         if (mode == "--unregister")
         {
+            var collection = new Lopata.Collection.CollectionShellRegistration(Path.Combine(state.AppDirectory, "AIHub.exe"));
+            if (collection.CanManageRegistration && collection.HasOwnedRegistration)
+            {
+                var directory = Lopata.Collection.CollectionPaths.DefaultDirectory;
+                try
+                {
+                    var error = Lopata.Collection.CollectionDeactivation.Disable(directory);
+                    if (error is not null)
+                        try
+                        {
+                            var log = Path.Combine(state.StateDirectory, "collection-unregister.json");
+                            SafeUpdatePath.RejectLinks(log);
+                            Lopata.Collection.CollectionFiles.WriteAtomic(log, JsonSerializer.SerializeToUtf8Bytes(new { error }));
+                        }
+                        catch (Exception logError) when (logError is IOException or UnauthorizedAccessException) { }
+                }
+                finally { collection.Disable(); }
+            }
             var startup = new StartupRegistration(InstalledUpdateState.LauncherPath);
             if (startup.IsRegistered) startup.SetEnabled(false);
             await RemoveManagedFilesAsync(state, transaction);
@@ -196,4 +216,5 @@ internal sealed class UpdateHost(Action<string> status)
         SafeUpdatePath.RejectLinks(InstalledUpdateState.RegistrationPath);
         File.Delete(InstalledUpdateState.RegistrationPath);
     }
+
 }

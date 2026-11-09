@@ -61,6 +61,7 @@ public static class VideoPreparationExport
                 }
                 roles[a.Role] = relative; progress?.Report(.3 * (i + 1) / Math.Max(1, p.Attachments.Count));
             }
+            var generatedStart = madeFiles.Count;
             string? Reference(string id) => p.References?.Images.FirstOrDefault(i => i.Id == id) is { } image && roles.TryGetValue(image.AttachmentRole, out var path) ? path : null;
             await Text("texts/concept.native.txt", p.IdeaText); await Text("texts/concept.en.txt", p.EnglishText);
             await Text("texts/development.native.txt", p.Development?.IdeaText ?? ""); await Text("texts/development.en.txt", p.Development?.EnglishText ?? "");
@@ -98,6 +99,8 @@ public static class VideoPreparationExport
             { token.ThrowIfCancellationRequested(); using var input = File.OpenRead(file); hashes.Add(new { path = Path.GetRelativePath(temporary, file).Replace('\\', '/'), bytes = input.Length, sha256 = Convert.ToHexStringLower(await SHA256.HashDataAsync(input, token)) }); }
             await Data("manifest.json", new { format = "LOPATA.VideoPreparation.Export", schema = 1, projectId = p.Id, operationId, files = hashes });
             token.ThrowIfCancellationRequested(); SafeUpdatePath.RejectLinks(destination); Directory.Move(temporary, destination); progress?.Report(1);
+            foreach (var generated in madeFiles.Skip(generatedStart))
+                CollectionExportJournal.Record(Path.Combine(destination, Path.GetRelativePath(temporary, generated)), provenance.Scenario);
             return new(destination, madeFiles.Count);
         }
         finally

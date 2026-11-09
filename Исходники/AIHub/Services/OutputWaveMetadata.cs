@@ -11,8 +11,10 @@ public static class OutputWaveMetadata
         {
             File.Copy(source, temporary);
             await AudioMetadataWriter.AttachAsync(temporary, MusicAudioFormat.Wav,
-                new Dictionary<string, string> { ["software"] = "LOPATA " + provenance.ProgramVersion, ["LOPATA_PROVENANCE"] = provenance.Json() }, [], CancellationToken.None);
+                new Dictionary<string, string> { ["software"] = "LOPATA " + provenance.ProgramVersion,
+                    ["encoded_by"] = "LOPATA", ["LOPATA_PROVENANCE"] = provenance.Json() }, [], CancellationToken.None);
             File.Move(temporary, destination, true);
+            CollectionExportJournal.Record(destination, provenance.Scenario);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

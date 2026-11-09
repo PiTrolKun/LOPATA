@@ -5,5 +5,8 @@
   "UpdateHost.Verifying": "Verifying the prepared update…",
   "UpdateHost.Applying": "Installing the update. Please wait…",
   "UpdateHost.Recovering": "Restoring the previous installation after an interruption…",
-  "UpdateHost.Failed": "Could not complete the update or launch. Close other LOPATA instances and try again. Saved projects were not deleted. Details are in the report:"
+  "UpdateHost.Failed": "Could not complete the update or launch. Close other LOPATA instances and try again. Saved projects were not deleted. Details are in the report:",
+  "UpdateHost.CollectionInitializationFailed": "The application files are installed, but the LOPATA collection could not be connected to File Explorer (code {0}). Run the installer again. Details are in the report:",
+  "UpdateHost.CollectionInitializationTimedOut": "The application files are installed, but connecting the LOPATA collection to File Explorer did not finish in time. Run the installer again. Details are in the report:",
+  "UpdateHost.CollectionInitializationStartFailed": "Could not start LOPATA collection setup for File Explorer. Run the installer again. Details are in the report:"
 }

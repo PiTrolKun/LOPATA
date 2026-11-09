@@ -57,9 +57,14 @@ public sealed class AudioConversionService(MusicAudioRuntime? runtime = null)
         var temporary = Path.Combine(directory, ".lopata-audio-" + Guid.NewGuid().ToString("N"));
         var metadata = temporary + ".ffmetadata"; var sidecar = temporary + ".json";
         var metadataDestination = destination + ".metadata.json";
+        var provenance = new OutputProvenance { Scenario = "audio/convert", CreatedUtc = DateTimeOffset.UtcNow };
+        var outputTags = new Dictionary<string, string>(info.Tags, StringComparer.OrdinalIgnoreCase)
+        {
+            ["encoded_by"] = "LOPATA", ["LOPATA_PROVENANCE"] = provenance.Json()
+        };
         try
         {
-            await File.WriteAllTextAsync(metadata, AudioConversionMetadata.Ffmetadata(info.Tags,
+            await File.WriteAllTextAsync(metadata, AudioConversionMetadata.Ffmetadata(outputTags,
                 format == MusicAudioFormat.Opus ? info.Covers.Take(1) : []), new System.Text.UTF8Encoding(false), token);
             var args = new List<string> { "-nostdin", "-v", "error", "-n", "-i", source, "-f", "ffmetadata", "-i", metadata,
                 "-map", "0:a:0", "-map_metadata", format is MusicAudioFormat.Mp3 or MusicAudioFormat.Wav ? "-1" : "1", "-map_chapters", "-1" };
@@ -71,7 +76,7 @@ public sealed class AudioConversionService(MusicAudioRuntime? runtime = null)
                 _ => new[] { "-c:a", "pcm_s16le", "-f", "wav" }
             });
             args.Add(temporary); await _runtime.RunAsync(false, args, token, TimeSpan.FromHours(12));
-            await AudioMetadataWriter.AttachAsync(temporary, format, info.Tags, info.Covers, token);
+            await AudioMetadataWriter.AttachAsync(temporary, format, outputTags, info.Covers, token);
             var result = await AudioConversionMetadata.ReadAsync(_runtime, temporary, token);
             var rate = format == MusicAudioFormat.Opus ? 48000 : info.SampleRate;
             if (result.Channels != info.Channels || result.SampleRate != rate || Math.Abs(result.Duration - info.Duration) > .15
@@ -101,6 +106,7 @@ public sealed class AudioConversionService(MusicAudioRuntime? runtime = null)
             File.Move(sidecar, metadataDestination, false);
             try { File.Move(temporary, destination, false); }
             catch { File.Delete(metadataDestination); throw; }
+            CollectionExportJournal.Record(destination, provenance.Scenario);
             return new(destination, metadataDestination, missing);
         }
         finally

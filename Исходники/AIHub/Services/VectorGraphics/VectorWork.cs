@@ -81,7 +81,9 @@ public sealed class VectorWork : IDisposable
                 if (!File.Exists(export)) File.Copy(svgPath, export, false);
                 else if (await File.ReadAllTextAsync(export, token) != svg) throw new IOException("Vector.Error.Export");
             }
-            VectorStore.Save(state with { Phase = "completed", Error = null, ExportPath = export }); status("Ready", 0); return export;
+            VectorStore.Save(state with { Phase = "completed", Error = null, ExportPath = export });
+            CollectionExportJournal.Record(export, state.Provenance!.Scenario);
+            status("Ready", 0); return export;
         }
         catch (OperationCanceledException)
         { VectorStore.Save(state with { Phase = "waiting", Error = null }); throw; }

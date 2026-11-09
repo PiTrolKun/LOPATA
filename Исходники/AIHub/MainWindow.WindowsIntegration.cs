@@ -50,6 +50,7 @@ public partial class MainWindow
         try { ApplyVideoIntegration(); }
         catch (Exception error) { OwnedProcessRegistry.Log("video_shell_registration_failed", "WindowsIntegration", detail: error.GetType().Name); }
         ApplyReaderIntegration();
+        ApplyCollectionIntegration();
     }
     private void SetImageShellIntegration(bool enabled)
     {
@@ -82,6 +83,7 @@ public partial class MainWindow
     {
         if (_imageShellIntegrationSwitch is not null) _imageShellIntegrationSwitch.IsChecked = _appSettings.Behavior.ImageShellIntegrationEnabled;
         RefreshBookShellIntegrationSetting();
+        RefreshCollectionSetting();
         if (_readerShellSwitch is not null) _readerShellSwitch.IsChecked = _appSettings.FileViewer.ReaderWindowsIntegrationEnabled;
         if (_vectorEditorSwitch is not null) _vectorEditorSwitch.IsChecked = _appSettings.Behavior.VectorEditorEnabled;
         if (_imageShellIntegrationInitialized && _imageShellIntegrationLanguage != _appSettings.LanguageCode) ApplyImageShellIntegration();

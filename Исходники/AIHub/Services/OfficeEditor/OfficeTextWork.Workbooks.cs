@@ -100,10 +100,11 @@ internal sealed partial class OfficeTextWork
     }
 
     internal Task ExportWorkbookAsync(string id, string path, CancellationToken token)
-        => LockedAsync(() =>
+        => LockedAsync(async () =>
         {
             RejectExportCollision(path);
-            return WriteWorkbookOutputAsync(id, path, _manifest.Provenance! with { ExportedUtc = DateTimeOffset.UtcNow }, token);
+            await WriteWorkbookOutputAsync(id, path, _manifest.Provenance! with { ExportedUtc = DateTimeOffset.UtcNow }, token);
+            CollectionExportJournal.Record(path, _manifest.Provenance!.Scenario);
         }, token);
 
     private async Task WriteWorkbookOutputAsync(string id, string path, OutputProvenance facts, CancellationToken token)
@@ -128,15 +129,16 @@ internal sealed partial class OfficeTextWork
     }
 
     internal Task ExportDocumentBytesAsync(byte[] docx, string path, CancellationToken token, string? sheetId = null)
-        => LockedAsync(() =>
+        => LockedAsync(async () =>
         {
             RejectExportCollision(path);
             var facts = FactsForSheet(sheetId ?? OfficeSheets.PrimaryId, _manifest.Provenance! with { ExportedUtc = DateTimeOffset.UtcNow });
-            return OfficeTextFormats.ExportAsync(docx, path, _draft.DirectoryPath, facts, token);
+            await OfficeTextFormats.ExportAsync(docx, path, _draft.DirectoryPath, facts, token);
+            CollectionExportJournal.Record(path, facts.Scenario);
         }, token);
 
     internal Task ExportSheetDocumentAsync(string id, string path, CancellationToken token)
-        => LockedAsync(() =>
+        => LockedAsync(async () =>
         {
             RejectExportCollision(path);
             var sheet = FindSheet(id);
@@ -144,7 +146,8 @@ internal sealed partial class OfficeTextWork
             using var zip = ZipFile.OpenRead(TemporaryProjectPath);
             var content = id == OfficeSheets.PrimaryId ? Document : ReadBytes(zip.GetEntry(OfficeSheets.Payload(sheet)));
             var facts = FactsForSheet(id, _manifest.Provenance! with { ExportedUtc = DateTimeOffset.UtcNow });
-            return OfficeTextFormats.ExportAsync(content, path, _draft.DirectoryPath, facts, token);
+            await OfficeTextFormats.ExportAsync(content, path, _draft.DirectoryPath, facts, token);
+            CollectionExportJournal.Record(path, facts.Scenario);
         }, token);
 
     private void RejectExportCollision(string path)

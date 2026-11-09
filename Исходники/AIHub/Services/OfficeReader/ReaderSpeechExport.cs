@@ -20,6 +20,7 @@ internal static class ReaderSpeechExport
             await using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536, true))
             { await input.CopyToAsync(output); await output.FlushAsync(); }
             File.Move(temporary, target, true);
+            CollectionExportJournal.Record(target, "office/reader-speech");
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

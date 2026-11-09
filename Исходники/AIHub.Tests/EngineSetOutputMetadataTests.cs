@@ -139,15 +139,17 @@ public sealed class EngineSetOutputMetadataTests
             Assert.AreEqual("2026-10-17", json.RootElement.GetProperty("EngineSetDate").GetString());
             Assert.AreEqual("001", json.RootElement.GetProperty("Runtime").GetProperty("EngineSetId").GetString());
             var producer = "LOPATA " + json.RootElement.GetProperty("ProgramVersion").GetString() + "; engine set 001 (2026-10-17)";
-            Assert.AreEqual(producer, actual["Software"]);
+            Assert.AreEqual("LOPATA", actual["Software"]);
+            Assert.AreEqual(producer, actual["LOPATA_PRODUCER"]);
             XNamespace xmp = "http://ns.adobe.com/xap/1.0/";
-            Assert.AreEqual(producer, XElement.Parse(actual["XML:com.adobe.xmp"]).Descendants(xmp + "CreatorTool").Single().Value);
+            Assert.AreEqual("LOPATA", XElement.Parse(actual["XML:com.adobe.xmp"]).Descendants(xmp + "CreatorTool").Single().Value);
             var independent = await FileMetadataExifTool.ReadAsync(path, default);
             Assert.IsTrue(independent.EnumerateObject().Any(p => p.Value.ValueKind == JsonValueKind.String && p.Value.GetString() == producer));
         }
         var unknown = ImageGenerationMetadata.Create(request, 0, DateTimeOffset.UtcNow);
         Assert.AreEqual("unknown", unknown["LOPATA_ENGINE_SET"]);
         Assert.IsFalse(unknown.ContainsKey("LOPATA_ENGINE_SET_DATE"));
-        StringAssert.Contains(unknown["Software"], "engine set unknown");
+        Assert.AreEqual("LOPATA", unknown["Software"]);
+        StringAssert.Contains(unknown["LOPATA_PRODUCER"], "engine set unknown");
     }
 }

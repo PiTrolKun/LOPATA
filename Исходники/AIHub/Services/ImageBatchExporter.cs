@@ -26,8 +26,10 @@ public static class ImageBatchExporter
                 var (item, section) = sections[i];
                 var name = string.Concat(Path.GetFileNameWithoutExtension(item.File.DisplayName).Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
                 if (name.Length > 70) name = name[..70];
-                ImageBatchStore.WriteText(Path.Combine(directory, $"{item.Position:D4}-{name}-{ImageBatchStore.Key(item.Id)}.md"),
+                var markdownPath = Path.Combine(directory, $"{item.Position:D4}-{name}-{ImageBatchStore.Key(item.Id)}.md");
+                ImageBatchStore.WriteText(markdownPath,
                     $"---\nlopata_provenance: {provenance.Json()}\n---\n\n# {section.Title}\n\n{item.File.DisplayName}\n\n" + string.Join("\n\n", section.Paragraphs));
+                CollectionExportJournal.Record(markdownPath, provenance.Scenario);
             }
             return;
         }
@@ -61,6 +63,7 @@ public static class ImageBatchExporter
                 main.Document.Save();
             }
             File.Move(temp, destination, true);
+            CollectionExportJournal.Record(destination, provenance.Scenario);
         }
         finally { if (File.Exists(temp)) File.Delete(temp); }
     }

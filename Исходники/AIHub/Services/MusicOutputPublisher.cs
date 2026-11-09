@@ -44,7 +44,9 @@ public sealed class MusicOutputPublisher(IMusicAudioEncoder encoder)
             var knownHash = additional ? variant.AdditionalHash : variant.ResultHash;
             if (File.Exists(destination)) {
                 if (knownHash is null) throw new InvalidDataException("An unrelated audio file occupies the result path.");
-                await MatchHashAsync(destination, knownHash, token); return;
+                await MatchHashAsync(destination, knownHash, token);
+                CollectionExportJournal.Record(destination, "music/generate");
+                return;
             }
             await MatchHashAsync(variant.AudioFile!, variant.AudioHash!, token);
             var temporary = destination + "." + Guid.NewGuid().ToString("N") + ".partial";
@@ -53,6 +55,7 @@ public sealed class MusicOutputPublisher(IMusicAudioEncoder encoder)
                 var hash = await HashAsync(temporary, token);
                 variant = additional ? variant with { AdditionalHash = hash } : variant with { ResultHash = hash };
                 save(variant); token.ThrowIfCancellationRequested(); File.Move(temporary, destination, false);
+                CollectionExportJournal.Record(destination, "music/generate");
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }

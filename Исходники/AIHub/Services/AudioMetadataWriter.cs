@@ -15,15 +15,20 @@ internal static class AudioMetadataWriter
         if (format == MusicAudioFormat.Wav)
         {
             var tag = AudioConversionMetadata.Id3(tags, covers);
-            using var file = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            var header = new byte[12]; file.ReadExactly(header);
-            if (!header.AsSpan(0, 4).SequenceEqual("RIFF"u8) || !header.AsSpan(8, 4).SequenceEqual("WAVE"u8))
-                throw new InvalidDataException("Invalid PCM WAV.");
-            file.Position = file.Length; file.Write("id3 "u8);
-            var size = new byte[4]; BinaryPrimitives.WriteUInt32LittleEndian(size, checked((uint)tag.Length)); file.Write(size);
-            await file.WriteAsync(tag, token); if ((tag.Length & 1) != 0) file.WriteByte(0);
-            BinaryPrimitives.WriteUInt32LittleEndian(size, checked((uint)(file.Length - 8)));
-            file.Position = 4; file.Write(size); file.Flush(true);
+            using (var file = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                var header = new byte[12]; file.ReadExactly(header);
+                if (!header.AsSpan(0, 4).SequenceEqual("RIFF"u8) || !header.AsSpan(8, 4).SequenceEqual("WAVE"u8))
+                    throw new InvalidDataException("Invalid PCM WAV.");
+                file.Position = file.Length; file.Write("id3 "u8);
+                var size = new byte[4]; BinaryPrimitives.WriteUInt32LittleEndian(size, checked((uint)tag.Length)); file.Write(size);
+                await file.WriteAsync(tag, token); if ((tag.Length & 1) != 0) file.WriteByte(0);
+                BinaryPrimitives.WriteUInt32LittleEndian(size, checked((uint)(file.Length - 8)));
+                file.Position = 4; file.Write(size); file.Flush(true);
+            }
+            if (tags.TryGetValue("encoded_by", out var encoder) && encoder == "LOPATA"
+                && (tags.ContainsKey("LOPATA_PROVENANCE") || tags.ContainsKey("LOPATA_JOB")))
+                WaveSoftwareMetadata.Write(path, token);
             return;
         }
         if (format == MusicAudioFormat.Flac && covers.Count == 0) return;

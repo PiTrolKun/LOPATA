@@ -61,6 +61,7 @@ public static class ImportBookExporter
                 main.Document.Save();
             }
             ct.ThrowIfCancellationRequested(); File.Move(temporary, destination, true);
+            CollectionExportJournal.Record(destination, "literature/import-export");
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

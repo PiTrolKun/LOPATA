@@ -25,6 +25,7 @@ public static class MusicSongMetadata
             ["LOPATA_MODEL_REVISION"] = job.ModelRevision, ["LOPATA_RUNTIME_REVISION"] = job.RuntimeRevision,
             ["LOPATA_RUNTIME_PACK"] = variant.UsedRuntimePack ?? job.RuntimePack, ["LOPATA_VERSION"] = job.AppVersion,
             ["producer"] = EngineSetMetadataIdentity.Producer(job.AppVersion, engineSetId),
+            ["encoded_by"] = "LOPATA",
             ["LOPATA_GGML_REVISION"] = job.Variation is MusicModelVariants.Bf16 or MusicStudioRuntime.Variation or MusicAceCatalog.Variation or MusicDiffRhythmCatalog.Variation or MusicHeartMuLaCatalog.Variation ? "" : MusicYueRuntime.GgmlRevision,
             ["LOPATA_AUDIO_RUNTIME"] = MusicAudioRuntime.Revision,
             ["LOPATA_LM_SEED"] = variant.LanguageSeed.ToString(culture),

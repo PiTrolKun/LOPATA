@@ -105,10 +105,11 @@ internal sealed partial class OfficeTextWork
         return Task.CompletedTask;
     }, token);
 
-    internal Task ExportNativeSectionAsync(string sheetId, string path, CancellationToken token) => LockedAsync(() =>
+    internal Task ExportNativeSectionAsync(string sheetId, string path, CancellationToken token) => LockedAsync(async () =>
     {
         RejectExportCollision(path);
-        return WriteNativeSectionOutputAsync(FindSheet(sheetId), path, _manifest.Provenance! with { ExportedUtc = DateTimeOffset.UtcNow }, token);
+        await WriteNativeSectionOutputAsync(FindSheet(sheetId), path, _manifest.Provenance! with { ExportedUtc = DateTimeOffset.UtcNow }, token);
+        CollectionExportJournal.Record(path, _manifest.Provenance!.Scenario);
     }, token);
 
     private async Task WriteNativeSectionOutputAsync(OfficeSheet sheet, string path, OutputProvenance project, CancellationToken token)

@@ -164,6 +164,7 @@ public sealed class BookConversionService
                     var directory = string.IsNullOrWhiteSpace(request.OutputDirectory) ? Path.GetDirectoryName(source)! : Path.GetFullPath(request.OutputDirectory); Directory.CreateDirectory(directory);
                     var baseName = request.Merge ? SafeName(request.Title ?? "Сборник") : Path.GetFileNameWithoutExtension(source);
                     var published = (_publish ?? Publish)(staged, directory, baseName, format, cancellationToken); outputs.Add(published);
+                    CollectionExportJournal.Record(published, facts.Scenario);
                     progress?.Report(new("completed", index + 1, total, source, published, "BookConverter.Progress.Completed"));
                 }
                 catch (OperationCanceledException) { throw; }

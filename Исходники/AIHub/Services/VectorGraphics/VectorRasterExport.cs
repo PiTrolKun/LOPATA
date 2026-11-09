@@ -76,6 +76,7 @@ public static class VectorRasterExport
             await VectorRenderer.RenderFrameAsync(composed, rendered, options.Width, options.Height, token);
             await Task.Run(() => Encode(rendered, temporary, options, facts, token), token);
             token.ThrowIfCancellationRequested(); File.Move(temporary, path, true);
+            CollectionExportJournal.Record(path, facts.Scenario);
         }
         finally
         {

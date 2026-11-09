@@ -86,6 +86,7 @@ internal static class LetItOutConversationExport
             token.ThrowIfCancellationRequested();
             if (store.IsDeleted(request.ConversationId)) throw new InvalidDataException("Conversation was removed.");
             Lopata.Updates.SafeUpdatePath.RejectLinks(destination); File.Move(temporary, destination, true);
+            CollectionExportJournal.Record(destination, provenance.Scenario);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

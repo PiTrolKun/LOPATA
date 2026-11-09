@@ -104,3 +104,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 Исходники/AIHub/Licenses/texts/books-djvu* -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/OfficeReader-DjVuLibre-GPL2.txt -text -eol -whitespace
 Исходники/AIHub/Licenses/texts/OfficeReader-DjVuLibre-NOTICE.txt -text -eol -whitespace
+
+# Preserve the committed vendor licence byte-for-byte on fresh checkouts.
+Исходники/AIHub/Licenses/texts/song-clip-glitch-libraries.txt -text -eol -whitespace

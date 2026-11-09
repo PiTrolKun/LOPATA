@@ -1,0 +1,13 @@
+<Project Sdk="MSTest.Sdk/4.2.3">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LOPATA.Collection\LOPATA.Collection.csproj" />
+    <ProjectReference Include="..\LOPATA.CollectionWorker\LOPATA.CollectionWorker.csproj" />
+  </ItemGroup>
+</Project>

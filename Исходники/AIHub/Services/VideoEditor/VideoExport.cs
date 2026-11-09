@@ -118,6 +118,7 @@ internal static class VideoExport
                 token.ThrowIfCancellationRequested(); File.Move(temporary, destination);
             }
             catch { foreach (var file in published) if (File.Exists(file.Target) && File.ReadAllBytes(file.Source).SequenceEqual(File.ReadAllBytes(file.Target))) File.Delete(file.Target); throw; }
+            CollectionExportJournal.Record(destination, "video-editor/export");
             progress?.Invoke(1); return destination;
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }

@@ -60,6 +60,7 @@ internal static class UpscaleAssembly
         var last = project.Steps.Last(s => s.Enabled);
         job.FinalArtifact = (await UpscaleMediaTools.Check(staging, job.Frames, last.Width, last.Height, token)) with { Path = job.Output }; UpscaleStore.Save(jobFile, job);
         token.ThrowIfCancellationRequested(); Lopata.Updates.SafeUpdatePath.RejectLinks(job.Output); File.Move(staging, job.Output);
+        CollectionExportJournal.Record(job.Output, metadata.Scenario);
         job.Complete = true; UpscaleStore.Save(jobFile, job); progress.Report(new(1, "VideoUpscale.Complete")); return job.Output;
     }
 }

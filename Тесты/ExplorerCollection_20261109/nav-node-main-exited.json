@@ -1,0 +1,73 @@
+{
+  "version": "0.7.65-dev",
+  "mainFullyExited": true,
+  "desktopProcess": 41416,
+  "firstWinE": {
+    "Stage": "outside-restart",
+    "LaunchMethod": "Win+E",
+    "Hwnd": 328242,
+    "Pid": 41416,
+    "Tree": 262924,
+    "ExistingDesktopProcess": false,
+    "MainRunning": 0,
+    "NodePresent": true,
+    "NodeState": 3145728,
+    "Title": "Главная — проводник"
+  },
+  "openSameWindow": {
+    "Hwnd": 328242,
+    "NavigationAction": "MSAA default action on exact own nav node",
+    "RootNodePresent": true,
+    "RootNodeSelected": true,
+    "RootState": 3145730,
+    "MainRunning": 0,
+    "WorkerPid": 25856,
+    "ExactWorkerAlive": true,
+    "Phase": "ready",
+    "Count": 462,
+    "Limited": false,
+    "ErrorIsNull": true
+  },
+  "newWinEAfterRootClose": {
+    "Stage": "after-root-close",
+    "LaunchMethod": "Win+E",
+    "Hwnd": 262810,
+    "Pid": 41416,
+    "Tree": 1769870,
+    "ExistingDesktopProcess": false,
+    "MainRunning": 0,
+    "NodePresent": true,
+    "NodeState": 3145728,
+    "Title": "Главная — проводник"
+  },
+  "newWinESecondCycle": {
+    "Stage": "second-cycle",
+    "LaunchMethod": "Win+E",
+    "Hwnd": 524850,
+    "Pid": 41416,
+    "Tree": 787130,
+    "ExistingDesktopProcess": true,
+    "MainRunning": 0,
+    "NodePresent": true,
+    "NodeState": 3145728,
+    "Title": "Главная — проводник"
+  },
+  "cleanup": {
+    "ExecProjectionClassPresent": false,
+    "ExecProjectionNamespacePresent": false,
+    "ConfigEnabled": true,
+    "AuditEnabled": false,
+    "EnabledFlag": 1
+  },
+  "originalSourceRestored": {
+    "Исходники/LOPATA.Collection/CollectionShellRegistration.cs": true,
+    "Исходники/AIHub.Tests/CollectionIntegrationTests.cs": true
+  },
+  "regression": {
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0
+  },
+  "productCodeChangedThisPass": false,
+  "installerRebuilt": false
+}

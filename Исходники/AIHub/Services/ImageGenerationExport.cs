@@ -51,7 +51,10 @@ public static class ImageGenerationExport
                 if (temporary is not null)
                 { try { if (File.Exists(temporary)) File.Delete(temporary); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
             }
-            return Persist(request, result);
+            var saved = Persist(request, result);
+            if (saved.Exported && saved.ExportPath is { } completed)
+                CollectionExportJournal.Record(completed, request.Metadata?.Scenario ?? "image-generation/simple");
+            return saved;
         }
     }
 

@@ -120,6 +120,7 @@ internal static class ReaderTranslationPdf
             await using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536, true))
             { await input.CopyToAsync(output); await output.FlushAsync(); }
             File.Move(temporary, target, true);
+            CollectionExportJournal.Record(target, "office/translation");
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

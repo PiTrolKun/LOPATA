@@ -64,6 +64,8 @@ public sealed partial class UpdateTransaction
         foreach (var file in manifest.Files)
             if (!await UpdatePlanner.MatchesAsync(_roots.Resolve(file), file, token))
                 throw new InvalidDataException("Full installer files do not match manifest: " + file.Key);
+        if (File.Exists(InstalledManifestPath))
+            RememberCollectionOwnership(SignedManifest.Read(await File.ReadAllBytesAsync(InstalledManifestPath, token)));
         DurableUpdateFiles.WriteJson(InstalledManifestPath, installed);
     }
 
@@ -73,16 +75,33 @@ public sealed partial class UpdateTransaction
         if (ReadJournal() is { Phase: not (UpdatePhase.Healthy or UpdatePhase.RolledBack) })
             throw new IOException("Recover the unfinished update before uninstalling.");
         SafeUpdatePath.RejectLinks(InstalledManifestPath);
+        var owned = ReadCollectionOwnership();
         if (File.Exists(InstalledManifestPath))
         {
-            var manifest = SignedManifest.Read(await File.ReadAllBytesAsync(InstalledManifestPath, token)).Verify(_keys);
-            foreach (var file in manifest.Files)
-            {
-                var path = _roots.Resolve(file);
-                if (File.Exists(path) && await UpdatePlanner.MatchesAsync(path, file, token)) File.Delete(path);
-            }
-            File.Delete(InstalledManifestPath);
+            var signed = SignedManifest.Read(await File.ReadAllBytesAsync(InstalledManifestPath, token));
+            var manifest = signed.Verify(_keys);
+            RememberCollectionOwnership(signed);
+            foreach (var file in manifest.Files) owned[file.Key] = file;
         }
+        var retained = new List<object>();
+        foreach (var file in owned.Values)
+        {
+            var path = _roots.Resolve(file);
+            try
+            {
+                if (!File.Exists(path)) continue;
+                if (await UpdatePlanner.MatchesAsync(path, file, token)) File.Delete(path);
+                else if (CollectionPayloadRetention.IsVersioned(file)) retained.Add(new { file, reason = "locally-changed" });
+            }
+            catch (Exception error) when (CollectionPayloadRetention.IsVersioned(file)
+                && error is not InvalidDataException && (error is IOException || error is UnauthorizedAccessException))
+            {
+                // Never restart Explorer or schedule deletion of bytes that could change before reboot.
+                retained.Add(new { file, reason = error.GetType().Name });
+            }
+        }
+        DurableUpdateFiles.WriteJson(Path.Combine(_stateDirectory, "collection-retained.json"), retained);
+        File.Delete(InstalledManifestPath);
         // Without an installation there is no transaction to recover. Cached packages/backups remain expendable.
         SafeUpdatePath.RejectLinks(JournalPath);
         File.Delete(JournalPath);

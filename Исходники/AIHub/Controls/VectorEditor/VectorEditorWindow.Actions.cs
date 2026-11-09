@@ -88,6 +88,7 @@ internal sealed partial class VectorEditorWindow
         {
             var saved=_project with{Name=Path.GetFileNameWithoutExtension(path!)};
             VectorProjectArchive.Save(saved,path!);_project=saved;_path=path;_dirty=false;_autosave.Stop();VectorProjectRecovery.Remove(_project.Id);
+            CollectionExportJournal.Record(path!, "vector-editor/project");
             UpdateTitle();_status.Text=T("Saved");return true;
         }
         catch(Exception e){Error(e);return false;}
@@ -143,6 +144,7 @@ internal sealed partial class VectorEditorWindow
         {
             Lopata.Updates.SafeUpdatePath.RejectLinks(path);var temp=path+"."+Guid.NewGuid().ToString("N")+".tmp";
             try{await File.WriteAllTextAsync(temp,svg,new System.Text.UTF8Encoding(false));File.Move(temp,path,true);}finally{if(File.Exists(temp))File.Delete(temp);}
+            CollectionExportJournal.Record(path, "vector-editor/export");
         }
         else
         {

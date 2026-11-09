@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Xml;
 using AIHub.Models;
 
 namespace AIHub.Services;
@@ -57,6 +58,7 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
     public async Task<string> ProcessAsync(ImageUtilityItem item, ImageUtilityOptions options, string outputFolder,
         IProgress<ImageUtilityProgress>? progress = null, CancellationToken token = default, Action? checkpoint = null)
     {
+        using var auditOperation = ComponentAudit.CaptureOperation();
         var method = ImageUtilityCatalog.GetMethod(options.MethodId);
         var format = ImageUtilityFormats.Get(options.Format);
         ValidateOptions(options);
@@ -68,6 +70,7 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
         try
         {
             var source = await PrepareSourceAsync(item, scratch, progress, token);
+            var copiedSource = source;
             if (IsAnimatedPng(source)) throw new ImageUtilityException("ImageUtility.Error.ApngUnsupported");
             var info = await InspectControlledPathAsync(source, token);
             if (info.Format is "PSD" or "PSB")
@@ -100,6 +103,13 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
                 throw new ImageUtilityException("ImageUtility.Error.MultiPage");
             progress?.Report(new("ImageUtility.Event.Processing", [item.DisplayName, info.Width, info.Height, size.Width, size.Height], ItemId: item.Id));
 
+            // Capture provenance alongside the used input, before a long model operation can
+            // let an external writer replace the original file and its named streams.
+            var sourceXmp = Path.Combine(scratch, "source.xmp");
+            try { await RunAsync([copiedSource + "[0]", "xmp:" + sourceXmp], token); }
+            catch (ImageUtilityException) { /* A source may have no XMP profile. */ }
+            var facts = await ImageUtilitySourceHistory.MergeAsync(ImageUtilityProvenance.Create(options, method),
+                copiedSource, sourceXmp, item.LocalPath, token);
             var input = source;
             if (!options.FormatOnly && method.IsAi)
             {
@@ -147,17 +157,29 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
             }
             var withoutMetadata = new List<string>(arguments);
             if (!options.FormatOnly && method.IsAi) await AddSourceMetadataAsync(arguments, source, scratch, token);
-            var operation = options.FormatOnly ? "conversion" : $"resize/{options.MethodId}";
-            arguments.AddRange(["-set", "comment", $"%[comment]\nLOPATA: {operation}; {info.Width}x{info.Height} -> {size.Width}x{size.Height}; {DateTimeOffset.Now:O}; item={item.Id}",
+            facts = facts with { ExportedUtc = DateTimeOffset.UtcNow };
+            if (ImageUtilityProvenance.SupportsXmp(format.Id))
+            {
+                try
+                {
+                    var outputXmp = Path.Combine(scratch, "output-provenance.xmp");
+                    await File.WriteAllTextAsync(outputXmp, ImageUtilityProvenance.MergeXmp(sourceXmp, facts), token);
+                    arguments.AddRange(["-profile", outputXmp]);
+                }
+                catch (Exception error) when (error is XmlException or InvalidDataException)
+                { OwnedProcessRegistry.Log("image_source_xmp_unreadable", "ImageUtility", detail: error.GetType().Name); }
+            }
+            arguments.AddRange(["-set", "comment", "%[comment]\n" + facts.Json(), "-set", "Software", "LOPATA",
                 "-set", "exif:PixelXDimension", size.Width.ToString(CultureInfo.InvariantCulture),
                 "-set", "exif:PixelYDimension", size.Height.ToString(CultureInfo.InvariantCulture)]);
+            if (format.Id == "tiff") arguments.AddRange(["-define", "tiff:software=LOPATA"]);
             if (info.Frames > 1) arguments.AddRange(["-layers", "Optimize"]);
             arguments.Add(format.Id + ":" + temporaryOutput);
             try { await RunAsync(arguments, token); }
             catch (ImageUtilityException)
             {
-                // Some encoders reject otherwise readable profiles. Metadata is best effort;
-                // retry encoding the already processed image without optional metadata changes.
+                // Some encoders reject source profiles. Mandatory provenance is written separately
+                // after encoding, without changing raster data or hiding a metadata failure.
                 if (File.Exists(temporaryOutput)) File.Delete(temporaryOutput);
                 if (info.Frames > 1) withoutMetadata.AddRange(["-layers", "Optimize"]);
                 withoutMetadata.Add(format.Id + ":" + temporaryOutput);
@@ -173,8 +195,12 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
             var desiredName = SafeFileName(ImageUtilityNaming.CreateStem(item, options));
             await using (var resultStream = File.OpenRead(temporaryOutput))
                 item.PreparedOutputSha256 = Convert.ToHexString(await SHA256.HashDataAsync(resultStream, token));
+            var hasStream = Lopata.Collection.CollectionAlternateOrigin.Write(temporaryOutput, facts.Json(), item.PreparedOutputSha256);
             var output = CommitWithoutOverwrite(temporaryOutput, folder, desiredName, format.Extension, item, checkpoint, options.NamingMode is "series" or "date");
             item.OutputPath = output;
+            var recorded = CollectionExportJournal.Record(output, facts.Scenario, item.PreparedOutputSha256);
+            if (!recorded) progress?.Report(new("ImageUtility.Event.CollectionNotRecorded", [Path.GetFileName(output)], IsError: true));
+            else if (!hasStream) progress?.Report(new("ImageUtility.Event.ProvenanceLocalOnly", [Path.GetFileName(output)]));
             return output;
         }
         finally

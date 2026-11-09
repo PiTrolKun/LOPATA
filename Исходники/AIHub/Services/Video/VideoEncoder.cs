@@ -95,6 +95,7 @@ public static class VideoEncoder
                 var errors = await errorText;
                 if (process.ExitCode != 0 || !File.Exists(temporary) || new FileInfo(temporary).Length < 100) throw new IOException(errors.Length == 0 ? "The video encoder did not produce a complete file." : errors);
                 token.ThrowIfCancellationRequested(); File.Move(temporary, destination); progress?.Invoke(100);
+                CollectionExportJournal.Record(destination, facts.Scenario);
             }
             catch
             {

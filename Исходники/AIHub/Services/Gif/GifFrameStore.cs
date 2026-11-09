@@ -90,6 +90,7 @@ public sealed class GifFrameStore
                 encoder.Add(previous!, Math.Max(1, totalCs - emittedCs), token); encoder.Finish(); file.Flush(true);
             }
             token.ThrowIfCancellationRequested(); File.Move(temporary, destination);
+            CollectionExportJournal.Record(destination, Manifest.Provenance?.Scenario ?? "screen-capture/gif");
             return destination;
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }

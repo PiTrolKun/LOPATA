@@ -43,7 +43,7 @@ public sealed record OutputProvenance
             new XElement(rdf + "RDF", new XAttribute(XNamespace.Xmlns + "rdf", rdf),
                 new XElement(rdf + "Description", new XAttribute(rdf + "about", ""),
                     new XAttribute(XNamespace.Xmlns + "xmp", xmp), new XAttribute(XNamespace.Xmlns + "lopata", lopata),
-                    new XElement(xmp + "CreatorTool", "LOPATA " + ProgramVersion),
+                    new XElement(xmp + "CreatorTool", "LOPATA"),
                     new XElement(lopata + "Provenance", Json()))))).ToString(SaveOptions.DisableFormatting);
     }
 

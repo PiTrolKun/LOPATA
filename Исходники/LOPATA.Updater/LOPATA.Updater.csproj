@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LOPATA.Updates\LOPATA.Updates.csproj" />
+    <ProjectReference Include="..\LOPATA.Collection\LOPATA.Collection.csproj" />
     <EmbeddedResource Include="Localization\ru.json" LogicalName="UpdateHost.ru" />
     <EmbeddedResource Include="Localization\en.json" LogicalName="UpdateHost.en" />
   </ItemGroup>

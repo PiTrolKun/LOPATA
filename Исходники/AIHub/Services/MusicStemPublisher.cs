@@ -43,7 +43,9 @@ public sealed class MusicStemPublisher(IMusicStemsWorker worker, IMusicAudioEnco
             var known = music ? additional ? variant.Stems!.AdditionalMusicHash : variant.Stems!.MusicHash : additional ? variant.AdditionalHash : variant.ResultHash;
             if (File.Exists(destination)) {
                 if (known is null) throw new IOException("An unrelated file occupies the song bundle.");
-                await MusicOutputPublisher.MatchHashAsync(destination, known, token); return;
+                await MusicOutputPublisher.MatchHashAsync(destination, known, token);
+                CollectionExportJournal.Record(destination, "music/separate");
+                return;
             }
             var temporary = destination + "." + Guid.NewGuid().ToString("N") + ".partial";
             try {
@@ -52,6 +54,7 @@ public sealed class MusicStemPublisher(IMusicStemsWorker worker, IMusicAudioEnco
                 variant = music ? variant with { Stems = additional ? variant.Stems! with { AdditionalMusicHash = hash } : variant.Stems! with { MusicHash = hash } }
                     : additional ? variant with { AdditionalHash = hash } : variant with { ResultHash = hash };
                 save(variant); token.ThrowIfCancellationRequested(); File.Move(temporary, destination, false);
+                CollectionExportJournal.Record(destination, "music/separate");
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }

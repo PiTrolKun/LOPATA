@@ -133,6 +133,7 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
     <ProjectReference Include="..\LOPATA.Updates\LOPATA.Updates.csproj" />
+    <ProjectReference Include="..\LOPATA.Collection\LOPATA.Collection.csproj" />
     <ProjectReference Include="..\LOPATA.Capture\LOPATA.Capture.csproj" />
     <PackageReference Include="AngleSharp" Version="1.5.2" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
@@ -278,6 +279,30 @@
     <ItemGroup>
       <Compile Remove="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs" />
       <Compile Include="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs" />
+    </ItemGroup>
+  </Target>
+  <Target Name="PrepareExplorerCollection" AfterTargets="Build" BeforeTargets="ComputeFilesToPublish"
+          Condition="'$(DesignTimeBuild)' != 'true' And '$(BuildCollectionPayload)' != 'false'">
+    <PropertyGroup>
+      <_CollectionRuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</_CollectionRuntimeIdentifier>
+      <_CollectionRuntimeIdentifier Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</_CollectionRuntimeIdentifier>
+    </PropertyGroup>
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildProjectDirectory)\..\..\Инструменты\CollectionShell\build-collection.ps1&quot; -Configuration $(Configuration) -RuntimeIdentifier $(_CollectionRuntimeIdentifier) -OutputDirectory &quot;$(TargetDir)Collection&quot;" />
+    <ReadLinesFromFile File="$(TargetDir)collection-generation.txt">
+      <Output TaskParameter="Lines" ItemName="_CollectionGeneration" />
+    </ReadLinesFromFile>
+    <PropertyGroup>
+      <_CollectionGenerationValue>@(_CollectionGeneration)</_CollectionGenerationValue>
+    </PropertyGroup>
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(TargetDir)Collection\current.json">
+        <RelativePath>Collection\current.json</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="$(TargetDir)Collection\$(_CollectionGenerationValue)\**\*">
+        <RelativePath>Collection\$(_CollectionGenerationValue)\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
 </Project>

@@ -41,6 +41,7 @@ internal sealed partial class OfficeTextWork
                 }
                 _draft.SetTarget(target,hash); TargetPath=target;
                 Store(Document,next,replaceEntry:OfficeSheets.Payload(sheet),content:bytes); IsDirty=NeedsProject;
+                CollectionExportJournal.Record(target, next.Provenance!.Scenario);
                 return sheet;
             }
             finally { File.Delete(staged); }

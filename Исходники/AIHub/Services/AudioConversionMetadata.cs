@@ -16,7 +16,8 @@ internal static class AudioConversionMetadata
     {
         ["title"] = "TIT2", ["artist"] = "TPE1", ["album"] = "TALB", ["album_artist"] = "TPE2",
         ["composer"] = "TCOM", ["genre"] = "TCON", ["date"] = "TDRC", ["track"] = "TRCK",
-        ["disc"] = "TPOS", ["copyright"] = "TCOP", ["publisher"] = "TPUB", ["lyrics"] = "USLT", ["comment"] = "COMM"
+        ["disc"] = "TPOS", ["copyright"] = "TCOP", ["publisher"] = "TPUB", ["lyrics"] = "USLT", ["comment"] = "COMM",
+        ["encoded_by"] = "TENC"
     };
     internal static async Task<AudioConversionInfo> ReadAsync(MusicAudioRuntime runtime, string path, CancellationToken token)
     {

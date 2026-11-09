@@ -47,6 +47,7 @@ public static class LiteraryDocxExporter
                 main.Document.Save();
             }
             File.Move(temporary, path, true);
+            CollectionExportJournal.Record(path, provenance.Scenario);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

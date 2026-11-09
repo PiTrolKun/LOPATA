@@ -9602,5 +9602,17 @@
   "Cloud.Description.office_reader_speech": "Read pages or selected text aloud, seek and save the recording.",
   "Cloud.Description.office_reader_ai": "Choose and prepare reader text models and voices.",
   "Cloud.Tag.office_reader_translation": "Document translation",
-  "Cloud.Description.office_reader_translation": "Translate pages or selected text, switch to the original and save a separate PDF."
+  "Cloud.Description.office_reader_translation": "Translate pages or selected text, switch to the original and save a separate PDF.",
+  "Collection.Title": "LOPATA collection",
+  "Collection.Enabled": "Show the LOPATA collection in File Explorer",
+  "Collection.Help": "All created works in one place. Files remain in their folders. The collection also works when LOPATA is closed.",
+  "Collection.Open": "Open collection",
+  "Collection.Folders": "Additional collection folders",
+  "Collection.FoldersHelp": "Output folders from LOPATA settings are included automatically. Add other folders containing your works here. Finding relocated files depends on Windows Search.",
+  "Collection.AddFolder": "Add folder",
+  "Collection.RemoveFolder": "Remove from list",
+  "Collection.SaveFolders": "Save",
+  "Collection.Failed": "Could not update the collection integration. Check that its components are present and try again.",
+  "ImageUtility.Event.CollectionNotRecorded": "{0}: the file was saved, but its collection history entry could not be written. Add the output folder in the collection settings.",
+  "ImageUtility.Event.ProvenanceLocalOnly": "{0}: this storage did not retain the additional collection marker. The result is recorded on this PC; discovery after transfer depends on the format metadata."
 }

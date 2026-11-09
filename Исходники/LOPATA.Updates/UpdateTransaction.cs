@@ -79,6 +79,7 @@ public sealed partial class UpdateTransaction
         var journal = Require(id, UpdatePhase.Prepared);
         CheckInstalledManifest(journal.Previous);
         await ValidateLiveBeforeApplyAsync(journal, token);
+        RememberCollectionOwnership(journal.Previous);
         journal = journal with { Phase = UpdatePhase.Applying };
         Save(journal);
         checkpoint?.Invoke(new("applying", 0, null));

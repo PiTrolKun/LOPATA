@@ -80,6 +80,7 @@ internal static class VideoExport
                 await VerifyAsync(temporary, options, length, tags, token);
                 await session.VerifySourceAsync(token);
                 token.ThrowIfCancellationRequested(); File.Move(temporary, destination);
+                CollectionExportJournal.Record(destination, "lyric-video/export");
                 log($"Export verified: {encoder}; {count / watch.Elapsed.TotalSeconds:F1} frames/s; {new FileInfo(destination).Length} bytes.");
                 progress?.Invoke(1);
             }

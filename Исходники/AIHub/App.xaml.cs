@@ -18,6 +18,12 @@ public partial class App : System.Windows.Application
     public static bool ReaderFileLaunch { get; private set; }
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (e.Args is ["--initialize-collection"])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = InitializeCollectionAsync();
+            return;
+        }
         if(e.Args is ["--dictation-worker"]) {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             _=RunDictationWorkerAsync();return;
@@ -143,6 +149,20 @@ public partial class App : System.Windows.Application
     }
 
     private async Task RunDictationWorkerAsync() => Shutdown(await Services.Dictation.DictationWorker.RunAsync());
+
+    private async Task InitializeCollectionAsync()
+    {
+        var exitCode = 0;
+        try { await Services.CollectionInitializationService.InitializeCurrentAsync(); }
+        catch (Exception error)
+        {
+            Services.OwnedProcessRegistry.Log("collection_initialization_failed", "Collection", detail: error.GetType().Name);
+            var message = error.GetType().Name + ": " + error.Message;
+            Console.Error.WriteLine(message[..Math.Min(message.Length, 2048)]);
+            exitCode = 1;
+        }
+        Shutdown(exitCode);
+    }
 
     protected override void OnExit(ExitEventArgs e)
     {

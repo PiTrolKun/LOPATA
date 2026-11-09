@@ -11,7 +11,7 @@ public static class OutputImageMetadata
     {
         if (format == "png")
         {
-            PngMetadataWriter.Write(path, new Dictionary<string, string> { ["Software"] = "LOPATA " + facts.ProgramVersion, ["LOPATA"] = facts.Json() });
+            PngMetadataWriter.Write(path, new Dictionary<string, string> { ["Software"] = "LOPATA", ["LOPATA"] = facts.Json() });
             return;
         }
         var xmp = Encoding.UTF8.GetBytes(facts.Xmp());

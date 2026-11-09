@@ -339,6 +339,7 @@ internal sealed partial class OfficeTextWork
             TargetPath = target;
             Store(Document, next);
             IsDirty = NeedsProject;
+            CollectionExportJournal.Record(target, facts.Scenario);
         }, token);
 
     internal Task ExportAsync(string path, CancellationToken token)
@@ -348,6 +349,7 @@ internal sealed partial class OfficeTextWork
             if (SameFile(SourcePath, target) || SameFile(TargetPath, target) || SameFile(_draft.ProjectPath, target))
                 throw new IOException("OfficeEditor.Unsupported");
             await ExportPrimaryAsync(target, _manifest.Provenance! with { ExportedUtc = DateTimeOffset.UtcNow }, token);
+            CollectionExportJournal.Record(target, _manifest.Provenance!.Scenario);
         }, token);
 
     internal void Close(bool discardDraft)
