@@ -107,3 +107,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Preserve the committed vendor licence byte-for-byte on fresh checkouts.
 Исходники/AIHub/Licenses/texts/song-clip-glitch-libraries.txt -text -eol -whitespace
+
+# Preserve unmodified ImageUtility vendor notices, including extensionless files.
+Исходники/AIHub/Licenses/texts/image-utility-* -text -eol -whitespace
