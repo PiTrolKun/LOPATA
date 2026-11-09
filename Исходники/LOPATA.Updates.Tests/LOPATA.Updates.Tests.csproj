@@ -8,5 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LOPATA.Updates\LOPATA.Updates.csproj" />
+    <Compile Include="..\LOPATA.Updater\CollectionInstallation.cs" Link="Updater\CollectionInstallation.cs" />
+    <None Include="..\LOPATA.Updater\Localization\*.json" Link="UpdaterLocalization\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
