@@ -299,8 +299,9 @@
         <RelativePath>Collection\current.json</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
-      <ResolvedFileToPublish Include="$(TargetDir)Collection\$(_CollectionGenerationValue)\**\*">
-        <RelativePath>Collection\$(_CollectionGenerationValue)\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+      <_CollectionPayloadToPublish Include="$(TargetDir)Collection\$(_CollectionGenerationValue)\**\*" />
+      <ResolvedFileToPublish Include="@(_CollectionPayloadToPublish)">
+        <RelativePath>Collection\$(_CollectionGenerationValue)\%(_CollectionPayloadToPublish.RecursiveDir)%(_CollectionPayloadToPublish.Filename)%(_CollectionPayloadToPublish.Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
     </ItemGroup>
