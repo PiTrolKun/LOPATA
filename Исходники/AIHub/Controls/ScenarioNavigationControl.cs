@@ -30,6 +30,19 @@ public sealed partial class ScenarioNavigationControl : UserControl
     public bool IsLetItOutChat { get; private set; }
     public event Action<LetItOutChatControl>? LetItOutChatCreated;
     public bool IsHome => SelectedDirectionId is null;
+    internal SpeechAssets.SpeechAssetsControl? SpeechAssetsView { get; private set; }
+    internal bool IsSpeechAssets { get; private set; }
+    private void LeaveSpeechAssets()
+    {
+        if (IsSpeechAssets && SpeechAssetsView is { } view) _ = view.LeaveScenarioAsync();
+        IsSpeechAssets = false;
+    }
+    internal SpeechAssets.SpeechAssetsControl ShowSpeechAssets(System.Windows.Window owner)
+    {
+        SpeechAssetsView ??= new(owner, _localize);
+        IsSpeechAssets = true; SelectedDirectionId = ScenarioNavigationCatalog.Utilities;
+        Content = SpeechAssetsView; SpeechAssetsView.EnterScenario(); StateChanged?.Invoke(); return SpeechAssetsView;
+    }
     public event Action<string>? ScenarioRequested;
     public event Action? StateChanged;
     public event Action<VideoPreparationControl>? VideoPreparationCreated;
@@ -60,6 +73,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsSpeechAssets) { LeaveSpeechAssets(); Render(); return true; }
         if (IsLivingArcade)
         {
             LivingArcade?.SuspendForNavigation();
@@ -98,6 +112,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        LeaveSpeechAssets();
         LivingArcade?.SuspendForNavigation();
         IsLivingArcade = false;
         if (SongClip?.Checkpoint() == false) return;
@@ -114,6 +129,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
+        LeaveSpeechAssets();
         LivingArcade?.SuspendForNavigation();
         IsLivingArcade = false;
         if (SongClip?.Checkpoint() == false) return;
@@ -131,6 +147,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void OpenScenario(string id)
     {
+        LeaveSpeechAssets();
         if (id == ScenarioNavigationCatalog.LivingArcade)
         {
             ScenarioRequested?.Invoke(id);
@@ -254,6 +271,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (IsSpeechAssets) { Content = SpeechAssetsView; StateChanged?.Invoke(); return; }
         if (Content == LivingArcade) Content = null;
         if (IsLivingArcade)
         {

@@ -17,6 +17,7 @@ public static class ScenarioNavigationCatalog
     public const string Analysis = "analysis";
     public const string Experiments = "experiments";
     public const string Utilities = "processing_utilities";
+    public const string SpeechAssets = "speech_assets";
     public const string Literary = "literary";
     public const string Images = "image_analysis";
     public const string Sandbox = "uncertainty";
@@ -47,7 +48,9 @@ public static class ScenarioNavigationCatalog
         Node(Creation, ScenarioNavigationKind.Direction, null, "Navigation.Creation", "Navigation.CreationHint", "create"),
         Node(Analysis, ScenarioNavigationKind.Direction, null, "Navigation.Analysis", "Navigation.AnalysisHint", "analyze"),
         Node(Experiments, ScenarioNavigationKind.Direction, null, "Navigation.Experiments", "Navigation.ExperimentsHint", "experiment"),
-        Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause", "component_audit"]),
+        Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause", "component_audit", "voice_notifications"]),
+        Node("utilities_audio", ScenarioNavigationKind.Group, Utilities, "SpeechAssets.Group", "", "tools"),
+        Node(SpeechAssets, ScenarioNavigationKind.Scenario, "utilities_audio", "SpeechAssets.Title", "SpeechAssets.Description", "tools", tags: ["speech_assets"]),
         Node("utilities_text", ScenarioNavigationKind.Group, Utilities, "BookConverter.Group", "", "tools"),
         Node(OfficeReader, ScenarioNavigationKind.Scenario, "utilities_text", "Reader.Entry", "Reader.Description", "tools", tags: ["office_reader", "office_reader_ai", "office_reader_speech", "office_reader_translation", "office_document_summary"]),
         Node(OfficeEditor, ScenarioNavigationKind.Scenario, "utilities_text", "OfficeEditor.Entry", "OfficeEditor.Description", "tools", tags: ["office_editor", "office_editor_capture", "office_editor_project", "office_project_sheets", "office_project_journals", "office_workbook_formulas", "office_book_editing", "office_slide_editing","office_paragraph_translation", "office_document_summary", "office_selection_actions", "office_editor_web_search", "office_special_characters", "office_symbol_suggestions"]),
@@ -113,6 +116,7 @@ public static class ScenarioNavigationCatalog
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
+        new ScenarioNavigationTag("speech_assets", "SpeechAssets.Title", "SpeechAssets.Description", SpeechAssets),
         new ScenarioNavigationTag("living_arcade", "Arcade.Title", "Arcade.Description", LivingArcade),
         new ScenarioNavigationTag("living_arcade_levels", "Arcade.Tag.Levels", "Arcade.Tag.LevelsHelp", LivingArcade),
         new ScenarioNavigationTag("living_arcade_saves", "Arcade.Tag.Saves", "Arcade.Tag.SavesHelp", LivingArcade),
@@ -183,7 +187,7 @@ public static class ScenarioNavigationCatalog
         Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", "utilities_images"),
         Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility),
         Tag("github_releases", Publisher), Tag("vk_publishing", Publisher), Tag("publishing_queue", Publisher),
-        Tag("audio_convert", Utilities), Tag("audio_shell", Utilities), Tag("rag_books", RagBooks), Tag("rag_lexicon", RagBooks), Tag("stress_tables", RagBooks), Tag("file_metadata", Metadata), Tag("background_pause", Utilities), Tag("emergency_stop", Utilities)
+        Tag("audio_convert", Utilities), Tag("audio_shell", Utilities), Tag("rag_books", RagBooks), Tag("rag_lexicon", RagBooks), Tag("stress_tables", RagBooks), Tag("file_metadata", Metadata), Tag("background_pause", Utilities), Tag("emergency_stop", Utilities), Tag("voice_notifications", Utilities)
     ]);
 
     public static ScenarioNavigationTag GetTag(string id) => CloudTags.First(tag => tag.Id == id);

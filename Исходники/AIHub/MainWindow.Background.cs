@@ -43,6 +43,8 @@ public partial class MainWindow
         RegisterLetItOutBackgroundOperation();
         RegisterLivingArcadeBackgroundOperations();
         RegisterChatSpeech();
+        _backgroundOperations.Register(Services.SpeechAssets.SpeechAssetWork.Kind,
+            (state, token) => ScenarioNavigationPage.ShowSpeechAssets(this).ResumeAsync(state, token));
         _backgroundOperations.Register(Services.OfficeReader.ReaderSpeechWork.Kind, (_, _) =>
             Task.FromException(new BackgroundOperationFailedException("Reader.Speech.Expired")));
         _backgroundOperations.Register(Services.OfficeReader.ReaderTranslationWork.Kind, (_, _) =>
@@ -65,7 +67,9 @@ public partial class MainWindow
         { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
         {
-            System.Media.SystemSounds.Asterisk.Play();
+            var voiceContext = Services.VoiceNotifications.VoiceNotificationContext.Project(notice.Project);
+            if (Services.VoiceNotifications.VoiceNotificationEvents.CanSpeak?.Invoke("Tray.ResultReady", voiceContext) != true &&
+                Services.VoiceNotifications.VoicePlaybackHub.Allows(voiceContext)) System.Media.SystemSounds.Asterisk.Play();
             _applicationTray?.Notify(L("Tray.ResultReady"), notice.Title, onOpen: ViewBackgroundResult);
             RefreshBackgroundTray();
         });
@@ -237,6 +241,17 @@ public partial class MainWindow
             if (notice.Kind == ChatSpeechWork.Kind)
             {
                 OpenChatSpeechFolder(); _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == Services.SpeechAssets.SpeechAssetWork.Kind)
+            {
+                RestoreFromTray(); ShowWorkStartPage();
+                if (WorkStartPage.Visibility != System.Windows.Visibility.Visible) return;
+                foreach (var page in new System.Windows.FrameworkElement[] { FinancialPage, CapturePage, GenerationPage, ImageUtilityPage, MusicPage, VectorPage, RagBooksPageHost })
+                    page.Visibility = System.Windows.Visibility.Collapsed;
+                ScenarioNavigationPage.Visibility = System.Windows.Visibility.Visible;
+                var view = ScenarioNavigationPage.ShowSpeechAssets(this);
+                if (notice.Project is { } session && view.SessionId != session) view.OpenSavedSession(session);
+                _backgroundOperations!.Acknowledge(notice.Id); return;
             }
             if (notice.Kind is LetItOutChatWork.Kind or LetItOutChatRuntime.MemoryWorkKind or LetItOutChatRuntime.TreeWorkKind)
             {

@@ -8,6 +8,7 @@ internal static class DesktopAttentionNotification
     {
         if (System.Windows.Application.Current is not { } app) return false;
         if (!app.Dispatcher.CheckAccess()) return app.Dispatcher.Invoke(() => Show(title, message));
+        VoiceNotifications.VoiceNotificationEvents.Publish(message);
         return Notify?.Invoke(title, message) == true;
     }
 }

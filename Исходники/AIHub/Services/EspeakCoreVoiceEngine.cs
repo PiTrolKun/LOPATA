@@ -30,7 +30,7 @@ public sealed class EspeakCoreVoiceEngine : ICoreVoiceEngine
     private NativeApi? _api;
     private NativeApi.SynthCallback? _callback;
     private SynthesisSession? _activeSynthesis;
-    private SoundPlayer? _activePlayer;
+    private NAudio.Wave.WaveOutEvent? _activePlayer;
 
     public EspeakCoreVoiceEngine(CoreVoiceRuntimeLocator? runtimeLocator = null)
     {
@@ -192,26 +192,27 @@ public sealed class EspeakCoreVoiceEngine : ICoreVoiceEngine
         CancellationToken cancellationToken)
     {
         await using var waveStream = CreateWaveStream(synthesis.Samples, _sampleRate);
-        using var player = new SoundPlayer(waveStream);
-        player.Load();
+        waveStream.Position = 0;
+        using var reader = new NAudio.Wave.WaveFileReader(waveStream);
+        using var player = new NAudio.Wave.WaveOutEvent { DesiredLatency = 100 };
+        player.Init(reader);
+        var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        player.PlaybackStopped += (_, e) => { if (e.Exception is { } error) ended.TrySetException(error); else ended.TrySetResult(); };
         lock (_nativeSync)
         {
             _activePlayer = player;
         }
 
-        using var registration = cancellationToken.Register(player.Stop);
+        using var registration = cancellationToken.Register(() => { player.Stop(); ended.TrySetCanceled(cancellationToken); });
         var durationMilliseconds = (int)Math.Ceiling(synthesis.Samples.Count * 1000d / _sampleRate);
         var cues = BuildRevealCues(synthesis, rate, durationMilliseconds);
-        var playbackTask = Task.Run(player.PlaySync, cancellationToken);
-        var stopwatch = Stopwatch.StartNew();
+        using var speech = VoiceNotifications.VoicePlaybackHub.RegisterSpeech(player.Pause, player.Play);
+        if (!speech.IsSuspended) player.Play();
 
         foreach (var cue in cues)
         {
-            var delay = cue.TimeMilliseconds - (int)stopwatch.ElapsedMilliseconds;
-            if (delay > 0)
-            {
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-            }
+            while (!ended.Task.IsCompleted && cue.TimeMilliseconds > reader.CurrentTime.TotalMilliseconds)
+                await Task.Delay(20, cancellationToken).ConfigureAwait(false);
 
             progress.Report(CreateProgress(
                 synthesis.Composition,
@@ -220,7 +221,7 @@ public sealed class EspeakCoreVoiceEngine : ICoreVoiceEngine
                 synthesis.WordEvents.Count > 0));
         }
 
-        await playbackTask.ConfigureAwait(false);
+        await ended.Task.ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
     }
 

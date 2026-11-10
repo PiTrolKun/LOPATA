@@ -52,6 +52,7 @@ public sealed partial class SongClipControl:UserControl
     internal SongClipControl(Func<string,string> localize,SongClipStore store)
     {
         _l=localize;_store=store;
+        Services.VoiceNotifications.VoiceNotificationContext.Bind(this, () => _project.Id);
         _promptInput=new(_l("SongClip.Prompt"),_l("SongClip.PromptExample"),"SongClip.Prompt",multiline:true);
         _prompt=_promptInput.Input;_prompt.Height=double.NaN;
         _prompt.Loaded+=(_,_)=>LiterarySpellChecking.Enable(_prompt,_l("VideoPrep.SpellingLanguage"));

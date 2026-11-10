@@ -1,3 +1,4 @@
+using AIHub.Services.VoiceNotifications;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -26,7 +27,7 @@ public sealed partial class SongClipControl
         if (_playing)
         {
             _preview.IsMuted = true;
-            _preview.Pause();
+            VoiceMediaElement.Pause(_preview);
             _playing = false;
             return;
         }
@@ -34,7 +35,7 @@ public sealed partial class SongClipControl
         // Navigation releases the decoder; only an explicit click reopens the selected result.
         _preview.Source ??= _selectedPreviewSource;
         _preview.IsMuted = false;
-        _preview.Play();
+        VoiceMediaElement.Play(_preview);
         _playing = true;
     }
 
@@ -82,7 +83,7 @@ public sealed partial class SongClipControl
             window.Content = null;
         };
         window.Show();
-        media.Play();
+        VoiceMediaElement.Play(media);
     }
 
     private void CloseExpandedPreview()
@@ -103,8 +104,8 @@ public sealed partial class SongClipControl
         // WPF queues native media operations. Mute first so pending open/play callbacks
         // cannot produce a short sound while Stop/Close and URI removal are processed.
         media.IsMuted = true;
-        media.Stop();
-        media.Close();
+        VoiceMediaElement.Stop(media);
+        VoiceMediaElement.Close(media);
         media.Source = null;
     }
 }

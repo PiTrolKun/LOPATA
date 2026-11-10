@@ -28,7 +28,7 @@ public sealed class DictationSession : IAsyncDisposable
     {
         if(_disposed||Recording||Processing||!Ready)throw new InvalidOperationException("Dictation is not ready.");
         var audio=new DictationAudioCapture(Enqueue);audio.Failed+=OnFailure;
-        try{audio.Start(device);_audio=audio;Changed?.Invoke();}
+        try{audio.Start(device);_audio=audio;VoiceNotifications.VoicePlaybackHub.MicrophoneState(this,true);Changed?.Invoke();}
         catch{audio.Dispose();throw;}
     }
     private void Enqueue(DictationChunk chunk)
@@ -68,7 +68,7 @@ public sealed class DictationSession : IAsyncDisposable
         var audio=_audio;_audio=null;
         _stopTask=StopCore();return _stopTask;
         async Task StopCore() {
-            if(audio is not null){try{await audio.StopAsync();}finally{audio.Dispose();}}
+            if(audio is not null){try{await audio.StopAsync();}finally{audio.Dispose();VoiceNotifications.VoicePlaybackHub.MicrophoneState(this,false);}}
             Changed?.Invoke();await _drained.Task.WaitAsync(TimeSpan.FromMinutes(2),_lifetime.Token);Changed?.Invoke();
         }
     }
@@ -78,7 +78,7 @@ public sealed class DictationSession : IAsyncDisposable
         if(_disposed)return;_disposed=true;
         // Exit discards undelivered IPC; no capture is restarted on the next launch.
         var audio=_audio;_audio=null;
-        if(audio is not null){audio.Failed-=OnFailure;try{await audio.StopAsync();}finally{audio.Dispose();}}
+        if(audio is not null){audio.Failed-=OnFailure;try{await audio.StopAsync();}finally{audio.Dispose();VoiceNotifications.VoicePlaybackHub.MicrophoneState(this,false);}}
         TextReady=null;_lifetime.Cancel();await _host.DisposeAsync();await _pump;
         lock(_gate){_queue.Clear();_pending=0;_drained.TrySetResult();}
         _lifetime.Dispose();_signal.Dispose();

@@ -30,6 +30,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.SpeechAssets:
+                    ScenarioNavigationPage.ShowSpeechAssets(this);
+                    break;
                 case ScenarioNavigationCatalog.LivingArcade:
                     await OpenLivingArcadeAsync();
                     break;

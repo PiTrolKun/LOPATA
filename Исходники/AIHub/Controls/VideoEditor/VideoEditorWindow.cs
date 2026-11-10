@@ -62,6 +62,7 @@ internal sealed partial class VideoEditorWindow : Window
     internal VideoEditorWindow(Window owner, Func<string, string> l, string language, VideoWork work, VideoProject? project = null, string? path = null)
     {
         Owner = owner; _l = l; _language = language; _work = work; _editing = new(project ?? new()); _path = path;
+        Services.VoiceNotifications.VoiceNotificationContext.Bind(this, () => Project.Id);
         if (project is null) { Project.Name = T("Untitled"); foreach (var t in Project.Tracks) t.Name = T(t.Kind == "video" ? "VideoTrack" : "AudioTrack") + " 1"; }
         _saveChanges = new(Project, path is not null);
         MusicWishUi.PrepareWindow(this, T("Title"), "VideoEditor.Window", 1500); Height = 950; MinWidth = 1050; MinHeight = 700;

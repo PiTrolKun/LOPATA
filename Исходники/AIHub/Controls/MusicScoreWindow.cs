@@ -1,3 +1,4 @@
+using AIHub.Services.VoiceNotifications;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -75,7 +76,7 @@ public sealed class MusicScoreWindow : Window
         var body=new Grid();body.ColumnDefinitions.Add(new(){Width=new GridLength(260)});body.ColumnDefinitions.Add(new());root.Children.Add(body);
         body.Children.Add(_list);Grid.SetColumn(_tabs,1);body.Children.Add(_tabs);_tabs.Margin=new Thickness(12,0,0,0);
         var overview=new StackPanel();overview.Children.Add(_summary);
-        overview.Children.Add(Action("Preview",PreviewAsync));overview.Children.Add(Action("StopPreview",()=>_player.Close()));
+        overview.Children.Add(Action("Preview",PreviewAsync));overview.Children.Add(Action("StopPreview",()=>VoiceMediaElement.Close(_player)));
         overview.Children.Add(new TextBlock{Text=L("PreviewHint"),TextWrapping=TextWrapping.Wrap,Margin=new Thickness(8)});
         _tabs.Items.Add(new TabItem{Header=L("Plans"),Content=overview});
         var editor=new DockPanel();var editActions=new WrapPanel();DockPanel.SetDock(editActions,Dock.Bottom);editor.Children.Add(editActions);
@@ -100,7 +101,7 @@ public sealed class MusicScoreWindow : Window
         _draftTimer.Tick+=(_,_)=>{_draftTimer.Stop();FlushDraft();};
         controller.Changed+=Refresh;
         Closing+=(_,_)=>FlushDraft();
-        Closed+=(_,_)=>{_closed=true;_draftTimer.Stop();_lifetime.Cancel();controller.Changed-=Refresh;_player.Close();
+        Closed+=(_,_)=>{_closed=true;_draftTimer.Stop();_lifetime.Cancel();controller.Changed-=Refresh;VoiceMediaElement.Close(_player);
             foreach(var path in Directory.Exists(_previewFolder)?Directory.GetFiles(_previewFolder,"*.wav"):[])try{File.Delete(path);}catch(IOException){} _lifetime.Dispose();};
         Refresh();
     }
@@ -145,7 +146,7 @@ public sealed class MusicScoreWindow : Window
         _dirty=false;_controller.ReplaceDraft(_editing,_abc.Text);
     }
     private async Task LoadAsync(MusicScoreVersion? version) {
-        _player.Close();_editing=version?.Id;_inspection=null;_canSchedule=false;_refreshing=true;
+        VoiceMediaElement.Close(_player);_editing=version?.Id;_inspection=null;_canSchedule=false;_refreshing=true;
         _abc.Text=version is null?"":version.Draft.Length>0?version.Draft:version.Abc;_dirty=false;_refreshing=false;
         await InspectAsync();
     }
@@ -169,9 +170,9 @@ public sealed class MusicScoreWindow : Window
     }
     private async Task PreviewAsync() {
         await InspectAsync();if(_inspection is null)return;
-        _player.Close();Directory.CreateDirectory(_previewFolder);var path=Path.Combine(_previewFolder,Guid.NewGuid().ToString("N")+".wav");
+        VoiceMediaElement.Close(_player);Directory.CreateDirectory(_previewFolder);var path=Path.Combine(_previewFolder,Guid.NewGuid().ToString("N")+".wav");
         await Task.Run(()=>MusicScorePreview.Write(path,_inspection.Sheet,_lifetime.Token),_lifetime.Token);
-        if(!_closed){_player.Open(new Uri(path));_player.Play();}
+        if(!_closed){_player.Open(new Uri(path));VoiceMediaElement.Play(_player, this);}
     }
     private async Task SaveVersionAsync() {if(Current is {} version)await _controller.AddAsync(_abc.Text,"edited",version.Id);}
     private async Task ImportAsync() {

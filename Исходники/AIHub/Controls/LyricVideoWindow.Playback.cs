@@ -1,3 +1,4 @@
+using AIHub.Services.VoiceNotifications;
 using System.Diagnostics;
 using System.Windows;
 using AIHub.Services;
@@ -13,18 +14,18 @@ public sealed partial class LyricVideoWindow
         if (Time >= _session.TotalDuration - .02) Seek(0);
         if (_playing)
         {
-            if (_credits) { _creditsBase = Time; _creditsClock.Reset(); } else _player.Pause();
+            if (_credits) { _creditsBase = Time; _creditsClock.Reset(); } else VoiceMediaElement.Pause(_player);
         }
-        else { if (_credits) _creditsClock.Restart(); else _player.Play(); }
+        else { if (_credits) _creditsClock.Restart(); else VoiceMediaElement.Play(_player); }
         _playing = !_playing; _play.Content = _playing ? _l("LyricVideo.Pause") : _l("LyricVideo.Play");
     }
     internal void Seek(double position)
     {
         if (!_ready || _session is null) return;
-        position = Math.Clamp(position, 0, _session.TotalDuration); _player.Pause(); _creditsClock.Reset();
+        position = Math.Clamp(position, 0, _session.TotalDuration); VoiceMediaElement.Pause(_player); _creditsClock.Reset();
         _credits = position >= _session.SongDuration;
         if (_credits) { _creditsBase = position; if (_playing) _creditsClock.Start(); }
-        else { _player.Position = TimeSpan.FromSeconds(position); if (_playing) _player.Play(); }
+        else { _player.Position = TimeSpan.FromSeconds(position); if (_playing) VoiceMediaElement.Play(_player); }
         _lastFrame = -1; RequestFrame();
     }
     private void RequestFrame()
@@ -50,7 +51,7 @@ public sealed partial class LyricVideoWindow
             if (!_dragging) { _updatingSeek = true; _seek.Value = time; _updatingSeek = false; }
 
         }
-        catch (Exception error) { if (!_closing) { _timer.Stop(); _player.Pause(); OwnedProcessRegistry.Log("clip_frame_failed", "Music.Video", detail: error.GetType().Name); _status.Text = _l("LyricVideo.Failed"); } }
+        catch (Exception error) { if (!_closing) { _timer.Stop(); VoiceMediaElement.Pause(_player); OwnedProcessRegistry.Log("clip_frame_failed", "Music.Video", detail: error.GetType().Name); _status.Text = _l("LyricVideo.Failed"); } }
     }
     private static string Format(double time) => TimeSpan.FromSeconds(time).ToString(@"mm\:ss");
 }

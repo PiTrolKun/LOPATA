@@ -47,6 +47,7 @@ public static class ApplicationBackgroundOperations
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, ExitToken);
         var operation = restored ?? new BackgroundOperationState
             { Kind = kind, Title = title, Project = project, Input = JsonSerializer.SerializeToElement(input) };
+        using var voiceOperation = VoiceNotifications.VoiceNotificationEvents.Operation(operation.Id, project);
         try { return await controller.RunAsync(operation, execute, RetireModelsAsync, lifetime.Token); }
         catch (OperationCanceledException) when (token.IsCancellationRequested && !ExitToken.IsCancellationRequested)
         { controller.DiscardPending(operation.Id); throw; }

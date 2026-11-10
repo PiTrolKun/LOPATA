@@ -12,6 +12,10 @@
     expand.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="'+(expanded?'M3 9h6V3M15 3v6h6M21 15h-6v6M9 21v-6H3':'M9 3H3v6M15 3h6v6M21 15v6h-6M9 21H3v-6')+'"/></svg>';
   }
   let data, time = 0, playing = false, last = 0, nodes = [], lastPost = 0;
+  let notifiedPlaying = false;
+  function notifyPlayback() {
+    if (notifiedPlaying !== playing) { notifiedPlaying = playing; window.chrome.webview.postMessage({kind:'playback',value:playing}); }
+  }
   const context = new AudioContext();
   const mix = context.createGain(), meter = context.createAnalyser(); mix.connect(meter).connect(context.destination);
   function resize() {
@@ -58,7 +62,7 @@
   }
   function frame(now) {
     if (playing && data) { time = Math.min(data.project.Duration, time + Math.min(.25, (now - last) / 1000)); if (time >= data.project.Duration) playing = false; }
-    last = now; sync();
+    last = now; sync(); notifyPlayback();
     if (now - lastPost > 100) { window.chrome.webview.postMessage(time); lastPost = now; }
     requestAnimationFrame(frame);
   }
@@ -99,7 +103,7 @@
     },
     seek(value) { time = value; sync(); },
     framing(id,enabled) { if(data.framingClip!==id || !enabled) framing.reset(); data.framingClip=id; data.framingEnabled=enabled; resize(); framing.update(); },
-    play(value) { playing = value; if(value) context.resume(); last = performance.now(); sync(); },
+    play(value) { playing = value; if(value) context.resume(); last = performance.now(); sync(); notifyPlayback(); },
     volumes(value) { for (const n of nodes) { if (Object.hasOwn(value.tracks,n.track.Id)) n.track.Volume=value.tracks[n.track.Id]; if (Object.hasOwn(value.clips,n.clip.Id)) n.clip.Volume=value.clips[n.clip.Id]; } sync(); },
     diagnostics() { const samples=new Float32Array(meter.fftSize); meter.getFloatTimeDomainData(samples); return {time,playing,audioState:context.state,audioRms:Math.sqrt(samples.reduce((sum,x)=>sum+x*x,0)/samples.length)}; }
   };

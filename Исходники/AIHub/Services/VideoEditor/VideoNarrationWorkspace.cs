@@ -4,10 +4,14 @@ namespace AIHub.Services.VideoEditor;
 internal static class VideoNarrationWorkspace
 {
     private static readonly AsyncLocal<string?> Current = new();
+    private static readonly AsyncLocal<bool> PrivateOutput = new();
     internal static string? Directory => Current.Value;
-    internal static IDisposable Capture(string directory)
+    internal static bool PublishOutput => !PrivateOutput.Value;
+    internal static IDisposable Capture(string directory, bool publishOutput = true)
     {
-        var before = Current.Value; Current.Value = directory; return new Restore(before);
+        var before = Current.Value; var wasPrivate = PrivateOutput.Value;
+        Current.Value = directory; PrivateOutput.Value = !publishOutput; return new Restore(before, wasPrivate);
     }
-    private sealed class Restore(string? before) : IDisposable { public void Dispose() => Current.Value = before; }
+    private sealed class Restore(string? before, bool wasPrivate) : IDisposable
+    { public void Dispose() { Current.Value = before; PrivateOutput.Value = wasPrivate; } }
 }

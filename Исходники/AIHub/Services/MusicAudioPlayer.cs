@@ -27,6 +27,14 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
     private CancellationTokenSource? _opening;
     private string? _temporary;
     private double _volume = .75;
+    private string? _notificationPath;
+    internal Func<string[]>? NotificationContexts { get; set; }
+    private void NotifyPlaybackChanged()
+    {
+        VoiceNotifications.VoicePlaybackHub.MediaState(this, IsPlaying,
+            [.. VoiceNotifications.VoiceNotificationContext.File(_notificationPath), .. (NotificationContexts?.Invoke() ?? [])]);
+        Changed?.Invoke();
+    }
     public bool IsReady { get; private set; }
     public bool IsPlaying { get; private set; }
     public TimeSpan Duration => IsReady && _player!.NaturalDuration.HasTimeSpan ? _player.NaturalDuration.TimeSpan : TimeSpan.Zero;
@@ -37,11 +45,12 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
     public void Open(string? path)
     {
         if (_disposed) return;
+        _notificationPath = path;
         _opening?.Cancel(); _opening = null;
         var previous = _player; _player = null; previous?.Close();
         DeleteTemporary(_temporary); _temporary = null;
         IsReady = IsPlaying = _playWhenReady = false;
-        Changed?.Invoke();
+        NotifyPlaybackChanged();
         if (string.IsNullOrEmpty(path)) return;
         if (!File.Exists(path)) { Failed?.Invoke("Music.Audio.Missing"); return; }
         if (Path.GetExtension(path).ToLowerInvariant() is ".opus" or ".mp3" or ".flac") {
@@ -66,12 +75,12 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
         catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException or TimeoutException) {
             if (!dispatcher.HasShutdownStarted) await dispatcher.InvokeAsync(() => {
                 if (_opening != cancellation || _disposed) return; _opening = null; _playWhenReady = false;
-                Failed?.Invoke("Music.Audio.Error"); Changed?.Invoke();
+                Failed?.Invoke("Music.Audio.Error"); NotifyPlaybackChanged();
             });
         }
         finally {
             if (!dispatcher.HasShutdownStarted) await dispatcher.InvokeAsync(() => {
-                if (_opening == cancellation) { _opening = null; _playWhenReady = false; if (!_disposed) Changed?.Invoke(); }
+                if (_opening == cancellation) { _opening = null; _playWhenReady = false; if (!_disposed) NotifyPlaybackChanged(); }
             });
             DeleteTemporary(temporary); cancellation.Dispose();
         }
@@ -84,12 +93,12 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
             if (_player != player) return;
             IsReady = player.NaturalDuration.HasTimeSpan;
             if (_playWhenReady && IsReady) { player.Play(); IsPlaying = true; }
-            _playWhenReady = false; Changed?.Invoke();
+            _playWhenReady = false; NotifyPlaybackChanged();
         };
         player.MediaEnded += (_, _) =>
-        { if (_player != player) return; player.Pause(); player.Position = TimeSpan.Zero; IsPlaying = false; Changed?.Invoke(); };
+        { if (_player != player) return; player.Pause(); player.Position = TimeSpan.Zero; IsPlaying = false; NotifyPlaybackChanged(); };
         player.MediaFailed += (_, _) =>
-        { if (_player != player) return; _player = null; player.Close(); IsReady = IsPlaying = _playWhenReady = false; Failed?.Invoke("Music.Audio.Error"); Changed?.Invoke(); };
+        { if (_player != player) return; _player = null; player.Close(); IsReady = IsPlaying = _playWhenReady = false; Failed?.Invoke("Music.Audio.Error"); NotifyPlaybackChanged(); };
         try { player.Open(new Uri(Path.GetFullPath(path), UriKind.Absolute)); }
         catch (Exception e) when (e is IOException or ArgumentException or InvalidOperationException or NotSupportedException)
         { _player = null; player.Close(); Failed?.Invoke("Music.Audio.Error"); }
@@ -101,15 +110,15 @@ public sealed class MusicAudioPlayer : IMusicAudioPlayer
         if (_player is null) return;
         if (!IsReady) { _playWhenReady = !_playWhenReady; return; }
         if (IsPlaying) _player.Pause(); else _player.Play();
-        IsPlaying = !IsPlaying; Changed?.Invoke();
+        IsPlaying = !IsPlaying; NotifyPlaybackChanged();
     }
     public void Pause()
-    { _playWhenReady = false; _player?.Pause(); IsPlaying = false; Changed?.Invoke(); }
+    { _playWhenReady = false; _player?.Pause(); IsPlaying = false; NotifyPlaybackChanged(); }
     public void Seek(TimeSpan position)
     { if (IsReady) _player!.Position = TimeSpan.FromSeconds(Math.Clamp(position.TotalSeconds, 0, Duration.TotalSeconds)); }
     public void Dispose()
     { if (_disposed) return; _disposed = true; _opening?.Cancel(); _opening = null; _player?.Close(); _player = null;
-        DeleteTemporary(_temporary); _temporary = null; IsReady = IsPlaying = false; Changed = null; Failed = null; }
+        DeleteTemporary(_temporary); _temporary = null; IsReady = IsPlaying = false; VoiceNotifications.VoicePlaybackHub.MediaState(this, false); Changed = null; Failed = null; }
     private static void DeleteTemporary(string? path)
     { if (string.IsNullOrEmpty(path)) return; try { if (File.Exists(path)) File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
 }

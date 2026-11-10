@@ -172,6 +172,7 @@ public partial class MainWindow : Window
         _ = RefreshModelCatalogOnStartupAsync();
         UpdatePrimaryActionButton();
         InitializeApplicationUpdates();
+        InitializeVoiceNotifications();
         InitializeSettingsWorkspace();
         InitializeScreenCapture();
         InitializeApplicationTray();
@@ -501,6 +502,8 @@ public partial class MainWindow : Window
 
     private void ApplyLocalization()
     {
+        using var voiceLocalization = Services.VoiceNotifications.VoiceNotificationEvents.Suppress();
+        LocalizeVoiceNotifications();
         StartupBusyOverlay.Message = L("Startup.Checking");
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(
             _localizationService.CurrentLanguageCode.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "en-US" : "ru-RU");

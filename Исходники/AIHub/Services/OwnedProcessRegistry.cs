@@ -218,5 +218,6 @@ public sealed class OwnedProcessRegistry : IDisposable
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        VoiceNotifications.VoiceNotificationEvents.ModelLog(kind, component);
     }
 }

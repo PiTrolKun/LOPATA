@@ -922,3 +922,8 @@ JSON is consumed; generated executable code and arbitrary asset downloads are no
 ## Office text editor
 
 The local DOCX editor uses EigenPal Core 2.35.0 (Apache-2.0), bundled font substitutes and supporting libraries. Component, font and dependency notices ship in [OfficeTextSurface notices](Исходники/AIHub/Licenses/texts/OfficeTextSurface-2.35.0-NOTICES.txt) and alongside the runtime assets.
+
+
+## Prepared voice notification recordings
+
+RU recordings were generated with Silero v5.6 RU (xenia), EN with KittenTTS 2 (Iris). Model weights are not included in these notification archives. Powered by KittenML. Attribution, original model licence references and provenance are provided in `Исходники/AIHub/Licenses/texts/VoiceNotificationRecordings-NOTICE.txt` and the existing model licence files. These data notices do not replace the project source-code licence.

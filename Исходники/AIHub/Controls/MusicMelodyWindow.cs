@@ -1,3 +1,4 @@
+using AIHub.Services.VoiceNotifications;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -89,9 +90,9 @@ public sealed class MusicMelodyWindow : Window
                 if (e.Key == Key.Z) _editor.Undo(); else _editor.Redo(); Refresh(); e.Handled = true;
             }
         };
-        _player.MediaOpened += (_,_) => { if (!_closed.IsCancellationRequested) _player.Play(); };
-        _player.MediaFailed += (_,_) => { _status.Text = L("PreviewFailed"); _player.Close(); };
-        Closed += (_,_) => { _closed.Cancel(); _player.Close(); try { if (Directory.Exists(_previewFolder)) Directory.Delete(_previewFolder,true); } catch (IOException) { } _closed.Dispose(); };
+        _player.MediaOpened += (_,_) => { if (!_closed.IsCancellationRequested) VoiceMediaElement.Play(_player, this); };
+        _player.MediaFailed += (_,_) => { _status.Text = L("PreviewFailed"); VoiceMediaElement.Close(_player); };
+        Closed += (_,_) => { _closed.Cancel(); VoiceMediaElement.Close(_player); try { if (Directory.Exists(_previewFolder)) Directory.Delete(_previewFolder,true); } catch (IOException) { } _closed.Dispose(); };
         Refresh();
     }
     private string L(string key) => _l("Music.Midi." + key);
@@ -175,5 +176,5 @@ public sealed class MusicMelodyWindow : Window
         catch (Exception e) { if (!_closed.IsCancellationRequested) _status.Text = e.Message.StartsWith("Music.Midi.") ? _l(e.Message) : L("PreviewFailed"); }
         finally { _previewing = false; if (_closed.IsCancellationRequested) try { if (Directory.Exists(_previewFolder)) Directory.Delete(_previewFolder,true); } catch (IOException) { } }
     }
-    private void Stop() { _previewRevision++; _player.Close(); }
+    private void Stop() { _previewRevision++; VoiceMediaElement.Close(_player); }
 }

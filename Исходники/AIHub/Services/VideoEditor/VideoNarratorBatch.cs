@@ -5,6 +5,7 @@ internal sealed class VideoNarratorBatch(VideoNarratorRegistry registry) : IDisp
 {
     private string? _id;
     private IVideoNarrator? _active;
+    internal bool IsResident => _active is UpstreamVideoNarrator upstream ? upstream.IsResident : _active is not null;
     internal IVideoNarrator Get(string id)
     {
         if (_active is not null && _id == id) return _active;

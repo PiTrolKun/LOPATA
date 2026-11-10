@@ -232,8 +232,10 @@ internal sealed class BackgroundOperationExecution(BackgroundOperationStore stor
     }
     private void Persist(BackgroundOperationState state)
     {
+        var previous = _state;
         var next = state with { UpdatedUtc = DateTimeOffset.UtcNow };
         store.Save(next); _state = next;
+        if (previous is not null) VoiceNotifications.VoiceNotificationEvents.Background(previous, next);
     }
 
     public async Task PauseAsync()

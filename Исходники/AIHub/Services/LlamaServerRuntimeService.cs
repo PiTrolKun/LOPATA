@@ -328,6 +328,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
             await ModelProcessRetirement.StopAsync(_process, Stop);
             await CoreModelManager.VerifyPathForUseAsync(model.Path, cancellationToken, log);
             await ExecutorModelInstaller.VerifyPathForUseAsync(model.Path, cancellationToken, log);
+            VoiceNotifications.VoiceNotificationEvents.Publish("model.load", family: "model");
             var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), cancellationToken);
             if (_letItOutEnabled)
             {
@@ -351,6 +352,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 && selection.UsesGpu && _hardwareStartupFailure && !cancellationToken.IsCancellationRequested)
             {
                 log($"Full GPU model startup failed ({ex.Message}). Retrying with CPU/RAM fallback.");
+                VoiceNotifications.VoiceNotificationEvents.Publish("model.fallback", family: "model");
                 await ModelProcessRetirement.StopAsync(_process, Stop);
                 var cpu = await LlamaRuntimeSelector.SelectAsync(0, true, log, cancellationToken);
                 LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens);
@@ -358,8 +360,9 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 await WaitForHealthAsync(log, cancellationToken);
             }
         }
-        catch
+        catch (Exception error)
         {
+            if (error is not OperationCanceledException) VoiceNotifications.VoiceNotificationEvents.Publish("model.load_error", family: "model");
             await ModelProcessRetirement.StopAsync(_process, Stop);
             throw;
         }
@@ -482,6 +485,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 {
                     if (sampleMemory is not null) await sampleMemory(cancellationToken);
                     log($"llama-server health OK: {Endpoint}");
+                    VoiceNotifications.VoiceNotificationEvents.Publish("model.loaded", family: "model");
                     log(RuntimeResourceDiagnostics.DescribeSnapshot(
                         "AI HUB core / llama-server",
                         _process,

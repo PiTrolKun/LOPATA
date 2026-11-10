@@ -7,6 +7,7 @@ internal sealed class ChatSpeechPlayer : IDisposable
 {
     private readonly MediaPlayer _player = new();
     private TaskCompletionSource? _ended;
+    private VoiceNotifications.VoicePlaybackHub.SpeechLease? _notificationSpeech;
     internal ChatSpeechPlayer()
     {
         _player.MediaOpened += (_, _) => OwnedProcessRegistry.Log("chat_speech_media_opened", "LetItOut.Speech");
@@ -19,11 +20,13 @@ internal sealed class ChatSpeechPlayer : IDisposable
         {
             token.ThrowIfCancellationRequested();
             var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously); _ended = ended;
-            _player.Open(new Uri(file)); _player.Play();
+            _player.Open(new Uri(file));
+            _notificationSpeech = VoiceNotifications.VoicePlaybackHub.RegisterSpeech(_player.Pause, _player.Play);
+            if (!_notificationSpeech.IsSuspended) _player.Play();
             try { await ended.Task.WaitAsync(token); }
             finally { if (ReferenceEquals(_ended, ended)) Stop(); }
         }
     }
-    internal void Stop() { _player.Stop(); _player.Close(); _ended?.TrySetCanceled(); _ended = null; }
+    internal void Stop() { _notificationSpeech?.Dispose(); _notificationSpeech = null; _player.Stop(); _player.Close(); _ended?.TrySetCanceled(); _ended = null; }
     public void Dispose() => Stop();
 }

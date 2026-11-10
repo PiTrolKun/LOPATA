@@ -48,6 +48,8 @@ public sealed partial class MusicPlayerControl : UserControl, IDisposable
     public MusicPlayerControl(IMusicAudioPlayer audio)
     {
         _audio = audio; AutomationProperties.SetAutomationId(this, "Music.Audio.Player");
+        if (audio is MusicAudioPlayer actual) actual.NotificationContexts = () =>
+            [.. Services.VoiceNotifications.VoiceNotificationContext.Element(this), .. Services.VoiceNotifications.VoiceNotificationContext.Project(_track?.JobId)];
         var root = new StackPanel { Margin = new(12, 4, 12, 4) };
         _title.FontWeight = FontWeights.SemiBold; root.Children.Add(_title);
         var tools = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };

@@ -34,6 +34,7 @@ public sealed class MusicWorkspaceControl : UserControl, IDisposable
         Player = audioPlayer is null ? new() : new(audioPlayer);
         Generation = new(outputPreferences);
         AutomationProperties.SetAutomationId(this, "Music.Workspace");
+        Services.VoiceNotifications.VoiceNotificationContext.Bind(this, () => Projects?.Current.Id);
         var grid = new Grid { Margin = new(8) };
         var editorWidth = new ColumnDefinition { Width = new(360), MinWidth = 250 };
         grid.ColumnDefinitions.Add(editorWidth);

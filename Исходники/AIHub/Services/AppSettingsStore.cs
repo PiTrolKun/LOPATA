@@ -34,6 +34,7 @@ public sealed class AppSettingsStore
             settings.ChatSpeech ??= new();
             settings.ScreenCapture.Normalize();
             settings.CoreVoice ??= new CoreVoiceSettings();
+            settings.VoiceNotifications ??= new VoiceNotificationSettings();
             settings.CoreAutonomy ??= new CoreAutonomySettings();
             settings.ModelDownloads ??= new ModelDownloadSettings();
             settings.FileViewer ??= new FileViewerSettings();

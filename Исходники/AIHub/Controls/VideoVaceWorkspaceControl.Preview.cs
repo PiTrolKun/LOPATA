@@ -1,3 +1,4 @@
+using AIHub.Services.VoiceNotifications;
 using System.IO;
 using System.Windows;
 using System.Windows.Automation;
@@ -56,14 +57,14 @@ internal sealed partial class VideoVaceWorkspaceControl
     private void TogglePlayback()
     {
         if (_player.Source is null) return;
-        if (_playing) { _player.Pause(); _playTimer.Stop(); _play.Content = "▶"; }
-        else { _player.Play(); _playTimer.Start(); _play.Content = "Ⅱ"; }
+        if (_playing) { VoiceMediaElement.Pause(_player); _playTimer.Stop(); _play.Content = "▶"; }
+        else { VoiceMediaElement.Play(_player); _playTimer.Start(); _play.Content = "Ⅱ"; }
         _playing = !_playing;
     }
     private void DrawPlaybackTime() => _time.Text = _player.Position.ToString(@"hh\:mm\:ss") + " / " +
         (_player.NaturalDuration.HasTimeSpan ? _player.NaturalDuration.TimeSpan : TimeSpan.Zero).ToString(@"hh\:mm\:ss");
     private void PlaybackTick(object? sender, EventArgs args) => DrawPlaybackTime();
-    private void ClosePlayback() { _playTimer.Stop(); _player.Close(); _playing = false; _playingPath = null; _play.Content = "▶"; _play.IsEnabled = false; _time.Text = "00:00:00 / 00:00:00"; }
+    private void ClosePlayback() { _playTimer.Stop(); VoiceMediaElement.Close(_player); _playing = false; _playingPath = null; _play.Content = "▶"; _play.IsEnabled = false; _time.Text = "00:00:00 / 00:00:00"; }
     private void ResizeCanvas()
     {
         var ratio = _player.NaturalVideoWidth > 0 && _player.NaturalVideoHeight > 0 ? _player.NaturalVideoWidth / (double)_player.NaturalVideoHeight : S.Width / (double)S.Height;

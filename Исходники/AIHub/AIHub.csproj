@@ -21,6 +21,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Assets\VoiceNotifications\*.json;Assets\VoiceNotifications\*.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Examples\SpeechAssets\*.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\OfficeUnicode\characters.tsv.gz" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\OfficeUnicode\manifest.json" LogicalName="AIHub.OfficeUnicodeManifest" />
     <Content Include="Tools\OfficeTextSurface\public\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

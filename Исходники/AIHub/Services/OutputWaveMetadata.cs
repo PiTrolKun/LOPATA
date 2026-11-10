@@ -4,7 +4,7 @@ namespace AIHub.Services;
 
 public static class OutputWaveMetadata
 {
-    public static async Task ExportAsync(string source, string destination, OutputProvenance provenance)
+    public static async Task ExportAsync(string source, string destination, OutputProvenance provenance, bool recordCollection = true)
     {
         var temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
@@ -14,7 +14,7 @@ public static class OutputWaveMetadata
                 new Dictionary<string, string> { ["software"] = "LOPATA " + provenance.ProgramVersion,
                     ["encoded_by"] = "LOPATA", ["LOPATA_PROVENANCE"] = provenance.Json() }, [], CancellationToken.None);
             File.Move(temporary, destination, true);
-            CollectionExportJournal.Record(destination, provenance.Scenario);
+            if (recordCollection) CollectionExportJournal.Record(destination, provenance.Scenario);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

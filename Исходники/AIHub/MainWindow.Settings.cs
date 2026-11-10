@@ -76,12 +76,14 @@ public partial class MainWindow
         InitializeEngineSetSettings();
         var engines = _settingsCards.Card(_settingsCards.Label("EngineSets.Title", true),
             _settingsCards.Label("EngineSets.Help"), _engineSets);
+        if (SettingsLanguageCard.Child is StackPanel translations)
+            translations.Children.Add(_settingsCards.Action("Settings.LanguageImport", "VoiceNotifications.Import", (_, _) => _ = ImportVoiceNotificationPackageAsync()));
 
         void Section(string id, string icon, params FrameworkElement[] cards) => SettingsNavigator.AddSection(id, icon,
             "Settings.Navigation." + id + ".Title", "Settings.Navigation." + id + ".Help", cards);
         Section("general", "\uE713", general, startup, windowsIntegration, folders, generationFolder);
         Section("interface", "\uE771", theme, SettingsLanguageCard, SettingsInterfaceCard);
-        Section("voice", "\uE767", SettingsVoiceCard, _settingsCards.Card(_dictationSettings));
+        Section("voice", "\uE767", CreateVoiceNotificationSettings(), SettingsVoiceCard, _settingsCards.Card(_dictationSettings));
         Section("models", "\uE8F1", SettingsAutonomyCard, ManagedModelsExpander);
         Section("components", "\uE74C", ProcessingComponentsExpander, ViewerComponentsExpander, _settingsCards.Card(ComponentLicensesButton));
         Section("engines", "\uE713", engines);
@@ -109,6 +111,7 @@ public partial class MainWindow
         Target("scale", "interface", "Settings.TextSize", "Settings.InterfaceHelp", InterfaceTextScaleSlider);
         Target("window", "interface", "Settings.WindowStartup", "Settings.InterfaceHelp", WindowStartupModeComboBox);
         Target("voice", "voice", "Settings.CoreVoiceEnabled", "Settings.CoreVoiceHelp", CoreVoiceEnabledCheckBox);
+        Target("voice-notifications", "voice", "VoiceNotifications.Title", "VoiceNotifications.Help", _voiceNotificationSettings);
         Target("dictation", "voice", "Dictation.Title", "Dictation.SettingsHelp", _dictationSettings);
         Target("provider", "voice", "Settings.CoreVoiceProvider", "Settings.CoreVoiceHelp", CoreVoiceProviderComboBox);
         Target("volume", "voice", "Settings.CoreVoiceVolume", "Settings.CoreVoiceHelp", CoreVoiceVolumeSlider);

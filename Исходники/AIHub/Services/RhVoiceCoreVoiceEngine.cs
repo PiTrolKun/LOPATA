@@ -88,6 +88,7 @@ public sealed class RhVoiceCoreVoiceEngine : ICoreVoiceEngine
                 completion.Task,
                 fallbackCts.Token);
             using var registration = cancellationToken.Register(Cancel);
+            using var notificationSpeech = VoiceNotifications.VoicePlaybackHub.RegisterSpeech(synthesizer.Pause, synthesizer.Resume);
             synthesizer.SpeakAsync(composition.Text);
             var completed = await completion.Task.ConfigureAwait(false);
             fallbackCts.Cancel();
@@ -201,7 +202,8 @@ public sealed class RhVoiceCoreVoiceEngine : ICoreVoiceEngine
         }
 
         var timeline = SpeechTimelineBuilder.BuildEstimated(composition.Text, rate);
-        var started = Environment.TickCount64;
+        var previous = Environment.TickCount64;
+        var elapsed = 0L;
         foreach (var cue in timeline)
         {
             if (hasNativeEvents() || completion.IsCompleted)
@@ -209,10 +211,13 @@ public sealed class RhVoiceCoreVoiceEngine : ICoreVoiceEngine
                 return;
             }
 
-            var delay = cue.TimeMilliseconds - (int)(Environment.TickCount64 - started);
-            if (delay > 0)
+            while (cue.TimeMilliseconds > elapsed || VoiceNotifications.VoicePlaybackHub.NotificationsInterrupting)
             {
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                if (hasNativeEvents() || completion.IsCompleted) return;
+                await Task.Delay(20, cancellationToken).ConfigureAwait(false);
+                var now = Environment.TickCount64;
+                if (!VoiceNotifications.VoicePlaybackHub.NotificationsInterrupting) elapsed += now - previous;
+                previous = now;
             }
 
             progress.Report(CreateProgress(composition, cue.VisibleCharacters, false, false));

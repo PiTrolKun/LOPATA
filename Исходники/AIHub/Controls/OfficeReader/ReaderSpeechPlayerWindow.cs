@@ -28,6 +28,7 @@ internal sealed class ReaderSpeechPlayerWindow : Window
     private readonly ReaderSpeechResult _audio;
     private readonly string _document;
     private bool _playing, _opened, _updating, _dragging, _disposed;
+    private AIHub.Services.VoiceNotifications.VoicePlaybackHub.SpeechLease? _notificationSpeech;
     internal Task PendingSave { get; private set; } = Task.CompletedTask;
 
     internal ReaderSpeechPlayerWindow(Window owner, Func<string, string> localize, ReaderSpeechResult audio, string document)
@@ -69,13 +70,14 @@ internal sealed class ReaderSpeechPlayerWindow : Window
         _position.AddHandler(Thumb.DragCompletedEvent, new DragCompletedEventHandler((_, _) => { _dragging = false; if (_opened) _media.Position = TimeSpan.FromSeconds(_position.Value); }));
         _media.MediaOpened += (_, _) => { if (_disposed) return; _opened = true;
             if (_media.NaturalDuration.HasTimeSpan) _position.Maximum = _media.NaturalDuration.TimeSpan.TotalSeconds;
-            _playing = true; _media.Play(); UpdatePlay(); };
-        _media.MediaEnded += (_, _) => { _playing = false; _media.Pause(); _position.Value = _position.Maximum; UpdatePlay(); };
-        _media.MediaFailed += (_, _) => { _playing = false; _status.Text = T("PlaybackFailed"); UpdatePlay(); };
+            _notificationSpeech = AIHub.Services.VoiceNotifications.VoicePlaybackHub.RegisterSpeech(_media.Pause, _media.Play);
+            _playing = true; if (!_notificationSpeech.IsSuspended) _media.Play(); UpdatePlay(); };
+        _media.MediaEnded += (_, _) => { _playing = false; _notificationSpeech?.SetActive(false); _media.Pause(); _position.Value = _position.Maximum; UpdatePlay(); };
+        _media.MediaFailed += (_, _) => { _playing = false; _notificationSpeech?.SetActive(false); _status.Text = T("PlaybackFailed"); UpdatePlay(); };
         _timer.Tick += (_, _) => { if (_disposed || !_opened || _dragging) return;
             _updating = true; _position.Value = Math.Clamp(_media.Position.TotalSeconds, 0, _position.Maximum); _updating = false; UpdateTime(); };
         Loaded += (_, _) => { _media.Open(new Uri(audio.Path)); _timer.Start(); };
-        Closed += (_, _) => { _disposed = true; _timer.Stop(); _media.Close(); };
+        Closed += (_, _) => { _disposed = true; _notificationSpeech?.Dispose(); _timer.Stop(); _media.Close(); };
         Left = Math.Max(SystemParameters.VirtualScreenLeft, Math.Min(owner.Left + owner.ActualWidth - Width - 25, SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - Width));
         Top = Math.Max(SystemParameters.VirtualScreenTop, owner.Top + 90);
     }
@@ -91,8 +93,10 @@ internal sealed class ReaderSpeechPlayerWindow : Window
     {
         if (!_opened) return;
         if (_playing) _media.Pause();
-        else { if (_position.Value >= _position.Maximum - .05) { _media.Position = TimeSpan.Zero; _position.Value = 0; } _media.Play(); }
-        _playing = !_playing; UpdatePlay();
+        else { if (_position.Value >= _position.Maximum - .05) { _media.Position = TimeSpan.Zero; _position.Value = 0; } }
+        _playing = !_playing; _notificationSpeech?.SetActive(_playing);
+        if (_playing && _notificationSpeech?.IsSuspended != true) _media.Play();
+        UpdatePlay();
     }
     private void UpdatePlay()
     { _play.Content = _playing ? "Ⅱ" : "▶"; _play.ToolTip = T(_playing ? "Pause" : "Play"); AutomationProperties.SetName(_play, (string)_play.ToolTip); }

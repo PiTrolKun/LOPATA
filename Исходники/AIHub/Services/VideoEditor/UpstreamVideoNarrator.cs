@@ -11,6 +11,7 @@ internal sealed class UpstreamVideoNarrator(string id, ManagedModelLibraryStore?
     internal Func<OutputModelUse, Task>? BeforeInference { get; set; }
     private readonly ManagedModelLibraryStore _store = library ?? new();
     private readonly VideoNarratorSession _session = new();
+    internal bool IsResident => _session.IsRunning;
     private sealed record CachedRuntime(string Key, string Policy, ManagedPythonSelection Runtime, int Context);
     private CachedRuntime? _cachedRuntime;
     public IReadOnlyList<VideoVoice> Voices => VideoNarratorCatalog.Get(id).Languages.Select(l => new VideoVoice(id, VideoNarratorCatalog.Get(id).Name, l,
@@ -83,7 +84,7 @@ internal sealed class UpstreamVideoNarrator(string id, ManagedModelLibraryStore?
             id == "kitten2" && runtime.Device == "cpu" ? new(runtime.Entry.Id, "Python interpreter", PinnedPythonWheelSet.PythonVersion, "speech interpreter")
             : new(runtime.Entry.Id, "Python / PyTorch · " + runtime.Profile.Flavor(), runtime.Profile.TorchVersion(), "speech hardware runtime · " + runtime.Device) };
         if (id == "kitten2" && runtime.Device != "cpu") dependencies.AddRange(VideoNarratorCatalog.Pin(id).AdditionalModels ?? []);
-        await OutputWaveMetadata.ExportAsync(output, marked, new OutputProvenance { Scenario = "video-editor/narration", ModelHistory = "recorded", Models = new[] { facts }.Concat(dependencies).ToArray() });
+        await OutputWaveMetadata.ExportAsync(output, marked, new OutputProvenance { Scenario = "video-editor/narration", ModelHistory = "recorded", Models = new[] { facts }.Concat(dependencies).ToArray() }, VideoNarrationWorkspace.PublishOutput);
         return new(marked, facts, AdditionalModels: dependencies.ToArray());
     }
     public void Dispose() { _session.Dispose(); _cachedRuntime = null; }

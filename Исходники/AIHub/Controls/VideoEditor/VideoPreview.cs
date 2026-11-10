@@ -15,6 +15,8 @@ internal sealed class VideoPreview : WebView2
     private readonly HashSet<Stream> _streams = [];
     private CoreWebView2Environment? _environment;
     public bool Ready { get; private set; }
+    private string[] _notificationContexts = [];
+    public VideoPreview() => Unloaded += (_, _) => AIHub.Services.VoiceNotifications.VoicePlaybackHub.MediaState(this, false);
     public event Action<double>? PositionChanged;
     public event Action<string, double, double, double, double>? FramingChanged;
     public event Action<string>? FramingSelected;
@@ -41,6 +43,8 @@ internal sealed class VideoPreview : WebView2
             try {
                 using var message = JsonDocument.Parse(e.WebMessageAsJson); var value = message.RootElement;
                 if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var at) && double.IsFinite(at) && at >= 0) PositionChanged?.Invoke(at);
+                else if (value.ValueKind == JsonValueKind.Object && value.GetProperty("kind").GetString() == "playback")
+                    AIHub.Services.VoiceNotifications.VoicePlaybackHub.MediaState(this, value.GetProperty("value").GetBoolean(), _notificationContexts);
                 else if (value.ValueKind == JsonValueKind.Object && value.GetProperty("kind").GetString() == "expanded" && value.GetProperty("value").ValueKind is JsonValueKind.True or JsonValueKind.False) ExpandedRequested?.Invoke(value.GetProperty("value").GetBoolean());
                 else if (value.ValueKind == JsonValueKind.Object && value.GetProperty("kind").GetString() == "framingSelect") {
                     var id = value.GetProperty("clipId").GetString(); if (Guid.TryParseExact(id, "N", out var selectedGuid)) FramingSelected?.Invoke(id!);
@@ -66,6 +70,8 @@ internal sealed class VideoPreview : WebView2
     }
     public async Task LoadAsync(VideoProject project, double at, bool subtitles, string? subtitleTrack = null, string? framingClip = null, bool framingEnabled = false)
     {
+        _notificationContexts = [.. AIHub.Services.VoiceNotifications.VoiceNotificationContext.Project(project.Id),
+            .. AIHub.Services.VoiceNotifications.VoiceNotificationContext.Element(this)];
         if (!Ready) return; _files.Clear();
         var urls = new Dictionary<string, string>();
         var audioUrls = new Dictionary<string, string>();
@@ -83,7 +89,11 @@ internal sealed class VideoPreview : WebView2
     public Task SetFramingAsync(string? id, bool enabled = true) => Ready ? CoreWebView2.ExecuteScriptAsync("window.lopata.framing(" + JsonSerializer.Serialize(id) + "," + (enabled ? "true" : "false") + ")") : Task.CompletedTask;
     public Task SetExpandedAsync(bool expanded, string title) => Ready ? CoreWebView2.ExecuteScriptAsync("window.lopata.expanded(" + JsonSerializer.Serialize(new { expanded, title }) + ")") : Task.CompletedTask;
     public Task SeekAsync(double at) => Ready ? CoreWebView2.ExecuteScriptAsync("window.lopata.seek(" + VideoExport.N(at) + ")") : Task.CompletedTask;
-    public Task PlayAsync(bool play) => Ready ? CoreWebView2.ExecuteScriptAsync("window.lopata.play(" + (play ? "true" : "false") + ")") : Task.CompletedTask;
+    public Task PlayAsync(bool play)
+    {
+        AIHub.Services.VoiceNotifications.VoicePlaybackHub.MediaState(this, Ready && play, _notificationContexts);
+        return Ready ? CoreWebView2.ExecuteScriptAsync("window.lopata.play(" + (play ? "true" : "false") + ")") : Task.CompletedTask;
+    }
     public Task SetVolumesAsync(VideoProject project) => Ready ? CoreWebView2.ExecuteScriptAsync("window.lopata.volumes(" + JsonSerializer.Serialize(new {
         tracks = project.Tracks.Where(t => t.Kind == "audio").ToDictionary(t => t.Id, t => t.Volume),
         clips = project.Tracks.Where(t => t.Kind == "audio").SelectMany(t => t.Clips).ToDictionary(c => c.Id, c => c.Volume)

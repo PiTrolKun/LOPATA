@@ -16,6 +16,8 @@ public sealed class AppSettings
 
     public CoreVoiceSettings CoreVoice { get; set; } = new();
 
+    public VoiceNotificationSettings VoiceNotifications { get; set; } = new();
+
     public CoreAutonomySettings CoreAutonomy { get; set; } = new();
 
     public ModelDownloadSettings ModelDownloads { get; set; } = new();

@@ -28,7 +28,8 @@ internal sealed class VideoNarratorSession : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             var key = Key(runtime, overlay, expanded, modelKey);
-            if (!IsRunning || _key != key) Start(runtime, overlay, expanded, output, component, key);
+            var firstResponse = !IsRunning || _key != key;
+            if (firstResponse) Start(runtime, overlay, expanded, output, component, key);
             var process = _process!; var id = Guid.NewGuid().ToString("N");
             await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new { id, request, output }).AsMemory(), token);
             await process.StandardInput.FlushAsync(token);
@@ -47,6 +48,7 @@ internal sealed class VideoNarratorSession : IDisposable
                 using var response = JsonDocument.Parse(line[prefix.Length..]); var root = response.RootElement;
                 if (root.GetProperty("id").GetString() != id) throw new IOException("Narrator returned an out-of-order response.");
                 if (!root.GetProperty("ok").GetBoolean()) throw new IOException("Narrator failed: " + root.GetProperty("error").GetString() + "\n" + Tail());
+                if (firstResponse) VoiceNotifications.VoiceNotificationEvents.Publish("model.loaded", family: "model");
                 return;
             }
             await process.WaitForExitAsync(token).ConfigureAwait(false);
@@ -56,7 +58,7 @@ internal sealed class VideoNarratorSession : IDisposable
             OwnedProcessRegistry.Log("narrator_native_exit", component, detail: failure);
             throw new IOException("Narrator exited with code " + process.ExitCode + ": " + Tail());
         }
-        catch { Stop(); throw; }
+        catch (Exception error) { Stop(); if (error is not OperationCanceledException) VoiceNotifications.VoiceNotificationEvents.Publish("model.failed", family: "model"); throw; }
         finally { _gate.Release(); }
     }
     private void Start(ManagedPythonSelection runtime, string overlay, string expanded, string output, string component, string key)
@@ -71,6 +73,7 @@ internal sealed class VideoNarratorSession : IDisposable
         ManagedPythonLaunch.ScriptArguments(start, [script, "--serve", overlay, expanded, runtime.Profile.Flavor(), runtime.Device]);
         _log = new StreamWriter(Path.Combine(Path.GetDirectoryName(output)!, "worker.log"), false, new UTF8Encoding(false)) { AutoFlush = true };
         _process = OwnedProcessRegistry.Shared.Start(start, component); _key = key;
+        VoiceNotifications.VoiceNotificationEvents.Publish("model.load", family: "model");
         _stderr = DrainAsync(_process.StandardError);
     }
     private async Task DrainAsync(StreamReader stream)
@@ -103,6 +106,7 @@ internal sealed class VideoNarratorSession : IDisposable
             { if (!process.HasExited) { process.Kill(true); process.WaitForExit(5000); } }
         }
         try { _stderr?.GetAwaiter().GetResult(); } catch (Exception error) when (error is IOException or ObjectDisposedException) { }
+        if (process is { HasExited: true }) VoiceNotifications.VoiceNotificationEvents.Publish("model.retired", family: "model");
         process?.Dispose();
         _stderr = null;
         lock (_tail) { _log?.Dispose(); _log = null; _logged = 0; _tail.Clear(); }
