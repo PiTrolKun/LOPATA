@@ -1,3 +1,11 @@
+## 2026-11-11 — 1C assistance, 0.7.74-dev
+
+AvalonEdit 6.3.1.120 is bundled under MIT. Source revision: https://github.com/icsharpcode/AvalonEdit/tree/862415d51eddc9eac93f462dbc522ffbf929cd52 . Original license: Licenses/texts/OneC-AvalonEdit-MIT.txt. Copyright: AlphaSierraPapa / AvalonEdit contributors.
+
+BSL Language Server 1.0.7 is an optional download, executed as a separate process. Complete analyzer source and original LGPL-3.0 license: https://github.com/1c-syntax/bsl-language-server/tree/v1.0.7 . The official Windows archive includes OpenJDK 25.0.4 under GPL-2.0 with Classpath Exception and additional notices. The original runtime/legal directory and JAR dependency notices remain intact. Original LGPL, GPL3 and Java license texts are included in the component license catalog. The application does not modify or relink the checker/JRE or install Java in Windows.
+
+Pinned archive: bsl-language-server_win.zip, 168253085 bytes, SHA-256 fed523e3b6d1d64c65a0df08ff74088c4d26eb3c550a2ff776c84ac2c8655c30. Tools/OneC/bsl-runtime-files.json pins all 319 extracted files. No proprietary 1C platform, database, commercial configuration or OneScript execution runtime is redistributed. Optional acknowledgements do not change historical base terms.
+
 ## 2026-11-09 — Unicode character library and typing suggestions
 
 LOPATA bundles a generated character and emoji catalogue from Unicode 18.0.0

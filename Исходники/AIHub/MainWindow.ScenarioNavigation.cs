@@ -30,6 +30,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.OneC:
+                    ScenarioNavigationPage.ShowOneC(this);
+                    break;
                 case ScenarioNavigationCatalog.SpeechAssets:
                     ScenarioNavigationPage.ShowSpeechAssets(this);
                     break;

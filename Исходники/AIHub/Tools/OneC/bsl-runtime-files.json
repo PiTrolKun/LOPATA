@@ -1,0 +1,1597 @@
+[
+  {
+    "Path": "bsl-language-server/bsl-language-server.exe",
+    "Size": 524800,
+    "Sha256": "143324f254383bc61b3281fb93ad72381818ca6a58be3b3dc2f6fe5b87308eb4"
+  },
+  {
+    "Path": "bsl-language-server/app/.jpackage.xml",
+    "Size": 256,
+    "Sha256": "05c5c9e0701f012704fdb3a7ce44f8203043844105820084d753655c86556c41"
+  },
+  {
+    "Path": "bsl-language-server/app/bsl-language-server-1.0.7-exec.jar",
+    "Size": 130182893,
+    "Sha256": "6bb4b8c1f0016351a050f81b55b064cd0784d7e93eecb7e5478e694ae538175e"
+  },
+  {
+    "Path": "bsl-language-server/app/bsl-language-server.cfg",
+    "Size": 149,
+    "Sha256": "e371b704d615aa96bc7ab4ee748c4cc87677d3afb03410a4d2503d1760cd4690"
+  },
+  {
+    "Path": "bsl-language-server/runtime/release",
+    "Size": 795,
+    "Sha256": "7be455e3ee3bbe8f25f3faefe9c011eb942c61659d8bd4f9ae6e35c710f08b2e"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-console-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "869ec6bc79d1da594b0db2cfa510472ca781ffd826acbe7716198415ea3a3605"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-console-l1-2-0.dll",
+    "Size": 21960,
+    "Sha256": "69a12b4beba7e6cf1a9b7263e2c6a494a60ddbbed0bd8c40920c51179f571d99"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-datetime-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "60675dfc2cb2af87456032d28d454baa4821d6b1921cb03f12a2891def445fd6"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-debug-l1-1-0.dll",
+    "Size": 21960,
+    "Sha256": "3182765b6cae55cf4c67b9cb5b6f0b037f323585950ff9b6301b59e5e5acf780"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-errorhandling-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "3746169e2226c52c7b930bbffc8f3e263283d559d3237c4e193cbb07abaced1c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-fibers-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "7ad9720c4999b88c8b8db1dcb1ee765f374900b489b2f09bb40e4951b68b0aab"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-fibers-l1-1-1.dll",
+    "Size": 21960,
+    "Sha256": "6599741ffe12d3e90ef2b456b64cee90425ff995bc0d1c3cd9c754ddba6697ae"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-file-l1-1-0.dll",
+    "Size": 26056,
+    "Sha256": "3a7bdd492a945a962eb18f486ae7bcddc2bbd5b43a12eb461057a6cdc5657f5f"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-file-l1-2-0.dll",
+    "Size": 22072,
+    "Sha256": "1b384401b534ca9a61dce7f51c8d54b9eabb625f86569bf09e449be5724c6ca0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-file-l2-1-0.dll",
+    "Size": 22056,
+    "Sha256": "1d2f1efefd0a802190f0257aac7e1589d08ffbaea550c561c69c1827e57b55e7"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-handle-l1-1-0.dll",
+    "Size": 22072,
+    "Sha256": "819976a22a6648536ba0c184d80d093d867d513849baa8f7011fade104a7f8c0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-heap-l1-1-0.dll",
+    "Size": 22072,
+    "Sha256": "83ca55315263d7a42d16cf032e67b79359052321c43c5df97d687c2f4d84a79c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-interlocked-l1-1-0.dll",
+    "Size": 22072,
+    "Sha256": "7e32a4463c99e54dd1366658b4284020e1a3384c4c366761116309dae49ee831"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-kernel32-legacy-l1-1-1.dll",
+    "Size": 21960,
+    "Sha256": "82bb3c053e3c8f4ed9127d3a4d0d5bea73d13b98a023073ea0f039ca96405c09"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-libraryloader-l1-1-0.dll",
+    "Size": 21960,
+    "Sha256": "c29c1592af0578c58f2f37e77a044573e8c9fda4daba184c3ac5032b061693a5"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-localization-l1-2-0.dll",
+    "Size": 22056,
+    "Sha256": "2fb638be18863ef6077fef2b7f4ebda92527b8e19d2e5b39eba27b3bf96a7fed"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-memory-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "7aacd77d48b5a7595c59ef95c09d65bd9ee6644206b0878a8108398563b09515"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-namedpipe-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "c184419f20f5ea131239e627dcad237da804a5fd21b446846f5c0d60b06a7b49"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-processenvironment-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "9ab3de163dd167a9423946c308a6f225e22172e8547ccf154e0269d258588df7"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-processthreads-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "f5b2cd5c8fbe89ac55a09b6939cfacdd0861ff47e1fc3df300412603fa96e00b"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-processthreads-l1-1-1.dll",
+    "Size": 22072,
+    "Sha256": "5a3d41a750d1d6714232448193e57ab7d8fd718ba9cec24c7afc71f69886dae3"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-profile-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "23a1324112574ad2f7d903a881592354e8fe915ba3086e830b9dc49cfbf7154c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-rtlsupport-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "17423b1dfc0d5c9246a1b4c50bce5af931b186ad66268761b2611e611d9adbb3"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-string-l1-1-0.dll",
+    "Size": 22072,
+    "Sha256": "ac5a66b65ead96dfbc63afd947601bd276c1c5ede2a7acc0d580b02ef104892a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-synch-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "2d577cdae281cd49141a87340d21ee3b372a297ef9ce35e82cf449dd352f380d"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-synch-l1-2-0.dll",
+    "Size": 22072,
+    "Sha256": "220a7cee500b92a005b58d45006b1b98545fcd2040dda5d3d750fe2e6de5c62b"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-sysinfo-l1-1-0.dll",
+    "Size": 21960,
+    "Sha256": "371442d516a47a8949945f85c6bb0fe3c3b88731de07a4ff457c2b041c928cfd"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-sysinfo-l1-2-0.dll",
+    "Size": 21960,
+    "Sha256": "da65cf54767305c74eaf35e39ac8b7ff472c2df5e22a84e4fc465e2448d2fea3"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-timezone-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "9dae313de05c31ab6583545323e422dd1bdaec4aa26e81cbea0d5b69b632fd0c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-core-util-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "d627df017ddcf7472c761f9796cb55fc7a2347f05cc897bf6c7c29aee8e4dd0c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-conio-l1-1-0.dll",
+    "Size": 22072,
+    "Sha256": "4324863a74391b29229e5376020de3e1a04f436abbd4604e305307fde4601fa7"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-convert-l1-1-0.dll",
+    "Size": 26040,
+    "Sha256": "6f997e4a9837f42295fa25f45cb564f5efa93c99768e2a2e2643008ecffe97b0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-environment-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "3c0893659c504d16984d6b87c61c98fa050d60473ff77e294f69fdb7fae155bb"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-filesystem-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "924099811552d0e9623d220fd9f9348a14d44ef08694a15d442010193574b1fe"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-heap-l1-1-0.dll",
+    "Size": 22056,
+    "Sha256": "2cfc2c7c376630b595e3582ccd2dda019f82ae5dc1665d34d3621e2c62e1a868"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-locale-l1-1-0.dll",
+    "Size": 22072,
+    "Sha256": "3c2bc1ebdcb4c6fedefc5b82419a1a4b5ba035c3f5453e9d083dccdbfe2d9e95"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-math-l1-1-0.dll",
+    "Size": 30248,
+    "Sha256": "930fbbcfd3fbd97bfc2c0174f059ff48f33fa54274e409ed6d629a7230e45aa0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-multibyte-l1-1-0.dll",
+    "Size": 30264,
+    "Sha256": "ebf235dce2322da2bf32ff0ddc0e2b0a159b1360ee0a07e3604f621fca883125"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-private-l1-1-0.dll",
+    "Size": 75320,
+    "Sha256": "0b6c38eae2ba2929b5a25393766cf66028b0d5d2cd51c218528a8df9f62cafee"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-process-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "4efdca4ac7819401a586e2abebc3b858ba8ba0b13ad296c6afacd583500f2575"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-runtime-l1-1-0.dll",
+    "Size": 26168,
+    "Sha256": "5e9837abf4517eb8f74edcf7ea08a3d32916e253d9c24663869dda40cf7b0280"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-stdio-l1-1-0.dll",
+    "Size": 26168,
+    "Sha256": "f2a7e41ededd62b2c192fe6381c8cc33f9bd223164ffc8b38623c9220c009ccb"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-string-l1-1-0.dll",
+    "Size": 26168,
+    "Sha256": "0b337649b564a760abb57e21fb2a755cff080a604034b71c3e8a3cc48c7da71d"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-time-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "63a56aa00ca3bec9225e516ccd336003fc4145c1c1439c7d4d9925d8be24c0e7"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/api-ms-win-crt-utility-l1-1-0.dll",
+    "Size": 21944,
+    "Sha256": "dc75e73ff3f294ada7e9646b51b2ed137f5c26364cbbd71f36a8f5029a3111db"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/attach.dll",
+    "Size": 19968,
+    "Sha256": "dd643560e0a701b000483e4406b753c1325c78ad68a46b69bf35ea198973698b"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/awt.dll",
+    "Size": 1404928,
+    "Sha256": "2c62b37fa7ffef0ce8b934c62701a3523fe577b1f3b2bfb77247351b7b3e9cf2"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/dt_shmem.dll",
+    "Size": 26624,
+    "Sha256": "cf277875a96db8a2a49725d051bf379835fdf35081df6269088a9baf42768a56"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/dt_socket.dll",
+    "Size": 26112,
+    "Sha256": "47e88729dd975f303c706b3ff4fa4b71d0a9b3820c2d9a3b52498bb1316e55d2"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/extnet.dll",
+    "Size": 13824,
+    "Sha256": "65eb480332ca0db1f4c9d75a3567fbc5aab462aabae4de7b8d7ee7f5ad81d2f8"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/fontmanager.dll",
+    "Size": 1008128,
+    "Sha256": "0e7520f04840f4ac3ed115b8d9d62e5f742e9de50f78807b8291ecb91808082d"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/freetype.dll",
+    "Size": 547840,
+    "Sha256": "6a024d5ddbbeea18bc06e7abf7109bc43b6bf6ec15db82bc8318a7d0f3f2b2b9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/instrument.dll",
+    "Size": 41984,
+    "Sha256": "4604bdf2e62c3748e6663d729ab26002bb0cb906d8ab2c5f6a37045f1f3eaa08"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/j2gss.dll",
+    "Size": 41984,
+    "Sha256": "a83804d31d443b7039ad674b75b265e03390e0e6402dfd9ad30c98d81fa30661"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/j2pcsc.dll",
+    "Size": 15872,
+    "Sha256": "07c4f58921694d085afffbbd61aa33e6069487aac9de0f557346f4d3e08e3fe0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/jaas.dll",
+    "Size": 17920,
+    "Sha256": "742894a434fbe1614871e30d085764676c4a6cc9458ec3cfdb913b3fa8905de4"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/java.dll",
+    "Size": 106496,
+    "Sha256": "68e726ccb98cf74a6c60c8ca3e2e30b640c16b1133ac76ef458682555c923658"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/javaaccessbridge.dll",
+    "Size": 295424,
+    "Sha256": "7753adc8cb40ad72c46caf4db16e45adad64440e983069359477b40c0274578f"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/javajpeg.dll",
+    "Size": 169472,
+    "Sha256": "f55c94e8302d4f0f02effaca05e6dd7edc7b8932c6f4847f25767e884449e7f2"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/jawt.dll",
+    "Size": 10752,
+    "Sha256": "26fdade7862786ffc33ed73a5921489ee73ae34bf745fd86cde757f2f3db9642"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/jdwp.dll",
+    "Size": 229376,
+    "Sha256": "f9b202c5708b52a42c9f558b721e2057dadcee36b63a0d99a8b137d5e70f324f"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/jimage.dll",
+    "Size": 23040,
+    "Sha256": "267cbf6ca5994d982ba0e781b06acbf0a4b48c5e6a77e54047bda5724e5f4eb0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/jli.dll",
+    "Size": 76800,
+    "Sha256": "fc90c307ef375a01740a2a51bbdad318c75802612ff88df8f851cdb8cefa2518"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/jsound.dll",
+    "Size": 51200,
+    "Sha256": "6d1573d4a381ae213f5bf9a6c114c247a1e6f702dcb969fb3ae9ad41a868e3dc"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/jsvml.dll",
+    "Size": 859136,
+    "Sha256": "769ddf3838705541559a606d5c095fa1f1822beccdf43759fc05624f9d051860"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/lcms.dll",
+    "Size": 248832,
+    "Sha256": "6cb133123d3d9ee984da93810dde281fac3f425c91f0e1f129a29d3bb97b1065"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/management.dll",
+    "Size": 18944,
+    "Sha256": "e4bde7b40932f95b8348c031b2fbbce980ce335e1102f3839db186c2041ca173"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/management_agent.dll",
+    "Size": 14336,
+    "Sha256": "5f6a3e05eacb0e623a60feb7fe7dc9e2b083404c8d1fd40152b5505b7ad886e6"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/management_ext.dll",
+    "Size": 25600,
+    "Sha256": "95b1ebe48d70c6d3d42e96ea90c4fe89fca6d47e61a0a14d5f9fe2171acec270"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/mlib_image.dll",
+    "Size": 501760,
+    "Sha256": "7150a4e9e74865221292a6130e543a69837cef8bdc68785876202cf2782bb417"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/msvcp140.dll",
+    "Size": 575056,
+    "Sha256": "a4c2229bdc2a2a630acdc095b4d86008e5c3e3bc7773174354f3da4f5beb9cde"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/net.dll",
+    "Size": 49152,
+    "Sha256": "bd57d5e68988e10867a8bef16b4e93ac7b0ad018467cd562d07c61a9319e59e2"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/nio.dll",
+    "Size": 70656,
+    "Sha256": "bde417469ef7fafa4140e6d93eea32dc42c8e2b8950e9244268fab9167b1fe09"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/prefs.dll",
+    "Size": 15360,
+    "Sha256": "0476d09531a19fcb46bc9398c879234949a91e09cefe99e82acf1d955d9a8b0d"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/rmi.dll",
+    "Size": 10752,
+    "Sha256": "905fa5754c71f3c0c334efc8cb799c7533b6f3490b843282c650778d0ac5bf2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/splashscreen.dll",
+    "Size": 199680,
+    "Sha256": "7c9ce2013c8cca663617dc91c99831c79b18cb1c92e888693fa16f54e1a66528"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/sspi_bridge.dll",
+    "Size": 34816,
+    "Sha256": "25cb5407e20f533996021b1253c70790e9aa241cee0a652ab9444c9c1d00a0cd"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/syslookup.dll",
+    "Size": 17408,
+    "Sha256": "b78c15331c74319fee50319481f6a8983fc2c446b0a542d02fecd8beb20b348e"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/ucrtbase.dll",
+    "Size": 1357256,
+    "Sha256": "d404dc9aa843d53d7e276dd078b2cac8d7aa905e2838a1fe8385278e19ba3810"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/vcruntime140.dll",
+    "Size": 119888,
+    "Sha256": "02c6aa0e6e624411a9f19b0360a7865ab15908e26024510e5c38a9c08362c35a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/vcruntime140_1.dll",
+    "Size": 49640,
+    "Sha256": "7dd9aa02e271c68ca6d5f18d651d23a15d7259715af43326578f7dde27f37637"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/verify.dll",
+    "Size": 44544,
+    "Sha256": "dd17fea1b79619de09f9fe94d81f473f7cc61ad73f3ac8528afc23496dcc84fe"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/w2k_lsa_auth.dll",
+    "Size": 21504,
+    "Sha256": "7a0e70ac963837ffd648066f933ca024f34113ebedac1095394715b2873a94d2"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/windowsaccessbridge-64.dll",
+    "Size": 61952,
+    "Sha256": "76b854f7a562c97320924ff5599062aaa5a07bbe978343953f209a167d087dc6"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/zip.dll",
+    "Size": 71680,
+    "Sha256": "0e5d57b7d827115eceb8acbd502ebbeb2c9f8762c67b011c4b63787cfbb1e1fe"
+  },
+  {
+    "Path": "bsl-language-server/runtime/bin/server/jvm.dll",
+    "Size": 15485440,
+    "Sha256": "6eea96a0a97631be545ebbabb54c6c9a720d051891536fa09facb70334a9b84b"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/jaxp-strict.properties.template",
+    "Size": 4937,
+    "Sha256": "3cc9b87633769414b22c24c97ecded8a15df630fe5ab12abca2398d88e31b32b"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/jaxp.properties",
+    "Size": 8222,
+    "Sha256": "d4f45052a100e5aef02b6638a3b9c69b2bdd46155ceb58a52671e5d594c30100"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/logging.properties",
+    "Size": 2740,
+    "Sha256": "8590633e1e8a7d88ffe74cc04189c5c61b1ed4703180cbc851dcd5575efcce74"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/net.properties",
+    "Size": 7404,
+    "Sha256": "594bc40230a0bd7c441fe069989d66e534a6bae2ee5910f9f4bf64e59b583256"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/sound.properties",
+    "Size": 1210,
+    "Sha256": "299c2360b6155eb28990ec49cd21753f97e43442fe8fab03e04f3e213df43a66"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/management/jmxremote.access",
+    "Size": 3997,
+    "Sha256": "0c25d26ee212ca1e8c33f67c3c460d43fe849c3a1d23dbe341148517602b280c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/management/jmxremote.password.template",
+    "Size": 5690,
+    "Sha256": "0273b6a6b9e20e6ce54c5aee70164028e0395063b2b7d39060a40b6495543dbf"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/management/management.properties",
+    "Size": 15015,
+    "Sha256": "75e60327531d34d1ce5eb507db52711a1d926b9c77d14d6b3a392d747105488d"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/security/java.security",
+    "Size": 75867,
+    "Sha256": "8f42977f80b73ed19f941a1e2886de91d61e2c799b22f3e8e370d54c1ce99365"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/security/policy/README.txt",
+    "Size": 2390,
+    "Sha256": "6da0747334b0fea7592fd92614b2bbc8b126535e129b1fee483774d914e98eb5"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/security/policy/limited/default_local.policy",
+    "Size": 647,
+    "Sha256": "2b2627548e61316150d47ffc3e6cad465ca05b3cccd4785eb7d21aa7baa0f441"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/security/policy/limited/default_US_export.policy",
+    "Size": 146,
+    "Sha256": "758b930a526fc670ab7537f8c26321527050a31f5f42149a2dda623c56a0a1a9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/security/policy/limited/exempt_local.policy",
+    "Size": 566,
+    "Sha256": "8c3d7648abcd95a272ce12db870082937f4d7f6878d730d83cb7fbb31eb8b2c9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/security/policy/unlimited/default_local.policy",
+    "Size": 193,
+    "Sha256": "8d8a318e6d90dfd7e26612d2b6385aa704f686ca6134c551f8928418d92b851a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/conf/security/policy/unlimited/default_US_export.policy",
+    "Size": 146,
+    "Sha256": "758b930a526fc670ab7537f8c26321527050a31f5f42149a2dda623c56a0a1a9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/ADDITIONAL_LICENSE_INFO",
+    "Size": 2114,
+    "Sha256": "a69bce275ba7a3570af6579cb0f55682cd75fedfcd49e0e8e9022270c447c916"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/aes.md",
+    "Size": 1444,
+    "Sha256": "45c6d4da48325edfbff3dcf71c704e504c057904435ed23c6d57046d551eb69d"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/ASSEMBLY_EXCEPTION",
+    "Size": 1514,
+    "Sha256": "75292f03bf23d3db7c985aecc191029b93883200721ed23ed34a2e601463df33"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/c-libutl.md",
+    "Size": 1556,
+    "Sha256": "bef40679922d6fdfb7e4ddb223ad6722300f6054ba737bbf6188d60fcec517f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/cldr.md",
+    "Size": 8790,
+    "Sha256": "472e341c36efc1136860ed7a6461a2af4a53ae95d55d1126726340f5ba62b06a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/icu.md",
+    "Size": 4147,
+    "Sha256": "be23ad20a8231d2241b37fcf401548febd8597de8373f89268882020cb7c8818"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/LICENSE",
+    "Size": 19274,
+    "Sha256": "4b9abebc4338048a7c2dc184e9f800deb349366bdf28eb23c2677a77b4c87726"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/public_suffix.md",
+    "Size": 17783,
+    "Sha256": "861de1e4992a7d28f1de25c73cd50d26a94779ebd749c0643fecfa56442c3429"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/siphash.md",
+    "Size": 8256,
+    "Sha256": "5a792b5a74ad2a5f3d6a7ad8b7a841116e58a772c18bc6e392320a365b222c76"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/unicode.md",
+    "Size": 15098,
+    "Sha256": "5194d6760f2e7eccc07804196cc619f84e730fa9d10c0529b71416186f4d12dc"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/wepoll.md",
+    "Size": 1454,
+    "Sha256": "3ac2992770080453b98c42afa807ba4b2c1738ef756b92a55c645f55e7df48f0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.base/zlib.md",
+    "Size": 1010,
+    "Sha256": "c9c70c36a1f0325e8788771906202d42ba6ab4205caca44ec0f665707e83226b"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.compiler/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.compiler/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.compiler/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.datatransfer/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.datatransfer/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.datatransfer/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/colorimaging.md",
+    "Size": 741,
+    "Sha256": "129dd272e6343cb400abbe3df310d85c79e4e753d50c53b0c1f928c047aca4b0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/freetype.md",
+    "Size": 30570,
+    "Sha256": "e1f43089a3d7f846ac72709ba3f5e3dfe4a07955cbb1f5b580c3c41cf93792dd"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/giflib.md",
+    "Size": 1689,
+    "Sha256": "206aab89ec75968e48a6a1ed6df7d8b9bfb7aea12cbe4c9345d93e5d97460a25"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/harfbuzz.md",
+    "Size": 3629,
+    "Sha256": "5ec7cba7f8e7fc3a089213140aab6fa1b3bd5bf8a91bf8bddb3b8d315fc5f7d0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/jpeg.md",
+    "Size": 3474,
+    "Sha256": "c1dfb9719a71ad9f861f8728550542d681e25c8ef40e6393606e6e2a0c1d653a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/lcms.md",
+    "Size": 2655,
+    "Sha256": "6d409e73a4ce3c25479b4fb01d05fe79c0458bcd1dccc07f72d3e211d64ac8ce"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/libpng.md",
+    "Size": 7519,
+    "Sha256": "f73afb394792f3aeecd959e89487603677a430e56b44eba596d8b572accfd540"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.desktop/mesa3d.md",
+    "Size": 5732,
+    "Sha256": "63f4e6f75caebbccb95d903fb43e46ac7111b3624d0a34f146b276d7d9e7b152"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.instrument/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.instrument/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.instrument/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.logging/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.logging/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.logging/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.management/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.management/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.management/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.management.rmi/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.management.rmi/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.management.rmi/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.naming/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.naming/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.naming/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.net.http/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.net.http/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.net.http/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.prefs/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.prefs/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.prefs/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.rmi/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.rmi/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.rmi/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.scripting/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.scripting/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.scripting/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.security.jgss/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.security.jgss/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.security.jgss/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.security.sasl/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.security.sasl/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.security.sasl/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.smartcardio/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.smartcardio/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.smartcardio/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.sql/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.sql/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.sql/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.sql.rowset/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.sql.rowset/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.sql.rowset/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.transaction.xa/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.transaction.xa/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.transaction.xa/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/bcel.md",
+    "Size": 11196,
+    "Sha256": "cd578186ad93de46cca29ec8ace2b11f9da751987f3f140e6095c528596cc8c1"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/dom.md",
+    "Size": 3761,
+    "Sha256": "6686e8877667584a3a7c07344baadca1a03e29f677162d87c3c0811e990d1148"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/jcup.md",
+    "Size": 1448,
+    "Sha256": "8d5dcfdf50455a3c34c753a98f21e953248af200415a9084e3f102cb6c43b8bf"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/schema10part1.md",
+    "Size": 2138,
+    "Sha256": "b220f891e5bfa3aa4b2a4b34dfab53a291553c2ae0fd0b15a4cb1116d4e97770"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/schema10part2.md",
+    "Size": 2136,
+    "Sha256": "2350e35e91866d5ee5bd7ee7c303b3e424bbca335d36c71452588aac494eaa3e"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xalan.md",
+    "Size": 13477,
+    "Sha256": "02bd013fc3f438dbb8fa41fa57888177e015efa6431d37fce6e794c6f353a6a1"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xerces.md",
+    "Size": 11848,
+    "Sha256": "4a6bf6b367193ee68681cb2d9fed30ffc5d62dd2d477bd62e0271707d71b3244"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xhtml10.md",
+    "Size": 2634,
+    "Sha256": "9a5cde47073ca80cf59127891420f4aed603eb65070738ad027bb19e76fb9319"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xhtml10schema.md",
+    "Size": 7521,
+    "Sha256": "7bc51d884aaae6ef27551ee78d404ba3116356790da3d06b665679eb2e1cc002"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xhtml11.md",
+    "Size": 3258,
+    "Sha256": "4f99a390896f0f55a0b78376de89bfd2ac845713de85e67e37f884b77e0c3122"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xhtml11schema.md",
+    "Size": 3224,
+    "Sha256": "8cd69b1392e286538008f4cb003f85caea3a375c619e697813d820b69857cf74"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xmlspec.md",
+    "Size": 2719,
+    "Sha256": "afec263bf5dc67697ee33734ee243f86a878161335ef6298273e4041673b0544"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml/xmlxsd.md",
+    "Size": 1951,
+    "Sha256": "498a5fec63509a8f3949983bb6878ac5c95aaf1d5e3679272d93314371aa0211"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml.crypto/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml.crypto/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml.crypto/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/java.xml.crypto/santuario.md",
+    "Size": 11505,
+    "Sha256": "d08690d25f660f145c73365d260ed522cd0aace8a0e1396706551b7a1ae8c9a3"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.accessibility/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.accessibility/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.accessibility/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.attach/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.attach/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.attach/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.compiler/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.compiler/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.compiler/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.dynalink/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.dynalink/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.dynalink/dynalink.md",
+    "Size": 1502,
+    "Sha256": "17312591cabee3ef6c34ed8897d92e4e361ba9cea41ec00dcd61a322a8fc2cdb"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.dynalink/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.httpserver/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.httpserver/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.httpserver/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.incubator.vector/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.incubator.vector/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.incubator.vector/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.ed/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.ed/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.ed/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.jvmstat/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.jvmstat/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.jvmstat/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.le/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.le/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.le/jline.md",
+    "Size": 1579,
+    "Sha256": "a6fb63a226b77b03cbd7559cce6cdc3e1ea8563af960b1dce2330c8e1dce1abf"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.le/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.md/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.md/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.md/commonmark.md",
+    "Size": 1354,
+    "Sha256": "23a6f08218b13b6dbe16410d11104d56d14861316dd3a064e1fbd5054b6f470c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.md/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.opt/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.opt/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.opt/jopt-simple.md",
+    "Size": 1122,
+    "Sha256": "99bc67f93cf57d6d20e6047731c93fbb267d70fbdd4115d119e0f85c6efe5c05"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.internal.opt/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jartool/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jartool/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jartool/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.javadoc/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.javadoc/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.javadoc/dejavufonts.md",
+    "Size": 8841,
+    "Sha256": "bcec55913c89822a8292af4e97a5ad7a07aa920dbc49524439ff7c70638dd1e8"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.javadoc/highlightjs.md",
+    "Size": 1573,
+    "Sha256": "3e153ecf41179d31916d1e478e432541df8be58250624cab3a0e77c9b872e90d"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.javadoc/jquery.md",
+    "Size": 1157,
+    "Sha256": "b68f454c2bd58959c862d94bf0f16c3f78a2d537388ca060d354344db80ee695"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.javadoc/jqueryUI.md",
+    "Size": 1871,
+    "Sha256": "7854d2d568992ae25ff65867bd9021d655f70670142f0796b29a3b0621f19530"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.javadoc/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jconsole/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jconsole/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jconsole/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jdi/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jdi/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jdi/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jdwp.agent/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jdwp.agent/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jdwp.agent/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jfr/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jfr/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jfr/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jshell/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jshell/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jshell/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jsobject/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jsobject/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.jsobject/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management.agent/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management.agent/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management.agent/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management.jfr/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management.jfr/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.management.jfr/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.net/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.net/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.net/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.nio.mapmode/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.nio.mapmode/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.nio.mapmode/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.sctp/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.sctp/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.sctp/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.security.auth/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.security.auth/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.security.auth/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.security.jgss/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.security.jgss/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.security.jgss/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.unsupported/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.unsupported/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.unsupported/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.unsupported.desktop/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.unsupported.desktop/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.unsupported.desktop/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.xml.dom/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.xml.dom/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.xml.dom/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.zipfs/ADDITIONAL_LICENSE_INFO",
+    "Size": 49,
+    "Sha256": "ebf9777bd307ed789ceabf282a9aca168c391c7f48e15a60939352efb3ea33f9"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.zipfs/ASSEMBLY_EXCEPTION",
+    "Size": 44,
+    "Sha256": "b998cda101e5a1ebcfb5ff9cddd76ed43a2f2169676592d428b7c0d780665f2a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/legal/jdk.zipfs/LICENSE",
+    "Size": 33,
+    "Sha256": "86e0516b888276a492b19f9a84f5a866ed36925fae1510b3a94a0b6213e69192"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/classlist",
+    "Size": 86909,
+    "Sha256": "138b627ab7b813501a95ee0b3142e69be57f4f13ae0154ba300dbaf2f62ee839"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/ct.sym",
+    "Size": 10872977,
+    "Sha256": "2396757bf3b3b8fa3721721eab6e0f81f5a3873a53a362bc81b08a473f99a7a0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/fontconfig.bfc",
+    "Size": 4836,
+    "Sha256": "c7e2e76b908cb6330823e698889943c162e9861a4575501cbb59c9b830158ab0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/fontconfig.properties.src",
+    "Size": 12612,
+    "Sha256": "74e6c464ae1e63983ada241869fdc66ef8c28cef403ee2301e0a90db9555b00c"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/jawt.lib",
+    "Size": 1682,
+    "Sha256": "9cc1b3b3c0d342492f5e13b493338fcd7fcf8fd7f0a879e682f17704bb804687"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/jrt-fs.jar",
+    "Size": 109854,
+    "Sha256": "03d7a662e2765c5dbe8431b3c18e1cf90a296ccbd0a7a51b0fedd5b63d519bb8"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/jvm.cfg",
+    "Size": 29,
+    "Sha256": "aa9efb969444c1484e29adecab55a122458090616e766b2f1230ef05bc3867e0"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/jvm.lib",
+    "Size": 1214510,
+    "Sha256": "23c33f054f70f8532218cd82ccd602e948f5ab499eea6f3c1fa860fc3f81510f"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/modules",
+    "Size": 89284665,
+    "Sha256": "bf3931b88199b4ce663e1322e0d958d4cba6318859120205c8f50584a1ea0652"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/psfont.properties.ja",
+    "Size": 3793,
+    "Sha256": "5a4bd51b969bf187ff86d94f4a71fdfbfa602762975fa3c73d264b4575f7c78f"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/psfontj2d.properties",
+    "Size": 11402,
+    "Sha256": "cfb2f55fc4a22368567273c38f1afe3fc627ad56710a1d922ada68015710e53f"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/tzdb.dat",
+    "Size": 102956,
+    "Sha256": "5906b44e25a8a730131d7ba1beb5d15af27043f6536f1a169ca8a5d8b8bed8f8"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/tzmappings",
+    "Size": 15933,
+    "Sha256": "3929ab1380771d0d542d91cfbae02ce519a76678f5f63813739a6c6b98dc6d72"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/jfr/default.jfc",
+    "Size": 40505,
+    "Sha256": "26f2d7bf2f8473b3849f9480629eee695edf59fd667da838890a22919237718a"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/jfr/profile.jfc",
+    "Size": 40387,
+    "Sha256": "3e2c847608b1e7d182337f56bbf75b6a026ba4e9634b398bd92aec865e9ea8a7"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/security/blocked.certs",
+    "Size": 2527,
+    "Sha256": "583500b76965eb54b03493372989ab4d3426f85462d1db232c5ae6706a4d6c58"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/security/cacerts",
+    "Size": 134174,
+    "Sha256": "2675a0aa6e7c158bbccf1181383ee794319e362df9a6bc88e1a5f8469a4c1dd7"
+  },
+  {
+    "Path": "bsl-language-server/runtime/lib/security/public_suffix_list.dat",
+    "Size": 229254,
+    "Sha256": "37e71e43c8605f29b9072f152d0ea4708735cdf335a5b68b2bc2f875760806c3"
+  }
+]

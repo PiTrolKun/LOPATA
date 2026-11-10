@@ -6,6 +6,7 @@ public partial class MainWindow
 {
     private async Task StopBackgroundForExitAsync()
     {
+        if (ScenarioNavigationPage.OneCView?.Checkpoint() == false) throw new System.IO.IOException("1C project checkpoint failed.");
         CheckpointRagBooks();
         CheckpointVectorEditors();
         if (ScenarioNavigationPage.LetItOutChat?.SaveConversationForExit() == false)

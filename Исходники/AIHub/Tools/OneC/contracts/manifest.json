@@ -1,0 +1,31 @@
+{
+  "protocolVersion": 1,
+  "id": "lopata.onec",
+  "capabilities": [
+    "discover",
+    "list",
+    "read",
+    "check",
+    "createOwnedFile",
+    "editOwnedFile"
+  ],
+  "sources": [
+    "onec.text-folder.v1"
+  ],
+  "checkers": [
+    {
+      "id": "runtime.onec.bsl-ls",
+      "version": "1.0.7",
+      "level": "static"
+    }
+  ],
+  "execution": "unavailable",
+  "states": [
+    "unsupported",
+    "unsupported-version",
+    "unavailable",
+    "permission-required",
+    "cancelled",
+    "failed"
+  ]
+}

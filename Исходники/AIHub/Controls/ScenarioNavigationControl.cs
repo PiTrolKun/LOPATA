@@ -73,6 +73,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsOneC) { if (OneCView?.Checkpoint() == false) return true; IsOneC = false; Render(); return true; }
         if (IsSpeechAssets) { LeaveSpeechAssets(); Render(); return true; }
         if (IsLivingArcade)
         {
@@ -112,6 +113,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        if (!LeaveOneC()) return;
         LeaveSpeechAssets();
         LivingArcade?.SuspendForNavigation();
         IsLivingArcade = false;
@@ -129,6 +131,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
+        if (!LeaveOneC()) return;
         LeaveSpeechAssets();
         LivingArcade?.SuspendForNavigation();
         IsLivingArcade = false;
@@ -147,6 +150,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void OpenScenario(string id)
     {
+        if (!LeaveOneC()) return;
         LeaveSpeechAssets();
         if (id == ScenarioNavigationCatalog.LivingArcade)
         {
@@ -271,6 +275,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (IsOneC) { OneCView!.Configure(_localize); Content = OneCView; StateChanged?.Invoke(); return; }
         if (IsSpeechAssets) { Content = SpeechAssetsView; StateChanged?.Invoke(); return; }
         if (Content == LivingArcade) Content = null;
         if (IsLivingArcade)

@@ -78,5 +78,11 @@ internal sealed partial class ReaderAiWindow
         Resources["SecondaryButtonBackgroundBrush"] = Resources["PanelBrush"];
         Resources["LineBrush"] = Color(dark ? "#3A465C" : "#CCD3DF");
         Resources["AccentBrush"] = Color("#2563EB"); Resources["UiBodyFontSize"] = 14d;
+        // The picker also opens from MainWindow, which has no Reader palette or styles.
+        Resources["ReaderText"] = Resources["TextPrimaryBrush"];
+        Resources["ReaderMuted"] = Resources["TextSecondaryBrush"];
+        Resources["ReaderPanel"] = Resources["PanelBrush"];
+        Resources["ReaderLine"] = Resources["LineBrush"];
+        Resources["ReaderHover"] = Color(dark ? "#293954" : "#E7EFFF");
     }
 }

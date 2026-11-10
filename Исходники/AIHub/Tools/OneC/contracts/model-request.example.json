@@ -1,0 +1,15 @@
+{
+  "Task": "Напиши функцию сложения двух чисел без метаданных конфигурации.",
+  "Mode": "build",
+  "Language": "ru",
+  "ModuleContext": "common",
+  "PlatformVersion": "",
+  "SourceName": null,
+  "Scope": "whole file",
+  "SourceCode": "",
+  "Before": "",
+  "After": "",
+  "PreviousProposal": null,
+  "UserReportedError": null,
+  "ActuallyTriedCode": null
+}

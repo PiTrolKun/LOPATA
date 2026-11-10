@@ -43,6 +43,8 @@ public partial class MainWindow
         RegisterLetItOutBackgroundOperation();
         RegisterLivingArcadeBackgroundOperations();
         RegisterChatSpeech();
+        _backgroundOperations.Register(Services.OneC.OneCWork.Kind,
+            (state, token) => ScenarioNavigationPage.ShowOneC(this).ResumeAsync(state, token));
         _backgroundOperations.Register(Services.SpeechAssets.SpeechAssetWork.Kind,
             (state, token) => ScenarioNavigationPage.ShowSpeechAssets(this).ResumeAsync(state, token));
         _backgroundOperations.Register(Services.OfficeReader.ReaderSpeechWork.Kind, (_, _) =>
@@ -241,6 +243,17 @@ public partial class MainWindow
             if (notice.Kind == ChatSpeechWork.Kind)
             {
                 OpenChatSpeechFolder(); _backgroundOperations!.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == Services.OneC.OneCWork.Kind)
+            {
+                RestoreFromTray(); ShowWorkStartPage();
+                if (WorkStartPage.Visibility != System.Windows.Visibility.Visible) return;
+                foreach (var page in new System.Windows.FrameworkElement[] { FinancialPage, CapturePage, GenerationPage, ImageUtilityPage, MusicPage, VectorPage, RagBooksPageHost }) page.Visibility = System.Windows.Visibility.Collapsed;
+                ScenarioNavigationPage.Visibility = System.Windows.Visibility.Visible;
+                var state = _backgroundOperations!.LoadResult(notice.Id) ?? _backgroundOperations.State!;
+                var pointer = Services.OneC.OneCWork.ReadPointer(state);
+                await ScenarioNavigationPage.ShowOneC(this).EnterAsync(pointer.ProjectId);
+                _backgroundOperations.Acknowledge(notice.Id); return;
             }
             if (notice.Kind == Services.SpeechAssets.SpeechAssetWork.Kind)
             {

@@ -103,6 +103,19 @@ public static class ComponentCatalog
             [".sqlite", ".sqlite3", ".db"]),
 
         Download(
+            "runtime.onec.bsl-ls",
+            "BSL Language Server (with Java runtime)",
+            "1.0.7",
+            ComponentDeliveryKinds.Archive,
+            "https://github.com/1c-syntax/bsl-language-server/releases/download/v1.0.7/bsl-language-server_win.zip",
+            "bsl-language-server-1.0.7-win.zip",
+            168_253_085,
+            420_000_000,
+            "LGPL-3.0; bundled OpenJDK GPL-2.0 with Classpath Exception; dependency notices apply",
+            "https://github.com/1c-syntax/bsl-language-server/releases/tag/v1.0.7",
+            [], ["check.onec.bsl"], "bsl-language-server/bsl-language-server.exe",
+            "fed523e3b6d1d64c65a0df08ff74088c4d26eb3c550a2ff776c84ac2c8655c30"),
+        Download(
             "runtime.java.temurin21",
             "Eclipse Temurin JRE",
             "21",

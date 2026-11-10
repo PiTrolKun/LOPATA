@@ -103,6 +103,62 @@ public sealed class OfficeReaderAiUiTests
         }
         finally { owner.Close(); }
     });
+    [TestMethod, TestCategory("Native"), DataRow("ru", true), DataRow("en", true), DataRow("ru", false), DataRow("en", false)]
+    public Task TextPickerIsThemedWithoutReaderOwnerResources(string language, bool dark) => Sta(async () =>
+    {
+        if (Environment.GetEnvironmentVariable("LOPATA_READER_AI_UI") != "1") Assert.Inconclusive("Explicit WPF model-picker test required.");
+        var root = Path.Combine(AppDataPaths.ProjectRoot!, "_tmp", "reader-ai-theme", language + (dark ? "-dark" : "-light"));
+        Directory.CreateDirectory(root);
+        var localizer = new LocalizationService(); localizer.Load(language);
+        var owner = new Window { Width = 1180, Height = 820 };
+        // MainWindow uses these keys, but has no Reader resources. That launch path regressed.
+        owner.Resources["TextPrimaryBrush"] = Brushes.Magenta;
+        owner.Resources["PanelBrush"] = Brushes.Yellow;
+        Assert.IsNull(owner.TryFindResource("ReaderText"));
+        owner.Show();
+        var prefs = new ReaderAiSettingsStore(Path.Combine(root, Guid.NewGuid().ToString("N") + ".json"));
+        var storage = new StorageSettings { Models = new() { Locations = [new() { Path = root }] } };
+        var library = new ManagedModelLibraryStore(Path.Combine(root, "library"));
+        var catalog = new TaskCompletionSource<IReadOnlyList<ManagedModelArtifactCard>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var window = new ReaderAiWindow(owner, localizer.T, prefs, library, storage, () => catalog.Task,
+            textOnly: true, darkTheme: dark, title: localizer.T("OneC.ModelTitle"), hint: localizer.T("OneC.ModelHint"));
+        try
+        {
+            await Modal(window, async () => {
+                var apply = Desc<Button>(window).Single(b => Id(b) == "Office.Reader.AI.Apply");
+                await Wait(() => !apply.IsEnabled);
+                var text = dark ? "#FFF1F4FA" : "#FF202735";
+                var panel = dark ? "#FF172132" : "#FFFFFFFF";
+                Assert.AreEqual(panel, apply.Background.ToString(), "Loading buttons must keep the themed surface.");
+                Assert.AreEqual(text, apply.Foreground.ToString());
+                catalog.SetResult([]);
+                await Wait(() => apply.IsEnabled && Desc<RadioButton>(window).Any());
+                var models = Desc<RadioButton>(window).ToArray();
+                Assert.IsTrue(models.All(r => Id(r).StartsWith("Office.Reader.AI.Text.")), "Text-only mode must remain text-only.");
+                Assert.IsTrue(models.All(r => r.Foreground.ToString() == text));
+                Assert.IsTrue(models.All(r => ((TextBlock)r.Content).Foreground.ToString() == text), "Model names must inherit the visible foreground.");
+                Assert.IsTrue(Desc<Button>(window).All(b => b.Background.ToString() == panel && b.Foreground.ToString() == text));
+                var cards = Desc<Border>(window).Where(b => b.Child is StackPanel p && p.Children.OfType<RadioButton>().Any()).ToArray();
+                Assert.AreEqual(models.Length, cards.Length);
+                Assert.IsTrue(cards.All(b => b.Background.ToString() == panel && b.BorderBrush is not null));
+                var scroll = Desc<ScrollViewer>(window).Single(s => s.Content is StackPanel);
+                Assert.IsTrue(scroll.ScrollableHeight > 0);
+                var bar = Desc<System.Windows.Controls.Primitives.ScrollBar>(scroll).Single(b => b.IsVisible);
+                Assert.AreEqual(panel, bar.Background.ToString(), "No Windows white scrollbar in the dark picker.");
+                Assert.IsNotNull(bar.Template);
+                Capture(window, Path.Combine(root, "picker.png"));
+                window.Width = window.MinWidth; await Dispatcher.Yield(DispatcherPriority.Render);
+                Capture(window, Path.Combine(root, "picker-narrow.png"));
+                scroll.ScrollToEnd(); await Dispatcher.Yield(DispatcherPriority.Render);
+                Assert.IsTrue(scroll.VerticalOffset > 0);
+                models[^1].IsChecked = true;
+                Assert.AreEqual(1, models.Count(r => r.IsChecked == true));
+                apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                StringAssert.EndsWith(Id(models[^1]), prefs.Load().TextModel);
+            });
+        }
+        finally { owner.Close(); }
+    });
     private static string Id(DependencyObject value) => AutomationProperties.GetAutomationId(value);
     private static async Task Modal(Window window, Func<Task> check)
     {

@@ -132,8 +132,8 @@ internal sealed class ReaderTranslationRuntime(OfficeAiJournal? journal = null) 
         return GenerateTextAsync(card, input, instructions, "text rephrasing", 4096, 24000, token, answer => OfficeRephraseText.Validate(text, answer));
     }
 
-    private async Task<string> GenerateTextAsync(ManagedModelArtifactCard card, string input, string instructions, string role,
-        int maximumTokens, int maximumCharacters, CancellationToken token, Action<string>? validate = null)
+    internal async Task<string> GenerateTextAsync(ManagedModelArtifactCard card, string input, string instructions, string role,
+        int maximumTokens, int maximumCharacters, CancellationToken token, Action<string>? validate = null, object? responseFormat = null)
     {
         await PrepareAsync(card, token);
         var model = new OutputModelUse(card.ModelArtifactId, card.DisplayName, card.Revision, role);
@@ -160,6 +160,11 @@ internal sealed class ReaderTranslationRuntime(OfficeAiJournal? journal = null) 
                     new { role = "system", content = instructions }, new { role = "user", content = input } },
                     max_tokens = reserve, temperature = .1, top_p = .9, repeat_penalty = 1.05, stream = false,
                     cache_prompt = false, chat_template_kwargs = new { enable_thinking = false } });
+                if (responseFormat is not null)
+                {
+                    var structured = System.Text.Json.Nodes.JsonNode.Parse(payload)!.AsObject();
+                    structured["response_format"] = JsonSerializer.SerializeToNode(responseFormat); payload = structured.ToJsonString();
+                }
                 await BeforeSend();
                 var raw = await _llama.GeneratePrivateJsonAsync(_model, payload, token);
                 using var response = JsonDocument.Parse(raw);

@@ -5682,5 +5682,42 @@
       "texts/Unicode-18.0-CLDR49.txt"
     ],
     "Terms": "2CEBBE810FE18377328DB2831C5D1A36CF6B599F75ABB30201D512BB0BD10A2E"
+  },
+  {
+    "Id": "nuget.AvalonEdit",
+    "Name": "AvalonEdit",
+    "Version": "6.3.1.120",
+    "Author": "AlphaSierraPapa and AvalonEdit contributors",
+    "License": "MIT",
+    "Source": "https://github.com/icsharpcode/AvalonEdit/tree/862415d51eddc9eac93f462dbc522ffbf929cd52",
+    "Checked": "2026-11-11",
+    "Ru": "Редактор кода AvalonEdit. Оригинальный текст MIT включён.",
+    "En": "AvalonEdit code editor. Original MIT license included.",
+    "Basic": false,
+    "Delivery": "bundled",
+    "Terms": "72C81201AC596B978386AC5B7FA15700ABF36D1BC9EE78E555EC5B3F744836AD",
+    "Texts": [
+      "texts/OneC-AvalonEdit-MIT.txt"
+    ]
+  },
+  {
+    "Id": "runtime.onec.bsl-ls",
+    "Name": "BSL Language Server with bundled OpenJDK",
+    "Version": "1.0.7",
+    "Author": "1c-syntax contributors; OpenJDK contributors",
+    "License": "LGPL-3.0; OpenJDK GPL-2.0 with Classpath Exception",
+    "Source": "https://github.com/1c-syntax/bsl-language-server/releases/tag/v1.0.7",
+    "Checked": "2026-11-11",
+    "Ru": "Отдельный статический анализатор и его Java runtime. Полный исходный код анализатора доступен по ссылке. Оригинальные лицензии и уведомления сохраняются в дистрибутиве. Платформа 1С не входит.",
+    "En": "Separate static analyzer and its Java runtime. Complete analyzer source is available at the linked release. Original licenses and notices remain in the distribution. The 1C platform is not included.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "714CB1754F10D323703AFAB7CE32447207A1AC560662FDBB720F260413F1EFBD",
+    "Texts": [
+      "texts/OneC-BSL-LGPL-3.0.txt",
+      "texts/GPL-3.0-or-later.txt",
+      "texts/OneC-OpenJDK-LICENSE.txt",
+      "texts/OneC-OpenJDK-ADDITIONAL_LICENSE_INFO.txt"
+    ]
   }
 ]

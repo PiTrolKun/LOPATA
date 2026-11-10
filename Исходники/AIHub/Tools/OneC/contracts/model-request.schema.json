@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "Task": {
+      "type": "string"
+    },
+    "Mode": {
+      "type": "string"
+    },
+    "Language": {
+      "type": "string"
+    },
+    "ModuleContext": {
+      "type": "string"
+    },
+    "PlatformVersion": {
+      "type": "string"
+    },
+    "SourceName": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "Scope": {
+      "type": "string"
+    },
+    "SourceCode": {
+      "type": "string"
+    },
+    "Before": {
+      "type": "string"
+    },
+    "After": {
+      "type": "string"
+    },
+    "PreviousProposal": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "UserReportedError": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ActuallyTriedCode": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "Task",
+    "Mode",
+    "Language",
+    "SourceCode",
+    "Scope"
+  ],
+  "additionalProperties": false
+}

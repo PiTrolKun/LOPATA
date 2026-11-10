@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "Explanation": {
+      "type": "string"
+    },
+    "Code": {
+      "type": "string"
+    },
+    "SuggestedName": {
+      "type": "string"
+    },
+    "InsertLocation": {
+      "type": "string"
+    },
+    "MissingContext": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "Explanation",
+    "Code",
+    "SuggestedName",
+    "InsertLocation",
+    "MissingContext"
+  ]
+}

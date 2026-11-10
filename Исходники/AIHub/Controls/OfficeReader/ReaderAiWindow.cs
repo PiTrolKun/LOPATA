@@ -29,23 +29,27 @@ internal sealed partial class ReaderAiWindow : Window
     private readonly CancellationTokenSource _life = new();
     private IReadOnlyList<ManagedModelArtifactCard> _cards = [];
     private bool _busy;
+    private readonly bool _textOnly;
+    private readonly string? _hint;
     private string Root => _storage.Models.Locations.Select(x => x.Path?.Trim()).FirstOrDefault(x => !string.IsNullOrEmpty(x)) ?? "";
     private string T(string key) => _l("Reader.Ai." + key);
 
     internal ReaderAiWindow(Window owner, Func<string, string> localize, ReaderAiSettingsStore? settings = null,
         ManagedModelLibraryStore? library = null, StorageSettings? storage = null,
-        Func<Task<IReadOnlyList<ManagedModelArtifactCard>>>? loadCatalog = null)
+        Func<Task<IReadOnlyList<ManagedModelArtifactCard>>>? loadCatalog = null, bool textOnly = false, bool? darkTheme = null,
+        string? title = null, string? hint = null)
     {
-        Owner = owner; Icon = owner.Icon; _l = localize;
+        Owner = owner; Icon = owner.Icon; _l = localize; _textOnly = textOnly; _hint = hint;
         _settingsStore = settings ?? new(); _settings = _settingsStore.Load();
         _library = library ?? new(); _storage = storage ?? new StorageSettingsStore().LoadOrCreate();
         // Other scenarios register new models in this common library. Reading the picker must
         // not rewrite their installation paths or reset their verification state.
         _loadCatalog = loadCatalog ?? (() => Task.Run(() => _library.LoadAll()));
-        Title = T("Title"); Width = 1150; Height = 780; MinWidth = 760; MinHeight = 480;
+        Title = title ?? T("Title"); Width = 1150; Height = 780; MinWidth = 760; MinHeight = 480;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         Resources.MergedDictionaries.Add(owner.Resources);
-        ApplySharedTheme(owner is ReaderWindow reader ? reader.IsDarkTheme : owner is OfficeEditor.EditorWindow editor && editor.IsDarkTheme);
+        Resources.MergedDictionaries.Add(new() { Source = new Uri("/AIHub;component/Controls/OfficeReader/ReaderAiResources.xaml", UriKind.Relative) });
+        ApplySharedTheme(darkTheme ?? (owner is ReaderWindow reader ? reader.IsDarkTheme : owner is OfficeEditor.EditorWindow editor && editor.IsDarkTheme));
         FontFamily = new FontFamily("Segoe UI"); FontSize = 14;
         AutomationProperties.SetAutomationId(this, "Office.Reader.AI.Window");
         Build();
@@ -56,8 +60,8 @@ internal sealed partial class ReaderAiWindow : Window
     {
         var dock = new DockPanel { Margin = new(18) }; Content = dock;
         var header = new StackPanel(); DockPanel.SetDock(header, Dock.Top); dock.Children.Add(header);
-        header.Children.Add(new TextBlock { Text = T("Title"), FontSize = 22, Margin = new(0, 0, 0, 8) });
-        header.Children.Add(new TextBlock { Text = T("Hint"), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 12) });
+        header.Children.Add(new TextBlock { Text = Title, FontSize = 22, Margin = new(0, 0, 0, 8) });
+        header.Children.Add(new TextBlock { Text = _hint ?? T("Hint"), TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 12) });
         var bottom = new StackPanel { Margin = new(0, 12, 0, 0) }; DockPanel.SetDock(bottom, Dock.Bottom); dock.Children.Add(bottom);
         bottom.Children.Add(_status);
         var actions = new WrapPanel(); bottom.Children.Add(actions);
@@ -69,8 +73,8 @@ internal sealed partial class ReaderAiWindow : Window
         AutomationProperties.SetAutomationId(_apply, "Office.Reader.AI.Apply");
         actions.Children.Add(_refresh); actions.Children.Add(_apply);
         var cancel = new Button { Content = T("Cancel"), IsCancel = true }; actions.Children.Add(cancel);
-        var columns = new Grid(); columns.ColumnDefinitions.Add(new()); columns.ColumnDefinitions.Add(new()); dock.Children.Add(columns);
-        AddSection(columns, _text, T("Text"), 0); AddSection(columns, _speech, T("Speech"), 1);
+        var columns = new Grid(); columns.ColumnDefinitions.Add(new()); if (!_textOnly) columns.ColumnDefinitions.Add(new()); dock.Children.Add(columns);
+        AddSection(columns, _text, T("Text"), 0); if (!_textOnly) AddSection(columns, _speech, T("Speech"), 1);
     }
     private static void AddSection(Grid grid, StackPanel items, string title, int column)
     {
@@ -101,7 +105,7 @@ internal sealed partial class ReaderAiWindow : Window
         if (!models.Any(m => m.Id == _settings.TextModel))
             _text.Children.Add(new TextBlock { Text = T("Unavailable") + " " + _settings.TextModel, TextWrapping = TextWrapping.Wrap });
         foreach (var model in models) AddModel(_text, model, false);
-        foreach (var model in ReaderAiModelCatalog.SpeechModels(Root, _cards)) AddModel(_speech, model, true);
+        if (!_textOnly) foreach (var model in ReaderAiModelCatalog.SpeechModels(Root, _cards)) AddModel(_speech, model, true);
     }
     private void AddModel(StackPanel parent, ReaderAiModel model, bool speech)
     {

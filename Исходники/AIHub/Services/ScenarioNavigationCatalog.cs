@@ -1,4 +1,4 @@
-﻿namespace AIHub.Services;
+namespace AIHub.Services;
 
 public enum ScenarioNavigationKind { Direction, Group, Scenario }
 
@@ -17,6 +17,8 @@ public static class ScenarioNavigationCatalog
     public const string Analysis = "analysis";
     public const string Experiments = "experiments";
     public const string Utilities = "processing_utilities";
+    public const string OneC = "onec";
+    public const string VibeCoding = "creation_vibe_coding";
     public const string SpeechAssets = "speech_assets";
     public const string Literary = "literary";
     public const string Images = "image_analysis";
@@ -82,6 +84,8 @@ public static class ScenarioNavigationCatalog
         Node("creation_images", ScenarioNavigationKind.Group, Creation, "Navigation.Images", "", "create"),
         Node("creation_music", ScenarioNavigationKind.Group, Creation, "Music.Group", "", "create"),
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
+        Node(VibeCoding, ScenarioNavigationKind.Group, Creation, "OneC.Group", "", "create"),
+        Node(OneC, ScenarioNavigationKind.Scenario, VibeCoding, "OneC.Title", "OneC.Description", "create", tags: ["onec_assistance", "onec_projects", "onec_checks"]),
         Node(VideoGeneration, ScenarioNavigationKind.Scenario, "creation_video", "VideoGeneration.Title", "VideoGeneration.Description", "create",
             tags: ["video_generation", "video_concept", "video_concept_ai", "video_development", "video_world", "video_assistant_warmup", "video_reference_prompts", "video_storyboard", "video_preparation_export", "video_generator_plan", "video_h3_preparation"]),
         Node(SongClip, ScenarioNavigationKind.Scenario, "creation_video", "SongClip.Title", "SongClip.Description", "create", tags: ["song_clip"]),
@@ -116,6 +120,9 @@ public static class ScenarioNavigationCatalog
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
+        new ScenarioNavigationTag("onec_assistance", "OneC.Title", "OneC.Description", OneC),
+        new ScenarioNavigationTag("onec_projects", "OneC.Projects", "OneC.ProjectsDescription", OneC),
+        new ScenarioNavigationTag("onec_checks", "OneC.CheckFile", "OneC.CheckerPreparationHint", OneC),
         new ScenarioNavigationTag("speech_assets", "SpeechAssets.Title", "SpeechAssets.Description", SpeechAssets),
         new ScenarioNavigationTag("living_arcade", "Arcade.Title", "Arcade.Description", LivingArcade),
         new ScenarioNavigationTag("living_arcade_levels", "Arcade.Tag.Levels", "Arcade.Tag.LevelsHelp", LivingArcade),
