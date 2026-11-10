@@ -122,3 +122,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Frozen voice notification snapshots are immutable byte contracts.
 Документы_проекта/Голосовые_уведомления/Слепки/** -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Preserve the published voice bundle index bytes, including line endings.
+Исходники/AIHub/Assets/VoiceNotifications/bundles.json -text -eol
