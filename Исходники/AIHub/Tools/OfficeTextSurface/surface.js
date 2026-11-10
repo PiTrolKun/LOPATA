@@ -2,6 +2,7 @@ import { createDocxEditor } from '@docx-editor.dev/core';
 import { packagedFonts } from '@docx-editor.dev/fonts';
 import { Spelling } from './spelling.js';
 import { SymbolSuggestions } from './symbol-suggestions.js';
+import { readerPreview } from './reader-preview.js';
 import { textCompatibility, compareCompatibility, serializeCompatibilityBaseline, restoreCompatibilityBaseline } from './text-compatibility.js';
 
 const bridge = window.chrome?.webview;
@@ -73,6 +74,7 @@ async function open(request) {
   }
   editor.on('change', () => { lastKind=changeKind; if (changeKind !== 'text') richEdit=true; changed(); spelling?.schedule(); });
   editor.on('selectionChange', () => {changed();suggestions?.selectionChanged();});
+  if (request.readOnly) { spelling = suggestions = null; return state(); }
   spelling = new Spelling(editor,document.querySelector('#viewport'),post);
   spelling.schedule();
   suggestions=new SymbolSuggestions(editor,document.querySelector('#viewport'),post,(selection,text)=>{
@@ -192,6 +194,7 @@ async function handle(r) {
   try {
     switch(r.action) {
       case 'state':return state();
+      case 'readerPreview':return readerPreview(editor,r);
       case 'symbolSuggestions':suggestions?.receive(r);return;
       case 'compatibilityBaseline':return originalFeatures ? serializeCompatibilityBaseline(originalFeatures) : null;
       case 'compatibility':return originalFeatures

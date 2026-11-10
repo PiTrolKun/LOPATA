@@ -8,7 +8,7 @@ internal static class ReaderPreviewCache
 {
     private const long Capacity = 96 * 1024 * 1024;
     private static readonly object Gate = new();
-    private static readonly Dictionary<string, (byte[] Pdf, long Used)> Entries = new();
+    private static readonly Dictionary<string, (byte[] Pdf, byte[]? Metadata, long Used)> Entries = new();
     private static long _clock;
 
     internal static async Task<string?> KeyAsync(string source, string extension, CancellationToken token)
@@ -22,13 +22,15 @@ internal static class ReaderPreviewCache
     internal static async Task<bool> RestoreAsync(string? key, string target, CancellationToken token)
     {
         if (key is null) return false;
-        byte[] pdf;
+        byte[] pdf; byte[]? metadata;
         lock (Gate)
         {
             if (!Entries.TryGetValue(key, out var entry)) return false;
-            pdf = entry.Pdf; Entries[key] = (pdf, ++_clock);
+            pdf = entry.Pdf; metadata = entry.Metadata; Entries[key] = (pdf, metadata, ++_clock);
         }
         await File.WriteAllBytesAsync(target, pdf, token);
+        if (metadata is not null)
+            await File.WriteAllBytesAsync(Path.Combine(Path.GetDirectoryName(target)!, ReaderTextPreview.MetadataName), metadata, token);
         return true;
     }
 
@@ -36,11 +38,13 @@ internal static class ReaderPreviewCache
     {
         if (key is null || new FileInfo(pdf).Length > Capacity / 3) return;
         var bytes = await File.ReadAllBytesAsync(pdf, token);
+        var metadataPath = Path.Combine(Path.GetDirectoryName(pdf)!, ReaderTextPreview.MetadataName);
+        var metadata = File.Exists(metadataPath) ? await File.ReadAllBytesAsync(metadataPath, token) : null;
         if (bytes.Length == 0 || bytes.Length > Capacity / 3) return;
         lock (Gate)
         {
-            Entries[key] = (bytes, ++_clock);
-            while (Entries.Count > 8 || Entries.Values.Sum(entry => (long)entry.Pdf.Length) > Capacity)
+            Entries[key] = (bytes, metadata, ++_clock);
+            while (Entries.Count > 8 || Entries.Values.Sum(entry => (long)entry.Pdf.Length + (entry.Metadata?.Length ?? 0)) > Capacity)
                 Entries.Remove(Entries.MinBy(entry => entry.Value.Used).Key);
         }
     }

@@ -17,3 +17,15 @@ body.workspace-dark { background:#182232; }
 .lopata-symbol-suggestions small { width:100%; font:11px "Segoe UI",sans-serif; opacity:.75; padding:3px; }
 .workspace-dark .lopata-symbol-suggestions { background:#172132; color:#f1f4fa; border-color:#3a465c; }
 .workspace-dark .lopata-symbol-suggestions button:hover,.workspace-dark .lopata-symbol-suggestions button.active { background:#293954; }
+
+#reader-print { display:none; }
+body.reader-printing { height:auto; overflow:visible; background:white; }
+.reader-printing #viewport { display:none; }
+.reader-printing #reader-print { display:block; }
+.reader-sheet { position:relative; overflow:hidden; break-inside:avoid; break-after:page; margin:0; padding:0; }
+.reader-sheet:last-child { break-after:auto; }
+#reader-print .docx-page { box-shadow:none; }
+@media print {
+  html,body { height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+  #reader-print { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+}

@@ -75,7 +75,7 @@ public sealed class OfficeReaderTests
     }
 
     [TestMethod, TestCategory("Native")]
-    public async Task WarmOfficeSessionReusesEngineAndCachedPreviewRemainsCorrect()
+    public async Task EditorPreviewUsesNoOfficeSessionAndCachedPreviewRemainsCorrect()
     {
         if (Environment.GetEnvironmentVariable("LOPATA_READER_NATIVE") != "1") Assert.Inconclusive("Explicit native reader run required.");
         var root = Path.Combine(AppDataPaths.ProjectRoot!, "Тесты", "OfficeReader_20261107");
@@ -85,10 +85,8 @@ public sealed class OfficeReaderTests
         var timings = new List<object>();
         using var limit = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         using var audit = ComponentAudit.CaptureOperation();
-        var lease = ReaderOfficeSession.Retain();
         try
         {
-            int? engine = null;
             foreach (var file in new[] { source, other })
             {
                 var workspace = Path.Combine(ReaderPreparation.CacheRoot, Guid.NewGuid().ToString("N")); Directory.CreateDirectory(workspace);
@@ -98,9 +96,8 @@ public sealed class OfficeReaderTests
                     var start = DateTime.UtcNow;
                     var pdf = await ReaderOfficeExport.ExportAsync(file, copy, workspace, ".docx", limit.Token);
                     Assert.IsGreaterThan(100, new FileInfo(pdf).Length);
-                    var worker = OwnedProcessRegistry.Shared.GetSnapshot().Single(row => row.Component == "Office.Reader");
-                    if (engine is not null) Assert.AreEqual(engine.Value, worker.Pid, "Different documents must share the same engine.");
-                    engine = worker.Pid;
+                    Assert.IsFalse(OwnedProcessRegistry.Shared.GetSnapshot().Any(row => row.Component == "Office.Reader"),
+                        "Text previews must release their rendering surface and use no Python/office worker.");
                     timings.Add(new { step = file == source ? "first_engine_document" : "second_engine_document", ms = (DateTime.UtcNow - start).TotalMilliseconds });
                 }
                 finally { ReaderPreparation.DeleteWorkspace(workspace); }
@@ -118,7 +115,7 @@ public sealed class OfficeReaderTests
             }
             File.WriteAllText(Path.Combine(root, "speed-result.json"), System.Text.Json.JsonSerializer.Serialize(timings));
         }
-        finally { await lease.DisposeAsync(); ComponentLicenseGate.ConfirmAsync = gate; }
+        finally { ComponentLicenseGate.ConfirmAsync = gate; }
         Assert.IsFalse(OwnedProcessRegistry.Shared.GetSnapshot().Any(row => row.Component == "Office.Reader"), "Closing the final reader must release the engine.");
     }
 
@@ -145,7 +142,8 @@ public sealed class OfficeReaderTests
             Assert.IsNotNull((await book.FindAsync("внутренние ссылки", 0, limit.Token)).Page);
             Assert.IsTrue(Enumerable.Range(0, book.Pages.Count).Any(page => ReaderLinks.Read(book.PdfPath, page).Any(link => link.Page is not null)));
             await using var comments = await ReaderPreparation.OpenAsync(Path.Combine(corpus, "02_documents", "RU", "complex_review.docx"), null, limit.Token);
-            Assert.IsTrue(Enumerable.Range(0, comments.Pages.Count).Any(page => ReaderLinks.Read(comments.PdfPath, page).Any(link => !string.IsNullOrWhiteSpace(link.Note))));
+            var notes = await Task.WhenAll(Enumerable.Range(0, comments.Pages.Count).Select(page => comments.ReadLinksAsync(page, limit.Token)));
+            Assert.IsTrue(notes.Any(page => page.Any(link => !string.IsNullOrWhiteSpace(link.Note))));
             await using var scan = await ReaderPreparation.OpenAsync(Path.Combine(corpus, "05_pdf", "RU", "image_only_no_OCR.pdf"), null, limit.Token);
             Assert.IsFalse((await scan.FindAsync("anything", 0, limit.Token)).HasText);
         }

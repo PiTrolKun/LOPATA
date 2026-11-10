@@ -24,6 +24,9 @@ public sealed class OfficeReaderSuiteTests
         Assert.HasCount(56, files);
         var gate = ComponentLicenseGate.ConfirmAsync; ComponentLicenseGate.ConfirmAsync = (_, _) => Task.CompletedTask;
         var results = new List<object>(); var failures = new List<string>();
+        // Exercise the shared first-full / subsequent-presence audit policy in
+        // isolation, without changing the user's saved audit setting.
+        using var auditStore = ComponentAudit.UseTestStore(Path.Combine(evidence, "suite-audit"), false);
         using var audit = ComponentAudit.CaptureOperation();
         try
         {

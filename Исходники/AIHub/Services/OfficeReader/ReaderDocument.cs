@@ -19,6 +19,7 @@ internal sealed class ReaderDocument : IAsyncDisposable
     private readonly SemaphoreSlim _metadata = new(1, 1);
     private bool _disposed;
     private readonly Dictionary<int, ReaderPageText> _textPages = [];
+    private readonly ReaderPreviewInfo? _preview;
     internal string SourcePath { get; }
     internal string? PdfPath { get; }
     internal string Workspace { get; }
@@ -31,6 +32,13 @@ internal sealed class ReaderDocument : IAsyncDisposable
     {
         SourcePath = source; Workspace = workspace; Backend = backend; PdfPath = pdf;
         Statistics = new(this);
+        var metadata = Path.Combine(workspace, ReaderTextPreview.MetadataName);
+        if (File.Exists(metadata))
+        {
+            _preview = System.Text.Json.JsonSerializer.Deserialize<ReaderPreviewInfo>(File.ReadAllText(metadata))
+                ?? throw new InvalidDataException("Reader.RenderFailed");
+            _preview.Validate(Pages.Count);
+        }
         var headings = new List<ReaderHeading>();
         if (pdf is not null)
         {
@@ -49,7 +57,7 @@ internal sealed class ReaderDocument : IAsyncDisposable
                 Walk(bookmarks.Roots);
             }
         }
-        Headings = headings;
+        Headings = _preview?.Headings ?? (IReadOnlyList<ReaderHeading>)headings;
     }
 
     internal async Task<IReadOnlyList<ReaderLink>> ReadLinksAsync(int page, CancellationToken token)
@@ -58,7 +66,7 @@ internal sealed class ReaderDocument : IAsyncDisposable
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            return await Task.Run(() => ReaderLinks.Read(PdfPath, page), token);
+            return _preview is not null ? _preview.Links[page] : await Task.Run(() => ReaderLinks.Read(PdfPath, page), token);
         }
         finally { _metadata.Release(); }
     }

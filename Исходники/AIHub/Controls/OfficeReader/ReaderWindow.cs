@@ -36,7 +36,6 @@ public sealed partial class ReaderWindow : Window
     private bool _book, _dark, _loading, _closed, _navigating, _fullscreen;
     private WindowState _previousState;
     private readonly Stack<int> _linkHistory = new();
-    private readonly IAsyncDisposable _officeSession;
     private readonly ReaderWindowGroup _windowGroup;
     internal string? SourcePath { get; private set; }
     internal bool IsDarkTheme => _dark;
@@ -59,7 +58,6 @@ public sealed partial class ReaderWindow : Window
         _shell.Children.Add(_root);
         Content = _shell;
         if (startEditing) MountEditor();
-        _officeSession = ReaderOfficeSession.Retain();
         _windowGroup.Attach(this);
         _selection.CopyRequested = () => _ = CopySelectedTextAsync();
         _selection.SelectAllRequested = () => _selection.SelectAll(_document?.Pages.Count ?? 0);
@@ -90,8 +88,7 @@ public sealed partial class ReaderWindow : Window
         finally
         {
             _load?.Dispose();
-            try { await _officeSession.DisposeAsync(); }
-            finally { if (_editor is not null) await _editor.DisposeAsync(); }
+            if (_editor is not null) await _editor.DisposeAsync();
         }
     }
 

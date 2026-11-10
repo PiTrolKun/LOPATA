@@ -13,8 +13,8 @@
     },
     {
       "Name": "app/surface.js",
-      "Bytes": 4915812,
-      "Sha256": "501e0dafdbac3528d68dc2a34913b1c68b66a513c9f7643fb388e1e0c8157ad2"
+      "Bytes": 4918952,
+      "Sha256": "19abf0e3f60825ca0c30902ad8f7d1ad5eeb00af5d31b19acaa37fad5634a533"
     },
     {
       "Name": "assets/Caladea-Bold.ttf",
@@ -148,8 +148,8 @@
     },
     {
       "Name": "index.html",
-      "Bytes": 659,
-      "Sha256": "55297a4dd626b521b55bcc5fded761f822f5a9e6a65a74476762a42767766afc"
+      "Bytes": 665,
+      "Sha256": "88caa5df3e1483b187f087cff4f7e05f1121b498ab49b697d04b7a2b60dce69e"
     },
     {
       "Name": "licenses/@docx-editor.dev__core/LICENSE",
@@ -453,8 +453,8 @@
     },
     {
       "Name": "surface.css",
-      "Bytes": 1888,
-      "Sha256": "078f696b381ecfcdbb72bd34ba2d282429b5f0752c29c313eb90bb48a8e622ef"
+      "Bytes": 2517,
+      "Sha256": "385336d73ddcf59fc3820b508455678a27d25ea6b5e6b2cddd7ceeca350ea356"
     }
   ]
 }
