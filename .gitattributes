@@ -124,4 +124,7 @@ Runtime/MusicHeartMuLa/source.zip binary
 Документы_проекта/Голосовые_уведомления/Слепки/** -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 # Preserve the published voice bundle index bytes, including line endings.
-Исходники/AIHub/Assets/VoiceNotifications/bundles.json -text -eol
+Исходники/AIHub/Assets/VoiceNotifications/bundles.json -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Original 1C idea retains intentional Markdown hard breaks.
+ТЗ/Архив/LOPATA_идея_сценария_программирования_1С.md -whitespace
