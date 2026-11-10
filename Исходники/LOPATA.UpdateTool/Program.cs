@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using Lopata.Updates;
+using Lopata.UpdateTool;
 
 // Developer packaging/isolated-stand tool. This is not the installed recovery launcher.
 try
@@ -23,16 +24,33 @@ try
         using var signingKey = ECDsa.Create();
         signingKey.ImportFromPem(await File.ReadAllTextAsync(config.PrivateKeyPath));
         var reuse = config.PreviousManifestPath is null ? null : Read(config.PreviousManifestPath).Verify(keys);
-        var manifest = await UpdatePackageBuilder.BuildAsync(config.Roots, config.OutputDirectory,
-            config.Version, config.SourceCommit, config.Notes, reuse);
-        if (EngineSetTransition.UsesSets(manifest))
+        var preparation = Path.Combine(config.OutputDirectory, "build-inputs");
+        ReleaseInputChanges? changes = null;
+        if (reuse is not null)
+            changes = await ReleaseInputPreparation.RestorePreviousAsync(config.Roots, reuse,
+                Path.GetDirectoryName(Path.GetFullPath(config.PreviousManifestPath!))!, preparation);
+        string? legacyDirectory = null;
+        UpdateManifest? legacySet = null;
+        if (config.Roots.TryGetValue("app", out var appRoot) && Directory.Exists(Path.Combine(appRoot, "EngineSets")))
         {
             if (config.LegacyEngineSetManifestPath is null || config.LegacyEngineSetDirectory is null)
+                throw new InvalidDataException("Engine set delivery requires signed legacy inputs before packaging.");
+            legacySet = Read(config.LegacyEngineSetManifestPath).Verify(keys);
+            legacyDirectory = await ReleaseInputPreparation.MaterializeLegacyAsync(legacySet, config.LegacyEngineSetDirectory, preparation);
+        }
+        Directory.CreateDirectory(preparation);
+        WriteJson(Path.Combine(preparation, "input-preparation.json"), new { changes, legacyPrepared = legacyDirectory is not null });
+        var manifest = await UpdatePackageBuilder.BuildAsync(config.Roots, config.OutputDirectory,
+            config.Version, config.SourceCommit, config.Notes, reuse);
+        if (reuse is not null) ReleaseInputPreparation.EnsurePreviousPaths(manifest, reuse);
+        if (EngineSetTransition.UsesSets(manifest))
+        {
+            if (legacySet is null || legacyDirectory is null)
                 throw new InvalidDataException("Engine set delivery requires a signed legacy transition payload and a separate fresh manifest.");
             WriteJson(Path.Combine(config.OutputDirectory, EngineSetTransition.FreshManifestName),
                 SignedManifest.Sign(manifest, config.KeyId, signingKey));
-            manifest = await EngineSetTransition.BuildAsync(manifest, Read(config.LegacyEngineSetManifestPath).Verify(keys),
-                config.LegacyEngineSetDirectory, config.OutputDirectory, reuse);
+            manifest = await EngineSetTransition.BuildAsync(manifest, legacySet,
+                legacyDirectory, config.OutputDirectory, reuse);
         }
         var signed = SignedManifest.Sign(manifest, config.KeyId, signingKey);
         signed.Verify(keys);

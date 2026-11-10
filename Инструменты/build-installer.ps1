@@ -10,6 +10,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# poka-yoke: reject a missing predecessor before publishing an offline payload.
+if (!$StandDataRoot -and !$PreviousManifestPath) {
+    throw 'A production installer requires -PreviousManifestPath for its file-update payload.'
+}
 if (!$StandDataRoot -and !$ExplicitFullInstaller -and !$GenerationRelease) {
     throw 'Use build-mini-installer.ps1. Full offline setup requires an explicit separate request (-ExplicitFullInstaller) or a first-number generation release (-GenerationRelease).'
 }

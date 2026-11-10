@@ -16,6 +16,12 @@
 *.ico binary
 Исходники/AIHub/Assets/VideoNarratorSamples/*.wav binary
 
+
+# poka-yoke: shipped byte contracts retain original bytes in every clean checkout.
+Исходники/AIHub/Licenses/** -text -eol -whitespace
+Исходники/AIHub/Tools/** -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+Исходники/AIHub/Assets/VideoNarratorSamples/** -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
 LICENSE text eol=lf
 VERSION text eol=lf
 

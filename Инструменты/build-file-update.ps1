@@ -12,6 +12,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 if ($Version -notmatch '^\d+\.\d+\.\d+(-beta)?$') { throw 'File delivery requires an explicit beta or public version.' }
+# poka-yoke: do not construct a destructive replacement from a fresh-only snapshot.
+if (!$StandBuild -and !$PreviousManifestPath) { throw 'A production file update requires the previous signed manifest.' }
 $notesText = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $NotesPath).Path).Trim()
 if (!$notesText) { throw 'User-facing release notes are required.' }
 $out = [IO.Path]::GetFullPath($OutputDirectory)
