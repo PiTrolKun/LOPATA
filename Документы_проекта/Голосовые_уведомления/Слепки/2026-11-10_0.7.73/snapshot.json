@@ -1,0 +1,295 @@
+{
+  "schema": 1,
+  "snapshotId": "2026-11-10_0.7.73",
+  "createdUtc": "2026-11-10T14:44:53.208491+00:00",
+  "program": "LOPATA",
+  "programVersion": "0.7.73-dev",
+  "release": "0.7.73-beta",
+  "baselineSourceCommit": "ce4daf4100ec1d7e4b3224dcefa5269a238912ff",
+  "releaseUrl": "https://github.com/PiTrolKun/LOPATA/releases/tag/v0.7.73-beta",
+  "purpose": "Immutable inventory for future voice notification extension; not an installable language pack or user settings backup.",
+  "counts": {
+    "clips": 1529,
+    "eventAliases": 5247,
+    "templates": 6394,
+    "eventAliasesByPriority": {
+      "1": 3076,
+      "2": 2093,
+      "3": 78
+    },
+    "audioEntriesVerified": 3058
+  },
+  "packages": {
+    "ru": {
+      "sourcePath": "Исходники/AIHub/Assets/VoiceNotifications/ru.zip",
+      "bytes": 50829838,
+      "sha256": "8684a0460f1f790f45cab730eb52a2230efdc88fb774c5cdba09035d7123e733",
+      "manifestSha256": "6ce04be70977ceae724c3c55aa88218d99b13e5f172c808431015d7169565869",
+      "clips": 1529,
+      "format": "Opus",
+      "bitrateKbps": 64,
+      "originalExportProvenance": {
+        "Schema": 1,
+        "Program": "LOPATA",
+        "ProgramVersion": "0.7.70-dev",
+        "Scenario": "speech-assets/export",
+        "ExportedUtc": "2026-11-09T20:35:17.3977809+00:00",
+        "CreatedUtc": "2026-11-09T20:35:17.3977815+00:00",
+        "GenerationSeconds": null,
+        "ModelHistory": "recorded",
+        "ModelScope": "output",
+        "Models": [
+          {
+            "Id": "video-narrator-silero56",
+            "Name": "Silero v5.6 RU · xenia · ru",
+            "Revision": "v5_6_ru-04cc9b1d08ce",
+            "Role": "narration speech synthesis"
+          },
+          {
+            "Id": "video-narrator-runtime-silero56",
+            "Name": "Silero v5.6 RU · Python runtime",
+            "Revision": "voices-20261026-3",
+            "Role": "speech runtime"
+          },
+          {
+            "Id": "runtime.python.cuda126",
+            "Name": "Python / PyTorch · cu126",
+            "Revision": "2.10.0+cu126",
+            "Role": "speech hardware runtime · cuda:0"
+          }
+        ]
+      },
+      "phoneticEdits": 157,
+      "catalogSourceDifferences": 0
+    },
+    "en": {
+      "sourcePath": "Исходники/AIHub/Assets/VoiceNotifications/en.zip",
+      "bytes": 65390949,
+      "sha256": "66cb36c5835e3c3015037740ef9acb99d729ebda61d028ca9632a1069dec6c4d",
+      "manifestSha256": "c4461aac8b0201185bdf7786a8049e324415a57fa3c4ec010479fec745eb6bb8",
+      "clips": 1529,
+      "format": "Opus",
+      "bitrateKbps": 64,
+      "originalExportProvenance": {
+        "Schema": 1,
+        "Program": "LOPATA",
+        "ProgramVersion": "0.7.70-dev",
+        "Scenario": "speech-assets/export",
+        "ExportedUtc": "2026-11-10T06:48:45.4842377+00:00",
+        "CreatedUtc": "2026-11-10T06:48:45.4842383+00:00",
+        "GenerationSeconds": null,
+        "ModelHistory": "recorded",
+        "ModelScope": "output",
+        "Models": [
+          {
+            "Id": "video-narrator-kitten2",
+            "Name": "KittenTTS 2 · Iris · en",
+            "Revision": "c93cb7c271baa51d9ae8204d5277988906f235a2",
+            "Role": "narration speech synthesis"
+          },
+          {
+            "Id": "video-narrator-runtime-kitten",
+            "Name": "KittenTTS 2 · Python runtime",
+            "Revision": "voices-20261026-3",
+            "Role": "speech runtime"
+          },
+          {
+            "Id": "runtime.python.cuda126",
+            "Name": "Python / PyTorch · cu126",
+            "Revision": "2.10.0+cu126",
+            "Role": "speech hardware runtime · cuda:0"
+          },
+          {
+            "Id": "model-chatterbox-turbo-s3gen",
+            "Name": "ResembleAI Chatterbox Turbo S3Gen",
+            "Revision": "749d1c1a46eb10492095d68fbcf55691ccf137cd",
+            "Role": "Kitten GPU waveform decoder"
+          }
+        ]
+      },
+      "phoneticEdits": 0,
+      "catalogSourceDifferences": 0
+    }
+  },
+  "sourceFiles": [
+    {
+      "path": "Исходники/AIHub/Assets/VoiceNotifications/catalog.json",
+      "sha256": "b0974e9953619fd1e66859f261379b993ee578ebd2bf17b51a813118209a5299",
+      "capturedFileSha256": "b0974e9953619fd1e66859f261379b993ee578ebd2bf17b51a813118209a5299",
+      "canonicalJsonSha256": "48f162191e5cbb5f54ee8d40ba5e276f48232ddfb8712c9a9a14b032646821a7"
+    },
+    {
+      "path": "Исходники/AIHub/Assets/VoiceNotifications/bundles.json",
+      "sha256": "d76e83ca4dbaf27eb75e627306836794b7bc4d27c192bc21a00e21b7354e0e0c",
+      "capturedFileSha256": "1f3ee5ce5888ba25805df1960e07f09a656ded056e7e9e7a96171ba805bd5625",
+      "canonicalJsonSha256": "f0c2e5ac79f595947998bcededad8c416a12f88c6c4c41c5b8cfd43e7b3390db"
+    },
+    {
+      "path": "Исходники/AIHub/Localization/ru.json",
+      "sha256": "2ea62c2569f87b1aab7d98efff8381e4f41fd92aa35897e90dc0005060533ede",
+      "capturedFileSha256": "1c9d6953a3f68a74de9a7acd07c5f4da6e632d199c46d5e0a5a12e26dff4f595",
+      "canonicalJsonSha256": "e464e16edbabe5cf5b5901a3d878ae443e4f3a7e651ba92b9bf8fb57a6eaa488"
+    },
+    {
+      "path": "Исходники/AIHub/Localization/en.json",
+      "sha256": "ab0462ca5a92a112d3b1c4603f6f5a5684264c823b1d533c3d55342b10a40548",
+      "capturedFileSha256": "136558b9db2a0a7db54810d65e8c07edddb9357ec398dfe198992276c4e265b9",
+      "canonicalJsonSha256": "754725a0e5f4716fe65b85bdf080d17cbc68604b2fccff06b4f78da831fdc94c"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceMediaElement.cs",
+      "sha256": "0ca4390f5dc42629c7eab5e11e020d69cadf3ed5dafa0435d0e32efc4a1c2421",
+      "capturedFileSha256": "0ca4390f5dc42629c7eab5e11e020d69cadf3ed5dafa0435d0e32efc4a1c2421"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationAudio.cs",
+      "sha256": "eb32b610f32212613510ab0784ce55a398ab16dafd396b5e3ba3f8c008a5ad7a",
+      "capturedFileSha256": "eb32b610f32212613510ab0784ce55a398ab16dafd396b5e3ba3f8c008a5ad7a"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationCatalog.cs",
+      "sha256": "4635dca7eb3bc5842a9ad8a771192949ef5a6b3be3f31feac4aedb783eb75b37",
+      "capturedFileSha256": "4635dca7eb3bc5842a9ad8a771192949ef5a6b3be3f31feac4aedb783eb75b37"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationContext.cs",
+      "sha256": "4c890e6bf52e59bae8b23fe97b921b3fc30278b774309eca83e2f020c76d8cc4",
+      "capturedFileSha256": "4c890e6bf52e59bae8b23fe97b921b3fc30278b774309eca83e2f020c76d8cc4"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationEvents.cs",
+      "sha256": "e74f764c166368a32c8e12803e55f991bf222224bfcbcd2703fc5c020273851d",
+      "capturedFileSha256": "e74f764c166368a32c8e12803e55f991bf222224bfcbcd2703fc5c020273851d"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationPackage.cs",
+      "sha256": "c9fddfd8eaaa51f591c0a43a5084dbc08f6bd1b3a35b676883f8a8cf90726331",
+      "capturedFileSha256": "c9fddfd8eaaa51f591c0a43a5084dbc08f6bd1b3a35b676883f8a8cf90726331"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationQueue.cs",
+      "sha256": "7646bb55590952f5e9559046dbbec79d0d0e1f180036dd2c293e8f1ebcb3e4d4",
+      "capturedFileSha256": "7646bb55590952f5e9559046dbbec79d0d0e1f180036dd2c293e8f1ebcb3e4d4"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationService.cs",
+      "sha256": "3dd92edaea73cd1815dc648d58527a650e88caf2fef1a7e15a35541ffb14c7c8",
+      "capturedFileSha256": "3dd92edaea73cd1815dc648d58527a650e88caf2fef1a7e15a35541ffb14c7c8"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationStore.cs",
+      "sha256": "337cd2fc94381172e8e2d71078421ce8e13ee051153e05228e23476f7fcb4352",
+      "capturedFileSha256": "337cd2fc94381172e8e2d71078421ce8e13ee051153e05228e23476f7fcb4352"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoicePackageImporter.cs",
+      "sha256": "329eb76f1e1e7cbc05ebebf9f046f9ac98f1b6ca47502b72e7506fd281f24401",
+      "capturedFileSha256": "329eb76f1e1e7cbc05ebebf9f046f9ac98f1b6ca47502b72e7506fd281f24401"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoicePlaybackHub.cs",
+      "sha256": "faabbc8d2100fddd83f6d8dc91862183c81f26b2d278dc753876a88f6d17e8b4",
+      "capturedFileSha256": "faabbc8d2100fddd83f6d8dc91862183c81f26b2d278dc753876a88f6d17e8b4"
+    },
+    {
+      "path": "Исходники/AIHub/Services/VoiceNotifications/VoiceStatusObserver.cs",
+      "sha256": "baf42ea5ab7574f52c77d7b803eda1c195900f7f81b73abb5b3e56e6cf0f21d7",
+      "capturedFileSha256": "baf42ea5ab7574f52c77d7b803eda1c195900f7f81b73abb5b3e56e6cf0f21d7"
+    },
+    {
+      "path": "Исходники/AIHub/Models/VoiceNotificationSettings.cs",
+      "sha256": "f2d4778e9c883d6941c24f08e2ca53cdb4abed8230b9aa8c85fc2af784bbebc0",
+      "capturedFileSha256": "f2d4778e9c883d6941c24f08e2ca53cdb4abed8230b9aa8c85fc2af784bbebc0"
+    },
+    {
+      "path": "Инструменты/SpeechAssets/build_voice_notification_catalog.py",
+      "sha256": "0c74a8c1e89ddd36d080223963f890e27cac0ca951fb58bf5f9d546ed308a173",
+      "capturedFileSha256": "0c74a8c1e89ddd36d080223963f890e27cac0ca951fb58bf5f9d546ed308a173"
+    },
+    {
+      "path": "Инструменты/SpeechAssets/build_notification_lists.py",
+      "sha256": "919d0889b90f62a24907a07c7b6b735a091bb2a81f88d1ae68fdb44ef20722d3",
+      "capturedFileSha256": "919d0889b90f62a24907a07c7b6b735a091bb2a81f88d1ae68fdb44ef20722d3"
+    },
+    {
+      "path": "Инструменты/SpeechAssets/notification_filter.py",
+      "sha256": "c6232f690cd95fa8f9dadd6df9d0ff62e4b0565c7147a647423f4917133efee5",
+      "capturedFileSha256": "c6232f690cd95fa8f9dadd6df9d0ff62e4b0565c7147a647423f4917133efee5"
+    }
+  ],
+  "pronunciationNote": {
+    "language": "ru",
+    "model": "silero56",
+    "speaker": "xenia",
+    "userClarificationDate": "2026-11-10",
+    "text": "Most manual Russian pronunciation edits address Latin letters and digits that this selected model did not pronounce as intended. SynthesisText is voice/model-specific; preserve canonical text and stable IDs. Reassess for another voice rather than applying these edits globally."
+  },
+  "files": [
+    {
+      "path": "bundles.json",
+      "bytes": 157,
+      "sha256": "1f3ee5ce5888ba25805df1960e07f09a656ded056e7e9e7a96171ba805bd5625"
+    },
+    {
+      "path": "catalog.json",
+      "bytes": 1640121,
+      "sha256": "b0974e9953619fd1e66859f261379b993ee578ebd2bf17b51a813118209a5299"
+    },
+    {
+      "path": "en.manifest.json",
+      "bytes": 2951558,
+      "sha256": "c4461aac8b0201185bdf7786a8049e324415a57fa3c4ec010479fec745eb6bb8"
+    },
+    {
+      "path": "inventory.csv",
+      "bytes": 1252857,
+      "sha256": "4c97ada45fdfd524f82aadd4b44a3fc7d610600c75f2b3cd204087d03dae57a1"
+    },
+    {
+      "path": "LOPATA_Notifications_and_Statuses_en.md",
+      "bytes": 352341,
+      "sha256": "f1a3894255a3c24f13795a1ea43715c3760e89a663fb76c84841d26657c5beb9"
+    },
+    {
+      "path": "LOPATA_уведомления_и_статусы_ru.md",
+      "bytes": 429143,
+      "sha256": "43e4324862f8516e604cf81464e2f8f4b8a04b8fe05e964937cc34a40b0cdf49"
+    },
+    {
+      "path": "origins.json",
+      "bytes": 2561785,
+      "sha256": "c582438fcf01b1a5f0d54418f4c9821b0823189790030c5999c3a880568f1119"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3443,
+      "sha256": "8b1b62f884d782249cc04c45e097b75841e637d78dcac6f23e461af70b32f263"
+    },
+    {
+      "path": "README_en.md",
+      "bytes": 4452,
+      "sha256": "fe274fcb9e35fbae3f76d6679375ed9c605dd72762e9c3618b92a4b3ed9fb8a9"
+    },
+    {
+      "path": "README_ru.md",
+      "bytes": 7883,
+      "sha256": "4b4661f7e02491af7cb31a608f18ec41ccb8c6d741e3f9f067522975c4197c41"
+    },
+    {
+      "path": "recordings-NOTICE.txt",
+      "bytes": 1139,
+      "sha256": "e6f79340a8f035e95e5fc8db63df6bafc42dd9112873bdfc4e11919140179cc1"
+    },
+    {
+      "path": "ru.manifest.json",
+      "bytes": 3311806,
+      "sha256": "6ce04be70977ceae724c3c55aa88218d99b13e5f172c808431015d7169565869"
+    }
+  ],
+  "sourceFileHashMeaning": {
+    "sha256": "Exact blob bytes in baselineSourceCommit",
+    "capturedFileSha256": "Exact verified release-worktree bytes; line endings may differ from the Git blob",
+    "canonicalJsonSha256": "Sorted compact UTF-8 JSON; equal values in Git and captured file verified"
+  },
+  "scopeNote": "The accepted release voice data is the baseline; unrelated dirty workspace source edits are not incorporated."
+}

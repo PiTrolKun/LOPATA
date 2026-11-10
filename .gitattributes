@@ -119,3 +119,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Original idea retains intentional Markdown hard breaks.
 ТЗ/Архив/LOPATA_Идея_интеграции_в_Проводник_Windows_2026-10-17.md -whitespace
+
+# Frozen voice notification snapshots are immutable byte contracts.
+Документы_проекта/Голосовые_уведомления/Слепки/** -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
