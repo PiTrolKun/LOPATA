@@ -11,9 +11,11 @@ public static class CollectionWindowsSearch
 
     public static CollectionIndexResult Query(CollectionConfig config, CancellationToken token)
     {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(12));
         var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         string? error = null; var limited = false;
-        var projected = Execute(OriginCondition, token);
+        var projected = Execute(OriginCondition, token, deadline.Token);
         paths.UnionWith(projected.Paths); error = projected.Error; limited |= projected.Limited;
         // Windows often indexes only the path of these containers, not their private provenance.
         // Ask its existing index for candidates in explicitly permitted locations, then parse origin.
@@ -52,7 +54,7 @@ public static class CollectionWindowsSearch
                     + "OR System.FileExtension = '.avs' OR System.FileExtension = '.dcx' OR System.FileExtension = '.mtv' "
                     + "OR System.FileExtension = '.otb' OR System.FileExtension = '.palm' OR System.FileExtension = '.pdb' "
                     + "OR System.FileExtension = '.vicar' OR System.FileExtension = '.viff' OR System.FileExtension = '.vips')";
-                var fallback = Execute(scope + " AND " + extensions, token);
+                var fallback = Execute(scope + " AND " + extensions, token, deadline.Token);
                 paths.UnionWith(fallback.Paths); error = fallback.Error; limited |= fallback.Limited;
             }
         }
@@ -60,29 +62,34 @@ public static class CollectionWindowsSearch
         return new(paths.Take(CollectionSnapshot.MaxEntries).ToArray(), error, limited);
     }
 
-    private static CollectionIndexResult Execute(string condition, CancellationToken token)
+    private static CollectionIndexResult Execute(string condition, CancellationToken token, CancellationToken deadline)
     {
         var paths = new List<string>(); object? connectionObject = null; object? recordsObject = null;
         try
         {
+            deadline.ThrowIfCancellationRequested();
             var type = Type.GetTypeFromProgID("ADODB.Connection") ?? throw new InvalidOperationException("Windows Search provider is unavailable.");
             connectionObject = Activator.CreateInstance(type) ?? throw new InvalidOperationException("Windows Search provider could not be created.");
             dynamic connection = connectionObject;
             connection.ConnectionTimeout = 5;
             connection.CommandTimeout = 10;
             connection.Open("Provider=Search.CollatorDSO;Extended Properties='Application=Windows';");
-            token.ThrowIfCancellationRequested();
+            deadline.ThrowIfCancellationRequested();
             recordsObject = connection.Execute($"SELECT TOP {CollectionSnapshot.MaxEntries + 1} System.ItemUrl FROM SystemIndex WHERE {condition}");
             dynamic records = recordsObject;
             while (!(bool)records.EOF && paths.Count <= CollectionSnapshot.MaxEntries)
             {
-                token.ThrowIfCancellationRequested();
+                deadline.ThrowIfCancellationRequested();
                 string value = Convert.ToString(records.Fields.Item(0).Value, System.Globalization.CultureInfo.InvariantCulture) ?? "";
                 if (Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.IsFile) paths.Add(uri.LocalPath);
                 records.MoveNext();
             }
             var limited = paths.Count > CollectionSnapshot.MaxEntries;
             return new(paths.Take(CollectionSnapshot.MaxEntries).ToArray(), null, limited);
+        }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        {
+            return new(paths, "windows-search:timeout", true);
         }
         catch (Exception error) when (error is COMException or InvalidOperationException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
         {

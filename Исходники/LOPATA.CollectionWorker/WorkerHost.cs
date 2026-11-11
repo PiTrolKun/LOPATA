@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -9,8 +8,6 @@ namespace Lopata.CollectionWorker;
 
 internal static class WorkerHost
 {
-    private const string NamespaceName = "::{D4ACCFB2-2A17-4F52-BB28-8CF2A584362A}";
-
     public static Task<int> RunAsync(string root, bool diagnostic = false) => Task.Run(() => Run(root, diagnostic));
 
     private static int Run(string root, bool diagnostic)
@@ -56,10 +53,11 @@ internal static class WorkerHost
                     var scan = Task.Run(async () =>
                     {
                         await WorkerAudit.VerifyAsync(root, config, diagnostic, timeout.Token);
-                        // Clear a previous scope only after auditing the selected component.
-                        if (!Publish(root, revision, oldItems)) return new CollectionScanResult([], null, false, 0);
+                        // Reconcile the current snapshot before querying any discovery provider.
+                        var available = CollectionPublication.FilterAvailable(config, oldItems, timeout.Token);
+                        if (!Publish(root, revision, available)) return new CollectionScanResult([], null, false, 0);
                         return scanner.Scan(root, config, timeout.Token,
-                            local => PublishLocal(root, config, revision, local, oldItems), oldItems);
+                            local => PublishLocal(root, config, revision, local, available), available);
                     }, timeout.Token);
                     // A blocked OS provider belongs to this expendable worker, never to Explorer.
                     var scanWait = Stopwatch.StartNew();
@@ -72,7 +70,7 @@ internal static class WorkerHost
                         }
                         if (scanWait.Elapsed >= TimeSpan.FromSeconds(50))
                         {
-                            Status(root, "unavailable", oldItems.Count, "scan-timeout", true);
+                            Status(root, "unavailable", CollectionPublication.ReadCurrent(root, revision).Count, "scan-timeout", true);
                             Environment.Exit(3);
                         }
                     }
@@ -94,7 +92,7 @@ internal static class WorkerHost
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException
             or InvalidDataException or OperationCanceledException or AggregateException)
         {
-            Status(root, "unavailable", 0, error.GetType().Name, true);
+            Status(root, "unavailable", SnapshotForDisplay(root).Count, error.GetBaseException().GetType().Name, true);
             return 2;
         }
         finally
@@ -152,20 +150,19 @@ internal static class WorkerHost
 
     private static void PublishLocal(string root, CollectionConfig config, string revision, IReadOnlyList<CollectionItem> local, IReadOnlyList<CollectionItem> previous)
     {
-        if (!CollectionPublication.IsCurrent(root, revision) || local.Count == 0) return;
+        if (!CollectionPublication.IsCurrent(root, revision)) return;
         var combined = CollectionPublication.MergeValidated(config, local, previous, root);
         Publish(root, revision, combined);
     }
 
-    private static bool Publish(string root, string revision, IReadOnlyList<CollectionItem> items)
+    // Explorer's lease monitor observes snapshot changes and refreshes its view.
+    private static bool Publish(string root, string revision, IReadOnlyList<CollectionItem> items) =>
+        CollectionPublication.TryPublish(root, revision, items, Environment.ProcessPath ?? "");
+
+    private static IReadOnlyList<CollectionItem> SnapshotForDisplay(string root)
     {
-        var previous = CollectionSnapshot.Read(root);
-        if (!CollectionPublication.TryPublish(root, revision, items, Environment.ProcessPath ?? "")) return false;
-        if (previous.SequenceEqual(items)) return true;
-        if (SHParseDisplayName(NamespaceName, IntPtr.Zero, out var pidl, 0, out _) != 0) return true;
-        try { SHChangeNotify(0x1000, 0, pidl, IntPtr.Zero); }
-        finally { Marshal.FreeCoTaskMem(pidl); }
-        return true;
+        try { return CollectionSnapshot.Read(root); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException) { return []; }
     }
 
     private static void Status(string root, string phase, int count, string? error, bool limited)
@@ -184,8 +181,4 @@ internal static class WorkerHost
         catch (Exception failure) when (failure is IOException or UnauthorizedAccessException) { }
     }
 
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-    private static extern int SHParseDisplayName(string name, IntPtr bind, out IntPtr pidl, uint attributes, out uint actual);
-    [DllImport("shell32.dll")]
-    private static extern void SHChangeNotify(uint change, uint flags, IntPtr first, IntPtr second);
 }

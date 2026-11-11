@@ -32,10 +32,13 @@ internal static class CollectionConfigurationFactory
                 "OfficeEditor/Drafts", "OfficeReader/Sessions", "OfficeReader/Speech/Temporary",
                 "OfficeReader/Translation/Temporary", "VideoPreparation/Recovery", "VideoEditor/Projects",
                 "VectorGraphics/EditorRecovery", "VectorGraphics/Jobs", "VideoPreparation/H3Jobs",
-                "VideoPreparation/VaceJobs", "Chat/Audio"
+                "VideoPreparation/VaceJobs", "Chat/Audio", "SpeechAssets/Sessions",
+                "VoiceNotifications", "Localization/VoiceNotifications"
             }.Select(relative => Path.Combine(paths.DataDirectory, relative)))
             .Concat(paths.ProjectRoot is { } projectRoot
-                ? new[] { Path.Combine(projectRoot, "_tmp"), Path.Combine(projectRoot, "_backups") } : [])
+                ? new[] { Path.Combine(projectRoot, "_tmp"), Path.Combine(projectRoot, "_backups"),
+                    Path.Combine(projectRoot, "Исходники", "AIHub", "bin"),
+                    Path.Combine(projectRoot, "Исходники", "AIHub", "Assets", "VoiceNotifications") } : [])
             .Where(p => !string.IsNullOrWhiteSpace(p) && Path.IsPathFullyQualified(p))
             .Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var searchRoots = roots.Concat(new[]

@@ -207,6 +207,28 @@ public sealed class CollectionTests
     }
 
     [TestMethod]
+    public void CachedViewDropsMissingFilesAndPrivateNarrationBeforeWindowsSearch()
+    {
+        using var fixture = new Fixture();
+        var userExport = fixture.File("narration.wav");
+        var removed = fixture.File("removed.png");
+        var privateRoot = fixture.File("SpeechAssets");
+        Directory.CreateDirectory(privateRoot);
+        var privateNarration = Path.Combine(privateRoot, "narration.wav");
+        File.WriteAllText(userExport, "User export");
+        File.WriteAllText(privateNarration, "Working audio");
+        var config = new CollectionConfig { ExcludedRoots = [privateRoot], Language = "ru" };
+        CollectionItem[] previous = [
+            new(userExport, "Аудио", CollectionLabels.Scenario("speech-assets/export", config.Language)),
+            new(removed, "Изображения", "Генерация изображений"),
+            new(privateNarration, "Аудио", "Видео")
+        ];
+        var filtered = CollectionPublication.FilterAvailable(config, previous, CancellationToken.None);
+        Assert.AreEqual(userExport, filtered.Single().Path);
+        Assert.AreEqual("Музыка и аудио", filtered.Single().Scenario);
+    }
+
+    [TestMethod]
     public void LateScanReplyCannotPublishAfterConfigurationChange()
     {
         using var fixture = new Fixture();

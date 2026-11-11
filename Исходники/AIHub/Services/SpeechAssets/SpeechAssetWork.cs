@@ -78,7 +78,8 @@ internal sealed class SpeechAssetWork(SpeechAssetStore store, VideoNarratorRegis
                             catch (Exception e) when (e is IOException or JsonException) { receipt = null; }
                         if (receipt is null)
                         {
-                            using var workspace = VideoNarrationWorkspace.Capture(store.FileFor(job.SessionId, $"work/{item.TakeId}/{part:D6}"));
+                            using var workspace = VideoNarrationWorkspace.Capture(
+                                store.FileFor(job.SessionId, $"work/{item.TakeId}/{part:D6}"), publishOutput: false);
                             var narrator = batch.Get(job.Voice.Id); var voice = job.Voice;
                             var audio = narrator is IConfiguredVideoNarrator configured
                                 ? await configured.GenerateAsync(voice.Id, voice.Language, parts[part], voice.Rate, voice.Options, attempt)

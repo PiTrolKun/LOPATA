@@ -39,7 +39,7 @@ public static class CollectionLabels
             "vector" or "vector-editor" or "vector-generation" => english ? "Vector graphics" : "Векторная графика",
             "office" => english ? "AI Office" : "AI Office",
             "books" or "book-converter" => english ? "Books" : "Книги",
-            "music" or "music-generation" or "music-stems" or "audio-conversion" => english ? "Music and audio" : "Музыка и аудио",
+            "music" or "music-generation" or "music-stems" or "audio-conversion" or "speech-assets" => english ? "Music and audio" : "Музыка и аудио",
             "video" or "video-editor" or "video-preparation" or "song-clip" or "lyric-video" or "video-upscale" => english ? "Video" : "Видео",
             "literary" or "literature" => english ? "Literature" : "Литература",
             "reader" => english ? "Reader" : "Читалка",

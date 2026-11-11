@@ -86,6 +86,24 @@ public static class CollectionPublication
         return items.Values.OrderBy(p => p.Path, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
+    public static IReadOnlyList<CollectionItem> FilterAvailable(CollectionConfig config,
+        IReadOnlyList<CollectionItem> previous, CancellationToken token)
+    {
+        var available = new List<CollectionItem>(previous.Count);
+        foreach (var item in previous)
+        {
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                if (!CollectionFilePolicy.IsAllowed(item.Path, config)) continue;
+                var file = new FileInfo(item.Path);
+                if (file.Exists && CollectionFilePolicy.CanRead(file)) available.Add(item);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or System.Security.SecurityException) { }
+        }
+        return available;
+    }
+
     internal static void WithLock(string root, Action action)
     {
         var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(root).ToUpperInvariant())))[..24];

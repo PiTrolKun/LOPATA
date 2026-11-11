@@ -108,7 +108,8 @@ public sealed class CollectionInitializationTests
             Assert.Contains(Path.Combine(f.Root, name), config.Roots);
         foreach (var name in new[] { "OfficeEditor/Drafts", "OfficeReader/Sessions", "OfficeReader/Speech/Temporary",
             "OfficeReader/Translation/Temporary", "VideoPreparation/Recovery", "VideoEditor/Projects", "VectorGraphics/EditorRecovery",
-            "VectorGraphics/Jobs", "VideoPreparation/H3Jobs", "VideoPreparation/VaceJobs", "Chat/Audio" })
+            "VectorGraphics/Jobs", "VideoPreparation/H3Jobs", "VideoPreparation/VaceJobs", "Chat/Audio",
+            "SpeechAssets/Sessions", "VoiceNotifications", "Localization/VoiceNotifications" })
             Assert.Contains(Path.GetFullPath(Path.Combine(f.Paths.DataDirectory, name)), config.ExcludedRoots);
         Assert.Contains(f.Paths.ApplicationDirectory, config.ExcludedRoots);
         Assert.Contains(f.Paths.RuntimeDirectory, config.ExcludedRoots);
@@ -116,6 +117,8 @@ public sealed class CollectionInitializationTests
         Assert.Contains(Path.Combine(f.Root, "models"), config.ExcludedRoots);
         Assert.Contains(Path.Combine(f.Paths.ProjectRoot!, "_tmp"), config.ExcludedRoots);
         Assert.Contains(Path.Combine(f.Paths.ProjectRoot!, "_backups"), config.ExcludedRoots);
+        Assert.Contains(Path.Combine(f.Paths.ProjectRoot!, "Исходники", "AIHub", "bin"), config.ExcludedRoots);
+        Assert.Contains(Path.Combine(f.Paths.ProjectRoot!, "Исходники", "AIHub", "Assets", "VoiceNotifications"), config.ExcludedRoots);
     }
 
     private sealed class Fixture : IDisposable

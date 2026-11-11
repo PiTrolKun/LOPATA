@@ -37,3 +37,11 @@ inline bool RecoveryAttemptDue(const RecoveryAttempts& attempts, ULONGLONG now) 
     const auto pause = (1ull << attempts.count) * 10000000;
     return !attempts.lastStart || now - attempts.lastStart > pause + 10ull * 10000000;
 }
+
+inline bool RearmRecoveryAfterIdle(RecoveryAttempts& attempts, ULONGLONG now) {
+    constexpr ULONGLONG idleBeforeReopen = 60ull * 10000000;
+    if (attempts.count < 3 || !attempts.lastStart || now < attempts.lastStart ||
+        now - attempts.lastStart < idleBeforeReopen) return false;
+    ResetRecoveryCounters(attempts, now);
+    return true;
+}

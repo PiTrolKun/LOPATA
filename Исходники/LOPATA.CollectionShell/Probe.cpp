@@ -61,6 +61,9 @@ int wmain(int count, wchar_t** arguments) {
     Require(oldWorker == RecoveryWorkerFingerprint(L"c:\\ИСХОДНИКИ\\old\\WORKER.EXE"), "recovery worker identity ignores Unicode path case");
     RecoveryAttempts attempts{1, 1, 3, oldWorker};
     Require(!BindRecoveryWorker(attempts, 10000000000, oldWorker) && !RecoveryAttemptDue(attempts, 10000000000), "three attempts remain exhausted for the same worker");
+    Require(!RearmRecoveryAfterIdle(attempts, 590000001) && attempts.count == 3, "reopening immediately does not restart a failing worker");
+    Require(RearmRecoveryAfterIdle(attempts, 600000001) && RecoveryAttemptDue(attempts, 600000001), "reopening after idle gets a fresh bounded budget");
+    attempts = {1, 1, 3, oldWorker};
     Require(BindRecoveryWorker(attempts, 10000000000, newWorker) && attempts.count == 0 && RecoveryAttemptDue(attempts, 10000000000), "a changed worker gets a new bounded budget");
     attempts.count = 1; attempts.lastStart = 10000000000;
     Require(!BindRecoveryWorker(attempts, 10000000001, newWorker) && attempts.count == 1 && !RecoveryAttemptDue(attempts, 10000000001), "the same new worker does not reset its budget repeatedly");

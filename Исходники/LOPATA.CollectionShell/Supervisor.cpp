@@ -83,7 +83,7 @@ void StopUnresponsive(const Settings& settings) {
 }
 
 using Attempts = RecoveryAttempts;
-void EnsureWorker(const Settings& settings, bool explicitRefresh) {
+void EnsureWorker(const Settings& settings, bool explicitRefresh, bool openedView) {
     const auto now = Now();
     const auto heartbeat = FileTime(settings.root + L"\\heartbeat");
     HANDLE mutex = CreateMutexW(nullptr, FALSE, LockName(settings.root).c_str());
@@ -103,6 +103,8 @@ void EnsureWorker(const Settings& settings, bool explicitRefresh) {
         ReleaseMutex(mutex); CloseHandle(mutex); return;
     }
     if (explicitRefresh || !attempts.window || now < attempts.window) ResetRecoveryCounters(attempts, now);
+    else if (openedView && RearmRecoveryAfterIdle(attempts, now))
+        WriteSmall(recoveryPath, &attempts, sizeof(attempts));
     // A common retry window prevents several Explorer processes from launching a storm.
     if (RecoveryAttemptDue(attempts, now)) {
         if (heartbeat && now >= heartbeat && now - heartbeat > 30ull * 10000000) StopUnresponsive(settings);
@@ -127,6 +129,7 @@ DWORD WINAPI Monitor(void* argument) {
     std::wstring lease;
     ULONGLONG previousSnapshot = 0;
     ULONGLONG previousStatus = 0;
+    bool openedView = true;
     while (Views > 0) {
         try {
             const auto settings = ReadSettings();
@@ -140,7 +143,8 @@ DWORD WINAPI Monitor(void* argument) {
             Touch(lease);
             const bool refresh = RefreshRequested.exchange(false);
             if (refresh) Touch(settings.root + L"\\refresh.request");
-            EnsureWorker(settings, refresh);
+            EnsureWorker(settings, refresh, openedView);
+            openedView = false;
             const auto currentSnapshot = FileTime(settings.root + L"\\snapshot.bin");
             const auto currentStatus = FileTime(settings.root + L"\\status.bin");
             if ((currentSnapshot && currentSnapshot != previousSnapshot) || currentStatus != previousStatus) {
