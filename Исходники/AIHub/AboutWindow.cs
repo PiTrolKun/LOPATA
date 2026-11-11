@@ -83,7 +83,14 @@ public sealed class AboutWindow : Window
         var guideHeading = Paragraph("About.GuideTitle");
         guideHeading.FontWeight = FontWeights.SemiBold;
         panel.Children.Add(guideHeading);
-        foreach (var key in new[] { "Start", "Navigation", "Images", "Generation", "Music", "ImageUtility", "Shell", "Capture", "Finance", "Literary", "Import", "Sending", "Sources", "Memory", "Prompts", "Background", "Updates" })
+        foreach (var key in new[]
+                 {
+                     "Start", "Navigation", "Images", "Generation", "Vector", "Video",
+                     "Music", "GameSounds", "OneC", "Literary", "Import", "Sending",
+                     "Sources", "Memory", "Prompts", "Office", "SpeechAssets", "FileTools",
+                     "ImageUtility", "Capture", "Shell", "Voice", "Experiments", "Finance",
+                     "Background", "Updates"
+                 })
         {
             var section = new Expander
             {

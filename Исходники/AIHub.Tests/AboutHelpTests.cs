@@ -26,7 +26,14 @@ public sealed class AboutHelpTests
                     owner.Show();
                     var help = new AboutWindow(owner, "LOPATA", "0.3.32-dev", localizer.T, () => { });
                     var sections = Descendants(help).OfType<Expander>().ToArray();
-                    foreach (var key in new[] { "Navigation", "Generation", "ImageUtility", "Shell", "Capture", "Finance", "Import", "Background", "Updates" })
+                    foreach (var key in new[]
+                             {
+                                 "Start", "Navigation", "Images", "Generation", "Vector", "Video",
+                                 "Music", "GameSounds", "OneC", "Literary", "Import", "Sending",
+                                 "Sources", "Memory", "Prompts", "Office", "SpeechAssets", "FileTools",
+                                 "ImageUtility", "Capture", "Shell", "Voice", "Experiments", "Finance",
+                                 "Background", "Updates"
+                             })
                     {
                         var title = localizer.T("About.Guide." + key + "Title");
                         var section = sections.Single(s => s.Header is TextBlock heading && heading.Text == title);
