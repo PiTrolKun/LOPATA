@@ -13,6 +13,17 @@ public sealed partial class LlamaServerRuntimeService
         int outputTokens, Action<string> log, CancellationToken token)
     {
         await PrepareAsync(model, log, token);
+        var tokens = await CountPrivatePromptAsync(json, token);
+        log($"Document context: input={tokens}, output={outputTokens}, capacity={RequestedContextTokens}");
+        if ((long)tokens + outputTokens + 512 >= RequestedContextTokens) return null;
+        try { return await GeneratePrivateJsonAsync(model, json, token); }
+        catch (HttpRequestException error) when (error.StatusCode == System.Net.HttpStatusCode.BadRequest
+            && error.Message.Contains("exceed_context_size_error", StringComparison.Ordinal))
+        { log("Document context changed; dividing this batch before retry."); return null; }
+    }
+
+    internal async Task<int> CountPrivatePromptAsync(string json, CancellationToken token)
+    {
         using var payload = JsonDocument.Parse(json);
         using var template = new StringContent(JsonSerializer.Serialize(new
         {
@@ -32,12 +43,6 @@ public sealed partial class LlamaServerRuntimeService
         using var counted = await _httpClient.PostAsync(Endpoint + "/tokenize", input, token);
         counted.EnsureSuccessStatusCode();
         using var counts = JsonDocument.Parse(await counted.Content.ReadAsStringAsync(token));
-        var tokens = counts.RootElement.GetProperty("tokens").GetArrayLength();
-        log($"Document context: input={tokens}, output={outputTokens}, capacity={RequestedContextTokens}");
-        if ((long)tokens + outputTokens + 512 >= RequestedContextTokens) return null;
-        try { return await GeneratePrivateJsonAsync(model, json, token); }
-        catch (HttpRequestException error) when (error.StatusCode == System.Net.HttpStatusCode.BadRequest
-            && error.Message.Contains("exceed_context_size_error", StringComparison.Ordinal))
-        { log("Document context changed; dividing this batch before retry."); return null; }
+        return counts.RootElement.GetProperty("tokens").GetArrayLength();
     }
 }

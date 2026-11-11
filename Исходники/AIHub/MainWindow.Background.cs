@@ -45,6 +45,8 @@ public partial class MainWindow
         RegisterChatSpeech();
         _backgroundOperations.Register(Services.OneC.OneCWork.Kind,
             (state, token) => ScenarioNavigationPage.ShowOneC(this).ResumeAsync(state, token));
+        _backgroundOperations.Register(Services.GameSounds.GameSoundModelSession.Kind,
+            (state, token) => ScenarioNavigationPage.RestoreGameSoundsAsync(this, () => _localizationService.CurrentLanguageCode, state, token));
         _backgroundOperations.Register(Services.SpeechAssets.SpeechAssetWork.Kind,
             (state, token) => ScenarioNavigationPage.ShowSpeechAssets(this).ResumeAsync(state, token));
         _backgroundOperations.Register(Services.OfficeReader.ReaderSpeechWork.Kind, (_, _) =>
@@ -254,6 +256,13 @@ public partial class MainWindow
                 var pointer = Services.OneC.OneCWork.ReadPointer(state);
                 await ScenarioNavigationPage.ShowOneC(this).EnterAsync(pointer.ProjectId);
                 _backgroundOperations.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == Services.GameSounds.GameSoundModelSession.Kind && notice.Project is { } soundProject)
+            {
+                RestoreFromTray(); ShowWorkStartPage();
+                if (WorkStartPage.Visibility != System.Windows.Visibility.Visible) return;
+                await ScenarioNavigationPage.OpenGameSoundProjectAsync(this, () => _localizationService.CurrentLanguageCode, soundProject);
+                _backgroundOperations!.Acknowledge(notice.Id); return;
             }
             if (notice.Kind == Services.SpeechAssets.SpeechAssetWork.Kind)
             {

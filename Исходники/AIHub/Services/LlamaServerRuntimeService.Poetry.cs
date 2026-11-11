@@ -12,6 +12,8 @@ public sealed partial class LlamaServerRuntimeService
     private LlamaStartupJournal? _poetryJournal;
     private LlamaStartupPlacement? _poetryPlacement;
     private bool _poetryCanResize;
+    private bool _adaptivePoetryPlacement;
+    private LlamaPlacementMode? _requiredPoetryPlacement;
     private TimeSpan? _poetryStartupTimeout;
     private MusicPoetryReasoningOptions _poetryReasoning = MusicPoetryReasoningOptions.Disabled;
     private Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? _poetryGpuAdmission;
@@ -20,14 +22,18 @@ public sealed partial class LlamaServerRuntimeService
     internal async Task<int> PreparePoetryAsync(DebugModelInfo model, CancellationToken token, string? reasoningMode = null,
         MusicPoetryReasoningPreference? reasoningPreference = null, int? requestedContextTokens = null,
         MusicPoetryReasoningOptions? reasoningOptions = null, TimeSpan? startupTimeout = null,
-        Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? gpuAdmission = null)
+        Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? gpuAdmission = null,
+        bool adaptivePlacement = false, LlamaPlacementMode? requiredPlacement = null)
     {
         var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token);
-        var capacity = Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);
+        var capacity = adaptivePlacement ? memory.ModelContextTokens
+            : Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);
         if (requestedContextTokens is { } requested) capacity = Math.Min(capacity, Math.Max(1024, requested));
         await RetirePoetryAsync();
         _poetryReasoning = reasoningOptions ?? MusicPoetryReasoning.Resolve(model, reasoningMode, reasoningPreference);
         _poetryGpuAdmission = gpuAdmission;
+        _adaptivePoetryPlacement = adaptivePlacement;
+        _requiredPoetryPlacement = requiredPlacement;
         _poetryStartupTimeout = startupTimeout;
         _poetryRequestedContextTokens = capacity;
         _poetryContextTokens = capacity;

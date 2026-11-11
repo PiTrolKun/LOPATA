@@ -18,6 +18,7 @@ public static class ScenarioNavigationCatalog
     public const string Experiments = "experiments";
     public const string Utilities = "processing_utilities";
     public const string OneC = "onec";
+    public const string GameSounds = "game_sounds";
     public const string VibeCoding = "creation_vibe_coding";
     public const string SpeechAssets = "speech_assets";
     public const string Literary = "literary";
@@ -82,7 +83,7 @@ public static class ScenarioNavigationCatalog
             tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
         Node("creation_video", ScenarioNavigationKind.Group, Creation, "Navigation.Video", "", "create"),
         Node("creation_images", ScenarioNavigationKind.Group, Creation, "Navigation.Images", "", "create"),
-        Node("creation_music", ScenarioNavigationKind.Group, Creation, "Music.Group", "", "create"),
+        Node("creation_music", ScenarioNavigationKind.Group, Creation, "GameSounds.AudioGroup", "", "create"),
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
         Node(VibeCoding, ScenarioNavigationKind.Group, Creation, "OneC.Group", "", "create"),
         Node(OneC, ScenarioNavigationKind.Scenario, VibeCoding, "OneC.Title", "OneC.Description", "create", tags: ["onec_assistance", "onec_projects", "onec_checks"]),
@@ -91,6 +92,8 @@ public static class ScenarioNavigationCatalog
         Node(SongClip, ScenarioNavigationKind.Scenario, "creation_video", "SongClip.Title", "SongClip.Description", "create", tags: ["song_clip"]),
         Node(Music, ScenarioNavigationKind.Scenario, "creation_music", "Music.Title", "Music.Description", "create",
             tags: ["music_preparation", "music_ace_ideas", "music_ace_retake", "music_score_plans", "music_score_editor", "music_score_sections", "music_midi", "music_melody", "music_wishes", "music_performers", "music_text_tools", "music_rhyme", "music_rhyme_creative", "music_player", "music_lyrics_sync", "music_status", "music_generation", "music_expert", "music_presets", "music_models", "music_formats", "music_metadata", "music_stems", "music_audio_cover", "music_audio_references", "music_audio_processing", "music_cover", "music_examples", "music_studio", "music_tuning", "music_diffrhythm", "music_heartmula", "music_model_remove", "music_poetry", "music_poetry_sessions", "music_poetry_assembly", "music_poetry_reasoning", "music_poetry_search", "music_lyrics_library", "music_lora"], related: []),
+        Node(GameSounds, ScenarioNavigationKind.Scenario, "creation_music", "GameSounds.Title", "GameSounds.Description", "create",
+            tags: ["game_sounds", "game_sound_layers", "game_sound_projects", "game_sound_export"], related: [Music, LivingArcade]),
         Node(ImageGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Generation.Title", "Generation.Description", "create",
             tags: ["image_generation", "image_variation", "generation_history", "image_autosave", "generation_model_switch", "prompt_spelling", "prompt_assistant", "image_reference", "image_metadata", "image_resize"], related: [Images]),
         Node(VectorGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Vector.Title", "Vector.Description", "create", tags: ["vector_graphics", "svg_generation"], related: [ImageGeneration]),
@@ -123,6 +126,10 @@ public static class ScenarioNavigationCatalog
         new ScenarioNavigationTag("onec_assistance", "OneC.Title", "OneC.Description", OneC),
         new ScenarioNavigationTag("onec_projects", "OneC.Projects", "OneC.ProjectsDescription", OneC),
         new ScenarioNavigationTag("onec_checks", "OneC.CheckFile", "OneC.CheckerPreparationHint", OneC),
+        new ScenarioNavigationTag("game_sounds", "GameSounds.Title", "GameSounds.Description", GameSounds),
+        new ScenarioNavigationTag("game_sound_layers", "GameSounds.Orchestration", "GameSounds.LayersDescription", GameSounds),
+        new ScenarioNavigationTag("game_sound_projects", "GameSounds.Projects", "GameSounds.ProjectsDescription", GameSounds),
+        new ScenarioNavigationTag("game_sound_export", "GameSounds.SaveAudio", "GameSounds.ExportDescription", GameSounds),
         new ScenarioNavigationTag("speech_assets", "SpeechAssets.Title", "SpeechAssets.Description", SpeechAssets),
         new ScenarioNavigationTag("living_arcade", "Arcade.Title", "Arcade.Description", LivingArcade),
         new ScenarioNavigationTag("living_arcade_levels", "Arcade.Tag.Levels", "Arcade.Tag.LevelsHelp", LivingArcade),

@@ -36,7 +36,8 @@ public static class ApplicationBackgroundOperations
     }
 
     public static async Task<T> RunAsync<T>(string kind, string title, string? project, object input,
-        Func<CancellationToken, Task<T>> execute, CancellationToken token, BackgroundOperationState? restored = null)
+        Func<CancellationToken, Task<T>> execute, CancellationToken token, BackgroundOperationState? restored = null,
+        Func<Task>? releaseModels = null)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         if (Current is not { } controller)
@@ -48,7 +49,7 @@ public static class ApplicationBackgroundOperations
         var operation = restored ?? new BackgroundOperationState
             { Kind = kind, Title = title, Project = project, Input = JsonSerializer.SerializeToElement(input) };
         using var voiceOperation = VoiceNotifications.VoiceNotificationEvents.Operation(operation.Id, project);
-        try { return await controller.RunAsync(operation, execute, RetireModelsAsync, lifetime.Token); }
+        try { return await controller.RunAsync(operation, execute, releaseModels ?? RetireModelsAsync, lifetime.Token); }
         catch (OperationCanceledException) when (token.IsCancellationRequested && !ExitToken.IsCancellationRequested)
         { controller.DiscardPending(operation.Id); throw; }
         catch (Exception error) { ComponentAuditFailures.Report(error); throw; }

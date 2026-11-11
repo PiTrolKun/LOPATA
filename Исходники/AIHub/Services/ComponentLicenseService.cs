@@ -79,7 +79,9 @@ public sealed class ComponentLicenseService(string directory, string statePath)
         try
         {
             var catalog = Entries;
-            var selected = ids.Distinct(StringComparer.Ordinal).Select(id =>
+            var selected = ids.Select(id => id == ManagedModelCatalog.Qwen36ExecutorArtifactId
+                    ? ManagedModelCatalog.Qwen36ExecutorRepository : id)
+                .Distinct(StringComparer.Ordinal).Select(id =>
                 catalog.SingleOrDefault(x => x.Id == id)
                 ?? throw new InvalidOperationException($"Component license is not registered: {id}")).ToList();
             var receipts = ReadReceipts().ToList();

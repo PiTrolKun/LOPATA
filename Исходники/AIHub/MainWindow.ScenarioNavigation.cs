@@ -30,6 +30,9 @@ public partial class MainWindow
             }
             switch (id)
             {
+                case ScenarioNavigationCatalog.GameSounds:
+                    await ScenarioNavigationPage.OpenGameSoundsAsync(this, () => _localizationService.CurrentLanguageCode);
+                    break;
                 case ScenarioNavigationCatalog.OneC:
                     ScenarioNavigationPage.ShowOneC(this);
                     break;

@@ -73,6 +73,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsGameSounds) { if (LeaveGameSounds() && !ReturnFromScenario()) Render(); return true; }
         if (IsOneC) { if (OneCView?.Checkpoint() == false) return true; IsOneC = false; Render(); return true; }
         if (IsSpeechAssets) { LeaveSpeechAssets(); Render(); return true; }
         if (IsLivingArcade)
@@ -113,6 +114,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
         LeaveSpeechAssets();
         LivingArcade?.SuspendForNavigation();
@@ -131,6 +133,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
+        if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
         LeaveSpeechAssets();
         LivingArcade?.SuspendForNavigation();
@@ -150,6 +153,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void OpenScenario(string id)
     {
+        if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
         LeaveSpeechAssets();
         if (id == ScenarioNavigationCatalog.LivingArcade)
@@ -275,6 +279,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (IsGameSounds) { GameSoundsView!.Configure(_localize); Content = GameSoundsView; StateChanged?.Invoke(); return; }
         if (IsOneC) { OneCView!.Configure(_localize); Content = OneCView; StateChanged?.Invoke(); return; }
         if (IsSpeechAssets) { Content = SpeechAssetsView; StateChanged?.Invoke(); return; }
         if (Content == LivingArcade) Content = null;

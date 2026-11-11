@@ -18,7 +18,7 @@ internal static class LlamaStagedStartup
     internal static async Task<LlamaStartupPlacement> RunAsync(LlamaStartupPlacement initial,
         Func<LlamaStartupPlacement, CancellationToken, Task<LlamaStartupPlacement>> load,
         Func<CancellationToken, Task<LlamaStartupPlacement>> hybrid,
-        Func<Task> retire, Action<string> log, CancellationToken token)
+        Func<Task> retire, Action<string> log, CancellationToken token, bool allowFallback = true)
     {
         var next = initial;
         while (true)
@@ -30,7 +30,7 @@ internal static class LlamaStagedStartup
             {
                 log($"placement_failure: mode={next.Mode}; layers={next.GpuLayers}; error={error}");
                 await retire(); token.ThrowIfCancellationRequested();
-                if (next.Mode == LlamaPlacementMode.Cpu) throw;
+                if (!allowFallback || next.Mode == LlamaPlacementMode.Cpu) throw;
                 if (next.Mode == LlamaPlacementMode.Gpu)
                 {
                     try { next = await hybrid(token); }

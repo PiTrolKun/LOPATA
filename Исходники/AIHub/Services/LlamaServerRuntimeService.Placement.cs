@@ -14,7 +14,7 @@ public sealed partial class LlamaServerRuntimeService
         var journal = _poetryJournal ?? throw new InvalidOperationException("Startup journal was not initialized.");
         var startupTimeout = _poetryStartupTimeout;
         // Ask for a compatible device, not proof that an upper-bound full allocation fits.
-        var gpu = await LlamaRuntimeSelector.SelectAsync(0, _forceCpu, log, token);
+        var gpu = await LlamaRuntimeSelector.SelectAsync(0, _forceCpu || _requiredPoetryPlacement == LlamaPlacementMode.Cpu, log, token);
         GpuAdapterMemoryMonitor? monitor = null;
         try { if (gpu.Device is { } device) monitor = new(device); }
         catch (Exception error) when (error is IOException or System.Runtime.InteropServices.COMException)
@@ -31,6 +31,28 @@ public sealed partial class LlamaServerRuntimeService
             gpu.UsesGpu ? memory.BlockCount + 1 : 0, requested);
         var hybridApproved = false;
         var cpuApproved = false;
+        if (_adaptivePoetryPlacement)
+        {
+            if (_requiredPoetryPlacement == LlamaPlacementMode.Hybrid)
+                initial = await Hybrid(token);
+            else if (gpu.UsesGpu && monitor is not null)
+            {
+                var device = await CurrentDevice(token);
+                var capacity = FitContext(requested, context => LlamaGpuAdmissionPolicy.FitsFree(
+                    LlamaDenseMemoryPolicy.GpuRequired(memory, context), device));
+                if (capacity > 0) initial = new(LlamaPlacementMode.Gpu, memory.BlockCount + 1, capacity);
+                else if (_requiredPoetryPlacement == LlamaPlacementMode.Gpu)
+                    throw new IOException("GameSounds.NotEnoughVram");
+                else
+                {
+                    try { initial = await Hybrid(token); }
+                    catch (IOException) { initial = new(LlamaPlacementMode.Cpu, 0, requested); }
+                }
+            }
+            else if (_requiredPoetryPlacement == LlamaPlacementMode.Gpu)
+                throw new IOException("GameSounds.NotEnoughVram");
+            else initial = new(LlamaPlacementMode.Cpu, 0, requested);
+        }
         if (_poetryGpuAdmission is not null && !recover) initial = await PreferredVideoPlacement(token);
         if (recover && gpu.UsesGpu)
         {
@@ -45,9 +67,9 @@ public sealed partial class LlamaServerRuntimeService
         journal.Record("preference", new { key, reused = saved is not null && !recover && _poetryGpuAdmission is null,
             hint = saved, videoFullGpuPriority = _poetryGpuAdmission is not null, initial });
         var successful = await LlamaStagedStartup.RunAsync(initial, Load, Hybrid, RetirePoetryForRecoveryAsync,
-            text => journal.Record("transition", text), token);
+            text => journal.Record("transition", text), token, allowFallback: _requiredPoetryPlacement is null);
         _poetryPlacement = successful;
-        try { preferences.Save(key, successful); journal.Record("preference_saved", successful); }
+        try { if (!_adaptivePoetryPlacement) { preferences.Save(key, successful); journal.Record("preference_saved", successful); } }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         { journal.Record("preference_write_failed", error.ToString()); }
 
@@ -64,6 +86,8 @@ public sealed partial class LlamaServerRuntimeService
                     cpuApproved = true;
                 }
                 selected = await LlamaRuntimeSelector.SelectAsync(0, true, log, cancellation);
+                if (_adaptivePoetryPlacement)
+                    _poetryContextTokens = Math.Min(requested, LlamaDenseMemoryPolicy.MaximumCpuContext(memory));
                 while (true)
                 {
                     try { LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens); break; }
@@ -107,13 +131,30 @@ public sealed partial class LlamaServerRuntimeService
                 if (decision != LlamaGpuDecision.Hybrid) throw new OperationCanceledException(cancellation);
                 hybridApproved = true;
             }
-            LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens);
+            var context = _adaptivePoetryPlacement ? Math.Min(requested, LlamaDenseMemoryPolicy.MaximumCpuContext(memory))
+                : RequestedContextTokens;
+            LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, context);
             await Task.Delay(250, cancellation); // Let driver accounting catch up after the retired worker.
             var device = await CurrentDevice(cancellation);
             var layout = await Task.Run(() => LlamaLayerPlacement.Read(model.Path, memory), cancellation);
-            var layers = layout.HybridLayers(device, LlamaDenseMemoryPolicy.KvBytes(memory, RequestedContextTokens));
+            var layers = 0;
+            if (_adaptivePoetryPlacement)
+            {
+                // Keep most of the offload that fits at a small context before growing the KV cache.
+                // Maximizing context alone can leave a large hybrid model with just one GPU layer.
+                var possibleLayers = layout.HybridLayers(device, LlamaDenseMemoryPolicy.KvBytes(memory, 1024));
+                var minimumLayers = (3 * possibleLayers + 3) / 4;
+                context = FitContext(context, tokens =>
+                {
+                    try { return layout.HybridLayers(device, LlamaDenseMemoryPolicy.KvBytes(memory, tokens)) >= minimumLayers; }
+                    catch (IOException) { return false; }
+                });
+                if (context == 0) throw new IOException("GameSounds.NotEnoughVram");
+                layers = layout.HybridLayers(device, LlamaDenseMemoryPolicy.KvBytes(memory, context));
+            }
+            else layers = layout.HybridLayers(device, LlamaDenseMemoryPolicy.KvBytes(memory, context));
             journal.Record("hybrid_plan", new { layers, device, layout.FixedBytes, layout.LayerBytes });
-            return new(LlamaPlacementMode.Hybrid, layers, RequestedContextTokens);
+            return new(LlamaPlacementMode.Hybrid, layers, context);
         }
 
         async Task<LlamaStartupPlacement> PreferredVideoPlacement(CancellationToken cancellation)
@@ -162,5 +203,20 @@ public sealed partial class LlamaServerRuntimeService
             journal.Record("vram", new { device, intendedUsedBytes = intended, effective });
             if (LlamaStagedStartup.AtVramLimit(effective)) throw new LlamaVramPressureException();
         }
+    }
+
+    private static int FitContext(int capacity, Func<int, bool> fits)
+    {
+        if (capacity >= 1024 && fits(capacity)) return capacity;
+        var low = 4;
+        var high = capacity / 256;
+        var best = 0;
+        while (low <= high)
+        {
+            var middle = low + (high - low) / 2;
+            if (fits(middle * 256)) { best = middle * 256; low = middle + 1; }
+            else high = middle - 1;
+        }
+        return best;
     }
 }
