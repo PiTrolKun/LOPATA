@@ -15,7 +15,8 @@ public sealed partial class ImageGenerationControl
         var installed = ImageGenerationCatalog.Manifest.Models.Where(m => _installation.IsReady(_modelsRoot, m.Id)).ToArray();
         foreach (var model in installed)
         {
-            var item = new MenuItem { Header = model.Name, IsCheckable = true, IsChecked = model.Id == _modelId, IsEnabled = CanChangeModel };
+            var item = new MenuItem { Header = new TextBlock { Text = model.Name }, IsCheckable = true,
+                IsChecked = model.Id == _modelId, IsEnabled = CanChangeModel };
             System.Windows.Automation.AutomationProperties.SetAutomationId(item, "Generation.InstalledModel." + model.Id);
             item.Click += async (_, _) => await TryAction(() => SwitchModelAsync(model.Id)); menu.Items.Add(item);
         }

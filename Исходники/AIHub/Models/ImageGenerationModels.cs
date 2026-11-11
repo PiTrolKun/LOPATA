@@ -5,7 +5,14 @@ public sealed record ImageGenerationManifest(int Schema, string BackendCommit,
 public sealed record ImageGenerationArtifact(string Id, string Name, string Repository,
     string Revision, string License, ManagedModelArtifactFile[] Files);
 public sealed record ImageGenerationModel(string Id, string Name, string[] Components,
-    int Steps, double Cfg, string Sampler, int ClipSkip, int DefaultWidth, int DefaultHeight, int MaximumSide);
+    int Steps, double Cfg, string Sampler, int ClipSkip, int DefaultWidth, int DefaultHeight, int MaximumSide)
+{
+    public string? Family { get; init; }
+    public string? Variant { get; init; }
+    public string? Sigmas { get; init; }
+    public bool RequiresGpu { get; init; }
+    public string? RequiredEngineSet { get; init; }
+}
 public sealed record ImageGenerationRequest(string Id, string ModelId, string Prompt,
     int Width, int Height, long[] Seeds, string ModelsRoot, string SessionDirectory)
 {
@@ -24,6 +31,8 @@ public sealed record ImageGenerationRequest(string Id, string ModelId, string Pr
 public sealed record ImageGenerationRuntimeReceipt(string EngineSetId, string RuntimeVersion,
     string BackendCommit, string Backend, string ComponentId)
 {
+    public string? Placement { get; init; }
+    public string? Schedule { get; init; }
     public ImageLoraApplied[] Loras { get; init; } = [];
 }
 public sealed record ImageLoraApplied(string Id, string Repository, string Revision, string Sha256, double Strength, string Trigger);

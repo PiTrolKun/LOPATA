@@ -64,7 +64,7 @@ public sealed class MusicModelSelectionControl : UserControl, IDisposable
         row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         if (model.Id is not ("diffrhythm" or "heartmula")) row.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
         var body = new StackPanel();
-        var remove = MusicAudioUi.IconButton("RemoveModel", "M3,5 L21,5 M9,5 L9,2 L15,2 L15,5 M5,5 L6,22 L18,22 L19,5 M10,9 L10,18 M14,9 L14,18", () => { });
+        var remove = MusicAudioUi.RemoveModelButton(() => { });
         remove.Width = remove.Height = 36;
         remove.Margin = new(0, 14, 0, 0); remove.HorizontalAlignment = HorizontalAlignment.Left;
         AutomationProperties.SetAutomationId(remove, "Music.Models.Remove." + model.Id);

@@ -247,6 +247,8 @@ public sealed class ManagedModelLibraryStore
         card.Discovery ??= new ManagedModelDiscoveryProvenance();
         card.SemanticPassport ??= new ModelSemanticPassport();
         card.SchemaVersion = Math.Max(1, card.SchemaVersion);
+        if (ImageGenerationCatalog.IsRetiredArtifact(card.ModelArtifactId))
+            card.SupportsDirectDownload = false;
     }
 
     private static bool SameArtifactCoordinates(

@@ -7,11 +7,25 @@ namespace AIHub.Services;
 public static class ImageGenerationCatalog
 {
     public const string BackgroundKind = "image_generation.simple";
+    private static readonly Dictionary<string, string> RetiredModelNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["qwen-image-21-turbo-full"] = "Qwen-Image-2.1 Turbo · BF16 (Qwen)",
+        ["qwen-image-21-turbo-gguf"] = "Qwen-Image-2.1 Turbo · GGUF Q4_K_M (Unsloth)",
+        ["qwen-image-21-base-int8"] = "Qwen-Image-2.1 Base · INT8 (Comfy-Org)"
+    };
+
     public static ImageGenerationManifest Manifest { get; } = Load();
+    public static IEnumerable<ImageGenerationModel> VideoReferenceModels => Manifest.Models.Where(m => m.Family is null);
     public static bool IsAvailable(string id) => Manifest.Models.Any(m => m.Id == id);
     public static ImageGenerationModel Get(string id) => Manifest.Models.SingleOrDefault(m => m.Id == id)
         ?? throw new InvalidOperationException("Generation.ModelUnavailable");
-    public static string DisplayName(string id) => Manifest.Models.FirstOrDefault(m => m.Id == id)?.Name ?? id;
+    public static string DisplayName(string id) => Manifest.Models.FirstOrDefault(m => m.Id == id)?.Name
+        ?? RetiredModelNames.GetValueOrDefault(id, id);
+    internal static bool IsRetiredArtifact(string? id) => id is not null && id.StartsWith("generation-", StringComparison.OrdinalIgnoreCase)
+        && RetiredModelNames.ContainsKey(id["generation-".Length..]);
+    internal static bool SupportsEngineSet(ImageGenerationModel model, string engineSet) =>
+        model.RequiredEngineSet is null || model.RequiredEngineSet == engineSet;
+
     private static ImageGenerationManifest Load()
     {
         using var stream = typeof(ImageGenerationCatalog).Assembly.GetManifestResourceStream("AIHub.ImageGenerationManifest")
@@ -36,7 +50,9 @@ public static class ImageGenerationCatalog
         ModelsRoot = root, InstallDirectory = string.IsNullOrWhiteSpace(root) ? "" : Path.Combine(root, "ImageGeneration", a.Id, a.Revision[..12]),
         Origin = ManagedModelOrigins.PredefinedScenario,
         Consumers = [new() { Id = "simple-generation", DisplayName = "Простая генерация / Simple generation", Kind = "scenario" },
-            new() { Id = "video-reference-images", DisplayName = "Референсы видео / Video references", Kind = "scenario" }],
+            .. (VideoReferenceModels.Any(m => m.Components.Contains(a.Id))
+                ? new ManagedModelConsumer[] { new() { Id = "video-reference-images", DisplayName = "Референсы видео / Video references", Kind = "scenario" } }
+                : [])],
         Files = a.Files.Select(f => new ManagedModelArtifactFile { RelativePath = f.RelativePath, SourceUrl = f.SourceUrl,
             SizeBytes = f.SizeBytes, Sha256 = f.Sha256, Purpose = f.Purpose }).ToList()
     });

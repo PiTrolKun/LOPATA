@@ -36,7 +36,8 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
     }
     public bool IsReady(string root, string modelId)
     {
-        if (string.IsNullOrWhiteSpace(root)) return false;
+        if (string.IsNullOrWhiteSpace(root)
+            || !ImageGenerationCatalog.SupportsEngineSet(ImageGenerationCatalog.Get(modelId), EngineSetSelection.ActiveId)) return false;
         return Register(root, modelId).All(card => card.Status == ManagedModelStatuses.Installed && card.Files.All(file =>
         {
             var info = new FileInfo(Path.Combine(card.InstallDirectory, file.RelativePath));
@@ -49,6 +50,7 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
     {
         using var installation = download ? ComponentAudit.Installation() : null;
         using var auditOperation = ComponentAudit.CaptureOperation();
+        EnsureCompatibleEngine(modelId);
         var cards = Register(root, modelId);
         // Confirm every inherited component before any download or model use.
         await ComponentLicenseGate.EnsureAsync(cards.Select(c => c.ModelArtifactId).ToArray(), token);
@@ -72,6 +74,7 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
         IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
+        EnsureCompatibleEngine(modelId);
         var states = new List<ManagedModelArtifactCard>();
         foreach (var card in Register(root, modelId))
         {
@@ -79,6 +82,11 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
             states.Add(await _downloads.VerifyAsync(card.ModelArtifactId, progress, token));
         }
         return states;
+    }
+    private static void EnsureCompatibleEngine(string modelId)
+    {
+        if (!ImageGenerationCatalog.SupportsEngineSet(ImageGenerationCatalog.Get(modelId), EngineSetSelection.ActiveId))
+            throw new InvalidOperationException("Generation.Qwen.EngineSetRequired");
     }
     public static string Executable(IReadOnlyList<ManagedModelArtifactCard> cards)
     {

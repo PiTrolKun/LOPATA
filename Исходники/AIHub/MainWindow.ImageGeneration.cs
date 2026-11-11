@@ -58,6 +58,8 @@ public partial class MainWindow
     }
     private void RegisterImageGenerationBackgroundOperation()
     {
+        GenerationPage.CanRemoveModel = CanRemoveImageGenerationModel;
+        GenerationPage.RemoveModelRequested = RemoveImageGenerationModelAsync;
         GenerationPage.WorkspaceChanged += RefreshGenerationHeader;
         GenerationPage.IsVisibleChanged += (_, _) => RefreshGenerationHeader();
         ConfigureImageGeneration(); RefreshGenerationSettings();

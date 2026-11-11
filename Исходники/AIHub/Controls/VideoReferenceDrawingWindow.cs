@@ -54,7 +54,7 @@ public sealed class VideoReferenceDrawingWindow : Window
         var top = new StackPanel(); DockPanel.SetDock(top, Dock.Top); root.Children.Add(top);
         top.Children.Add(VideoReferenceWindowUi.Text(T("RefDrawingHint")));
         var tools = new WrapPanel();
-        var models = new ComboBox { ItemsSource = ImageGenerationCatalog.Manifest.Models, DisplayMemberPath = "Name", SelectedValuePath = "Id",
+        var models = new ComboBox { ItemsSource = ImageGenerationCatalog.VideoReferenceModels, DisplayMemberPath = "Name", SelectedValuePath = "Id",
             SelectedValue = drawing.ModelId, MinWidth = 230, IsEnabled = !busy, Margin = new Thickness(4) };
         AutomationProperties.SetAutomationId(models, "VideoPrep.Drawing.Model");
         models.SelectionChanged += (_, _) => { if (models.SelectedValue is string id) { drawing.ModelId = id; _message = ""; _save(); } };

@@ -90,7 +90,7 @@ public sealed class VideoReferenceDrawingUiTests
         var window = new VideoReferenceDrawingWindow(null, l.T, p, () => { saves++; VideoReferencePlans.Capture(p); }, _ => Task.CompletedTask,
             (i, prompt, w, h) => { submitted = i; text = prompt; return Task.CompletedTask; }, () => false, () => { }, () => { });
         nodes = ScenarioNavigationTests.LogicalDescendants(window).ToArray();
-        var models = nodes.OfType<ComboBox>().Single(); Assert.AreEqual(ImageGenerationCatalog.Manifest.Models.Length, models.Items.Count);
+        var models = nodes.OfType<ComboBox>().Single(); Assert.AreEqual(ImageGenerationCatalog.VideoReferenceModels.Count(), models.Items.Count);
         var input = nodes.OfType<TextBox>().Single(t => AutomationProperties.GetAutomationId(t) == "VideoPrep.Drawing.PromptText");
         Assert.AreEqual("en-us", input.Language.IetfLanguageTag.ToLowerInvariant());
         input.Text = "My edited English prompt";

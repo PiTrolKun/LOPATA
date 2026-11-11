@@ -26,8 +26,11 @@ public sealed class ImageGenerationTests
     [TestMethod]
     public void ManifestPinsEveryArtifactAndKeepsNavigationResolvable()
     {
-        CollectionAssert.AreEqual(new[] { "z-image", "krea" }, ImageGenerationCatalog.Manifest.Models.Select(m => m.Id).ToArray());
-        Assert.AreEqual(7, ImageGenerationCatalog.Manifest.Artifacts.Length);
+        CollectionAssert.AreEqual(new[] { "z-image", "krea", "qwen-image-21-turbo-int8", "qwen-image-21-base-gguf" },
+            ImageGenerationCatalog.Manifest.Models.Select(m => m.Id).ToArray());
+        Assert.AreEqual(12, ImageGenerationCatalog.Manifest.Artifacts.Length);
+        var licenseRoot = Path.Combine(AppContext.BaseDirectory, "Licenses");
+        var licenseService = new ComponentLicenseService(licenseRoot, Path.Combine(_root, "licenses.json"));
         foreach (var artifact in ImageGenerationCatalog.Manifest.Artifacts)
             Assert.IsTrue(ImageGenerationCatalog.Manifest.Models.Any(m => m.Components.Contains(artifact.Id)));
         foreach (var artifact in ImageGenerationCatalog.Manifest.Artifacts)
@@ -35,6 +38,9 @@ public sealed class ImageGenerationTests
         {
             Assert.AreEqual(64, file.Sha256.Length); Assert.IsTrue(file.Sha256.All(Uri.IsHexDigit));
             Assert.IsTrue(file.SourceUrl.Contains(artifact.Revision, StringComparison.Ordinal));
+            var license = licenseService.Entries.Single(entry => entry.Id == artifact.Id);
+            foreach (var text in license.Texts)
+                Assert.IsFalse(string.IsNullOrWhiteSpace(licenseService.ReadText(text)));
         }
         var entrance = ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.ImageGeneration);
         Assert.AreEqual("creation_images", entrance.ParentId);
@@ -45,7 +51,10 @@ public sealed class ImageGenerationTests
             var l = new LocalizationService(); l.Load(language);
             Assert.AreNotEqual("Generation.Title", l.T("Generation.Title"));
             foreach (var model in ImageGenerationCatalog.Manifest.Models)
-                Assert.AreNotEqual("Generation.Model." + model.Id, l.T("Generation.Model." + model.Id));
+            {
+                var key = "Generation.Model." + (model.Family ?? model.Id);
+                Assert.AreNotEqual(key, l.T(key));
+            }
         }
     }
     [TestMethod]
@@ -69,6 +78,70 @@ public sealed class ImageGenerationTests
         Assert.IsFalse(command.UseShellExecute);
         Assert.IsFalse(args.Contains("--clip-skip"));
         if (id == "krea") Assert.AreEqual("1.15", Value("--flow-shift"));
+    }
+
+    [TestMethod]
+    [DataRow("qwen-image-21-turbo-int8", 8, "1", "qwen_image_2.1_turbo_int8_convrot.safetensors")]
+    [DataRow("qwen-image-21-base-gguf", 40, "6", "qwen_image_2.1-Q4_K.gguf")]
+    public void QwenCommandsSelectPinnedComponentsAndAutomaticPlacement(string id, int steps, string cfg, string diffusion)
+    {
+        var request = Request(id);
+        var model = ImageGenerationCatalog.Get(id);
+        Assert.IsTrue(model.RequiresGpu);
+        Assert.IsFalse(ImageGenerationCatalog.SupportsEngineSet(model, NativeRuntimeReleasePolicy.LegacySet));
+        var selection = new SdRuntimeSelection("test", _root, true) { EngineSetId = NativeRuntimeReleasePolicy.UpdatedSet, Backend = "vulkan" };
+        var cards = ImageGenerationCatalog.CreateCards(request.ModelsRoot).Where(card => model.Components.Contains(card.ModelArtifactId)).ToArray();
+        var args = ImageGenerationNativeWorker.ManagedCommand(request, 0, cards, "raw input.txt", "out.png", selection).ArgumentList.ToArray();
+        string Value(string flag) => args[Array.IndexOf(args, flag) + 1];
+        Assert.AreEqual(diffusion, Path.GetFileName(Value("--diffusion-model")));
+        Assert.AreEqual(steps.ToString(), Value("--steps"));
+        Assert.AreEqual(cfg, Value("--cfg-scale"));
+        Assert.AreEqual("euler", Value("--sampling-method"));
+        Assert.AreEqual("on", Value("--auto-fit"));
+        Assert.IsFalse(args.Contains("--backend") || args.Contains("--offload-to-cpu"));
+        Assert.IsFalse(args.Contains("--max-vram"));
+        var larger = ImageGenerationNativeWorker.ManagedCommand(request with { Width = 2048, Height = 2048 },
+            0, cards, "raw input.txt", "out.png", selection).ArgumentList.ToArray();
+        Assert.AreEqual("-1", larger[Array.IndexOf(larger, "--max-vram") + 1]);
+        if (steps == 8) Assert.AreEqual("qwen-image-2.1-turbo", Value("--sigmas"));
+        else Assert.IsFalse(args.Contains("--sigmas"));
+        var expectedEncoder = cards.SelectMany(card => card.Files).Single(file => file.Purpose == "llm");
+        Assert.AreEqual(expectedEncoder.RelativePath, Path.GetFileName(Value("--llm")));
+    }
+
+    [TestMethod]
+    [DataRow("qwen-image-21-turbo-full")]
+    [DataRow("qwen-image-21-turbo-gguf")]
+    [DataRow("qwen-image-21-base-int8")]
+    public void RetiredQwenHistoryKeepsTheDisplayNameAndCannotRedownload(string modelId)
+    {
+        var store = new ManagedModelLibraryStore(_root);
+        var artifactId = "generation-" + modelId;
+        store.Upsert(new ManagedModelArtifactCard { ModelArtifactId = artifactId, SupportsDirectDownload = true });
+        Assert.IsFalse(ImageGenerationCatalog.IsAvailable(modelId));
+        Assert.StartsWith("Qwen-Image-2.1 ", ImageGenerationCatalog.DisplayName(modelId));
+        Assert.IsFalse(store.Load(artifactId)!.SupportsDirectDownload);
+    }
+
+    [TestMethod]
+    [DataRow("auto-fit: --backend \"diffusion=CUDA0,te=CUDA0,vae=CUDA0\"", "Vram")]
+    [DataRow("auto-fit: --backend \"diffusion=Vulkan0,te=Vulkan0,vae=Vulkan0\" --params-backend \"te=cpu\"", "Hybrid")]
+    [DataRow("auto-fit: --backend \"diffusion=Vulkan0,te=Vulkan0\" --params-backend \"te=disk\"", "MemoryUnavailable")]
+    [DataRow("auto-fit: no GPU memory budget available; using CPU", "MemoryUnavailable")]
+    [DataRow("auto-fit: no GPU devices; using the default backend", "GpuUnavailable")]
+    [DataRow("auto-fit: --backend \"diffusion=cpu,te=Vulkan0\"", "GpuUnavailable")]
+    public void QwenPlacementUsesNativePlan(string log, string expected) =>
+        Assert.AreEqual(expected, ImageGenerationPlacementLog.Read(log).ToString());
+
+    [TestMethod]
+    public void QwenQuantizationsShareComponents()
+    {
+        var models = ImageGenerationCatalog.Manifest.Models.Where(model => model.Family is not null).ToArray();
+        Assert.HasCount(2, models);
+        CollectionAssert.AreEqual(new[] { "generation-qwen-image-21-vae" },
+            models[0].Components.Intersect(models[1].Components).ToArray());
+        Assert.Contains("generation-qwen-image-21-text-int8", models[0].Components);
+        Assert.Contains("generation-qwen-image-21-text-gguf", models[1].Components);
     }
     [TestMethod]
     public async Task CancellationRetainsFinishedImagesAndResumeDoesNotGenerateThemAgain()

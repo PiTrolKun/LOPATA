@@ -34,12 +34,13 @@ internal static class SdRuntimeSelector
     }
 
     public static async Task<SdRuntimeSelection> SelectAsync(IReadOnlyList<ManagedModelArtifactCard> cards,
-        bool forceCpu, CancellationToken token, string? engineSetId = null)
+        bool forceCpu, CancellationToken token, string? engineSetId = null, bool requireGpu = false)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         var setId = NativeRuntimeReleasePolicy.ValidateSetId(engineSetId ?? EngineSetSelection.ActiveId);
         var manager = new ComponentManager();
-        var backends = forceCpu ? new[] { "cpu" } : ["vulkan", "cuda12", "cpu"];
+        var backends = requireGpu ? new[] { "vulkan", "cuda12" }
+            : forceCpu ? ["cpu"] : ["vulkan", "cuda12", "cpu"];
         foreach (var backend in backends)
         {
             var id = backend == "cpu" ? HardwareRuntimeCatalog.SdCpuId
@@ -81,6 +82,7 @@ internal static class SdRuntimeSelector
             if (!decision.Allowed) throw new IOException("Insufficient physical RAM for image generation on CPU.");
             return new(id, directory, false) { EngineSetId = setId, Backend = backend };
         }
+        if (requireGpu) throw new BackgroundOperationFailedException("Generation.Qwen.GpuUnavailable");
         throw new IOException("No verified compatible image generation runtime is available. Prepare hardware libraries first.");
     }
 

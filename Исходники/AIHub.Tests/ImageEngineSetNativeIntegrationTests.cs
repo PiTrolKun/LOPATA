@@ -14,6 +14,8 @@ public sealed class ImageEngineSetNativeIntegrationTests
     [DataRow("001", "z-image", false)]
     [DataRow("002", "z-image", true)]
     [DataRow("002", "krea", false)]
+    [DataRow("002", "qwen-image-21-turbo-int8", false)]
+    [DataRow("002", "qwen-image-21-base-gguf", false)]
     public async Task ActualWorkerPreservesTheCapturedEngineAndPublishedMetadata(string setId, string modelId, bool pause)
     {
         var modelRoot = Environment.GetEnvironmentVariable("AIHUB_IMAGE_NATIVE_MODEL_ROOT");
@@ -32,9 +34,11 @@ public sealed class ImageEngineSetNativeIntegrationTests
             Assert.IsTrue(File.Exists(path), "An existing model artifact is required: " + file.RelativePath);
             Assert.AreEqual(file.SizeBytes, new FileInfo(path).Length);
         }
+        var qwen = ImageGenerationCatalog.Get(modelId).Family is not null;
+        var side = qwen ? 1024 : 512;
         var request = new ImageGenerationRequest(Guid.NewGuid().ToString("N"), modelId,
             "A tabby cat beside a vintage computer monitor and a guitar, quiet blue studio lighting, coherent scene, no text.",
-            512, 512, pause ? [424242, 424243] : [424242], modelRoot, session)
+            side, side, pause ? [424242, 424243] : [424242], modelRoot, session)
         {
             EngineSetId = setId, Metadata = new("LOPATA integration test"), OutputFolder = Path.Combine(folder, "export"),
             SubmittedAt = DateTimeOffset.UtcNow, OutputLongestSide = 1280
@@ -59,6 +63,8 @@ public sealed class ImageEngineSetNativeIntegrationTests
             Assert.IsNotNull(image.Runtime);
             Assert.AreEqual(setId, image.Runtime.EngineSetId);
             Assert.AreEqual(NativeRuntimeReleasePolicy.SdRevision(setId), image.Runtime.BackendCommit);
+            if (qwen)
+                Assert.IsTrue(image.Runtime.Placement is "Vram" or "Hybrid");
             Assert.IsTrue(image.Exported);
             Assert.IsTrue(ImageGenerationOutput.IsReady(request, image.Index));
             using var metadata = JsonDocument.Parse(PngTextMetadata.Read(image.ExportPath!)["LOPATA"]);

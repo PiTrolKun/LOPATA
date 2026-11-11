@@ -1,4 +1,5 @@
 using AIHub.Models;
+using Lopata.Updates;
 using System.IO;
 
 namespace AIHub.Services;
@@ -18,8 +19,12 @@ public sealed class DelegateModelUsageGuard(Func<string, bool> predicate) : IMod
     public bool IsActive(string modelArtifactId) => predicate(modelArtifactId);
 }
 
+internal sealed record ManagedModelRemovalFile(string Path, long Bytes, long WriteTicks);
+
 public sealed class ManagedModelRemovalService
 {
+    private const string RetiredFullTurboArtifactId = "generation-qwen-image-21-turbo-full";
+    private const string RetiredFullTurboPreparedEncoder = "text_encoder/lopata-sdcpp-bf16-v1.safetensors";
     private readonly ManagedModelLibraryStore _store;
     private readonly IModelUsageGuard _usageGuard;
 
@@ -58,6 +63,15 @@ public sealed class ManagedModelRemovalService
                 }
             }
         }
+        // Older installations can still remove the retired bundle from the model library.
+        if (card.ModelArtifactId == RetiredFullTurboArtifactId)
+        {
+            var prepared = GetContainedPath(installRoot, RetiredFullTurboPreparedEncoder);
+            Lopata.Updates.SafeUpdatePath.RejectLinks(prepared);
+            Lopata.Updates.SafeUpdatePath.RejectLinks(prepared + ".tmp");
+            removedBytes += DeleteExactFile(prepared, removed);
+            removedBytes += DeleteExactFile(prepared + ".tmp", removed);
+        }
 
         card.StoredBytes = 0;
         card.Status = ManagedModelStatuses.FilesRemoved;
@@ -66,6 +80,76 @@ public sealed class ManagedModelRemovalService
         card.LastError = string.Empty;
         _store.Upsert(card);
         return new ManagedModelRemovalResult(removedBytes, removed);
+    }
+
+    internal static ManagedModelRemovalFile[] InspectScenarioFiles(ManagedModelArtifactCard card)
+    {
+        var root = Path.GetFullPath(card.ModelsRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var install = Path.GetFullPath(card.InstallDirectory);
+        if (!install.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+            || ManagedModelPathIdentity.SameDirectory(root, install))
+            throw new InvalidDataException("Refusing removal outside model storage.");
+        SafeUpdatePath.RejectLinks(install);
+        var paths = card.Files.Select(file => SafeUpdatePath.Resolve(install, file.RelativePath))
+            .SelectMany(path => new[] { path }.Concat(SegmentedModelFileDownloader.GetPartialArtifactPaths(path)));
+        return paths.Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase)
+            .Select(path =>
+            {
+                SafeUpdatePath.RejectLinks(path);
+                return new FileInfo(path);
+            })
+            .Where(file => file.Exists)
+            .Select(file => new ManagedModelRemovalFile(file.FullName, file.Length, file.LastWriteTimeUtc.Ticks))
+            .ToArray();
+    }
+
+    internal void EnsureScenarioRemovalAllowed(ManagedModelArtifactCard card)
+    {
+        EnsureRemovalAllowed(card);
+        var registered = _store.Load(card.ModelArtifactId);
+        if (card.Origin != ManagedModelOrigins.PredefinedScenario || card.IsSystem
+            || registered is { IsSystem: true }
+            || registered is not null && registered.Origin != ManagedModelOrigins.PredefinedScenario)
+            throw new InvalidOperationException("The scenario component is protected.");
+        if (registered is not null) EnsureRemovalAllowed(registered);
+    }
+
+    internal long RemoveReviewedScenarioFiles(ManagedModelArtifactCard card, IReadOnlyList<ManagedModelRemovalFile> confirmed)
+    {
+        EnsureScenarioRemovalAllowed(card);
+        if (!InspectScenarioFiles(card).SequenceEqual(confirmed))
+            throw new InvalidOperationException("The model files changed after confirmation.");
+        var registered = _store.Load(card.ModelArtifactId);
+        var resetReceipt = registered is not null
+            && ManagedModelPathIdentity.SameDirectory(card.InstallDirectory, registered.InstallDirectory);
+        ComponentAudit.Invalidate(card.InstallDirectory);
+        if (resetReceipt)
+            _store.ResetInstallationReceipt(card.ModelArtifactId, ManagedModelStatuses.NeedsVerification, registered!.StoredBytes);
+        var removed = new List<string>();
+        long bytes = 0;
+        try
+        {
+            foreach (var file in confirmed)
+            {
+                if (_usageGuard.IsActive(card.ModelArtifactId))
+                    throw new InvalidOperationException("The component became active.");
+                SafeUpdatePath.RejectLinks(file.Path);
+                var current = new FileInfo(file.Path);
+                if (!current.Exists || current.Length != file.Bytes || current.LastWriteTimeUtc.Ticks != file.WriteTicks)
+                    throw new IOException("A model file changed during removal.");
+                bytes += DeleteExactFile(file.Path, removed);
+            }
+        }
+        finally
+        {
+            if (resetReceipt)
+            {
+                var remaining = InspectScenarioFiles(card);
+                var status = remaining.Length == 0 ? ManagedModelStatuses.FilesRemoved : ManagedModelStatuses.NeedsVerification;
+                _store.ResetInstallationReceipt(card.ModelArtifactId, status, remaining.Sum(file => file.Bytes));
+            }
+        }
+        return bytes;
     }
 
     // Explicit, reviewed removal for predefined scenario packages. The pinned

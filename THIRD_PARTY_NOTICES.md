@@ -1,3 +1,7 @@
+## 2026-11-11 — Qwen-Image-2.1
+
+Qwen-Image-2.1 Base GGUF Q4_K (leejet), Turbo INT8 (Comfy-Org) and the shared Qwen Image 2.1 VAE are optional downloads under the Qwen Research License. Their Qwen3-VL-8B text encoders are available separately under Apache-2.0. The research license and Apache-2.0 notices are included in the component license catalog. Source repositories, exact revisions and hashes are pinned in [the image generation manifest](Исходники/AIHub/Tools/image-generation-manifest.json). [Qwen license](https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/blob/fc13ba1986fcb905854dc8de2f52eee395f49b5b/LICENSE).
+
 ## 2026-11-11 — 1C assistance, 0.7.74-dev
 
 AvalonEdit 6.3.1.120 is bundled under MIT. Source revision: https://github.com/icsharpcode/AvalonEdit/tree/862415d51eddc9eac93f462dbc522ffbf929cd52 . Original license: Licenses/texts/OneC-AvalonEdit-MIT.txt. Copyright: AlphaSierraPapa / AvalonEdit contributors.

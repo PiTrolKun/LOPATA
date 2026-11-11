@@ -5719,5 +5719,90 @@
       "texts/OneC-OpenJDK-LICENSE.txt",
       "texts/OneC-OpenJDK-ADDITIONAL_LICENSE_INFO.txt"
     ]
+  },
+  {
+    "Texts": [
+      "texts/generation-qwen-image-21-LICENSE.txt"
+    ],
+    "Terms": "F820231AC734687326A181EE81CA42CD7E3FF9C693927631A58492541ECF86C1",
+    "Version": "aacf31a6d48e707f352ecba714cee0680da3479b",
+    "License": "Qwen Research",
+    "Ru": "Условия Qwen Research разрешают некоммерческие исследования и оценку. Для коммерческого использования требуется отдельное разрешение правообладателя. Условия сохраняются при квантовании. Компонент скачивается отдельно.",
+    "Id": "generation-qwen-image-21-turbo-int8",
+    "Basic": false,
+    "En": "Qwen Research terms permit non-commercial research and evaluation. Commercial use requires separate permission from the rights holder. Quantization retains the upstream terms. This component is downloaded separately.",
+    "Delivery": "download",
+    "Name": "Qwen-Image-2.1 Turbo · Comfy-Org INT8",
+    "Author": "Comfy-Org",
+    "Checked": "2026-11-11",
+    "Source": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/tree/aacf31a6d48e707f352ecba714cee0680da3479b"
+  },
+  {
+    "Texts": [
+      "texts/generation-qwen-image-21-LICENSE.txt"
+    ],
+    "Terms": "F820231AC734687326A181EE81CA42CD7E3FF9C693927631A58492541ECF86C1",
+    "Version": "cc11433936a06e9765f7c0c0b1f0436cfd2b9856",
+    "License": "Qwen Research",
+    "Ru": "Условия Qwen Research разрешают некоммерческие исследования и оценку. Для коммерческого использования требуется отдельное разрешение правообладателя. Условия сохраняются при квантовании. Компонент скачивается отдельно.",
+    "Id": "generation-qwen-image-21-base-gguf",
+    "Basic": false,
+    "En": "Qwen Research terms permit non-commercial research and evaluation. Commercial use requires separate permission from the rights holder. Quantization retains the upstream terms. This component is downloaded separately.",
+    "Delivery": "download",
+    "Name": "Qwen-Image-2.1 Base · leejet GGUF Q4_K",
+    "Author": "leejet",
+    "Checked": "2026-11-11",
+    "Source": "https://huggingface.co/leejet/Qwen-Image-2.1-GGUF/tree/cc11433936a06e9765f7c0c0b1f0436cfd2b9856"
+  },
+  {
+    "Texts": [
+      "texts/generation-z-LICENSE.txt"
+    ],
+    "Terms": "A878F3FF3E9F72109918FE164DEFFAEE3209FD5B5B3ABCC3863ABB3038851C33",
+    "Version": "aacf31a6d48e707f352ecba714cee0680da3479b",
+    "License": "Apache-2.0",
+    "Ru": "Кодировщик Qwen3-VL-8B по Apache 2.0. Соблюдайте исходную лицензию и сохраняйте уведомления. Условия для генератора изображений указаны отдельно.",
+    "Id": "generation-qwen-image-21-text-int8",
+    "Basic": false,
+    "En": "Qwen3-VL-8B text encoder under Apache 2.0. Follow the upstream license and retain notices. The image generator has separate terms.",
+    "Delivery": "download",
+    "Name": "Qwen3-VL-8B text encoder · Comfy-Org INT8",
+    "Author": "Comfy-Org",
+    "Checked": "2026-11-11",
+    "Source": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/tree/aacf31a6d48e707f352ecba714cee0680da3479b"
+  },
+  {
+    "Texts": [
+      "texts/generation-z-LICENSE.txt"
+    ],
+    "Terms": "A878F3FF3E9F72109918FE164DEFFAEE3209FD5B5B3ABCC3863ABB3038851C33",
+    "Version": "f982a07559d4a2f6c8744d840bf6fccab30eea96",
+    "License": "Apache-2.0",
+    "Ru": "Кодировщик Qwen3-VL-8B по Apache 2.0. Соблюдайте исходную лицензию и сохраняйте уведомления. Условия для генератора изображений указаны отдельно.",
+    "Id": "generation-qwen-image-21-text-gguf",
+    "Basic": false,
+    "En": "Qwen3-VL-8B text encoder under Apache 2.0. Follow the upstream license and retain notices. The image generator has separate terms.",
+    "Delivery": "download",
+    "Name": "Qwen3-VL-8B text encoder · Qwen GGUF Q4_K_M",
+    "Author": "Qwen",
+    "Checked": "2026-11-11",
+    "Source": "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/tree/f982a07559d4a2f6c8744d840bf6fccab30eea96"
+  },
+  {
+    "Texts": [
+      "texts/generation-qwen-image-21-LICENSE.txt"
+    ],
+    "Terms": "F820231AC734687326A181EE81CA42CD7E3FF9C693927631A58492541ECF86C1",
+    "Version": "aacf31a6d48e707f352ecba714cee0680da3479b",
+    "License": "Qwen Research",
+    "Ru": "Условия Qwen Research разрешают некоммерческие исследования и оценку. Для коммерческого использования требуется отдельное разрешение правообладателя. Условия сохраняются при квантовании. Компонент скачивается отдельно.",
+    "Id": "generation-qwen-image-21-vae",
+    "Basic": false,
+    "En": "Qwen Research terms permit non-commercial research and evaluation. Commercial use requires separate permission from the rights holder. Quantization retains the upstream terms. This component is downloaded separately.",
+    "Delivery": "download",
+    "Name": "Qwen-Image-2.1 VAE · Comfy-Org BF16",
+    "Author": "Comfy-Org",
+    "Checked": "2026-11-11",
+    "Source": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/tree/aacf31a6d48e707f352ecba714cee0680da3479b"
   }
 ]

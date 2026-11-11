@@ -28,6 +28,7 @@ public static class ImageGenerationMetadata
             $"Steps: {model.Steps}, Sampler: {model.Sampler}, CFG scale: {model.Cfg}, Seed: {seed}, Size: {size}, Model: {model.Name}");
         if (model.ClipSkip > 0) parameters += FormattableString.Invariant($", Clip skip: {model.ClipSkip}");
         if (model.Id == "krea") parameters += ", Flow shift: 1.15";
+        if (runtime?.Schedule is { } schedule) parameters += ", Schedule: " + schedule;
         if (runtime?.Loras.Length > 0) parameters += ", LoRA: " + string.Join("; ", runtime.Loras.Select(l =>
             l.Repository + "@" + l.Revision + ":" + l.Strength.ToString(CultureInfo.InvariantCulture)));
 
@@ -62,7 +63,9 @@ public static class ImageGenerationMetadata
             AppliedLoras = runtime?.Loras ?? [],
             LoraPrompt = runtime?.Loras.Length > 0 ? string.Join(", ", runtime.Loras.Select(l => l.Trigger).Where(t => t.Length > 0 && !request.Prompt.Contains(t, StringComparison.OrdinalIgnoreCase))
                 .Distinct().Append(request.Prompt)) : null,
-            DiffusionFlashAttention = true, OffloadToCpu = runtime is null ? (bool?)null : false, VaeTiling = true,
+            DiffusionFlashAttention = true,
+            OffloadToCpu = runtime is null ? (bool?)null : runtime.Placement == nameof(ImageGenerationGpuPlacement.Hybrid),
+            VaeTiling = true,
             // Engine delivery is recorded above from the actual attempt; static model weights stay separate.
             Components = model.Components.Where(id => id != "generation-runtime").Select(id =>
             {

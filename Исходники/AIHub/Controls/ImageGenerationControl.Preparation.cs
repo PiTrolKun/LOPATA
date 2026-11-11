@@ -39,6 +39,12 @@ public sealed partial class ImageGenerationControl
                 : card.Status == ManagedModelStatuses.Installed ? L("Preparation.Available") : L("Preparation.Missing");
             panel.Children.Add(Text(card.DisplayName + " — " + state));
         }
+        if (_preparationChecked && !_preparationReady && ImageGenerationCatalog.Get(_modelId).RequiresGpu)
+        {
+            var bytes = _preparationCards.Where(card => card.Status != ManagedModelStatuses.Installed)
+                .Sum(card => card.TotalBytes);
+            panel.Children.Add(Text(string.Format(L("Qwen.PendingSize"), bytes / 1_000_000_000d)));
+        }
         _status = Text(_statusText); panel.Children.Add(_status);
         _preparationProgress = new ProgressBar { Height = 10, Minimum = 0, Maximum = 100,
             IsIndeterminate = _busy, Value = _preparationReady ? 100 : 0, Margin = new Thickness(0, 10, 0, 14) };

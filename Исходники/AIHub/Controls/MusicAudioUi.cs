@@ -24,6 +24,8 @@ internal static class MusicAudioUi
         AutomationProperties.SetAutomationId(button, "Music.Audio." + name);
         ToolTipService.SetShowOnDisabled(button, true); button.Click += (_, _) => action(); return button;
     }
+    public static Button RemoveModelButton(Action action) => IconButton("RemoveModel",
+        "M3,5 L21,5 M9,5 L9,2 L15,2 L15,5 M5,5 L6,22 L18,22 L19,5 M10,9 L10,18 M14,9 L14,18", action);
     public static Viewbox Icon(string geometry)
     {
         var path = new System.Windows.Shapes.Path { Data = Geometry.Parse(geometry), StrokeThickness = 1.8,

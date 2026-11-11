@@ -32,6 +32,7 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         Arg("--prompt-file", promptFile); Arg("--output", output);
         Arg("--width", request.Width); Arg("--height", request.Height); Arg("--seed", request.Seeds[index]);
         Arg("--steps", model.Steps); Arg("--cfg-scale", model.Cfg); Arg("--sampling-method", model.Sampler);
+        if (model.Sigmas is { } sigmas) Arg("--sigmas", sigmas);
         Arg("--batch-count", 1);
         if (model.ClipSkip > 0) Arg("--clip-skip", model.ClipSkip);
         Arg("--diffusion-model", ImageGenerationInstallation.Weight(cards, "diffusion"));
@@ -57,27 +58,44 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         token.ThrowIfCancellationRequested();
+        var model = ImageGenerationCatalog.Get(request.ModelId);
+        var setId = request.EngineSetId ?? EngineSetSelection.ActiveId;
+        if (!ImageGenerationCatalog.SupportsEngineSet(model, setId))
+            throw new BackgroundOperationFailedException("Generation.Qwen.EngineSetRequired");
         var store = new ManagedModelLibraryStore();
         foreach (var card in cards)
             await ManagedModelRuntimeAudit.VerifyAsync(store, card.ModelArtifactId, token);
         if (cards.SingleOrDefault(card => card.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
             await ImageGenerationInstallation.EnsureRuntimeAsync(legacyRuntime, token);
-        var setId = request.EngineSetId ?? EngineSetSelection.ActiveId;
-        var selection = await SdRuntimeSelector.SelectAsync(cards, false, token, setId);
-        var result = await AttemptAsync(request, index, cards, promptFile, output, selection, token);
-        if (result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log))
+        var selection = await SdRuntimeSelector.SelectAsync(cards, false, token, setId, requireGpu: model.RequiresGpu);
+        var result = await AttemptAsync(request, index, cards, promptFile, output, selection, model.RequiresGpu, token);
+        if (!model.RequiresGpu && result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log))
         {
             token.ThrowIfCancellationRequested();
             var cpu = await SdRuntimeSelector.SelectAsync(cards, true, token, setId);
-            var retry = await AttemptAsync(request, index, cards, promptFile, output, cpu, token);
-            result = (retry.ExitCode, result.Log + "\nCPU retry:\n" + retry.Log);
+            var retry = await AttemptAsync(request, index, cards, promptFile, output, cpu, false, token);
+            result = (retry.ExitCode, result.Log + "\nCPU retry:\n" + retry.Log, retry.Placement);
             selection = cpu;
         }
         await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_" + index + ".runtime.log"), result.Log, token);
+        if (model.RequiresGpu)
+        {
+            if (result.Placement == ImageGenerationGpuPlacement.GpuUnavailable)
+                throw new BackgroundOperationFailedException("Generation.Qwen.GpuUnavailable");
+            if (result.Placement == ImageGenerationGpuPlacement.MemoryUnavailable
+                || (result.ExitCode != 0 && (result.Log.Contains("out of memory", StringComparison.OrdinalIgnoreCase)
+                    || result.Log.Contains("failed to allocate", StringComparison.OrdinalIgnoreCase)
+                    || result.Log.Contains("VK_ERROR_OUT_OF", StringComparison.OrdinalIgnoreCase))))
+                throw new BackgroundOperationFailedException("Generation.Qwen.MemoryUnavailable");
+            if (result.ExitCode != 0 || result.Placement == ImageGenerationGpuPlacement.Unknown)
+                throw new BackgroundOperationFailedException("Generation.Qwen.RuntimeError");
+        }
         if (result.ExitCode != 0) throw new BackgroundOperationFailedException("Generation.RuntimeError");
         if (request.Loras.Length > 0 && (LoraRejected(result.Log) || !LorasApplied(result.Log, request.Loras)))
             throw new BackgroundOperationFailedException("Generation.Lora.NotApplied");
         return new(selection.EngineSetId, selection.Version, selection.Revision, selection.Backend, selection.ComponentId) {
+            Placement = model.RequiresGpu ? result.Placement.ToString() : null,
+            Schedule = model.Sigmas,
             Loras = request.Loras.Select(u => { var d = ImageLora.ImageLoraCatalog.Find(u.Id);
                 return new ImageLoraApplied(u.Id, d.Repository, u.Revision, d.Files.Single().Sha256, u.Strength, d.Trigger); }).ToArray() };
     }
@@ -95,6 +113,12 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         RuntimeDeviceProbe.ClearBackendOverrides(info);
         info.ArgumentList.Remove("--offload-to-cpu");
         info.ArgumentList.Add("--auto-fit"); info.ArgumentList.Add("on");
+        if (ImageGenerationCatalog.Get(request.ModelId).RequiresGpu && (long)request.Width * request.Height > 1024L * 1024)
+        {
+            // A negative native budget reserves this much live VRAM for the larger image.
+            info.ArgumentList.Add("--max-vram");
+            info.ArgumentList.Add("-1");
+        }
         if (!selection.UsesGpu)
         {
             info.ArgumentList.Add("--backend"); info.ArgumentList.Add("cpu");
@@ -115,34 +139,64 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
             && match.Groups[1].Value == match.Groups[2].Value && match.Groups[1].Value != "0"));
     }
 
-    private static async Task<(int ExitCode, string Log)> AttemptAsync(ImageGenerationRequest request, int index,
+    private static async Task<(int ExitCode, string Log, ImageGenerationGpuPlacement Placement)> AttemptAsync(ImageGenerationRequest request, int index,
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output,
-        SdRuntimeSelection selection, CancellationToken token)
+        SdRuntimeSelection selection, bool requireGpu, CancellationToken token)
     {
         using var process = OwnedProcessRegistry.Shared.Start(ManagedCommand(request, index, cards, promptFile, output, selection), "ImageGeneration");
-        var stdout = DrainAsync(process.StandardOutput); var stderr = DrainAsync(process.StandardError);
+        var rejected = new TaskCompletionSource<ImageGenerationGpuPlacement>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var placement = ImageGenerationGpuPlacement.Unknown;
+        void Observe(string line)
+        {
+            var observed = ImageGenerationPlacementLog.Read(line);
+            if (observed is ImageGenerationGpuPlacement.GpuUnavailable or ImageGenerationGpuPlacement.MemoryUnavailable)
+                rejected.TrySetResult(observed);
+            else if (observed != ImageGenerationGpuPlacement.Unknown)
+                placement = observed;
+        }
+        var stdout = DrainAsync(process.StandardOutput, requireGpu ? Observe : null);
+        var stderr = DrainAsync(process.StandardError, requireGpu ? Observe : null);
         try
         {
-            await process.WaitForExitAsync(token);
+            var exit = process.WaitForExitAsync(token);
+            if (requireGpu && await Task.WhenAny(exit, rejected.Task) == rejected.Task)
+                Stop(process);
+            await exit;
+            var outputLog = await stdout + Environment.NewLine + await stderr;
+            if (rejected.Task.IsCompletedSuccessfully) placement = rejected.Task.Result;
+            var model = ImageGenerationCatalog.Get(request.ModelId);
             var log = $"Backend: {selection.Revision}; engineSet={selection.EngineSetId}; version={selection.Version}; runtime={selection.ComponentId}; backend={selection.Backend}; executable={selection.Executable}\nExit: 0x{process.ExitCode:X8}\n"
-                + await stdout + Environment.NewLine + await stderr;
-            return (process.ExitCode, log);
+                + (requireGpu ? $"Placement: {placement}; model={request.ModelId}; seed={request.Seeds[index]}; size={request.Width}x{request.Height}\n"
+                    + $"Sampling: {model.Sampler}, steps={model.Steps}, cfg={model.Cfg}, sigmas={model.Sigmas ?? "automatic"}\n" : "")
+                + outputLog;
+            return (process.ExitCode, log, placement);
         }
         finally
         {
-            if (!process.HasExited) process.Kill(entireProcessTree: true);
+            Stop(process);
             await process.WaitForExitAsync(CancellationToken.None);
             await Task.WhenAll(stdout, stderr);
         }
     }
-    private static async Task<string> DrainAsync(StreamReader reader)
+    private static void Stop(Process process)
+    {
+        try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
+        catch (InvalidOperationException) when (process.HasExited) { }
+        catch (System.ComponentModel.Win32Exception) when (process.HasExited) { }
+    }
+    private static async Task<string> DrainAsync(StreamReader reader, Action<string>? observe = null)
     {
         var tail = new StringBuilder(); var buffer = new char[4096]; int count; var rejected = false; var previous = "";
         var applied = new HashSet<string>(StringComparer.Ordinal);
         while ((count = await reader.ReadAsync(buffer)) > 0)
         { var chunk = previous + new string(buffer, 0, count); rejected |= LoraRejected(chunk);
-            foreach (var line in chunk.Split('\n').Where(line => line.Contains("LoRA tensors have been applied", StringComparison.Ordinal)))
-                if (applied.Count < 64) applied.Add(line.Trim());
+            var lines = chunk.Split('\n');
+            foreach (var line in lines)
+                if (applied.Count < 64 && line.Contains("LoRA tensors have been applied", StringComparison.Ordinal))
+                    applied.Add(line.Trim());
+            if (observe is not null)
+                for (var i = 0; i < lines.Length - 1; i++)
+                    if (lines[i].Contains("auto-fit:", StringComparison.Ordinal)) observe(lines[i]);
             previous = chunk[^Math.Min(chunk.Length, 4096)..];
             tail.Append(buffer, 0, count); if (tail.Length > 65536) tail.Remove(0, tail.Length - 65536); }
         return (rejected ? "LOPATA_LORA_REJECTED\n" : "") + string.Join('\n', applied) + "\n" + tail;

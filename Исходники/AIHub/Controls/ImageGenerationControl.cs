@@ -33,7 +33,7 @@ public sealed partial class ImageGenerationControl : UserControl
     private Func<string?> _metadataAuthor = () => null;
     public event Action? WorkspaceChanged;
     public bool IsChat => _page == 2;
-    public bool CanChangeModel => !_busy && !HasPendingGeneration();
+    public bool CanChangeModel => !_busy && !_removingModel && !HasPendingGeneration();
     public void ConfigureOutput(ImageGenerationSettings settings, Action save) { _settings = settings; _settings.Loras ??= new(); _saveSettings = save; }
     public void ConfigureMetadata(Func<string?> author) => _metadataAuthor = author;
     public ImageGenerationControl() : this(new ImageGenerationInstallation(), new()) { }
