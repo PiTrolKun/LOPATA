@@ -13,7 +13,13 @@ internal static class UpscaleNative
     {
         if (step.Engine == UpscaleEngine.Scale) {
             var filter = UpscaleMediaTools.ScaleFilter(step.Width, step.Height, step.Algorithm);
-            if (UpscaleCatalog.Number(step, "denoise", "0") is > 0 and var noise) filter = $"hqdn3d={UpscaleMediaTools.N(noise)}," + filter;
+            if (UpscaleCatalog.Number(step, "denoise", "0") is > 0 and var noise)
+            {
+                // The slider value 2 maps to the filter's default thresholds.
+                var averageThreshold = UpscaleMediaTools.N(noise / 100);
+                var frameThreshold = UpscaleMediaTools.N(noise / 50);
+                filter = $"atadenoise=0a={averageThreshold}:0b={frameThreshold}:1a={averageThreshold}:1b={frameThreshold}:2a={averageThreshold}:2b={frameThreshold}," + filter;
+            }
             if (UpscaleCatalog.Number(step, "sharpen", "0") is > 0 and var sharp) filter += $",unsharp=5:5:{UpscaleMediaTools.N(sharp)}:5:5:0";
             await UpscaleMediaTools.Filter(input, output, filter, token); return;
         }
@@ -45,17 +51,36 @@ internal static class UpscaleNative
             var root = UpscaleRuntime.Expanded(cards.Single(c => c.ModelArtifactId == "video-upscale-visual-enhancer"));
             var executable = Directory.EnumerateFiles(root, "VE_CLI.exe", SearchOption.AllDirectories).Single();
             var media = await UpscaleMediaTools.Describe(input, token);
-            Dictionary<string, object> settings = new() {
-                ["video_enabled_stages"] = new[] { step.Engine switch { UpscaleEngine.NeuralRendering => "neural_model", UpscaleEngine.RtxVideo => "super_resolution", UpscaleEngine.DlssSr => "dlss_super_resolution", UpscaleEngine.VfxVsr => "vfx_vsr", _ => "vfx_upscale" } },
-                ["upscale_engine"] = step.Engine == UpscaleEngine.DlssSr ? "DLSS" : "RTX Video Super Resolution",
-                ["upscale_vsr_enabled"] = true, ["upscale_size_mode"] = "Scale factor",
-                ["upscale_scale_factor"] = Math.Max(1, Math.Max(step.Width / (double)media.Width, step.Height / (double)media.Height)),
-                ["upscaling_factor"] = Math.Max(step.Width / (double)media.Width, step.Height / (double)media.Height),
-                ["vfx_frame_generation_enabled"] = false,
-                ["vfx_vsr_enabled"] = step.Engine == UpscaleEngine.VfxVsr, ["vfx_upscale_enabled"] = step.Engine == UpscaleEngine.VfxUpscale,
-                ["vfx_size_mode"] = "Scale factor", ["vfx_scale_factor"] = Math.Max(step.Width / (double)media.Width, step.Height / (double)media.Height),
-                ["vfx_upscale_scale"] = Math.Max(step.Width / (double)media.Width, step.Height / (double)media.Height)
+            var stage = step.Engine switch {
+                UpscaleEngine.NeuralRendering => "neural_model",
+                UpscaleEngine.RtxVideo => "super_resolution",
+                UpscaleEngine.DlssSr => "dlss_super_resolution",
+                UpscaleEngine.VfxVsr => "vfx_vsr",
+                UpscaleEngine.VfxUpscale => "vfx_upscale",
+                _ => throw new InvalidOperationException("VideoUpscale.InvalidParameter")
             };
+            var factor = Math.Min(step.Width / (double)media.Width, step.Height / (double)media.Height);
+            Dictionary<string, object> settings = new() { ["video_enabled_stages"] = new[] { stage } };
+            switch (step.Engine) {
+                case UpscaleEngine.RtxVideo:
+                case UpscaleEngine.DlssSr:
+                    settings["upscale_engine"] = step.Engine == UpscaleEngine.DlssSr ? "DLSS" : "RTX Video Super Resolution";
+                    settings["upscale_vsr_enabled"] = true;
+                    settings["upscale_size_mode"] = "Scale factor";
+                    settings["upscale_scale_factor"] = Math.Max(1, factor);
+                    break;
+                case UpscaleEngine.VfxVsr:
+                    settings["vfx_vsr_enabled"] = true;
+                    settings["vfx_size_mode"] = "Scale factor";
+                    settings["vfx_scale_factor"] = Math.Max(1, factor);
+                    break;
+                case UpscaleEngine.VfxUpscale:
+                    // Visual Enhancer 21.0 accepts only these factors for Lightweight Upscale.
+                    // The same final filter fits the native output to the user's exact size.
+                    settings["vfx_upscale_enabled"] = true;
+                    settings["vfx_upscale_scale"] = new[] { 1.5, 2, 3, 4 }.MinBy(value => Math.Abs(value - factor));
+                    break;
+            }
             foreach (var p in UpscaleCatalog.Parameters(step.Engine).Where(p => p.Key != "gpu")) {
                 var value = step.Get(p.Key, p.Default);
                 settings[p.Key] = bool.TryParse(value, out var b) ? b : p.Min is not null ? (object)double.Parse(value, System.Globalization.CultureInfo.InvariantCulture) : value;

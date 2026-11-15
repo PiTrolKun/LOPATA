@@ -18,16 +18,18 @@ public partial class MainWindow
         window.Closed += (_, _) => { if (_upscaleWindow == window) _upscaleWindow = null; };
         _upscaleWindow = window; window.Show();
     }
-    private async Task<string?> PrepareUpscaleModels(System.Windows.Window owner, UpscaleProject project, CancellationToken token)
+    private Task<string?> PrepareUpscaleModels(System.Windows.Window owner, UpscaleProject project, CancellationToken token)
     {
         var root = _storageSettings.Models.Locations.Select(l => l.Path?.Trim()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? "";
-        if (project.Steps.All(s => !s.Enabled || s.Engine == UpscaleEngine.Scale)) return root;
+        if (project.Steps.All(s => !s.Enabled || s.Engine == UpscaleEngine.Scale)) return Task.FromResult<string?>(root);
         using var preparation = new UpscaleComponents(_appSettings.ModelDownloads?.MaximumParallelConnections ?? 4);
         using var audit = ComponentAudit.CaptureOperation();
         Task<bool> Run(bool download, IProgress<AIHub.Models.ManagedModelDownloadProgress> progress, CancellationToken ct) => preparation.PrepareAsync(root, project, download, progress, ct);
-        if (await Run(false, new Progress<AIHub.Models.ManagedModelDownloadProgress>(), token)) return root;
-        var details = string.Join(Environment.NewLine, UpscaleComponents.Cards(root, project).Select(c => $"{c.DisplayName}: {c.TotalBytes / 1073741824d:0.00} GiB"));
-        return new VideoPreparationWindow(owner, L, L("VideoUpscale.Components"), Run, token, details).ShowDialog() == true ? root : null;
+        var cards = UpscaleComponents.Cards(root, project);
+        var details = string.Join(Environment.NewLine, cards.Select(c => $"{c.DisplayName}: {c.TotalBytes / 1073741824d:0.00} GiB"));
+        var names = cards.ToDictionary(c => c.ModelArtifactId, c => c.DisplayName);
+        return Task.FromResult(new VideoPreparationWindow(owner, L, L("VideoUpscale.Components"), Run, token, details, names)
+            .ShowDialog() == true ? root : null);
     }
     private void RegisterUpscaleOperations()
     {

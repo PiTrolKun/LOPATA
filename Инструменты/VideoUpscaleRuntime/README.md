@@ -1,8 +1,8 @@
 # Встроенный runtime «Апскейла видео»
 
 Это отдельная LGPL-сборка FFmpeg, а не замена runtime видеоредактора.
-Ревизия: `8.1.3-video-upscale-2`; каталог
-`Runtime/VideoUpscale/ffmpeg-8.1.3-upscale-2` (бинарники не в Git).
+Ревизия `8.1.3-video-upscale-3` лежит в каталоге
+`Runtime/VideoUpscale/ffmpeg-8.1.3-upscale-3` (бинарники не в Git).
 
 Используется существующая исходная база Capture Minimal-8.1 и её закреплённые
 библиотеки/инструментарий UCRT64. `sources.json` и исходные лицензии берутся
@@ -21,6 +21,8 @@ bash /h/AI_HUB/Инструменты/VideoUpscaleRuntime/build.sh /h/AI_HUB
 Packaging сохраняет конфигурацию/источники/лицензии и SHA-256 каждого файла в
 `Исходники/AIHub/Tools/VideoUpscale/ffmpeg-files.json`. Этот manifest встраивается
 в assembly и проверяется общим RuntimeFileAudit перед исполнением.
+Перед упаковкой скрипт проверяет, что в бинарнике есть `scale`, `pad`,
+`unsharp` и фильтр шумоподавления `atadenoise`.
 
 Python/Flash/VE в этот комплект не входят. Их оригинальные pinned архивы
 определены в `Tools/VideoUpscale/runtime.json`, `weights.json` и UpscaleComponents.

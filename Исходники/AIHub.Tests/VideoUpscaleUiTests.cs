@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using AIHub.Controls.VideoEditor;
 using AIHub.Controls.VideoUpscale;
 using AIHub.Services;
 using AIHub.Services.VideoUpscale;
@@ -19,6 +20,65 @@ namespace AIHub.Tests;
 [TestClass, DoNotParallelize]
 public sealed class VideoUpscaleUiTests
 {
+    private static async Task CheckPreparationProgress(Window owner, Func<string, string> localize, bool cancel)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var verifying = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseVerify = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var downloading = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseDownload = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var window = new VideoPreparationWindow(owner, localize, "FlashVSR+", async (download, progress, ct) => {
+            const string artifact = "test-component";
+            const long mib = 1024 * 1024;
+            if (download) {
+                progress.Report(new(artifact, "weights.bin", mib, 4 * mib, mib, "downloading"));
+                downloading.SetResult();
+                await releaseDownload.Task.WaitAsync(ct);
+                return true;
+            }
+            progress.Report(new(artifact, "", 4 * mib, 4 * mib, 0, "verifying-presence"));
+            verifying.SetResult();
+            await releaseVerify.Task.WaitAsync(ct);
+            return false;
+        }, timeout.Token, componentNames: new Dictionary<string, string> { ["test-component"] = "FlashVSR+ Base" });
+        var inspection = Inspect();
+        var result = window.ShowDialog();
+        await inspection;
+        Assert.AreEqual(!cancel, result == true);
+
+        async Task Inspect()
+        {
+            try {
+                await verifying.Task.WaitAsync(timeout.Token);
+                await Dispatcher.Yield(DispatcherPriority.Background);
+                var bar = Descendants(window).OfType<System.Windows.Controls.ProgressBar>().Single();
+                Assert.IsTrue(bar.IsIndeterminate);
+                Assert.IsTrue(Descendants(window).OfType<TextBlock>().Any(t =>
+                    t.Text.Contains(localize("VideoEditor.CheckingModels")) && t.Text.Contains("FlashVSR+ Base")));
+                releaseVerify.SetResult();
+                var download = Descendants(window).OfType<Button>().Single(b =>
+                    AutomationProperties.GetAutomationId(b) == "VideoEditor.Preparation.Download");
+                while (!download.IsEnabled) await Task.Delay(10, timeout.Token);
+                download.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await downloading.Task.WaitAsync(timeout.Token);
+                await Dispatcher.Yield(DispatcherPriority.Background);
+                Assert.IsFalse(bar.IsIndeterminate);
+                Assert.AreEqual(25d, bar.Value);
+                Assert.IsTrue(Descendants(window).OfType<TextBlock>().Any(t =>
+                    t.Text.Contains(localize("VideoEditor.PreparationDownloading")) && t.Text.Contains("weights.bin")));
+                if (cancel) {
+                    var button = Descendants(window).OfType<Button>().Single(b =>
+                        AutomationProperties.GetAutomationId(b) == "VideoEditor.Preparation.Cancel");
+                    button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                } else releaseDownload.SetResult();
+            }
+            catch {
+                window.Close();
+                throw;
+            }
+        }
+    }
+
     [STATestMethod]
     public void TimelineReusesLabelsAndMovesPlayheadWithoutArrangingAgain()
     {
@@ -82,6 +142,8 @@ public sealed class VideoUpscaleUiTests
         var localizer = new LocalizationService(); localizer.Load("ru");
         try {
             owner.Show();
+            await CheckPreparationProgress(owner, localizer.T, cancel: false);
+            await CheckPreparationProgress(owner, localizer.T, cancel: true);
             await UpscaleFfmpeg.PrepareAsync(CancellationToken.None);
             var source = Path.Combine(folder, "ui-source.mp4");
             await UpscaleFfmpeg.RunAsync(false, ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=24:duration=1", "-c:v", "libopenh264", "-b:v", "5M", source], CancellationToken.None);

@@ -13,14 +13,18 @@ internal sealed class VideoPreparationWindow : Window
     private readonly Func<bool, IProgress<ManagedModelDownloadProgress>, CancellationToken, Task<bool>> _prepare;
     private readonly Func<string, string> _l;
     private readonly CancellationTokenSource _cancel;
+    private readonly IReadOnlyDictionary<string, string>? _componentNames;
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, Margin = new(0, 12, 0, 12) };
     private readonly System.Windows.Controls.ProgressBar _progress = new() { Height = 7, Margin = new(0, 10, 0, 10) };
     private readonly Button _verify, _download;
     private bool _busy, _closing;
+    private int _attempt;
     internal VideoPreparationWindow(Window owner, Func<string, string> localize, string name,
-        Func<bool, IProgress<ManagedModelDownloadProgress>, CancellationToken, Task<bool>> prepare, CancellationToken token, string? details = null)
+        Func<bool, IProgress<ManagedModelDownloadProgress>, CancellationToken, Task<bool>> prepare, CancellationToken token,
+        string? details = null, IReadOnlyDictionary<string, string>? componentNames = null)
     {
         _prepare = prepare; _l = localize; _cancel = CancellationTokenSource.CreateLinkedTokenSource(token);
+        _componentNames = componentNames;
         MusicWishUi.PrepareWindow(this, T("ModelPreparation"), "VideoEditor.Preparation", 760); Height = 380; MinHeight = 300;
         Owner = owner; Resources.MergedDictionaries.Insert(0, owner.Resources);
         var panel = new StackPanel { Margin = new(24) }; panel.Children.Add(MusicWishUi.Text(name, true)); panel.Children.Add(MusicWishUi.Text(T("PreparationHint")));
@@ -45,10 +49,28 @@ internal sealed class VideoPreparationWindow : Window
     internal async Task ExecuteAsync(bool download)
     {
         if (_busy) return; _busy = true; _verify.IsEnabled = _download.IsEnabled = false; _progress.IsIndeterminate = true;
+        var attempt = ++_attempt;
+        _status.Text = T("CheckingModels");
         try {
             var ready = await _prepare(download, new Progress<ManagedModelDownloadProgress>(p => {
-                if (_closing) return; _status.Text = p.FileName + " · " + p.Stage; _progress.IsIndeterminate = p.TotalBytes <= 0;
-                if (p.TotalBytes > 0) _progress.Value = 100d * p.DownloadedBytes / p.TotalBytes;
+                if (!_busy || _closing || attempt != _attempt) return;
+                var downloading = p.Stage == "downloading";
+                var stage = T(p.Stage switch {
+                    "downloading" => "PreparationDownloading",
+                    "restarting" => "PreparationRestarting",
+                    "unpacking" => "PreparationUnpacking",
+                    _ => "CheckingModels"
+                });
+                var amount = downloading && p.TotalBytes > 0
+                    ? $"{ComponentCardViewModel.FormatBytes(p.DownloadedBytes)} / {ComponentCardViewModel.FormatBytes(p.TotalBytes)}"
+                    : null;
+                var speed = downloading && p.BytesPerSecond > 0
+                    ? string.Format(T("PreparationSpeed"), ComponentCardViewModel.FormatBytes((long)p.BytesPerSecond))
+                    : null;
+                _status.Text = string.Join(" · ", new[] { stage, _componentNames?.GetValueOrDefault(p.ModelArtifactId),
+                    p.FileName, amount, speed }.Where(value => !string.IsNullOrWhiteSpace(value)));
+                _progress.IsIndeterminate = amount is null;
+                if (amount is not null) _progress.Value = Math.Clamp(100d * p.DownloadedBytes / p.TotalBytes, 0, 100);
             }), _cancel.Token);
             _cancel.Token.ThrowIfCancellationRequested();
             if (ready) { _busy = false; DialogResult = true; return; }
@@ -56,6 +78,6 @@ internal sealed class VideoPreparationWindow : Window
         }
         catch (OperationCanceledException) { _status.Text = T("Interrupted"); }
         catch (Exception error) { VideoErrors.Report(error); _status.Text = T("PreparationFailed") + "\n" + (error.Message.StartsWith("VideoEditor.", StringComparison.Ordinal) ? _l(error.Message) : error.Message); }
-        finally { _busy = false; _progress.IsIndeterminate = false; _verify.IsEnabled = _download.IsEnabled = true; if (_closing) Close(); }
+        finally { _busy = false; _progress.IsIndeterminate = false; _progress.Value = 0; _verify.IsEnabled = _download.IsEnabled = true; if (_closing) Close(); }
     }
 }

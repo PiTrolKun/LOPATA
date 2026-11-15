@@ -8,7 +8,7 @@ namespace AIHub.Services.VideoUpscale;
 /// <summary>Bundled LGPL build with the actual filters and lossless codecs required by this utility.</summary>
 internal static class UpscaleFfmpeg
 {
-    internal const string Revision = "8.1.3-video-upscale-2";
+    internal const string Revision = "8.1.3-video-upscale-3";
     internal static string DirectoryPath => Path.Combine(AppContext.BaseDirectory, "VideoUpscaleRuntime");
     internal static async Task PrepareAsync(CancellationToken token)
     {

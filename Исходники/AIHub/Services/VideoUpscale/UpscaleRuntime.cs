@@ -12,12 +12,14 @@ internal static class UpscaleRuntime
 {
     private static readonly SemaphoreSlim Gate = new(1);
     internal static string Expanded(ManagedModelArtifactCard card) => Path.Combine(card.InstallDirectory, "Expanded");
-    internal static async Task<string> PrepareAsync(ManagedModelArtifactCard card, CancellationToken token, bool reinstall = false)
+    internal static async Task<string> PrepareAsync(ManagedModelArtifactCard card, CancellationToken token, bool reinstall = false,
+        Action<string>? report = null)
     {
         await Gate.WaitAsync(token);
         try {
             var root = Expanded(card); var identity = RuntimeFileAudit.Revision(card.Revision, card.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray());
             if (!Directory.Exists(root) || reinstall) {
+                report?.Invoke("unpacking");
                 var staging = root + "." + Guid.NewGuid().ToString("N") + ".partial";
                 Lopata.Updates.SafeUpdatePath.RejectLinks(staging); Directory.CreateDirectory(staging);
                 try {
@@ -35,6 +37,7 @@ internal static class UpscaleRuntime
                     if (Directory.Exists(resolved)) Directory.Delete(resolved, true);
                 }
             }
+            report?.Invoke("verifying");
             await ComponentAudit.RunAsync(card.ModelArtifactId + ".expanded", root, identity,
                 ct => RuntimeFileAudit.PresenceInventoryAsync(root, identity, ct), async ct => {
                     var expected = await ProcessAsync(card, root, false, ct);

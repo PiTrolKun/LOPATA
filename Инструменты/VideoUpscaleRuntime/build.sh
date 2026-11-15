@@ -3,7 +3,7 @@ set -euo pipefail
 test "${MSYSTEM:-}" = UCRT64
 root=$(realpath "${1:?workspace root}")
 capture="$root/Runtime/Capture/Minimal-8.1"
-build="$root/Runtime/VideoUpscale/Build-8.1"
+build="$root/Runtime/VideoUpscale/Build-8.1-upscale-3"
 prefix="$build/prefix"
 mkdir -p "$build/work" "$build/logs" "$prefix"
 export PKG_CONFIG_PATH="$capture/prefix/lib/pkgconfig"
@@ -21,9 +21,9 @@ cd "$build/work"
  --enable-demuxer=concat,rawvideo,pcm_s16le,mov,matroska,avi,wav,mp3,flac,ogg,aac,image2,png_pipe,jpeg_pipe,bmp_pipe,gif,webp_pipe \
  --enable-muxer=mp4,matroska,rawvideo,pcm_s16le,wav,image2 \
  --enable-protocol=file,pipe,fd --enable-indev=lavfi \
- --enable-filter=anullsrc,sine,aresample,aformat,apad,atrim,anull,amix,volume,asetpts,format,null,scale,setsar,setpts,trim,fps,pad,color,overlay,crop,select,showinfo,tpad,testsrc2,blend,unsharp,hqdn3d \
+ --enable-filter=anullsrc,sine,aresample,aformat,apad,atrim,anull,amix,volume,asetpts,format,null,scale,setsar,setpts,trim,fps,pad,color,overlay,crop,select,showinfo,tpad,testsrc2,blend,unsharp,atadenoise \
  --extra-cflags="-I$capture/prefix/include" \
  --extra-ldflags="-L$capture/prefix/lib -static-libgcc -static-libstdc++ -static" \
- --extra-version=lopata-video-upscale-2 >"$build/logs/configure.log" 2>&1
+ --extra-version=lopata-video-upscale-3 >"$build/logs/configure.log" 2>&1
 make -j8 >"$build/logs/build.log" 2>&1
 make install >>"$build/logs/build.log" 2>&1

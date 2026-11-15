@@ -12,7 +12,10 @@ internal sealed class UpscaleComponents : IDisposable
     internal const string IntRevision = "56c806f1357d90c8a0b4b054e21bcefe3cb9ac1d";
     private readonly ManagedModelLibraryStore _store = new();
     private readonly ManagedModelAcquisitionService _download;
-    internal UpscaleComponents(int parallel = 4) { _download = new(_store); _download.MaximumParallelConnections = parallel; }
+    internal UpscaleComponents(int parallel = 4)
+    {
+        _download = new(_store) { MaximumParallelConnections = parallel };
+    }
     private sealed record Weight(string Role, string RelativePath, string SourceUrl, long SizeBytes, string Sha256, string Purpose);
     private static T Read<T>(string file) => JsonSerializer.Deserialize<T>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Tools", "VideoUpscale", file)))!;
     internal static IReadOnlyList<ManagedModelArtifactCard> Cards(string root, UpscaleProject project)
@@ -51,12 +54,21 @@ internal sealed class UpscaleComponents : IDisposable
         foreach (var card in cards) {
             var old = _store.Load(card.ModelArtifactId);
             _store.Upsert(old is not null && old.Revision == card.Revision && old.InstallDirectory == card.InstallDirectory ? old : card);
+            progress?.Report(new(card.ModelArtifactId, "", 0, 0, 0, "verifying"));
             var actual = await _download.VerifyAsync(card.ModelArtifactId, progress, token);
-            if (actual.Status != ManagedModelStatuses.Installed && download) actual = await _download.DownloadAsync(card.ModelArtifactId, progress, token);
+            var fetched = actual.Status != ManagedModelStatuses.Installed && download;
+            if (fetched) actual = await _download.DownloadAsync(card.ModelArtifactId, progress, token);
             if (actual.Status != ManagedModelStatuses.Installed) { ready = false; continue; }
             if (card.Files.Any(f => f.Purpose != "model")) {
-                try { await UpscaleRuntime.PrepareAsync(actual, token, reinstall: download); }
-                catch (IOException) when (!download) { ready = false; }
+                void Report(string stage) => progress?.Report(new(card.ModelArtifactId, "", 0, 0, 0, stage));
+                Task<string> PrepareRuntime(bool reinstall) =>
+                    Task.Run(() => UpscaleRuntime.PrepareAsync(actual, token, reinstall, Report), token);
+                try { await PrepareRuntime(fetched); }
+                catch (Exception error) when (error is IOException or InvalidDataException) {
+                    if (!download) ready = false;
+                    else if (!fetched) await PrepareRuntime(true);
+                    else throw;
+                }
             }
         }
         return ready;

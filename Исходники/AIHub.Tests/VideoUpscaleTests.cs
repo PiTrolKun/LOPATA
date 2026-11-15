@@ -73,6 +73,9 @@ public sealed class VideoUpscaleTests
             await UpscaleFfmpeg.RunAsync(false, ["-v", "error", "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=24:duration=1", "-f", "lavfi", "-i", "sine=duration=1", "-c:v", "ffv1", "-c:a", "pcm_s16le", "-shortest", source], CancellationToken.None);
             var p = new UpscaleProject { Source = source, SourceLength = new FileInfo(source).Length, SourceSha256 = await UpscaleMediaTools.Hash(source, CancellationToken.None),
                 Media = await UpscaleMediaTools.Describe(source, CancellationToken.None), Steps = [UpscaleCatalog.New(UpscaleEngine.Scale, 640, 360)], PreviewLength = 1 };
+            p.Steps[0].Algorithm = "bicubic";
+            p.Steps[0].Parameters["denoise"] = "1.03";
+            p.Steps[0].Parameters["sharpen"] = "0.23";
             var job = UpscalePipeline.Create(p, false, Path.Combine(folder, "result.mp4")); job.ChunkFrames = 12; UpscaleStore.Save(UpscaleStore.JobPath(job), job);
             Assert.AreEqual(UpscaleStore.JobPath(job), job.Project.LastJob);
             using var stop = new CancellationTokenSource();
