@@ -17,13 +17,30 @@ def emit(stage, fraction, message, **extra):
     print(json.dumps(dict(stage=stage, fraction=fraction, message=message, **extra), ensure_ascii=False), flush=True)
 
 
+def worker_error_type(error, cuda_out_of_memory):
+    failure = error
+    while failure is not None:
+        if isinstance(failure, cuda_out_of_memory):
+            return 'OutOfMemoryError'
+        failure = failure.__cause__
+    return type(error).__name__
+
+
+def cpu_offloaded_loader(load_pipeline):
+    def load(model_id, *, cache_dir, device):
+        pipe = load_pipeline(model_id, cache_dir=cache_dir, device='cpu')
+        pipe.enable_model_cpu_offload(device=device)
+        return pipe
+    return load
+
+
 def validate_visual_plan(request, duration=None):
     if 'visualPlan' not in request:
         return None
     visual = request['visualPlan']
     if (not isinstance(visual, dict) or type(visual.get('version')) is not int or visual['version'] != 1
             or not isinstance(visual.get('globalStyle'), str) or not visual['globalStyle'].strip()
-            or not isinstance(visual.get('scenes'), list) or not 1 <= len(visual['scenes']) <= 256):
+            or not isinstance(visual.get('scenes'), list) or not visual['scenes']):
         raise ValueError('Invalid Glitchframe visual plan.')
     scenes = visual['scenes']
     for index, scene in enumerate(scenes, 1):
@@ -105,6 +122,7 @@ def run(request):
     from pipeline.audio_ingest import ingest_audio_file
     from pipeline.audio_analyzer import analyze_song
     from pipeline.background_stills import BackgroundStills
+    import pipeline.background_stills as background_stills
     from pipeline.compositor import CompositorConfig, render_full_video
     import pipeline.compositor as compositor
     from pipeline.kinetic_typography import AlignedWord
@@ -115,10 +133,21 @@ def run(request):
         command = original_command(**kwargs)
         return ['pipe:0' if argument == '-' else argument for argument in command]
     compositor._build_ffmpeg_cmd = pipe_command
+    def fit_background(image, width, height):
+        import numpy as np
+        from PIL import Image, ImageOps
+        fitted = ImageOps.pad(image.convert('RGB'), (width, height), Image.Resampling.LANCZOS, color=(0, 0, 0))
+        return np.asarray(fitted, dtype=np.uint8).copy()
+    background_stills._resize_rgb = fit_background
     if not torch.cuda.is_available():
         raise RuntimeError('Glitchframe upstream SDXL background generator requires a CUDA-compatible GPU.')
-    torch.cuda.set_device(request.get('device', 'cuda:0'))
+    cuda_device = request.get('device', 'cuda:0')
+    torch.cuda.set_device(cuda_device)
     torch.cuda.reset_peak_memory_stats()
+    background_stills._require_cuda = lambda: cuda_device
+    cpu_offload = os.environ.get('LOPATA_H3_RETRY_OFFLOAD') == '1'
+    if cpu_offload:
+        background_stills._load_sdxl_pipeline = cpu_offloaded_loader(background_stills._load_sdxl_pipeline)
     # The work directory is already unique to the immutable attempt snapshot.
     # Upstream keyframe checkpoints are therefore never shared across changed requests.
     emit('ingest', 0.01, 'Decoding original song')
@@ -126,7 +155,7 @@ def run(request):
     validate_visual_plan(request, ingested.duration_sec)
     analysis = analyze_song(ingested.cache_dir, fps=request['fps'], separate_vocals=False,
                             progress=lambda p, m: emit('analysis', .03 + p * .12, m))
-    emit('background', .15, 'Preparing SDXL backgrounds')
+    emit('background', .15, 'Preparing SDXL backgrounds', cpuOffload=cpu_offload)
     background_type = planned_background_class(BackgroundStills, request)
     background = background_type(ingested.cache_dir, preset_id=request.get('preset', 'lopata'),
         preset_prompt=request['prompt'], width=request['width'], height=request['height'],
@@ -164,5 +193,6 @@ if __name__ == '__main__':
     try:
         run(json.loads(Path(sys.argv[1]).read_text(encoding='utf-8-sig')))
     except Exception as error:
-        emit('error', 0, str(error))
+        cuda = getattr(sys.modules.get('torch'), 'cuda', None)
+        emit('error', 0, str(error), type=worker_error_type(error, getattr(cuda, 'OutOfMemoryError', ())))
         raise

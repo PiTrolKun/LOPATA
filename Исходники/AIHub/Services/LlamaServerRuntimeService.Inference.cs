@@ -32,6 +32,11 @@ public sealed partial class LlamaServerRuntimeService
             return await reader.ReadToEndAsync(cancellation);
         }, text => _poetryJournal?.Record("inference", text), null, token);
 
+    internal Task<StructuredChatResult> GeneratePrivateStreamAsync(DebugModelInfo model, string json,
+        Action tokenReceived, CancellationToken token) => CompletePayloadAsync(model, json,
+        (stream, _, cancellation) => OpenAiSseStreamParser.ReadAsync(stream, null, cancellation, tokenReceived, retainInterruptedContent: true),
+        text => _poetryJournal?.Record("inference", text), null, token);
+
     private async Task<T> CompletePayloadAsync<T>(DebugModelInfo model, string json,
         Func<Stream, IProgress<ModelStreamChunk>?, CancellationToken, Task<T>> readResponse,
         Action<string> log, IProgress<ModelStreamChunk>? progress, CancellationToken token)

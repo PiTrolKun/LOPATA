@@ -37,7 +37,6 @@ public sealed partial class SongClipControl
         _referenceRoleInput = new(_l("SongClip.ReferenceRoleQuestion"), _l("SongClip.ReferenceRoleExample"),
             "SongClip.ReferenceRole", multiline: true);
         _referenceRoleInput.Input.Height = double.NaN;
-        _referenceRoleInput.Input.MaxLength = SongClipReferences.MaximumDescription;
         _referenceRoleInput.Input.Loaded += (sender, _) => LiterarySpellChecking.Enable((TextBox)sender, _l("VideoPrep.SpellingLanguage"));
         panel.Children.Add(_referenceRoleInput);
         AutomationProperties.SetAutomationId(_referenceChoice, "SongClip.ReferenceSelection");
@@ -111,7 +110,7 @@ public sealed partial class SongClipControl
         _busy = true; SetInputs(false); RefreshActions();
         try {
             foreach (var file in files.FileNames) {
-                if (SongClipReferences.For(_project).Length >= SongClipReferences.MaximumCount) {
+                if ((!IsMotion || !SongClipModes.IsMontage(_loadedH3Mode)) && SongClipReferences.For(_project).Length >= SongClipReferences.MaximumCount) {
                     _status.Text = _l("SongClip.ReferenceLimit"); break;
                 }
                 var question = new SongClipReferenceWindow(Window.GetWindow(this), _l, file);
@@ -125,10 +124,11 @@ public sealed partial class SongClipControl
 
     internal async Task AddReferenceAsync(string file, string kind, string description, CancellationToken token)
     {
-        if (kind is not ("performer" or "world" or "object") || string.IsNullOrWhiteSpace(description)
-            || description.Length > SongClipReferences.MaximumDescription) throw new InvalidDataException(SongClipReferences.Invalid);
+        if (kind is not ("performer" or "world" or "object") || string.IsNullOrWhiteSpace(description))
+            throw new InvalidDataException(SongClipReferences.Invalid);
         var references = SongClipReferences.For(_project).ToList();
-        if (references.Count >= SongClipReferences.MaximumCount) throw new InvalidDataException("SongClip.ReferenceLimit");
+        if ((!IsMotion || !SongClipModes.IsMontage(_loadedH3Mode)) && references.Count >= SongClipReferences.MaximumCount)
+            throw new InvalidDataException("SongClip.ReferenceLimit");
         var relative = await _store.ImportAsync(_project.Id, file, token);
         var index = references.FindIndex(reference => reference.File == relative);
         if (index < 0) { index = references.Count; references.Add(new(relative, kind, description.Trim())); }

@@ -13,6 +13,7 @@ public sealed partial class LlamaServerRuntimeService
     private LlamaStartupPlacement? _poetryPlacement;
     private bool _poetryCanResize;
     private bool _adaptivePoetryPlacement;
+    private bool _requireFullPoetryPrompt;
     private LlamaPlacementMode? _requiredPoetryPlacement;
     private TimeSpan? _poetryStartupTimeout;
     private MusicPoetryReasoningOptions _poetryReasoning = MusicPoetryReasoningOptions.Disabled;
@@ -23,7 +24,7 @@ public sealed partial class LlamaServerRuntimeService
         MusicPoetryReasoningPreference? reasoningPreference = null, int? requestedContextTokens = null,
         MusicPoetryReasoningOptions? reasoningOptions = null, TimeSpan? startupTimeout = null,
         Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? gpuAdmission = null,
-        bool adaptivePlacement = false, LlamaPlacementMode? requiredPlacement = null)
+        bool adaptivePlacement = false, LlamaPlacementMode? requiredPlacement = null, bool requireFullPrompt = false)
     {
         var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token);
         var capacity = adaptivePlacement ? memory.ModelContextTokens
@@ -33,6 +34,7 @@ public sealed partial class LlamaServerRuntimeService
         _poetryReasoning = reasoningOptions ?? MusicPoetryReasoning.Resolve(model, reasoningMode, reasoningPreference);
         _poetryGpuAdmission = gpuAdmission;
         _adaptivePoetryPlacement = adaptivePlacement;
+        _requireFullPoetryPrompt = requireFullPrompt;
         _requiredPoetryPlacement = requiredPlacement;
         _poetryStartupTimeout = startupTimeout;
         _poetryRequestedContextTokens = capacity;

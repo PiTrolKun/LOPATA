@@ -3,6 +3,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Globalization;
 using System.Text.Json;
+using AIHub.Models;
 using AIHub.Services.SongClip;
 using ComboBox = System.Windows.Controls.ComboBox;
 using Orientation = System.Windows.Controls.Orientation;
@@ -15,7 +16,6 @@ public sealed partial class SongClipControl
     private readonly WrapPanel _motionOptions = new();
     private TextBlock? _referenceHeading, _referenceUse, _promptHeading;
     private string _deviceSummary = "";
-    private static readonly (int Width, int Height)[] MotionSizes = [(608,352),(864,480),(480,864),(1024,576),(576,1024)];
     private bool IsMotion => _project.Model == "h3_music_context";
     private string ReferenceHintKey => SongClipVariantCatalog.IsRetiredModel(_project.Model)?SongClipVariantCatalog.RetiredMessageKey
         : IsInfiniteTalk ? "SongClip.InfiniteReferenceHint" : !HasSceneReferences ? "SongClip.ReferenceHint" : IsGeek ? "SongClip.GeekReferenceHint"
@@ -35,7 +35,6 @@ public sealed partial class SongClipControl
             AutomationProperties.SetName(choice, _l("SongClip." + key));
             option.Children.Add(choice); _motionOptions.Children.Add(option);
         }
-        foreach (var (width, height) in MotionSizes) _motionSize.Items.Add($"{width} × {height}");
         foreach (var steps in new[] { 12,16,20,24,30,40 }) _motionSteps.Items.Add(steps);
         _motionOptions.Children.Add(BuildMontageDurationChoice());
         return _motionOptions;
@@ -100,6 +99,8 @@ public sealed partial class SongClipControl
             var value = json.RootElement;
             if (!value.TryGetProperty("kind", out var kind)) return message;
             int Number(string key) => value.TryGetProperty(key, out var number) && number.TryGetInt32(out var result) ? result : 0;
+            long? Bytes(string key) => value.TryGetProperty(key, out var number) && number.ValueKind == JsonValueKind.Number
+                && number.TryGetInt64(out var result) && result >= 0 ? result : null;
             string Format(string key, params object[] values) => string.Format(CultureInfo.CurrentCulture, _l("SongClip." + key), values);
             return kind.GetString() switch
             {
@@ -117,6 +118,9 @@ public sealed partial class SongClipControl
                 "plan" => Format("MotionPlan", Number("total")),
                 "analysis" => Format("MontageAnalysisReady", value.TryGetProperty("slots", out var slots)
                     && slots.ValueKind == JsonValueKind.Array ? slots.GetArrayLength() : 0),
+                "space-estimate" when Bytes("availableBytes") is long free => Bytes("projectedRemainingShotBytes") is long remaining
+                    ? Format("MontageSpaceEstimate", ComponentCardViewModel.FormatBytes(remaining), ComponentCardViewModel.FormatBytes(free))
+                    : Format("MontageSpaceBeforeFirstShot", ComponentCardViewModel.FormatBytes(free)),
                 "progress" => Format("MotionProgress", Number("index"), Number("total"), Number("step"), Number("steps")),
                 "chunk-start" => Format("MotionPart", Number("index"), Number("total")),
                 "chunk" => Format("MotionSaved", Number("index"), Number("total")),

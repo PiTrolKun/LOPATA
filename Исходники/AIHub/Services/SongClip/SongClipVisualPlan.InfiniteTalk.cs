@@ -15,7 +15,7 @@ internal static partial class SongClipVisualProtocol
         var total = (int)Math.Ceiling(duration * InfiniteTalkNativeFps);
         var advance = settings.FrameWindow - settings.MotionFrames;
         var count = 1 + Math.Max(0,(int)Math.Ceiling((total - settings.FrameWindow) / (double)advance));
-        CheckCount(count);
+        if (count > 256) throw new InvalidDataException(InvalidReply);
         return Enumerable.Range(0,count).Select(index => Slot(index+1,index*advance/(double)InfiniteTalkNativeFps,
             Math.Min(duration,(index*advance+settings.FrameWindow)/(double)InfiniteTalkNativeFps),source)).ToArray();
     }

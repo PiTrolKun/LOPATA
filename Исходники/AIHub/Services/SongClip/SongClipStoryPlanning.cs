@@ -32,15 +32,15 @@ internal static class SongClipStoryPlanning
                     "\nThe previous response failed validation. Choose each sourceLine verbatim from the supplied enum; do not shorten, translate or paraphrase it. Each visual must be a concise English image of 2 to 80 characters. Return only the complete JSON schema."),
                     SongClipStoryBrief.Input(attempt, reference.Roles), SongClipStoryBrief.Schema(attempt), token);
                 // Retain the actual rejected answer as evidence; never silently repair its source text.
-                SongClipStore.Atomic(Path.Combine(job, $"planner-story-{retry + 1}.json"), new { response.Text, response.Model });
+                SongClipStore.Atomic(Path.Combine(job, $"planner-story-{retry + 1}.json"), new { response.Text, response.Model, response.IsPartial });
+                if (response.IsPartial) throw new InvalidDataException("VideoPrep.AiIncomplete");
                 var anchor = SongClipStoryBrief.Parse(response.Text, attempt);
                 if (!KnownModel(response.Model) || reference.Model is not null && response.Model != reference.Model)
                     throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);
                 var story = new Prepared(1, boundInput, anchor, response.Model);
                 SongClipStore.Atomic(file, story); token.ThrowIfCancellationRequested(); return story;
             }
-            catch (InvalidDataException error) when (retry == 0 && error.Message is
-                SongClipVisualProtocol.InvalidReply or "VideoPrep.AiInvalidReply" or "VideoPrep.AiIncomplete")
+            catch (Exception error) when (retry == 0 && SongClipPlannerRecovery.IsRecoverableReply(error))
             { report(0, "SongClip.PlanRepairing"); }
         }
         throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);

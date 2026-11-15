@@ -9,7 +9,7 @@ public sealed partial class SongClipControl
 {
     private readonly WrapPanel _infiniteOptions = new();
     private readonly ComboBox _infiniteSize = new(), _infiniteSteps = new(), _infiniteAudioCfg = new(), _infiniteVramReserve = new();
-    private static readonly (int Width, int Height)[] InfiniteSizes = [(448,448),(512,512),(640,384),(384,640),(832,480),(480,832)];
+    private static readonly FrameSize[] InfiniteSizes = [new(448,448), new(512,512), new(640,384), new(384,640), new(832,480), new(480,832)];
     private bool IsInfiniteTalk => _project.Model == InfiniteTalkRunner.ModelId;
 
     private FrameworkElement BuildInfiniteTalkOptions()
@@ -21,7 +21,7 @@ public sealed partial class SongClipControl
             _infiniteOptions.Children.Add(ModeOption(key,choice));
             choice.SelectionChanged += (_,_) => { if (!_loading && !_busy) Checkpoint(); };
         }
-        foreach (var (width,height) in InfiniteSizes) _infiniteSize.Items.Add($"{width} × {height}");
+        _infiniteSize.ItemsSource = InfiniteSizes;
         foreach (var steps in new[] {20,30,40}) _infiniteSteps.Items.Add(steps);
         foreach (var value in new[] {2d,3d,4d,5d}) _infiniteAudioCfg.Items.Add(value);
         foreach (var value in new[] {1d,2d,3d,4d}) _infiniteVramReserve.Items.Add(value);
@@ -31,7 +31,7 @@ public sealed partial class SongClipControl
     private void LoadInfiniteTalkSettings()
     {
         var settings = _project.Settings.InfiniteTalk ?? new();
-        _infiniteSize.SelectedIndex = Math.Max(0,Array.FindIndex(InfiniteSizes,s => s == (settings.Width,settings.Height)));
+        _infiniteSize.SelectedIndex = Math.Max(0, Array.IndexOf(InfiniteSizes, new FrameSize(settings.Width, settings.Height)));
         _infiniteSteps.SelectedItem = settings.Steps; _infiniteAudioCfg.SelectedItem = settings.AudioCfg;
         _infiniteVramReserve.SelectedItem = settings.VramReserveGb;
     }
@@ -40,8 +40,8 @@ public sealed partial class SongClipControl
     {
         if (!IsInfiniteTalk) return;
         var settings = _project.Settings.InfiniteTalk ?? new();
-        var size = _infiniteSize.SelectedIndex >= 0 ? InfiniteSizes[_infiniteSize.SelectedIndex] : (settings.Width,settings.Height);
-        _project.Settings.InfiniteTalk = settings with { Width = size.Item1, Height = size.Item2,
+        var size = _infiniteSize.SelectedItem is FrameSize selected ? selected : new(settings.Width, settings.Height);
+        _project.Settings.InfiniteTalk = settings with { Width = size.Width, Height = size.Height,
             Steps = _infiniteSteps.SelectedItem is int steps ? steps : settings.Steps,
             AudioCfg = _infiniteAudioCfg.SelectedItem is double guidance ? guidance : settings.AudioCfg,
             VramReserveGb = _infiniteVramReserve.SelectedItem is double reserve ? reserve : settings.VramReserveGb };

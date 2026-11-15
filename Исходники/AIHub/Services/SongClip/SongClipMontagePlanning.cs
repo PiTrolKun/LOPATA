@@ -10,36 +10,36 @@ namespace AIHub.Services.SongClip;
 /// <summary>Checkpointed Any Song director. Uses one approved resident Qwen, then retires it before video inference.</summary>
 internal static class SongClipMontagePlanning
 {
-    private const int ResponseTokens = 4096;
     private sealed record Binding(int Schema, string InputHash, string PlanSha256);
     private sealed record Progress(int Schema, string InputHash, string ReferenceHash, string StoryHash,
         string BatchesSha256, SongClipMontagePlan[] Batches);
 
     internal static async Task<SongClipMontagePlan> EnsureAsync(SongClipAttempt attempt, SongClipStore store, string job,
-        SongClipMontageAnalysis analysis, Action<double, string> progress, CancellationToken token)
+        SongClipMontageAnalysis analysis, Action<double, string> progress, CancellationToken token,
+        SongClipPlannerSession? warmedSession = null, string? plannerId = null)
     {
-        var boundInput = await PrepareAsync(attempt, store, analysis, token);
+        var boundInput = await PrepareAsync(attempt, store, analysis, token, plannerId);
         var completed = await ReadAsync(attempt, job, analysis, boundInput, token);
         if (completed is not null) { progress(0, "SongClip.PlanReused"); return completed; }
-        SongClipPlannerSession? session = null;
+        var session = warmedSession;
         try {
             return await EnsureCoreAsync(attempt, job, analysis, boundInput, async (system, body, schema, ct) => {
-                session ??= await SongClipPlannerModel.OpenAsync(attempt, ct);
-                return await session.GenerateAsync(system, body, schema, ResponseTokens, ct);
-            }, progress, token, prepareStory: true);
+                session ??= await SongClipPlannerModel.OpenAsync(attempt, ct, plannerId);
+                return await session.GenerateAsync(system, body, schema, SongClipPlannerRecovery.Reserve(body), ct);
+            }, progress, token, prepareStory: true, growBatches: true);
         }
-        finally { if (session is not null) await session.DisposeAsync(); }
+        finally { if (session is not null && session != warmedSession) await session.DisposeAsync(); }
     }
 
     internal static async Task<SongClipMontagePlan> ReadCompletedAsync(SongClipAttempt attempt, SongClipStore store, string job,
-        SongClipMontageAnalysis analysis, CancellationToken token)
+        SongClipMontageAnalysis analysis, CancellationToken token, string? plannerId = null)
     {
-        var boundInput = await PrepareAsync(attempt, store, analysis, token);
+        var boundInput = await PrepareAsync(attempt, store, analysis, token, plannerId);
         return await ReadAsync(attempt, job, analysis, boundInput, token) ?? throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
     }
 
     private static async Task<string> PrepareAsync(SongClipAttempt attempt, SongClipStore store,
-        SongClipMontageAnalysis analysis, CancellationToken token)
+        SongClipMontageAnalysis analysis, CancellationToken token, string? plannerId)
     {
         token.ThrowIfCancellationRequested(); SongClipMontageProtocol.ValidateInput(attempt, analysis);
         var song = store.Resolve(attempt.ProjectId, attempt.Song);
@@ -49,14 +49,14 @@ internal static class SongClipMontagePlanning
             || Math.Abs(duration - analysis.DurationSeconds) > .1) throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
         return SongClipMontageProtocol.Hash(new { schema = 1, source = SongClipMontageProtocol.InputHash(attempt, analysis),
             songHash = await FileHashAsync(song, token), referenceHash = await SongClipReferences.HashAsync(attempt, store, token),
-            planner = SongClipPlannerModel.ModelIdFor(attempt.Model) });
+            planner = plannerId ?? SongClipPlannerModel.ModelIdFor(attempt.Model) });
     }
 
     // The pure hook exercises immutable analysis, repair, checkpoints and resume without a model/runtime.
     internal static async Task<SongClipMontagePlan> EnsureCoreAsync(SongClipAttempt attempt, string job,
         SongClipMontageAnalysis analysis, string boundInput,
         Func<string, string, object, CancellationToken, Task<VideoStructuredAnswer>> generate,
-        Action<double, string> report, CancellationToken token, bool prepareStory = false)
+        Action<double, string> report, CancellationToken token, bool prepareStory = false, bool growBatches = false)
     {
         token.ThrowIfCancellationRequested(); SongClipMontageProtocol.ValidateInput(attempt, analysis);
         if (boundInput is null || boundInput.Length != 64 || boundInput.Any(character => !Uri.IsHexDigit(character)))
@@ -75,45 +75,46 @@ internal static class SongClipMontagePlanning
             var previous = await DeserializeAsync<Progress>(progressFile, token);
             if (previous is null || previous.Schema != 1 || previous.InputHash != boundInput
                 || previous.ReferenceHash != referenceHash || previous.StoryHash != storyHash || previous.Batches is null
-                || previous.Batches.Length > (analysis.Slots.Length + SongClipMontageProtocol.MaximumBatch - 1) / SongClipMontageProtocol.MaximumBatch
+                || previous.Batches.Length > analysis.Slots.Length
                 || previous.BatchesSha256 != SongClipMontageProtocol.Hash(previous.Batches))
                 throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
             foreach (var batch in previous.Batches) {
                 var offset = batches.Sum(item => item.Shots.Length);
-                var expected = analysis.Slots.Skip(offset).Take(SongClipMontageProtocol.MaximumBatch).ToArray();
+                if (batch?.Shots is not { Length: > 0 } || batch.Shots.Length > analysis.Slots.Length - offset)
+                    throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
+                var expected = analysis.Slots.AsSpan(offset, batch.Shots.Length).ToArray();
                 var validated = SongClipMontageProtocol.Validate(batch, attempt, analysis, expected, batches.LastOrDefault()?.Shots.LastOrDefault());
                 RequireModel(reference, story, validated.Assistants[0]);
                 if (!EqualsRoles(reference.Roles, validated.ReferenceRoles)) throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
                 batches.Add(Freeze(batches, validated));
             }
         }
-        for (var offset = batches.Sum(batch => batch.Shots.Length); offset < analysis.Slots.Length; offset += SongClipMontageProtocol.MaximumBatch) {
+        var preferredCount = batches.LastOrDefault()?.Shots.Length ?? SongClipPlannerRecovery.InitialBatch;
+        for (var offset = batches.Sum(batch => batch.Shots.Length); offset < analysis.Slots.Length;) {
             token.ThrowIfCancellationRequested();
-            var expected = analysis.Slots.Skip(offset).Take(SongClipMontageProtocol.MaximumBatch).ToArray();
-            var ordinal = offset / SongClipMontageProtocol.MaximumBatch + 1;
-            report(0, JsonSerializer.Serialize(new { kind = "planner", stage = "SongClip.PlanningBatch", current = ordinal,
-                total = (analysis.Slots.Length + SongClipMontageProtocol.MaximumBatch - 1) / SongClipMontageProtocol.MaximumBatch,
+            var ordinal = batches.Count + 1;
+            report(0, JsonSerializer.Serialize(new { kind = "planner", stage = "SongClip.PlanningBatch", current = offset + 1,
+                total = analysis.Slots.Length,
                 model = SongClipPlannerModel.ModelIdFor(attempt.Model) }));
-            SongClipMontagePlan? accepted = null;
-            for (var retry = 0; retry < 2; retry++) {
-                token.ThrowIfCancellationRequested();
-                try {
-                    var system = SongClipMontageProtocol.System + (retry == 0 ? "" :
-                        "\nThe previous response failed validation. Copy the exact supplied indices, times, source anchors and accepted style. Preserve typed roles, performer visibility and transitions. Return only complete JSON.");
+            var requestedCount = Math.Min(preferredCount, analysis.Slots.Length - offset);
+            var (accepted, count) = await SongClipPlannerRecovery.BatchAsync(requestedCount,
+                async (length, pass, guidance) => {
+                    var expected = analysis.Slots.AsSpan(offset, length).ToArray();
+                    var system = SongClipMontageProtocol.System + (guidance is null ? "" : "\n" + guidance)
+                        + (offset == 0 && length == 1 ? "\nWhen a performer reference is provided, the opening shot must show that performer." : "");
                     var response = await generate(system, SongClipMontageProtocol.Input(attempt, analysis, expected,
                         batches.FirstOrDefault()?.GlobalStyle, batches.SelectMany(batch => batch.Shots).TakeLast(2).ToArray(), story?.Anchor ?? "", reference.Roles),
-                        SongClipMontageProtocol.Schema(expected.Length), token);
-                    SongClipStore.Atomic(Path.Combine(job, $"montage-planner-{ordinal:D3}-{retry + 1}.json"), new { response.Text, response.Model });
-                    accepted = SongClipMontageProtocol.Parse(response.Text, attempt, analysis, expected, response.Model,
-                        reference.Roles, batches.LastOrDefault()?.Shots.LastOrDefault());
-                    RequireModel(reference, story, response.Model); accepted = Freeze(batches, accepted); break;
-                }
-                catch (InvalidDataException error) when (retry == 0 && error.Message is
-                    SongClipMontageProtocol.InvalidReply or "VideoPrep.AiInvalidReply" or "VideoPrep.AiIncomplete")
-                { report(0, "SongClip.PlanRepairing"); }
-            }
-            if (accepted is null) throw new InvalidDataException(SongClipMontageProtocol.InvalidReply);
+                        SongClipMontageProtocol.Schema(expected.Length, reference.Roles?.Length ?? 0), token);
+                    SongClipStore.Atomic(Path.Combine(job, $"montage-planner-{ordinal:D3}-{pass}.json"), new { response.Text, response.Model, response.IsPartial });
+                    RequireModel(reference, story, response.Model);
+                    return SongClipPlannerRecovery.PreserveValidPrefix(response.Text, "shots", length, (text, available) =>
+                        Freeze(batches, SongClipMontageProtocol.Parse(text, attempt, analysis, expected[..available], response.Model,
+                            reference.Roles, batches.LastOrDefault()?.Shots.LastOrDefault(), supplyTimedAnchors: true,
+                            repairTransitions: guidance is not null)), response.IsPartial);
+                }, report, token, plan => plan.Shots.Length);
             batches.Add(accepted);
+            offset += count;
+            preferredCount = growBatches && count == requestedCount ? count + 1 : count;
             SongClipStore.Atomic(progressFile, new Progress(1, boundInput, referenceHash, storyHash,
                 SongClipMontageProtocol.Hash(batches.ToArray()), batches.ToArray()));
             token.ThrowIfCancellationRequested();

@@ -19,6 +19,43 @@ namespace AIHub.Tests;
 [TestClass, DoNotParallelize]
 public sealed class VideoUpscaleUiTests
 {
+    [STATestMethod]
+    public void TimelineReusesLabelsAndMovesPlayheadWithoutArrangingAgain()
+    {
+        var range = new UpscaleRange { ClipName = "Тестовый ролик" };
+        range.Resources["TextPrimaryBrush"] = Brushes.WhiteSmoke;
+        range.Resources["TextSecondaryBrush"] = Brushes.SlateGray;
+        range.Set(80, 2, 5);
+        range.Measure(new System.Windows.Size(400, 104));
+        range.Arrange(new Rect(0, 0, 400, 104));
+        range.UpdateLayout();
+
+        var labels = range.Children.OfType<TextBlock>().ToArray();
+        var playhead = range.Children.OfType<System.Windows.Shapes.Line>().Single();
+        Assert.HasCount(10, labels);
+        Assert.AreEqual("00:10", labels[1].Text);
+        Assert.AreEqual("01:20", labels[8].Text);
+        Assert.AreEqual("Тестовый ролик", labels[9].Text);
+        Assert.AreEqual(TextAlignment.Left, labels[9].TextAlignment);
+        Assert.AreSame(Brushes.SlateGray, labels[1].Foreground);
+        Assert.IsTrue(range.IsArrangeValid);
+        for (var i = 0; i <= 200; i++)
+            range.Position = i / 5d;
+        Assert.IsTrue(range.IsArrangeValid);
+        Assert.AreEqual(200d, ((TranslateTransform)playhead.RenderTransform).X);
+        CollectionAssert.AreEqual(labels, range.Children.OfType<TextBlock>().ToArray());
+
+        range.Resources["TextSecondaryBrush"] = Brushes.DarkSlateGray;
+        range.Set(3600, 2, 5);
+        range.Measure(new System.Windows.Size(640, 104));
+        range.Arrange(new Rect(0, 0, 640, 104));
+        range.UpdateLayout();
+        Assert.AreEqual("01:00:00", labels[8].Text);
+        Assert.AreEqual(596d, Canvas.GetLeft(labels[8]));
+        Assert.AreSame(Brushes.DarkSlateGray, labels[1].Foreground);
+        CollectionAssert.AreEqual(labels, range.Children.OfType<TextBlock>().ToArray());
+    }
+
     [TestMethod]
     public async Task ThreeRealWindowsHaveDifferentDetailAndTwoInitializedPlayers()
     {

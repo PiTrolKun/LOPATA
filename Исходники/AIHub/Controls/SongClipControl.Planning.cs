@@ -39,6 +39,14 @@ public sealed partial class SongClipControl
         }
         // Canonicalize only new work. Old matching null-reference snapshots above
         // must remain byte-for-byte legacy inputs on continuation.
+        _syncingSizes = true;
+        try
+        {
+            if (_motionSize.SelectedItem is FrameSize motion) SelectGenerationSize(_motionSize, motion);
+            if (_geekSize.SelectedItem is FrameSize geek) SelectGenerationSize(_geekSize, geek);
+            CaptureMotionSettings();
+        }
+        finally { _syncingSizes = false; }
         var references = SongClipReferences.For(_project).ToArray();
         _project.References = references; _project.Reference = references.FirstOrDefault()?.File ?? "";
         if (SongClipModes.IsMontage(_project.Settings.Motion.Mode) && _project.Settings.Montage is null)

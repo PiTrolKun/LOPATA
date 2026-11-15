@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
@@ -20,6 +21,49 @@ public sealed class SongClipLayoutTests
     private const double Tolerance = 2;
     private static readonly string[] Areas = ["Lyrics", "Reference", "Parameters", "Timings", "Preview", "Results", "Output"];
     private static readonly string[] Actions = ["ImportSong", "ImportReference", "RemoveReference", "Components", "Generate", "Pause", "Stop", "Export", "Editor", "Play", "Fullscreen"];
+
+    [TestMethod]
+    public Task JournalFollowsNewLinesAndRespectsReadingPosition() => OnUi(() =>
+    {
+        using var files = new VideoPreparationTests.TestFiles();
+        var localizer = new LocalizationService(); localizer.Load("ru");
+        var control = new SongClipControl(localizer.T, new SongClipStore(files.File("song-journal-projects")));
+        var window = CreateHost(control, 1360, 800, 1, out _);
+        try
+        {
+            window.Show(); FlushLayout(window);
+            var log = Find<TextBox>(control, "Log");
+            var scroll = (ScrollViewer)log.Template.FindName("PART_ContentHost", log);
+            const BindingFlags methods = BindingFlags.Instance | BindingFlags.NonPublic;
+            var queue = typeof(SongClipControl).GetMethod("QueueGenerationProgress", methods)!;
+            var flush = typeof(SongClipControl).GetMethod("FlushGenerationProgress", methods)!;
+            void Post(int count, string prefix, int length)
+            {
+                for (var index = 0; index < count; index++)
+                    queue.Invoke(control, [0.25, $"{prefix} {index} {new string('а', length)}"]);
+                flush.Invoke(control, [false]);
+                FlushLayout(window);
+            }
+
+            Post(60, "Прогресс", 28);
+            Assert.IsTrue(scroll.ScrollableHeight > 10);
+            Assert.AreEqual(scroll.ScrollableHeight, scroll.VerticalOffset, Tolerance);
+            scroll.ScrollToVerticalOffset(scroll.ScrollableHeight / 2); FlushLayout(window);
+            var readingPosition = scroll.VerticalOffset;
+            Post(8, "В фоне", 28);
+            Assert.AreEqual(readingPosition, scroll.VerticalOffset, Tolerance);
+            Assert.Contains("В фоне 7", log.Text);
+
+            Post(90, "Переполнение", 550);
+            Assert.AreEqual(readingPosition, scroll.VerticalOffset, Tolerance);
+            Assert.Contains("Прогресс 0", log.Text);
+            scroll.ScrollToBottom(); FlushLayout(window);
+            Assert.Contains("Переполнение 89", log.Text);
+            Assert.IsLessThanOrEqualTo(32_000, log.Text.Length);
+            Assert.AreEqual(scroll.ScrollableHeight, scroll.VerticalOffset, Tolerance);
+        }
+        finally { window.Close(); }
+    });
 
     [TestMethod]
     [DataRow("ru", 1900d, 980d, 1d)]

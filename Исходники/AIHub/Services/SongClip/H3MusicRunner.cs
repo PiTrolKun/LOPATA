@@ -44,11 +44,11 @@ internal static class H3MusicRunner
         void Report(double fraction, string message)
         {
             if (watch.Elapsed.TotalSeconds - saved >= 2)
-            { SongClipStore.Atomic(clockFile, Elapsed()); saved = watch.Elapsed.TotalSeconds; }
+            { SongClipResources.SaveElapsed(clockFile, Elapsed()); saved = watch.Elapsed.TotalSeconds; }
             progress(fraction, message);
         }
         try { return await RunAttemptAsync(attempt, store, job, Report, token, Elapsed); }
-        finally { SongClipStore.Atomic(clockFile, Elapsed()); }
+        finally { SongClipResources.SaveElapsed(clockFile, Elapsed()); }
     }
 
     internal static void ValidateSettings(SongClipAttempt attempt)
@@ -75,11 +75,14 @@ internal static class H3MusicRunner
         using var auditLog = ComponentAudit.CaptureLog(message => progress(0, message));
         progress(0, "SongClip.Preparing");
         await ApplicationBackgroundOperations.RetireModelsAsync();
+        if (!File.Exists(Path.Combine(job, "worker-result.json")))
+            await SongClipResources.CheckH3AudioAsync(store.Resolve(attempt.ProjectId, attempt.Song), token);
         var plan = await SongClipPlanning.EnsureAsync(attempt, store, job, progress, token);
         if (attempt.PlanningVersion == 1 && plan?.Assistants is not { Length: > 0 }) throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);
         var environment = await H3MusicComponents.PrepareAsync(attempt.ModelsRoot, attempt.Connections, token, message => progress(0, message));
         var scripts = new[] { ("song_clip_motion.py", "AIHub.SongClip.MotionWorker"),
-            ("song_clip_motion_state.py", "AIHub.SongClip.MotionState"), ("h3_memory.py", "AIHub.H3Memory") };
+            ("song_clip_motion_state.py", "AIHub.SongClip.MotionState"),
+            ("song_clip_montage_media.py", "AIHub.SongClip.MontageMedia"), ("h3_memory.py", "AIHub.H3Memory") };
         var files = new List<PinnedTreeFile>();
         foreach (var (file, resource) in scripts)
         {
@@ -128,6 +131,7 @@ internal static class H3MusicRunner
             GenerationSeconds = elapsed(), ModelHistory = "recorded-inference", Models = [..Facts(environment.Cards), ..(plan?.Assistants ?? [])]
         };
         var staging = Path.Combine(job, "clip.installing.mp4"); progress(.99, "SongClip.Finalizing");
+        SongClipResources.CheckMuxSpace(raw, staging);
         await VideoRuntime.RunAsync(false, ["-nostdin", "-v", "error", "-y", "-i", raw,
             "-map", "0:v:0", "-map", "0:a:0", "-c", "copy",
             "-metadata", "encoded_by=LOPATA " + facts.ProgramVersion, "-metadata", "LOPATA_VIDEO=" + facts.Json(),
@@ -165,6 +169,33 @@ internal static class H3MusicRunner
     internal static async Task RunWorkerAsync(string python, string request, string job,
         Action<double, string> progress, CancellationToken token, bool montage = false, bool analyze = false, bool verify = false, string? worker = null, string? action = null)
     {
+        var render = !analyze && !verify && (action is null || action is "--cards" or "--run");
+        try
+        {
+            await RunWorkerOnceAsync(python, request, job, progress, token, montage, analyze, verify, worker, action, preferOffload: false);
+        }
+        catch (WorkerFailure failure) when (render && failure.CanRetry)
+        {
+            token.ThrowIfCancellationRequested();
+            progress(0, "SongClip.RenderRetrying");
+            await RunWorkerOnceAsync(python, request, job, progress, token, montage, analyze, verify, worker, action,
+                preferOffload: failure.PreferOffload);
+        }
+    }
+
+    private sealed class WorkerFailure(int code, string? kind, bool started, string? workerError, string detail) : IOException(detail)
+    {
+        internal bool PreferOffload => kind == "OutOfMemoryError"
+            || started && kind == "AcceleratorError" && workerError?.StartsWith("CUDA error: unknown error", StringComparison.Ordinal) == true;
+
+        internal bool CanRetry => PreferOffload || (started && kind is null && code == unchecked((int)0xC0000005));
+    }
+
+    private static async Task RunWorkerOnceAsync(string python, string request, string job,
+        Action<double, string> progress, CancellationToken token, bool montage, bool analyze, bool verify, string? worker, string? action,
+        bool preferOffload)
+    {
+        token.ThrowIfCancellationRequested();
         var info = new ProcessStartInfo(python)
         {
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
@@ -172,38 +203,84 @@ internal static class H3MusicRunner
         };
         var script = Path.Combine(AppContext.BaseDirectory, "Tools", worker ?? (montage ? "song_clip_montage.py" : "song_clip_motion.py"));
         ManagedPythonLaunch.ScriptArguments(info, action is not null ? [script, action, request] : analyze ? [script, "--analyze", request] : verify ? [script, "--verify", request] : [script, request]);
-        var label = worker == "song_clip_geek.py" ? "SongClip.Geekatplay" : montage ? "SongClip.H3Montage" : "SongClip.H3Motion";
+        info.Environment["LOPATA_H3_RETRY_OFFLOAD"] = preferOffload ? "1" : "0";
+        var geek = worker == "song_clip_geek.py";
+        var glitch = worker == "song_clip_glitch.py";
+        if (geek)
+            info.Environment["LOPATA_GEEK_PROGRAM_VERSION"] = ApplicationBuildVersion.Value;
+        var label = geek ? "SongClip.Geekatplay" : glitch ? "SongClip.Glitchframe" : montage ? "SongClip.H3Montage" : "SongClip.H3Motion";
         using var process = OwnedProcessRegistry.Shared.Start(info, label);
-        using var cancel = token.Register(() => { try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { } });
+        void StopWorker()
+        {
+            try { if (!process.HasExited) process.Kill(true); }
+            catch (InvalidOperationException) { }
+            catch (System.ComponentModel.Win32Exception) when (process.HasExited) { }
+        }
+        using var cancel = token.Register(StopWorker);
         var diagnostics = new StringBuilder();
+        async Task<bool> AppendDiagnosticAsync(string file, string line)
+        {
+            try
+            {
+                await File.AppendAllTextAsync(Path.Combine(job, file), line + Environment.NewLine, CancellationToken.None);
+                return true;
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return false; }
+        }
         var stderr = Task.Run(async () =>
         {
+            var log = true;
             while (await process.StandardError.ReadLineAsync() is { } line)
             {
-                await File.AppendAllTextAsync(Path.Combine(job, "stderr.log"), line + Environment.NewLine, CancellationToken.None);
+                if (log) log = await AppendDiagnosticAsync("stderr.log", line);
                 diagnostics.AppendLine(line); if (diagnostics.Length > 20000) diagnostics.Remove(0, 12000);
             }
         });
         try
         {
+            string? workerError = null, failureType = null;
+            var started = false;
+            var log = true;
             while (await process.StandardOutput.ReadLineAsync() is { } line)
             {
-                await File.AppendAllTextAsync(Path.Combine(job, "progress.jsonl"), line + Environment.NewLine, CancellationToken.None);
-                if (!line.StartsWith("@motion ", StringComparison.Ordinal)) { progress(0, line); continue; }
-                using var message = JsonDocument.Parse(line[8..]); var value = message.RootElement;
+                if (log) log = await AppendDiagnosticAsync("progress.jsonl", line);
+                if (!glitch && !line.StartsWith("@motion ", StringComparison.Ordinal))
+                {
+                    if (!geek) progress(0, line);
+                    continue;
+                }
+                JsonDocument parsed;
+                try { parsed = JsonDocument.Parse(glitch ? line : line[8..]); }
+                catch (JsonException) when (glitch) { progress(0, line); continue; }
+                using var message = parsed;
+                var value = message.RootElement;
+                var kind = value.ValueKind == JsonValueKind.Object && value.TryGetProperty(glitch ? "stage" : "kind", out var eventKind)
+                    ? eventKind.GetString() : null;
+                if (glitch && kind is null) { progress(0, line); continue; }
+                started |= kind is "stage" or "chunk-start" or "card-start" or "background" or "render";
+                if (kind == "error")
+                {
+                    workerError = value.TryGetProperty("message", out var detail) ? detail.GetString() : null;
+                    failureType = value.TryGetProperty("type", out var category) ? category.GetString() : null;
+                }
                 var fraction = value.TryGetProperty("fraction", out var f) ? f.GetDouble() : 0;
                 if (!double.IsFinite(fraction)) throw new InvalidDataException("Invalid H3 music progress.");
                 // Keep event structure for the presentation layer; checkpoint payloads
                 // belong in the private event log, not directly in the status label.
-                progress(Math.Clamp(fraction, 0, .98), value.GetRawText());
+                progress(Math.Clamp(fraction, 0, .98), glitch ? value.GetProperty("message").GetString() ?? "" : value.GetRawText());
             }
             await process.WaitForExitAsync(CancellationToken.None); await stderr; token.ThrowIfCancellationRequested();
-            if (process.ExitCode != 0) throw new IOException((worker == "song_clip_geek.py" ? "Geekatplay: " : "H3 Motion Context Music: ") + diagnostics);
+            if (process.ExitCode != 0)
+            {
+                if (failureType == "DiskSpaceError") throw new IOException("SongClip.MuxDiskSpace");
+                throw new WorkerFailure(process.ExitCode, failureType, started, workerError,
+                    $"{label} (0x{process.ExitCode:X8}) {workerError ?? diagnostics.ToString()}".TrimEnd());
+            }
             if (worker is null && !File.Exists(Path.Combine(job, analyze ? "montage-analysis.json" : "worker-result.json"))) throw new InvalidDataException("H3 music worker did not commit its result.");
         }
         finally
         {
-            if (!process.HasExited) process.Kill(true);
+            StopWorker();
             await process.WaitForExitAsync(CancellationToken.None); await stderr;
         }
     }

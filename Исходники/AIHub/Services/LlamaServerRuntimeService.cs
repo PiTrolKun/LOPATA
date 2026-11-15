@@ -372,7 +372,8 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         }
     }
 
-    private void StartProcess(DebugModelInfo model, LlamaRuntimeSelection selection, Action<string> log)
+    private void StartProcess(DebugModelInfo model, LlamaRuntimeSelection selection, Action<string> log,
+        LlamaStartupActivity? startupActivity = null)
     {
         _selectedRuntime = selection;
         _hardwareStartupFailure = false;
@@ -407,12 +408,14 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         AddArgument(startInfo, selection.DeviceId);
         AddArgument(startInfo, "--parallel");
         AddArgument(startInfo, "1");
-        if (_poetryGpuAdmission is not null && selection.Bundle.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
+        if ((_poetryGpuAdmission is not null || _requireFullPoetryPrompt)
+            && selection.Bundle.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
         {
             // Retain weights, not previous video prompts or recurrent-state checkpoints.
             AddArgument(startInfo, "--ctx-checkpoints"); AddArgument(startInfo, "0");
             AddArgument(startInfo, "--cache-ram"); AddArgument(startInfo, "0");
             AddArgument(startInfo, "--no-cache-prompt");
+            if (_requireFullPoetryPrompt) AddArgument(startInfo, "--no-context-shift");
         }
         AddArgument(startInfo, "--jinja");
         AddArgument(startInfo, "--reasoning");
@@ -449,6 +452,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         var started = _process;
         _stderrPumpTask = PumpOutputAsync(_process.StandardError, log, line =>
         {
+            startupActivity?.ObserveLine(line);
             _poetryJournal?.Capture("stderr", line);
             if (ReferenceEquals(_process, started))
             {
@@ -459,10 +463,11 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
     }
 
     private async Task WaitForHealthAsync(Action<string> log, CancellationToken cancellationToken,
-        Func<CancellationToken, Task>? sampleMemory = null, TimeSpan? startupTimeout = null)
+        Func<CancellationToken, Task>? sampleMemory = null, TimeSpan? startupTimeout = null,
+        LlamaStartupActivity? startupActivity = null)
     {
         var deadline = DateTimeOffset.UtcNow + (startupTimeout ?? TimeSpan.FromMinutes(5));
-        while (DateTimeOffset.UtcNow < deadline)
+        while (startupActivity is not null || DateTimeOffset.UtcNow < deadline)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (_process is null)
@@ -473,6 +478,12 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
             if (_process.HasExited)
             {
                 throw new InvalidOperationException($"llama-server exited with code {_process.ExitCode}.");
+            }
+            if (startupActivity is not null)
+            {
+                _process.Refresh();
+                startupActivity.ObservePeakWorkingSet(_process.PeakWorkingSet64);
+                if (startupActivity.IsIdle) throw new TimeoutException("SongClip.PlannerStartupIdle");
             }
             if (sampleMemory is not null) await sampleMemory(cancellationToken);
 

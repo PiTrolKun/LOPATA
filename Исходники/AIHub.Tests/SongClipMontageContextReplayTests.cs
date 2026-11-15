@@ -12,7 +12,7 @@ namespace AIHub.Tests;
 
 /// <summary>Opt-in replay of a saved context rejection; never writes to the source project or renders video.</summary>
 [TestClass, DoNotParallelize]
-public sealed class SongClipMontageContextReplayTests
+public sealed partial class SongClipMontageContextReplayTests
 {
     [TestMethod, TestCategory("InstalledRuntime")]
     public async Task SavedSongCompletesAllMontageBatchesWithTheInstalledPlanner()

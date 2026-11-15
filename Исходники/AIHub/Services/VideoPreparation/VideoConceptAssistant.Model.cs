@@ -7,6 +7,16 @@ public sealed partial class VideoConceptAssistant
 {
     private static async Task<(DebugModelInfo Model, OutputModelUse Identity)> AuditModelAsync(VideoConceptModelRequest request, CancellationToken attempt)
     {
+        if (request.ModelId == ManagedModelCatalog.LetItOutArtifactId && request.SongPlannerModelsRoot is { } root)
+        {
+            if (!Path.GetFullPath(request.ModelPath).Equals(Path.GetFullPath(LetItOutModel.ModelPath(root)), StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("VideoPrep.AiModelMissing");
+            await ComponentLicenseGate.EnsureAsync(ManagedModelCatalog.LetItOutArtifactId, attempt);
+            var gemma = await ManagedModelRuntimeAudit.VerifyAsync(LetItOutModel.Register(root), ManagedModelCatalog.LetItOutArtifactId, attempt);
+            var gemmaWeight = gemma.Files.Single();
+            return (new DebugModelInfo { Name = gemma.DisplayName, Path = request.ModelPath, Format = "gguf", IsRunnable = true,
+                SizeBytes = gemmaWeight.SizeBytes }, new(gemma.RepositoryId, gemma.DisplayName, gemma.Revision + "; sha256=" + gemmaWeight.Sha256, "video preparation"));
+        }
         var candidate = MusicPoetryModelCatalog.All.Single(c => c.Id == request.ModelId);
         await ComponentLicenseGate.EnsureAsync(candidate.LicenseId, attempt);
         var model = new DebugModelInfo

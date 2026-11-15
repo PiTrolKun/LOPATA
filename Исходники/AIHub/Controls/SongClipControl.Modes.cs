@@ -26,7 +26,7 @@ public sealed partial class SongClipControl
     private FrameworkElement BuildMontageDurationChoice()
     {
         _montageDurationOption = ModeOption("MontageClipSeconds", _montageClipSeconds);
-        foreach (var seconds in new[] { 3, 5, 8, 10 }) _montageClipSeconds.Items.Add(seconds);
+        foreach (var seconds in Enumerable.Range(2, 14)) _montageClipSeconds.Items.Add(seconds);
         _montageClipSeconds.ToolTip = _l("SongClip.MontageClipSecondsHint");
         return _montageDurationOption;
     }
@@ -54,8 +54,7 @@ public sealed partial class SongClipControl
             var (width, height, steps) = SongClipModes.IsMontage(_loadedH3Mode)
                 ? (montage.Width, montage.Height, montage.Steps)
                 : (connected.Width, connected.Height, connected.Steps);
-            _motionSize.SelectedIndex = Array.FindIndex(MotionSizes, size => size.Width == width && size.Height == height);
-            if (_motionSize.SelectedIndex < 0) _motionSize.SelectedIndex = 0;
+            SelectGenerationSize(_motionSize, new(width, height), _project.PendingAttemptId.Length > 0);
             _motionSteps.SelectedItem = steps;
             _montageClipSeconds.SelectedItem = montage.ClipSeconds;
             RefreshModePresentation();
@@ -65,14 +64,15 @@ public sealed partial class SongClipControl
 
     private void CaptureModeSettings()
     {
+        if (!IsMotion) return;
         if (SongClipModes.IsMontage(_loadedH3Mode))
         {
             var previous = _project.Settings.Montage;
             var settings = previous ?? new SongClipMontageSettings();
-            var size = _motionSize.SelectedIndex >= 0 ? MotionSizes[_motionSize.SelectedIndex] : (settings.Width, settings.Height);
+            var size = _motionSize.SelectedItem is FrameSize selected ? selected : new(settings.Width, settings.Height);
             var updated = settings with
             {
-                Width = size.Item1, Height = size.Item2,
+                Width = size.Width, Height = size.Height,
                 Steps = _motionSteps.SelectedItem is int steps ? steps : settings.Steps,
                 ClipSeconds = _montageClipSeconds.SelectedItem is int seconds ? seconds : settings.ClipSeconds
             };
@@ -82,11 +82,11 @@ public sealed partial class SongClipControl
         else
         {
             var settings = _project.Settings.Motion;
-            var size = _motionSize.SelectedIndex >= 0 ? MotionSizes[_motionSize.SelectedIndex] : (settings.Width, settings.Height);
+            var size = _motionSize.SelectedItem is FrameSize selected ? selected : new(settings.Width, settings.Height);
             // Replace the nested record so pending attempts keep their immutable inputs.
             _project.Settings.Motion = settings with
             {
-                Width = size.Item1, Height = size.Item2,
+                Width = size.Width, Height = size.Height,
                 Steps = _motionSteps.SelectedItem is int steps ? steps : settings.Steps
             };
         }

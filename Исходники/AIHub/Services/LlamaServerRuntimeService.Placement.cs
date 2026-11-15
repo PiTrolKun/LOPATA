@@ -109,8 +109,10 @@ public sealed partial class LlamaServerRuntimeService
                 kvBytes = LlamaDenseMemoryPolicy.KvBytes(memory, RequestedContextTokens) });
             var baseline = selected.UsesGpu ? await CurrentDevice(cancellation) : null;
             _poetryAllocation = baseline is null ? null : new(selected.DeviceId, baseline.TotalBytes - baseline.FreeBytes);
-            StartProcess(model, selected, log);
-            await WaitForHealthAsync(log, cancellation, selected.UsesGpu ? Sample : null, startupTimeout);
+            var startupActivity = _requireFullPoetryPrompt
+                ? new LlamaStartupActivity(startupTimeout ?? TimeSpan.FromMinutes(4), TimeProvider.System) : null;
+            StartProcess(model, selected, log, startupActivity);
+            await WaitForHealthAsync(log, cancellation, selected.UsesGpu ? Sample : null, startupTimeout, startupActivity);
             var result = placement with { ContextTokens = RequestedContextTokens };
             journal.Record("ready", result);
             return result;

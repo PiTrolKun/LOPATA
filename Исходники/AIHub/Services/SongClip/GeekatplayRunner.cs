@@ -37,11 +37,11 @@ internal static class GeekatplayRunner
         if (!double.IsFinite(previous) || previous < 0) throw new InvalidDataException("Invalid generation clock.");
         var watch = Stopwatch.StartNew(); double saved = 0;
         void Report(double value, string message) {
-            if (watch.Elapsed.TotalSeconds - saved >= 2) { SongClipStore.Atomic(clock, previous + watch.Elapsed.TotalSeconds); saved = watch.Elapsed.TotalSeconds; }
+            if (watch.Elapsed.TotalSeconds - saved >= 2) { SongClipResources.SaveElapsed(clock, previous + watch.Elapsed.TotalSeconds); saved = watch.Elapsed.TotalSeconds; }
             progress(value, message);
         }
         try { return await Render(attempt, store, job, Report, token, () => previous + watch.Elapsed.TotalSeconds); }
-        finally { SongClipStore.Atomic(clock, previous + watch.Elapsed.TotalSeconds); }
+        finally { SongClipResources.SaveElapsed(clock, previous + watch.Elapsed.TotalSeconds); }
     }
     private static async Task<SongClipResult> Render(SongClipAttempt attempt, SongClipStore store, string job,
         Action<double, string> progress, CancellationToken token, Func<double> elapsed)
@@ -54,6 +54,14 @@ internal static class GeekatplayRunner
             ApplicationBuildVersion.Value, GeekatplayBinding.AdapterFiles(), token);
         var request = Request(attempt, store, job, environment);
         var analysisRequest = Path.Combine(job, "geek-analysis-request.json");
+        var input = Path.Combine(job, "request.json");
+        var savedRequest = File.Exists(input) ? input : analysisRequest;
+        // The immutable worker input includes the version that created the attempt.
+        // The worker receives the actual producing build separately for new artifacts.
+        if (File.Exists(savedRequest)
+            && JsonNode.Parse(await File.ReadAllTextAsync(savedRequest, token))?["programVersion"] is JsonValue savedVersion
+            && savedVersion.TryGetValue<string>(out var version))
+            request["programVersion"] = version;
         SongClipStore.Atomic(analysisRequest, request);
         await Worker("--analyze", analysisRequest);
         using var analysis = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(job, "geek-analysis.json"), token));
@@ -61,7 +69,6 @@ internal static class GeekatplayRunner
         var plan = await SongClipPlanning.EnsureAsync(attempt, store, job, progress, token, slots)
             ?? throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);
         request["visualPlan"] = JsonSerializer.SerializeToNode(plan);
-        var input = Path.Combine(job, "request.json");
         if (File.Exists(input)) {
             if (!JsonNode.DeepEquals(JsonNode.Parse(await File.ReadAllTextAsync(input, token)), request))
                 throw new InvalidDataException("SongClip.VisualPlanMismatch");
@@ -85,6 +92,7 @@ internal static class GeekatplayRunner
         var final = Path.Combine(job, "clip.mp4");
         if (!File.Exists(final)) {
             var staging = Path.Combine(job, "clip.installing.mp4"); progress(.99, "SongClip.Finalizing");
+            SongClipResources.CheckMuxSpace(raw, staging);
             await VideoRuntime.RunAsync(false, ["-nostdin", "-v", "error", "-y", "-i", raw, "-map", "0:v:0", "-map", "0:a:0",
                 "-c", "copy", "-metadata", "encoded_by=LOPATA " + facts.ProgramVersion, "-metadata", "LOPATA_VIDEO=" + facts.Json(),
                 "-metadata", "LOPATA_OPERATION=" + attempt.Id, "-metadata", "creation_time=" + facts.ExportedUtc.ToString("O"),
@@ -106,9 +114,9 @@ internal static class GeekatplayRunner
     {
         if (analysis.GetProperty("schema").GetInt32() != 1) throw new InvalidDataException("Invalid Geekatplay analysis.");
         var duration = analysis.GetProperty("durationSeconds").GetDouble();
-        if (!double.IsFinite(duration) || duration is <= 0 or > 7200) throw new InvalidDataException("Invalid song duration.");
+        if (!SongClipVisualProtocol.CanRepresentDuration(duration, 24)) throw new InvalidDataException("SongClip.FrameCountLimit");
         var rows = analysis.GetProperty("slots").EnumerateArray().ToArray();
-        if (rows.Length is < 1 or > 256) throw new InvalidDataException("Invalid Geekatplay segment count.");
+        if (rows.Length < 1) throw new InvalidDataException("Invalid Geekatplay segment count.");
         var source = SongClipVisualProtocol.Source(attempt); var result = new List<SongClipVisualScene>(); double end = 0;
         foreach (var row in rows) {
             var index = row.GetProperty("index").GetInt32(); var start = row.GetProperty("startSeconds").GetDouble();

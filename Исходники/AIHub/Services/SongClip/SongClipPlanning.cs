@@ -31,8 +31,8 @@ internal static class SongClipPlanning
             return await EnsureCoreAsync(attempt, job, input.Duration, input.Hash, async (system, body, schema, ct) =>
             {
                 session ??= await SongClipPlannerModel.OpenAsync(attempt, ct);
-                return await session.GenerateAsync(system, body, schema, ResponseTokens, ct);
-            }, progress, token, prepareStory: true, suppliedSlots: slots);
+                return await session.GenerateAsync(system, body, schema, SongClipPlannerRecovery.Reserve(body), ct);
+            }, progress, token, prepareStory: true, suppliedSlots: slots, growBatches: true);
         }
         finally { if (session is not null) await session.DisposeAsync(); }
     }
@@ -64,7 +64,8 @@ internal static class SongClipPlanning
     // Pure orchestration hook: tests exercise cancellation/cache/retry without loading any model or native runtime.
     internal static async Task<SongClipVisualPlan> EnsureCoreAsync(SongClipAttempt attempt, string job, double duration, string boundInput,
         Func<string, string, object, CancellationToken, Task<VideoStructuredAnswer>> generate,
-        Action<double, string> report, CancellationToken token, bool prepareStory = false, SongClipVisualScene[]? suppliedSlots = null)
+        Action<double, string> report, CancellationToken token, bool prepareStory = false, SongClipVisualScene[]? suppliedSlots = null,
+        bool growBatches = false)
     {
         if (attempt.PlanningVersion != SongClipVisualProtocol.Version) throw new InvalidDataException(Mismatch);
         var input = new Input(duration, boundInput);
@@ -81,47 +82,46 @@ internal static class SongClipPlanning
         {
             var previous = JsonSerializer.Deserialize<Progress>(await File.ReadAllTextAsync(progressFile, token));
             if (previous is null || previous.Schema != 1 || previous.InputHash != boundInput || previous.Batches is null
-                || previous.Batches.Length > (slots.Length + BatchSize - 1) / BatchSize) throw new InvalidDataException(Mismatch);
+                || previous.Batches.Length > slots.Length) throw new InvalidDataException(Mismatch);
             foreach (var batch in previous.Batches)
             {
-                var expected = slots.Skip(batches.Sum(item => item.Scenes.Length)).Take(BatchSize).ToArray();
+                var offset = batches.Sum(item => item.Scenes.Length);
+                if (batch?.Scenes is not { Length: > 0 } || batch.Scenes.Length > slots.Length - offset)
+                    throw new InvalidDataException(Mismatch);
+                var expected = slots.AsSpan(offset, batch.Scenes.Length).ToArray();
                 _ = Validate(batch, attempt, duration, expected, suppliedSlots);
                 if (reference.Model is not null && !batch.Assistants.SequenceEqual([reference.Model]))
                     throw new InvalidDataException(Mismatch);
                 batches.Add(FreezeStyleAndModel(batches, batch));
             }
         }
-        for (var offset = batches.Sum(batch => batch.Scenes.Length); offset < slots.Length; offset += BatchSize)
+        var preferredCount = batches.LastOrDefault()?.Scenes.Length ?? SongClipPlannerRecovery.InitialBatch;
+        for (var offset = batches.Sum(batch => batch.Scenes.Length); offset < slots.Length;)
         {
             token.ThrowIfCancellationRequested();
-            var expected = slots.Skip(offset).Take(BatchSize).ToArray();
-            var stage = JsonSerializer.Serialize(new { kind = "planner", stage = "SongClip.PlanningBatch", current = offset / BatchSize + 1,
-                total = (slots.Length + BatchSize - 1) / BatchSize, model = SongClipPlannerModel.ModelIdFor(attempt.Model) });
+            var ordinal = batches.Count + 1;
+            var stage = JsonSerializer.Serialize(new { kind = "planner", stage = "SongClip.PlanningBatch", current = offset + 1,
+                total = slots.Length, model = SongClipPlannerModel.ModelIdFor(attempt.Model) });
             report(0, stage);
-            SongClipVisualPlan? accepted = null;
-            // One bounded retry of the same independent schema request. Never render with a malformed/partial response.
-            for (var retry = 0; retry < 2; retry++)
-            {
-                var system = SongClipVisualProtocol.BuildSystem(attempt.Model) + (retry == 0 ? "" :
-                    "\nThe previous response failed validation. Follow every supplied index, exact time and required original lyric anchor. Return only the complete JSON schema.");
-                try
-                {
+            var requestedCount = Math.Min(preferredCount, slots.Length - offset);
+            var (accepted, count) = await SongClipPlannerRecovery.BatchAsync(requestedCount,
+                async (length, pass, guidance) => {
+                    var expected = slots.AsSpan(offset, length).ToArray();
+                    var system = SongClipVisualProtocol.BuildSystem(attempt.Model) + (guidance is null ? "" : "\n" + guidance);
                     var reply = await generate(system, SongClipVisualProtocol.BuildInput(attempt, duration, expected, batches.FirstOrDefault()?.GlobalStyle,
                         batches.SelectMany(batch => batch.Scenes).TakeLast(2).ToArray(), story?.Anchor ?? "", reference.Roles, suppliedSlots),
                         SongClipVisualProtocol.Schema(expected), token);
-                    SongClipStore.Atomic(Path.Combine(job, $"planner-{offset / BatchSize + 1:D3}-{retry + 1}.json"),
-                        new { reply.Text, reply.Model });
-                    accepted = SongClipVisualProtocol.ParseAndValidate(reply.Text, attempt, duration, [reply.Model], expected, timeline: suppliedSlots);
+                    SongClipStore.Atomic(Path.Combine(job, $"planner-{ordinal:D3}-{pass}.json"),
+                        new { reply.Text, reply.Model, reply.IsPartial });
                     if (story is not null && story.Model != reply.Model) throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);
                     if (reference.Model is not null && reference.Model != reply.Model) throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);
-                    accepted = FreezeStyleAndModel(batches, accepted); break;
-                }
-                catch (InvalidDataException error) when (retry == 0 && error.Message is
-                    SongClipVisualProtocol.InvalidReply or "VideoPrep.AiInvalidReply" or "VideoPrep.AiIncomplete")
-                { report(0, "SongClip.PlanRepairing"); }
-            }
-            if (accepted is null) throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);
+                    return SongClipPlannerRecovery.PreserveValidPrefix(reply.Text, "scenes", length, (text, available) =>
+                        FreezeStyleAndModel(batches, SongClipVisualProtocol.ParseAndValidate(text, attempt, duration,
+                            [reply.Model], expected[..available], timeline: suppliedSlots, supplyTimedAnchors: true)), reply.IsPartial);
+                }, report, token, plan => plan.Scenes.Length);
             batches.Add(accepted);
+            offset += count;
+            preferredCount = growBatches && count == requestedCount ? count + 1 : count;
             SongClipStore.Atomic(progressFile, new Progress(1, boundInput, batches.ToArray()));
             token.ThrowIfCancellationRequested();
         }

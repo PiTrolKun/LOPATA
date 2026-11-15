@@ -2,6 +2,22 @@
 from fractions import Fraction
 
 
+def fit_video_frame(frame, width, height):
+    """Scale a square-pixel frame to fit the target and pad any spare area."""
+    import av
+    import numpy as np
+    if frame.width * height == frame.height * width:
+        return frame.reformat(width, height, format="yuv420p", interpolation="LANCZOS")
+    scale = min(width / frame.width, height / frame.height)
+    fitted_width = min(width, max(1, round(frame.width * scale)))
+    fitted_height = min(height, max(1, round(frame.height * scale)))
+    x, y = (width - fitted_width) // 2, (height - fitted_height) // 2
+    canvas = np.zeros((height, width, 3), dtype=np.uint8)
+    scaled = frame.reformat(fitted_width, fitted_height, format="rgb24", interpolation="LANCZOS")
+    canvas[y:y + fitted_height, x:x + fitted_width] = scaled.to_ndarray()
+    return av.VideoFrame.from_ndarray(canvas, format="rgb24").reformat(format="yuv420p")
+
+
 def join_video(parts, target, fps, width, height):
     """Remux every frame in order; no concat demuxer or additional FFmpeg build."""
     import av
@@ -59,7 +75,7 @@ def scale_video(source, target, fps, width, height, quality):
         stream.options = {"crf": str(max(10, min(35, round(36 - quality / 5)))), "preset": "medium"}
         count = 0
         for frame in video.decode(video=0):
-            frame = frame.reformat(width, height, format="yuv420p", interpolation="LANCZOS")
+            frame = fit_video_frame(frame, width, height)
             frame.pts, frame.time_base = count, Fraction(1, fps)
             for packet in stream.encode(frame):
                 output.mux(packet)

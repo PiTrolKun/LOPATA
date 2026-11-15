@@ -47,12 +47,14 @@ public sealed class SongClipMotionUiTests
             Assert.IsTrue(motionSize.IsVisible);
             Assert.IsTrue(motionSteps.IsVisible);
             Assert.IsTrue(((TextBlock)model.Content).Text.Contains("Motion Context",StringComparison.Ordinal));
-            motionSize.SelectedIndex = 2; motionSteps.SelectedItem = 24;
+            var output = Find<ComboBox>("Size");
+            output.SelectedItem = output.Items.Cast<object>().Single(item => item.ToString() == "720 × 1280");
+            motionSize.SelectedIndex = 1; motionSteps.SelectedItem = 24;
             Assert.IsTrue(control.Checkpoint());
             var saved = store.List().Single();
             Assert.AreEqual("h3_music_context", saved.Model);
-            Assert.AreEqual(480, saved.Settings.Motion.Width);
-            Assert.AreEqual(864, saved.Settings.Motion.Height);
+            Assert.AreEqual(576, saved.Settings.Motion.Width);
+            Assert.AreEqual(1024, saved.Settings.Motion.Height);
             Assert.AreEqual(24, saved.Settings.Motion.Steps);
             Assert.AreEqual(20, saved.Settings.Steps, "H3 edits must not replace the Glitchframe step setting.");
             Assert.IsTrue(control.SelectVariant("glitchframe"));
@@ -64,7 +66,7 @@ public sealed class SongClipMotionUiTests
             Assert.IsTrue(control.Checkpoint());
             control.OpenProject(saved.Id);
             Assert.IsTrue(((TextBlock)model.Content).Text.Contains("Motion Context",StringComparison.Ordinal));
-            Assert.AreEqual(2, motionSize.SelectedIndex);
+            Assert.AreEqual("576 × 1024", motionSize.SelectedItem?.ToString());
             Assert.AreEqual(24, motionSteps.SelectedItem);
             var copy = JsonSerializer.Deserialize<SongClipProject>(JsonSerializer.Serialize(saved))!;
             Assert.AreEqual(saved.Settings.Motion, copy.Settings.Motion);

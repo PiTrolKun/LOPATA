@@ -45,18 +45,18 @@ internal sealed record SongClipLyricSource(string Style, string[] Lines, SongCli
 /// <summary>Pure prompt protocol and deterministic native slots; owns no model, process, download or project state.</summary>
 internal static partial class SongClipVisualProtocol
 {
-    internal const int Version = 1, MaximumScenes = 256, MaximumBatch = 16;
+    internal const int Version = 1, MaximumBatch = 16;
     internal const string InvalidReply = "SongClip.VisualPlanInvalid";
-    private const int MaximumSource = 100_000, MaximumPrompt = 1_400, MaximumStyle = 2_401;
+    private const int MaximumStyle = 2_401;
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
-    private static readonly Regex Timestamp = new(@"\[(\d{1,3}):(\d{2})(?:[.:](\d{1,3}))?\]", RegexOptions.CultureInvariant);
+    private static readonly Regex Timestamp = new(@"\[(\d+):(\d{2})(?:[.:](\d{1,3}))?\]", RegexOptions.CultureInvariant);
     private static readonly Regex Stage = new(@"^\s*\[(?!\d)([^\]]+)\]\s*", RegexOptions.CultureInvariant);
     private static readonly Regex UnsafeOutput = new(@"<\|(?:im_|system|assistant)|</?(?:script|system|assistant)>|```|ignore\s+(?:all\s+)?(?:previous|system|developer)\s+(?:instructions|messages)|reveal\s+(?:the\s+)?(?:system\s+prompt|secrets)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     internal static SongClipLyricSource Source(SongClipAttempt attempt)
     {
-        if (attempt.Lyrics is null || attempt.Timings is null || attempt.Lyrics.Length > MaximumSource || attempt.Timings.Length > MaximumSource)
+        if (attempt.Lyrics is null || attempt.Timings is null)
             throw new InvalidDataException(InvalidReply);
         var lines = new List<string>(); var styles = new List<string>(); var sections = new List<string>();
         var styleMode = false;
@@ -77,7 +77,8 @@ internal static partial class SongClipVisualProtocol
             foreach (Match match in matches) {
                 var seconds = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture); if (seconds >= 60) continue;
                 var fraction = match.Groups[3].Value;
-                var start = 60 * int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) + seconds
+                if (!int.TryParse(match.Groups[1].Value, CultureInfo.InvariantCulture, out var minutes)) continue;
+                var start = 60d * minutes + seconds
                     + (fraction.Length == 0 ? 0 : int.Parse(fraction, CultureInfo.InvariantCulture) / Math.Pow(10, fraction.Length));
                 cues.Add(new(start, text));
             }
@@ -87,13 +88,15 @@ internal static partial class SongClipVisualProtocol
 
     internal static SongClipVisualScene[] Slots(SongClipAttempt attempt, double duration)
     {
-        if (!double.IsFinite(duration) || duration <= 0 || duration > 7_200 || attempt.Settings is null)
+        if (attempt.Settings is null)
             throw new InvalidDataException(InvalidReply);
+        if (!CanRepresentDuration(duration, attempt.Settings.Fps))
+            throw new InvalidDataException("SongClip.FrameCountLimit");
         var source = Source(attempt); var scenes = new List<SongClipVisualScene>();
         if (attempt.Model == "glitchframe") {
             var interval = attempt.Settings.Interval;
             if (interval is < 2 or > 60) throw new InvalidDataException(InvalidReply);
-            var count = Math.Max(1, (int)Math.Ceiling(duration / interval)); CheckCount(count);
+            var count = Math.Max(1, (int)Math.Ceiling(duration / interval));
             for (var index = 0; index < count; index++) {
                 var start = count == 1 ? 0 : duration * index / (count - 1);
                 var end = count == 1 ? duration : index == count - 1 ? duration : duration * (index + 1) / (count - 1);
@@ -106,15 +109,15 @@ internal static partial class SongClipVisualProtocol
                 || motion.ContextFrames < 5 || (motion.ContextFrames - 5) % 17 != 0 || motion.ContextFrames >= motion.RawFrames)
                 throw new InvalidDataException(InvalidReply);
             var total = (int)Math.Ceiling(duration * 24); var advance = motion.RawFrames - motion.ContextFrames;
-            var count = 1 + Math.Max(0, (int)Math.Ceiling((total - motion.RawFrames) / (double)advance)); CheckCount(count);
+            var count = 1 + Math.Max(0, (int)Math.Ceiling((total - motion.RawFrames) / (double)advance));
             for (var index = 0; index < count; index++)
-                scenes.Add(Slot(index + 1, index * advance / 24d, Math.Min(duration, (index * advance + motion.RawFrames) / 24d), source));
+                scenes.Add(Slot(index + 1, (long)index * advance / 24d, Math.Min(duration, ((long)index * advance + motion.RawFrames) / 24d), source));
         }
         else if (attempt.Model == InfiniteTalkRunner.ModelId) return InfiniteTalkSlots(attempt, duration, source);
         else if (attempt.Model == GeekatplayRunner.ModelId) {
             var interval = (attempt.Settings.Geek ?? new SongClipGeekSettings()).ClipSeconds;
             if (interval is < 5 or > 10) throw new InvalidDataException(InvalidReply);
-            var count = Math.Max(1, (int)Math.Ceiling(duration / interval)); CheckCount(count);
+            var count = Math.Max(1, (int)Math.Ceiling(duration / interval));
             for (var index = 0; index < count; index++)
                 scenes.Add(Slot(index + 1, duration * index / count, duration * (index + 1) / count, source));
         }
@@ -123,9 +126,25 @@ internal static partial class SongClipVisualProtocol
     }
 
     private static SongClipVisualScene Slot(int index, double start, double end, SongClipLyricSource source) => new(index, start, end, "",
-        source.Timings.Where(cue => cue.StartSeconds >= start - .000001 && (end == start ? Math.Abs(cue.StartSeconds - start) < .000001 : cue.StartSeconds < end))
+        TimingSlice(source.Timings, start, end)
             .Select(cue => cue.Text).Distinct(StringComparer.Ordinal).ToArray());
-    private static void CheckCount(int count) { if (count is < 1 or > MaximumScenes) throw new InvalidDataException(InvalidReply); }
+    internal static IEnumerable<SongClipLyricCue> TimingSlice(SongClipLyricCue[] cues, double start, double end)
+    {
+        const double tolerance = .000001;
+        var lower = 0;
+        var upper = cues.Length;
+        while (lower < upper)
+        {
+            var middle = lower + (upper - lower) / 2;
+            if (cues[middle].StartSeconds < start - tolerance) lower = middle + 1;
+            else upper = middle;
+        }
+        var limit = end == start ? end + tolerance : end;
+        for (var i = lower; i < cues.Length && cues[i].StartSeconds < limit; i++)
+            if (end != start || Math.Abs(cues[i].StartSeconds - start) < tolerance) yield return cues[i];
+    }
+    internal static bool CanRepresentDuration(double seconds, int fps) =>
+        double.IsFinite(seconds) && seconds > 0 && fps > 0 && Math.Ceiling(seconds * fps) <= int.MaxValue;
 
     internal static string InputHash(SongClipAttempt attempt, double duration)
     {
@@ -186,8 +205,8 @@ internal static partial class SongClipVisualProtocol
         The terminal still continues the last meaningful image; never use a blank/black screen merely because the source
         includes an untimed Silence/Outro label. Do not assume missing section timings or force the full story's ending
         into the last slot of a partial time window.
-        Copy all known lyricAnchors supplied in each slot. Additional anchors may only be complete lines from lyricsLines or
-        knownTimingCues. Do not move a known timed line to a slot outside its supplied markers. When timings are partial,
+        The host attaches exact timed lines to their slots. Optional thematic anchors must be complete untimed source lines.
+        Do not move a known timed line to a slot outside its supplied markers. When timings are partial,
         missing intervals have UNKNOWN alignment; do not fabricate timestamps,
         word-level synchronisation or assume that a known line lasts until a distant next marker. For untimed lyrics choose
         relevant real lines as thematic anchors, without claiming precise timing. Instrumental/unknown gaps may have no anchors.
@@ -218,7 +237,7 @@ internal static partial class SongClipVisualProtocol
         Разные иллюстрации развивают образы песни, сохраняя героя и стиль. Если acceptedGlobalStyle задан,
         скопируй его точно; acceptedPreviousScenes — уже принятые предыдущие изображения для связности.
         slots задаёт точное число сцен, index, startSeconds и endSeconds. Перепиши числа без изменения.
-        В lyricAnchors каждой сцены скопируй ВСЕ строки из соответствующего slots.lyricAnchors в оригинале.
+        ЛОПАТА сама добавляет в lyricAnchors строки с точными таймингами из slots.lyricAnchors.
         Можно добавить только дословные строки lyricsLines без известного времени; строки knownTimingCues
         нельзя переносить в другие интервалы. Отсутствующие времена НЕ выдумывай. Инструментальный промежуток
         допускает пустые anchors. Последний slot может иметь одинаковое начало и конец: это полноценная
@@ -238,11 +257,12 @@ internal static partial class SongClipVisualProtocol
         SongClipReferenceRole[]? referenceRoles = null, IReadOnlyList<SongClipVisualScene>? timeline = null)
     {
         var batch = Batch(attempt, duration, slots, timeline); var source = Source(attempt);
+        var cues = batch.SelectMany(scene => TimingSlice(source.Timings, scene.StartSeconds, scene.EndSeconds)).Distinct().ToArray();
         var payload = JsonSerializer.SerializeToNode(new {
             task = "Create a lyric-grounded coherent visual plan for these exact native slots", durationSeconds = duration,
             songTitle = attempt.Name, semanticAnchor,
             output = attempt.Model == "glitchframe" ? "still-image keyframes" : attempt.Model == InfiniteTalkRunner.ModelId ? "continuous audio-driven performance by the single referenced performer" : attempt.Model == GeekatplayRunner.ModelId ? "storyboard keyframes and first-to-last-frame video transitions" : "video continuation with overlapping context",
-            songStyle = source.Style, lyricsLines = source.Lines, songSections = source.Sections, knownTimingCues = source.Timings,
+            songStyle = source.Style, lyricsLines = source.Lines, songSections = source.Sections, knownTimingCues = cues,
             timingCoverage = source.Timings.Length == 0 ? "unknown; thematic anchors only" : "known markers only; coverage may be partial",
             creativeDirection = attempt.Settings.Prompt == new SongClipSettings().Prompt ? "" : attempt.Settings.Prompt,
             defaultDirection = attempt.Settings.Prompt == new SongClipSettings().Prompt,
@@ -270,9 +290,9 @@ internal static partial class SongClipVisualProtocol
                     type = "object", additionalProperties = false,
                     required = new[] { "index", "startSeconds", "endSeconds", "prompt", "lyricAnchors" },
                     properties = new {
-                        index = new { type = "integer", minimum = 1, maximum = MaximumScenes },
+                        index = new { type = "integer", minimum = 1 },
                         startSeconds = new { type = "number", minimum = 0 }, endSeconds = new { type = "number", minimum = 0 },
-                        prompt = new { type = "string", minLength = 20, maxLength = MaximumPrompt },
+                        prompt = new { type = "string", minLength = 20 },
                         lyricAnchors = new { type = "array", maxItems = 32, items = new { type = "string", minLength = 1, maxLength = 2_000 } }
                     }
                 } }
@@ -281,10 +301,11 @@ internal static partial class SongClipVisualProtocol
     };
 
     internal static SongClipVisualPlan ParseAndValidate(string raw, SongClipAttempt attempt, double duration,
-        OutputModelUse[] assistants, IReadOnlyList<SongClipVisualScene>? slots = null, SongClipReferenceRole[]? referenceRoles = null, IReadOnlyList<SongClipVisualScene>? timeline = null)
+        OutputModelUse[] assistants, IReadOnlyList<SongClipVisualScene>? slots = null, SongClipReferenceRole[]? referenceRoles = null,
+        IReadOnlyList<SongClipVisualScene>? timeline = null, bool supplyTimedAnchors = false)
     {
         try {
-            if (raw is null || raw.Length is < 2 or > 1_000_000 || assistants is null || assistants.Length is < 1 or > 8
+            if (raw is null || raw.Length < 2 || assistants is null || assistants.Length is < 1 or > 8
                 || assistants.Any(model => model is null || new[] { model.Id, model.Name, model.Revision, model.Role }.Any(string.IsNullOrWhiteSpace)))
                 throw new InvalidDataException(InvalidReply);
             var expected = Batch(attempt, duration, slots, timeline); var source = Source(attempt);
@@ -320,10 +341,13 @@ internal static partial class SongClipVisualProtocol
                     var slot = expected[offset]; var start = row.GetProperty("startSeconds").GetDouble(); var end = row.GetProperty("endSeconds").GetDouble();
                     if (row.GetProperty("index").GetInt32() != slot.Index || !double.IsFinite(start) || !double.IsFinite(end)
                         || Math.Abs(start - slot.StartSeconds) > .000001 || Math.Abs(end - slot.EndSeconds) > .000001) throw new InvalidDataException(InvalidReply);
-                    var prompt = row.GetProperty("prompt").GetString()!; English(prompt, MaximumPrompt);
+                    var prompt = row.GetProperty("prompt").GetString()!; English(prompt);
                     var anchorRows = row.GetProperty("lyricAnchors");
-                    if (anchorRows.ValueKind != JsonValueKind.Array || anchorRows.GetArrayLength() > 32) throw new InvalidDataException(InvalidReply);
+                    if (anchorRows.ValueKind != JsonValueKind.Array) throw new InvalidDataException(InvalidReply);
                     var anchors = anchorRows.EnumerateArray().Select(anchor => Normalize(anchor.GetString()!)).ToArray();
+                    if (supplyTimedAnchors && source.Timings.Length > 0)
+                        anchors = slot.LyricAnchors.Concat(anchors.Where(anchor => allowed.Contains(anchor) && !timedLines.Contains(anchor)))
+                            .Distinct(StringComparer.Ordinal).ToArray();
                     if (anchors.Any(anchor => !allowed.Contains(anchor)) || anchors.Distinct(StringComparer.Ordinal).Count() != anchors.Length
                         || anchors.Any(anchor => timedLines.Contains(anchor) && !slot.LyricAnchors.Contains(anchor, StringComparer.Ordinal))
                         || slot.LyricAnchors.Any(anchor => !anchors.Contains(anchor, StringComparer.Ordinal))
@@ -353,10 +377,14 @@ internal static partial class SongClipVisualProtocol
                 throw new InvalidDataException(InvalidReply);
         }
         var all = timeline?.ToArray() ?? Slots(attempt, duration); if (slots is null) return all;
-        if (slots.Count is < 1 or > MaximumBatch) throw new InvalidDataException(InvalidReply);
-        var selected = slots.Select(slot => all.SingleOrDefault(expected => expected.Index == slot.Index
-            && Math.Abs(expected.StartSeconds - slot.StartSeconds) < .000001 && Math.Abs(expected.EndSeconds - slot.EndSeconds) < .000001)
-            ?? throw new InvalidDataException(InvalidReply)).ToArray();
+        if (slots.Count < 1) throw new InvalidDataException(InvalidReply);
+        var selected = slots.Select(slot => {
+            if (slot.Index < 1 || slot.Index > all.Length) throw new InvalidDataException(InvalidReply);
+            var expected = all[slot.Index - 1];
+            if (expected.Index != slot.Index || Math.Abs(expected.StartSeconds - slot.StartSeconds) >= .000001
+                || Math.Abs(expected.EndSeconds - slot.EndSeconds) >= .000001) throw new InvalidDataException(InvalidReply);
+            return expected;
+        }).ToArray();
         if (!selected.Select(scene => scene.Index).SequenceEqual(selected.Select(scene => scene.Index).Order().Distinct())) throw new InvalidDataException(InvalidReply);
         return selected;
     }
@@ -370,7 +398,8 @@ internal static partial class SongClipVisualProtocol
     private static string Normalize(string? value) => value is null ? throw new InvalidDataException(InvalidReply)
         : Regex.Replace(value.Normalize(NormalizationForm.FormC).Trim(), @"\s+", " ");
     internal static void ValidateAnchor(string value) => English(value, 600);
-    private static void English(string value, int maximum)
+    internal static void ValidateReferenceDescription(string value) => English(value);
+    private static void English(string value, int maximum = int.MaxValue)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length is < 20 || value.Length > maximum || UnsafeOutput.IsMatch(value)
             || value.Any(character => char.IsControl(character) && character is not ('\n' or '\r' or '\t'))

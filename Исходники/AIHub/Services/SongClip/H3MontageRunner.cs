@@ -22,7 +22,7 @@ internal static class H3MontageRunner
             throw new InvalidDataException("SongClip.InvalidSettings");
     }
     internal static async Task<SongClipResult> RunAsync(SongClipAttempt attempt, SongClipStore store,
-        Action<double, string> progress, CancellationToken token)
+        Action<double, string> progress, CancellationToken token, bool measureWarmOverlap = false, string? plannerId = null)
     {
         ValidateSettings(attempt);
         using var audit = ComponentAudit.CaptureOperation();
@@ -37,37 +37,27 @@ internal static class H3MontageRunner
         var watch = Stopwatch.StartNew(); double saved = 0;
         double Elapsed() => prior + watch.Elapsed.TotalSeconds;
         void Report(double value, string message) {
-            if (watch.Elapsed.TotalSeconds - saved >= 2) { SongClipStore.Atomic(clock, Elapsed()); saved = watch.Elapsed.TotalSeconds; }
+            if (watch.Elapsed.TotalSeconds - saved >= 2) { SongClipResources.SaveElapsed(clock, Elapsed()); saved = watch.Elapsed.TotalSeconds; }
             progress(value, message);
         }
-        try { return await RenderAsync(attempt, store, job, Report, token, Elapsed); }
-        finally { SongClipStore.Atomic(clock, Elapsed()); }
+        try { return await RenderAsync(attempt, store, job, Report, token, Elapsed, measureWarmOverlap, plannerId); }
+        finally { SongClipResources.SaveElapsed(clock, Elapsed()); }
     }
 
     private static async Task<SongClipResult> RenderAsync(SongClipAttempt attempt, SongClipStore store, string job,
-        Action<double, string> progress, CancellationToken token, Func<double> elapsed)
+        Action<double, string> progress, CancellationToken token, Func<double> elapsed, bool measureWarmOverlap, string? plannerId)
     {
         progress(0, "SongClip.Preparing");
         await ApplicationBackgroundOperations.RetireModelsAsync();
+        if (!File.Exists(Path.Combine(job, "worker-result.json")))
+            await SongClipResources.CheckH3AudioAsync(store.Resolve(attempt.ProjectId, attempt.Song), token);
         var environment = await H3MontageComponents.PrepareAsync(attempt.ModelsRoot, attempt.Connections, token, message => progress(0, message));
         await RuntimeFileAudit.VerifyAsync("SongClip.H3Montage.Adapter", Path.Combine(AppContext.BaseDirectory, "Tools"),
             ApplicationBuildVersion.Value, H3MontageBinding.AdapterFiles(), token);
         var payload = Request(attempt, store, job, environment);
-        var analysisFile = Path.Combine(job, "montage-analysis.json");
-        if (!File.Exists(analysisFile)) {
-            var analysisRequest = Path.Combine(job, "montage-analysis-request.json");
-            SongClipStore.Atomic(analysisRequest, payload);
-            await H3MusicRunner.RunWorkerAsync(environment.Motion.H3.Python.Python, analysisRequest, job,
-                (value, message) => progress(.04 * value, message), token, montage: true, analyze: true);
-        }
-        var analysis = JsonSerializer.Deserialize<SongClipMontageAnalysis>(await File.ReadAllTextAsync(analysisFile, token))
-            ?? throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
-        analysis.Validate();
         var final = Path.Combine(job, "clip.mp4");
-        var plan = File.Exists(final)
-            ? await SongClipMontagePlanning.ReadCompletedAsync(attempt, store, job, analysis, token)
-            : await SongClipMontagePlanning.EnsureAsync(attempt, store, job, analysis,
-                (value, message) => progress(.04 + .04 * value, message), token);
+        var plan = await PreparePlanAsync(attempt, store, job, payload, environment.Motion.H3.Python.Python,
+            progress, token, measureWarmOverlap, plannerId);
         if (plan is null || plan.Assistants is not { Length: > 0 }) throw new InvalidDataException(SongClipMontageProtocol.InvalidReply);
         payload["montagePlan"] = JsonSerializer.SerializeToNode(plan);
         var request = Path.Combine(job, "request.json");
@@ -93,6 +83,7 @@ internal static class H3MontageRunner
         var raw = receipt.RootElement.GetProperty("output").GetString() ?? throw new InvalidDataException("Missing montage output.");
         raw = RuntimeFileAudit.Contained(job, Path.GetRelativePath(job, Path.GetFullPath(raw)));
         var staging = Path.Combine(job, "clip.installing.mp4"); progress(.99, "SongClip.Finalizing");
+        SongClipResources.CheckMuxSpace(raw, staging);
         await VideoRuntime.RunAsync(false, ["-nostdin", "-v", "error", "-y", "-i", raw,
             "-map", "0:v:0", "-map", "0:a:0", "-c", "copy", "-metadata", "encoded_by=LOPATA " + facts.ProgramVersion,
             "-metadata", "LOPATA_VIDEO=" + facts.Json(), "-metadata", "LOPATA_OPERATION=" + attempt.Id,
@@ -100,6 +91,58 @@ internal static class H3MontageRunner
         _ = await H3MusicRunner.CheckResult(staging, attempt, store, facts.Models, token);
         token.ThrowIfCancellationRequested(); File.Move(staging, final, true);
         return await H3MusicRunner.CheckResult(final, attempt, store, facts.Models, token);
+    }
+
+    internal static async Task<SongClipMontagePlan> PreparePlanAsync(SongClipAttempt attempt, SongClipStore store,
+        string job, JsonObject request, string python, Action<double, string> progress, CancellationToken token,
+        bool warmDuringAnalysis, string? plannerId = null)
+    {
+        var analysisFile = Path.Combine(job, "montage-analysis.json");
+        var analyze = !File.Exists(analysisFile);
+        using var early = CancellationTokenSource.CreateLinkedTokenSource(token);
+        var warming = warmDuringAnalysis && analyze && !File.Exists(Path.Combine(job, "montage-plan-binding.json"))
+            ? WarmPlannerAsync(attempt, early.Token, plannerId) : null;
+        try
+        {
+            if (analyze)
+            {
+                var analysisRequest = Path.Combine(job, "montage-analysis-request.json");
+                SongClipStore.Atomic(analysisRequest, request);
+                await H3MusicRunner.RunWorkerAsync(python, analysisRequest, job,
+                    (value, message) => progress(.04 * value, message), token, montage: true, analyze: true);
+            }
+            var analysis = JsonSerializer.Deserialize<SongClipMontageAnalysis>(await File.ReadAllTextAsync(analysisFile, token))
+                ?? throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
+            analysis.Validate();
+            if (File.Exists(Path.Combine(job, "clip.mp4")))
+                return await SongClipMontagePlanning.ReadCompletedAsync(attempt, store, job, analysis, token, plannerId);
+
+            SongClipPlannerSession? warmed = null;
+            if (warming is not null)
+            {
+                try { warmed = await warming; }
+                catch (IOException failure) when (NativeHardwareFailure.IsRecoverable(failure.Message))
+                { OwnedProcessRegistry.Log("montage_warm_overlap_fallback", "SongClip", detail: failure.Message); }
+            }
+            return await SongClipMontagePlanning.EnsureAsync(attempt, store, job, analysis,
+                (value, message) => progress(.04 + .04 * value, message), token, warmed, plannerId);
+        }
+        finally
+        {
+            if (warming is not null)
+            {
+                await early.CancelAsync();
+                try { await (await warming).DisposeAsync(); }
+                catch (Exception) when (warming.IsFaulted || warming.IsCanceled) { }
+            }
+        }
+    }
+
+    private static async Task<SongClipPlannerSession> WarmPlannerAsync(SongClipAttempt attempt, CancellationToken token, string? plannerId)
+    {
+        var session = await SongClipPlannerModel.OpenAsync(attempt, token, plannerId);
+        try { await session.WarmAsync(token); return session; }
+        catch { await session.DisposeAsync(); throw; }
     }
 
     private static JsonObject Request(SongClipAttempt attempt, SongClipStore store, string job, H3MontageEnvironment environment)

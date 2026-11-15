@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using AIHub.Services.SongClip;
 
 namespace AIHub.Tests;
@@ -82,12 +83,34 @@ public sealed class GeekatplayTests
             var file = new AIHub.Models.ManagedModelArtifactFile { RelativePath="model.bin", SizeBytes=5, Sha256="abc" };
             AIHub.Models.ManagedModelArtifactCard[] cards = [new() { ModelArtifactId="test", Revision="pinned", Files=[file] }];
             await GeekatplayBinding.EnsureAsync(attempt, store, job, cards, CancellationToken.None);
-            var binding = await File.ReadAllTextAsync(Path.Combine(job, "geek-input-binding.json"));
+            var bindingPath = Path.Combine(job, "geek-input-binding.json");
+            var binding = await File.ReadAllTextAsync(bindingPath);
             file.VerifiedSizeBytes = 5;
             file.VerifiedLastWriteTimeUtc = DateTimeOffset.UtcNow;
             await GeekatplayBinding.EnsureAsync(attempt, store, job, cards, CancellationToken.None);
-            Assert.AreEqual(binding, await File.ReadAllTextAsync(Path.Combine(job, "geek-input-binding.json")));
+            Assert.AreEqual(binding, await File.ReadAllTextAsync(bindingPath));
+
+            var prior = JsonNode.Parse(binding)!;
+            var scripts = prior["scripts"]!.AsArray();
+            var worker = scripts.Single(script => script!["Path"]!.GetValue<string>() == "song_clip_geek.py")!;
+            var native = scripts.Single(script => script!["Path"]!.GetValue<string>() == "song_clip_geek_native.py")!;
+            var media = scripts.Single(script => script!["Path"]!.GetValue<string>() == "song_clip_montage_media.py")!;
+            media["Size"] = H3MontageBinding.PriorMedia.Size;
+            media["Sha256"] = H3MontageBinding.PriorMedia.Sha256;
+            worker["Size"] = 16989;
+            worker["Sha256"] = "77C44AF452B7B7F60B4F8BED14703AD87735A984874D3C7F7179318FCA5023F1";
+            native["Size"] = 9550;
+            native["Sha256"] = "EFBB219A256A134256672867CE8B01591066714535CF6CC355C244F8DAEC2C91";
+            var priorBinding = prior.ToJsonString();
+            await File.WriteAllTextAsync(bindingPath, priorBinding);
+            await GeekatplayBinding.EnsureAsync(attempt, store, job, cards, CancellationToken.None);
+            Assert.AreEqual(priorBinding, await File.ReadAllTextAsync(bindingPath));
+
             file.Sha256 = "changed";
+            await Assert.ThrowsAsync<InvalidDataException>(() => GeekatplayBinding.EnsureAsync(attempt, store, job, cards, CancellationToken.None));
+            file.Sha256 = "abc";
+            native["Sha256"] = "unknown";
+            await File.WriteAllTextAsync(bindingPath, prior.ToJsonString());
             await Assert.ThrowsAsync<InvalidDataException>(() => GeekatplayBinding.EnsureAsync(attempt, store, job, cards, CancellationToken.None));
         }
         finally { if (Directory.Exists(folder)) Directory.Delete(folder, true); }

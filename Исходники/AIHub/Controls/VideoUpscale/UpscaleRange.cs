@@ -1,58 +1,126 @@
-using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
+using Line = System.Windows.Shapes.Line;
 using Pen = System.Windows.Media.Pen;
 using Point = System.Windows.Point;
+using Size = System.Windows.Size;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
 namespace AIHub.Controls.VideoUpscale;
 
 /// <summary>A movable, independently resizable preview interval; never expands beyond five seconds.</summary>
-internal sealed class UpscaleRange : FrameworkElement
+internal sealed class UpscaleRange : Canvas
 {
+    private readonly TextBlock[] _ticks = new TextBlock[9];
+    private readonly TextBlock _clipLabel = CreateLabel(12, "TextPrimaryBrush");
+    private readonly TranslateTransform _playheadOffset = new();
     private double _duration = 1, _start, _length = 1, _grab, _originalStart, _originalLength;
     private int _drag;
     internal event Action<double, double>? Changed;
     internal List<ImageSource> Thumbnails { get; } = [];
-    internal string ClipName { get; set; } = "";
+    internal string ClipName { get => _clipLabel.Text; set => _clipLabel.Text = value; }
     private double _position;
-    internal double Position { get => _position; set { _position = value; InvalidateVisual(); } }
-    internal UpscaleRange() { Height = 104; Focusable = true; Cursor = System.Windows.Input.Cursors.SizeWE; }
+    internal double Position
+    {
+        get => _position;
+        set { _position = value; UpdatePlayhead(ActualWidth); }
+    }
+    internal UpscaleRange()
+    {
+        Height = 104;
+        Focusable = true;
+        Cursor = System.Windows.Input.Cursors.SizeWE;
+        for (var i = 0; i < _ticks.Length; i++)
+        {
+            var tick = CreateLabel(11, "TextSecondaryBrush");
+            tick.Width = 58;
+            SetTop(tick, 1);
+            _ticks[i] = tick;
+            Children.Add(tick);
+        }
+        SetLeft(_clipLabel, 6);
+        SetTop(_clipLabel, 27);
+        Children.Add(_clipLabel);
+        Children.Add(new Line {
+            Y1 = 18, Y2 = 104, Stroke = Brushes.OrangeRed, StrokeThickness = 1.5,
+            RenderTransform = _playheadOffset, IsHitTestVisible = false
+        });
+        UpdateTickText();
+    }
+
     internal void Set(double duration, double start, double length)
-    { _duration = Math.Max(.001, duration); _start = start; _length = length; InvalidateVisual(); }
+    {
+        duration = Math.Max(.001, duration);
+        if (_duration != duration)
+        {
+            _duration = duration;
+            UpdateTickText();
+            UpdatePlayhead(ActualWidth);
+        }
+        _start = start;
+        _length = length;
+        InvalidateVisual();
+    }
+
+    protected override Size ArrangeOverride(Size arrangeSize)
+    {
+        var width = arrangeSize.Width;
+        for (var i = 0; i < _ticks.Length; i++)
+        {
+            var x = width * i / (_ticks.Length - 1);
+            SetLeft(_ticks[i], i == _ticks.Length - 1 ? Math.Max(0, x - 44) : x + 3);
+        }
+        _clipLabel.Width = Math.Max(1, width - 12);
+        UpdatePlayhead(width);
+        return base.ArrangeOverride(arrangeSize);
+    }
+
+    private static TextBlock CreateLabel(double size, string brushKey)
+    {
+        var label = new TextBlock {
+            FontFamily = new System.Windows.Media.FontFamily("Segoe UI"), FontSize = size,
+            TextAlignment = TextAlignment.Left, FlowDirection = System.Windows.FlowDirection.LeftToRight,
+            TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis,
+            IsHitTestVisible = false
+        };
+        label.SetResourceReference(TextBlock.ForegroundProperty, brushKey);
+        return label;
+    }
+
+    private void UpdateTickText()
+    {
+        var format = _duration >= 3600 ? @"hh\:mm\:ss" : @"mm\:ss";
+        for (var i = 0; i < _ticks.Length; i++)
+            _ticks[i].Text = TimeSpan.FromSeconds(_duration * i / (_ticks.Length - 1)).ToString(format);
+    }
+
+    private void UpdatePlayhead(double width)
+        => _playheadOffset.X = Math.Clamp(_position / _duration * width, 0, width);
+
     protected override void OnRender(DrawingContext dc)
     {
         base.OnRender(dc); var width = ActualWidth; if (width < 1) return;
         var line = TryFindResource("LineBrush") as Brush ?? Brushes.SlateGray;
-        var foreground = TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.WhiteSmoke;
-        var muted = TryFindResource("TextSecondaryBrush") as Brush ?? Brushes.SlateGray;
         var body = new Rect(0, 25, width, 77);
         dc.DrawRectangle(new SolidColorBrush(System.Windows.Media.Color.FromRgb(41, 75, 124)), new Pen(line, 1), body);
-        for (var i = 0; i <= 8; i++) {
-            var x = width * i / 8;
+        for (var i = 0; i < _ticks.Length; i++) {
+            var x = width * i / (_ticks.Length - 1);
             dc.DrawLine(new Pen(line, 1), new Point(x, 19), new Point(x, 25));
-            var caption = TimeSpan.FromSeconds(_duration * i / 8).ToString(_duration >= 3600 ? @"hh\:mm\:ss" : @"mm\:ss");
-            Text(caption, i == 8 ? Math.Max(0, x - 44) : x + 3, 1, muted, 11, 58);
         }
         dc.PushClip(new RectangleGeometry(new Rect(1, 46, Math.Max(0, width - 2), 55)));
         if (Thumbnails.Count > 0) for (var i = 0; i < Thumbnails.Count; i++) {
             var cell = new Rect(i * width / Thumbnails.Count, 46, width / Thumbnails.Count + 1, 55);
             dc.DrawImage(Thumbnails[i], cell);
         }
-        dc.Pop(); Text(ClipName, 6, 27, foreground, 12, Math.Max(1, width - 12));
+        dc.Pop();
         var selected = SelectionBounds();
         dc.DrawRectangle(new SolidColorBrush(System.Windows.Media.Color.FromArgb(48, 55, 220, 95)), new Pen(Brushes.LightGreen, 2), selected);
         dc.DrawRectangle(Brushes.LightGreen, null, new Rect(selected.Left, selected.Top, 4, selected.Height));
         dc.DrawRectangle(Brushes.LightGreen, null, new Rect(selected.Right - 4, selected.Top, 4, selected.Height));
-        var cursor = Math.Clamp(_position / _duration * width, 0, width);
-        dc.DrawLine(new Pen(Brushes.OrangeRed, 1.5), new Point(cursor, 18), new Point(cursor, 104));
-        void Text(string value, double x, double y, Brush brush, double size, double maximum) {
-            var text = new FormattedText(value, CultureInfo.CurrentUICulture, System.Windows.FlowDirection.LeftToRight, new Typeface("Segoe UI"), size, brush, VisualTreeHelper.GetDpi(this).PixelsPerDip) { MaxTextWidth = maximum, MaxLineCount = 1, Trimming = TextTrimming.CharacterEllipsis };
-            dc.DrawText(text, new Point(x, y));
-        }
     }
     private Rect SelectionBounds()
     {

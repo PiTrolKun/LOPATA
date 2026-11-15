@@ -166,7 +166,7 @@ public static class RuntimeResourceDiagnostics
         return result;
     }
 
-    private static (long AvailableBytes, long TotalBytes) ReadPhysicalMemory()
+    internal static (long AvailableBytes, long TotalBytes) ReadPhysicalMemory()
     {
         var status = new MemoryStatusEx();
         if (!GlobalMemoryStatusEx(status))

@@ -13,12 +13,14 @@ from fractions import Fraction
 import gc
 import hashlib
 import importlib.util
+import io
 import json
 import logging
 import math
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -32,6 +34,10 @@ from song_clip_montage_media import join_video, scale_video
 
 
 ANY_SONG_REVISION = "37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1"
+
+
+class DiskSpaceError(OSError):
+    pass
 
 
 def load_module(name, source):
@@ -119,7 +125,11 @@ def grid_slots(ranges, duration):
     for start, length in ranges[:-1]:
         bound = round((start + length) * FPS)
         if bounds[-1] < bound < math.ceil(duration * FPS):
+            while bound - bounds[-1] > 15 * FPS:
+                bounds.append(bounds[-1] + 15 * FPS)
             bounds.append(bound)
+    while duration * FPS - bounds[-1] > 15 * FPS + 1e-7:
+        bounds.append(bounds[-1] + 15 * FPS)
     points = [value / FPS for value in bounds] + [duration]
     return [{"index": index + 1, "startSeconds": start, "endSeconds": end,
              "durationSeconds": end - start} for index, (start, end) in enumerate(zip(points, points[1:]))]
@@ -154,8 +164,8 @@ def analyze(request):
             raise ValueError("The Any Song beat analysis returned invalid timing.")
         helpers = load_definitions(files["__init__.py"], {"_chunk_ranges"}, {"json": json, "math": math})
         slots = grid_slots(helpers["_chunk_ranges"](duration, request.get("clipSeconds", 5), bpm, positions), duration)
-        if not slots or len(slots) > 1024 or any(item["durationSeconds"] > 15.001 for item in slots):
-            raise ValueError("The montage analysis produced an unsupported shot count or duration.")
+        if not slots or any(item["durationSeconds"] > 15.001 for item in slots):
+            raise ValueError("The montage analysis produced an invalid shot duration.")
         if file_hash(request["song"]) != original_hash:
             raise ValueError("The song changed during beat analysis.")
         if {name: file_hash(path) for name, path in files.items()} != source_hashes:
@@ -218,7 +228,7 @@ def compose_prompt(composer, plan, shot, references, route):
         reference, role = references[index - 1], roles[index - 1]
         if (not isinstance(role, dict) or role.get("index") != index or role.get("kind") != reference["kind"]
                 or not isinstance(role.get("description"), str) or not role["description"].strip()
-                or len(role["description"]) > 2000 or any(character in role["description"] for character in "<>\r\n")):
+                or any(character in role["description"] for character in "<>\r\n")):
             raise ValueError("Invalid translated montage reference role.")
         definitions.append(f'<Subject {index}> is the {names[reference["kind"]]} from <Picture {picture}>. Role: {role["description"]}')
         retention.append(f'<Subject {index}>: fully_preserved - preserve {preserve[reference["kind"]]}.')
@@ -359,6 +369,8 @@ def assemble(request, state, receipts, duration):
         if (width, height) != (request["width"], request["height"]):
             scale_video(joined, scaled, FPS, width, height, request.get("quality", 85))
             video = scaled
+        if shutil.disk_usage(state.root).free < video.stat().st_size:
+            raise DiskSpaceError("The assembled video cannot be copied into the final container with the current free space.")
         result = subprocess.run(assembly_command(request, video, staging, duration), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode:
             raise RuntimeError("Montage assembly failed: " + result.stderr.decode("utf-8", "replace")[-8000:])
@@ -388,11 +400,27 @@ def operation_identity(request, duration, files, facts):
                 "outputWidth", "outputHeight", "quality", "steps", "seed", "device", "memoryMode", "vramReserveGb", "clipSeconds", "halfTime")}}
 
 
-def verify_result(request, request_file, state, identity, facts, receipts, previous_hash, duration):
+PRIOR_ADAPTERS = {
+    "adapterSha256": "925c49c1e5dbd34dc4c77b642ebf1e8181e5dad8dfc85b651d63d449b0987f1c",
+    "stateAdapterSha256": "69e1bd20bd7868da3cf0aa852d054b52f6ec534e402d227a15079cc1cab7d0a1",
+    "mediaAdapterSha256": "4132875023b58ddeb1ee5a8df1775129964bebbeaf193f92e6f2225edeae815a",
+    "motionAdapterSha256": "14bd9498c755b2aee2ce84ea2047bfa210f21b5d0d54ff74b8c0bc385f443f28",
+}
+
+
+def compatible_identity(job, current):
+    path = contained(job, "montage-state.json")
+    if not path.exists():
+        return current
+    prior = {**current, **PRIOR_ADAPTERS}
+    return prior if read_document(path, maximum=None).get("identity") == prior else current
+
+
+def verify_result(request, request_file, state, identity, actual_adapter, facts, receipts, previous_hash, duration):
     """Read-only acceptance of an already committed run; never re-mux or rewrite."""
     if request_file is None:
         raise ValueError("A source request file is required for montage receipt verification.")
-    result = read_document(contained(state.root, "worker-result.json"))
+    result = read_document(contained(state.root, "worker-result.json"), maximum=None)
     target = contained(state.root, "montage-raw.mp4")
     expected = {"output": str(target), "duration": duration, "frames": math.ceil(duration * FPS),
                 "outputSha256": file_hash(target), "outputBytes": target.stat().st_size,
@@ -401,9 +429,10 @@ def verify_result(request, request_file, state, identity, facts, receipts, previ
                 "anySongSourceRevision": ANY_SONG_REVISION, "generationMode": "montage",
                 "montagePlanInputHash": request["montagePlan"]["inputHash"],
                 "montagePlanSha256": object_hash(request["montagePlan"]), "checkpointHash": previous_hash,
-                "audioMuxRequired": False, "actualAdapterSha256": identity["adapterSha256"],
+                "audioMuxRequired": False,
                 "hostRequestSha256": file_hash(request_file), "shotReceipts": receipts, **facts}
-    if (not isinstance(result, dict) or any(canonical(result.get(key)) != canonical(value) for key, value in expected.items())
+    if (not isinstance(result, dict) or result.get("actualAdapterSha256") not in (identity["adapterSha256"], actual_adapter)
+            or any(canonical(result.get(key)) != canonical(value) for key, value in expected.items())
             or type(result.get("seconds")) not in (int, float) or not math.isfinite(result["seconds"]) or result["seconds"] < 0):
         raise ValueError("The completed montage receipt no longer matches its actual inputs, routes, prompts or artifacts.")
     return result
@@ -427,10 +456,14 @@ def run(request, request_file=None, verify_only=False):
         prompts = [compose_prompt(composer, request["montagePlan"], shot, references, route) for shot, route in zip(shots, routes)]
         facts = reference_receipt(request)
         facts["referencePromptSha256"] = [hashlib.sha256(prompt.encode("utf-8")).hexdigest() for prompt in prompts]
-        identity = operation_identity(request, duration, files, facts)
+        current_identity = operation_identity(request, duration, files, facts)
+        actual_adapter = current_identity["adapterSha256"]
+        identity = compatible_identity(job, current_identity)
         state = MontageState(job, identity, request.get("seed", -1), read_only=verify_only)
         native = None
         receipts, previous_hash = [], state.input_hash
+        completed_bytes, completed_frames = 0, 0
+        total_frames = math.ceil(duration * FPS)
         verify = lambda path, item: verify_media(request, path, item)
         emit("plan", inputHash=state.input_hash, seed=state.seed, total=len(shots), duration=duration,
              frames=math.ceil(duration * FPS), generationMode="montage")
@@ -441,16 +474,28 @@ def run(request, request_file=None, verify_only=False):
                     if verify_only:
                         raise ValueError("The montage verification found an incomplete shot; generation was not started.")
                     if native is None:
+                        bytes_per_frame = completed_bytes / completed_frames if completed_frames else None
+                        emit("space-estimate", availableBytes=shutil.disk_usage(job).free, totalFrames=total_frames,
+                             cachedFrames=completed_frames, audioTargetBytes=math.ceil(duration * 192000 / 8),
+                             projectedRemainingShotBytes=None if bytes_per_frame is None else
+                             math.ceil(bytes_per_frame * (total_frames - completed_frames)))
                         native = NativeMontage(request, job)
                         native.chunk_count = len(shots)
                         master = decode_master_audio(request["song"], native.torch)
+                        if file_hash(request["song"]) != identity["songSha256"]:
+                            raise ValueError("The original song changed while decoding the montage soundtrack.")
                         native.load_vaes()
                     native.chunk_index = shot["index"]
                     images = []
                     import numpy as np
                     from PIL import Image, ImageOps
                     for index in route["referenceIndices"]:
-                        with Image.open(references[index - 1]["file"]) as image:
+                        path = Path(references[index - 1]["file"])
+                        reject_links(path)
+                        image_data = path.read_bytes()
+                        if hashlib.sha256(image_data).hexdigest() != identity["references"][index - 1]["sha256"]:
+                            raise ValueError("A reference changed before it could be used in a montage shot.")
+                        with Image.open(io.BytesIO(image_data)) as image:
                             image = ImageOps.exif_transpose(image).convert("RGB")
                             image.thumbnail((2048, 2048))
                             images.append(native.torch.from_numpy(np.array(image).astype("float32") / 255)[None])
@@ -462,8 +507,6 @@ def run(request, request_file=None, verify_only=False):
                     video = native.generate_shot(shot, slice_audio(master, shot), images, prompt,
                                                  (state.seed + shot["index"] - 1) % 2**53)
                     native.release_sampling()
-                    if file_hash(request["song"]) != identity["songSha256"] or reference_receipt(request).get("referenceInputs", []) != identity["references"]:
-                        raise ValueError("A source attachment changed during montage generation.")
                     receipt = state.commit(shot, previous_hash, lambda path: encode_shot(native, shot, video, path), verify, route)
                     del video, images
                     emit("chunk", index=shot["index"], total=len(shots), checkpoint=receipt, files=state.files(receipt),
@@ -474,9 +517,15 @@ def run(request, request_file=None, verify_only=False):
                     emit("cached", index=shot["index"], total=len(shots), checkpoint=receipt,
                          fraction=.08 + .77 * shot["index"] / len(shots))
                 receipts.append(receipt)
+                completed_bytes += receipt["data"]["size"]
+                completed_frames += receipt["identity"]["outputFrames"]
+                if not verify_only and len(receipts) == 1:
+                    emit("space-estimate", availableBytes=shutil.disk_usage(job).free, totalFrames=total_frames,
+                         cachedFrames=completed_frames, audioTargetBytes=math.ceil(duration * 192000 / 8),
+                         projectedRemainingShotBytes=math.ceil(completed_bytes / completed_frames * (total_frames - completed_frames)))
                 previous_hash = receipt["data"]["sha256"]
             if verify_only:
-                result = verify_result(request, request_file, state, identity, facts, receipts, previous_hash, duration)
+                result = verify_result(request, request_file, state, identity, actual_adapter, facts, receipts, previous_hash, duration)
                 emit("verified", fraction=1, message="Existing montage checkpoints, prompts and result were verified", **result)
                 return result
             emit("stage", stage="montage-assembly", fraction=.9, message="Assembling accepted montage shots with the complete original song")
@@ -492,7 +541,7 @@ def run(request, request_file=None, verify_only=False):
                       "anySongSourceRevision": ANY_SONG_REVISION, "generationMode": "montage",
                       "montagePlanInputHash": request["montagePlan"]["inputHash"],
                       "montagePlanSha256": object_hash(request["montagePlan"]), "checkpointHash": previous_hash,
-                      "audioMuxRequired": False, "actualAdapterSha256": identity["adapterSha256"],
+                      "audioMuxRequired": False, "actualAdapterSha256": actual_adapter,
                       "shotReceipts": receipts, **facts}
             if request_file is not None:
                 result["hostRequestSha256"] = file_hash(request_file)

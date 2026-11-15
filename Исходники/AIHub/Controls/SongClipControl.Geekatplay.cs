@@ -19,9 +19,8 @@ public sealed partial class SongClipControl
         foreach (var (key, choice) in new[] { ("GeekSize",_geekSize), ("GeekSteps",_geekSteps), ("GeekCardSteps",_geekCardSteps),
             ("GeekSeconds",_geekSeconds), ("GeekStrength",_geekStrength) }) {
             _geekOptions.Children.Add(ModeOption(key,choice));
-            choice.SelectionChanged += (_,_) => { if (!_loading && !_busy) Checkpoint(); };
+            choice.SelectionChanged += (_,_) => { if (!_loading && !_busy && !_syncingSizes) Checkpoint(); };
         }
-        foreach (var (width,height) in MotionSizes) _geekSize.Items.Add($"{width} × {height}");
         foreach (var steps in new[] {12,16,20,24,30,40}) _geekSteps.Items.Add(steps);
         foreach (var steps in new[] {8,16,20,30,40}) _geekCardSteps.Items.Add(steps);
         foreach (var seconds in new[] {5,6,8,10}) _geekSeconds.Items.Add(seconds);
@@ -31,7 +30,7 @@ public sealed partial class SongClipControl
     private void LoadGeekSettings()
     {
         var settings = _project.Settings.Geek ?? new();
-        _geekSize.SelectedIndex = Math.Max(0,Array.FindIndex(MotionSizes,s => s == (settings.Width,settings.Height)));
+        SelectGenerationSize(_geekSize, new(settings.Width,settings.Height), _project.PendingAttemptId.Length > 0);
         _geekSteps.SelectedItem = settings.Steps; _geekCardSteps.SelectedItem = settings.CardSteps;
         _geekSeconds.SelectedItem = settings.ClipSeconds; _geekStrength.SelectedItem = settings.ReferenceStrength;
     }
@@ -39,8 +38,8 @@ public sealed partial class SongClipControl
     {
         if (!IsGeek) return;
         var settings = _project.Settings.Geek ?? new();
-        var size = _geekSize.SelectedIndex >= 0 ? MotionSizes[_geekSize.SelectedIndex] : (settings.Width,settings.Height);
-        _project.Settings.Geek = settings with { Width = size.Item1, Height = size.Item2,
+        var size = _geekSize.SelectedItem is FrameSize selected ? selected : new(settings.Width,settings.Height);
+        _project.Settings.Geek = settings with { Width = size.Width, Height = size.Height,
             Steps = _geekSteps.SelectedItem is int steps ? steps : settings.Steps,
             CardSteps = _geekCardSteps.SelectedItem is int cards ? cards : settings.CardSteps,
             ClipSeconds = _geekSeconds.SelectedItem is int seconds ? seconds : settings.ClipSeconds,

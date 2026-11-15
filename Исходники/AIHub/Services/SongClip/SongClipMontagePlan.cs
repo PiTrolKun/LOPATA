@@ -23,9 +23,9 @@ internal sealed record SongClipMontageAnalysis
 
     internal void Validate()
     {
-        if (Version != 1 || Fps != 24 || !double.IsFinite(DurationSeconds) || DurationSeconds is <= 0 or > 7_200
-            || AnalyzerRevision != SongClipMontageProtocol.UpstreamRevision || BeatTimes is null || BeatTimes.Length > 100_000
-            || Slots is null || Slots.Length is < 1 or > SongClipMontageProtocol.MaximumShots)
+        if (Version != 1 || Fps != 24 || !SongClipVisualProtocol.CanRepresentDuration(DurationSeconds, Fps)
+            || AnalyzerRevision != SongClipMontageProtocol.UpstreamRevision || BeatTimes is null
+            || Slots is not { Length: > 0 })
             throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
         double previousBeat = -1, end = 0;
         foreach (var beat in BeatTimes) {

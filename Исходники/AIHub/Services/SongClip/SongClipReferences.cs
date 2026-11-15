@@ -9,7 +9,7 @@ internal sealed record SongClipReference(string File, string Kind, string Descri
 
 internal static class SongClipReferences
 {
-    internal const int MaximumCount = 9, MaximumDescription = 2_000;
+    internal const int MaximumCount = 9;
     internal const string Invalid = "SongClip.ReferenceRoleRequired";
 
     internal static SongClipReference[] For(SongClipProject project) => Effective(project.Reference, project.References);
@@ -22,10 +22,10 @@ internal static class SongClipReferences
     internal static void ValidateDraft(string legacy, SongClipReference[]? references)
     {
         if (references is null) return;
-        if (references.Length > MaximumCount || references.Any(reference => reference is null
+        if (references.Any(reference => reference is null
             || string.IsNullOrWhiteSpace(reference.File) || reference.File.Length > 512
             || reference.Kind is not ("" or "performer" or "world" or "object")
-            || reference.Description is null || reference.Description.Length > MaximumDescription
+            || reference.Description is null
             || reference.Description.Any(character => char.IsControl(character) && character is not ('\r' or '\n' or '\t')))
             || references.Select(reference => reference.File).Distinct(StringComparer.OrdinalIgnoreCase).Count() != references.Length
             || legacy != references.FirstOrDefault()?.File && !(references.Length == 0 && legacy.Length == 0))
@@ -38,6 +38,8 @@ internal static class SongClipReferences
         if (attempt.References is null) return;
         if (attempt.PlanningVersion != SongClipVisualProtocol.Version) throw new InvalidDataException(Invalid);
         ValidateDraft(attempt.Reference, attempt.References);
+        if (attempt.References.Length > MaximumCount && !SongClipModes.IsMontage(attempt))
+            throw new InvalidDataException("SongClip.ReferenceLimit");
         if (attempt.References.Any(reference => reference.Kind.Length == 0 || string.IsNullOrWhiteSpace(reference.Description)))
             throw new InvalidDataException(Invalid);
     }

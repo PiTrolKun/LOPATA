@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using AIHub.Models;
@@ -7,17 +8,28 @@ namespace AIHub.Services;
 
 public static class OpenAiSseStreamParser
 {
+    internal const string PrematureEnd = "Model stream ended before a completion marker. Partial output is not a completed result.";
     public static async Task<StructuredChatResult> ReadAsync(
         Stream stream,
         IProgress<ModelStreamChunk>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Action? tokenReceived = null, bool retainInterruptedContent = false)
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
         var content = new StringBuilder();
         var finishReason = string.Empty;
         var completed = false;
         var toolCalls = new Dictionary<int, ToolCallBuilder>();
-        while (await reader.ReadLineAsync(cancellationToken) is { } line)
+        async ValueTask<string?> ReadLineAsync()
+        {
+            try { return await reader.ReadLineAsync(cancellationToken); }
+            catch (HttpIOException) when (retainInterruptedContent && content.Length > 0) { return null; }
+        }
+        JsonDocument? ReadEvent(string data)
+        {
+            try { return JsonDocument.Parse(data); }
+            catch (JsonException) when (retainInterruptedContent && content.Length > 0) { return null; }
+        }
+        while (await ReadLineAsync() is { } line)
         {
             if (!line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
             {
@@ -33,7 +45,8 @@ public static class OpenAiSseStreamParser
 
             if (data.Length == 0) continue;
 
-            using var document = JsonDocument.Parse(data);
+            using var document = ReadEvent(data);
+            if (document is null) break;
             if (document.RootElement.TryGetProperty("error", out var error)
                 && error.ValueKind != JsonValueKind.Null)
             {
@@ -60,6 +73,9 @@ public static class OpenAiSseStreamParser
                 continue;
             }
 
+            if (delta.TryGetProperty("reasoning_content", out var reasoning) && reasoning.ValueKind == JsonValueKind.String
+                && !string.IsNullOrEmpty(reasoning.GetString())) tokenReceived?.Invoke();
+
             if (delta.TryGetProperty("content", out var contentElement)
                 && contentElement.ValueKind == JsonValueKind.String)
             {
@@ -67,6 +83,7 @@ public static class OpenAiSseStreamParser
                 content.Append(text);
                 if (text.Length > 0)
                 {
+                    tokenReceived?.Invoke();
                     progress?.Report(new ModelStreamChunk(text));
                 }
             }
@@ -91,8 +108,11 @@ public static class OpenAiSseStreamParser
 
         cancellationToken.ThrowIfCancellationRequested();
         if (!completed && string.IsNullOrWhiteSpace(finishReason))
-            throw new IOException("Model stream ended before a completion marker. Partial output is not a completed result.");
-        progress?.Report(new ModelStreamChunk(string.Empty, true));
+        {
+            if (!retainInterruptedContent || content.Length == 0) throw new IOException(PrematureEnd);
+            finishReason = "interrupted";
+        }
+        if (finishReason != "interrupted") progress?.Report(new ModelStreamChunk(string.Empty, true));
         return new StructuredChatResult
         {
             Content = content.ToString().Trim(),

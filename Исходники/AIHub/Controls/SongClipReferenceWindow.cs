@@ -59,7 +59,7 @@ internal sealed class SongClipReferenceWindow : Window
         var roleQuestion = new TextBlock { Text = L("ReferenceRoleQuestion"), Margin = new(0, 4, 0, 6), TextWrapping = TextWrapping.Wrap };
         DockPanel.SetDock(roleQuestion, Dock.Top); panel.Children.Add(roleQuestion);
         _role = new(L("ReferenceRoleQuestion"), L("ReferenceRoleExample"), "SongClip.ReferenceImport.Description", multiline: true);
-        _role.Input.Height = double.NaN; _role.Input.MaxLength = SongClipReferences.MaximumDescription;
+        _role.Input.Height = double.NaN;
         Loaded += (_, _) => LiterarySpellChecking.Enable(_role.Input, localize("VideoPrep.SpellingLanguage"));
         Closed += (_, _) => LiterarySpellChecking.ReleaseTree(_role);
         _role.Input.TextChanged += (_, _) => add.IsEnabled = ChosenKind.Length > 0 && Description.Length > 0;

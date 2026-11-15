@@ -23,9 +23,10 @@ def object_hash(value):
     return hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
 
 
-def read_document(path):
+def read_document(path, maximum=MAX_DOCUMENT):
     reject_links(path)
-    if not 0 < Path(path).stat().st_size <= MAX_DOCUMENT:
+    size = Path(path).stat().st_size
+    if size <= 0 or (maximum is not None and size > maximum):
         raise ValueError("Invalid montage checkpoint document size.")
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -41,7 +42,7 @@ def validate_plan(plan, duration, references):
             or not isinstance(plan.get("inputHash"), str) or len(plan["inputHash"]) != 64
             or not isinstance(plan.get("globalStyle"), str) or not plan["globalStyle"].strip()
             or len(plan["globalStyle"]) > 12000
-            or not isinstance(plan.get("shots"), list) or not 1 <= len(plan["shots"]) <= 1024):
+            or not isinstance(plan.get("shots"), list) or not plan["shots"]):
         raise ValueError("Invalid montage plan header.")
     end = 0.0
     for index, shot in enumerate(plan["shots"], 1):
@@ -51,7 +52,6 @@ def validate_plan(plan, duration, references):
                 or shot["durationSeconds"] > 15.001
                 or abs(shot["startSeconds"] - end) > .000001
                 or not isinstance(shot.get("prompt"), str) or not shot["prompt"].strip()
-                or len(shot["prompt"]) > 12000
                 or type(shot.get("performerVisible")) is not bool
                 or shot.get("transition") not in ("fresh", "match", "continue")
                 or not isinstance(shot.get("referenceIndices"), list)
@@ -100,7 +100,7 @@ class MontageState:
         self.request_hash = object_hash(identity)
         path = contained(self.root, "montage-state.json")
         if path.exists():
-            facts = read_document(path)
+            facts = read_document(path, maximum=None)
             if (facts.get("format") != FORMAT or facts.get("requestHash") != self.request_hash
                     or facts.get("identity") != identity or type(facts.get("seed")) is not int
                     or not 0 <= facts["seed"] < 2**53):
@@ -120,7 +120,7 @@ class MontageState:
             atomic_json(path, {**facts, "inputHash": self.input_hash})
 
     def _paths(self, index):
-        if type(index) is not int or not 1 <= index <= 1024:
+        if type(index) is not int or index < 1:
             raise ValueError("Invalid montage shot index.")
         return (contained(self.root, f"montage-clips/{index:06d}.mp4"),
                 contained(self.root, f"montage-clips/{index:06d}.json"))

@@ -49,6 +49,64 @@ public sealed class SongClipMontageUiTests
     });
 
     [TestMethod]
+    [DataRow("1280 × 720", 1280, 720, "512 × 288|1024 × 576", 1024, 576)]
+    [DataRow("720 × 1280", 720, 1280, "288 × 512|576 × 1024", 576, 1024)]
+    [DataRow("720 × 720", 720, 720, "512 × 512", 768, 768)]
+    public Task NewMontageAndGlitchframeMatchOutputOrientation(
+        string outputLabel, int width, int height, string supported, int glitchWidth, int glitchHeight) => OnUi(() =>
+    {
+        using var fixture = new Fixture("en");
+        var control = fixture.Control(fixture.Project());
+        Find<ComboBox>(control, "ClipMode").SelectedIndex = 1;
+        var output = Find<ComboBox>(control, "Size");
+        output.SelectedItem = output.Items.Cast<object>().Single(item => item.ToString() == outputLabel);
+
+        var generation = Find<ComboBox>(control, "MotionSize");
+        CollectionAssert.AreEqual(supported.Split('|'), generation.Items.Cast<object>().Select(item => item.ToString()).ToArray());
+        var settings = control.SelectStartAttempt().Settings;
+        Assert.AreEqual((width, height), (settings.Width, settings.Height));
+        var montage = settings.Montage!;
+        Assert.AreEqual((long)width * montage.Height, (long)height * montage.Width);
+        Assert.AreEqual((glitchWidth, glitchHeight), GlitchframeRunner.BackgroundSize(width, height, fixture.File("unstarted.json")));
+
+        var host = Host(control, dark: true, 1340, 820);
+        host.Show();
+        try
+        {
+            Flush(host);
+            foreach (var (picker, pixels) in new[] { (output, Math.Min(width, height)), (generation, Math.Min(montage.Width, montage.Height)) })
+            {
+                var templateRoot = (Grid)VisualTreeHelper.GetChild(picker, 0);
+                var presenter = templateRoot.Children.OfType<ContentPresenter>().Single();
+                var row = (StackPanel)VisualTreeHelper.GetChild(presenter, 0);
+                var label = row.Children.OfType<TextBlock>().Single();
+                var icon = row.Children.OfType<Grid>().Single().Children.OfType<Border>().Single();
+                Assert.AreEqual($"{pixels}p", label.Text);
+                Assert.IsTrue(icon.Width > 0 && icon.Height > 0);
+                Assert.AreEqual(width.CompareTo(height), icon.Width.CompareTo(icon.Height));
+            }
+        }
+        finally { host.Close(); }
+    });
+
+    [TestMethod]
+    [DataRow("ru")]
+    [DataRow("en")]
+    public Task MontageJournalShowsDiskSpaceBeforeAndAfterFirstShot(string language) => OnUi(() =>
+    {
+        using var fixture = new Fixture(language);
+        var control = fixture.Control(fixture.Project());
+        var queue = typeof(SongClipControl).GetMethod("QueueGenerationProgress", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        queue.Invoke(control, [0d, """{"kind":"space-estimate","availableBytes":8589934592,"projectedRemainingShotBytes":null}"""]);
+        queue.Invoke(control, [.1d, """{"kind":"space-estimate","availableBytes":7516192768,"projectedRemainingShotBytes":2147483648}"""]);
+        typeof(SongClipControl).GetMethod("FlushGenerationProgress", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(control, [false]);
+
+        var journal = Find<TextBox>(control, "Log").Text;
+        Assert.Contains(string.Format(fixture.Localize.T("SongClip.MontageSpaceBeforeFirstShot"), "8 GB"), journal);
+        Assert.Contains(string.Format(fixture.Localize.T("SongClip.MontageSpaceEstimate"), "2 GB", "7 GB"), journal);
+    });
+
+    [TestMethod]
     [DataRow("ru")]
     [DataRow("en")]
     public Task SwitchingModesKeepsIndependentSettingsWithinTheSameProject(string language) => OnUi(() =>
@@ -58,17 +116,20 @@ public sealed class SongClipMontageUiTests
         var mode = Find<ComboBox>(control, "ClipMode");
         var size = Find<ComboBox>(control, "MotionSize"); var steps = Find<ComboBox>(control, "MotionSteps");
         var duration = Find<ComboBox>(control, "MontageClipSeconds");
+        var output = Find<ComboBox>(control, "Size");
+        output.SelectedItem = output.Items.Cast<object>().Single(item => item.ToString() == "720 × 1280");
         size.SelectedIndex = 1; steps.SelectedItem = 30;
         var connected = fixture.Store.Load(project.Id).Settings.Motion;
+        Assert.AreEqual("576 × 1024", size.SelectedItem?.ToString());
         mode.SelectedIndex = 1;
         Assert.AreEqual(0, size.SelectedIndex); Assert.AreEqual(20, steps.SelectedItem); Assert.AreEqual(5, duration.SelectedItem);
         Assert.AreEqual(Visibility.Visible, Parent(duration).Visibility);
-        size.SelectedIndex = 2; steps.SelectedItem = 12; duration.SelectedItem = 8;
+        size.SelectedIndex = 0; steps.SelectedItem = 12; duration.SelectedItem = 8;
         var montage = fixture.Store.Load(project.Id);
         Assert.AreEqual(project.Id, montage.Id); Assert.AreEqual(project.Song, montage.Song);
         Assert.AreEqual(project.Lyrics, montage.Lyrics); Assert.AreEqual(project.Timings, montage.Timings);
         Assert.AreEqual(connected with { Mode = "montage" }, montage.Settings.Motion);
-        Assert.AreEqual(new SongClipMontageSettings { Width = 480, Height = 864, Steps = 12, ClipSeconds = 8 }, montage.Settings.Montage);
+        Assert.AreEqual(new SongClipMontageSettings { Width = 288, Height = 512, Steps = 12, ClipSeconds = 8 }, montage.Settings.Montage);
         mode.SelectedIndex = 0;
         Assert.AreEqual(1, size.SelectedIndex); Assert.AreEqual(30, steps.SelectedItem);
         Assert.AreEqual(Visibility.Collapsed, Parent(duration).Visibility);
@@ -78,7 +139,7 @@ public sealed class SongClipMontageUiTests
         Assert.AreEqual(montage.Settings.Montage, returned.Settings.Montage);
         var reopened = fixture.Control(returned);
         Find<ComboBox>(reopened, "ClipMode").SelectedIndex = 1;
-        Assert.AreEqual(2, Find<ComboBox>(reopened, "MotionSize").SelectedIndex);
+        Assert.AreEqual("288 × 512", Find<ComboBox>(reopened, "MotionSize").SelectedItem?.ToString());
         Assert.AreEqual(12, Find<ComboBox>(reopened, "MotionSteps").SelectedItem);
         Assert.AreEqual(8, Find<ComboBox>(reopened, "MontageClipSeconds").SelectedItem);
         Assert.IsInstanceOfType<Button>(Find<Button>(control,"Model"));

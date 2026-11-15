@@ -61,12 +61,28 @@ public sealed class SongClipVisualPlanTests
     }
 
     [TestMethod]
-    public void InvalidDurationGridAndSceneCountCannotCreateSlots()
+    public void TextAndTimingSourcesCanExceedTheFormerCharacterCeiling()
     {
-        foreach (var seconds in new[] { 0d, -1, double.NaN, double.PositiveInfinity, 7_201 })
+        var lyrics = new string('А', 100_001);
+        var repeated = string.Join('\n', Enumerable.Range(1, 1_600)
+            .Select(index => $"[{index / 60:00}:{index % 60:00}.00]Строка песни из контрольного материала на русском языке номер {index}."));
+        Assert.IsTrue(repeated.Length > 100_000);
+        var source = SongClipVisualProtocol.Source(Attempt() with { Lyrics = lyrics, Timings = repeated });
+        Assert.AreEqual(lyrics, source.Lines.Single());
+        Assert.HasCount(1_600, source.Timings);
+        var section = SongClipVisualProtocol.TimingSlice(source.Timings, 1500, 1504).ToArray();
+        CollectionAssert.AreEqual(new[] { 1500d, 1501, 1502, 1503 }, section.Select(cue => cue.StartSeconds).ToArray());
+        Assert.EndsWith("1503.", section[^1].Text);
+    }
+
+    [TestMethod]
+    public void TimeGridAcceptsFormerDurationAndSceneCapsButRejectsUnrepresentableFrames()
+    {
+        foreach (var seconds in new[] { 0d, -1, double.NaN, double.PositiveInfinity, (double)int.MaxValue })
             Assert.Throws<InvalidDataException>(() => SongClipVisualProtocol.Slots(Attempt(), seconds));
         Assert.Throws<InvalidDataException>(() => SongClipVisualProtocol.Slots(Attempt() with { Settings = new() { Interval = 1 } }, 10));
-        Assert.Throws<InvalidDataException>(() => SongClipVisualProtocol.Slots(Attempt() with { Settings = new() { Interval = 2 } }, 514));
+        Assert.HasCount(257, SongClipVisualProtocol.Slots(Attempt() with { Settings = new() { Interval = 2 } }, 514));
+        Assert.AreEqual(7_201, SongClipVisualProtocol.Slots(Attempt(), 7_201)[^1].EndSeconds);
         Assert.Throws<InvalidDataException>(() => SongClipVisualProtocol.Slots(Attempt("unknown"), 10));
         Assert.Throws<InvalidDataException>(() => SongClipVisualProtocol.Slots(Attempt("h3_music_context") with {
             Settings = new() { Motion = new() { RawFrames = 242 } }

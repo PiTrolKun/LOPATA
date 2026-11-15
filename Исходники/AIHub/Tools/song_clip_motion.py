@@ -24,6 +24,7 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from song_clip_motion_state import (MotionState, atomic_json, canonical, contained,
                                     file_hash, operation_lock, plan_chunks, reject_links)
+from song_clip_montage_media import fit_video_frame
 
 
 SOURCE_REVISION = "361624fb406b63eb6694442eac6c895fc1533a70"
@@ -31,6 +32,7 @@ SOURCE_REVISION = "361624fb406b63eb6694442eac6c895fc1533a70"
 # New attempts always record the actual executing adapter hash.
 LEGACY_ADAPTER_SHA256 = "5a75c63aa6f1a947689f995e8c5baa5185dc591303f9059024c4b26adf384cfe"
 SINGLE_REFERENCE_ADAPTER_SHA256 = "685a48ad75e18c61b337d244054bd9525c7a1a2d1c435ed8cd473c50753ed7b5"
+PRE_ASPECT_ADAPTER_SHA256 = "14bd9498c755b2aee2ce84ea2047bfa210f21b5d0d54ff74b8c0bc385f443f28"
 FPS = 24
 AUDIO_RATE = 32000
 
@@ -63,7 +65,7 @@ def validate_visual_plan(request, duration=None, plans=None):
     visual = request["visualPlan"]
     if (not isinstance(visual, dict) or type(visual.get("version")) is not int or visual["version"] != 1
             or not isinstance(visual.get("globalStyle"), str) or not visual["globalStyle"].strip()
-            or not isinstance(visual.get("scenes"), list) or not 1 <= len(visual["scenes"]) <= 256):
+            or not isinstance(visual.get("scenes"), list) or not visual["scenes"]):
         raise ValueError("Invalid H3 visual plan.")
     scenes = visual["scenes"]
     for index, scene in enumerate(scenes, 1):
@@ -104,7 +106,7 @@ def reference_inputs(request):
     if "references" not in request:
         return [{"file": request["reference"], "kind": "", "description": ""}] if request.get("reference") else []
     references = request["references"]
-    if not isinstance(references, list) or len(references) > 9:
+    if not isinstance(references, list) or (request.get("generationMode") != "montage" and len(references) > 9):
         raise ValueError("Invalid H3 reference list.")
     job = Path(request["job"]).absolute()
     if job.parent.name != "attempts":
@@ -115,7 +117,6 @@ def reference_inputs(request):
         if (not isinstance(reference, dict) or set(reference) != {"file", "kind", "description"}
                 or reference.get("kind") not in ("performer", "world", "object")
                 or not isinstance(reference.get("description"), str) or not reference["description"].strip()
-                or len(reference["description"]) > 2000
                 or not isinstance(reference.get("file"), str) or not Path(reference["file"]).is_absolute()):
             raise ValueError("Invalid H3 reference role.")
         path = Path(reference["file"])
@@ -167,7 +168,7 @@ def compose_reference_prompt(request, index):
     for offset, (reference, role) in enumerate(zip(references, roles), 1):
         if (not isinstance(role, dict) or set(role) != {"index", "kind", "description"}
                 or type(role.get("index")) is not int or role["index"] != offset or role.get("kind") != reference["kind"]
-                or not isinstance(role.get("description"), str) or not 20 <= len(role["description"].strip()) <= 600
+                or not isinstance(role.get("description"), str) or len(role["description"].strip()) < 20
                 or any(character in role["description"] for character in "<>\r\n")
                 or re.search(r"\b(?:subject_definitions|summary|retention_analysis|detailed_description|overall_soundscape|non_diegetic_music)\s*:",
                              role["description"], re.IGNORECASE)):
@@ -195,20 +196,21 @@ def validate_reference_prompts(request):
     if not visual or not isinstance(prompts, list) or len(prompts) != len(visual["scenes"]):
         raise ValueError("Missing H3 reference prompts for the complete visual plan.")
     for index, prompt in enumerate(prompts, 1):
-        if not isinstance(prompt, str) or len(prompt) > 32000 or prompt != compose_reference_prompt(request, index):
+        if not isinstance(prompt, str) or prompt != compose_reference_prompt(request, index):
             raise ValueError("H3 reference prompt does not match the reviewed scene and reference roles.")
 
 
 def checkpoint_identity(job, request, identity):
     """Explicit, bounded compatibility for pre-plan resumes; never trust arbitrary hashes."""
     path = contained(job, "motion-state.json")
-    if "references" in request or not path.exists():
+    if not path.exists():
         return identity, None
     reject_links(path)
     existing = json.loads(path.read_text(encoding="utf-8"))
     stored = existing.get("identity", {})
     known = stored.get("adapterSha256") if isinstance(stored, dict) else None
-    if known not in (SINGLE_REFERENCE_ADAPTER_SHA256, LEGACY_ADAPTER_SHA256):
+    if known != PRE_ASPECT_ADAPTER_SHA256 and ("references" in request or known not in
+                                               (SINGLE_REFERENCE_ADAPTER_SHA256, LEGACY_ADAPTER_SHA256)):
         return identity, None
     if known == LEGACY_ADAPTER_SHA256 and "visualPlan" in request:
         return identity, None
@@ -308,6 +310,9 @@ class NativeMotion:
         settings = {"MemoryMode": request.get("memoryMode", "auto"),
                     "VramReserveGb": request.get("vramReserveGb", 2)}
         device = request.get("device", "cpu")
+        if settings["MemoryMode"] == "auto" and device.startswith("cuda:") and os.environ.get("LOPATA_H3_RETRY_OFFLOAD") == "1":
+            settings["MemoryMode"] = "offload"
+            emit("stage", stage="retry-offload", message="Retrying H3 with model offload after a GPU memory failure")
         sys.argv = ["lopata-h3-music", "--offline", "--disable-auto-launch", "--reserve-vram",
                     str(settings["VramReserveGb"]), "--use-pytorch-cross-attention"]
         if device == "cpu":
@@ -519,7 +524,7 @@ def encode_video(native, state, receipts, total_frames):
                         break
                     rgb = (image.clamp(0, 1).numpy() * 255).round().astype(np.uint8)
                     frame = av.VideoFrame.from_ndarray(rgb, format="rgb24")
-                    frame = frame.reformat(width=stream.width, height=stream.height, format=stream.pix_fmt)
+                    frame = fit_video_frame(frame, stream.width, stream.height)
                     frame.pts, frame.time_base = written, Fraction(1, FPS)
                     for packet in stream.encode(frame):
                         output.mux(packet)

@@ -23,7 +23,7 @@ public sealed class GeekatplayUiTests
         var localizer=new LocalizationService();localizer.Load(language);
         var store=new SongClipStore(files.File("projects"));
         var project=new SongClipProject {Model="h3_music_context",Name="Test",Song="attachments/song.wav",
-            Lyrics="A cat watches the moon.",Settings=new(){Motion=new(){Width=864,Height=480,Steps=30}}};
+            Lyrics="A cat watches the moon.",Settings=new(){Motion=new(){Width=1024,Height=576,Steps=30}}};
         store.Save(project);
         var control=new SongClipControl(localizer.T,store);control.OpenProject(project.Id);
         var host=new Window {Content=control,Width=1700,Height=960,ShowActivated=false,ShowInTaskbar=false};
@@ -40,13 +40,15 @@ public sealed class GeekatplayUiTests
             Assert.IsTrue(control.SelectVariant("geekatplay"));Flush(host);
             var ids=new[]{"GeekSize","GeekSteps","GeekCardSteps","GeekSeconds","GeekStrength"};
             foreach(var id in ids){var field=Find<ComboBox>(control,id);Assert.IsTrue(field.IsVisible,id);Assert.IsTrue(field.ActualWidth>=100,id);Assert.DoesNotContain("SongClip.",AutomationProperties.GetName(field));}
-            Find<ComboBox>(control,"GeekSize").SelectedIndex=2;
+            var output = Find<ComboBox>(control,"Size");
+            output.SelectedItem = output.Items.Cast<object>().Single(item => item.ToString() == "720 × 1280");
+            Find<ComboBox>(control,"GeekSize").SelectedIndex=1;
             Find<ComboBox>(control,"GeekSteps").SelectedItem=12;
             Find<ComboBox>(control,"GeekCardSteps").SelectedItem=16;
             Find<ComboBox>(control,"GeekSeconds").SelectedItem=8;
             Assert.IsTrue(control.Checkpoint());
             var saved=store.Load(project.Id);
-            Assert.AreEqual(new SongClipGeekSettings {Width=480,Height=864,Steps=12,CardSteps=16,ClipSeconds=8},saved.Settings.Geek);
+            Assert.AreEqual(new SongClipGeekSettings {Width=576,Height=1024,Steps=12,CardSteps=16,ClipSeconds=8},saved.Settings.Geek);
             Assert.AreEqual(project.Settings.Motion,saved.Settings.Motion);
             Assert.IsTrue(control.SelectVariant("motion"));Flush(host);
             Assert.IsFalse(Find<ComboBox>(control,"GeekSize").IsVisible);

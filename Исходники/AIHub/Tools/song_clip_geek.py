@@ -72,12 +72,38 @@ def identity(request, plan=True):
                  'song_clip_motion_state.py', 'song_clip_montage_media.py', 'h3_memory.py')}}
 
 
+PRIOR_MEDIA = {
+    'song_clip_montage_media.py': '4132875023b58ddeb1ee5a8df1775129964bebbeaf193f92e6f2225edeae815a',
+    'song_clip_geek.py': '19c3d4306e49040d4cdb260248284ef5a2d469da7c651f805c2123f640ba074c',
+    'song_clip_geek_native.py': '9d05867ea43978783d2390852e4b06539ca4788b55828541b635955e53ea303f',
+}
+PRIOR_ADAPTERS = {
+    **PRIOR_MEDIA,
+    'song_clip_geek.py': '77c44af452b7b7f60b4f8bed14703ad87735a984874d3c7f7179318fca5023f1',
+    'song_clip_geek_native.py': 'efbb219a256a134256672867ce8b01591066714535cf6cc355c244f8daec2c91',
+}
+
+
+def checkpoint_identity(recorded, current):
+    if recorded == current:
+        return current
+    for adapters in (PRIOR_MEDIA, PRIOR_ADAPTERS):
+        prior = {**current, 'adapters': {**current['adapters'], **adapters}}
+        if recorded == prior:
+            return prior
+    raise ValueError('Geekatplay checkpoint inputs changed; start a new attempt.')
+
+
+def producing_version(request):
+    return os.environ.get('LOPATA_GEEK_PROGRAM_VERSION') or request['programVersion']
+
+
 def duration(request):
     result = subprocess.run([request['ffprobe'], '-v', 'error', '-show_entries', 'format=duration',
         '-of', 'json', request['song']], capture_output=True, text=True, check=True,
         creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     seconds = float(json.loads(result.stdout)['format']['duration'])
-    if not math.isfinite(seconds) or not 0 < seconds <= 7200: raise ValueError('Invalid song duration.')
+    if not math.isfinite(seconds) or not 0 < seconds <= (2**31 - 1) / FPS: raise ValueError('Invalid song duration.')
     return seconds
 
 
@@ -87,7 +113,7 @@ def analyze(request):
     path = contained(job, 'geek-analysis.json')
     if path.exists():
         data = json.loads(path.read_text(encoding='utf-8'))
-        if data.get('identity') != expected: raise ValueError('Geekatplay analysis input changed.')
+        checkpoint_identity(data.get('identity'), expected)
         return data
     os.environ['NUMBA_CACHE_DIR'] = str(contained(job, 'numba-cache'))
     os.environ['PATH'] = str(Path(request['ffprobe']).parent) + os.pathsep + os.environ.get('PATH', '')
@@ -98,7 +124,7 @@ def analyze(request):
         'none (auto-split by duration & custom lyrics)', audio_path=request['song'], custom_lyrics='', force_rerun=False)[0])
     seconds = duration(request)
     segments = board.get('segments', [])
-    if not 1 <= len(segments) <= 256: raise ValueError('The full song exceeds the supported storyboard size.')
+    if not segments: raise ValueError('The song has no storyboard segments.')
     # Quantize beat boundaries once to the actual 24 fps. Preserve the final tail,
     # including sub-centisecond source duration rounded in upstream's UI JSON.
     bounds = [0] + [round(float(seg['start_time']) * FPS) for seg in segments[1:]] + [math.ceil(seconds * FPS)]
@@ -148,7 +174,7 @@ def card_spec(request, plan, index):
 
 
 def facts(request, plan, index=None, stage='transitions'):
-    return dict(program='LOPATA', programVersion=request['programVersion'], scenario='song-to-clip/geekatplay',
+    return dict(program='LOPATA', programVersion=producing_version(request), scenario='song-to-clip/geekatplay',
         operation=Path(request['job']).name,
         createdUtc=__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
         models={key: value for key, value in request['pins'].items() if key in
@@ -212,7 +238,12 @@ def run(request, action):
         analysis = analyze(request)
         if action == '--analyze': return
         plan = validate_plan(request, analysis)
-        state = GeekState(job, identity(request))
+        binding = identity(request)
+        state_path = contained(job, 'geek-state.json')
+        if state_path.exists():
+            saved = json.loads(state_path.read_text(encoding='utf-8'))
+            binding = checkpoint_identity(saved.get('identity'), binding)
+        state = GeekState(job, binding)
         slots = analysis['slots']; count = len(slots)
         state.validate_counts(count+1, count)
         native = None
@@ -265,7 +296,7 @@ def run(request, action):
         temporary = contained(job,'geek-raw.installing.mp4')
         subprocess.run([request['ffmpeg'],'-nostdin','-v','error','-y','-i',str(scaled),'-i',request['song'],
             '-map','0:v:0','-map','1:a:0','-c:v','copy','-c:a','aac','-b:a','256k',
-            '-metadata','encoded_by=LOPATA ' + request['programVersion'],'-metadata','LOPATA_OPERATION='+job.name,
+            '-metadata','encoded_by=LOPATA ' + producing_version(request),'-metadata','LOPATA_OPERATION='+job.name,
             '-metadata','LOPATA_VIDEO='+canonical(facts(request, plan)),
             '-movflags','+faststart+use_metadata_tags',str(temporary)],check=True,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
@@ -283,4 +314,4 @@ if __name__ == '__main__':
     request = json.loads(Path(sys.argv[-1]).read_text(encoding='utf-8-sig'))
     try: run(request,action)
     except Exception as error:
-        emit('error',message=str(error)); raise
+        emit('error',message=str(error),type=type(error).__name__); raise

@@ -52,6 +52,32 @@ public sealed class OpenAiSseStreamParserTests
     }
 
     [TestMethod]
+    public async Task PrivatePlanningKeepsCompleteChunksWhenTheTransportEndsMidEvent()
+    {
+        const string sse = "data: {\"choices\":[{\"delta\":{\"content\":\"a received scene\"}}]}\ndata: {\"cho";
+        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(sse));
+        var result = await OpenAiSseStreamParser.ReadAsync(stream, null, CancellationToken.None, retainInterruptedContent: true);
+        Assert.AreEqual("a received scene", result.Content);
+        Assert.AreEqual("interrupted", result.FinishReason);
+    }
+
+    [TestMethod]
+    public async Task PrivateStreamReportsActivityForReasoningAndContentOnly()
+    {
+        const string sse = """
+            data: {"choices":[{"delta":{"reasoning_content":"thinking"}}]}
+            data: {"choices":[{"delta":{"content":""}}]}
+            data: {"choices":[{"delta":{"content":"answer"},"finish_reason":"stop"}]}
+            data: [DONE]
+            """;
+        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(sse));
+        var activities = 0;
+        var result = await OpenAiSseStreamParser.ReadAsync(stream, null, CancellationToken.None, () => activities++);
+        Assert.AreEqual(2, activities);
+        Assert.AreEqual("answer", result.Content);
+    }
+
+    [TestMethod]
     public async Task ExplicitFinishReasonAtEofIsACompletedStream()
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(

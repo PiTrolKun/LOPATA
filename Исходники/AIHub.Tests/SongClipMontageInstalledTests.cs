@@ -110,8 +110,10 @@ public sealed class SongClipMontageInstalledTests
                     reference.Description.Length == 0 ? "Исполнитель на изображении поёт песню в кадре, а события песни о котах происходят рядом. Изображение задаёт исполнителя, а не кота из текста песни." : reference.Description));
             }
             var reproduceDecode = Environment.GetEnvironmentVariable("LOPATA_SONG_MONTAGE_DECODE_REPRO") == "1";
-            var width = reproduceDecode ? 608 : 320; var height = reproduceDecode ? 352 : 320;
-            var settings = new SongClipSettings { Width = width, Height = height, Fps = 24, Quality = 85, Seed = 742,
+            var portrait = Environment.GetEnvironmentVariable("LOPATA_SONG_MONTAGE_GEOMETRY") == "portrait";
+            var width = portrait ? 288 : reproduceDecode ? 608 : 320;
+            var height = portrait ? 512 : reproduceDecode ? 352 : 320;
+            var settings = new SongClipSettings { Width = portrait ? 720 : width, Height = portrait ? 1280 : height, Fps = 24, Quality = 85, Seed = 742,
                 Prompt = source.Settings.Prompt, Motion = new() { Mode = SongClipModes.Montage },
                 Montage = new() { Width = width, Height = height, Steps = reproduceDecode ? 12 : 8, ClipSeconds = 8 } };
             var attempt = new SongClipAttempt(fixture.AttemptId, fixture.ProjectId, song, references.FirstOrDefault()?.File ?? "",
@@ -140,17 +142,24 @@ public sealed class SongClipMontageInstalledTests
                 startedUtc = DateTimeOffset.UtcNow, sourceProject = SourceId, cropStart = CropStart, cropSeconds = CropSeconds,
                 croppedHash, requestedPlanner = SongClipPlannerModel.ModelIdFor(attempt.Model), attempt
             });
-            var result = await H3MusicRunner.RunAsync(attempt, store, Progress, token);
+            var overlap = Environment.GetEnvironmentVariable("LOPATA_SONG_MONTAGE_WARM_OVERLAP") == "1";
+            var plannerId = Environment.GetEnvironmentVariable("LOPATA_SONG_MONTAGE_PLANNER") == "gemma"
+                ? ManagedModelCatalog.LetItOutArtifactId : null;
+            Task<SongClipResult> Run() => overlap || plannerId is not null
+                ? H3MontageRunner.RunAsync(attempt, store, Progress, token, overlap, plannerId) : H3MusicRunner.RunAsync(attempt, store, Progress, token);
+            var result = await Run();
             var firstSeconds = watch.Elapsed.TotalSeconds;
-            var plan = await VerifyResult(attempt, store, job, result, croppedHash, token);
+            var plan = await VerifyResult(attempt, store, job, result, croppedHash, token, plannerId);
             var artifacts = await StableArtifacts(job, token);
-            var repeat = await H3MusicRunner.RunAsync(attempt, store, Progress, token);
+            var replay = Stopwatch.StartNew();
+            var repeat = await Run();
+            var cachedRepeatSeconds = replay.Elapsed.TotalSeconds;
             Assert.AreEqual(result.File, repeat.File); Assert.AreEqual(result.Seconds, repeat.Seconds, .001);
             CollectionAssert.AreEqual(artifacts, await StableArtifacts(job, token), "Cached replay rewrote accepted native shots/plan/receipts or MP4.");
             if (!project.Results.Any(saved => saved.Id == result.Id)) project.Results.Add(result);
             project.PendingAttemptId = ""; store.Save(project); watch.Stop();
             SongClipStore.Atomic(Path.Combine(job, "installed-montage-result.json"), new {
-                completedUtc = DateTimeOffset.UtcNow, firstSeconds, cachedRepeatSeconds = watch.Elapsed.TotalSeconds - firstSeconds,
+                completedUtc = DateTimeOffset.UtcNow, firstSeconds, cachedRepeatSeconds, overlap,
                 result, output = store.Resolve(project.Id, result.File), actualShots = plan.Shots.Length, expectedShots = 2,
                 nativeBeatAnalysisUnmodified = true, sourceProject = SourceId, sourceCount = before.Length,
                 semanticReferencePromptSha256 = SongClipMontageProtocol.ReferencePromptHash(plan), plan
@@ -171,7 +180,7 @@ public sealed class SongClipMontageInstalledTests
     }
 
     private static async Task<SongClipMontagePlan> VerifyResult(SongClipAttempt attempt, SongClipStore store, string job,
-        SongClipResult result, string songHash, CancellationToken token)
+        SongClipResult result, string songHash, CancellationToken token, string? plannerId)
     {
         Assert.AreEqual(CropSeconds, result.Seconds, .15);
         using var analysisRaw = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(job, "montage-analysis.json"), token));
@@ -180,7 +189,7 @@ public sealed class SongClipMontageInstalledTests
         Assert.IsTrue(analysisRaw.RootElement.GetProperty("bpm").GetDouble() > 0);
         Assert.IsTrue(analysis.BeatTimes.Length > 0, "A song with audible rhythm should provide actual beat observations.");
         Assert.AreEqual(CropSeconds, analysis.DurationSeconds, .02);
-        var plan = await SongClipMontagePlanning.ReadCompletedAsync(attempt, store, job, analysis, token);
+        var plan = await SongClipMontagePlanning.ReadCompletedAsync(attempt, store, job, analysis, token, plannerId);
         Assert.AreEqual(analysis.Slots.Length, plan.Shots.Length); Assert.IsTrue(plan.Shots.Length >= 2);
         Assert.IsTrue(plan.Assistants.All(model => model.Role == "song-to-clip semantic planning" && model.Revision.Length > 0));
         Assert.AreEqual(analysis.DurationSeconds, plan.Shots[^1].StartSeconds + plan.Shots[^1].DurationSeconds, .000001);

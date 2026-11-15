@@ -37,7 +37,8 @@ public sealed partial class SongClipControl:UserControl
     private readonly ListBox _results=new();
     private readonly MediaElement _preview=new(){LoadedBehavior=MediaState.Manual,UnloadedBehavior=MediaState.Close,Stretch=Stretch.Uniform,IsMuted=true};
     private readonly TextBlock _status=new(){TextWrapping=TextWrapping.Wrap},_reference=new(){TextWrapping=TextWrapping.Wrap};
-    private readonly TextBox _log=new(){IsReadOnly=true,TextWrapping=TextWrapping.Wrap,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};
+    private readonly TextBox _log=new(){IsReadOnly=true,IsUndoEnabled=false,TextWrapping=TextWrapping.NoWrap,
+        HorizontalScrollBarVisibility=ScrollBarVisibility.Auto,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};
     private readonly ProgressBar _progress=new(){Height=12,Maximum=100};
     private readonly DispatcherTimer _saveTimer=new(){Interval=TimeSpan.FromMilliseconds(700)};
     private readonly DispatcherTimer _clock=new(){Interval=TimeSpan.FromSeconds(1)};
@@ -57,12 +58,19 @@ public sealed partial class SongClipControl:UserControl
         _prompt=_promptInput.Input;_prompt.Height=double.NaN;
         _prompt.Loaded+=(_,_)=>LiterarySpellChecking.Enable(_prompt,_l("VideoPrep.SpellingLanguage"));
         Resources.MergedDictionaries.Add(new ResourceDictionary{Source=new Uri("/AIHub;component/Controls/SongClipResources.xaml",UriKind.Relative)});
+        ConfigureSizePresentation();
         SetResourceReference(ForegroundProperty,"TextPrimaryBrush");
         _saveTimer.Tick+=(_,_)=>{_saveTimer.Stop();if(!_busy)Checkpoint();};
         _clock.Tick+=(_,_)=>UpdateStatus();
+        _progressTimer.Tick+=(_,_)=>FlushGenerationProgress();
+        _log.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => QueueDeferredJournalRefresh()));
+        _log.SelectionChanged += (_, _) => QueueDeferredJournalRefresh();
         Build();LoadFields();
         foreach(var box in new[]{_name,_lyrics,_timings,_prompt})box.TextChanged+=(_,_)=>{if(!_loading&&!_busy){_saveTimer.Stop();_saveTimer.Start();}};
-        foreach(var choice in new[]{_size,_steps,_interval,_motionSize,_motionSteps,_montageClipSeconds})choice.SelectionChanged+=(_,_)=>{if(!_loading&&!_modeSettingsLoading&&!_busy)Checkpoint();};
+        _size.SelectionChanged+=(_,_)=>ChangeOutputSize();
+        foreach(var choice in new[]{_steps,_interval,_motionSize,_motionSteps,_montageClipSeconds})choice.SelectionChanged+=(_,_)=>{if(!_loading&&!_modeSettingsLoading&&!_busy&&!_syncingSizes)Checkpoint();};
+        _motionSize.SelectionChanged+=(_,_)=>UpdateFrameSizeHint(_motionSize);
+        _geekSize.SelectionChanged+=(_,_)=>UpdateFrameSizeHint(_geekSize);
         _h3Mode.SelectionChanged+=(_,_)=>ChangeClipMode();
         _results.SelectionChanged+=(_,_)=>ShowResult();
         IsVisibleChanged+=(_,_)=>{if(!IsVisible)SuspendPreview();};
@@ -82,7 +90,7 @@ public sealed partial class SongClipControl:UserControl
     private void Capture()
     {
         _project.Name=_name.Text;_project.Lyrics=_lyrics.Text;_project.Timings=_timings.Text;_project.Settings.Prompt=_prompt.Text;
-        if(_size.SelectedIndex>=0){var sizes=new[]{(640,360),(1280,720),(1920,1080),(720,1280)};var size=sizes[_size.SelectedIndex];_project.Settings.Width=size.Item1;_project.Settings.Height=size.Item2;}
+        if(_size.SelectedItem is FrameSize size){_project.Settings.Width=size.Width;_project.Settings.Height=size.Height;}
         if(_steps.SelectedItem is int steps)_project.Settings.Steps=steps;
         if(_interval.SelectedItem is int interval)_project.Settings.Interval=interval;
         CaptureMotionSettings();
@@ -92,7 +100,9 @@ public sealed partial class SongClipControl:UserControl
         _loading=true;
         try{
             _name.Text=_project.Name;_lyrics.Text=_project.Lyrics;_timings.Text=_project.Timings;_prompt.Text=_project.Settings.Prompt;
-            _size.SelectedIndex=_project.Settings.Width==1920?2:_project.Settings.Height==1280?3:_project.Settings.Width==640?0:1;
+            var output = new FrameSize(_project.Settings.Width, _project.Settings.Height);
+            _size.ItemsSource=OutputSizes.Contains(output)?OutputSizes:[..OutputSizes,output];
+            _size.SelectedItem=output;
             _steps.SelectedItem=_project.Settings.Steps;_interval.SelectedItem=_project.Settings.Interval;
             LoadMotionSettings();RefreshEnginePresentation();
             RefreshReference();
@@ -160,14 +170,16 @@ public sealed partial class SongClipControl:UserControl
                 variant.Model, variant.Mode, autoDownload: true).ShowDialog() == true)) return;
         _store.EnsureAttemptSnapshot(attempt);
         _project.PendingAttemptId=attempt.Id;_store.Save(_project);
-        _cancel=CancellationTokenSource.CreateLinkedTokenSource(token);_busy=true;_stopRequested=false;_deviceSummary="";SetInputs(false);RefreshActions();_started=DateTimeOffset.UtcNow;_fraction=0;_clock.Start();
+        _cancel=CancellationTokenSource.CreateLinkedTokenSource(token);_busy=true;_stopRequested=false;_deviceSummary="";SetInputs(false);RefreshActions();_started=DateTimeOffset.UtcNow;_fraction=0;_clock.Start();_progressTimer.Start();
         try{
             var result=await ApplicationBackgroundOperations.RunAsync(attempt.Model==InfiniteTalkRunner.ModelId?InfiniteTalkRunner.Kind:attempt.Model=="h3_music_context"?H3MusicRunner.Kind:SongClipAttempt.Kind,EngineName(attempt.Model),attempt.ProjectId,attempt,
-                async ct=>await RunEngineAsync(attempt,(fraction,message)=>Dispatcher.BeginInvoke(()=>{_fraction=Math.Max(_fraction,fraction);_stage=FormatEngineProgress(message);_log.AppendText(_stage+Environment.NewLine);if(_log.Text.Length>32000)_log.Text=_log.Text[^16000..];_log.ScrollToEnd();UpdateStatus();}),ct),_cancel.Token,restored);
+                ct=>RunEngineAsync(attempt,QueueGenerationProgress,ct),_cancel.Token,restored);
             if(!_project.Results.Any(r=>r.Id==result.Id))_project.Results.Add(result);_project.PendingAttemptId="";_store.Save(_project);_stage=_l("SongClip.Complete");_fraction=1;
         }catch(OperationCanceledException){if(_stopRequested){_project.PendingAttemptId="";_store.Save(_project);}_stage=_l("SongClip.Canceled");}
+        catch(AIHub.Services.VideoPreparation.VideoStructuredContextException error)
+        {_stage=string.Format(System.Globalization.CultureInfo.CurrentCulture,_l("SongClip.PlanningContextSize"),error.RequiredTokens,error.Capacity);}
         catch(Exception error){_stage=FormatEngineProgress(error.Message);}
-        finally{_busy=false;SetInputs(true);_clock.Stop();_cancel.Dispose();_cancel=null;LoadFields();UpdateStatus();}
+        finally{_progressTimer.Stop();FlushGenerationProgress(preserveStage:true);_busy=false;SetInputs(true);_clock.Stop();_cancel.Dispose();_cancel=null;LoadFields();UpdateStatus();}
     }
     public async Task ResumeAsync(BackgroundOperationState state,CancellationToken token)
     {

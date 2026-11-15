@@ -13,7 +13,7 @@ internal static class SongClipMontageProtocol
 {
     internal const string UpstreamRevision = "37b72ef49d9128e6853f2b7a2d1fa56bc65cfeb1";
     internal const string InvalidReply = SongClipVisualProtocol.InvalidReply, Mismatch = "SongClip.VisualPlanMismatch";
-    internal const int MaximumShots = 1024, MaximumBatch = 6;
+    internal const int MaximumBatch = 6;
     internal static readonly string[] ShotSizes = ["close_up", "medium", "wide", "full_body"];
     internal static readonly string[] CameraAngles = ["eye_level", "low_angle", "high_angle", "profile", "three_quarter"];
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -26,10 +26,11 @@ internal static class SongClipMontageProtocol
         Read the WHOLE actual song and semanticAnchor. Preserve its concrete subjects, objects, actions and emotions.
         Musical genre controls treatment, not cast: a cat and its bowl must not become an unrelated human rock singer.
         User creativeDirection is optional. A generic/default cinematic landscape must never displace the song's images.
-        Write visual descriptions in English; lyricAnchors COPY complete original source lines in their original language.
+        Compose for the actual generation canvas in frameFormat. Treat any aspect ratio in creativeDirection as context from the source brief.
+        Write visual descriptions in English. The host attaches timed lyric anchors from the supplied slots.
         slots are final beat-derived edit intervals, not overlapping motion windows. Copy index, startSeconds and
-        durationSeconds EXACTLY, one shot per slot. Do not invent section, word or lyric times. All supplied lyricAnchors
-        are mandatory. Additional anchors must be complete untimed lyricsLines. A timed line belongs only to its slots.
+        durationSeconds EXACTLY, one shot per slot. Do not invent section, word or lyric times. In lyricAnchors,
+        you may add complete untimed lyricsLines in their original language. A timed line belongs only to its slots.
         Unknown/instrumental gaps may have no anchors. Do not force the whole song ending into a partial batch.
         Alternate meaningful performance shots with concrete lyric-inspired cutaways (b-roll). No random spectacle.
         performerVisible means an actual performing participant is visible. Do not invent a singer when neither the
@@ -87,13 +88,14 @@ internal static class SongClipMontageProtocol
         ValidateInput(attempt, analysis); SongClipReferenceBrief.Validate(roles, attempt);
         var source = SongClipVisualProtocol.Source(attempt);
         var direction = attempt.Settings.Prompt == new SongClipSettings().Prompt ? "" : attempt.Settings.Prompt;
+        var generation = attempt.Settings.Montage ?? new SongClipMontageSettings();
         // Keep the whole song for meaning, but send timed cues only for this batch.
         // All other cues remain in the immutable source and are bound to their own slots by the host.
-        var cues = source.Timings.Where(cue => slots.Any(slot =>
-            cue.StartSeconds >= slot.StartSeconds - .000001 && cue.StartSeconds < slot.EndSeconds)).ToArray();
+        var cues = slots.SelectMany(slot => SongClipVisualProtocol.TimingSlice(source.Timings, slot.StartSeconds, slot.EndSeconds)).Distinct().ToArray();
         return JsonSerializer.Serialize(new {
             task = "Create varied lyric-grounded montage shots for these exact beat-derived slots",
             analysis.DurationSeconds, framesPerSecond = analysis.Fps, songTitle = attempt.Name,
+            frameFormat = new { generation.Width, generation.Height, outputWidth = attempt.Settings.Width, outputHeight = attempt.Settings.Height },
             songStyle = source.Style, lyricsLines = source.Lines, songSections = source.Sections, knownTimingCues = cues,
             timingCoverage = source.Timings.Length == 0 ? "unknown; thematic anchors only"
                 : "known markers for current slots only; other source timings are retained by the host; coverage may be partial",
@@ -103,7 +105,7 @@ internal static class SongClipMontageProtocol
         }, Json);
     }
 
-    internal static object Schema(int count) => new {
+    internal static object Schema(int count, int referenceCount = SongClipReferences.MaximumCount) => new {
         type = "json_schema", json_schema = new { name = "song_clip_montage_plan", strict = true, schema = new {
             type = "object", additionalProperties = false, required = new[] { "globalStyle", "shots" }, properties = new {
                 globalStyle = new { type = "string", minLength = 20, maxLength = 1200 },
@@ -111,12 +113,13 @@ internal static class SongClipMontageProtocol
                     type = "object", additionalProperties = false,
                     required = new[] { "index", "startSeconds", "durationSeconds", "prompt", "lyricAnchors", "transition", "performerVisible", "referenceIndices", "shotSize", "cameraAngle" },
                     properties = new {
-                        index = new { type = "integer", minimum = 1, maximum = MaximumShots },
+                        index = new { type = "integer", minimum = 1 },
                         startSeconds = new { type = "number", minimum = 0 }, durationSeconds = new { type = "number", exclusiveMinimum = 0 },
-                        prompt = new { type = "string", minLength = 20, maxLength = 1400 },
+                        prompt = new { type = "string", minLength = 20 },
                         lyricAnchors = new { type = "array", maxItems = 32, items = new { type = "string", minLength = 1, maxLength = 2000 } },
                         transition = new { type = "string", @enum = new[] { "fresh", "match", "continue" } }, performerVisible = new { type = "boolean" },
-                        referenceIndices = new { type = "array", maxItems = SongClipReferences.MaximumCount, items = new { type = "integer", minimum = 1, maximum = SongClipReferences.MaximumCount } },
+                        referenceIndices = new { type = "array", maxItems = Math.Min(referenceCount, SongClipReferences.MaximumCount),
+                            items = new { type = "integer", minimum = 1, maximum = Math.Max(1, referenceCount) } },
                         shotSize = new { type = "string", @enum = ShotSizes }, cameraAngle = new { type = "string", @enum = CameraAngles }
                     }
                 } }
@@ -126,14 +129,15 @@ internal static class SongClipMontageProtocol
 
     internal static SongClipMontagePlan Parse(string raw, SongClipAttempt attempt, SongClipMontageAnalysis analysis,
         IReadOnlyList<SongClipMontageSlot> slots, OutputModelUse model, SongClipReferenceRole[]? roles,
-        SongClipMontageShot? previous = null, bool committedStyle = false)
+        SongClipMontageShot? previous = null, bool committedStyle = false, bool supplyTimedAnchors = false,
+        bool repairTransitions = false)
     {
         ValidateInput(attempt, analysis); SongClipReferenceBrief.Validate(roles, attempt);
-        if (!KnownModel(model) || slots.Count is < 1 or > MaximumShots || raw is null || raw.Length > 2_000_000)
+        if (!KnownModel(model) || slots.Count < 1 || raw is null)
             throw new InvalidDataException(InvalidReply);
         try {
-            var expected = slots.Select(slot => analysis.Slots.SingleOrDefault(item => item == slot)
-                ?? throw new InvalidDataException(InvalidReply)).ToArray();
+            var expected = slots.Select(slot => slot.Index >= 1 && slot.Index <= analysis.Slots.Length
+                    && analysis.Slots[slot.Index - 1] == slot ? slot : throw new InvalidDataException(InvalidReply)).ToArray();
             if (!expected.Select(slot => slot.Index).SequenceEqual(expected.Select(slot => slot.Index).Distinct().Order()))
                 throw new InvalidDataException(InvalidReply);
             using var document = JsonDocument.Parse(raw); var root = document.RootElement;
@@ -151,23 +155,35 @@ internal static class SongClipMontageProtocol
                 Fields(row, ["index", "startSeconds", "durationSeconds", "prompt", "lyricAnchors", "transition", "performerVisible", "referenceIndices", "shotSize", "cameraAngle"]);
                 var slot = expected[offset];
                 var shot = JsonSerializer.Deserialize<SongClipMontageShot>(row) ?? throw new InvalidDataException(InvalidReply);
-                if (shot.Index != slot.Index || !double.IsFinite(shot.StartSeconds) || !double.IsFinite(shot.DurationSeconds)
+                if (shot.Index != slot.Index || shot.ReferenceIndices is null || !double.IsFinite(shot.StartSeconds) || !double.IsFinite(shot.DurationSeconds)
                     || Math.Abs(shot.StartSeconds - slot.StartSeconds) > .000001 || Math.Abs(shot.DurationSeconds - slot.DurationSeconds) > .000001
                     || shot.Transition is not ("fresh" or "match" or "continue") || !ShotSizes.Contains(shot.ShotSize) || !CameraAngles.Contains(shot.CameraAngle))
                     throw new InvalidDataException(InvalidReply);
-                English(shot.Prompt, 1400);
+                English(shot.Prompt);
                 var required = Anchors(source, slot);
-                if (shot.LyricAnchors is null || shot.LyricAnchors.Length > 32 || shot.LyricAnchors.Any(anchor => anchor is null || !allowed.Contains(anchor))
+                if (supplyTimedAnchors && shot.LyricAnchors is not null && source.Timings.Length > 0)
+                    shot = shot with { LyricAnchors = required.Concat(shot.LyricAnchors.Where(anchor => anchor is not null && allowed.Contains(anchor) && !timed.Contains(anchor)))
+                        .Distinct(StringComparer.Ordinal).ToArray() };
+                if (shot.LyricAnchors is null || shot.LyricAnchors.Any(anchor => anchor is null || !allowed.Contains(anchor))
                     || shot.LyricAnchors.Distinct(StringComparer.Ordinal).Count() != shot.LyricAnchors.Length
                     || required.Any(anchor => !shot.LyricAnchors.Contains(anchor, StringComparer.Ordinal))
                     || shot.LyricAnchors.Any(anchor => timed.Contains(anchor) && !required.Contains(anchor, StringComparer.Ordinal))
                     || source.Timings.Length == 0 && source.Lines.Length > 0 && shot.LyricAnchors.Length == 0)
                     throw new InvalidDataException(InvalidReply);
-                ValidateReferences(shot, roles);
                 var prior = shots.LastOrDefault() ?? previous;
                 if (shot.Transition != "fresh" && (prior is null || prior.Index != shot.Index - 1
                     || prior.PerformerVisible != shot.PerformerVisible || !prior.ReferenceIndices.SequenceEqual(shot.ReferenceIndices)))
-                    throw new InvalidDataException(InvalidReply);
+                {
+                    if (repairTransitions) shot = shot with { Transition = "fresh" };
+                    else
+                    {
+                        var error = new InvalidDataException(InvalidReply);
+                        error.Data[SongClipPlannerRecovery.RepairInstruction] =
+                            $"Shot {shot.Index} must use the fresh transition because it has no preceding frame with the same performer visibility and references.";
+                        throw error;
+                    }
+                }
+                ValidateReferences(shot, roles);
                 shots.Add(shot);
             }
             if (expected[0].Index == 1 && roles?.Any(role => role.Kind == "performer") == true && !shots.Any(shot => shot.PerformerVisible)
@@ -191,20 +207,27 @@ internal static class SongClipMontageProtocol
     private static void ValidateReferences(SongClipMontageShot shot, SongClipReferenceRole[]? roles)
     {
         var choices = roles ?? [];
-        if (shot.ReferenceIndices is null || shot.ReferenceIndices.Length + (shot.Transition == "fresh" ? 0 : 1) > SongClipReferences.MaximumCount
+        if (shot.ReferenceIndices.Length + (shot.Transition == "fresh" ? 0 : 1) > SongClipReferences.MaximumCount
             || shot.ReferenceIndices.Any(index => index < 1 || index > choices.Length)
             || !shot.ReferenceIndices.SequenceEqual(shot.ReferenceIndices.Distinct().Order())) throw new InvalidDataException(InvalidReply);
         var selected = shot.ReferenceIndices.Select(index => choices[index - 1]).ToArray();
-        if (!shot.PerformerVisible && selected.Any(role => role.Kind == "performer")
-            || shot.PerformerVisible && choices.Any(role => role.Kind == "performer") && !selected.Any(role => role.Kind == "performer"))
-            throw new InvalidDataException(InvalidReply);
+        var performers = choices.Where(role => role.Kind == "performer").Select(role => role.Index).ToArray();
+        if (performers.Length > 0 && shot.PerformerVisible != selected.Any(role => role.Kind == "performer"))
+        {
+            var error = new InvalidDataException(InvalidReply);
+            error.Data[SongClipPlannerRecovery.RepairInstruction] =
+                $"In shot {shot.Index}, performerVisible refers only to the song performer, not to other people in the frame. "
+                + $"If the performer is shown, set performerVisible to true and include the matching performer reference from [{string.Join(", ", performers)}]. "
+                + "If the scene shows only other characters or scenery, set performerVisible to false and omit all performer references. Keep the requested story event.";
+            throw error;
+        }
         foreach (Match subject in Regex.Matches(shot.Prompt, @"<Subject\s+(\d+)>", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
             if (!int.TryParse(subject.Groups[1].Value, out var index) || !shot.ReferenceIndices.Contains(index)) throw new InvalidDataException(InvalidReply);
         if (Regex.IsMatch(shot.Prompt, @"\b(?:subject_definitions|retention_analysis|detailed_description|overall_soundscape|non_diegetic_music)\s*:", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
             throw new InvalidDataException(InvalidReply);
     }
-    private static string[] Anchors(SongClipLyricSource source, SongClipMontageSlot slot) => source.Timings
-        .Where(cue => cue.StartSeconds >= slot.StartSeconds - .000001 && cue.StartSeconds < slot.EndSeconds)
+    private static string[] Anchors(SongClipLyricSource source, SongClipMontageSlot slot) =>
+        SongClipVisualProtocol.TimingSlice(source.Timings, slot.StartSeconds, slot.EndSeconds)
         .Select(cue => cue.Text).Distinct(StringComparer.Ordinal).ToArray();
     internal static bool KnownModel(OutputModelUse? model) => model is not null
         && !new[] { model.Id, model.Name, model.Revision, model.Role }.Any(string.IsNullOrWhiteSpace);
@@ -216,7 +239,7 @@ internal static class SongClipMontageProtocol
         if (names.Length != required.Length || names.Distinct(StringComparer.Ordinal).Count() != names.Length
             || required.Any(name => !names.Contains(name, StringComparer.Ordinal))) throw new InvalidDataException(InvalidReply);
     }
-    private static void English(string value, int maximum)
+    private static void English(string value, int maximum = int.MaxValue)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length < 20 || value.Length > maximum
             || Regex.IsMatch(value, @"<\|(?:im_|system|assistant)|</?(?:script|system|assistant)>|```|ignore\s+(?:all\s+)?(?:previous|system|developer)\s+(?:instructions|messages)|\b(?:placeholder|TODO|lorem ipsum)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)

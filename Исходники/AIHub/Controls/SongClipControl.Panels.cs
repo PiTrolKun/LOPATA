@@ -129,7 +129,6 @@ public sealed partial class SongClipControl
         var output = Label("Output"); output.FontWeight = FontWeights.SemiBold; panel.Children.Add(output);
         var size = new DockPanel(); Grid.SetRow(size, 1); panel.Children.Add(size);
         var sizeLabel = Label("Size"); sizeLabel.VerticalAlignment = VerticalAlignment.Center; size.Children.Add(sizeLabel);
-        foreach (var value in new[] { "640 × 360", "1280 × 720", "1920 × 1080", "720 × 1280" }) _size.Items.Add(value);
         _size.Margin = new(6, 0, 3, 0); _size.ToolTip = _l("SongClip.OutputHint");
         AutomationProperties.SetAutomationId(_size, "SongClip.Size"); size.Children.Add(_size);
         var actions = new Grid { Margin = new(0, 4, 0, 4) };

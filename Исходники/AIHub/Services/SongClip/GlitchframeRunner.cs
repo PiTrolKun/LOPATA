@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AIHub.Services.VideoEditor;
@@ -27,8 +26,8 @@ internal static class GlitchframeRunner
         if(!double.IsFinite(prior)||prior<0)throw new InvalidDataException("Invalid generation clock.");
         var watch=Stopwatch.StartNew();double saved=0;double Elapsed()=>prior+watch.Elapsed.TotalSeconds;
         try {
-            return await RunAttemptAsync(attempt,store,(p,m)=>{if(watch.Elapsed.TotalSeconds-saved>=2){SongClipStore.Atomic(clockFile,Elapsed());saved=watch.Elapsed.TotalSeconds;}progress(p,m);},token,Elapsed);
-        } finally {SongClipStore.Atomic(clockFile,Elapsed());}
+            return await RunAttemptAsync(attempt,store,(p,m)=>{if(watch.Elapsed.TotalSeconds-saved>=2){SongClipResources.SaveElapsed(clockFile,Elapsed());saved=watch.Elapsed.TotalSeconds;}progress(p,m);},token,Elapsed);
+        } finally {SongClipResources.SaveElapsed(clockFile,Elapsed());}
     }
     private static async Task<SongClipResult> RunAttemptAsync(SongClipAttempt attempt, SongClipStore store,
         Action<double,string> progress, CancellationToken token,Func<double> elapsed)
@@ -57,37 +56,21 @@ internal static class GlitchframeRunner
         }
         var receipt=Path.Combine(job,"worker-result.json");
         if(!File.Exists(receipt)) {
+            var request = Path.Combine(job, "request.json");
+            var (genWidth, genHeight) = BackgroundSize(attempt.Settings.Width, attempt.Settings.Height, request);
             var payload=new {
                 libraries=environment.Libraries,source=environment.Source,model=environment.Model,job,
                 song=store.Resolve(attempt.ProjectId,attempt.Song),reference=attempt.Reference.Length==0?"":store.Resolve(attempt.ProjectId,attempt.Reference),
                 ffmpeg=Path.Combine(VideoRuntime.DirectoryPath,"ffmpeg.exe"),ffprobe=Path.Combine(VideoRuntime.DirectoryPath,"ffprobe.exe"),
                 width=attempt.Settings.Width,height=attempt.Settings.Height,fps=attempt.Settings.Fps,
                 // SDXL drawing size is independent of the output's aspect-preserving upscale.
-                genWidth=attempt.Settings.Width>attempt.Settings.Height?1024:768,
-                genHeight=attempt.Settings.Width>attempt.Settings.Height?768:1024,
+                genWidth, genHeight,
                 steps=attempt.Settings.Steps,interval=attempt.Settings.Interval,seed=attempt.Settings.Seed,
                 prompt=attempt.Settings.Prompt,visualPlan=plan,shader=attempt.Settings.Shader,intensity=attempt.Settings.Intensity,
                 title="",words=ParseTimings(attempt.Timings),device=environment.Python.Device
             };
-            var request=Path.Combine(job,"request.json"); SongClipWorkerRequest.Write(request,payload,plan);
-            var info=new ProcessStartInfo(environment.Python.Python) {UseShellExecute=false,CreateNoWindow=true,
-                RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};
-            ManagedPythonLaunch.ScriptArguments(info,[Path.Combine(AppContext.BaseDirectory,"Tools","song_clip_glitch.py"),request]);
-            using var process=OwnedProcessRegistry.Shared.Start(info,"SongClip.Glitchframe");
-            using var cancel=token.Register(()=>{try{if(!process.HasExited)process.Kill(true);}catch(InvalidOperationException){}});
-            var diagnostics=new StringBuilder();
-            async Task Read(StreamReader reader,bool events) {
-                while(await reader.ReadLineAsync() is {} line) {
-                    await File.AppendAllTextAsync(Path.Combine(job,events?"progress.jsonl":"stderr.log"),line+Environment.NewLine,CancellationToken.None);
-                    if(events) {
-                        try {using var message=JsonDocument.Parse(line);var e=message.RootElement;progress(e.GetProperty("fraction").GetDouble(),e.GetProperty("message").GetString()!);}
-                        catch(JsonException){progress(0,line);}
-                    } else {diagnostics.AppendLine(line);if(diagnostics.Length>16000)diagnostics.Remove(0,8000);}
-                }
-            }
-            var reads=Task.WhenAll(Read(process.StandardOutput,true),Read(process.StandardError,false));
-            await process.WaitForExitAsync(CancellationToken.None);await reads;token.ThrowIfCancellationRequested();
-            if(process.ExitCode!=0) throw new IOException("Glitchframe: "+diagnostics);
+            SongClipWorkerRequest.Write(request,payload,plan);
+            await H3MusicRunner.RunWorkerAsync(environment.Python.Python, request, job, progress, token, worker: "song_clip_glitch.py");
         }
         using var rendered=JsonDocument.Parse(await File.ReadAllTextAsync(receipt,token));
         var raw=rendered.RootElement.GetProperty("output").GetString()!;
@@ -99,6 +82,7 @@ internal static class GlitchframeRunner
                 ..(plan?.Assistants??[])]};
         var staging=Path.Combine(job,"clip.installing.mp4");
         progress(.99,"SongClip.Finalizing");
+        SongClipResources.CheckMuxSpace(raw,staging);
         // Copy video/audio streams. Output provenance is mandatory, never a sidecar-only claim.
         await VideoRuntime.RunAsync(false,["-nostdin","-v","error","-y","-i",raw,"-map","0:v:0","-map","0:a:0","-c","copy",
             "-metadata","encoded_by=LOPATA "+facts.ProgramVersion,"-metadata","LOPATA_VIDEO="+facts.Json(),
@@ -106,6 +90,21 @@ internal static class GlitchframeRunner
         _=await CheckResult(staging,attempt,store,token,plan?.Assistants);token.ThrowIfCancellationRequested();File.Move(staging,final,true);
         return await CheckResult(final,attempt,store,token,plan?.Assistants);
     }
+    internal static (int Width, int Height) BackgroundSize(int width, int height, string request)
+    {
+        var legacy = width > height ? (1024, 768) : (768, 1024);
+        if (File.Exists(request))
+        {
+            using var previous = JsonDocument.Parse(File.ReadAllText(request));
+            if (previous.RootElement.GetProperty("genWidth").GetInt32() == legacy.Item1
+                && previous.RootElement.GetProperty("genHeight").GetInt32() == legacy.Item2)
+                return legacy;
+        }
+        if (width == height) return (768, 768);
+        var shortEdge = Math.Max(256, 64 * (int)Math.Round(16d * Math.Min(width, height) / Math.Max(width, height)));
+        return width > height ? (1024, shortEdge) : (shortEdge, 1024);
+    }
+
     private static async Task<SongClipResult> CheckResult(string file,SongClipAttempt attempt,SongClipStore store,CancellationToken token,
         IReadOnlyList<OutputModelUse>? assistants=null)
     {

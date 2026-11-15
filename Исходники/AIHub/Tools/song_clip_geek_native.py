@@ -29,10 +29,14 @@ class NativeGeek:
         sys.argv = ['lopata-geek', '--offline', '--disable-auto-launch', '--reserve-vram', '2', '--use-pytorch-cross-attention']
         if device == 'cpu': sys.argv.append('--cpu')
         elif device.startswith('cuda:'): sys.argv += ['--cuda-device', device.split(':')[1]]
+        offload = device.startswith('cuda:') and os.environ.get('LOPATA_H3_RETRY_OFFLOAD') == '1'
+        settings = {'MemoryMode': 'offload' if offload else 'auto', 'VramReserveGb': 2}
+        if offload:
+            sys.argv += ['--disable-dynamic-vram', '--lowvram']
         import comfy.options
         comfy.options.enable_args_parsing()
         from h3_memory import initialize_host_memory, initialize_memory
-        initialize_host_memory({'MemoryMode': 'auto', 'VramReserveGb': 2})
+        initialize_host_memory(settings)
         import torch
         selected = torch.device(device)
         backend = getattr(torch, selected.type, None)
@@ -40,7 +44,7 @@ class NativeGeek:
         import folder_paths
         import nodes
         import comfy.model_management as memory
-        initialize_memory({'MemoryMode': 'auto', 'VramReserveGb': 2}, emit)
+        initialize_memory(settings, emit)
         actual = memory.get_torch_device()
         if actual.type != selected.type or selected.index is not None and (actual.index or 0) != selected.index:
             raise ValueError('Requested device unavailable; implicit fallback is forbidden.')
@@ -63,6 +67,7 @@ class NativeGeek:
         self.classes['MiniMaxH3ImageToVideo'] = nodes_minimax_h3.MiniMaxH3ImageToVideo
         self.classes['ImageFromBatch'] = nodes_images.ImageFromBatch
         self.graph = {}; self.cache = {}
+        self.card_models = None
         self.phase, self.index, self.total = 'cards', 1, 1
         import comfy.utils
         comfy.utils.set_progress_bar_global_hook(lambda value, total, *a, **k:
@@ -105,9 +110,11 @@ class NativeGeek:
         return result
 
     def card(self, prompt, reference, index, total):
-        from comfy.diffusers_load import load_diffusers
         self.phase, self.index, self.total = 'cards', index + 1, total
-        model, clip, vae = load_diffusers(self.request['sdxl'])
+        if self.card_models is None:
+            from comfy.diffusers_load import load_diffusers
+            self.card_models = load_diffusers(self.request['sdxl'])
+        model, clip, vae = self.card_models
         refs = self.image(reference['file']) if reference else None
         plan = {'references': [{'id': 'ref', 'kind': reference['kind'], 'name': reference['description']}],
                 'assignment': {'0': 'ref'}} if reference else None
@@ -126,6 +133,9 @@ class NativeGeek:
 
     def segment(self, first, last, prompt, seconds, index, total):
         import json
+        if self.card_models is not None:
+            self.card_models = None
+            self.reset()
         for key, category in [('model', 'diffusion_models'), ('encoder', 'text_encoders'), ('videoVae', 'vae')]:
             expected = contained(self.request['modelFolders'][category], self.request[key])
             resolved = self.paths.get_full_path(category, self.request[key])

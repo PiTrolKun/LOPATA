@@ -13,6 +13,7 @@ internal static class H3MusicAttemptBinding
     // Other adapters, component pins, inputs and settings must match exactly.
     private const string LegacyMotionWorkerHash = "5A75C63AA6F1A947689F995E8C5BAA5185DC591303F9059024C4B26ADF384CFE";
     private const string SingleReferenceWorkerHash = "685A48AD75E18C61B337D244054BD9525C7A1A2D1C435ED8CD473C50753ED7B5";
+    private const string PreAspectWorkerHash = "14BD9498C755B2AEE2CE84EA2047BFA210F21B5D0D54FF74B8C0BC385F443F28";
     private sealed record Receipt(int Schema, string InputHash);
     internal static async Task EnsureAsync(SongClipAttempt attempt, SongClipStore store, string job,
         IReadOnlyList<ManagedModelArtifactCard> cards, CancellationToken token)
@@ -44,10 +45,12 @@ internal static class H3MusicAttemptBinding
             if (prior is null || prior.Schema != 1)
                 throw new InvalidDataException("H3 music attempt inputs changed; existing results were preserved.");
             if (prior.InputHash == hash) return;
-            if (attempt.References is not null)
-                throw new InvalidDataException("H3 music attempt inputs changed; existing results were preserved.");
             string HashWith(Dictionary<string, string> known) => Convert.ToHexStringLower(SHA256.HashData(
                 JsonSerializer.SerializeToUtf8Bytes(identity with { adapters = known })));
+            var preAspect = new Dictionary<string, string>(adapters) { [MotionWorker] = PreAspectWorkerHash };
+            if (prior.InputHash == HashWith(preAspect)) return;
+            if (attempt.References is not null)
+                throw new InvalidDataException("H3 music attempt inputs changed; existing results were preserved.");
             var knownHashes = attempt.PlanningVersion == 0 ? new[] { SingleReferenceWorkerHash, LegacyMotionWorkerHash }
                 : new[] { SingleReferenceWorkerHash };
             var legacyAdapters = knownHashes.Select(known => new Dictionary<string, string>(adapters) { [MotionWorker] = known })
@@ -64,10 +67,13 @@ internal static class H3MusicAttemptBinding
                 LegacyAdapters = legacyAdapters, CurrentAdapters = adapters
             };
             var compatibilityPath = RuntimeFileAudit.Contained(job, "input-binding-compatibility.json");
+            bool MatchesCurrent(JsonElement recorded) => JsonElement.DeepEquals(recorded, JsonSerializer.SerializeToElement(compatibility))
+                || JsonElement.DeepEquals(recorded, JsonSerializer.SerializeToElement(compatibility with
+                    { CurrentInputHash = HashWith(preAspect), CurrentAdapters = preAspect }));
             if (File.Exists(compatibilityPath))
             {
                 using var recorded = JsonDocument.Parse(await File.ReadAllTextAsync(compatibilityPath, token));
-                if (!JsonElement.DeepEquals(recorded.RootElement, JsonSerializer.SerializeToElement(compatibility)))
+                if (!MatchesCurrent(recorded.RootElement))
                 {
                     // A .94/.95 compatibility receipt may already bind the
                     // pre-semantic worker to the exact single-reference worker.
@@ -81,7 +87,7 @@ internal static class H3MusicAttemptBinding
                     var nextPath = RuntimeFileAudit.Contained(job, "input-binding-reference-compatibility.json");
                     if (File.Exists(nextPath)) {
                         using var next = JsonDocument.Parse(await File.ReadAllTextAsync(nextPath, token));
-                        if (!JsonElement.DeepEquals(next.RootElement, JsonSerializer.SerializeToElement(compatibility)))
+                        if (!MatchesCurrent(next.RootElement))
                             throw new InvalidDataException("H3 music reference compatibility evidence changed; existing results were preserved.");
                     }
                     else { token.ThrowIfCancellationRequested(); SongClipStore.Atomic(nextPath, compatibility); }

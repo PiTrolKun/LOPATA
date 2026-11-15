@@ -49,7 +49,6 @@ public sealed class SongClipReferenceStoreTests
     [TestMethod]
     [DataRow("unknown-kind")]
     [DataRow("empty-description")]
-    [DataRow("too-long")]
     [DataRow("duplicate")]
     [DataRow("primary-mismatch")]
     [DataRow("too-many")]
@@ -59,11 +58,24 @@ public sealed class SongClipReferenceStoreTests
         SongClipReference[] references = [new(project.Reference, "performer", "Певица исполняет песню.")];
         if (defect == "unknown-kind") references[0] = references[0] with { Kind = "" };
         if (defect == "empty-description") references[0] = references[0] with { Description = " " };
-        if (defect == "too-long") references[0] = references[0] with { Description = new('x', 2001) };
         if (defect == "duplicate") references = [references[0], references[0] with { Kind = "world" }];
         if (defect == "primary-mismatch") references[0] = references[0] with { File = "attachments/other.png" };
         if (defect == "too-many") references = Enumerable.Range(0, 10).Select(i => references[0] with { File = $"attachments/{i}.png" }).ToArray();
         Assert.Throws<InvalidDataException>(() => SongClipReferences.ValidateNewAttempt(Attempt(project) with { References = references, PlanningVersion = 1 }));
+    }
+
+    [TestMethod]
+    public void DetailedSourceAndTranslatedReferenceRolesSurviveTheFormerCeilings()
+    {
+        var project = new SongClipProject { Reference = "attachments/actor.png" };
+        var text = string.Concat(Enumerable.Repeat("Исполнительница наблюдает события из своей мастерской. ", 50)).Trim();
+        var english = string.Concat(Enumerable.Repeat("The performer observes the events from her workshop. ", 48)).Trim();
+        Assert.IsTrue(text.Length > 2_000);
+        Assert.IsTrue(english.Length > 600);
+        var attempt = Attempt(project) with { PlanningVersion = 1, References = [new(project.Reference, "performer", text)] };
+        SongClipReferences.ValidateNewAttempt(attempt);
+        SongClipReferenceBrief.Validate([new(1, "performer", english)], attempt);
+        Assert.AreEqual(text, attempt.References[0].Description);
     }
 
     [TestMethod]

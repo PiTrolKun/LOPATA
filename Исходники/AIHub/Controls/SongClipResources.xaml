@@ -1,5 +1,15 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="SettingsResources.xaml" /></ResourceDictionary.MergedDictionaries>
+    <DataTemplate x:Key="SongClipFrameSize">
+        <StackPanel Orientation="Horizontal">
+            <Grid Width="20" Height="20" Margin="0,0,7,0">
+                <Border Width="{Binding IconWidth}" Height="{Binding IconHeight}"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="1"
+                        BorderThickness="1.5" BorderBrush="{DynamicResource TextPrimaryBrush}" />
+            </Grid>
+            <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+        </StackPanel>
+    </DataTemplate>
     <Style x:Key="SongClipResultItem" TargetType="ListBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />

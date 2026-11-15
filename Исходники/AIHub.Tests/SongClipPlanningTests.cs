@@ -49,7 +49,7 @@ public sealed class SongClipPlanningTests
         }, cancel.Token, report: (_, stage) => {
             if (stage.StartsWith('{')) {
                 using var status = JsonDocument.Parse(stage);
-                if (status.RootElement.GetProperty("current").GetInt32() == 2) cancel.Cancel();
+                if (status.RootElement.GetProperty("current").GetInt32() == 7) cancel.Cancel();
             }
         }));
         CollectionAssert.AreEqual(new[] { 1 }, generated.ToArray());
@@ -112,20 +112,20 @@ public sealed class SongClipPlanningTests
                 if (failure == "raw-json") return Task.FromResult(new VideoStructuredAnswer("{}", Assistant));
                 throw new InvalidDataException(failure);
             }
-            Assert.Contains("previous response failed validation", system);
+            Assert.Contains("The previous", system);
             return Task.FromResult(Reply(body));
         }, report: (_, stage) => { if (stage == "SongClip.PlanRepairing") repairs++; });
         Assert.AreEqual(2, calls); Assert.AreEqual(1, repairs); Assert.HasCount(3, result.Scenes);
     }
 
     [TestMethod]
-    public async Task RepeatedInvalidReplyStopsAfterTwoCallsWithoutCommittingPartialPlan()
+    public async Task RepeatedInvalidReplyStopsAfterSingleSceneRepairWithoutCommittingInvalidData()
     {
         using var fixture = new Fixture(24); var calls = 0;
         await Assert.ThrowsExactlyAsync<InvalidDataException>(() => fixture.RunAsync((_, _, _, _) => {
             calls++; return Task.FromResult(new VideoStructuredAnswer("{}", Assistant));
         }));
-        Assert.AreEqual(2, calls); Assert.IsFalse(File.Exists(fixture.Progress));
+        Assert.AreEqual(4, calls); Assert.IsFalse(File.Exists(fixture.Progress));
         Assert.IsFalse(File.Exists(fixture.Plan)); Assert.IsFalse(File.Exists(fixture.Binding));
     }
 
@@ -184,7 +184,7 @@ public sealed class SongClipPlanningTests
                 style: changed == "style" && index > 1 ? "A different cinematic world with icy neon towers and cold blue sunlight." : Style,
                 model: changed == "model" && index > 1 ? Assistant with { Revision = "revision-b" } : Assistant));
         }));
-        CollectionAssert.AreEqual(new[] { 1, 7, 7 }, calls.ToArray());
+        CollectionAssert.AreEqual(new[] { 1, 7, 7, 7, 7, 7, 7 }, calls.ToArray());
         using var checkpoint = JsonDocument.Parse(File.ReadAllText(fixture.Progress));
         Assert.AreEqual(1, checkpoint.RootElement.GetProperty("Batches").GetArrayLength());
         Assert.IsFalse(File.Exists(fixture.Plan)); Assert.IsFalse(File.Exists(fixture.Binding));
