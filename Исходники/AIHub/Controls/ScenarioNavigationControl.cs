@@ -27,6 +27,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
     public bool IsSongClip { get; private set; }
     internal ShortsControl? Shorts { get; private set; }
     internal bool IsShorts { get; private set; }
+    internal Func<bool>? PrepareShorts { get; set; }
     public event Action<SongClipControl>? SongClipCreated;
     public LetItOutChatControl? LetItOutChat { get; private set; }
     public bool IsLetItOutChat { get; private set; }
@@ -161,8 +162,11 @@ public sealed partial class ScenarioNavigationControl : UserControl
         Render();
     }
 
-    public void OpenScenario(string id)
+    public void OpenScenario(string id) => OpenScenario(id, prepareShorts: true);
+
+    internal void OpenScenario(string id, bool prepareShorts)
     {
+        if (id == ScenarioNavigationCatalog.Shorts && prepareShorts && PrepareShorts?.Invoke() == false) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
         LeaveSpeechAssets();
@@ -267,13 +271,17 @@ public sealed partial class ScenarioNavigationControl : UserControl
             ScenarioNavigationKind.Group => target.ParentId,
             _ => ScenarioNavigationCatalog.Get(target.ParentId!).ParentId
         };
+        var returnDirection = _tagReturnDirection;
         if (target.Kind == ScenarioNavigationKind.Scenario || destinationDirection != SelectedDirectionId)
             _tagReturnDirection = SelectedDirectionId;
         switch (target.Kind)
         {
             case ScenarioNavigationKind.Direction: SelectDirection(target.Id); break;
             case ScenarioNavigationKind.Group: SelectDirection(target.ParentId!); break;
-            case ScenarioNavigationKind.Scenario: OpenScenario(target.Id); break;
+            case ScenarioNavigationKind.Scenario:
+                OpenScenario(target.Id);
+                if (target.Id == ScenarioNavigationCatalog.Shorts && !IsShorts) _tagReturnDirection = returnDirection;
+                break;
         }
     }
 

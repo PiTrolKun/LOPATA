@@ -91,6 +91,7 @@ public partial class MainWindow
                         MusicPage.RestoreRecoveryProject(page.Project);
                         break;
                     case ScenarioNavigationCatalog.SongClip: OpenSongClip().RestoreRecoveryProject(page.Project); break;
+                    case ScenarioNavigationCatalog.Shorts: OpenShorts(); break;
                     case ScenarioNavigationCatalog.VideoGeneration:
                         OpenVideoConcept().RestoreRecoveryProject(page.Project, page.File);
                         break;

@@ -7,10 +7,6 @@ namespace AIHub.Services.GameSounds;
 internal static class GameSoundModels
 {
     private const string BigQwenId = ManagedModelCatalog.Qwen36ExecutorArtifactId;
-    private const string BigQwenRepository = ManagedModelCatalog.Qwen36ExecutorRepository;
-    private const string BigQwenRevision = "b3af3a64a15eb981da65f9074f81f1cc0804be75";
-    private const string BigQwenFile = "qwen3.6-27b-q4_k_m.gguf";
-    private const string BigQwenHash = "2ac61afbc9c600899ab57fe6333116179b9b08a6230c9bcaca5afd62ad75b7d7";
 
     internal static ManagedModelArtifactCard[] Available(StorageSettings settings, ManagedModelLibraryStore library)
     {
@@ -19,22 +15,7 @@ internal static class GameSoundModels
         var core = predefined.First(c => c.ModelArtifactId == ManagedModelCatalog.CoreArtifactId);
         var gemma = predefined.First(c => c.ModelArtifactId == ManagedModelCatalog.LetItOutArtifactId);
         var root = core.ModelsRoot;
-        var qwen = new ManagedModelArtifactCard
-        {
-            ModelArtifactId = BigQwenId, Family = "Qwen3.6-27B", DisplayName = BigQwenRepository,
-            Role = ManagedModelRoles.Executor, Provider = "Hugging Face", RepositoryId = BigQwenRepository,
-            Revision = BigQwenRevision, Format = "GGUF", Architecture = "qwen35", Quantization = "Q4_K_M",
-            ParameterCount = 27_000_000_000, License = "Apache-2.0", SourcePage = $"https://huggingface.co/{BigQwenRepository}",
-            IsManaged = true, CanRemoveFiles = true, ModelsRoot = root,
-            InstallDirectory = string.IsNullOrEmpty(root) ? "" : Path.Combine(root, "Executors", BigQwenRepository.Replace('/', '_')),
-            Origin = ManagedModelOrigins.PredefinedScenario, RuntimeBackend = LlamaBackendPaths.DisplayName,
-            Files = [new()
-            {
-                RelativePath = BigQwenFile, SizeBytes = 16_547_398_976, Sha256 = BigQwenHash,
-                SourceUrl = $"https://huggingface.co/{BigQwenRepository}/resolve/{BigQwenRevision}/{BigQwenFile}",
-                Purpose = "executor_model", IsRequired = true
-            }]
-        };
+        var qwen = ManagedModelCatalog.CreateQwen36Executor(root);
         return [Existing(core), Existing(qwen), Existing(gemma)];
 
         ManagedModelArtifactCard Existing(ManagedModelArtifactCard card)
@@ -43,9 +24,10 @@ internal static class GameSoundModels
             if (found is null) return card;
             if (card.ModelArtifactId != BigQwenId) return found;
             var weight = found.Files.FirstOrDefault(f => f.Purpose == "executor_model" &&
-                f.RelativePath == BigQwenFile && f.Sha256.Equals(BigQwenHash, StringComparison.OrdinalIgnoreCase));
+                f.RelativePath == ManagedModelCatalog.Qwen36ExecutorFile &&
+                f.Sha256.Equals(ManagedModelCatalog.Qwen36ExecutorSha256, StringComparison.OrdinalIgnoreCase));
             if (weight is null) return card;
-            found.Revision = BigQwenRevision;
+            found.Revision = ManagedModelCatalog.Qwen36ExecutorRevision;
             return found;
         }
     }

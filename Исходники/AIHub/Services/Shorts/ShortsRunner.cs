@@ -169,8 +169,7 @@ internal static class ShortsRunner
             return (output, checkpoint.Model);
         }
 
-        var step = new UpscaleStep { Engine = UpscaleEngine.DlssSr, Width = ShortsJob.Width, Height = ShortsJob.Height };
-        step.Parameters["upscale_dlss_mode"] = "Performance";
+        var step = ShortsComponents.DlssStep();
         var project = new UpscaleProject { Source = source, Steps = [step] };
         var cards = UpscaleComponents.Cards(job.ModelsRoot, project);
         if (SongClipAutomaticPreparation.NeedsDownload(cards))

@@ -16,6 +16,47 @@ namespace AIHub.Tests;
 public sealed class ShortsTests
 {
     [TestMethod]
+    public void EntryBundleIncludesBothH3ModesTheRegisteredPlannerAndDlss()
+    {
+        using var files = new VideoPreparationTests.TestFiles();
+        var root = files.File("models");
+        var library = new ManagedModelLibraryStore(files.File("library"));
+        var existing = ManagedModelCatalog.CreateQwen36Executor(root);
+        existing.InstallDirectory = Path.Combine(root, "Existing");
+        library.Upsert(existing);
+
+        var cards = ShortsComponents.Cards(root, library);
+        var ids = cards.Select(card => card.ModelArtifactId).ToHashSet();
+        foreach (var fromSong in new[] { false, true })
+            Assert.IsTrue(ShortsJob.Cards(fromSong, root).All(card => ids.Contains(card.ModelArtifactId)));
+        Assert.HasCount(cards.Length, ids);
+        var planner = cards.Single(card => card.ModelArtifactId == ManagedModelCatalog.Qwen36ExecutorArtifactId);
+        Assert.AreEqual(existing.InstallDirectory, planner.InstallDirectory);
+        Assert.AreEqual(ManagedModelCatalog.Qwen36ExecutorSha256, planner.Files.Single().Sha256);
+        Assert.IsTrue(ids.Contains("video-upscale-visual-enhancer"));
+        Assert.IsTrue(SongClipAutomaticPreparation.NeedsDownload(cards));
+    }
+
+    [TestMethod]
+    public Task OpeningShortsWaitsForComponentsAndRestoringItsWorkspaceSkipsEntryPrompt() => ScenarioNavigationTests.Sta(() =>
+    {
+        var requests = 0;
+        var navigation = new ScenarioNavigationControl { PrepareShorts = () => { requests++; return false; } };
+        navigation.SelectDirection(ScenarioNavigationCatalog.Creation);
+        navigation.OpenScenario(ScenarioNavigationCatalog.Shorts);
+        Assert.IsFalse(navigation.IsShorts);
+        Assert.IsNull(navigation.Shorts);
+        Assert.AreEqual(ScenarioNavigationCatalog.Creation, navigation.SelectedDirectionId);
+        navigation.PrepareShorts = () => { requests++; return true; };
+        navigation.OpenScenario(ScenarioNavigationCatalog.Shorts);
+        Assert.IsTrue(navigation.IsShorts);
+        Assert.IsTrue(navigation.GoBack());
+        navigation.OpenScenario(ScenarioNavigationCatalog.Shorts, prepareShorts: false);
+        Assert.IsTrue(navigation.IsShorts);
+        Assert.AreEqual(2, requests);
+    });
+
+    [TestMethod]
     public void LyricsAreClippedAndRebasedToTheChosenExcerpt()
     {
         var input = "[00:06.00]opening\n[00:15.00]phrase at cut\n[00:21.50]inside\n[00:32.00]outside";

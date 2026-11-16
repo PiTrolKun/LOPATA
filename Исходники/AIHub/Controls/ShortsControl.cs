@@ -11,7 +11,6 @@ using AIHub.Controls.VideoUpscale;
 using AIHub.Models;
 using AIHub.Services;
 using AIHub.Services.Shorts;
-using AIHub.Services.SongClip;
 using AIHub.Services.VideoEditor;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
@@ -484,10 +483,8 @@ internal sealed partial class ShortsControl : UserControl
         RefreshActions();
         try
         {
-            var cards = ShortsJob.Cards(draft.FromSong, _root);
-            if (SongClipAutomaticPreparation.NeedsDownload(cards)
-                && new SongClipDownloadWindow(Window.GetWindow(this), _localize, _root, _connections,
-                    autoDownload: true, requestedCards: cards).ShowDialog() != true) return;
+            if (!await PrepareMissingComponentsAsync(retry ? previous!.ModelsRoot : _root, retry ? previous!.Connections : _connections, token))
+                return;
             var job = retry ? previous! : await ShortsJob.CreateAsync(draft with { OutputPath = output, ProjectId = _project.Id },
                 _root, _connections, token);
             RecordProjectJob(draft, job);
@@ -504,6 +501,8 @@ internal sealed partial class ShortsControl : UserControl
         try
         {
             RestoreJobProject(job);
+            if (!File.Exists(job.Output) && !await PrepareMissingComponentsAsync(job.ModelsRoot, job.Connections, token))
+                throw new BackgroundOperationWaitingException("Tray.NeedsInput");
             if (_draft.OutputPath is null) _suggestedOutput = job.Output;
             SaveProjectDraft();
             RefreshActions();
@@ -511,6 +510,10 @@ internal sealed partial class ShortsControl : UserControl
         }
         finally { _busy = false; RefreshActions(); }
     }
+
+    private async Task<bool> PrepareMissingComponentsAsync(string root, int connections, CancellationToken token) =>
+        !await ShortsComponents.NeedsPreparationAsync(root, connections, token) ||
+        ShortsComponentPreparation.Show(Window.GetWindow(this), _localize, root, connections, token);
 
     private async Task RunAsync(ShortsJob job, BackgroundOperationState? state, CancellationToken token)
     {
