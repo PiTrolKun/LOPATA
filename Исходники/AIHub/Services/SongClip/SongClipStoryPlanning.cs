@@ -22,7 +22,7 @@ internal static class SongClipStoryPlanning
             if (saved is null || saved.Schema != 1 || saved.InputHash != boundInput || !KnownModel(saved.Model)
                 || reference.Model is not null && saved.Model != reference.Model)
                 throw new InvalidDataException("SongClip.VisualPlanMismatch");
-            SongClipVisualProtocol.ValidateAnchor(saved.Anchor); return saved;
+            SongClipStoryBrief.ValidateAnchor(saved.Anchor); return saved;
         }
         report(0, "SongClip.Interpreting");
         for (var retry = 0; retry < 2; retry++) {

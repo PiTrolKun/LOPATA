@@ -8,6 +8,7 @@ namespace AIHub.Services.SongClip;
 /// <summary>Separates interpretation of actual lyrics from musical/style priming.</summary>
 internal static class SongClipStoryBrief
 {
+    private const string AnchorPrefix = "Song-inspired visual motifs: ";
     internal const string System = """
         Extract the concrete visible animals, objects and actions NAMED in the actual song lines.
         This is literal extraction and translation, NOT a creative story or interpretation of the narrator.
@@ -65,21 +66,36 @@ internal static class SongClipStoryBrief
                 throw new InvalidDataException(SongClipVisualProtocol.InvalidReply);
             var source = Lines(attempt).ToHashSet(StringComparer.Ordinal); var images = new List<string>();
             foreach (var row in rows.EnumerateArray()) {
-                var line = row.GetProperty("sourceLine").GetString(); var visual = row.GetProperty("visual").GetString();
+                var line = row.GetProperty("sourceLine").GetString(); var visual = row.GetProperty("visual").GetString()?.Trim();
                 if (row.EnumerateObject().Count() != 2 || line is null || !source.Contains(line))
                     throw Invalid("A sourceLine must exactly match one complete supplied lyric line.");
-                if (string.IsNullOrWhiteSpace(visual) || visual.Length is < 2 or > 80)
+                if (visual is null || visual.Length is < 2 or > 80)
                     throw Invalid("A visual motif must contain between 2 and 80 characters.");
-                if (visual.Count(char.IsAsciiLetter) < .85 * visual.Count(char.IsLetter))
+                if (!HasEnglishLetters(visual))
                     throw Invalid("A visual motif must be an English description.");
-                images.Add(visual.Trim());
+                images.Add(visual);
             }
-            var anchor = "Song-inspired visual motifs: " + string.Join("; ", images.Distinct(StringComparer.OrdinalIgnoreCase)) + ".";
-            SongClipVisualProtocol.ValidateAnchor(anchor);
-            return anchor.Trim();
+            var anchor = AnchorPrefix + string.Join("; ", images.Distinct(StringComparer.OrdinalIgnoreCase)) + ".";
+            ValidateAnchor(anchor);
+            return anchor;
         }
         catch (Exception error) when (error is JsonException or KeyNotFoundException or InvalidOperationException or ArgumentException)
         { throw new InvalidDataException(SongClipVisualProtocol.InvalidReply, error); }
     }
+    internal static void ValidateAnchor(string value)
+    {
+        SongClipVisualProtocol.ValidatePromptText(value, 600);
+        // A motif can be a short phrase or just a noun. The prose rules for full scene prompts do not apply here.
+        if (!value.StartsWith(AnchorPrefix, StringComparison.Ordinal) || !value.EndsWith('.')
+            || !HasEnglishLetters(value[AnchorPrefix.Length..]))
+            throw Invalid("A visual anchor must contain the extracted English motifs.");
+    }
+
+    private static bool HasEnglishLetters(string value)
+    {
+        var latin = value.Count(char.IsAsciiLetter);
+        return latin > 0 && latin >= .85 * value.Count(char.IsLetter);
+    }
+
     private static InvalidDataException Invalid(string reason) => new(SongClipVisualProtocol.InvalidReply, new InvalidDataException(reason));
 }

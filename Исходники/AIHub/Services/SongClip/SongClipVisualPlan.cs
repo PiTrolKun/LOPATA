@@ -397,14 +397,20 @@ internal static partial class SongClipVisualProtocol
     }
     private static string Normalize(string? value) => value is null ? throw new InvalidDataException(InvalidReply)
         : Regex.Replace(value.Normalize(NormalizationForm.FormC).Trim(), @"\s+", " ");
-    internal static void ValidateAnchor(string value) => English(value, 600);
     internal static void ValidateReferenceDescription(string value) => English(value);
-    private static void English(string value, int maximum = int.MaxValue)
+
+    internal static void ValidatePromptText(string value, int maximum)
     {
-        if (string.IsNullOrWhiteSpace(value) || value.Length is < 20 || value.Length > maximum || UnsafeOutput.IsMatch(value)
+        if (string.IsNullOrWhiteSpace(value) || value.Length > maximum || UnsafeOutput.IsMatch(value)
             || value.Any(character => char.IsControl(character) && character is not ('\n' or '\r' or '\t'))
             || Regex.IsMatch(value, @"\b(?:lorem ipsum|placeholder|TODO|insert prompt|your prompt here)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
             throw new InvalidDataException(InvalidReply);
+    }
+
+    private static void English(string value, int maximum = int.MaxValue)
+    {
+        ValidatePromptText(value, maximum);
+        if (value.Length < 20) throw new InvalidDataException(InvalidReply);
         // Quoted intentional dialogue/names may retain their source language; the
         // descriptive prompt itself must have a substantial Latin-language body.
         var body = Regex.Replace(value, "[\"«“][^\"»”]*[\"»”]", "");

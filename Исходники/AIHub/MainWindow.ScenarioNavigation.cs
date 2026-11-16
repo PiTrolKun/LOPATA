@@ -113,8 +113,9 @@ public partial class MainWindow
     {
         RefreshWorkStartWorkspaceLayout();
         if (WorkStartPage.Visibility != Visibility.Visible) return;
+        if (ScenarioNavigationPage.IsShorts && ScenarioNavigationPage.Shorts is { } shorts) ConfigureShorts(shorts);
         BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade ? Visibility.Collapsed : Visibility.Visible;
-        if (ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade) { StatusText.Text = ""; return; }
+        if (ScenarioNavigationPage.IsShorts || ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.PlaceholderScenarioId is not null) { StatusText.Text = L("Navigation.Soon"); return; }
         if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
         if (VectorPage.Visibility == Visibility.Visible || MusicPage.Visibility == Visibility.Visible || FinancialPage.Visibility == Visibility.Visible || CapturePage.Visibility == Visibility.Visible || GenerationPage.Visibility == Visibility.Visible || ImageUtilityPage.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }

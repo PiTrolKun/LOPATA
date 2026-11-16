@@ -39,9 +39,27 @@ internal sealed class VideoWaveform
             }
             catch (Exception error) when (error is IOException or InvalidDataException) { OwnedProcessRegistry.Log("video_waveform_cache_rebuild", "VideoEditor", detail: error.GetType().Name); }
         }
-        var binFrames = (int)Math.Clamp(Math.Ceiling(a.Duration * Rate / MaxBins), 192, int.MaxValue / 2);
+        var waveform = await ReadAsync(a.Path, a.AudioStream, a.Duration, token).ConfigureAwait(false);
+        var peaksToSave = waveform._levels[0];
+        var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try {
+            using (var writer = new BinaryWriter(new FileStream(temporary, FileMode.CreateNew, FileAccess.Write))) {
+                writer.Write(Signature); writer.Write(a.Length); writer.Write(a.LastWriteUtc.Ticks); writer.Write(a.AudioStream);
+                writer.Write((int)Math.Round(waveform.BinSeconds * Rate)); writer.Write(peaksToSave.Length);
+                foreach (var peak in peaksToSave) writer.Write(peak);
+            }
+            token.ThrowIfCancellationRequested(); File.Move(temporary, path, true);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        return waveform;
+    }, token);
+
+    internal static async Task<VideoWaveform> ReadAsync(string path, int stream, double duration, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var binFrames = (int)Math.Clamp(Math.Ceiling(duration * Rate / MaxBins), 192, int.MaxValue / 2);
         var bins = new List<float>(); var inBin = 0; float maximum = 0;
-        using var process = OwnedProcessRegistry.Shared.Start(VideoRuntime.Info(false, ["-v", "error", "-nostdin", "-i", a.Path, "-map", "0:" + a.AudioStream, "-vn", "-ar", Rate.ToString(System.Globalization.CultureInfo.InvariantCulture), "-ac", "2", "-c:a", "pcm_s16le", "-f", "s16le", "pipe:1"]), "VideoEditor.Waveform");
+        using var process = OwnedProcessRegistry.Shared.Start(VideoRuntime.Info(false, ["-v", "error", "-nostdin", "-i", path, "-map", "0:" + stream, "-vn", "-ar", Rate.ToString(System.Globalization.CultureInfo.InvariantCulture), "-ac", "2", "-c:a", "pcm_s16le", "-f", "s16le", "pipe:1"]), "VideoEditor.Waveform");
         var errors = TailAsync(process.StandardError);
         void Stop() { try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { } }
         using var cancel = token.Register(Stop);
@@ -63,14 +81,8 @@ internal sealed class VideoWaveform
             if (inBin > 0) bins.Add(maximum);
         }
         catch { Stop(); await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false); await errors.ConfigureAwait(false); throw; }
-        var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        try {
-            using (var writer = new BinaryWriter(new FileStream(temporary, FileMode.CreateNew, FileAccess.Write))) { writer.Write(Signature); writer.Write(a.Length); writer.Write(a.LastWriteUtc.Ticks); writer.Write(a.AudioStream); writer.Write(binFrames); writer.Write(bins.Count); foreach (var peak in bins) writer.Write(peak); }
-            token.ThrowIfCancellationRequested(); File.Move(temporary, path, true);
-        }
-        finally { if (File.Exists(temporary)) File.Delete(temporary); }
         return new VideoWaveform(binFrames, bins.ToArray());
-    }, token);
+    }
     private static async Task<string> TailAsync(StreamReader reader)
     {
         var result = new StringBuilder(); while (await reader.ReadLineAsync().ConfigureAwait(false) is {} line) { result.AppendLine(line); if (result.Length > 65536) result.Remove(0, result.Length / 2); } return result.ToString();

@@ -41,6 +41,13 @@ internal sealed record VideoH3Job(string ProjectId, string ArchivePath, string M
         if (items.Length == 0) throw new InvalidDataException("VideoPrep.H3NoPlans");
         var total = items.Sum(i => i.Seconds);
         if (settings.TargetSeconds > 0) items = items.Select(i => i with { Seconds = i.Seconds / total * settings.TargetSeconds }).ToArray();
+        return CreateForItems(project, archive, root, connections, modelId, settings, items);
+    }
+
+    internal static VideoH3Job CreateForItems(VideoPreparationProject project, string archive, string root,
+        int connections, string modelId, VideoH3Settings settings, VideoH3Item[] items)
+    {
+        var state = VideoH3WorkspaceState.Ensure(project, modelId);
         var hashSettings = VideoShots.Copy(settings); hashSettings.ExportName = ""; hashSettings.RetryCount = 3;
         var hashInput = new StringBuilder(JsonSerializer.Serialize(hashSettings));
         if (modelId == VideoH3LiteCatalog.ModelId)

@@ -25,6 +25,8 @@ public sealed partial class ScenarioNavigationControl : UserControl
     public bool IsVideoPreparation { get; private set; }
     public SongClipControl? SongClip { get; private set; }
     public bool IsSongClip { get; private set; }
+    internal ShortsControl? Shorts { get; private set; }
+    internal bool IsShorts { get; private set; }
     public event Action<SongClipControl>? SongClipCreated;
     public LetItOutChatControl? LetItOutChat { get; private set; }
     public bool IsLetItOutChat { get; private set; }
@@ -89,6 +91,12 @@ public sealed partial class ScenarioNavigationControl : UserControl
             if (!ReturnFromScenario()) Render();
             return true;
         }
+        if (IsShorts)
+        {
+            IsShorts = false;
+            if (!ReturnFromScenario()) Render();
+            return true;
+        }
         if (IsSongClip) { if (SongClip?.Checkpoint() == false) return true; IsSongClip = false; Render(); return true; }
         if (IsVideoPreparation)
         {
@@ -121,6 +129,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsLivingArcade = false;
         if (SongClip?.Checkpoint() == false) return;
         IsSongClip = false;
+        IsShorts = false;
         if (VideoPreparation?.Checkpoint() == false) return;
         IsVideoPreparation = false;
         IsLetItOutChat = false;
@@ -140,6 +149,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsLivingArcade = false;
         if (SongClip?.Checkpoint() == false) return;
         IsSongClip = false;
+        IsShorts = false;
         var node = ScenarioNavigationCatalog.Get(id);
         if (node.Kind != ScenarioNavigationKind.Direction || !node.IsAvailable) return;
         if (VideoPreparation?.Checkpoint() == false) return;
@@ -171,12 +181,22 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsSandboxLanding = false;
         IsVideoPreparation = id == ScenarioNavigationCatalog.VideoGeneration;
         IsSongClip = id == ScenarioNavigationCatalog.SongClip;
+        IsShorts = id == ScenarioNavigationCatalog.Shorts;
         IsLetItOutChat = false;
         if (id == ScenarioNavigationCatalog.LetItOut)
         {
             // The host verifies the existing core before explicitly opening the chat.
             Render();
             ScenarioRequested?.Invoke(node.EntryTargetId);
+            return;
+        }
+        if (IsShorts)
+        {
+            if (Shorts is null)
+            {
+                Shorts = new ShortsControl(_localize);
+            }
+            Render();
             return;
         }
         if (IsSongClip)
@@ -224,7 +244,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsLivingArcade = false;
         SelectedDirectionId = ScenarioNavigationCatalog.Experiments;
         PlaceholderScenarioId = null;
-        IsSandboxLanding = IsVideoPreparation = IsSongClip = false;
+        IsSandboxLanding = IsVideoPreparation = IsSongClip = IsShorts = false;
         if (LetItOutChat is null)
         {
             LetItOutChat = new LetItOutChatControl(_localize);
@@ -294,6 +314,8 @@ public sealed partial class ScenarioNavigationControl : UserControl
             LetItOutChat!.Configure(_localize);
             Content = LetItOutChat; StateChanged?.Invoke(); return;
         }
+        if (Content == Shorts) Content = null;
+        if (IsShorts) { Content = Shorts; StateChanged?.Invoke(); return; }
         if (Content == SongClip) Content = null;
         if (IsSongClip) { Content = SongClip; StateChanged?.Invoke(); return; }
         if (Content == VideoPreparation) Content = null;

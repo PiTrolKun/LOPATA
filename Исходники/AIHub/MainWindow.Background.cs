@@ -40,6 +40,7 @@ public partial class MainWindow
         RegisterUpscaleOperations();
         RegisterVideoConceptBackgroundOperations();
         RegisterSongClipBackgroundOperations();
+        _backgroundOperations.Register(Services.Shorts.ShortsJob.Kind, (state, token) => OpenShorts().ResumeAsync(state, token));
         RegisterLetItOutBackgroundOperation();
         RegisterLivingArcadeBackgroundOperations();
         RegisterChatSpeech();
@@ -68,7 +69,13 @@ public partial class MainWindow
         _backgroundOperations.Register(MusicCoverWork.Kind, (state, token) =>
         { ConfigureMusic(); return MusicPage.ResumeCoverAsync(state, token); });
         _backgroundOperations.Changed += () =>
-        { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(RefreshBackgroundTray); };
+        {
+            if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(() =>
+            {
+                RefreshBackgroundTray();
+                ScenarioNavigationPage.Shorts?.RefreshActions();
+            });
+        };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
         {
             var voiceContext = Services.VoiceNotifications.VoiceNotificationContext.Project(notice.Project);
@@ -389,6 +396,12 @@ public partial class MainWindow
                 RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage);
                 OpenImageUtilityScenario(); ImageUtilityPage.Restore(notice.Project);
                 _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind == Services.Shorts.ShortsJob.Kind && notice.Project is { } shortsId)
+            {
+                RestoreFromTray();
+                if (OpenShorts().ShowResult(shortsId)) _backgroundOperations!.Acknowledge(notice.Id);
                 return;
             }
             if (notice.Kind is Services.SongClip.SongClipAttempt.Kind or Services.SongClip.H3MusicRunner.Kind or Services.SongClip.InfiniteTalkRunner.Kind)
