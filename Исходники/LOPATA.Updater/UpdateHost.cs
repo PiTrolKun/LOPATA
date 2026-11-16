@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using Lopata.Recovery;
 using Lopata.Updates;
 
 namespace Lopata.Updater;
@@ -20,12 +21,12 @@ internal sealed class UpdateHost(Action<string> status)
             var signed = SignedManifest.Read(await File.ReadAllBytesAsync(args[4]));
             if (mode is "--install" or "--setup")
             {
-                EnsureNotRunning(installation);
                 if (mode == "--setup" && InstalledUpdateState.Read() is { } registered &&
                     (!SameRoot(registered.AppDirectory, installation.AppDirectory) ||
                      !SameRoot(registered.LlamaDirectory, installation.LlamaDirectory) ||
                      !SameRoot(registered.ChatLlmDirectory, installation.ChatLlmDirectory)))
                     throw new IOException("Choose the registered installation directory before updating LOPATA.");
+                await WaitForInstallationMutationAsync(installation, token);
                 using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
                 var total = signed.Verify(Keys).Packages.Sum(p => p.Size);
                 var transferWatch = Stopwatch.StartNew();
@@ -82,12 +83,13 @@ internal sealed class UpdateHost(Action<string> status)
             return;
         }
         if (mode is not ("--launch" or "--apply" or "--unregister" or "--recover")) throw new ArgumentException("Unknown updater command.");
-        if (mode == "--recover") EnsureNotRunning(state);
         var pendingStore = new PreparedUpdateStore(state.StateDirectory, Keys);
         var journal = transaction.ReadJournal();
-        if (journal is { Phase: not (UpdatePhase.Healthy or UpdatePhase.RolledBack) })
+        var rollback = journal is { Phase: not (UpdatePhase.Healthy or UpdatePhase.RolledBack) };
+        if (rollback || mode is "--recover" or "--unregister")
+            await WaitForInstallationMutationAsync(state, token);
+        if (rollback)
         {
-            EnsureNotRunning(state);
             status(HostText.Get("UpdateHost.Recovering"));
             await transaction.RecoverAsync();
             // Do not automatically repeat a failed update on every launch.
@@ -116,13 +118,16 @@ internal sealed class UpdateHost(Action<string> status)
             var startup = new StartupRegistration(InstalledUpdateState.LauncherPath);
             if (startup.IsRegistered) startup.SetEnabled(false);
             await RemoveManagedFilesAsync(state, transaction);
+            RecoveryTask.TryUnregister(Path.Combine(state.AppDirectory, "AIHub.exe"), InstalledUpdateState.UserDataDirectory);
             return;
         }
         if (mode == "--recover") return;
+        var recoveryArgument = args.Contains("--recover-safe", StringComparer.Ordinal) ? "--recover-safe"
+            : args.Contains("--recover-session", StringComparer.Ordinal) ? "--recover-session" : null;
         var pending = pendingStore.Read();
-        if (pending is not null && (mode == "--apply" || pending.ApplyOnNextLaunch))
+        if (pending is not null && (mode == "--apply" || recoveryArgument is null && pending.ApplyOnNextLaunch))
         {
-            EnsureNotRunning(state);
+            await WaitForInstallationMutationAsync(state, token);
             if (pending.Delivery == UpdateDelivery.FullInstaller)
             {
                 if (!await UpdatePlanner.MatchesAsync(pending.InstallerPath!, pending.Installer!.Size, pending.Installer.Sha256))
@@ -139,6 +144,7 @@ internal sealed class UpdateHost(Action<string> status)
             using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
             await new FileUpdatePreparation(http, Keys) { MaximumParallelConnections = DownloadConnections() }
                 .StageAsync(state, pending.Files!, token: token);
+            await WaitForInstallationMutationAsync(state, token);
             var previous = SignedManifest.Read(await File.ReadAllBytesAsync(transaction.InstalledManifestPath));
             var id = await transaction.PrepareAsync(previous, pending.Files!, state.StageDirectory(pending.Version), token);
             try
@@ -158,7 +164,7 @@ internal sealed class UpdateHost(Action<string> status)
             return;
         }
         if (mode == "--apply") throw new IOException("No prepared update is available.");
-        StartApplication(state, null, args.Contains("--background", StringComparer.Ordinal));
+        StartApplication(state, null, args.Contains("--background", StringComparer.Ordinal), recoveryArgument);
     }
 
     private static int DownloadConnections() => UpdateDownloadSettings.Read(Path.Combine(InstalledUpdateState.UserDataDirectory, "settings.json"));
@@ -198,12 +204,45 @@ internal sealed class UpdateHost(Action<string> status)
         }
     }
 
-    private static void StartApplication(InstalledUpdateState state, string? transactionId, bool background)
+    private static async Task WaitForInstallationMutationAsync(InstalledUpdateState state, CancellationToken token)
+    {
+        EnsureNotRunning(state);
+        RecoverySession.RequestUpdateHandoff(Path.Combine(state.AppDirectory, "AIHub.exe"), InstalledUpdateState.UserDataDirectory);
+        var executable = Path.Combine(state.AppDirectory, "LOPATA.Recovery.exe");
+        var candidates = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(executable));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+        timeout.CancelAfter(TimeSpan.FromSeconds(15));
+        try
+        {
+            foreach (var process in candidates)
+            {
+                try
+                {
+                    if (string.Equals(process.MainModule?.FileName, executable, StringComparison.OrdinalIgnoreCase))
+                        await process.WaitForExitAsync(timeout.Token);
+                }
+                catch (System.ComponentModel.Win32Exception) { }
+                catch (InvalidOperationException) { }
+            }
+        }
+        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        {
+            throw new IOException("The LOPATA recovery process did not release the installation files.");
+        }
+        finally
+        {
+            foreach (var process in candidates) process.Dispose();
+        }
+        EnsureNotRunning(state);
+    }
+
+    private static void StartApplication(InstalledUpdateState state, string? transactionId, bool background, string? recoveryArgument = null)
     {
         var path = SafeUpdatePath.Resolve(state.AppDirectory, "AIHub.exe");
         var start = new ProcessStartInfo(path) { UseShellExecute = true, WorkingDirectory = state.AppDirectory };
         start.ArgumentList.Add("--launched-by-updater");
         if (background) start.ArgumentList.Add("--background");
+        if (recoveryArgument is not null) start.ArgumentList.Add(recoveryArgument);
         if (transactionId is not null) { start.ArgumentList.Add("--update-health"); start.ArgumentList.Add(transactionId); }
         _ = Process.Start(start) ?? throw new IOException("Could not launch LOPATA.");
     }

@@ -1,10 +1,12 @@
-﻿function Get-LopataVisibleProcess {
-    param([string]$ExecutablePath)
+function Get-LopataApplicationProcess {
+    param([string]$ExecutablePath, [switch]$Visible)
     $expected = [IO.Path]::GetFullPath($ExecutablePath)
+    $session = (Get-Process -Id $PID).SessionId
     foreach ($candidate in Get-Process -Name ([IO.Path]::GetFileNameWithoutExtension($expected)) -ErrorAction SilentlyContinue) {
         try {
             $candidate.Refresh()
-            if ($candidate.Path -ieq $expected -and $candidate.MainWindowHandle -ne [IntPtr]::Zero -and $candidate.Responding) { return $candidate }
+            if ($candidate.SessionId -ne $session -or $candidate.Path -ine $expected) { continue }
+            if (!$Visible -or ($candidate.MainWindowHandle -ne [IntPtr]::Zero -and $candidate.Responding)) { return $candidate }
         } catch [InvalidOperationException] { }
         catch [System.ComponentModel.Win32Exception] { } # Another user's process may be inaccessible.
     }
@@ -21,7 +23,7 @@ function Wait-LopataApplicationWindow {
             throw "AI_HUB exited before opening its window. PID=$($StartedProcess.Id), exit=$($StartedProcess.ExitCode)."
         }
         # A second invocation normally exits after activating the existing, same-installation window.
-        $visible = Get-LopataVisibleProcess -ExecutablePath $ExecutablePath
+        $visible = Get-LopataApplicationProcess -ExecutablePath $ExecutablePath -Visible
         if ($null -ne $visible) { return $visible }
         if ($clock.Elapsed.TotalSeconds -ge $nextNotice) {
             Write-Host "Waiting for the AI_HUB window... $([int]$clock.Elapsed.TotalSeconds)s (launch PID $($StartedProcess.Id))"

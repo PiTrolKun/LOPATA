@@ -91,6 +91,14 @@ public sealed class FileViewerService
         }
     }
 
+    internal FileViewerWindow? RestoreInternal(Window owner, string path, bool isDarkTheme, LocalizationService localization)
+    {
+        var fullPath = Path.GetFullPath(path);
+        if (!BuiltInExtensions.Contains(Path.GetExtension(fullPath)) || UsesReader(fullPath) || !File.Exists(fullPath)) return null;
+        OpenInternal(owner, fullPath, isDarkTheme, localization);
+        return _openWindows.GetValueOrDefault(fullPath);
+    }
+
     public static bool CanOpenInternally(
         string extension,
         FileViewerSettings settings)

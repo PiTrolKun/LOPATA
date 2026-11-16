@@ -30,6 +30,8 @@ internal static class ApplicationUpdateStartup
             || IsVectorFileLaunch(args) || IsVideoFileLaunch(args)) return false;
         var start = Launcher("--launch");
         if (args.Contains("--background", StringComparer.Ordinal)) start.ArgumentList.Add("--background");
+        if (args.Contains("--recover-safe", StringComparer.Ordinal)) start.ArgumentList.Add("--recover-safe");
+        else if (args.Contains("--recover-session", StringComparer.Ordinal)) start.ArgumentList.Add("--recover-session");
         AddWaitForThisProcess(start);
         _ = Process.Start(start) ?? throw new IOException("Could not start the update launcher.");
         return true;

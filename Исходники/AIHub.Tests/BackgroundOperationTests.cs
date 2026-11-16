@@ -59,6 +59,46 @@ public sealed class BackgroundOperationTests
     }
 
     [TestMethod]
+    public async Task AnotherControllerCannotRewriteRunningJobOrReplayItsStaleSnapshot()
+    {
+        var input = Input() with { Phase = BackgroundOperationPhase.Waiting };
+        Store.Save(input);
+        var owner = new BackgroundOperationController(Store);
+        var stale = new BackgroundOperationController(Store);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var finish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        bool duplicate = false;
+        owner.Register(input.Kind, async (state, token) =>
+            await owner.RunAsync(state, async cancellation =>
+            {
+                entered.SetResult();
+                await finish.Task.WaitAsync(cancellation);
+                return 1;
+            }, () => Task.CompletedTask, token));
+        stale.Register(input.Kind, (_, _) => { duplicate = true; return Task.CompletedTask; });
+        owner.Load();
+        stale.Load();
+        var running = owner.ResumeAsync(CancellationToken.None);
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            var fresh = new BackgroundOperationController(Store);
+            fresh.Load();
+            Assert.IsNull(fresh.State);
+            Assert.AreEqual(BackgroundOperationPhase.Running, Store.Load()!.Phase);
+            await Assert.ThrowsAsync<BackgroundOperationWaitingException>(() => stale.ResumeAsync(CancellationToken.None));
+        }
+        finally
+        {
+            finish.TrySetResult();
+            await running.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        await Assert.ThrowsAsync<BackgroundOperationWaitingException>(() => stale.ResumeAsync(CancellationToken.None));
+        Assert.IsFalse(duplicate);
+        Assert.AreEqual(BackgroundOperationPhase.Completed, Store.Load()!.Phase);
+    }
+
+    [TestMethod]
     public async Task CompletionCannotTurnIntoPhantomPausedTask()
     {
         var controller = new BackgroundOperationController(Store);

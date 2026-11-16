@@ -45,6 +45,7 @@ public partial class MainWindow
 
     private async Task CompleteUpdateStartupAsync()
     {
+        var finishingUpdate = ApplicationUpdateStartup.HealthTransactionId is not null;
             try { await ApplicationUpdateStartup.ConfirmHealthyAsync(_updateLifetime.Token); }
             catch (Exception)
             {
@@ -56,6 +57,7 @@ public partial class MainWindow
                 }
                 return;
             }
+        if (finishingUpdate && System.Windows.Application.Current is App application) application.StartRecoveryMonitoring();
             await CheckAutomaticUpdateAsync();
     }
 

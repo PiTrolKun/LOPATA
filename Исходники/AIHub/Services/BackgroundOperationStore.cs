@@ -14,6 +14,21 @@ public sealed class BackgroundOperationStore(string path, bool archiveResults = 
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Invalid operation ID.");
         return new(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "Jobs", id + ".json"), false);
     }
+    internal FileStream? TryOwnOperation()
+    {
+        var lease = Path.GetFullPath(path) + ".lease";
+        Lopata.Updates.SafeUpdatePath.RejectLinks(lease);
+        Directory.CreateDirectory(Path.GetDirectoryName(lease)!);
+        try
+        {
+            return new FileStream(lease, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1,
+                FileOptions.DeleteOnClose);
+        }
+        catch (IOException error) when ((error.HResult & 0xffff) is 32 or 33)
+        {
+            return null;
+        }
+    }
     internal IReadOnlyList<BackgroundOperationState> LoadOperations()
     {
         var directory = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "Jobs");
@@ -22,7 +37,7 @@ public sealed class BackgroundOperationStore(string path, bool archiveResults = 
         var result = new List<BackgroundOperationState>();
         foreach (var file in Directory.EnumerateFiles(directory, "*.json"))
         {
-            var state = new BackgroundOperationStore(file, false).Load()!;
+            if (new BackgroundOperationStore(file, false).Load() is not { } state) continue;
             if (Path.GetFileNameWithoutExtension(file) != state.Id) throw new InvalidDataException("Background job identity mismatch.");
             result.Add(state);
         }
@@ -37,11 +52,15 @@ public sealed class BackgroundOperationStore(string path, bool archiveResults = 
     public BackgroundOperationState? Load()
     {
         Lopata.Updates.SafeUpdatePath.RejectLinks(path);
-        if (!File.Exists(path)) return null;
-        var state = JsonSerializer.Deserialize<BackgroundOperationState>(File.ReadAllBytes(path), Options)
-            ?? throw new InvalidDataException("Empty background operation checkpoint.");
-        Validate(state);
-        return state;
+        try
+        {
+            using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+            var state = JsonSerializer.Deserialize<BackgroundOperationState>(file, Options)
+                ?? throw new InvalidDataException("Empty background operation checkpoint.");
+            Validate(state);
+            return state;
+        }
+        catch (IOException error) when (error is FileNotFoundException or DirectoryNotFoundException) { return null; }
     }
 
     public void Save(BackgroundOperationState state)

@@ -1,4 +1,4 @@
-﻿using System.Configuration;
+using System.Configuration;
 using System.Data;
 using System.Windows;
 
@@ -65,12 +65,15 @@ public partial class App : System.Windows.Application
             Shutdown(AIHub.Services.WindowsConsoleProcess.Signal(pid, ticks));
             return;
         }
-        ImageShellLaunch = e.Args.Contains("--shell-image", StringComparer.Ordinal);
-        AudioShellLaunch = e.Args.Contains("--shell-audio", StringComparer.Ordinal);
-        VectorFileLaunch = e.Args.Contains("--svg", StringComparer.Ordinal);
-        VideoFileLaunch = e.Args.Contains("--video-project", StringComparer.Ordinal);
-        ReaderFileLaunch = e.Args.Contains("--reader", StringComparer.Ordinal)
-            || (e.Args is [var fileArgument] && !fileArgument.StartsWith("--", StringComparison.Ordinal));
+        SafeCrashRecoveryLaunch = e.Args.Contains("--recover-safe", StringComparer.Ordinal);
+        var recovering = SafeCrashRecoveryLaunch || e.Args.Contains("--recover-session", StringComparer.Ordinal);
+        var args = e.Args.Where(argument => argument is not ("--recover-session" or "--recover-safe")).ToArray();
+        ImageShellLaunch = args.Contains("--shell-image", StringComparer.Ordinal);
+        AudioShellLaunch = args.Contains("--shell-audio", StringComparer.Ordinal);
+        VectorFileLaunch = args.Contains("--svg", StringComparer.Ordinal);
+        VideoFileLaunch = args.Contains("--video-project", StringComparer.Ordinal);
+        ReaderFileLaunch = args.Contains("--reader", StringComparer.Ordinal)
+            || (args is [var fileArgument] && !fileArgument.StartsWith("--", StringComparison.Ordinal));
         Models.ImageShellRequest? imageRequest;
         Models.AudioShellRequest? audioRequest;
         Services.VectorEditor.VectorFileRequest? vectorRequest;
@@ -79,16 +82,21 @@ public partial class App : System.Windows.Application
         try
         {
             Services.OwnedProcessRegistry.Log("startup_enter", "Application", Environment.ProcessId);
-            imageRequest = Models.ImageShellRequest.ParseArguments(e.Args);
-            audioRequest = Models.AudioShellRequest.ParseArguments(e.Args);
-            vectorRequest = Services.VectorEditor.VectorFileRequest.Parse(e.Args);
-            videoRequest = Services.VideoEditor.VideoFileRequest.Parse(e.Args);
-            readerRequest = Services.OfficeReader.ReaderFileRequest.Parse(e.Args);
+            imageRequest = Models.ImageShellRequest.ParseArguments(args);
+            audioRequest = Models.AudioShellRequest.ParseArguments(args);
+            vectorRequest = Services.VectorEditor.VectorFileRequest.Parse(args);
+            videoRequest = Services.VideoEditor.VideoFileRequest.Parse(args);
+            readerRequest = Services.OfficeReader.ReaderFileRequest.Parse(args);
             if (new[] {ImageShellLaunch,AudioShellLaunch,VectorFileLaunch,VideoFileLaunch,ReaderFileLaunch}.Count(v=>v)>1) throw new System.IO.InvalidDataException("Mixed shell requests.");
-            BackgroundLaunch = ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch || e.Args.Contains("--background", StringComparer.Ordinal);
+            BackgroundLaunch = ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch || args.Contains("--background", StringComparer.Ordinal);
             _instance = Services.SingleApplicationInstance.Acquire(BackgroundLaunch, imageRequest, audioRequest, vectorRequest, videoRequest, readerRequest);
             if (_instance is null) { Shutdown(); return; }
-            if (Services.ApplicationUpdateStartup.RedirectInstalledLaunch(e.Args)) { Shutdown(); return; }
+            if (Services.ApplicationUpdateStartup.RedirectInstalledLaunch(e.Args))
+            {
+                NotifyRecoveryLaunchRedirect();
+                Shutdown();
+                return;
+            }
         }
         catch (Exception error)
         {
@@ -104,12 +112,15 @@ public partial class App : System.Windows.Application
         }
         try
         {
+            if (Services.ApplicationUpdateStartup.HealthTransactionId is null) StartRecoveryMonitoring(recovering);
             base.OnStartup(e);
             Services.OwnedProcessRegistry.Log("startup_window_construct_begin", "Application", Environment.ProcessId);
             var window = new MainWindow(); MainWindow = window;
+            window.InitializeCrashWorkspaceRecovery(recovering && !SafeCrashRecoveryLaunch);
             Services.OwnedProcessRegistry.Log("startup_window_construct_end", "Application", Environment.ProcessId);
             _instance.OpenRequested += () => Dispatcher.BeginInvoke(window.OpenFromSecondInstance);
-            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch || (BackgroundLaunch && window.CanStartInTray))
+            var startInTray = !SafeCrashRecoveryLaunch && (window.CrashWorkspaceStartsInTray ?? BackgroundLaunch);
+            if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch || (startInTray && window.CanStartInTray))
             {
                 Services.ApplicationBackgroundOperations.PreserveHiddenWork = true;
                 new System.Windows.Interop.WindowInteropHelper(window).EnsureHandle();
@@ -169,6 +180,7 @@ public partial class App : System.Windows.Application
         AIHub.Services.OwnedProcessRegistry.Shared.Dispose();
         _instance?.Dispose(); _instance = null;
         base.OnExit(e);
+        CompleteRecoveryExit(e.ApplicationExitCode);
     }
 }
 

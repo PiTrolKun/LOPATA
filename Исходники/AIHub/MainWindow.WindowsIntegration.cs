@@ -30,6 +30,10 @@ public partial class MainWindow
     }
     private void ApplyImageShellIntegration()
     {
+#if UPDATE_STAND
+        // A recovery smoke run uses the real app entry point but an isolated user profile.
+        if (Environment.GetEnvironmentVariable("LOPATA_RECOVERY_TEST") == "1") return;
+#endif
         _imageShellIntegrationInitialized = true;
         try
         {

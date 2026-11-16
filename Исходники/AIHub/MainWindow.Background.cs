@@ -141,10 +141,11 @@ public partial class MainWindow
     {
         if (!_applicationReady || _backgroundOperations is null) return;
         var state = _backgroundOperations.State;
-        if (_appSettings.Behavior.AutoResumeBackgroundOperation && !_backgroundOperations.IsRunning
+        var autoResume = !App.SafeCrashRecoveryLaunch && _appSettings.Behavior.AutoResumeBackgroundOperation;
+        if (autoResume && !_backgroundOperations.IsRunning
             && _backgroundOperations.CanRestore && state is { UserPaused: false, RequiresDecision: false, Phase: BackgroundOperationPhase.Waiting })
         { _backgroundCountdown.Start(DateTimeOffset.UtcNow); _backgroundOperations.SetCountdown(true); }
-        else if (!_appSettings.Behavior.AutoResumeBackgroundOperation)
+        else if (!autoResume)
         { _backgroundCountdown.Cancel(); _backgroundOperations.SetCountdown(false); }
         RefreshBackgroundTray();
     }

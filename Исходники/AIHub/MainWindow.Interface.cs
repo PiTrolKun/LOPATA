@@ -328,9 +328,18 @@ public partial class MainWindow
         if (_processShutdownPending) { e.Cancel = true; base.OnClosing(e); return; }
         if (!TryResolveCloseBehavior(out bool closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
         if (TryHideToTray(closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
+        var application = System.Windows.Application.Current as App;
         if (!_processShutdownComplete)
         {
-            if (ScenarioNavigationPage.VideoPreparation?.CanClose() == false) { e.Cancel = true; base.OnClosing(e); return; }
+            if (ScenarioNavigationPage.VideoPreparation?.CanClose() == false)
+            {
+                _applicationUpdateStart = null;
+                e.Cancel = true;
+                base.OnClosing(e);
+                return;
+            }
+            application?.BeginRecoveryExit(_sessionEnding ? Lopata.Recovery.RecoveryExitIntent.WindowsSessionEnding
+                : _applicationUpdateStart is null ? Lopata.Recovery.RecoveryExitIntent.UserExit : Lopata.Recovery.RecoveryExitIntent.Update);
             e.Cancel = true;
             base.OnClosing(e);
             _processShutdownPending = true;
@@ -351,12 +360,25 @@ public partial class MainWindow
                 _applicationTray?.Notify(L("Tray.Exit"), StatusText.Text, warning: true);
                 return;
             }
-            finally { _processShutdownPending = false; }
+            finally
+            {
+                _processShutdownPending = false;
+                if (!_processShutdownComplete)
+                {
+                    _applicationUpdateStart = null;
+                    application?.CancelRecoveryExit();
+                }
+            }
             _ = Dispatcher.BeginInvoke(new Action(Close));
             return;
         }
         SaveCurrentWindowPlacement();
         base.OnClosing(e);
+        if (e.Cancel)
+        {
+            _applicationUpdateStart = null;
+            application?.CancelRecoveryExit();
+        }
     }
 
     private void SaveCurrentWindowPlacement()

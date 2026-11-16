@@ -58,14 +58,12 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         foreach (var notice in state.Notices.Concat(state.Notice is null ? [] : new[] { state.Notice }))
             if (!_acknowledged.Contains(notice.Id)) _notices[notice.Id] = notice;
     }
-    private BackgroundOperationExecution Add(BackgroundOperationState state, bool load)
+    private BackgroundOperationExecution? Add(string id, Func<(BackgroundOperationState State, DateTime LastWrite)?>? recover = null)
     {
-        var destination = store.Operation(state.Id);
-        if (load) destination.Save(state);
-        var execution = new BackgroundOperationExecution(destination);
+        var execution = new BackgroundOperationExecution(store.Operation(id));
         foreach (var (kind, restore) in _restorers) execution.Register(kind, restore);
-        if (load) execution.Load();
-        _jobs.Add(state.Id, execution);
+        if (recover is not null && !execution.TryLoad(recover)) return null;
+        _jobs.Add(id, execution);
         execution.Changed += () => Update(execution);
         execution.Completed += notice => {
             foreach (Action<BackgroundOperationNotice> listener in Completed?.GetInvocationList() ?? [])
@@ -79,9 +77,13 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         {
             Collect(execution.State);
             if (execution.State is { } current && current.Id == _resumingId && current.Phase != BackgroundOperationPhase.Paused) _resumingId = null;
-            if (ReferenceEquals(execution, _selected) && VisibleState() is { } state) store.Save(state);
+            if (ReferenceEquals(execution, _selected)) SaveVisibleState();
         }
         Notify();
+    }
+    private void SaveVisibleState()
+    {
+        if (_selected is { } selected && VisibleState() is { } state) selected.SaveMirror(store, state);
     }
     private void Notify()
     {
@@ -132,19 +134,21 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
             try
             {
                 var selected = store.Load();
-                // Legacy callers can explicitly update operation.json. A later write there must win;
-                // a job checkpoint written just before a crash can, conversely, be newer than the mirror.
-                var selectedIsNewer = selected is not null && store.LastWriteUtc >= store.Operation(selected.Id).LastWriteUtc;
                 var states = store.LoadOperations().Concat(selected is null ? [] : new[] { selected })
-                    .GroupBy(state => state.Id).Select(group => selectedIsNewer && group.Key == selected!.Id
-                        ? selected! : group.MaxBy(state => state.UpdatedUtc)!).ToArray();
+                    .GroupBy(state => state.Id).Select(group => group.MaxBy(state => state.UpdatedUtc)!).ToArray();
                 _jobs.Clear(); _notices.Clear();
-                foreach (var state in states.Where(state => state.Id == selected?.Id || !Final(state))) { Collect(state); Add(state, true); }
+                foreach (var state in states.Where(state => state.Id == selected?.Id || !Final(state)))
+                {
+                    (BackgroundOperationState, DateTime)? ReadSelected() =>
+                        store.Load() is { } current && current.Id == state.Id ? (current, store.LastWriteUtc) : null;
+                    var loaded = Add(state.Id, state.Id == selected?.Id ? ReadSelected : static () => null);
+                    Collect(loaded?.State);
+                }
                 _selected = selected is not null && _jobs.TryGetValue(selected.Id, out var execution) ? execution : _jobs.Values.LastOrDefault();
                 if (_selected?.HasPending != true || Parked(_selected))
                     _selected = _jobs.Values.FirstOrDefault(job => job.HasPending && !Parked(job)) ?? _selected;
                 _loadFailed = false;
-                if (VisibleState() is { } restored) store.Save(restored);
+                if (selected is null || _jobs.ContainsKey(selected.Id)) SaveVisibleState();
             }
             catch { _loadFailed = true; throw; }
         }
@@ -173,19 +177,24 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         lock (_gate)
         {
             if (_emergencyStopping || _emergencyFailed) throw Blocked("Background.Stop.InProgress");
-            if (_jobs.Values.FirstOrDefault(job => job.IsInOperationScope) is { } nested) execution = nested;
+            var nested = _jobs.Values.FirstOrDefault(job => job.IsInOperationScope);
+            if (nested is not null) execution = nested;
             else
             {
                 if (_loadFailed || _auxiliary || _resumingId is not null && _resumingId != input.Id
                     || _jobs.Values.Any(job => job.IsRunning && !Parked(job))
                     || _jobs.Values.Any(job => job.HasPending && !Parked(job) && job.State?.Id != input.Id))
                     throw Blocked("Another background operation requires attention or is running.");
+                execution = _jobs.TryGetValue(input.Id, out var previous) ? previous : Add(input.Id)!;
+            }
+            using var ownership = execution.OwnProcess();
+            if (nested is null)
+            {
                 Collect(_selected?.State);
-                execution = _jobs.TryGetValue(input.Id, out var previous) ? previous : Add(input, false);
                 _selected = execution;
                 input = input with { Notices = _notices.Values.ToArray(), Notice = _notices.Values.LastOrDefault(), NeedsAttention = _notices.Count > 0 || input.NeedsAttention };
             }
-            // Enter the execution synchronously while holding the scheduler gate: no two starts can acquire it.
+            // Enter execution while both leases are held. RunAsync keeps its process lease until the run ends.
             running = execution.RunAsync(input, execute, Release, lifetime);
         }
         return await running;
@@ -241,7 +250,7 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
             _selected = job;
             resumeIdle = new(TaskCreationOptions.RunContinuationsAsynchronously);
             _restoring.Add(restoreCancellation, resumeIdle.Task);
-            _resumingId = job.State!.Id; store.Save(VisibleState()!);
+            _resumingId = job.State!.Id; SaveVisibleState();
         }
         Notify();
         try { await job.ResumeAsync(restoreCancellation.Token); }
@@ -253,7 +262,7 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         BackgroundOperationExecution[] jobs;
         lock (_gate) { _acknowledged.Add(id); _notices.Remove(id); jobs = _jobs.Values.ToArray(); }
         foreach (var job in jobs) job.Acknowledge(id);
-        lock (_gate) if (VisibleState() is { } state) store.Save(state);
+        lock (_gate) SaveVisibleState();
         Notify();
     }
     public void DiscardPending(string? expectedId = null)

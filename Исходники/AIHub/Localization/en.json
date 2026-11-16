@@ -4295,6 +4295,7 @@
   "Tray.ViewResult": "View result",
   "Tray.RestoreFailed": "Could not restore the background task. Its original checkpoint is preserved and requires review.",
   "Tray.OperationFailed": "Could not confirm pausing or resuming the task. It has not been marked complete; details were saved in the log.",
+  "Tray.OperationHeldElsewhere": "Another copy of LOPATA has this task open, or its saved state changed. Reopen the task when it is available.",
   "Tray.Open": "Open LOPATA",
   "Tray.Exit": "Exit",
   "Tray.Exiting": "Saving the task and releasing models before exit…",
