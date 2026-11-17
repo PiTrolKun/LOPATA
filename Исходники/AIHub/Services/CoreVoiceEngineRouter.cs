@@ -16,26 +16,37 @@ public sealed class CoreVoiceEngineRouter(
 
     internal bool IsKittenMiniAvailable => kittenMiniEngine?.IsAvailable == true;
 
-    internal string ResolveProvider(string configured) => CoreVoiceSettings.NormalizeProvider(configured) switch
+    internal string? ResolveProvider(CoreVoiceSettings settings)
     {
-        CoreVoiceSettings.KittenMiniProvider when IsKittenMiniAvailable => CoreVoiceSettings.KittenMiniProvider,
-        CoreVoiceSettings.RhVoiceProvider when IsRhVoiceAvailable => CoreVoiceSettings.RhVoiceProvider,
-        _ => CoreVoiceSettings.EspeakProvider
-    };
+        if (EngineFor(settings.SelectedProvider)?.IsAvailable == true) return settings.SelectedProvider;
+        if (EngineFor(settings.FallbackProvider)?.IsAvailable == true) return settings.FallbackProvider;
+        if (espeakEngine.IsAvailable) return CoreVoiceSettings.EspeakProvider;
+        if (rhVoiceEngine.IsAvailable) return CoreVoiceSettings.RhVoiceProvider;
+        return IsKittenMiniAvailable ? CoreVoiceSettings.KittenMiniProvider : null;
+    }
 
     public Task<CoreSpeechPresentationResult> SpeakAsync(
         CoreSpeechRequest request,
         IProgress<CoreSpeechProgress> progress,
         CancellationToken cancellationToken)
     {
-        var engine = ResolveProvider(request.Settings.Provider) switch
-        {
-            CoreVoiceSettings.KittenMiniProvider => kittenMiniEngine!,
-            CoreVoiceSettings.RhVoiceProvider => rhVoiceEngine,
-            _ => espeakEngine
-        };
-        return engine.SpeakAsync(request, progress, cancellationToken);
+        var engine = EngineFor(ResolveProvider(request.Settings));
+        if (engine is not null) return engine.SpeakAsync(request, progress, cancellationToken);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var visible = new Dictionary<string, int>();
+        foreach (var segment in request.Segments) visible[segment.Id] = segment.Text.Length;
+        progress.Report(new(visible, IsComplete: true, UsesNativeWordEvents: false));
+        return Task.FromResult(new CoreSpeechPresentationResult(false, true, false, "voice_unavailable"));
     }
+
+    private ICoreVoiceEngine? EngineFor(string? provider) => provider switch
+        {
+            CoreVoiceSettings.KittenMiniProvider => kittenMiniEngine,
+            CoreVoiceSettings.RhVoiceProvider => rhVoiceEngine,
+            CoreVoiceSettings.EspeakProvider => espeakEngine,
+            _ => null
+        };
 
     public void Cancel()
     {

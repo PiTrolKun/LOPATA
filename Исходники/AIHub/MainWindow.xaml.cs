@@ -765,7 +765,6 @@ public partial class MainWindow : Window
         try
         {
             _appSettings.CoreVoice ??= new CoreVoiceSettings();
-            _appSettings.CoreVoice.Provider = CoreVoiceSettings.NormalizeProvider(_appSettings.CoreVoice.Provider);
 
             PopulateCoreVoiceProviderComboBox();
             CoreVoiceEnabledCheckBox.IsChecked = _appSettings.CoreVoice.Enabled;
@@ -791,8 +790,8 @@ public partial class MainWindow : Window
                 new CoreVoiceProviderOption(CoreVoiceSettings.RhVoiceProvider, L("Settings.CoreVoiceProviderRhVoice"))
             };
             CoreVoiceProviderComboBox.ItemsSource = providers;
-            CoreVoiceProviderComboBox.SelectedItem = providers.First(provider =>
-                string.Equals(provider.Id, _appSettings.CoreVoice.Provider, StringComparison.OrdinalIgnoreCase));
+            CoreVoiceProviderComboBox.SelectedItem = providers.FirstOrDefault(provider =>
+                provider.Id == _appSettings.CoreVoice.SelectedProvider) ?? providers[1];
         }
         finally
         {
@@ -809,8 +808,7 @@ public partial class MainWindow : Window
         }
 
         CancelCoreSpeech(revealFullText: true, "voice_provider_changed");
-        _appSettings.CoreVoice.Provider = provider.Id;
-        _appSettingsStore.Save(_appSettings);
+        _appSettingsStore.SelectCoreVoice(_appSettings, provider.Id);
         UpdateCoreVoiceControls();
         StatusText.Text = LF("Status.CoreVoiceProviderSaved", provider.DisplayName);
     }
@@ -974,7 +972,7 @@ public partial class MainWindow : Window
         {
             var settings = _appSettings.CoreVoice;
             var token = _backgroundLifetime.Token;
-            if (settings.Provider == CoreVoiceSettings.KittenMiniProvider && !_coreSpeechCoordinator.IsKittenMiniAvailable)
+            if (settings.SelectedProvider == CoreVoiceSettings.KittenMiniProvider && !_coreSpeechCoordinator.IsKittenMiniAvailable)
             {
                 var choice = CoreVoiceSettings.KittenMiniProvider;
                 var root = new ManagedModelLibraryStore().Load(VideoNarratorCatalog.ArtifactId(choice))?.ModelsRoot;
@@ -1030,12 +1028,24 @@ public partial class MainWindow : Window
             ? L("ChoiceScenario.CoreVoiceDisable")
             : L("ChoiceScenario.CoreVoiceEnable");
         CoreVoiceProviderComboBox.IsEnabled = enabled;
-        CoreVoiceProviderComboBox.ToolTip = _appSettings.CoreVoice.Provider switch
+        var voice = _appSettings.CoreVoice;
+        var preferred = CoreVoiceSettings.KnownProvider(voice.Provider);
+        var actual = _coreSpeechCoordinator.ResolveProvider(voice);
+        var fallbackNotice = actual is null ? L("Settings.CoreVoiceTextOnly")
+            : LF("Settings.CoreVoiceFallback", L(actual switch
+            {
+                CoreVoiceSettings.KittenMiniProvider => "Settings.CoreVoiceProviderKittenMini",
+                CoreVoiceSettings.RhVoiceProvider => "Settings.CoreVoiceProviderRhVoice",
+                _ => "Settings.CoreVoiceProviderEspeak"
+            }));
+        var setup = preferred switch
         {
             CoreVoiceSettings.RhVoiceProvider when !_coreSpeechCoordinator.IsRhVoiceAvailable => L("Settings.CoreVoiceRhVoiceUnavailable"),
             CoreVoiceSettings.KittenMiniProvider when !_coreSpeechCoordinator.IsKittenMiniAvailable => L("Settings.CoreVoiceKittenMiniUnavailable"),
             _ => null
         };
+        CoreVoiceProviderComboBox.ToolTip = preferred == actual && actual is not null ? null
+            : setup is null ? fallbackNotice : fallbackNotice + " " + setup;
         CoreVoiceTestButton.ToolTip = _coreSpeechCoordinator.IsAvailable
             ? L("Settings.CoreVoiceTestTooltip")
             : L("Settings.CoreVoiceUnavailable");

@@ -113,6 +113,7 @@ public partial class App : System.Windows.Application
         try
         {
             if (Services.ApplicationUpdateStartup.HealthTransactionId is null) StartRecoveryMonitoring(recovering);
+            else Services.ApplicationUpdateStartup.PrepareVoiceSettingsRecovery();
             base.OnStartup(e);
             Services.OwnedProcessRegistry.Log("startup_window_construct_begin", "Application", Environment.ProcessId);
             var window = new MainWindow(); MainWindow = window;

@@ -16,9 +16,9 @@ public sealed class CoreSpeechPresentationCoordinator(ICoreVoiceEngine engine) :
     internal bool IsKittenMiniAvailable =>
         _engine is CoreVoiceEngineRouter router && router.IsKittenMiniAvailable;
 
-    internal string ResolveProvider(string configured) => _engine is CoreVoiceEngineRouter router
-        ? router.ResolveProvider(configured)
-        : configured;
+    internal string? ResolveProvider(CoreVoiceSettings settings) => _engine is CoreVoiceEngineRouter router
+        ? router.ResolveProvider(settings)
+        : settings.SelectedProvider;
 
     public async Task<CoreSpeechPresentationResult> PresentAsync(
         CoreSpeechRequest request,

@@ -4,19 +4,23 @@ namespace Lopata.Updates;
 
 internal static class DurableUpdateFiles
 {
-    public static void WriteJson<T>(string path, T value)
+    public static void WriteJson<T>(string path, T value, JsonSerializerOptions? options = null)
     {
         SafeUpdatePath.RejectLinks(path);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
-            65536, FileOptions.WriteThrough))
+        try
         {
-            JsonSerializer.Serialize(stream, value, UpdateManifest.JsonOptions);
-            stream.Flush(true);
+            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                65536, FileOptions.WriteThrough))
+            {
+                JsonSerializer.Serialize(stream, value, options ?? UpdateManifest.JsonOptions);
+                stream.Flush(true);
+            }
+            SafeUpdatePath.RejectLinks(path);
+            File.Move(temporary, path, true);
         }
-        SafeUpdatePath.RejectLinks(path);
-        File.Move(temporary, path, true);
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 
     public static async Task CopyAsync(string source, string destination, CancellationToken token)

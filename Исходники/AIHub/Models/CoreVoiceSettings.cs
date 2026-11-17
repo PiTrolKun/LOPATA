@@ -1,14 +1,15 @@
-using AIHub.Services.VideoEditor;
+using System.Text.Json.Serialization;
+using Lopata.Updates;
 
 namespace AIHub.Models;
 
 public sealed class CoreVoiceSettings
 {
-    public const string EspeakProvider = "espeak";
+    public const string EspeakProvider = CoreVoiceProfileStore.Espeak;
 
-    public const string RhVoiceProvider = "rhvoice";
+    public const string RhVoiceProvider = CoreVoiceProfileStore.RhVoice;
 
-    public const string KittenMiniProvider = VideoNarratorCatalog.KittenMini;
+    public const string KittenMiniProvider = CoreVoiceProfileStore.Mini;
 
     public bool Enabled { get; set; } = true;
 
@@ -22,11 +23,16 @@ public sealed class CoreVoiceSettings
 
     public string EnglishVoice { get; set; } = "en+f3";
 
-    internal static string NormalizeProvider(string? provider) => provider?.ToLowerInvariant() switch
+    [JsonIgnore] internal string FallbackProvider { get; set; } = EspeakProvider;
+
+    internal string SelectedProvider => KnownProvider(Provider) ?? FallbackProvider;
+
+    internal static string? KnownProvider(string? provider) => provider?.ToLowerInvariant() switch
     {
         EspeakProvider => EspeakProvider,
         RhVoiceProvider => RhVoiceProvider,
-        _ => KittenMiniProvider
+        KittenMiniProvider => KittenMiniProvider,
+        _ => null
     };
 }
 

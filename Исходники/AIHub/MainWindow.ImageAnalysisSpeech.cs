@@ -797,6 +797,7 @@ public partial class MainWindow
         {
             Enabled = true,
             Provider = configured.Provider,
+            FallbackProvider = configured.FallbackProvider,
             Volume = Math.Clamp(programmaticVolume * 2, 0, 200),
             Rate = Math.Clamp(
                 (int)Math.Round(120d * programmaticRate / 100d),
@@ -806,7 +807,7 @@ public partial class MainWindow
             EnglishVoice = configured.EnglishVoice
         };
         var language = NormalizeSpeechLanguage(options.Language);
-        var (actualProvider, actualVoice) = _imageAnalysisProgrammaticSpeechCoordinator.ResolveProvider(configured.Provider) switch
+        var (actualProvider, actualVoice) = _imageAnalysisProgrammaticSpeechCoordinator.ResolveProvider(settings) switch
         {
             CoreVoiceSettings.KittenMiniProvider => ("Kitten TTS 2 Mini", VideoNarratorCatalog.Get(CoreVoiceSettings.KittenMiniProvider).DefaultSpeaker),
             CoreVoiceSettings.RhVoiceProvider => ("RHVoice", language == "en" ? "Bdl" : "Elena"),

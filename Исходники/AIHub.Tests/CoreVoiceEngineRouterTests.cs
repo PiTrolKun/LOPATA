@@ -7,6 +7,26 @@ namespace AIHub.Tests;
 public sealed class CoreVoiceEngineRouterTests
 {
     [TestMethod]
+    public async Task SpeakAsync_UsesSavedLegacyFallbackAndRevealsTextWhenVoicesAreUnavailable()
+    {
+        var espeak = new FakeVoiceEngine(true);
+        var rhVoice = new FakeVoiceEngine(true);
+        using var router = new CoreVoiceEngineRouter(espeak, rhVoice, new FakeVoiceEngine(false));
+        var request = CreateRequest(CoreVoiceSettings.KittenMiniProvider);
+        request.Settings.FallbackProvider = CoreVoiceSettings.RhVoiceProvider;
+        await router.SpeakAsync(request, new SpeechProgress(), CancellationToken.None);
+        Assert.AreEqual(1, rhVoice.SpeakCalls);
+        Assert.AreEqual(0, espeak.SpeakCalls);
+
+        using var unavailable = new CoreVoiceEngineRouter(new FakeVoiceEngine(false), new FakeVoiceEngine(false));
+        var progress = new SpeechProgress();
+        var result = await unavailable.SpeakAsync(request, progress, CancellationToken.None);
+        Assert.IsTrue(result.Skipped);
+        Assert.IsTrue(progress.Last?.IsComplete);
+        Assert.AreEqual(request.Segments[0].Text.Length, progress.Last!.VisibleCharacters["question"]);
+    }
+
+    [TestMethod]
     public async Task SpeakAsync_UsesEspeakWhenExplicitlySelected()
     {
         using var espeak = new FakeVoiceEngine(true);

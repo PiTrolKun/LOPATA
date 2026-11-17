@@ -30,7 +30,7 @@ internal static class Program
                     // Ordinary autostart has no progress window. Recovery or an explicitly
                     // prepared update can still expose its existing installation progress.
                     if (startHidden && !window.Visible) { hiddenContext!.MainForm = window; window.Show(); }
-                });
+                }, (store, id) => SettingsRollbackPrompt.Show(window, store, id));
                 await host.RunAsync(args, cancellation.Token);
                 Environment.ExitCode = 0;
             }

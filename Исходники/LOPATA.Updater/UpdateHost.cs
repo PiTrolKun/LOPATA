@@ -5,7 +5,8 @@ using Lopata.Updates;
 
 namespace Lopata.Updater;
 
-internal sealed class UpdateHost(Action<string> status)
+internal sealed class UpdateHost(Action<string> status,
+    Action<CoreVoiceRollbackStore, string>? reportSettingsRollback = null)
 {
     private static readonly IReadOnlyDictionary<string, string> Keys = UpdateReleaseKeys.Trusted;
 
@@ -72,8 +73,11 @@ internal sealed class UpdateHost(Action<string> status)
             StartupInstallation.Configure(args[1] == "1"); return;
         }
         var transaction = new UpdateTransaction(state.Roots(), Keys, state.StateDirectory);
-        if (!worker && mode != "--confirm" && await WorkerDispatch.TryStartAsync(state, transaction, args,
-                waitForExit: mode is "--unregister" or "--recover")) return;
+        var journal = transaction.ReadJournal();
+        var voiceRecovery = new CoreVoiceRollbackStore(state.StateDirectory, new(InstalledUpdateState.UserDataDirectory));
+        var noticePending = journal is { Phase: UpdatePhase.RolledBack } && !voiceRecovery.WasReported(journal.Id);
+        if (!worker && mode != "--confirm" && !noticePending
+            && await WorkerDispatch.TryStartAsync(state, transaction, args, waitForExit: mode is "--unregister" or "--recover")) return;
         await WaitForCallerAsync(args);
         if (mode == "--confirm")
         {
@@ -84,7 +88,7 @@ internal sealed class UpdateHost(Action<string> status)
         }
         if (mode is not ("--launch" or "--apply" or "--unregister" or "--recover")) throw new ArgumentException("Unknown updater command.");
         var pendingStore = new PreparedUpdateStore(state.StateDirectory, Keys);
-        var journal = transaction.ReadJournal();
+        journal = transaction.ReadJournal();
         var rollback = journal is { Phase: not (UpdatePhase.Healthy or UpdatePhase.RolledBack) };
         if (rollback || mode is "--recover" or "--unregister")
             await WaitForInstallationMutationAsync(state, token);
@@ -94,6 +98,7 @@ internal sealed class UpdateHost(Action<string> status)
             await transaction.RecoverAsync();
             // Do not automatically repeat a failed update on every launch.
             if (pendingStore.Read() is { } interrupted) pendingStore.Save(interrupted with { ApplyOnNextLaunch = false });
+            journal = transaction.ReadJournal();
         }
         if (mode == "--unregister")
         {
@@ -122,6 +127,16 @@ internal sealed class UpdateHost(Action<string> status)
             return;
         }
         if (mode == "--recover") return;
+        if (journal is { Phase: UpdatePhase.RolledBack } && reportSettingsRollback is not null)
+        {
+            using var reportLease = voiceRecovery.TryBeginReport(journal.Id);
+            if (reportLease is null) return; // The other launcher will start the restored application.
+            if (!voiceRecovery.WasReported(journal.Id))
+            {
+                reportSettingsRollback(voiceRecovery, journal.Id);
+                voiceRecovery.MarkReported(journal.Id);
+            }
+        }
         var recoveryArgument = args.Contains("--recover-safe", StringComparer.Ordinal) ? "--recover-safe"
             : args.Contains("--recover-session", StringComparer.Ordinal) ? "--recover-session" : null;
         var pending = pendingStore.Read();

@@ -8,5 +8,20 @@
   "UpdateHost.Failed": "Could not complete the update or launch. Close other LOPATA instances and try again. Saved projects were not deleted. Details are in the report:",
   "UpdateHost.CollectionInitializationFailed": "The application files are installed, but the LOPATA collection could not be connected to File Explorer (code {0}). Run the installer again. Details are in the report:",
   "UpdateHost.CollectionInitializationTimedOut": "The application files are installed, but connecting the LOPATA collection to File Explorer did not finish in time. Run the installer again. Details are in the report:",
-  "UpdateHost.CollectionInitializationStartFailed": "Could not start LOPATA collection setup for File Explorer. Run the installer again. Details are in the report:"
+  "UpdateHost.CollectionInitializationStartFailed": "Could not start LOPATA collection setup for File Explorer. Run the installer again. Details are in the report:",
+  "UpdateHost.SettingsChanged": "Settings changed",
+  "UpdateHost.RollbackTitle": "Update rolled back",
+  "UpdateHost.AppRolledBack": "LOPATA returned to the previous version.",
+  "UpdateHost.SettingsOffer": "You can restore the core voice selection saved before the update.",
+  "UpdateHost.RestoreSettings": "Restore settings",
+  "UpdateHost.KeepSettings": "Keep current settings",
+  "UpdateHost.ReviewSettingsAgain": "Settings changed while this window was open. Review the values and confirm again.",
+  "UpdateHost.SettingsAlreadyMatch": "The current selection matches the saved selection.",
+  "UpdateHost.SettingsRestoreUnavailable": "The saved voice selection could not be read or restored.",
+  "UpdateHost.PreferredVoice": "Selected core voice",
+  "UpdateHost.CompatibleVoice": "Core voice for older versions",
+  "UpdateHost.SeparateVoice": "Voice preference for newer versions",
+  "UpdateHost.CurrentValue": "Current — {0}",
+  "UpdateHost.SavedValue": "Before the update — {0}",
+  "UpdateHost.EmptyVoice": "empty"
 }

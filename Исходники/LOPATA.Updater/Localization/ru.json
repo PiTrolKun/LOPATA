@@ -8,5 +8,20 @@
   "UpdateHost.Failed": "Не удалось завершить обновление или запуск. Закройте другие экземпляры ЛОПАТЫ и повторите запуск. Сохранённые проекты не удалялись. Подробности в отчёте:",
   "UpdateHost.CollectionInitializationFailed": "Файлы программы установлены, но не удалось подключить коллекцию ЛОПАТЫ к Проводнику (код {0}). Повторите установку. Подробности в отчёте:",
   "UpdateHost.CollectionInitializationTimedOut": "Файлы программы установлены, но подключение коллекции ЛОПАТЫ к Проводнику не завершилось вовремя. Повторите установку. Подробности в отчёте:",
-  "UpdateHost.CollectionInitializationStartFailed": "Не удалось запустить настройку коллекции ЛОПАТЫ для Проводника. Повторите установку. Подробности в отчёте:"
+  "UpdateHost.CollectionInitializationStartFailed": "Не удалось запустить настройку коллекции ЛОПАТЫ для Проводника. Повторите установку. Подробности в отчёте:",
+  "UpdateHost.SettingsChanged": "Настройки изменились",
+  "UpdateHost.RollbackTitle": "Откат обновления",
+  "UpdateHost.AppRolledBack": "ЛОПАТА вернулась к предыдущей версии.",
+  "UpdateHost.SettingsOffer": "Можно восстановить сохранённый до обновления выбор голоса ядра.",
+  "UpdateHost.RestoreSettings": "Восстановить настройки",
+  "UpdateHost.KeepSettings": "Оставить текущие",
+  "UpdateHost.ReviewSettingsAgain": "Настройки изменились, пока окно было открыто. Проверьте значения и подтвердите выбор снова.",
+  "UpdateHost.SettingsAlreadyMatch": "Текущий выбор совпадает с сохранённым.",
+  "UpdateHost.SettingsRestoreUnavailable": "Не удалось прочитать или восстановить сохранённый выбор голоса.",
+  "UpdateHost.PreferredVoice": "Выбранный голос ядра",
+  "UpdateHost.CompatibleVoice": "Голос ядра для старых версий",
+  "UpdateHost.SeparateVoice": "Предпочтение голоса для новых версий",
+  "UpdateHost.CurrentValue": "Сейчас — {0}",
+  "UpdateHost.SavedValue": "До обновления — {0}",
+  "UpdateHost.EmptyVoice": "пусто"
 }

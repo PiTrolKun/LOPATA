@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using Lopata.Updates;
 using AIHub.Models;
 
@@ -8,6 +9,66 @@ namespace AIHub.Services;
 internal static class ApplicationUpdateStartup
 {
     public static string? HealthTransactionId { get; private set; }
+    private static CoreVoiceRollbackStore? _voiceRecovery;
+
+    public static void PrepareVoiceSettingsRecovery()
+    {
+        if (HealthTransactionId is not { } id) return;
+        try
+        {
+            var state = InstalledUpdateState.Read();
+            if (state is null || !Path.TrimEndingDirectorySeparator(state.AppDirectory).Equals(
+                Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory), StringComparison.OrdinalIgnoreCase)) return;
+            var keys = UpdateReleaseKeys.Trusted;
+            var journal = new UpdateTransaction(state.Roots(), keys, state.StateDirectory).ReadJournal();
+            if (journal is not { Phase: UpdatePhase.AwaitingHealth } || journal.Id != id) return;
+            _voiceRecovery = new(state.StateDirectory, new(AppDataPaths.BaseDirectory));
+
+            // A rollback runs outside the installed application. Keep the verified host there
+            // so the notification survives restoring an older application and its managed worker.
+            var host = journal.Target.Verify(keys).Files.SingleOrDefault(file =>
+                file.Root == "app" && file.Path == "Updater/LOPATA.Updater.exe");
+            if (host is not null) RefreshRecoveryHost(state.Roots().Resolve(host), host);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException
+            or System.Text.Json.JsonException or CryptographicException)
+        {
+            OwnedProcessRegistry.Log("voice_settings_recovery_setup_failed", "update", detail: error.Message);
+        }
+    }
+
+    public static void RecordVoiceSettingsMigration(CoreVoiceSelection before)
+    {
+        if (HealthTransactionId is { } id) _voiceRecovery?.Capture(id, before);
+    }
+
+    private static void RefreshRecoveryHost(string source, UpdateFile expected)
+    {
+        var path = InstalledUpdateState.LauncherPath;
+        SafeUpdatePath.RejectLinks(path);
+        if (File.Exists(path) && Matches(path, expected)) return;
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (var input = File.OpenRead(source))
+            using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                input.CopyTo(output);
+                output.Flush(flushToDisk: true);
+            }
+            if (!Matches(temporary, expected)) throw new InvalidDataException("Recovery host copy failed verification.");
+            SafeUpdatePath.RejectLinks(path);
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+
+        static bool Matches(string file, UpdateFile expected)
+        {
+            using var stream = File.OpenRead(file);
+            return stream.Length == expected.Size && Convert.ToHexStringLower(SHA256.HashData(stream)) == expected.Sha256;
+        }
+    }
 
     public static bool RedirectInstalledLaunch(string[] args)
     {
