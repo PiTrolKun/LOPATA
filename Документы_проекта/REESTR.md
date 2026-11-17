@@ -1,3 +1,7 @@
+## 17.11.2026 — Kitten TTS 2 Mini
+
+[Модель ONNX INT8](https://huggingface.co/KittenML/kitten-tts-2-mini/tree/c01797caec3967b400da457656e011eb81f530a4) на CPU и [kittenml 0.9.8](https://pypi.org/project/kittenml/0.9.8/) поддерживают озвучивание на русском и английском. Веса под Apache-2.0. Условия библиотек указаны в каталоге лицензий. Включено в [0.8.43-beta](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.8.43-beta).
+
 ## 17.11.2026 — повторное использование Qwen-Image, 0.8.36-dev
 
 Повторы по выбранному промпту визуального сценария используют `sd-server.exe` из установленного комплекта 002 stable-diffusion.cpp `f0aac52`. Весами и предпросмотром управляет тот же движок через локальный адрес с динамическим портом. Аудит манифеста и моделей общий для обоих способов запуска. [API закреплённой ревизии](https://github.com/leejet/stable-diffusion.cpp/blob/f0aac524d3f29140e60ba78f3cfb16d6acea87db/examples/server/api.md).
