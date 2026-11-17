@@ -13,9 +13,10 @@ internal static class VideoNarratorDevice
     internal static long RequiredBytes(string id, long modelBytes, int context) => modelBytes + 2L * 1024 * 1024 * 1024
         + (id == "orpheus3b" ? context * 114688L : 0);
     // Final preferences are set from the documented per-engine CPU/GPU comparisons.
-    internal static bool PreferGpu(string id) => VideoNarratorCatalog.Models.Any(m => m.Id == id);
+    internal static bool PreferGpu(string id) => VideoNarratorCatalog.Models.Any(m => m.Id == id && !m.CpuOnly);
     internal static HashSet<string> SupportedProfiles(string id)
     {
+        if (id == VideoNarratorCatalog.KittenMini) return [HardwareRuntimeCatalog.PythonCpuId];
         var profiles = new HashSet<string>([HardwareRuntimeCatalog.PythonCpuId, HardwareRuntimeCatalog.PythonCudaId,
             HardwareRuntimeCatalog.PythonCuda128Id, HardwareRuntimeCatalog.PythonXpuId]);
         if (id is "supertonic3" or "vosk010" or "cosyvoice300") profiles.Remove(HardwareRuntimeCatalog.PythonXpuId);
@@ -26,6 +27,7 @@ internal static class VideoNarratorDevice
     }
     internal static async Task<ManagedPythonSelection> ResolveAsync(string id, string policy, string overlay, string expanded, CancellationToken token)
     {
+        if (id == VideoNarratorCatalog.KittenMini) return await ManagedPythonRuntime.ResolveAsync("cpu", token);
         var cpu = policy == "cpu" || policy == "auto" && !PreferGpu(id);
         if (id == "orpheus3b")
         {

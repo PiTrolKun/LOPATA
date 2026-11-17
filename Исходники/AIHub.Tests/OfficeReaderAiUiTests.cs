@@ -49,6 +49,7 @@ public sealed class OfficeReaderAiUiTests
                 Assert.AreEqual(owner.Foreground.ToString(), textModels[0].Foreground.ToString());
                 StringAssert.EndsWith(Id(textModels[1]), "reader-future");
                 Assert.IsTrue(Desc<RadioButton>(window).Single(r => Id(r) == "Office.Reader.AI.Speech.qwen3-17b").IsChecked);
+                Assert.IsTrue(Desc<RadioButton>(window).Single(r => Id(r) == "Office.Reader.AI.Speech.kitten2-mini").IsEnabled);
                 Assert.IsTrue(Desc<TextBlock>(window).Any(t => t.Text.Contains("Ryan")));
                 Assert.AreEqual(dark ? "#FF0D1523" : "#FFEDF0F6", window.Background.ToString());
                 Capture(window, Path.Combine(root, "models.png"));

@@ -31,6 +31,15 @@ internal static class VideoNarratorRuntime
                 : manifest.Files.Where(f => model == "silero56" ? new[] { "numpy", "soundfile", "cffi", "pycparser" }.Contains(f.Name)
                     : names.Contains(f.Name) && f.Name != "supertonic" || model == "vosk010" && f.Name is "requests" or "urllib3" or "charset-normalizer");
             wheels = wheels.Concat(additional);
+            if (model == VideoNarratorCatalog.KittenMini)
+            {
+                // English pronunciation uses spaCy and the bundled BART model.
+                wheels = wheels.Concat(manifest.Files.Where(f => f.Name is "transformers" or "huggingface-hub" or "scipy"
+                        or "requests" or "urllib3" or "charset-normalizer" or "joblib"))
+                    .Concat((manifest.Kokoro ?? []).Where(f => f.Name is not ("kokoro" or "ruaccent" or "loguru"
+                        or "sentencepiece" or "python-crfsuite" or "razdel" or "win32-setctime"
+                        or "spacy-curated-transformers" or "curated-transformers" or "curated-tokenizers")));
+            }
         }
         if (model is "supertonic3" or "vosk010" or "orpheus3b")
             wheels = wheels.Concat((manifest.Gpu ?? []).Where(w => model == "orpheus3b" || w.Name == "onnxruntime-gpu"));

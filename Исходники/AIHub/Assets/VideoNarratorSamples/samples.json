@@ -577,5 +577,71 @@
         "Role": "speech hardware runtime"
       }
     ]
+  },
+  {
+    "id": "kitten2-mini",
+    "language": "ru",
+    "synthesisLanguage": "ru",
+    "experimental": false,
+    "speaker": "Iris",
+    "file": "kitten2-mini-ru.wav",
+    "text": "Лопата для вас приготовила тестовую запись диктора. Лопата умеет говорить во многих сценариях.",
+    "seconds": 6,
+    "generationSeconds": 9.4271082,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/KittenML/kitten-tts-2-mini",
+    "models": [
+      {
+        "Id": "video-narrator-kitten2-mini",
+        "Name": "Kitten TTS 2 Mini · Iris · ru",
+        "Revision": "c01797caec3967b400da457656e011eb81f530a4",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-kitten2-mini",
+        "Name": "Kitten TTS 2 Mini · Python runtime",
+        "Revision": "voices-20261026-3",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python / PyTorch · cpu",
+        "Revision": "2.10.0+cpu",
+        "Role": "speech hardware runtime · cpu"
+      }
+    ]
+  },
+  {
+    "id": "kitten2-mini",
+    "language": "en",
+    "synthesisLanguage": "en",
+    "experimental": false,
+    "speaker": "Iris",
+    "file": "kitten2-mini-en.wav",
+    "text": "LOPATA has prepared a narrator test recording for you. LOPATA can speak in many scenarios.",
+    "seconds": 6.025,
+    "generationSeconds": 10.842118,
+    "license": "Apache-2.0",
+    "source": "https://huggingface.co/KittenML/kitten-tts-2-mini",
+    "models": [
+      {
+        "Id": "video-narrator-kitten2-mini",
+        "Name": "Kitten TTS 2 Mini · Iris · en",
+        "Revision": "c01797caec3967b400da457656e011eb81f530a4",
+        "Role": "narration speech synthesis"
+      },
+      {
+        "Id": "video-narrator-runtime-kitten2-mini",
+        "Name": "Kitten TTS 2 Mini · Python runtime",
+        "Revision": "voices-20261026-3",
+        "Role": "speech runtime"
+      },
+      {
+        "Id": "runtime.python.cpu",
+        "Name": "Python / PyTorch · cpu",
+        "Revision": "2.10.0+cpu",
+        "Role": "speech hardware runtime · cpu"
+      }
+    ]
   }
 ]

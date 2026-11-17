@@ -3,7 +3,7 @@ import re
 
 # These are conservative invocation ceilings, not limits on a project or its text.
 # Native tokenizers/chunkers still run inside each bounded invocation.
-LIMITS = {'kokoro-sveta': 320, 'kokoro-heart': 320, 'kitten2': 240,
+LIMITS = {'kokoro-sveta': 320, 'kokoro-heart': 320, 'kitten2': 240, 'kitten2-mini': 240,
           'vosk010': 400, 'supertonic3': 240, 'qwen3-17b': 240,
           'qwen3-06b': 240, 'orpheus3b': 160, 'silero56': 360, 'cosyvoice300': 240}
 PLAN_VERSION = 1

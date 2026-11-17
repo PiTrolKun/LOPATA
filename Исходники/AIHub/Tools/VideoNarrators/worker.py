@@ -52,6 +52,8 @@ def check_runtime(engine):
     assert rate == 24000 and len(audio) == 240
     if engine == 'supertonic3':
         from supertonic import TTS
+    elif engine == 'kitten2-mini':
+        from kittenml import KittenTTS
     elif engine == 'kitten2':
         from kitten_tts_cpp import KittenTTS
     elif engine in ('qwen3-17b', 'qwen3-06b'):

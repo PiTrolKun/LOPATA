@@ -13,6 +13,13 @@ public sealed class CoreSpeechPresentationCoordinator(ICoreVoiceEngine engine) :
     public bool IsRhVoiceAvailable =>
         _engine is CoreVoiceEngineRouter router && router.IsRhVoiceAvailable;
 
+    internal bool IsKittenMiniAvailable =>
+        _engine is CoreVoiceEngineRouter router && router.IsKittenMiniAvailable;
+
+    internal string ResolveProvider(string configured) => _engine is CoreVoiceEngineRouter router
+        ? router.ResolveProvider(configured)
+        : configured;
+
     public async Task<CoreSpeechPresentationResult> PresentAsync(
         CoreSpeechRequest request,
         IProgress<CoreSpeechProgress> progress,

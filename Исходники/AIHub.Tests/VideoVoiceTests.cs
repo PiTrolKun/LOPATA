@@ -75,6 +75,11 @@ public sealed class VideoVoiceTests
         Assert.ThrowsExactly<InvalidDataException>(() => VideoNarratorCatalog.Validate("qwen3-17b", "ru", 80, new("Ryan")));
         Assert.ThrowsExactly<InvalidDataException>(() => VideoNarratorCatalog.Validate("supertonic3", "ru", 100, new("missing")));
         Assert.ThrowsExactly<InvalidDataException>(() => VideoNarratorCatalog.Validate("vosk010", "en", 100, new("0")));
+        var mini = VideoNarratorCatalog.KittenMini;
+        VideoNarratorCatalog.Validate(mini, "ru", 100, new("Anastasia", Device: "cpu"));
+        VideoNarratorCatalog.Validate(mini, "en", 120, new("Iris"));
+        Assert.ThrowsExactly<InvalidDataException>(() => VideoNarratorCatalog.Validate(mini, "en", 100, new("Anastasia")));
+        Assert.ThrowsExactly<InvalidDataException>(() => VideoNarratorCatalog.Validate(mini, "ru", 100, new("Iris", Device: "gpu")));
         using var voskAdapter = new VideoNarratorRegistry().Create("vosk010");
         Assert.IsInstanceOfType<IConfiguredVideoNarrator>(voskAdapter);
         using var installedAdapter = new VideoNarratorRegistry().Create("supertonic3");
@@ -100,7 +105,7 @@ public sealed class VideoVoiceTests
         Assert.IsFalse(VideoNarratorCatalog.Cards("").Any(c => c.InstallDirectory.Length > 0));
         Assert.AreEqual(ScenarioNavigationCatalog.VideoEditor, ScenarioNavigationCatalog.GetTag("video_narrator_models").TargetId);
         var all = VideoNarratorCatalog.Cards(f.Path);
-        Assert.AreEqual(16, all.Count); Assert.IsTrue(VideoNarratorCatalog.Models.All(m => m.Blocked is null));
+        Assert.AreEqual(18, all.Count); Assert.IsTrue(VideoNarratorCatalog.Models.All(m => m.Blocked is null));
         Assert.IsTrue(all.All(c => licenses.Any(e => e.Id == c.ModelArtifactId)));
         var installed = JsonSerializer.Deserialize<ManagedModelArtifactCard>(JsonSerializer.Serialize(all[0]))!;
         installed.Files[0].Sha256 = new string('0', 64);

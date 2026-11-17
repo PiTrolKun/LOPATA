@@ -373,6 +373,16 @@
     }
   ],
   "Additional": {
+    "kitten2-mini": [
+      {
+        "Name": "kittenml",
+        "Version": "0.9.8",
+        "RelativePath": "kittenml-0.9.8-py3-none-any.whl",
+        "SourceUrl": "https://files.pythonhosted.org/packages/e1/aa/1c68957c094dd68b5dc15af79afc4576afaf01a771095513e9f748db6d37/kittenml-0.9.8-py3-none-any.whl",
+        "SizeBytes": 218433,
+        "Sha256": "6b2403384987627ea700fc795711df6797d775c60d796fd3114425f55c1b8676"
+      }
+    ],
     "vosk010": [
       {
         "Name": "vosk-tts",

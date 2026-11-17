@@ -283,6 +283,75 @@
       }
     ]
   },
+  "kitten2-mini": {
+    "Repository": "KittenML/kitten-tts-2-mini",
+    "Revision": "c01797caec3967b400da457656e011eb81f530a4",
+    "Files": [
+      {
+        "RelativePath": "config.json",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/config.json",
+        "SizeBytes": 16329,
+        "Sha256": "e6a63545213fbb677da62e1bc9946059033252bf61f57682b47cb6d8a54d0cbf",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "g2p/cmu_misaki_us.json",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/g2p/cmu_misaki_us.json",
+        "SizeBytes": 3418388,
+        "Sha256": "ae564e1a76df3501058a5ec99d135d016759c9475042fb6c3811374daee1ef04",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "g2p/g2p_bart_en_us/config.json",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/g2p/g2p_bart_en_us/config.json",
+        "SizeBytes": 1257,
+        "Sha256": "8deb3537fb29c63cd9f20d75515ae06e4c92f1b6db0703a2d45bca95b33a53a4",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "g2p/g2p_bart_en_us/generation_config.json",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/g2p/g2p_bart_en_us/generation_config.json",
+        "SizeBytes": 191,
+        "Sha256": "79a11240b01c6d34cab0b122b63a2b2dd5938c4d37d1530e14144d27e8ba6272",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "g2p/g2p_bart_en_us/model.safetensors",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/g2p/g2p_bart_en_us/model.safetensors",
+        "SizeBytes": 3011692,
+        "Sha256": "dc4a02e62d4fcb4bb4097ecf00db89b8e1a12a549a52ab6adfbba220b80a55c5",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "kitten_tts_2_mini.onnx",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/kitten_tts_2_mini.onnx",
+        "SizeBytes": 82711386,
+        "Sha256": "fa821c1cdd8f7fbfdbd5d1cae0a767673871d62696b85af7db059a9bd26b42d2",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "vocab.json",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/vocab.json",
+        "SizeBytes": 1324,
+        "Sha256": "b007200ac2a7973ac25c509f8346815076b9d9f33758cb0bfe4de99e2f58f851",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "voices_en.npz",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/voices_en.npz",
+        "SizeBytes": 5747328,
+        "Sha256": "5c18573d075f53f6f218c2056dfc84ad10e976e81e23d55e5a7a6adc6e9135a4",
+        "Purpose": "narrator"
+      },
+      {
+        "RelativePath": "voices_ru.npz",
+        "SourceUrl": "https://huggingface.co/KittenML/kitten-tts-2-mini/resolve/c01797caec3967b400da457656e011eb81f530a4/voices_ru.npz",
+        "SizeBytes": 6792308,
+        "Sha256": "f998f1fce7b19a0714c47b99aaaa06c8ab94be13e1dfb3acf8a6a6c2b97a05f2",
+        "Purpose": "narrator"
+      }
+    ]
+  },
   "kitten2": {
     "Repository": "KittenML/kitten-tts-2",
     "Revision": "c93cb7c271baa51d9ae8204d5277988906f235a2",

@@ -63,13 +63,18 @@ public sealed partial class LetItOutChatUiTests
         {
             window.Show(); window.UpdateLayout(); Field<MediaPlayer>("_player").Volume = 0;
             Assert.AreEqual(fixture.Localize("ChatSpeech.Settings"), window.Title);
-            Assert.AreEqual(10, Field<ListBox>("_models").Items.Count);
             Assert.AreEqual(fixture.Localize("ChatSpeech.Auto"), Field<System.Windows.Controls.CheckBox>("_global").Content);
             Assert.IsTrue(Field<System.Windows.Controls.CheckBox>("_global").IsEnabled); Assert.IsFalse(window.Global);
-            var models = Field<ListBox>("_models"); models.SelectedIndex = 1;
+            var models = Field<ListBox>("_models");
+            Assert.AreEqual(VideoNarratorCatalog.Models.Count, models.Items.Count);
+            System.Windows.Controls.ListBoxItem ModelItem(string id) => models.Items.Cast<System.Windows.Controls.ListBoxItem>()
+                .Single(item => ((VideoNarratorModel)item.Tag).Id == id);
+            models.SelectedItem = ModelItem(VideoNarratorCatalog.KittenMini);
+            Assert.AreEqual("Iris", Field<ComboBox>("_speaker").SelectedItem);
+            models.SelectedItem = ModelItem("kokoro-heart");
             Assert.IsTrue(Field<Button>("_remove").IsEnabled, "Chat settings allow managed Kokoro removal through the common guarded service.");
             Assert.IsTrue(Field<TextBox>("_trial").Text.StartsWith("Hello"), "Test content follows synthesis language, not UI language.");
-            models.SelectedIndex = 5; Field<ComboBox>("_language").SelectedValue = "ru";
+            models.SelectedItem = ModelItem("qwen3-17b"); Field<ComboBox>("_language").SelectedValue = "ru";
             Field<ComboBox>("_speaker").SelectedItem = "Aiden"; Field<TextBox>("_style").Text = "Говори спокойно";
             Field<ComboBox>("_device").SelectedValue = "cpu";
             var check = ScenarioNavigationTests.LogicalDescendants(window).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "ChatSpeech.Test");

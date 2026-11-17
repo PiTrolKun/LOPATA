@@ -29,6 +29,16 @@ def load(data, device, execution):
                                    lang=data['language'], speed=data['rate'] / 100, total_steps=data['steps'])
             sf.write(output, wav.reshape(-1), tts.sample_rate, subtype='PCM_16')
         return synthesize
+    if engine == 'kitten2-mini':
+        from kittenml import KittenTTS
+        tts = KittenTTS(model, backend='onnx', device='cpu')
+        execution.loaded(engine='Kitten TTS 2 Mini ONNX INT8', device='cpu')
+
+        def synthesize(output):
+            wav = tts.generate(data['text'], voice=data['speaker'], language=data['language'], speed=data['rate'] / 100)
+            sf.write(output, wav, tts.sample_rate, subtype='PCM_16')
+
+        return synthesize
     if engine == 'kitten2':
         if device == 'cpu':
             from kitten_tts_cpp import KittenTTS

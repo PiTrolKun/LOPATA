@@ -7,7 +7,7 @@ namespace AIHub.Tests;
 public sealed class CoreVoiceEngineRouterTests
 {
     [TestMethod]
-    public async Task SpeakAsync_UsesEspeakByDefault()
+    public async Task SpeakAsync_UsesEspeakWhenExplicitlySelected()
     {
         using var espeak = new FakeVoiceEngine(true);
         using var rhVoice = new FakeVoiceEngine(true);
@@ -17,6 +17,36 @@ public sealed class CoreVoiceEngineRouterTests
 
         Assert.AreEqual(1, espeak.SpeakCalls);
         Assert.AreEqual(0, rhVoice.SpeakCalls);
+    }
+
+    [TestMethod]
+    public async Task SpeakAsync_UsesMiniByDefaultWhenPrepared()
+    {
+        var mini = new FakeVoiceEngine(true);
+        var espeak = new FakeVoiceEngine(true);
+        using var router = new CoreVoiceEngineRouter(espeak, new FakeVoiceEngine(true), mini);
+        var settings = new CoreVoiceSettings();
+
+        await router.SpeakAsync(CreateRequest(settings.Provider), new Progress<CoreSpeechProgress>(), CancellationToken.None);
+
+        Assert.AreEqual(CoreVoiceSettings.KittenMiniProvider, settings.Provider);
+        Assert.AreEqual(1, mini.SpeakCalls);
+        Assert.AreEqual(0, espeak.SpeakCalls);
+    }
+
+    [TestMethod]
+    public async Task SpeakAsync_KeepsMiniSelectedWhenComponentsAreMissing()
+    {
+        var mini = new FakeVoiceEngine(false);
+        var espeak = new FakeVoiceEngine(true);
+        using var router = new CoreVoiceEngineRouter(espeak, new FakeVoiceEngine(true), mini);
+        var request = CreateRequest(CoreVoiceSettings.KittenMiniProvider);
+
+        await router.SpeakAsync(request, new Progress<CoreSpeechProgress>(), CancellationToken.None);
+
+        Assert.AreEqual(1, espeak.SpeakCalls);
+        Assert.AreEqual(0, mini.SpeakCalls);
+        Assert.AreEqual(CoreVoiceSettings.KittenMiniProvider, request.Settings.Provider);
     }
 
     [TestMethod]
@@ -43,6 +73,35 @@ public sealed class CoreVoiceEngineRouterTests
 
         Assert.AreEqual(1, espeak.SpeakCalls);
         Assert.AreEqual(0, rhVoice.SpeakCalls);
+    }
+
+    [TestMethod]
+    public async Task InstalledMiniSynthesizesAndPlaysThroughCoreVoiceRouter()
+    {
+        if (Environment.GetEnvironmentVariable("LOPATA_CORE_MINI_SMOKE") != "1")
+        {
+            Assert.Inconclusive("Requires the installed Mini and Windows audio output.");
+            return;
+        }
+
+        using var coordinator = new CoreSpeechPresentationCoordinator(CoreVoiceEngineRouter.CreateWithKittenMini());
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        Assert.IsTrue(coordinator.IsKittenMiniAvailable);
+        var settings = new CoreVoiceSettings { Volume = 0 };
+        foreach (var (language, text) in new[] { ("ru-RU", "Голос ядра готов. Продолжаем работу."), ("en-US", "The core voice is ready. Let's continue.") })
+        {
+            var progress = new SpeechProgress();
+            var result = await coordinator.PresentAsync(new([new("test", text)], language, settings, "mini_core_smoke"), progress, null, timeout.Token);
+            Assert.IsTrue(result.Completed, $"{language}: {result.ErrorCode}");
+            Assert.IsTrue(progress.Last?.IsComplete);
+            Assert.AreEqual(text.Length, progress.Last!.VisibleCharacters["test"]);
+        }
+    }
+
+    private sealed class SpeechProgress : IProgress<CoreSpeechProgress>
+    {
+        public CoreSpeechProgress? Last { get; private set; }
+        public void Report(CoreSpeechProgress value) => Last = value;
     }
 
     private static CoreSpeechRequest CreateRequest(string provider) =>

@@ -60,17 +60,17 @@ class Execution:
         original = ort.InferenceSession
         cuda = gpu and self.device.startswith('cuda')
         self.ort_gpu = cuda
-        providers = [('CUDAExecutionProvider', {'device_id': int(self.device.split(':')[1]) if ':' in self.device else 0}), 'CPUExecutionProvider'] if cuda else ['CPUExecutionProvider']
+        session_providers = [('CUDAExecutionProvider', {'device_id': int(self.device.split(':')[1]) if ':' in self.device else 0}), 'CPUExecutionProvider'] if cuda else ['CPUExecutionProvider']
         owner = self
         class Session(original):
-            def __init__(self, *args, **kwargs):
-                options = kwargs.pop('sess_options', None) or ort.SessionOptions()
+            def __init__(self, path_or_bytes, sess_options=None, providers=None, provider_options=None, **kwargs):
+                options = sess_options or ort.SessionOptions()
                 options.intra_op_num_threads = 8
                 if owner.repeats > 1:
                     options.enable_profiling = True
                     options.profile_file_prefix = str(owner.output.parent / ('onnx-' + str(len(owner.sessions))))
-                kwargs['sess_options'], kwargs['providers'] = options, providers
-                super().__init__(*args, **kwargs)
+                super().__init__(path_or_bytes, sess_options=options, providers=session_providers,
+                                 provider_options=provider_options, **kwargs)
                 if cuda and 'CUDAExecutionProvider' not in self.get_providers():
                     raise RuntimeError('CUDA ONNX provider failed to load; refusing a false GPU result.')
                 owner.sessions.append(self)

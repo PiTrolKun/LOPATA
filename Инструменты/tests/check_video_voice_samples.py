@@ -43,24 +43,24 @@ def main():
     options = args.parse_args()
     entries = json.loads((options.directory / "samples.json").read_text(encoding="utf-8-sig"))
     unavailable = json.loads((options.directory / "unavailable.json").read_text(encoding="utf-8-sig"))
-    assert len(entries) + len(unavailable) == 20
     successful_cases = {(e["id"], e["language"]) for e in entries}
     failed_cases = {(e["Id"], e["Language"]) for e in unavailable}
     assert len(successful_cases) == len(entries) and len(failed_cases) == len(unavailable)
     assert not (successful_cases & failed_cases)
-    assert len(successful_cases | failed_cases) == 20
     assert ("vosk010", "ru") in successful_cases and ("vosk010", "en") in failed_cases
-    assert len({e["id"] for e in entries} | {e["Id"] for e in unavailable}) == 10
-    ids = {"kokoro-sveta", "kokoro-heart", "kitten2", "vosk010", "supertonic3", "qwen3-17b", "qwen3-06b", "orpheus3b", "silero56", "cosyvoice300"}
+    assert {("kitten2-mini", "ru"), ("kitten2-mini", "en")} <= successful_cases
+    ids = {"kokoro-sveta", "kokoro-heart", "kitten2", "kitten2-mini", "vosk010", "supertonic3", "qwen3-17b", "qwen3-06b", "orpheus3b", "silero56", "cosyvoice300"}
     assert successful_cases | failed_cases == {(model, language) for model in ids for language in ("ru", "en")}
     native = {"kokoro-sveta": "ru", "kokoro-heart": "en", "vosk010": "ru", "orpheus3b": "en", "silero56": "ru", "cosyvoice300": "en"}
     results = []
     for entry in entries:
         assert entry["language"] in ("ru", "en")
         assert entry["file"] == entry["id"] + "-" + entry["language"] + ".wav"
-        if entry["id"] == "vosk010" and entry["language"] == "ru":
+        if entry["id"] in {"vosk010", "kitten2-mini"} and entry["language"] == "ru":
             assert entry["text"] == "Лопата для вас приготовила тестовую запись диктора. Лопата умеет говорить во многих сценариях."
             assert not any(c.isascii() and c.isalpha() for c in entry["text"])
+        elif entry["id"] == "kitten2-mini":
+            assert "LOPATA" in entry["text"] and entry["text"].isascii()
         else:
             assert "Лопата" in entry["text"] and "LOPATA" in entry["text"]
         experimental = entry["id"] in native and entry["language"] != native[entry["id"]]
@@ -69,7 +69,7 @@ def main():
         path = options.directory / entry["file"]
         raw = path.read_bytes()
         facts = provenance(raw)
-        expected_version = "0.6.31-dev" if entry["id"] == "vosk010" else "0.6.30-dev"
+        expected_version = {"vosk010": "0.6.31-dev", "kitten2-mini": "0.8.42-dev"}.get(entry["id"], "0.6.30-dev")
         assert facts["Program"] == "LOPATA" and facts["ProgramVersion"] == expected_version
         assert facts["Scenario"] == "video-editor/narration"
         assert facts["Models"] == entry["models"]
@@ -87,8 +87,8 @@ def main():
             assert peak > 0.001 and rms > 0.001 and 0.1 < seconds < 120
         results.append(dict(id=entry["id"], language=entry["language"], speaker=entry["speaker"],
                             seconds=seconds, peak=peak, rms=rms, sha256=hashlib.sha256(raw).hexdigest(), provenance=facts))
-    options.report.write_text(json.dumps(dict(version="0.6.31-dev", samples=results, unavailable=unavailable), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"PASS: {len(results)} PCM16 examples, {len(unavailable)} explicit synthesis failures, 10 model cards; {sum(e['seconds'] for e in results):.1f} seconds total")
+    options.report.write_text(json.dumps(dict(version="0.8.42-dev", samples=results, unavailable=unavailable), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"PASS: {len(results)} PCM16 examples, {len(unavailable)} explicit synthesis failures, {len(ids)} model cards; {sum(e['seconds'] for e in results):.1f} seconds total")
 
 
 if __name__ == "__main__":

@@ -19,14 +19,15 @@ public sealed class VideoNarratorRegistrationTests
         { Assert.Inconclusive("Explicit maintenance invocation and backed-up library are required."); return; }
         Assert.IsTrue(File.Exists(backup));
         using var verified = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(evidence, "verification.json")));
-        Assert.AreEqual(10, verified.RootElement.GetProperty("models").GetArrayLength());
+        var voices = verified.RootElement.GetProperty("models").EnumerateArray()
+            .Select(model => model.GetProperty("id").GetString()!).ToArray();
+        Assert.AreEqual(10, voices.Distinct().Count());
         Assert.IsTrue(verified.RootElement.GetProperty("metadataVerified").GetBoolean());
         var confirm = ComponentLicenseGate.ConfirmAsync; ComponentLicenseGate.ConfirmAsync = (_, _) => Task.CompletedTask;
         try
         {
             // Normal live ComponentAudit store: test receipts do not certify a user installation.
             using var preparation = new VideoModelPreparation();
-            var voices = VideoNarratorCatalog.Models.Select(m => m.Id).ToArray();
             using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(15));
             Assert.IsTrue(await preparation.PrepareAsync(root, new("speech", voices), false, null, deadline.Token));
             var store = new ManagedModelLibraryStore();

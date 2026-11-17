@@ -264,5 +264,37 @@
     "Texts": [
       "texts/VideoNarrator-Chatterbox-LICENSE.txt"
     ]
+  },
+  {
+    "Id": "video-narrator-kitten2-mini",
+    "Name": "Kitten TTS 2 Mini",
+    "Version": "c01797caec3967b400da457656e011eb81f530a4",
+    "Author": "KittenML",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/KittenML/kitten-tts-2-mini",
+    "Checked": "2026-11-17",
+    "Ru": "Веса ONNX INT8, голоса и файлы произношения для автономного синтеза.",
+    "En": "ONNX INT8 weights, voices and pronunciation files for offline synthesis.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "FDDE3476787C87C229CAA3269E8261925147687FE90B9FB5B146B4D7FD400A97",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "video-narrator-runtime-kitten2-mini",
+    "Name": "Kitten TTS 2 Mini Python runtime",
+    "Version": "voices-20261026-3",
+    "Author": "KittenML and upstream dependency authors",
+    "License": "Apache-2.0; MIT; BSD; GPL; LGPL and upstream notices",
+    "Source": "https://pypi.org/project/kittenml/0.9.8/",
+    "Checked": "2026-11-17",
+    "Ru": "Библиотеки автономного синтеза и фонетики, включая ONNX Runtime, spaCy и eSpeak NG. Оригинальные условия вложенных компонентов сохранены в wheel-файлах. Точные версии зафиксированы в runtime.json.",
+    "En": "Libraries for offline synthesis and phonetics, including ONNX Runtime, spaCy, and eSpeak NG. Original dependency terms remain in the wheel files. Exact versions are pinned in runtime.json.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "BAE247FDC687D2A96CF0A6A4FF13A1523F9AFAA7C8C896FB0C5E7C6F58E8DA28",
+    "Texts": []
   }
 ]

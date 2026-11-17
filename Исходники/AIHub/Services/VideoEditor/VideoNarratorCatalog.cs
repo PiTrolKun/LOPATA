@@ -6,16 +6,26 @@ namespace AIHub.Services.VideoEditor;
 
 internal sealed record VideoNarratorModel(string Id, string Name, string[] Languages, string[] Speakers,
     string DefaultSpeaker, string DescriptionKey, string License, string Source, string? Blocked = null,
-    bool Rate = false, bool Style = false, bool Steps = false, bool Preset = false);
+    bool Rate = false, bool Style = false, bool Steps = false, bool Preset = false,
+    bool CpuOnly = false, IReadOnlyDictionary<string, string[]>? LanguageSpeakers = null)
+{
+    internal string[] SpeakersFor(string language) => LanguageSpeakers?.GetValueOrDefault(language) ?? Speakers;
+}
 internal sealed record VideoNarratorPin(string Repository, string Revision, List<ManagedModelArtifactFile> Files, OutputModelUse[]? AdditionalModels = null);
 
 internal static class VideoNarratorCatalog
 {
+    internal const string KittenMini = "kitten2-mini";
+    private static readonly Dictionary<string, string[]> MiniVoices = JsonSerializer.Deserialize<Dictionary<string, string[]>>(
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Tools", "VideoNarrators", "kitten-mini-voices.json")))!;
     private static readonly string[] QwenSpeakers = ["Vivian", "Serena", "Uncle_Fu", "Dylan", "Eric", "Ryan", "Aiden", "Ono_Anna", "Sohee"];
     internal static IReadOnlyList<VideoNarratorModel> Models { get; } = [
         new("kokoro-sveta", "Kokoro · Света", ["ru"], ["sveta"], "sveta", "KokoroRu", "Apache-2.0; voice terms", "https://huggingface.co/zaakirio/kokoro-ru", Rate: true),
         new("kokoro-heart", "Kokoro · af_heart", ["en"], ["af_heart"], "af_heart", "KokoroEn", "Apache-2.0", "https://huggingface.co/hexgrad/Kokoro-82M", Rate: true),
         new("kitten2", "KittenTTS 2", ["ru", "en"], KittenVoices(), "Bruno", "Kitten", "Stellon Labs Community License; Apache-2.0/MIT code", "https://github.com/KittenML/KittenTTS", Preset: true),
+        new(KittenMini, "Kitten TTS 2 Mini", ["ru", "en"], MiniVoices.Values.SelectMany(voices => voices).Distinct().ToArray(),
+            "Iris", "KittenMini", "Apache-2.0", "https://huggingface.co/KittenML/kitten-tts-2-mini",
+            Rate: true, CpuOnly: true, LanguageSpeakers: MiniVoices),
         new("vosk010", "Vosk-TTS 0.10 multi", ["ru"], Enumerable.Range(0, 57).Select(i => i.ToString()).ToArray(), "0", "Vosk", "Apache-2.0", "https://github.com/alphacep/vosk-tts", Rate: true),
         new("supertonic3", "Supertonic 3", ["ar", "bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "hi", "hr", "hu", "id", "it", "ja", "ko", "lt", "lv", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "tr", "uk", "vi"],
             ["M1", "M2", "M3", "M4", "M5", "F1", "F2", "F3", "F4", "F5"], "M1", "Supertonic", "BigScience Open RAIL-M; MIT code", "https://huggingface.co/jiangzhuo9357/supertonic-3", Rate: true, Steps: true),
@@ -41,7 +51,8 @@ internal static class VideoNarratorCatalog
     {
         var model = Get(id); VideoVoiceProfiles.ValidateStored(options);
         if (!model.Languages.Contains(language) || rate is < 50 or > 200 || !model.Rate && rate != 100
-            || options!.Speaker.Length > 0 && !model.Speakers.Contains(options.Speaker)
+            || options!.Speaker.Length > 0 && !model.SpeakersFor(language).Contains(options.Speaker)
+            || model.CpuOnly && options.Device == "gpu"
             || !model.Style && options.Style.Length > 0 || !model.Steps && options.Steps != 8
             || options.Device is not ("auto" or "cpu" or "gpu") || options.Steps is < 1 or > 50 || id == "supertonic3" && rate < 70
             || options.Preset is not ("stable" or "expressive") || !model.Preset && options.Preset != "stable")
@@ -60,7 +71,7 @@ internal static class VideoNarratorCatalog
         var model = Get(id); var pin = Pin(id);
         return new() { ModelArtifactId = ArtifactId(id), DisplayName = model.Name, Family = model.Name, Role = ManagedModelRoles.Speech,
             Provider = id == "vosk010" ? "Alpha Cephei" : id == "silero56" ? "Silero" : "Hugging Face", RepositoryId = pin.Repository, Revision = pin.Revision, License = model.License,
-            Format = id switch { "supertonic3" => "ONNX", "vosk010" => "ZIP / ONNX", "silero56" => "Torch package", "orpheus3b" => "GGUF / SNAC ONNX", "kitten2" => "GGUF CPU / Safetensors GPU", "cosyvoice300" => "PyTorch", _ => "Safetensors" }, SourcePage = model.Source,
+            Format = id switch { "supertonic3" => "ONNX", "vosk010" => "ZIP / ONNX", "silero56" => "Torch package", "orpheus3b" => "GGUF / SNAC ONNX", "kitten2" => "GGUF CPU / Safetensors GPU", KittenMini => "ONNX INT8", "cosyvoice300" => "PyTorch", _ => "Safetensors" }, SourcePage = model.Source,
             IsManaged = true, CanRemoveFiles = true, ModelsRoot = root, InstallDirectory = string.IsNullOrWhiteSpace(root) ? "" : Path.Combine(root, "Speech", id, pin.Revision[..12]),
             Origin = ManagedModelOrigins.PredefinedScenario, RuntimeBackend = "upstream Python / LOPATA voice adapter",
             Consumers = [new() { Id = ScenarioNavigationCatalog.VideoEditor, DisplayName = "Видеоредактор / Video editor", Kind = "scenario" }], Files = pin.Files };

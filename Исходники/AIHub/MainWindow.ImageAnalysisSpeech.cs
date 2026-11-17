@@ -5,6 +5,7 @@ using System.Media;
 using AIHub.Controls;
 using AIHub.Models;
 using AIHub.Services;
+using AIHub.Services.VideoEditor;
 using WpfMessageBox = System.Windows.MessageBox;
 
 namespace AIHub;
@@ -12,7 +13,7 @@ namespace AIHub;
 public partial class MainWindow
 {
     private readonly CoreSpeechPresentationCoordinator _imageAnalysisProgrammaticSpeechCoordinator =
-        new(new CoreVoiceEngineRouter(new EspeakCoreVoiceEngine(), new RhVoiceCoreVoiceEngine()));
+        new(CoreVoiceEngineRouter.CreateWithKittenMini());
     private KokoroSpeechRuntimeService? _imageAnalysisKokoroSpeechService;
     private CancellationTokenSource? _imageAnalysisSpeechCts;
     private CancellationTokenSource? _imageAnalysisSpeechWarmupCts;
@@ -805,15 +806,12 @@ public partial class MainWindow
             EnglishVoice = configured.EnglishVoice
         };
         var language = NormalizeSpeechLanguage(options.Language);
-        var usesRhVoice = string.Equals(
-                configured.Provider,
-                CoreVoiceSettings.RhVoiceProvider,
-                StringComparison.OrdinalIgnoreCase)
-            && _imageAnalysisProgrammaticSpeechCoordinator.IsRhVoiceAvailable;
-        var actualProvider = usesRhVoice ? "RHVoice" : "eSpeak NG";
-        var actualVoice = usesRhVoice
-            ? language == "en" ? "Bdl" : "Elena"
-            : language == "en" ? settings.EnglishVoice : settings.RussianVoice;
+        var (actualProvider, actualVoice) = _imageAnalysisProgrammaticSpeechCoordinator.ResolveProvider(configured.Provider) switch
+        {
+            CoreVoiceSettings.KittenMiniProvider => ("Kitten TTS 2 Mini", VideoNarratorCatalog.Get(CoreVoiceSettings.KittenMiniProvider).DefaultSpeaker),
+            CoreVoiceSettings.RhVoiceProvider => ("RHVoice", language == "en" ? "Bdl" : "Elena"),
+            _ => ("eSpeak NG", language == "en" ? settings.EnglishVoice : settings.RussianVoice)
+        };
         LogImageAnalysisRuntime(
             $"Voice playback started: requested={(fallbackFromKokoro ? "kokoro" : "programmatic")}; " +
             $"actual=programmatic; provider={actualProvider}; voice={actualVoice}; " +

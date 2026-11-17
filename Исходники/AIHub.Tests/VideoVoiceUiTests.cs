@@ -10,6 +10,7 @@ using AIHub.Services;
 using AIHub.Services.VideoEditor;
 using Button = System.Windows.Controls.Button;
 using ListBox = System.Windows.Controls.ListBox;
+using ListBoxItem = System.Windows.Controls.ListBoxItem;
 using ComboBox = System.Windows.Controls.ComboBox;
 using TextBox = System.Windows.Controls.TextBox;
 
@@ -35,30 +36,40 @@ public sealed class VideoVoiceUiTests
             try
             {
                 dialog.Show(); await Task.Delay(80);
-                var models = Field<ListBox>("_models"); Assert.AreEqual(10, models.Items.Count);
-                models.SelectedIndex = 5; await Task.Delay(20); // Qwen 1.7B
+                var models = Field<ListBox>("_models"); Assert.AreEqual(VideoNarratorCatalog.Models.Count, models.Items.Count);
+                ListBoxItem ModelItem(string id) => models.Items.Cast<ListBoxItem>().Single(item => ((VideoNarratorModel)item.Tag).Id == id);
+                models.SelectedItem = ModelItem("qwen3-17b"); await Task.Delay(20);
                 Field<ComboBox>("_device").SelectedValue = "gpu";
                 Field<TextBox>("_style").Text = "Спокойно"; Field<ComboBox>("_speaker").SelectedItem = "Aiden";
-                models.SelectedIndex = 3; Assert.IsTrue(Field<Button>("_apply").IsEnabled); Assert.IsTrue(Field<Button>("_download").IsEnabled);
+                models.SelectedItem = ModelItem("vosk010"); Assert.IsTrue(Field<Button>("_apply").IsEnabled); Assert.IsTrue(Field<Button>("_download").IsEnabled);
                 Assert.IsTrue(Field<TextBlock>("_description").Text.Contains("Латинские буквы"));
-                models.SelectedIndex = 5; Assert.AreEqual("Спокойно", Field<TextBox>("_style").Text); Assert.AreEqual("Aiden", Field<ComboBox>("_speaker").SelectedItem);
+                models.SelectedItem = ModelItem("qwen3-17b"); Assert.AreEqual("Спокойно", Field<TextBox>("_style").Text); Assert.AreEqual("Aiden", Field<ComboBox>("_speaker").SelectedItem);
                 Assert.AreEqual("gpu", Field<ComboBox>("_device").SelectedValue);
                 foreach (var index in Enumerable.Range(0, models.Items.Count))
                 {
                     models.SelectedIndex = index;
-                    Assert.IsTrue(Field<ComboBox>("_device").IsEnabled);
+                    Assert.AreEqual(!((VideoNarratorModel)((ListBoxItem)models.SelectedItem).Tag).CpuOnly, Field<ComboBox>("_device").IsEnabled);
                     Assert.AreEqual(3, Field<ComboBox>("_device").Items.Count);
                 }
-                models.SelectedIndex = 5;
+                var mini = ModelItem(VideoNarratorCatalog.KittenMini);
+                models.SelectedItem = mini;
+                Assert.AreEqual("cpu", Field<ComboBox>("_device").SelectedValue);
+                Field<ComboBox>("_speaker").SelectedItem = "Anastasia";
+                Assert.AreEqual("Anastasia", Field<ComboBox>("_speaker").SelectedItem);
+                Field<ComboBox>("_language").SelectedValue = "en";
+                Assert.IsFalse(Field<ComboBox>("_speaker").Items.Contains("Anastasia"));
+                Assert.AreEqual("Iris", Field<ComboBox>("_speaker").SelectedItem);
+                models.SelectedItem = ModelItem("qwen3-17b");
                 Assert.IsFalse(Field<Button>("_play").IsEnabled); Assert.IsTrue(Field<TextBlock>("_sample").Text.Contains("нет"));
                 Assert.IsNull(dialog.Choice); Assert.IsFalse(Field<TextBox>("_rate").IsEnabled);
-                var examples = Field<List<Button>>("_exampleButtons"); Assert.AreEqual(20, examples.Count);
+                var examples = Field<List<Button>>("_exampleButtons"); Assert.AreEqual(VideoNarratorCatalog.Models.Count * 2, examples.Count);
                 foreach (var model in VideoNarratorCatalog.Models)
                     foreach (var language in new[] { "ru", "en" })
                     {
                         var button = examples.Single(b => System.Windows.Automation.AutomationProperties.GetAutomationId(b) == "VideoEditor.Voices.Sample." + model.Id + "." + language);
                         var sample = VideoNarratorSamples.Find(model.Id, language);
                         Assert.AreEqual(sample is not null, button.IsEnabled);
+                        if (model.Id == VideoNarratorCatalog.KittenMini) Assert.IsTrue(button.IsEnabled && sample is { Experimental: false });
                         Assert.IsTrue(sample is not null || VideoNarratorSamples.UnavailableReason(model.Id, language) is not null, "Every attempted case must have audio or an explicit failure.");
                         if (!model.Languages.Contains(language))
                         {
@@ -72,11 +83,12 @@ public sealed class VideoVoiceUiTests
                 foreach (var button in examples.Where(b => b.IsEnabled))
                 {
                     var sample = (VideoNarratorSample)button.Tag;
-                    if (sample.Id == "vosk010" && sample.Language == "ru")
+                    if (sample.Id is "vosk010" or VideoNarratorCatalog.KittenMini && sample.Language == "ru")
                     {
                         Assert.AreEqual("Лопата для вас приготовила тестовую запись диктора. Лопата умеет говорить во многих сценариях.", sample.Text);
                         Assert.IsFalse(sample.Text.Any(char.IsAsciiLetter));
                     }
+                    else if (sample.Id == VideoNarratorCatalog.KittenMini) Assert.IsTrue(sample.Text.All(char.IsAscii));
                     else Assert.IsTrue(sample.Text.Contains("Лопата") && sample.Text.Contains("LOPATA"));
                     var opened = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                     void Opened(object? sender, EventArgs e) => opened.TrySetResult();
@@ -97,7 +109,7 @@ public sealed class VideoVoiceUiTests
                 Assert.IsNull(dialog.Choice, "Examples must not apply a project profile.");
                 var entriesDirectory = Path.Combine(f.Path, "library", "Entries");
                 Assert.IsTrue(!Directory.Exists(entriesDirectory) || !Directory.EnumerateFiles(entriesDirectory, "*.json").Any());
-                models.SelectedIndex = 3; models.ScrollIntoView(models.Items[3]); await Task.Delay(30);
+                models.SelectedItem = mini; models.ScrollIntoView(mini); await Task.Delay(30);
                 var output = Path.Combine("H:\\AI_HUB\\Тесты\\VideoVoiceGpu_20261026", "voice-window.png"); Directory.CreateDirectory(Path.GetDirectoryName(output)!);
                 dialog.UpdateLayout(); var bitmap = new RenderTargetBitmap((int)dialog.ActualWidth, (int)dialog.ActualHeight, 96, 96, PixelFormats.Pbgra32); bitmap.Render(dialog);
                 var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(bitmap)); using var stream = File.Create(output); png.Save(stream);

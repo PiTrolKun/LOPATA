@@ -5,6 +5,7 @@ voice clones, endorsements, or recordings of the upstream authors. Original
 spellings Лопата and LOPATA are intentionally kept in both languages.
 Exception requested by the user on 2026-10-26: the Vosk Russian example
 uses Лопата in both sentences, since its native frontend rejects Latin text.
+Kitten TTS 2 Mini uses Лопата in the Russian example and LOPATA in English.
 One default speaker per model is demonstrated. Language support and synthesis
 quality are model-specific. No other model or voice was substituted.
 Experimental entries test foreign-language text through that model's native
@@ -20,6 +21,7 @@ Credits / Сведения об авторах моделей:
 Kokoro: hexgrad and contributors; Russian voice Sveta: zaakirio.
 Vosk-TTS: Alpha Cephei and contributors.
 KittenTTS 2: KittenML / Stellon Labs. Powered by Stellon Labs. Powered by KittenML.
+Kitten TTS 2 Mini: KittenML, Apache-2.0.
 Qwen3-TTS and CosyVoice: Qwen / Alibaba and contributors.
 Supertonic: Supertone and contributors; pinned mirror jiangzhuo9357/supertonic-3.
 Orpheus: Canopy AI and contributors; isaiahbjork GGUF; SNAC by Hubert Siuzdak.

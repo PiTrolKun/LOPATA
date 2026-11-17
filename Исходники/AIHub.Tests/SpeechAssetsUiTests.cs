@@ -173,6 +173,8 @@ public sealed partial class SpeechAssetsUiTests
                     picker = owner.OwnedWindows.Cast<Window>().Single(); picker.UpdateLayout();
                     Assert.AreEqual("VideoEditor.Voices.Window", System.Windows.Automation.AutomationProperties.GetAutomationId(picker));
                     Assert.IsTrue(Desc<System.Windows.Controls.ListBox>(picker).Any(list => list.Items.Count > 3));
+                    Assert.IsTrue(Desc<Button>(picker).Single(b => System.Windows.Automation.AutomationProperties.GetAutomationId(b)
+                        == "VideoEditor.Voices.Sample.kitten2-mini.ru").IsEnabled);
                     var shot = new RenderTargetBitmap((int)picker.ActualWidth, (int)picker.ActualHeight, 96, 96, PixelFormats.Pbgra32);
                     shot.Render(picker); var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(shot));
                     using var file = File.Create(Path.Combine(root, "models.png")); png.Save(file);

@@ -45,7 +45,10 @@ public sealed class VideoVoiceSamplePreparationTests
                     var text = language == "ru"
                         ? "Лопата для вас приготовила тестовую запись диктора. LOPATA умеет говорить во многих сценариях."
                         : "Лопата has prepared a narrator test recording for you. LOPATA can speak in many scenarios.";
-                    if (model.Id == "vosk010" && language == "ru") text = text.Replace("LOPATA", "Лопата", StringComparison.Ordinal);
+                    if (model.Id is "vosk010" or VideoNarratorCatalog.KittenMini && language == "ru")
+                        text = text.Replace("LOPATA", "Лопата", StringComparison.Ordinal);
+                    if (model.Id == VideoNarratorCatalog.KittenMini && language == "en")
+                        text = text.Replace("Лопата", "LOPATA", StringComparison.Ordinal);
                     var name = model.Id + "-" + language + ".wav";
                     var target = Path.Combine(destination, name);
                     if (File.Exists(target))

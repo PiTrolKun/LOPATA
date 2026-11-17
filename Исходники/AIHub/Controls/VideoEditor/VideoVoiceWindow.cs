@@ -121,7 +121,13 @@ internal sealed partial class VideoVoiceWindow : Window
         foreach (var b in new[] { _generate, _play, _stop }) { b.Margin = new(0, 8, 8, 8); buttons.Children.Add(b); }
         _trialPanel.Children.Add(buttons); _trialPanel.Children.Add(new TextBlock { Text = L("TrialSafe"), TextWrapping = TextWrapping.Wrap });
         _speaker.SelectionChanged += (_, _) => InvalidatePreview(); _language.SelectionChanged += (_, _) => InvalidatePreview();
-        _language.SelectionChanged += (_, _) => { if (_extension is not null && _language.SelectedValue is string language) _trial.Text = _extension.TestPhrase(language); };
+        _language.SelectionChanged += (_, _) =>
+        {
+            if (_language.SelectedValue is not string language) return;
+            if (Model is { LanguageSpeakers: not null } model)
+                LoadSpeakers(model, language, _speaker.SelectedItem as string);
+            if (_extension is not null) _trial.Text = _extension.TestPhrase(language);
+        };
         _device.SelectionChanged += (_, _) => InvalidatePreview(); _rate.TextChanged += (_, _) => InvalidatePreview();
         _style.TextChanged += (_, _) => InvalidatePreview(); _steps.TextChanged += (_, _) => InvalidatePreview(); _trial.TextChanged += (_, _) => InvalidatePreview();
         _preset.SelectionChanged += (_, _) => InvalidatePreview();
@@ -157,17 +163,23 @@ internal sealed partial class VideoVoiceWindow : Window
         _player.Stop(); InvalidatePreview(); var m = Model; if (m is null) return;
         var initial = _drafts.GetValueOrDefault(m.Id) ?? new(m.Id, m.Languages.Contains("ru") ? "ru" : m.Languages[0], 100, new(Speaker: m.DefaultSpeaker));
         _description.Text = m.Name + "\n\n" + L(m.DescriptionKey) + "\n\n" + L("License") + ": " + m.License;
-        _speaker.ItemsSource = m.Speakers; _speaker.SelectedItem = string.IsNullOrEmpty(initial.Options.Speaker) ? m.DefaultSpeaker : initial.Options.Speaker;
         _language.ItemsSource = m.Languages.Select(code => new PresetChoice(code, LanguageName(code))).ToArray(); _language.SelectedValue = initial.Language;
+        LoadSpeakers(m, initial.Language, initial.Options.Speaker);
         _rate.Text = initial.Rate.ToString(CultureInfo.InvariantCulture); _rate.IsEnabled = m.Rate;
         _style.Text = initial.Options.Style; _style.IsEnabled = m.Style;
         _steps.Text = initial.Options.Steps.ToString(CultureInfo.InvariantCulture); _steps.IsEnabled = m.Steps;
         _preset.SelectedItem = _preset.Items.Cast<PresetChoice>().Single(p => p.Id == initial.Options.Preset);
-        _device.SelectedValue = initial.Options.Device; _device.IsEnabled = true;
+        _device.SelectedValue = m.CpuOnly ? "cpu" : initial.Options.Device;
         ShowField("Rate", m.Rate); ShowField("Style", m.Style); ShowField("Steps", m.Steps);
         ShowField("Preset", m.Preset);
         ShowField("Device", true);
         _sample.Text = L("NoSample"); _status.Text = m.Blocked is {} blocked ? L(blocked) : L("NotPhysicallyTested"); UpdateButtons();
+    }
+    private void LoadSpeakers(VideoNarratorModel model, string language, string? selected)
+    {
+        var speakers = model.SpeakersFor(language);
+        _speaker.ItemsSource = speakers;
+        _speaker.SelectedItem = speakers.Contains(selected) ? selected : model.DefaultSpeaker;
     }
     private void ShowField(string name, bool visible)
     { var field = _fields[name]; field.Label.Visibility = field.Control.Visibility = visible ? Visibility.Visible : Visibility.Collapsed; }
@@ -193,7 +205,7 @@ internal sealed partial class VideoVoiceWindow : Window
         _global.IsEnabled = available && _canTargetSelection;
         _rate.IsEnabled = !_busy && m?.Rate == true; _style.IsEnabled = !_busy && m?.Style == true; _steps.IsEnabled = !_busy && m?.Steps == true;
         _preset.IsEnabled = available && m?.Preset == true;
-        _device.IsEnabled = available;
+        _device.IsEnabled = available && m?.CpuOnly == false;
         foreach (var model in VideoNarratorCatalog.Models)
             if (_cardStatuses.TryGetValue(model.Id, out var status)) status.Text = model.Blocked is not null ? L("Pending") : Installed(model) ? L("Installed") : L("Missing");
     }
