@@ -19,8 +19,23 @@ public interface IImageGenerationWorker
 
 public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
 {
+    private readonly IProgress<BitmapSource>? _previewFrames;
+    private readonly ImageGenerationResident? _resident;
+
+    public ImageGenerationNativeWorker() { }
+
+    internal ImageGenerationNativeWorker(IProgress<BitmapSource> previewFrames, ImageGenerationResident? resident = null)
+    {
+        _previewFrames = previewFrames;
+        _resident = resident;
+    }
+
     public static ProcessStartInfo Command(ImageGenerationRequest request, int index,
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, string? executableOverride = null)
+        => CreateCommand(request, index, cards, promptFile, output, executableOverride, false);
+
+    private static ProcessStartInfo CreateCommand(ImageGenerationRequest request, int index,
+        IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, string? executableOverride, bool server)
     {
         var model = ImageGenerationCatalog.Get(request.ModelId);
         ImageLora.ImageLoraCatalog.ValidateRawPrompt(request.Prompt);
@@ -29,8 +44,11 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
             StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
         void Arg(string key, object value) { info.ArgumentList.Add(key); info.ArgumentList.Add(Convert.ToString(value, CultureInfo.InvariantCulture)!); }
-        Arg("--prompt-file", promptFile); Arg("--output", output);
-        Arg("--width", request.Width); Arg("--height", request.Height); Arg("--seed", request.Seeds[index]);
+        if (!server)
+        {
+            Arg("--prompt-file", promptFile); Arg("--output", output);
+            Arg("--width", request.Width); Arg("--height", request.Height); Arg("--seed", request.Seeds[index]);
+        }
         Arg("--steps", model.Steps); Arg("--cfg-scale", model.Cfg); Arg("--sampling-method", model.Sampler);
         if (model.Sigmas is { } sigmas) Arg("--sigmas", sigmas);
         Arg("--batch-count", 1);
@@ -39,6 +57,17 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         Arg("--llm", ImageGenerationInstallation.Weight(cards, "llm"));
         info.ArgumentList.Add("--diffusion-fa"); // Legacy command; ManagedCommand adjusts only the selected newer contract.
         Arg("--vae", ImageGenerationInstallation.Weight(cards, "vae"));
+        if (request.ReferenceImages.Length > 0)
+        {
+            if (model.Id == "qwen-image-21-base-gguf")
+                Arg("--llm_vision", ImageGenerationInstallation.Weight(cards, "llm_vision"));
+            if (!server)
+            {
+                foreach (var reference in request.ReferenceImages) Arg("-r", reference);
+                var refOptions = ImageGenerationReferences.NativeOptions(request);
+                if (refOptions.Length > 0) Arg("--ref-image-args", refOptions);
+            }
+        }
         if (model.Id == "krea") Arg("--flow-shift", 1.15); // Native Krea denoiser uses the author's mu directly.
         info.ArgumentList.Add("--offload-to-cpu");
         info.ArgumentList.Add("--vae-tiling");
@@ -68,7 +97,13 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         if (cards.SingleOrDefault(card => card.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
             await ImageGenerationInstallation.EnsureRuntimeAsync(legacyRuntime, token);
         var selection = await SdRuntimeSelector.SelectAsync(cards, false, token, setId, requireGpu: model.RequiresGpu);
-        var result = await AttemptAsync(request, index, cards, promptFile, output, selection, model.RequiresGpu, token);
+        using var prepared = ImageGenerationReferences.NeedsPreparation(request)
+            ? await Task.Run(() => ImageGenerationReferences.Prepare(request.ReferenceImages, token), token)
+            : null;
+        if (prepared is not null) request = request with { ReferenceImages = prepared.Paths };
+        var result = _resident is null
+            ? await AttemptAsync(request, index, cards, promptFile, output, selection, model.RequiresGpu, token)
+            : await _resident.GenerateAsync(request, index, cards, output, selection, _previewFrames, token);
         if (!model.RequiresGpu && result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log))
         {
             token.ThrowIfCancellationRequested();
@@ -96,19 +131,27 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         return new(selection.EngineSetId, selection.Version, selection.Revision, selection.Backend, selection.ComponentId) {
             Placement = model.RequiresGpu ? result.Placement.ToString() : null,
             Schedule = model.Sigmas,
+            ArtistRevision = cards.FirstOrDefault(card => card.Files.Any(file => file.Purpose == "diffusion"))?.Revision,
             Loras = request.Loras.Select(u => { var d = ImageLora.ImageLoraCatalog.Find(u.Id);
                 return new ImageLoraApplied(u.Id, d.Repository, u.Revision, d.Files.Single().Sha256, u.Strength, d.Trigger); }).ToArray() };
     }
 
     internal static ProcessStartInfo ManagedCommand(ImageGenerationRequest request, int index,
-        IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, SdRuntimeSelection selection)
+        IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, SdRuntimeSelection selection,
+        string? previewPattern = null, bool server = false)
     {
-        var info = Command(request, index, cards, promptFile, output, selection.Executable);
-        info.FileName = selection.Executable; info.WorkingDirectory = selection.Directory;
+        var executable = server ? Path.Combine(selection.Directory, "sd-server.exe") : selection.Executable;
+        var info = CreateCommand(request, index, cards, promptFile, output, executable, server);
         if (selection.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
         {
             info.ArgumentList.Remove("--diffusion-fa");
             info.ArgumentList.Add("--flash-attn"); info.ArgumentList.Add("off,diffusion=on");
+            if (previewPattern is not null)
+            {
+                info.ArgumentList.Add("--preview"); info.ArgumentList.Add("proj");
+                info.ArgumentList.Add("--preview-interval"); info.ArgumentList.Add("1");
+                info.ArgumentList.Add("--preview-path"); info.ArgumentList.Add(previewPattern);
+            }
         }
         RuntimeDeviceProbe.ClearBackendOverrides(info);
         info.ArgumentList.Remove("--offload-to-cpu");
@@ -139,11 +182,16 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
             && match.Groups[1].Value == match.Groups[2].Value && match.Groups[1].Value != "0"));
     }
 
-    private static async Task<(int ExitCode, string Log, ImageGenerationGpuPlacement Placement)> AttemptAsync(ImageGenerationRequest request, int index,
+    private async Task<(int ExitCode, string Log, ImageGenerationGpuPlacement Placement)> AttemptAsync(ImageGenerationRequest request, int index,
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output,
         SdRuntimeSelection selection, bool requireGpu, CancellationToken token)
     {
-        using var process = OwnedProcessRegistry.Shared.Start(ManagedCommand(request, index, cards, promptFile, output, selection), "ImageGeneration");
+        using var preview = _previewFrames is not null && selection.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet
+            ? ImageGenerationLivePreview.TryCreate() : null;
+        using var process = OwnedProcessRegistry.Shared.Start(
+            ManagedCommand(request, index, cards, promptFile, output, selection, preview?.OutputPattern), "ImageGeneration");
+        using var stopPreview = preview is null ? null : new CancellationTokenSource();
+        var watchPreview = preview?.WatchAsync(_previewFrames!, stopPreview!.Token) ?? Task.CompletedTask;
         var rejected = new TaskCompletionSource<ImageGenerationGpuPlacement>(TaskCreationOptions.RunContinuationsAsynchronously);
         var placement = ImageGenerationGpuPlacement.Unknown;
         void Observe(string line)
@@ -173,12 +221,13 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         }
         finally
         {
+            stopPreview?.Cancel();
             Stop(process);
             await process.WaitForExitAsync(CancellationToken.None);
-            await Task.WhenAll(stdout, stderr);
+            await Task.WhenAll(stdout, stderr, watchPreview);
         }
     }
-    private static void Stop(Process process)
+    internal static void Stop(Process process)
     {
         try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
         catch (InvalidOperationException) when (process.HasExited) { }
@@ -249,7 +298,7 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
                 token.ThrowIfCancellationRequested();
                 if (!IsValidImage(partial, request)) throw new BackgroundOperationFailedException("Generation.InvalidImage");
                 if (receipt is not null) await SaveReceiptAsync(receiptPath, receipt, token);
-                if (request.Metadata is not null)
+                if (request.Metadata is not null || request.OutputFormat != ImageGenerationFileFormat.Png)
                 {
                     var metadata = ImageGenerationMetadata.Create(request, i, DateTimeOffset.Now, receipt);
                     await Task.Run(() => PngMetadataWriter.Write(partial, metadata, token), token);

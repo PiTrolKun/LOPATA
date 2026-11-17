@@ -197,6 +197,21 @@ public sealed class BackgroundOperationTests
     }
 
     [TestMethod]
+    public async Task ResumeKeepsWaitingReasonForTheNextAttempt()
+    {
+        var input = Input() with { Phase = BackgroundOperationPhase.Waiting };
+        Store.Save(input);
+        var controller = new BackgroundOperationController(Store);
+        controller.Load();
+        controller.Register(input.Kind, (_, _) => Task.FromException(new BackgroundOperationWaitingException("resume_in_separate_process")));
+
+        await Assert.ThrowsAsync<BackgroundOperationWaitingException>(() => controller.ResumeAsync(CancellationToken.None));
+
+        Assert.AreEqual(BackgroundOperationPhase.Waiting, controller.State!.Phase);
+        Assert.AreEqual("resume_in_separate_process", Store.Load()!.Detail);
+    }
+
+    [TestMethod]
     public async Task RefusedRequestCanBeResolvedWithoutDiscardingAnotherPendingTask()
     {
         var controller = new BackgroundOperationController(Store); var input = Input();

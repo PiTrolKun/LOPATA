@@ -63,9 +63,11 @@ public static class ImageGenerationExport
 
     public static string FileName(ImageGenerationRequest request, int number)
     {
-        var name = ImageGenerationCatalog.DisplayName(request.ModelId);
+        var name = string.IsNullOrWhiteSpace(request.OutputName)
+            ? ImageGenerationCatalog.DisplayName(request.ModelId) : request.OutputName;
         name = new string(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c).ToArray());
-        return name + "_" + (request.SubmittedAt ?? DateTimeOffset.Now).ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture) + "_" + number.ToString("D4", CultureInfo.InvariantCulture) + ".png";
+        return name + "_" + (request.SubmittedAt ?? DateTimeOffset.Now).ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture)
+            + "_" + number.ToString("D4", CultureInfo.InvariantCulture) + ImageGenerationOutput.Extension(request.OutputFormat);
     }
 
     private static bool SameContent(string a, string b)

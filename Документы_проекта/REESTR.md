@@ -1,3 +1,11 @@
+## 17.11.2026 — повторное использование Qwen-Image, 0.8.36-dev
+
+Повторы по выбранному промпту визуального сценария используют `sd-server.exe` из установленного комплекта 002 stable-diffusion.cpp `f0aac52`. Весами и предпросмотром управляет тот же движок через локальный адрес с динамическим портом. Аудит манифеста и моделей общий для обоих способов запуска. [API закреплённой ревизии](https://github.com/leejet/stable-diffusion.cpp/blob/f0aac524d3f29140e60ba78f3cfb16d6acea87db/examples/server/api.md).
+
+## 17.11.2026 — визуальный модуль Qwen3-VL-8B для Base GGUF
+
+Для входных изображений Qwen-Image-2.1 Base GGUF используется `mmproj-Qwen3VL-8B-Instruct-F16.gguf`, ревизия `f982a07559d4a2f6c8744d840bf6fccab30eea96`, 1 159 029 824 байта, SHA-256 `ca524100ebf825c9a870db1c580d03879e0da0ab2541697e2458e64891cf9d38`. Лицензия Apache-2.0 учтена в каталоге. В Turbo INT8 обнаружены встроенные визуальные веса. [Ревизия Qwen](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/tree/f982a07559d4a2f6c8744d840bf6fccab30eea96) · [ТЗ](../ТЗ/Архив/2026-11-16_Пошаговый_визуальный_сценарий.md).
+
 ## 11.11.2026 — форматы игровых звуков, 0.7.83-dev
 
 Opus 64 кбит/с VBR и MP3 128 кбит/с CBR кодируются существующим комплектом music.audio с общей проверкой и лицензией. WAV использует исходный PCM16. Метаданные записываются в OpusTags или ID3 и содержат LOPATA_PROVENANCE, LOPATA_SYNTHESIZER, LOPATA_ENCODING и LOPATA_GAME_SOUND.

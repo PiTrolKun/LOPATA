@@ -41,6 +41,10 @@ public partial class MainWindow
         RegisterVideoConceptBackgroundOperations();
         RegisterSongClipBackgroundOperations();
         _backgroundOperations.Register(Services.Shorts.ShortsJob.Kind, (state, token) => OpenShorts().ResumeAsync(state, token));
+        _backgroundOperations.Register(Controls.VisualScenario.VisualScenarioControl.DrawingKind,
+            (state, token) => RevealVisualScenario().RestoreAsync(state, token));
+        _backgroundOperations.Register(Services.VisualScenario.VisualAdvisor.ChatKind,
+            (state, token) => RevealVisualScenario().RestoreAsync(state, token));
         RegisterLetItOutBackgroundOperation();
         RegisterLivingArcadeBackgroundOperations();
         RegisterChatSpeech();
@@ -74,6 +78,7 @@ public partial class MainWindow
             {
                 RefreshBackgroundTray();
                 ScenarioNavigationPage.Shorts?.RefreshActions();
+                ScenarioNavigationPage.VisualWorkspace?.UpdateCommands();
             });
         };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -395,6 +400,13 @@ public partial class MainWindow
             {
                 RestoreFromTray(); ShowBackgroundScenarioPage(WorkStartPage);
                 OpenImageUtilityScenario(); ImageUtilityPage.Restore(notice.Project);
+                _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind is Controls.VisualScenario.VisualScenarioControl.DrawingKind or Services.VisualScenario.VisualAdvisor.ChatKind
+                && notice.Project is { } visualId)
+            {
+                RevealVisualScenario().RestoreProject(visualId);
                 _backgroundOperations!.Acknowledge(notice.Id);
                 return;
             }

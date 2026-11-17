@@ -10,6 +10,17 @@ namespace AIHub.Services;
 /// <summary>Only the submitted author and generation data belong in a shared image.</summary>
 public static class ImageGenerationMetadata
 {
+    private static readonly XNamespace X = "adobe:ns:meta/";
+    private static readonly XNamespace Rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    private static readonly XNamespace Exif = "http://ns.adobe.com/exif/1.0/";
+    private static readonly XNamespace Lopata = "https://lopata.app/ns/provenance/1.0/";
+    private static readonly string[] GenerationFields =
+    [
+        "ProgramVersion", "Scenario", "OperationId", "Model", "ModelId", "ModelRevision", "Prompt",
+        "EngineSetId", "EngineSetDate", "Backend", "BackendCommit", "Steps", "Sampler", "Cfg", "Seed",
+        "Width", "Height", "OutputWidth", "OutputHeight", "OutputFormat", "ReferenceImageCount"
+    ];
+
     public static string Author(string? name) => string.IsNullOrWhiteSpace(name) ? "LOPATA User" : name.Trim();
 
     public static IReadOnlyDictionary<string, string> Create(ImageGenerationRequest request, int index, DateTimeOffset createdAt,
@@ -32,30 +43,30 @@ public static class ImageGenerationMetadata
         if (runtime?.Loras.Length > 0) parameters += ", LoRA: " + string.Join("; ", runtime.Loras.Select(l =>
             l.Repository + "@" + l.Revision + ":" + l.Strength.ToString(CultureInfo.InvariantCulture)));
 
-        XNamespace rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
         XNamespace dc = "http://purl.org/dc/elements/1.1/";
         XNamespace xmp = "http://ns.adobe.com/xap/1.0/";
-        XNamespace exif = "http://ns.adobe.com/exif/1.0/";
-        XElement Alternative(XName name, string value) => new(name, new XElement(rdf + "Alt",
-            new XElement(rdf + "li", new XAttribute(XNamespace.Xml + "lang", "x-default"), value)));
-        var xml = new XElement(XName.Get("xmpmeta", "adobe:ns:meta/"),
-            new XElement(rdf + "RDF", new XElement(rdf + "Description", new XAttribute(rdf + "about", ""),
-                new XAttribute(XNamespace.Xmlns + "dc", dc), new XAttribute(XNamespace.Xmlns + "xmp", xmp), new XAttribute(XNamespace.Xmlns + "exif", exif),
+        XElement Alternative(XName name, string value) => new(name, new XElement(Rdf + "Alt",
+            new XElement(Rdf + "li", new XAttribute(XNamespace.Xml + "lang", "x-default"), value)));
+        var xml = new XElement(X + "xmpmeta",
+            new XElement(Rdf + "RDF", new XElement(Rdf + "Description", new XAttribute(Rdf + "about", ""),
+                new XAttribute(XNamespace.Xmlns + "dc", dc), new XAttribute(XNamespace.Xmlns + "xmp", xmp),
                 Alternative(dc + "title", title),
-                new XElement(dc + "creator", new XElement(rdf + "Seq", new XElement(rdf + "li", author))),
-                Alternative(dc + "description", request.Prompt), Alternative(exif + "UserComment", request.Prompt),
-                new XElement(dc + "subject", new XElement(rdf + "Bag", keywords.Select(k => new XElement(rdf + "li", k)))),
+                new XElement(dc + "creator", new XElement(Rdf + "Seq", new XElement(Rdf + "li", author))),
+                Alternative(dc + "description", request.Prompt), Alternative(Exif + "UserComment", request.Prompt),
+                new XElement(dc + "subject", new XElement(Rdf + "Bag", keywords.Select(k => new XElement(Rdf + "li", k)))),
                 new XElement(xmp + "CreatorTool", "LOPATA"),
                 new XElement(xmp + "CreateDate", createdAt.ToString("O", CultureInfo.InvariantCulture)),
-                new XElement(exif + "DateTimeOriginal", createdAt.ToString("O", CultureInfo.InvariantCulture)))));
-        var structured = JsonSerializer.Serialize(new
+                new XElement(Exif + "DateTimeOriginal", createdAt.ToString("O", CultureInfo.InvariantCulture)))));
+        var structured = JsonSerializer.SerializeToNode(new
         {
             Schema = 1, Author = author, Program = "LOPATA", ProgramVersion = version,
             Scenario = request.Metadata?.Scenario ?? "image-generation/simple", OperationId = request.Id,
             EngineSetId = runtime?.EngineSetId, EngineSetDate = engineSetDate,
-            Model = model.Name, ModelId = model.Id, GenerationNumber = request.FirstGenerationNumber + index,
+            Model = model.Name, ModelId = model.Id, ModelRevision = runtime?.ArtistRevision ?? request.Metadata?.ArtistRevision,
+            AdditionalModels = request.Metadata?.AdditionalModels ?? [], GenerationNumber = request.FirstGenerationNumber + index,
             request.Prompt, request.SubmittedAt, CreatedAt = createdAt, Seed = seed, request.Width, request.Height,
             OutputWidth = request.Width, OutputHeight = request.Height, OutputLongestSide = 0, ResizeAlgorithm = "None",
+            OutputFormat = "PNG", ReferenceImageCount = request.ReferenceImages.Length,
             model.Steps, model.Cfg, model.Sampler, model.ClipSkip,
             FlowShift = model.Id == "krea" ? (double?)1.15 : null,
             Backend = "stable-diffusion.cpp", BackendCommit = runtime?.BackendCommit,
@@ -73,14 +84,14 @@ public static class ImageGenerationMetadata
                 return new { artifact.Id, artifact.Repository, artifact.Revision,
                     Files = artifact.Files.Select(f => new { f.RelativePath, f.Sha256 }) };
             })
-        });
+        })!.AsObject();
         var fields = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["XML:com.adobe.xmp"] = xml.ToString(SaveOptions.DisableFormatting),
-            ["Title"] = title, ["Author"] = author, ["Description"] = request.Prompt,
+            ["XML:com.adobe.xmp"] = WriteXmp(xml, structured, parameters, request.Width, request.Height),
+            ["Title"] = title, ["Author"] = author, ["Description"] = request.Prompt, ["Prompt"] = request.Prompt,
             ["Software"] = "LOPATA", ["Creation Time"] = createdAt.ToString("O", CultureInfo.InvariantCulture),
             ["LOPATA_PRODUCER"] = producer,
-            ["Keywords"] = string.Join("; ", keywords), ["parameters"] = parameters, ["LOPATA"] = structured
+            ["Keywords"] = string.Join("; ", keywords), ["parameters"] = parameters, ["LOPATA"] = structured.ToJsonString()
         };
         EngineSetMetadataIdentity.AddTags(fields, runtime?.EngineSetId);
         return fields;
@@ -90,24 +101,48 @@ public static class ImageGenerationMetadata
         ImageGenerationRequest request, int width, int height, string algorithm)
     {
         var fields = original.ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
+        JsonObject? data = null;
         if (fields.TryGetValue("LOPATA", out var structured))
         {
-            var json = JsonNode.Parse(structured)?.AsObject() ?? throw new JsonException("Invalid generation metadata.");
-            json["OutputWidth"] = width; json["OutputHeight"] = height;
-            json["OutputLongestSide"] = request.OutputLongestSide; json["ResizeAlgorithm"] = algorithm;
-            fields["LOPATA"] = json.ToJsonString();
+            data = JsonNode.Parse(structured) as JsonObject ?? throw new JsonException("Invalid generation metadata.");
+            data["OutputWidth"] = width; data["OutputHeight"] = height;
+            data["OutputLongestSide"] = request.OutputLongestSide; data["ResizeAlgorithm"] = algorithm;
+            data["OutputFormat"] = ImageGenerationOutput.FormatId(request.OutputFormat).ToUpperInvariant();
+            fields["LOPATA"] = data.ToJsonString();
         }
         if (fields.TryGetValue("parameters", out var parameters))
-            fields["parameters"] = parameters + FormattableString.Invariant($", Output size: {width}x{height}, Resize: {algorithm}");
-        if (fields.TryGetValue("XML:com.adobe.xmp", out var xmp))
         {
-            var xml = XElement.Parse(xmp); XNamespace rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-            XNamespace exif = "http://ns.adobe.com/exif/1.0/";
-            var description = xml.Descendants(rdf + "Description").First();
-            description.SetElementValue(exif + "PixelXDimension", width);
-            description.SetElementValue(exif + "PixelYDimension", height);
-            fields["XML:com.adobe.xmp"] = xml.ToString(SaveOptions.DisableFormatting);
+            parameters += FormattableString.Invariant($", Output size: {width}x{height}, Resize: {algorithm}");
+            fields["parameters"] = parameters;
         }
+        if (fields.TryGetValue("XML:com.adobe.xmp", out var xmp))
+            fields["XML:com.adobe.xmp"] = WriteXmp(XElement.Parse(xmp), data, parameters, width, height);
         return fields;
+    }
+
+    private static string WriteXmp(XElement packet, JsonObject? data, string? parameters, int width, int height)
+    {
+        // Explicit conventional prefixes allow readers such as ExifTool to recognize the XMP envelope.
+        packet.Attribute("xmlns")?.Remove();
+        packet.SetAttributeValue(XNamespace.Xmlns + "x", X);
+        var rdf = packet.Descendants(Rdf + "RDF").First();
+        rdf.Attribute("xmlns")?.Remove();
+        rdf.SetAttributeValue(XNamespace.Xmlns + "rdf", Rdf);
+        var description = rdf.Element(Rdf + "Description")!;
+        description.SetAttributeValue(XNamespace.Xmlns + "exif", Exif);
+        description.SetAttributeValue(XNamespace.Xmlns + "lopata", Lopata);
+        description.SetElementValue(Exif + "PixelXDimension", width);
+        description.SetElementValue(Exif + "PixelYDimension", height);
+        description.SetElementValue(Lopata + "Parameters", parameters);
+        if (data is not null)
+        {
+            description.SetElementValue(Lopata + "Generation", data.ToJsonString());
+            foreach (var field in GenerationFields)
+                description.SetElementValue(Lopata + field, data[field]?.ToString());
+            var runtime = data["Runtime"] as JsonObject;
+            description.SetElementValue(Lopata + "ComputeBackend", runtime?["Backend"]?.ToString());
+            description.SetElementValue(Lopata + "Schedule", runtime?["Schedule"]?.ToString());
+        }
+        return packet.ToString(SaveOptions.DisableFormatting);
     }
 }

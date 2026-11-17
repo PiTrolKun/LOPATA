@@ -27,8 +27,8 @@ public sealed class FileMetadataReader
             Lopata.Updates.SafeUpdatePath.RejectLinks(path);
             var raw = await FileMetadataExifTool.ReadAsync(path, token);
             format = FileMetadataPolicy.RawValue(raw, "File:FileType").ToUpperInvariant();
-            if(format=="EXTENDED WEBP")format="WEBP";
             var mime = FileMetadataPolicy.RawValue(raw, "File:MIMEType");
+            if (mime.Equals("image/webp", StringComparison.OrdinalIgnoreCase)) format = "WEBP";
             var hasOrigin = raw.EnumerateObject().Any(p => p.Name.Contains("LOPATA", StringComparison.OrdinalIgnoreCase)
                 || p.Name.EndsWith(":Software", StringComparison.OrdinalIgnoreCase) && p.Value.ToString().Contains("LOPATA", StringComparison.OrdinalIgnoreCase));
             foreach (var pair in raw.EnumerateObject())

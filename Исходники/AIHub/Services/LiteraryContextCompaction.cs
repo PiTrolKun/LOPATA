@@ -11,7 +11,8 @@ public sealed class LiteraryContextCompaction(
     Func<string, CancellationToken, Task<int>> countText,
     Func<IReadOnlyList<ImageAnalysisHiddenMessage>, CancellationToken, Task<int>> countPrompt,
     Func<IReadOnlyList<ImageAnalysisHiddenMessage>, CancellationToken, Task<string>> generate,
-    Func<int> capacity)
+    Func<int> capacity,
+    string? summaryInstruction = null)
 {
     private const string Instruction = """
         Сожми рабочую литературную беседу на русском языке. Сохрани принятые автором решения,
@@ -23,8 +24,8 @@ public sealed class LiteraryContextCompaction(
         Сохраняй полезные ссылки на ID реплик. Не трать место на вступление и оценку собственной работы.
         """;
     private static string Render(IEnumerable<StudioContextItem> items) => string.Join("\n\n", items.Select(i => $"[{i.Id}] {i.Role}\n{i.Text}"));
-    private static IReadOnlyList<ImageAnalysisHiddenMessage> Prompt(string text, double ratio, bool merge) =>
-    [new() { Role = "system", Content = Instruction }, new() { Role = "user", Content =
+    private IReadOnlyList<ImageAnalysisHiddenMessage> Prompt(string text, double ratio, bool merge) =>
+    [new() { Role = "system", Content = summaryInstruction ?? Instruction }, new() { Role = "user", Content =
         (merge ? "Объедини пересказы в хронологическом порядке; не потеряй решения и поздние поправки. " : "Перескажи эту часть беседы. ")
         + $"Цель — примерно {ratio:P0} исходного объёма, сохраняя нужный смысл.\n\n" + text }];
 

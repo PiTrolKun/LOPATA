@@ -5804,5 +5804,22 @@
     "Author": "Comfy-Org",
     "Checked": "2026-11-11",
     "Source": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/tree/aacf31a6d48e707f352ecba714cee0680da3479b"
+  },
+  {
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "244DBCB9C244CF13CE77A8B9A8A33C252E62F0E78D711BF6B7A84AF198E7899E",
+    "Version": "f982a07559d4a2f6c8744d840bf6fccab30eea96",
+    "License": "Apache-2.0",
+    "Ru": "Визуальный модуль Qwen3-VL-8B по Apache 2.0. Соблюдайте исходную лицензию и сохраняйте уведомления. Условия для генератора изображений указаны отдельно.",
+    "Id": "generation-qwen-image-21-vision-gguf",
+    "Basic": false,
+    "En": "Qwen3-VL-8B image projector under Apache 2.0. Follow the upstream license and retain notices. The image generator has separate terms.",
+    "Delivery": "download",
+    "Name": "Qwen3-VL-8B image projector · F16 GGUF",
+    "Author": "Qwen",
+    "Checked": "2026-11-17",
+    "Source": "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/tree/f982a07559d4a2f6c8744d840bf6fccab30eea96"
   }
 ]

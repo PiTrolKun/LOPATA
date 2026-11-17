@@ -21,14 +21,16 @@ public sealed partial class LlamaServerRuntimeService
     private GpuAdapterMemoryMonitor? _letItOutMemory;
     private Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? _letItOutDecision;
     private Action<string>? _letItOutMode;
+    private long _letItOutVisionGpuAllowance;
     // An in-process integration harness can project measured usage onto a smaller adapter budget.
     // The desktop never sets this; there is no environment override or user mode preference.
     internal Func<RuntimeDevice, RuntimeDevice>? LetItOutMemoryProjection { get; set; }
 
     internal void ConfigureLetItOut(Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? decide,
-        Action<string>? mode)
+        Action<string>? mode, long visionGpuAllowance = 0)
     {
         _letItOutEnabled = true; _letItOutDecision = decide; _letItOutMode = mode;
+        _letItOutVisionGpuAllowance = visionGpuAllowance;
     }
 
     private RuntimeDevice ProjectLetItOutMemory(RuntimeDevice measured) => LetItOutMemoryProjection?.Invoke(measured) ?? measured;
@@ -47,7 +49,9 @@ public sealed partial class LlamaServerRuntimeService
         if (setId != NativeRuntimeReleasePolicy.UpdatedSet)
             throw new LetItOutMemoryException("LetItOut.Preparation.EngineRequired");
         var policy = await Task.Run(() => LetItOutMemoryPolicy.Read(model.Path, metadata, LetItOutContextPolicy.Minimum), token);
-        if (_letItOutProjector is not null) policy = policy with { ExtraHostBytes = 2 * new FileInfo(_letItOutProjector).Length + 512L * 1024 * 1024 };
+        if (_letItOutProjector is not null)
+            policy = policy with { ExtraHostBytes = 2 * new FileInfo(_letItOutProjector).Length + 512L * 1024 * 1024,
+                ExtraGpuBytes = _letItOutVisionGpuAllowance };
         var preferredPolicy = policy with { KvBytes = LlamaDenseMemoryPolicy.KvBytes(metadata,
             Math.Min(LetItOutContextPolicy.Preferred, metadata.ModelContextTokens)) };
         var mayOffer = true; var minimumExperts = 0; var failedLoads = 0;

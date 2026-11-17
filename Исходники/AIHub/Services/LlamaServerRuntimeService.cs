@@ -305,6 +305,9 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         _disposed = true;
     }
 
+    internal bool IsRunningModel(string path) => _process is { HasExited: false }
+        && string.Equals(_currentModelPath, path, StringComparison.OrdinalIgnoreCase);
+
     private async Task EnsureStartedAsync(DebugModelInfo model, Action<string> log, CancellationToken cancellationToken, bool forceCpuFallback = false)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
@@ -317,10 +320,8 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 throw new FileNotFoundException("llama-server.exe was not found.", ExpectedExecutablePath);
             }
 
-            if (_process is not null
-                && !_process.HasExited
-                && (!forceCpuFallback || _selectedRuntime?.UsesGpu == false)
-                && string.Equals(_currentModelPath, model.Path, StringComparison.OrdinalIgnoreCase))
+            if (IsRunningModel(model.Path)
+                && (!forceCpuFallback || _selectedRuntime?.UsesGpu == false))
             {
                 return;
             }

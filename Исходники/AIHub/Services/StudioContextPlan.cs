@@ -6,7 +6,8 @@ public enum StudioContextMethod { Manual, Retelling, Smart }
 public sealed record StudioContextItem(string Id, string Role, string Text);
 public sealed record StudioContextMeter(int Input, int Capacity, bool Estimate = false)
 {
-    public int Available => Math.Max(0, Capacity - LiteraryAutomaticBudget.SafetyTokens - LiteraryAutomaticBudget.MinimumReply);
+    public int SafetyTokens { get; init; } = LiteraryAutomaticBudget.SafetyTokens;
+    public int Available => Math.Max(0, Capacity - SafetyTokens - LiteraryAutomaticBudget.MinimumReply);
     public double UsedRatio => Available == 0 ? 0 : Math.Clamp((double)Input / Available, 0, 1);
     public int Free => Math.Max(0, Available - Input);
     public StudioContextMethod Recommended(bool rejected) => rejected ? StudioContextMethod.Smart

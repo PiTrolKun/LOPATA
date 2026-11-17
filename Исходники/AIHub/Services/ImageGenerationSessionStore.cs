@@ -17,16 +17,30 @@ public static class ImageGenerationSessionStore
     }
     public static ImageGenerationSession Load(string directory) => JsonSerializer.Deserialize<ImageGenerationSession>(
         File.ReadAllBytes(Path.Combine(directory, "session.json"))) ?? throw new InvalidDataException("Invalid image generation session.");
-    public static void Save(string directory, ImageGenerationSession session)
+    internal static void EnsureInitialized(string directory, string sessionId)
     {
-        var path = Path.Combine(directory, "session.json");
+        lock (Gate)
+        {
+            var path = Path.Combine(directory, "session.json");
+            Lopata.Updates.SafeUpdatePath.RejectLinks(path);
+            if (File.Exists(path)) return;
+            Directory.CreateDirectory(directory);
+            Write(path, new(sessionId, []), overwrite: false);
+        }
+    }
+
+    public static void Save(string directory, ImageGenerationSession session) =>
+        Write(Path.Combine(directory, "session.json"), session, overwrite: true);
+
+    private static void Write(string path, ImageGenerationSession session, bool overwrite)
+    {
         Lopata.Updates.SafeUpdatePath.RejectLinks(path);
         var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
             { file.Write(JsonSerializer.SerializeToUtf8Bytes(session)); file.Flush(true); }
-            File.Move(temporary, path, true);
+            File.Move(temporary, path, overwrite);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

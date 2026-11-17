@@ -13,11 +13,14 @@ public sealed record ImageGenerationModel(string Id, string Name, string[] Compo
     public bool RequiresGpu { get; init; }
     public string? RequiredEngineSet { get; init; }
 }
+public enum ImageGenerationFileFormat { Png, Jpeg, WebP }
+
 public sealed record ImageGenerationRequest(string Id, string ModelId, string Prompt,
     int Width, int Height, long[] Seeds, string ModelsRoot, string SessionDirectory)
 {
     // Optional metadata keeps earlier checkpoints readable. Old sessions are not exported retroactively.
     public string OutputFolder { get; init; } = "";
+    public ImageGenerationFileFormat OutputFormat { get; init; }
     public DateTimeOffset? SubmittedAt { get; init; }
     public int FirstGenerationNumber { get; init; } = 1;
     // Null for pre-metadata sessions: their existing PNG files remain untouched.
@@ -27,16 +30,23 @@ public sealed record ImageGenerationRequest(string Id, string ModelId, string Pr
     // Captured when submitted. A resumed native job cannot silently change executors.
     public string? EngineSetId { get; init; }
     public AIHub.Services.ImageLora.ImageLoraUse[] Loras { get; init; } = [];
+    public string[] ReferenceImages { get; init; } = [];
+    public string? OutputName { get; init; }
 }
 public sealed record ImageGenerationRuntimeReceipt(string EngineSetId, string RuntimeVersion,
     string BackendCommit, string Backend, string ComponentId)
 {
     public string? Placement { get; init; }
     public string? Schedule { get; init; }
+    public string? ArtistRevision { get; init; }
     public ImageLoraApplied[] Loras { get; init; } = [];
 }
 public sealed record ImageLoraApplied(string Id, string Repository, string Revision, string Sha256, double Strength, string Trigger);
-public sealed record ImageGenerationMetadataOptions(string Author, string Scenario = "image-generation/simple");
+public sealed record ImageGenerationMetadataOptions(string Author, string Scenario = "image-generation/simple")
+{
+    public AIHub.Services.OutputModelUse[] AdditionalModels { get; init; } = [];
+    public string? ArtistRevision { get; init; }
+}
 public sealed record ImageGenerationResult(int Index, string FileName, long Seed, bool Reviewed = false)
 {
     public string? ExportPath { get; init; }

@@ -59,7 +59,8 @@ public static class ImageGenerationCatalog
     public static void Validate(ImageGenerationRequest request)
     {
         var model = Get(request.ModelId);
-        if (!Guid.TryParseExact(request.Id, "N", out _) || string.IsNullOrWhiteSpace(request.Prompt) || request.Prompt.Length > 32000
+        if (!Guid.TryParseExact(request.Id, "N", out _) || !Enum.IsDefined(request.OutputFormat)
+            || string.IsNullOrWhiteSpace(request.Prompt) || request.Prompt.Length > 32000
             || request.Seeds.Length is < 1 or > 4 || request.Seeds.Any(s => s < 0 || s > int.MaxValue)
             || request.Width < 256 || request.Height < 256 || request.Width > model.MaximumSide || request.Height > model.MaximumSide
             || request.Width % 64 != 0 || request.Height % 64 != 0)

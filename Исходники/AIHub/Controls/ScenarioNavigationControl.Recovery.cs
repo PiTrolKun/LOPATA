@@ -12,6 +12,7 @@ public sealed partial class ScenarioNavigationControl
         IsLetItOutChat ? ScenarioNavigationCatalog.LetItOut :
         IsSongClip ? ScenarioNavigationCatalog.SongClip :
         IsShorts ? ScenarioNavigationCatalog.Shorts :
+        IsVisualScenario ? ScenarioNavigationCatalog.VisualScenario :
         IsVideoPreparation ? ScenarioNavigationCatalog.VideoGeneration :
         IsSandboxLanding ? ScenarioNavigationCatalog.Sandbox : PlaceholderScenarioId;
 

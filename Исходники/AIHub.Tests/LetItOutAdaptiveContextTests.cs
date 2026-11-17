@@ -39,6 +39,22 @@ public sealed class LetItOutAdaptiveContextTests
         Assert.IsTrue(plan.GpuBytes - minimum + LlamaDenseMemoryPolicy.KvBytes(metadata, chosen) + LetItOutMemoryPolicy.VramReserve <= device.FreeBytes);
     }
 
+    [TestMethod] public void VisionAllowanceIsReservedBeforeAllocatingTheGpuContext()
+    {
+        var metadata = Metadata();
+        var minimum = LlamaDenseMemoryPolicy.KvBytes(metadata, LetItOutContextPolicy.Minimum);
+        var standard = new LetItOutMemoryPolicy(metadata.FileBytes, minimum, [1L << 30]);
+        var visual = standard with { ExtraGpuBytes = LetItOutMemoryPolicy.VramReserve };
+        var free = visual.FullGpuRequired - minimum + LlamaDenseMemoryPolicy.KvBytes(metadata, 32768);
+        var device = new RuntimeDevice("Vulkan1", "Compatible adapter", free, free);
+
+        var plan = visual.Choose(device);
+        Assert.AreEqual("Gpu", plan.Mode);
+        Assert.AreEqual(32768, LetItOutContextPolicy.Choose(metadata, visual, plan, device, _ => true));
+        Assert.IsTrue(LetItOutContextPolicy.Choose(metadata, standard, standard.Choose(device), device, _ => true) > 32768);
+        Assert.AreEqual(standard.Choose(null), visual.Choose(null));
+    }
+
     [TestMethod] public void HybridMovesMoreExpertsToRamToProvideAtLeast64KWithTheSmallestTransfer()
     {
         var metadata = Metadata(); var minimum = LlamaDenseMemoryPolicy.KvBytes(metadata, 8192);

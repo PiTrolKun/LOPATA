@@ -28,6 +28,9 @@ public sealed partial class ScenarioNavigationControl : UserControl
     internal ShortsControl? Shorts { get; private set; }
     internal bool IsShorts { get; private set; }
     internal Func<bool>? PrepareShorts { get; set; }
+    internal Func<bool, VisualScenario.VisualScenarioControl?>? OpenVisualWorkspace { get; set; }
+    internal VisualScenario.VisualScenarioControl? VisualWorkspace { get; private set; }
+    internal bool IsVisualScenario { get; private set; }
     public event Action<SongClipControl>? SongClipCreated;
     public LetItOutChatControl? LetItOutChat { get; private set; }
     public bool IsLetItOutChat { get; private set; }
@@ -76,6 +79,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsVisualScenario) { if (LeaveVisualScenario() && !ReturnFromScenario()) Render(); return true; }
         if (IsGameSounds) { if (LeaveGameSounds() && !ReturnFromScenario()) Render(); return true; }
         if (IsOneC) { if (OneCView?.Checkpoint() == false) return true; IsOneC = false; Render(); return true; }
         if (IsSpeechAssets) { LeaveSpeechAssets(); Render(); return true; }
@@ -123,6 +127,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        if (!LeaveVisualScenario()) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
         LeaveSpeechAssets();
@@ -143,6 +148,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
+        if (!LeaveVisualScenario()) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
         LeaveSpeechAssets();
@@ -164,8 +170,15 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void OpenScenario(string id) => OpenScenario(id, prepareShorts: true);
 
-    internal void OpenScenario(string id, bool prepareShorts)
+    internal void OpenScenario(string id, bool prepareShorts, bool prepareVisual = true)
     {
+        if (id == ScenarioNavigationCatalog.VisualScenario)
+        {
+            var workspace = OpenVisualWorkspace?.Invoke(prepareVisual);
+            if (workspace is null) return;
+            VisualWorkspace = workspace;
+        }
+        else if (!LeaveVisualScenario()) return;
         if (id == ScenarioNavigationCatalog.Shorts && prepareShorts && PrepareShorts?.Invoke() == false) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
@@ -186,7 +199,9 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsVideoPreparation = id == ScenarioNavigationCatalog.VideoGeneration;
         IsSongClip = id == ScenarioNavigationCatalog.SongClip;
         IsShorts = id == ScenarioNavigationCatalog.Shorts;
+        IsVisualScenario = id == ScenarioNavigationCatalog.VisualScenario;
         IsLetItOutChat = false;
+        if (IsVisualScenario) { Render(); return; }
         if (id == ScenarioNavigationCatalog.LetItOut)
         {
             // The host verifies the existing core before explicitly opening the chat.
@@ -280,7 +295,8 @@ public sealed partial class ScenarioNavigationControl : UserControl
             case ScenarioNavigationKind.Group: SelectDirection(target.ParentId!); break;
             case ScenarioNavigationKind.Scenario:
                 OpenScenario(target.Id);
-                if (target.Id == ScenarioNavigationCatalog.Shorts && !IsShorts) _tagReturnDirection = returnDirection;
+                if (target.Id == ScenarioNavigationCatalog.Shorts && !IsShorts
+                    || target.Id == ScenarioNavigationCatalog.VisualScenario && !IsVisualScenario) _tagReturnDirection = returnDirection;
                 break;
         }
     }
@@ -305,8 +321,16 @@ public sealed partial class ScenarioNavigationControl : UserControl
         finally { TagCloud.SuspendForDescription(false); }
     }
 
+    private bool LeaveVisualScenario()
+    {
+        if (IsVisualScenario && VisualWorkspace?.CanLeave == false) return false;
+        IsVisualScenario = false;
+        return true;
+    }
+
     private void Render()
     {
+        if (IsVisualScenario) { Content = VisualWorkspace; StateChanged?.Invoke(); return; }
         if (IsGameSounds) { GameSoundsView!.Configure(_localize); Content = GameSoundsView; StateChanged?.Invoke(); return; }
         if (IsOneC) { OneCView!.Configure(_localize); Content = OneCView; StateChanged?.Invoke(); return; }
         if (IsSpeechAssets) { Content = SpeechAssetsView; StateChanged?.Invoke(); return; }

@@ -216,7 +216,7 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
                     Phase = terminal ? BackgroundOperationPhase.Failed : BackgroundOperationPhase.Waiting,
                     RequiresDecision = !terminal,
                     UserPaused = terminal ? false : _state!.UserPaused,
-                    Detail = error is BackgroundOperationWaitingException or BackgroundOperationFailedException ? error.Message : error.GetType().Name,
+                    Detail = FailureDetail(error),
                     ElapsedSeconds = Elapsed }); }
                 catch (Exception saveError) { OwnedProcessRegistry.Log("background_checkpoint_failed", "Application", detail: saveError.GetType().Name); }
                 _paused?.TrySetException(error);
@@ -235,6 +235,9 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
     private bool EmergencyStopRequested { get { lock (_gate) return _emergencyStopRequested; } }
     private double Elapsed => _previousElapsed + _elapsed.Elapsed.TotalSeconds;
     private static bool IsFinal(BackgroundOperationPhase phase) => phase is BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled;
+
+    private static string FailureDetail(Exception error) =>
+        error is BackgroundOperationWaitingException or BackgroundOperationFailedException ? error.Message : error.GetType().Name;
     private void NotifyChanged()
     {
         foreach (Action listener in Changed?.GetInvocationList() ?? [])
@@ -311,7 +314,7 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
             {
                 lock (_gate)
                     if (!_emergencyStopRequested && _state?.Id == state!.Id && !_running && !IsFinal(_state.Phase))
-                        Persist(_state with { Phase = BackgroundOperationPhase.Waiting, RequiresDecision = true, Detail = error.GetType().Name });
+                        Persist(_state with { Phase = BackgroundOperationPhase.Waiting, RequiresDecision = true, Detail = FailureDetail(error) });
                 NotifyChanged(); throw;
             }
         }

@@ -9,11 +9,12 @@ internal sealed record LetItOutMemoryPlan(string Mode, int CpuMoeLayers, long Gp
 internal sealed record LetItOutMemoryPolicy(long FileBytes, long KvBytes, IReadOnlyList<long> ExpertLayers)
 {
     internal long ExtraHostBytes { get; init; }
+    internal long ExtraGpuBytes { get; init; }
     internal const long VramReserve = 2 * LlamaDenseMemoryPolicy.GiB;
     // Lazy compute/graph allocations measured after the first Vulkan generation exceeded
     // the old 1 GiB estimate by ~132 MiB. Keep headroom independent of the 2 GiB user reserve.
     internal const long ComputeAllowance = 3 * LlamaDenseMemoryPolicy.GiB / 2;
-    internal long FullGpuBytes => checked(FileBytes + KvBytes + ComputeAllowance);
+    internal long FullGpuBytes => checked(FileBytes + KvBytes + ComputeAllowance + ExtraGpuBytes);
     internal long FullGpuRequired => checked(FullGpuBytes + VramReserve);
 
     internal static LetItOutMemoryPolicy Read(string path, LiteraryModelMemoryMetadata metadata,

@@ -9,7 +9,7 @@ using SkiaSharp;
 
 namespace AIHub.Tests;
 
-[TestClass]
+[TestClass, DoNotParallelize]
 public sealed class ImageGenerationMetadataTests
 {
     private string _root = null!;
@@ -61,6 +61,92 @@ public sealed class ImageGenerationMetadataTests
             var fixture = Environment.GetEnvironmentVariable("LOPATA_METADATA_FIXTURE");
             if (!string.IsNullOrWhiteSpace(fixture) && result.Index == 0) { Directory.CreateDirectory(Path.GetDirectoryName(fixture)!); File.Copy(canonical, fixture, true); }
         }
+    }
+
+    [TestMethod]
+    [DataRow("qwen-image-21-base-gguf", ImageGenerationFileFormat.Png, false, "PNG", ".png")]
+    [DataRow("qwen-image-21-turbo-int8", ImageGenerationFileFormat.Jpeg, false, "JPEG", ".jpg")]
+    [DataRow("qwen-image-21-turbo-int8", ImageGenerationFileFormat.Jpeg, true, "JPEG", ".jpg")]
+    [DataRow("qwen-image-21-turbo-int8", ImageGenerationFileFormat.WebP, false, "WEBP", ".webp")]
+    [DataRow("z-image", ImageGenerationFileFormat.Png, false, "PNG", ".png")]
+    [DataRow("krea", ImageGenerationFileFormat.Png, false, "PNG", ".png")]
+    public async Task ReadersFindGenerationFieldsInEachExportFormat(string modelId, ImageGenerationFileFormat format,
+        bool longPrompt, string fileType, string extension)
+    {
+        var request = Request(modelId) with
+        {
+            Prompt = longPrompt ? new string('я', 28000) + " Конец 🎨" : "Замок у моря 🎨",
+            OutputFormat = format, Seeds = [123],
+            Metadata = new("Тестовый автор 🐈", "image-generation/visual-scenario")
+        };
+        var model = ImageGenerationCatalog.Get(modelId);
+        var revision = "actual-rendered-weights";
+        var worker = new Worker
+        {
+            Transparent = true,
+            Receipt = new("002", "runtime-version", "executed-commit", "vulkan", "runtime.sd.vulkan")
+            { ArtistRevision = revision, Schedule = model.Sigmas }
+        };
+        var runtime = new ImageGenerationRuntime(worker);
+        var turn = await runtime.RunAsync(request, [], null, CancellationToken.None);
+        var result = turn.Results.Single();
+        Assert.IsTrue(result.Exported, result.ProcessingError ?? result.ExportError);
+        var output = result.ExportPath!;
+        Assert.AreEqual(extension, Path.GetExtension(output));
+        var original = ImageGenerationSessionStore.ResultPath(request, 0);
+        CollectionAssert.AreEqual(Chunks(worker.Bytes[0], "IDAT").SelectMany(bytes => bytes).ToArray(),
+            Chunks(File.ReadAllBytes(original), "IDAT").SelectMany(bytes => bytes).ToArray());
+        using var decoded = SKBitmap.Decode(output);
+        Assert.IsNotNull(decoded);
+        Assert.AreEqual(request.Width, decoded.Width);
+        Assert.AreEqual(request.Height, decoded.Height);
+        var corner = decoded.GetPixel(0, 0);
+        if (format == ImageGenerationFileFormat.Jpeg)
+        {
+            Assert.AreEqual(byte.MaxValue, corner.Alpha);
+            Assert.IsGreaterThan((byte)249, corner.Red);
+            Assert.IsGreaterThan((byte)249, corner.Green);
+            Assert.IsGreaterThan((byte)249, corner.Blue);
+        }
+        else Assert.AreEqual((byte)0, corner.Alpha);
+
+        var oldGate = ComponentLicenseGate.ConfirmAsync;
+        ComponentLicenseGate.ConfirmAsync = (_, _) => Task.CompletedTask;
+        try
+        {
+            var raw = await FileMetadataExifTool.ReadAsync(output, default);
+            var type = FileMetadataPolicy.RawValue(raw, "File:FileType").ToUpperInvariant();
+            if (format == ImageGenerationFileFormat.WebP)
+            {
+                StringAssert.Contains(type, "WEBP");
+                StringAssert.Contains(type, "(LOSSLESS)");
+                Assert.AreEqual("image/webp", FileMetadataPolicy.RawValue(raw, "File:MIMEType"));
+                var snapshot = await new FileMetadataReader().ReadAsync(output, default);
+                Assert.IsNull(snapshot.Error);
+                Assert.AreEqual("WEBP", snapshot.Format);
+            }
+            else Assert.AreEqual(fileType, type);
+            Assert.AreEqual("LOPATA", FileMetadataPolicy.RawValue(raw, "XMP-xmp:CreatorTool"));
+            Assert.AreEqual(request.Metadata.Author, FileMetadataPolicy.RawValue(raw, "XMP-dc:Creator"));
+            Assert.AreEqual(request.Prompt, FileMetadataPolicy.RawValue(raw, "XMP-dc:Description"));
+            Assert.AreEqual(request.Prompt, FileMetadataPolicy.RawValue(raw, "XMP-lopata:Prompt"));
+            if (format == ImageGenerationFileFormat.Png)
+                Assert.AreEqual(request.Prompt, PngTextMetadata.Read(output)["Prompt"]);
+            Assert.AreEqual("123", FileMetadataPolicy.RawValue(raw, "XMP-lopata:Seed"));
+            Assert.AreEqual(revision, FileMetadataPolicy.RawValue(raw, "XMP-lopata:ModelRevision"));
+            using var generation = JsonDocument.Parse(FileMetadataPolicy.RawValue(raw, "XMP-lopata:Generation"));
+            Assert.AreEqual(fileType, generation.RootElement.GetProperty("OutputFormat").GetString());
+            Assert.AreEqual(request.Prompt, generation.RootElement.GetProperty("Prompt").GetString());
+            Assert.AreEqual("executed-commit", generation.RootElement.GetProperty("BackendCommit").GetString());
+            Assert.IsFalse(generation.RootElement.GetRawText().Contains(request.SessionDirectory, StringComparison.Ordinal));
+        }
+        finally { ComponentLicenseGate.ConfirmAsync = oldGate; }
+
+        var sizeBefore = new FileInfo(output).Length;
+        await runtime.RunAsync(request, [], null, CancellationToken.None);
+        Assert.AreEqual(1, worker.Calls);
+        CollectionAssert.AreEqual(new[] { output }, Directory.GetFiles(request.OutputFolder));
+        Assert.AreEqual(sizeBefore, new FileInfo(output).Length);
     }
 
     [TestMethod]
@@ -183,10 +269,19 @@ public sealed class ImageGenerationMetadataTests
         public Dictionary<int, byte[]> Bytes { get; } = [];
         public int Calls { get; private set; }
         public int FailAt { get; set; } = -1;
+        public bool Transparent { get; init; }
+        public ImageGenerationRuntimeReceipt? Receipt { get; init; }
+        public async Task<ImageGenerationRuntimeReceipt?> GenerateWithReceiptAsync(ImageGenerationRequest request, int index,
+            IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, CancellationToken token)
+        {
+            await GenerateAsync(request, index, cards, promptFile, output, token);
+            return Receipt;
+        }
         public Task GenerateAsync(ImageGenerationRequest request, int index, IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, CancellationToken token)
         {
             Calls++; if (index == FailAt) throw new OperationCanceledException();
-            using var bitmap = new SKBitmap(request.Width, request.Height); bitmap.Erase(SKColors.Coral);
+            using var bitmap = new SKBitmap(request.Width, request.Height);
+            bitmap.Erase(Transparent ? SKColors.Transparent : SKColors.Coral);
             using var image = SKImage.FromBitmap(bitmap); using var data = image.Encode(SKEncodedImageFormat.Png, 100);
             Bytes[index] = data.ToArray(); File.WriteAllBytes(output, Bytes[index]); return Task.CompletedTask;
         }

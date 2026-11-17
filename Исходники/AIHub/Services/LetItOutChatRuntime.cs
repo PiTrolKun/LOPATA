@@ -18,6 +18,7 @@ public sealed partial class LetItOutChatRuntime(UserContextService userContext) 
 {
     internal const int AnswerTokens = 1536;
     internal const int ContextTokens = 16384;
+    internal const int ContextSafetyTokens = 513;
     private readonly LlamaServerRuntimeService _runtime = new(userContext);
     public Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? DecideGpu { get; set; }
     public Action<string>? ModeChanged { get; set; }
@@ -177,7 +178,7 @@ public sealed partial class LetItOutChatRuntime(UserContextService userContext) 
 
     internal static void RequireContextSpace(int inputTokens, int outputTokens, int capacity)
     {
-        if ((long)inputTokens + outputTokens + 512 >= capacity) throw new LetItOutChatContextException();
+        if ((long)inputTokens + outputTokens + ContextSafetyTokens > capacity) throw new LetItOutChatContextException();
     }
 
     public Task RetireAsync() => _runtime.RetireLetItOutAsync();
@@ -186,9 +187,10 @@ public sealed partial class LetItOutChatRuntime(UserContextService userContext) 
 
 public sealed partial class LlamaServerRuntimeService
 {
-    internal async Task WarmLetItOutAsync(DebugModelInfo model, CancellationToken token)
+    internal async Task WarmLetItOutAsync(DebugModelInfo model, CancellationToken token, bool forceCpu = false)
     {
-        await PrepareAsync(model, _ => { }, token);
+        if (forceCpu) await EnsureStartedAsync(model, _ => { }, token, forceCpuFallback: true);
+        else await PrepareAsync(model, _ => { }, token);
         _ = await ReadLetItOutCapacityAsync(token);
         CheckLetItOutReserve();
     }

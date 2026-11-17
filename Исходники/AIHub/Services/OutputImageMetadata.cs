@@ -1,6 +1,8 @@
 using System.Buffers.Binary;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
+using System.Xml.Linq;
 
 namespace AIHub.Services;
 
@@ -14,30 +16,77 @@ public static class OutputImageMetadata
             PngMetadataWriter.Write(path, new Dictionary<string, string> { ["Software"] = "LOPATA", ["LOPATA"] = facts.Json() });
             return;
         }
-        var xmp = Encoding.UTF8.GetBytes(facts.Xmp());
+        WriteXmp(path, format, width, height, facts.Xmp());
+    }
+
+    internal static void WriteXmp(string path, string format, int width, int height, string metadata, CancellationToken token = default)
+    {
+        var xmp = Encoding.UTF8.GetBytes(metadata);
+        Lopata.Updates.SafeUpdatePath.RejectLinks(path);
         var temp = path + "." + Guid.NewGuid().ToString("N") + ".metadata";
         try
         {
+            token.ThrowIfCancellationRequested();
             using (var input = File.OpenRead(path))
             using (var output = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
-                if (format is "jpeg" or "jpg")
-                {
-                    if (input.ReadByte() != 255 || input.ReadByte() != 216) throw new InvalidDataException("Invalid JPEG.");
-                    var prefix = "http://ns.adobe.com/xap/1.0/\0"u8;
-                    var size = checked(prefix.Length + xmp.Length + 2);
-                    if (size > ushort.MaxValue) throw new InvalidDataException("JPEG provenance is too large.");
-                    output.Write([255, 216, 255, 225, (byte)(size >> 8), (byte)size]);
-                    output.Write(prefix); output.Write(xmp); input.CopyTo(output);
-                }
+                if (format is "jpeg" or "jpg") WriteJpeg(input, output, xmp);
                 else if (format == "webp") WriteWebp(input, output, width, height, xmp);
-                else throw new InvalidDataException("Unsupported screenshot format.");
+                else throw new InvalidDataException("Unsupported image format.");
                 output.Flush(true);
             }
+            token.ThrowIfCancellationRequested();
             File.Move(temp, path, true);
         }
         finally { if (File.Exists(temp)) File.Delete(temp); }
     }
+
+    private static void WriteJpeg(Stream input, Stream output, byte[] xmp)
+    {
+        if (input.ReadByte() != 255 || input.ReadByte() != 216) throw new InvalidDataException("Invalid JPEG.");
+        output.Write([255, 216]);
+        var prefix = "http://ns.adobe.com/xap/1.0/\0"u8;
+        if (xmp.Length <= ushort.MaxValue - prefix.Length - 2)
+            WriteApp1(output, prefix, xmp);
+        else
+        {
+            // Adobe Extended XMP uses this digest as the identifier for the exact extended packet.
+            var id = Convert.ToHexString(MD5.HashData(xmp));
+            XNamespace x = "adobe:ns:meta/";
+            XNamespace rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+            XNamespace note = "http://ns.adobe.com/xmp/note/";
+            var link = new XElement(x + "xmpmeta", new XAttribute(XNamespace.Xmlns + "x", x),
+                new XElement(rdf + "RDF", new XAttribute(XNamespace.Xmlns + "rdf", rdf),
+                    new XElement(rdf + "Description", new XAttribute(rdf + "about", ""),
+                        new XAttribute(XNamespace.Xmlns + "xmpNote", note), new XAttribute(note + "HasExtendedXMP", id))));
+            WriteApp1(output, prefix, Encoding.UTF8.GetBytes(link.ToString(SaveOptions.DisableFormatting)));
+
+            var extension = "http://ns.adobe.com/xmp/extension/\0"u8;
+            Span<byte> header = stackalloc byte[40];
+            Encoding.ASCII.GetBytes(id.AsSpan(), header[..32]);
+            BinaryPrimitives.WriteUInt32BigEndian(header[32..36], (uint)xmp.Length);
+            var maxChunk = ushort.MaxValue - extension.Length - header.Length - 2;
+            for (var offset = 0; offset < xmp.Length;)
+            {
+                var count = Math.Min(maxChunk, xmp.Length - offset);
+                BinaryPrimitives.WriteUInt32BigEndian(header[36..], (uint)offset);
+                WriteApp1(output, extension, xmp.AsSpan(offset, count), header);
+                offset += count;
+            }
+        }
+        input.CopyTo(output);
+    }
+
+    private static void WriteApp1(Stream output, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> payload,
+        ReadOnlySpan<byte> header = default)
+    {
+        var size = checked((ushort)(prefix.Length + header.Length + payload.Length + 2));
+        output.Write([255, 225, (byte)(size >> 8), (byte)size]);
+        output.Write(prefix);
+        output.Write(header);
+        output.Write(payload);
+    }
+
     private static void WriteWebp(Stream input, Stream output, int width, int height, byte[] xmp)
     {
         Span<byte> header = stackalloc byte[12]; input.ReadExactly(header);
