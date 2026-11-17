@@ -85,12 +85,12 @@ public sealed class ManagedModelRemovalService
     internal static ManagedModelRemovalFile[] InspectScenarioFiles(ManagedModelArtifactCard card)
     {
         var root = Path.GetFullPath(card.ModelsRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        var install = Path.GetFullPath(card.InstallDirectory);
+        var install = Path.GetFullPath(card.InstallDirectory).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         if (!install.StartsWith(root, StringComparison.OrdinalIgnoreCase)
-            || ManagedModelPathIdentity.SameDirectory(root, install))
+            || string.Equals(root, install, StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Refusing removal outside model storage.");
         SafeUpdatePath.RejectLinks(install);
-        var paths = card.Files.Select(file => SafeUpdatePath.Resolve(install, file.RelativePath))
+        var paths = card.Files.Select(file => GetContainedPath(install, file.RelativePath))
             .SelectMany(path => new[] { path }.Concat(SegmentedModelFileDownloader.GetPartialArtifactPaths(path)));
         return paths.Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase)
             .Select(path =>

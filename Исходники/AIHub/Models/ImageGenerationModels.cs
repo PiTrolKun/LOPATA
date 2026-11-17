@@ -33,7 +33,7 @@ public sealed record ImageGenerationRequest(string Id, string ModelId, string Pr
     public string[] ReferenceImages { get; init; } = [];
     public string? OutputName { get; init; }
 }
-public sealed record ImageGenerationRuntimeReceipt(string EngineSetId, string RuntimeVersion,
+public sealed record ImageGenerationRuntimeReceipt(string? EngineSetId, string RuntimeVersion,
     string BackendCommit, string Backend, string ComponentId)
 {
     public string? Placement { get; init; }

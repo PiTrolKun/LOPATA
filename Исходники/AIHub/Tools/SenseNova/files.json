@@ -1,0 +1,457 @@
+[
+  {
+    "RelativePath": "weights/added_tokens.json",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/added_tokens.json",
+    "SizeBytes": 8005,
+    "Sha256": "d0ff3acec259fabfafc1ffa67638aeaf58203e5e604648fb44f072e4efe040c4",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/config.json",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/config.json",
+    "SizeBytes": 2631,
+    "Sha256": "6497591f64cb0dd6917fbb10c0cd13024e5817179a9aa3700998eb137a553d6b",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/merges.txt",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/merges.txt",
+    "SizeBytes": 1670344,
+    "Sha256": "455e0caaa06abffc663e9282dfe71dde07fd1991eaf24146bf08793c4dba4497",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00001-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00001-of-00008.safetensors",
+    "SizeBytes": 4966078840,
+    "Sha256": "2c1c34004cc8af1d8117f77f4ab3898d9ee6709f0c5c6ca67ac89a8cbe3a7556",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00002-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00002-of-00008.safetensors",
+    "SizeBytes": 4932742056,
+    "Sha256": "25976ebcae74749ce915dd8b5657fff8d06abfcd92122d6f1155047431caec30",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00003-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00003-of-00008.safetensors",
+    "SizeBytes": 4983075328,
+    "Sha256": "b4e9a064c19af0a021fc80505ac9189e55305bd89d6b075796ca2116dc14e7cd",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00004-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00004-of-00008.safetensors",
+    "SizeBytes": 4949521032,
+    "Sha256": "04bc2b31e28bb2fad73e21c7e8656ca4e1b846ccdab1991a9221926f67911702",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00005-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00005-of-00008.safetensors",
+    "SizeBytes": 4932725616,
+    "Sha256": "531f26640e0810c0eb6eaa6578e0dd09fe67e9a1c4c385a18f091a53d2500ba6",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00006-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00006-of-00008.safetensors",
+    "SizeBytes": 4999870800,
+    "Sha256": "e9ddda7a6ab2c7de1840bb9b1c08a9df2aa161ef3c063a744977c4d74dac1d98",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00007-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00007-of-00008.safetensors",
+    "SizeBytes": 4932725608,
+    "Sha256": "a9cb58e5c45c8c857fe3462eb4c38f6fa25b19789de56dd95a0abf92175145ed",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model-00008-of-00008.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model-00008-of-00008.safetensors",
+    "SizeBytes": 369118856,
+    "Sha256": "90862be20f40e667de050ef5dd78bb13393fb1ac23264552b9040be9a2608f35",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/model.safetensors.index.json",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/model.safetensors.index.json",
+    "SizeBytes": 113453,
+    "Sha256": "14bd9eda56dc3d520fe6127bf158b2eed292d3a7ac73667586390eb8e03491b9",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/special_tokens_map.json",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/special_tokens_map.json",
+    "SizeBytes": 39951,
+    "Sha256": "529306ff26be5cf190b4d96781e63c7dccd03ef0a39f87c0f1289d2d5a67a02f",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/tokenizer_config.json",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/tokenizer_config.json",
+    "SizeBytes": 63546,
+    "Sha256": "7433b95cec590c7d687259e81bca1bc4630ff39773dbf7f30f7df27a99748077",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "weights/vocab.json",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT/resolve/a2462cc1b549bace2c0896143bbbcbb3fa217c76/vocab.json",
+    "SizeBytes": 3383407,
+    "Sha256": "87a257b04b17642a0688c98cd1df89c398bda4fee532d6f88b38a659ecb4ac8d",
+    "Purpose": "model"
+  },
+  {
+    "RelativePath": "adapter/SenseNova-U1.5-8B-MoT-LoRA-8step-V2.safetensors",
+    "SourceUrl": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT-LoRAs/resolve/f33b8fe021e6f10e5aed58ebbfdd05f02826732/SenseNova-U1.5-8B-MoT-LoRA-8step-V2.safetensors",
+    "SizeBytes": 814867052,
+    "Sha256": "f4190cabd01fa261a45be853275c483d3a8069295c52cf01f7b2b31f4356f201",
+    "Purpose": "accelerator"
+  },
+  {
+    "RelativePath": "runtime/LICENSE",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/LICENSE",
+    "SizeBytes": 11357,
+    "Sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/__init__.py",
+    "SizeBytes": 2185,
+    "Sha256": "ea212423e96e0811b36d961dc3721600bb905d2febf433933fecfb42392b8ba3",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/__init__.py",
+    "SizeBytes": 133,
+    "Sha256": "855ca4379592a6ede65421e9dbb7cfd2c0c87b6451c5868cba549f13ffdfc8dd",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/__init__.py",
+    "SizeBytes": 1519,
+    "Sha256": "ac2911acc5306324086709030bb09a34a61805d44ea655d61ee90cf62540e560",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/cfg_batching.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/cfg_batching.py",
+    "SizeBytes": 4094,
+    "Sha256": "978ca1c3054e2bc71473b64248b14663c574a162127bdbc832d293401168726e",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/configuration_neo_chat.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/configuration_neo_chat.py",
+    "SizeBytes": 9025,
+    "Sha256": "cd31fdbf6f6d8727f535b0d4bd9e0c861dccd78d59edfb853168d7248d082690",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/configuration_neo_vit.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/configuration_neo_vit.py",
+    "SizeBytes": 1836,
+    "Sha256": "17d024a39e4b0c320b2078ebb14065907b015fa8068e812760f365381e63428f",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/conversation.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/conversation.py",
+    "SizeBytes": 15889,
+    "Sha256": "0afd416e8875789404745ab9f05445ce2f9492a7da7b34c67436424c84f68435",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/modeling_fm_modules.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/modeling_fm_modules.py",
+    "SizeBytes": 21017,
+    "Sha256": "7529a684527177b3f692c56209f3704833f0c4000d345547c372cb50413993c8",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/modeling_neo_chat.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/modeling_neo_chat.py",
+    "SizeBytes": 100923,
+    "Sha256": "4a0bbbafe432faebd55bbc0c37b273c731eebd20fefde252e1e74d22b9a1badd",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/modeling_neo_vit.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/modeling_neo_vit.py",
+    "SizeBytes": 9528,
+    "Sha256": "0feea3a7602ebd07a00c50e79aeab7a69ca901804afd23944859153591c3280e",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/modeling_qwen3_moe.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/modeling_qwen3_moe.py",
+    "SizeBytes": 46433,
+    "Sha256": "da36f3f6d46ddac4fc1958815ec17e2fc7c48db23a9bc7fcd38d97be033712b7",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/modeling_qwen3.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/modeling_qwen3.py",
+    "SizeBytes": 61538,
+    "Sha256": "2fb574fca58f4bdb355c6175d1af420c6132099e06b92a4278609f7fa3e26c2b",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/transformers_compat.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/transformers_compat.py",
+    "SizeBytes": 2612,
+    "Sha256": "eed7b3e1f9ac7e74c6da971d0768fcf9993b60a3e9a533cfff9811f96bde63fb",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/models/neo_unify/utils.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/models/neo_unify/utils.py",
+    "SizeBytes": 6059,
+    "Sha256": "6ba5efaa8bdf9a33fd3ab63767f0c8697906897ab25bacc4c3dd88926c4da003",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/__init__.py",
+    "SizeBytes": 309,
+    "Sha256": "9dfa23914d8a3d68fc57da0a9a3f9ea208cd59f93f062a7350cd0dea0825c138",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/_templates.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/_templates.py",
+    "SizeBytes": 1080,
+    "Sha256": "b1d9c20d1191ce7d1cd41cee98aca01e3468cc0837d29b3b7ea866859ea79cbd",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/enhancer.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/enhancer.py",
+    "SizeBytes": 5044,
+    "Sha256": "76423be7e63a3cb79cc985c16b0f4ae15fdd49adac4dfadee8fad15596592af5",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/adapters/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/adapters/__init__.py",
+    "SizeBytes": 229,
+    "Sha256": "d0143ba0a149993254b784b4bfa3d09dcc64dce1ac1d3b3bb7ca7a52db54a96e",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/adapters/anthropic_adapter.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/adapters/anthropic_adapter.py",
+    "SizeBytes": 7459,
+    "Sha256": "73842d053ae8c0268742c241f459e5147a2c8c47f43555841f7f2691d2fbf785",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/adapters/chat_completions_adapter.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/adapters/chat_completions_adapter.py",
+    "SizeBytes": 7870,
+    "Sha256": "cdeccbcb27d8a6396f52309c318b6b049986293a207aad900c253157687e69a1",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/adapters/utils.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/adapters/utils.py",
+    "SizeBytes": 3038,
+    "Sha256": "7ed1f902bdb317aac51afb30f284c8a39d8a92ca13968de67e82088ba0277a93",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/adapters/vlm_adapter.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/adapters/vlm_adapter.py",
+    "SizeBytes": 2106,
+    "Sha256": "afb7e33b22f3afe470da4eb18c0a068bef41fd55b6693a37d7ac3461e42377fe",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/prompt_enhance/templates/infographic_system.md",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/prompt_enhance/templates/infographic_system.md",
+    "SizeBytes": 4689,
+    "Sha256": "d685697874d22ea3dbaf4e565e52677e001dcdd39d78af7eddfaf515fd5f17c2",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/__init__.py",
+    "SizeBytes": 2097,
+    "Sha256": "70fd1488fc6e71c9b05eb2ec363e61633d456a39f4967afc669ed1ce599ef933",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/accel.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/accel.py",
+    "SizeBytes": 3348,
+    "Sha256": "79d53170f14a794764427a0fe5e29cb1a6a073aae6a965f15064f8bc61647d11",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/checkpoint_loading.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/checkpoint_loading.py",
+    "SizeBytes": 24491,
+    "Sha256": "b661b32d24e959aabdfc9af5f74a9c42cddb7469b9d8be2254859886ca0d3072",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/comparison.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/comparison.py",
+    "SizeBytes": 6765,
+    "Sha256": "445d2ea2ef5eebdd0a3cd59875e10d43a0c848a4115bf00f4f78478dcbe6b3fc",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/gguf_loader.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/gguf_loader.py",
+    "SizeBytes": 4263,
+    "Sha256": "8f73daa69c0f16954800fa0fc96613906b1e70edc0b057de52a726ee49a472dc",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/layer_offload.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/layer_offload.py",
+    "SizeBytes": 50405,
+    "Sha256": "e4aedc9ffbc3daa7fe7f486c7b9c2a589f0868b24eed5c77fb9a1dfd0a78f3ff",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/lora.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/lora.py",
+    "SizeBytes": 2413,
+    "Sha256": "a67b637f17ee59a4cf422867bb0b4da08e6834eb514fbdb96315deea43a6fdae",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/offload.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/offload.py",
+    "SizeBytes": 9178,
+    "Sha256": "d84215f53a9f349193e77fce369d07755c87b616e7e6c684d529d6a77d8cb43d",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/param_count.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/param_count.py",
+    "SizeBytes": 7239,
+    "Sha256": "21056b6fd968a86a0d43ead9fb5b87aa5e7f6a834d8bece28f427e6b2c43f042",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/profiler.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/profiler.py",
+    "SizeBytes": 12241,
+    "Sha256": "ba5bfb72f7bf35608fb6fa90588b05ad2cc34334b3a25ddc69e2c444dd85df6b",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1/utils/quant_runtime.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1/utils/quant_runtime.py",
+    "SizeBytes": 4125,
+    "Sha256": "3842bbefa3a26b574a08849c45b68ed9c279677320de91d417a088a5f696175d",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/__init__.py",
+    "SizeBytes": 32,
+    "Sha256": "56e8d3330c3d42695d5390da9b1d60c7427032adba03df0c740303dadb288461",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/image_pe.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/image_pe.py",
+    "SizeBytes": 8226,
+    "Sha256": "ee0018b09e9ba297291888b3252295741622b1124de8df7454ca3eff3a5b271c",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/caption/caption.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/caption/caption.py",
+    "SizeBytes": 7488,
+    "Sha256": "13c2e4de93b2a980ac6f4e151b387a930e4caf71af72bd5591560f99247d06ed",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/caption/result.json",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/caption/result.json",
+    "SizeBytes": 5684,
+    "Sha256": "cff6afc2ece956614b91b4bfb55bf5db0cf16625678cfd5c208d17a04265b9b4",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/caption/img/origin.png",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/caption/img/origin.png",
+    "SizeBytes": 21081786,
+    "Sha256": "8c4394697bfe316a12a82b5f7ceb719b73d28e75475daddc1fd4dc96c5613054",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/caption/img/reversed_beijing.png",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/caption/img/reversed_beijing.png",
+    "SizeBytes": 20956193,
+    "Sha256": "5db7d77c5a8847e4a24144aae1c478ba234ae5ab7e470427939d526d364d7c04",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/caption/img/reversed_red.png",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/caption/img/reversed_red.png",
+    "SizeBytes": 20691909,
+    "Sha256": "4065eec5393aecad0d578eee1eba31054c88d0cb82880fb15b3680fcaff1d225",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/caption/img/reversed.png",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/caption/img/reversed.png",
+    "SizeBytes": 21210268,
+    "Sha256": "832934229dd0c32de70892c0c71d8a742083a7af04fe8a78b1f9ea7c857d70fd",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/edit/__init__.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/edit/__init__.py",
+    "SizeBytes": 127,
+    "Sha256": "c8d30d3e704086ebd69cfa28f4a02dafb0d648bce58714a349eb27cab827af01",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "runtime/src/sensenova_u1_5/edit/edit_pe.py",
+    "SourceUrl": "https://raw.githubusercontent.com/OpenSenseNova/SenseNova-U1/414f82e9ff458a33190c47639a798994cc53d2a0/src/sensenova_u1_5/edit/edit_pe.py",
+    "SizeBytes": 14266,
+    "Sha256": "cfd3e190938a120a5f23215c8da0a22bf45e66726d244bc4a7bd7e371bfbe345",
+    "Purpose": "runtime_source"
+  },
+  {
+    "RelativePath": "wheels/accelerate-1.14.0-py3-none-any.whl",
+    "SourceUrl": "https://files.pythonhosted.org/packages/a8/db/253133d7e7cb40d3af384bb2f5c0b4a2b7fdcffbc95c688cc67a20a3c103/accelerate-1.14.0-py3-none-any.whl",
+    "SizeBytes": 389246,
+    "Sha256": "e94390c2863b873be18f623f9df48a0d8fe5eff13ea7f1a00092b0a7904888c6",
+    "Purpose": "runtime_wheel"
+  },
+  {
+    "RelativePath": "wheels/psutil-7.2.2-cp37-abi3-win_amd64.whl",
+    "SourceUrl": "https://files.pythonhosted.org/packages/b4/90/e2159492b5426be0c1fef7acba807a03511f97c5f86b3caeda6ad92351a7/psutil-7.2.2-cp37-abi3-win_amd64.whl",
+    "SizeBytes": 137737,
+    "Sha256": "eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988",
+    "Purpose": "runtime_wheel"
+  },
+  {
+    "RelativePath": "wheels/sentencepiece-0.2.1-cp312-cp312-win_amd64.whl",
+    "SourceUrl": "https://files.pythonhosted.org/packages/2d/81/92df5673c067148c2545b1bfe49adfd775bcc3a169a047f5a0e6575ddaca/sentencepiece-0.2.1-cp312-cp312-win_amd64.whl",
+    "SizeBytes": 1054671,
+    "Sha256": "4cdc7c36234fda305e85c32949c5211faaf8dd886096c7cea289ddc12a2d02de",
+    "Purpose": "runtime_wheel"
+  },
+  {
+    "RelativePath": "wheels/torchvision-0.25.0+cu126-cp312-cp312-win_amd64.whl",
+    "SourceUrl": "https://download-r2.pytorch.org/whl/cu126/torchvision-0.25.0%2Bcu126-cp312-cp312-win_amd64.whl",
+    "SizeBytes": 8792806,
+    "Sha256": "57a8a103814c344d91c32425ba38a53daac4bf4aab074aaaea7b6bab4c22fb7b",
+    "Purpose": "runtime_wheel"
+  }
+]

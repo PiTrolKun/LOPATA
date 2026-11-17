@@ -205,5 +205,22 @@
     "Author": "Comfy-Org",
     "Checked": "2026-11-11",
     "Source": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/tree/aacf31a6d48e707f352ecba714cee0680da3479b"
+  },
+  {
+    "Id": "sensenova-u1-5",
+    "Name": "SenseNova U1.5",
+    "Version": "a2462cc1b549bace2c0896143bbbcbb3fa217c76",
+    "Author": "SenseNova / SenseTime",
+    "Source": "https://huggingface.co/sensenova/SenseNova-U1.5-8B-MoT",
+    "Checked": "2026-11-17",
+    "License": "Apache-2.0",
+    "Delivery": "download",
+    "Basic": false,
+    "Ru": "Открытые веса SenseNova U1.5, официальный ускоряющий адаптер и код исполнителя загружаются отдельно. Условия пакетов Python находятся в их оригинальных уведомлениях.",
+    "En": "The open SenseNova U1.5 weights, official acceleration adapter and upstream runtime code are downloaded separately. Python packages retain their original notices.",
+    "Texts": [
+      "texts/sensenova-LICENSE.txt"
+    ],
+    "Terms": "712CDF16B88DE797EB4D1C07B74F5161E7CC701AED880E373F99A18D6A9CF56E"
   }
 ]

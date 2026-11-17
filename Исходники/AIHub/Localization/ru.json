@@ -1,4 +1,12 @@
 {
+  "Visual.RemoveModel": "Удаление модели",
+  "Visual.SenseNovaExperimental": "Экспериментальная 5090+, 64 gb RAM+",
+  "Visual.SenseNovaSuggestArtist": "Выберите SenseNova U1.5 также в списке «Художник». В соло-режиме модель останется прогретой между чатом и рисованием.",
+  "Visual.SenseNovaSuggestAdvisor": "Выберите SenseNova U1.5 также в списке «Советник». В соло-режиме модель останется прогретой между чатом и рисованием.",
+  "Visual.SenseNovaGpuRequired": "Для этой сборки SenseNova нужна совместимая видеокарта и подготовленная среда CUDA 12.6.",
+  "Visual.SenseNovaFailed": "Сбой локального процесса SenseNova. Задание сохранено. Подробности записаны в журнал процессов.",
+  "Cloud.Tag.visual_sensenova_solo": "Соло-режим SenseNova",
+  "Cloud.Description.visual_sensenova_solo": "Выберите SenseNova Советником и Художником, чтобы использовать один прогретый сеанс для чата и рисования.",
   "Visual.Title": "Пошаговый визуальный сценарий",
   "Generation.Qwen.ResidentInterrupted": "Движок Художника прервал повтор. Нажмите «Продолжить», чтобы завершить сохранённое задание в отдельном процессе.",
   "Visual.Description": "Обсуждайте сцену, собирайте промпт и создавайте изображения или правки по референсам.",

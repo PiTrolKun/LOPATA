@@ -25,7 +25,8 @@ internal sealed partial class VisualScenarioControl : UserControl
 {
     private readonly VisualProjects _projects;
     private readonly Func<string?> _metadataAuthor;
-    private readonly VisualAdvisor _advisor = new();
+    private readonly VisualSenseNovaSession _senseNova = new();
+    private readonly VisualAdvisor _advisor;
     private readonly ImageGenerationResident _artistSession = new();
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(350) };
     private readonly StackPanel _left = new(), _chat = new(), _gallery = new();
@@ -53,6 +54,7 @@ internal sealed partial class VisualScenarioControl : UserControl
 
     internal VisualScenarioControl(Func<string, string> localize, VisualProjects? projects = null, Func<string?>? metadataAuthor = null)
     {
+        _advisor = new(_senseNova);
         Resources.MergedDictionaries.Add(new ResourceDictionary
             { Source = new Uri("/AIHub;component/Controls/SettingsResources.xaml", UriKind.Relative) });
         SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
@@ -254,11 +256,13 @@ internal sealed partial class VisualScenarioControl : UserControl
         var options = _generationSettings = new StackPanel { IsEnabled = CanEditSettings };
         settings.Children.Add(options);
         options.Children.Add(MusicWishUi.Text(T("Advisor"), true));
-        options.Children.Add(Options(VisualComponents.Advisors.Select(id => (id, AdvisorLabel(id))), _project.Advisor,
-            id => RunUi(() => ChangeModelAsync(id, artist: false))));
+        options.Children.Add(WithModelRemoval(Options(VisualComponents.Advisors.Select(id =>
+            (id, VisualPreparation.ModelLabel(id, _components.AdvisorName(id), _localize))), _project.Advisor,
+            id => RunUi(() => ChangeModelAsync(id, artist: false))), _project.Advisor, artist: false));
         options.Children.Add(MusicWishUi.Text(T("Artist"), true));
-        options.Children.Add(Options(VisualComponents.Artists.Select(id => (id, ImageGenerationCatalog.DisplayName(id))),
-            _project.Artist, id => RunUi(() => ChangeModelAsync(id, artist: true))));
+        options.Children.Add(WithModelRemoval(Options(VisualComponents.Artists.Select(id =>
+            (id, VisualPreparation.ModelLabel(id, ImageGenerationCatalog.DisplayName(id), _localize))),
+            _project.Artist, id => RunUi(() => ChangeModelAsync(id, artist: true))), _project.Artist, artist: true));
         AddField(options, "Folder", _project.Folder, value => _project.Folder = value);
         options.Children.Add(ButtonFor("Browse", PickFolder));
         options.Children.Add(DimensionFields());
@@ -334,9 +338,6 @@ internal sealed partial class VisualScenarioControl : UserControl
         ToolTipService.SetShowDuration(row, int.MaxValue);
         return row;
     }
-
-    private string AdvisorLabel(string id) => _components.AdvisorName(id)
-        + (id == VisualComponents.Gemma ? " · " + T("Recommended") : "");
 
     private Grid DimensionFields()
     {

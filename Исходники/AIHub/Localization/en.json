@@ -1,4 +1,12 @@
 {
+  "Visual.RemoveModel": "Remove model",
+  "Visual.SenseNovaExperimental": "Experimental 5090+, 64 GB RAM+",
+  "Visual.SenseNovaSuggestArtist": "Select SenseNova U1.5 as Artist too. In solo mode it stays loaded between chatting and drawing.",
+  "Visual.SenseNovaSuggestAdvisor": "Select SenseNova U1.5 as Advisor too. In solo mode it stays loaded between chatting and drawing.",
+  "Visual.SenseNovaGpuRequired": "This SenseNova build needs a compatible GPU and a prepared CUDA 12.6 runtime.",
+  "Visual.SenseNovaFailed": "The local SenseNova worker failed. Your job was saved. See the process log for details.",
+  "Cloud.Tag.visual_sensenova_solo": "SenseNova solo mode",
+  "Cloud.Description.visual_sensenova_solo": "Select SenseNova as both Advisor and Artist to share one loaded session between chat and drawing.",
   "Visual.Title": "Step-by-step visual workspace",
   "Generation.Qwen.ResidentInterrupted": "The Artist engine interrupted the repeat. Select Continue to finish the saved job in a separate process.",
   "Visual.Description": "Discuss a scene, compose a prompt, and create or edit images using references.",

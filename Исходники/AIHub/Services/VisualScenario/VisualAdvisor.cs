@@ -5,7 +5,7 @@ using AIHub.Models;
 namespace AIHub.Services.VisualScenario;
 
 internal sealed record VisualAdvice(string Reply, string[] Fragments);
-internal sealed record VisualPreparedAdvisor(DebugModelInfo Model, bool Gemma, int Capacity)
+internal sealed record VisualPreparedAdvisor(DebugModelInfo Model, bool Gemma, int Capacity, bool SenseNova = false)
 {
     private int SafetyTokens => Gemma ? LetItOutChatRuntime.ContextSafetyTokens : LiteraryAutomaticBudget.SafetyTokens;
 
@@ -31,9 +31,13 @@ internal sealed class VisualAdvisor
     private readonly LlamaServerRuntimeService _text = new(new UserContextService(new UserProfileStore(), new IpLocationService()));
     private readonly LlamaServerRuntimeService _vision = new(new UserContextService(new UserProfileStore(), new IpLocationService()));
     private string? _activeText;
+    private readonly VisualSenseNovaSession? _senseNova;
 
-    internal VisualAdvisor()
+    internal Task RetireAsync() => Task.WhenAll(_vision.RetireLetItOutAsync(), _text.RetireLetItOutAsync());
+
+    internal VisualAdvisor(VisualSenseNovaSession? senseNova = null)
     {
+        _senseNova = senseNova;
         _text.ConfigurePrivateNoRetry();
         _vision.ConfigurePrivateNoRetry();
         _vision.ConfigureLetItOut((_, token) =>
@@ -43,8 +47,12 @@ internal sealed class VisualAdvisor
         }, null, visionGpuAllowance: LetItOutMemoryPolicy.VramReserve);
     }
 
-    internal async Task<VisualPreparedAdvisor> PrepareAsync(string path, bool gemma, bool images, CancellationToken token, bool forceCpu = false)
+    internal async Task<VisualPreparedAdvisor> PrepareAsync(string path, bool gemma, bool images, CancellationToken token,
+        bool forceCpu = false, bool senseNova = false)
     {
+        if (senseNova)
+            return new(new DebugModelInfo { Path = path, Name = VisualSenseNova.Name }, false,
+                await _senseNova!.WarmAsync(path, token), SenseNova: true);
         var model = new DebugModelInfo
         {
             Name = Path.GetFileNameWithoutExtension(path), Path = path, Format = "gguf", SizeBytes = new FileInfo(path).Length,
@@ -76,6 +84,7 @@ internal sealed class VisualAdvisor
     {
         var used = await CountAsync(prepared, messages, token);
         var replyTokens = prepared.ReplyTokens(used);
+        if (prepared.SenseNova) return await _senseNova!.CompleteAsync(prepared.Model.Path, messages, replyTokens, token);
         var json = Payload(messages, replyTokens, structured);
         if (prepared.Gemma)
         {
@@ -99,7 +108,8 @@ internal sealed class VisualAdvisor
     }
 
     internal Task<int> CountAsync(VisualPreparedAdvisor prepared, IReadOnlyList<object> messages, CancellationToken token) =>
-        prepared.Gemma ? _vision.CountLetItOutPromptAsync(Payload(messages), token)
+        prepared.SenseNova ? _senseNova!.CountAsync(prepared.Model.Path, messages, token)
+            : prepared.Gemma ? _vision.CountLetItOutPromptAsync(Payload(messages), token)
             : _text.CountPrivatePromptAsync(Payload(messages), token);
 
     private static string Payload(IReadOnlyList<object> messages,

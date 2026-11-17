@@ -17,9 +17,11 @@ public static class ImageGenerationCatalog
     public static ImageGenerationManifest Manifest { get; } = Load();
     public static IEnumerable<ImageGenerationModel> VideoReferenceModels => Manifest.Models.Where(m => m.Family is null);
     public static bool IsAvailable(string id) => Manifest.Models.Any(m => m.Id == id);
-    public static ImageGenerationModel Get(string id) => Manifest.Models.SingleOrDefault(m => m.Id == id)
+    public static ImageGenerationModel Get(string id) => id == VisualScenario.VisualSenseNova.Id
+        ? VisualScenario.VisualSenseNova.Model : Manifest.Models.SingleOrDefault(m => m.Id == id)
         ?? throw new InvalidOperationException("Generation.ModelUnavailable");
-    public static string DisplayName(string id) => Manifest.Models.FirstOrDefault(m => m.Id == id)?.Name
+    public static string DisplayName(string id) => id == VisualScenario.VisualSenseNova.Id
+        ? VisualScenario.VisualSenseNova.Name : Manifest.Models.FirstOrDefault(m => m.Id == id)?.Name
         ?? RetiredModelNames.GetValueOrDefault(id, id);
     internal static bool IsRetiredArtifact(string? id) => id is not null && id.StartsWith("generation-", StringComparison.OrdinalIgnoreCase)
         && RetiredModelNames.ContainsKey(id["generation-".Length..]);
@@ -65,5 +67,13 @@ public static class ImageGenerationCatalog
             || request.Width < 256 || request.Height < 256 || request.Width > model.MaximumSide || request.Height > model.MaximumSide
             || request.Width % 64 != 0 || request.Height % 64 != 0)
             throw new ArgumentException("Generation.InvalidInput");
+        if (request.ReferenceImages.Length > 0)
+        {
+            if (!VisualScenario.VisualComponents.Artists.Contains(request.ModelId)
+                || request.ReferenceImages.Length > VisualScenario.VisualComponents.ImageLimit(request.ModelId))
+                throw new ArgumentException("Generation.InvalidInput");
+            if (request.ReferenceImages.Any(path => !Path.IsPathFullyQualified(path) || !File.Exists(path)))
+                throw new FileNotFoundException("Visual.MissingImage");
+        }
     }
 }

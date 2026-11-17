@@ -6,7 +6,7 @@ namespace AIHub.Services.VisualScenario;
 
 internal sealed record VisualPair(string Advisor, string Artist, bool Confirmed = false);
 
-internal sealed class VisualComponents(StorageSettings settings, int parallel)
+internal sealed partial class VisualComponents(StorageSettings settings, int parallel, IModelUsageGuard? usageGuard = null)
 {
     internal const string Core = ManagedModelCatalog.CoreArtifactId;
     internal const string Literary = ManagedModelCatalog.OmniGammaArtifactId;
@@ -18,18 +18,20 @@ internal sealed class VisualComponents(StorageSettings settings, int parallel)
     private const string Repository = "Qwen/Qwen3-VL-8B-Instruct-GGUF";
     private const string Projector = "mmproj-Qwen3VL-8B-Instruct-F16.gguf";
 
-    internal static readonly string[] Advisors = [Core, Literary, Gemma];
-    internal static readonly string[] Artists = [Base, Turbo];
+    internal static readonly string[] Advisors = [Core, Literary, Gemma, VisualSenseNova.Id];
+    internal static readonly string[] Artists = [Base, Turbo, VisualSenseNova.Id];
     internal string Root { get; } = settings.Models.Locations.FirstOrDefault(item => !string.IsNullOrWhiteSpace(item.Path))?.Path ?? "";
     private readonly ManagedModelLibraryStore _library = new();
 
     internal static int ImageLimit(string artist) => artist == Base ? 10 : 4;
+    internal static bool CanSeeImages(string id) => id is Gemma or VisualSenseNova.Id;
     internal string AdvisorName(string id) => id == Literary ? LiteraryModelLocation.DisplayName : AdvisorCard(id).DisplayName;
     internal OutputModelUse AdvisorUse(string id) => new(id, AdvisorName(id), AdvisorCard(id).Revision, "visual-scenario/advisor");
 
     private ManagedModelArtifactCard AdvisorCard(string id)
     {
         if (!Advisors.Contains(id)) throw new InvalidDataException("Visual.InvalidProject");
+        if (id == VisualSenseNova.Id) return VisualSenseNova.Card(Root);
         return _library.Load(id) is { IsManaged: true } card ? card
             : ManagedModelCatalog.CreatePredefined(settings).Single(item => item.ModelArtifactId == id);
     }
@@ -42,6 +44,7 @@ internal sealed class VisualComponents(StorageSettings settings, int parallel)
 
     internal bool AdvisorPresent(string id)
     {
+        if (id == VisualSenseNova.Id) return VisualSenseNova.Present(Root);
         if (id == Gemma && EngineSetSelection.ActiveId != NativeRuntimeReleasePolicy.UpdatedSet) return false;
         if (!File.Exists(id == Literary ? LiteraryModelLocation.DownloadPath : AdvisorPath(id))
             && (id != Literary || !File.Exists(AdvisorPath(id)) && !File.Exists(LiteraryModelLocation.ConfigurationPath)))
@@ -56,6 +59,7 @@ internal sealed class VisualComponents(StorageSettings settings, int parallel)
 
     internal bool ArtistPresent(string id)
     {
+        if (id == VisualSenseNova.Id) return VisualSenseNova.Present(Root);
         if (string.IsNullOrWhiteSpace(Root) || !Artists.Contains(id)) return false;
         var model = ImageGenerationCatalog.Get(id);
         if (!ImageGenerationCatalog.SupportsEngineSet(model, EngineSetSelection.ActiveId) || SdRuntimeSelector.AvailableExecutable() is null) return false;
@@ -69,6 +73,8 @@ internal sealed class VisualComponents(StorageSettings settings, int parallel)
     {
         using var audit = ComponentAudit.CaptureOperation();
         if (string.IsNullOrWhiteSpace(Root)) throw new InvalidOperationException("Generation.StorageRequired");
+        if (id == VisualSenseNova.Id)
+            return (await VisualSenseNova.PrepareAsync(Root, _library, parallel, download, progress, token))?.InstallDirectory;
         if (id == Gemma && EngineSetSelection.ActiveId != NativeRuntimeReleasePolicy.UpdatedSet)
             throw new InvalidOperationException("LetItOut.Preparation.EngineRequired");
         string path;
@@ -114,6 +120,8 @@ internal sealed class VisualComponents(StorageSettings settings, int parallel)
     {
         using var audit = ComponentAudit.CaptureOperation();
         if (!Artists.Contains(id)) throw new InvalidDataException("Visual.InvalidProject");
+        if (id == VisualSenseNova.Id)
+            return await VisualSenseNova.PrepareAsync(Root, _library, parallel, download, progress, token) is { } sense ? [sense] : null;
         if (!ImageGenerationCatalog.SupportsEngineSet(ImageGenerationCatalog.Get(id), EngineSetSelection.ActiveId))
             throw new InvalidOperationException("Generation.Qwen.EngineSetRequired");
         if (SdRuntimeSelector.AvailableExecutable() is null)

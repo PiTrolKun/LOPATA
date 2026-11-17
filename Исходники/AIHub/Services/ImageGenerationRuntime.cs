@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Windows.Media.Imaging;
 using AIHub.Models;
+using AIHub.Services.VisualScenario;
 
 namespace AIHub.Services;
 
@@ -262,6 +263,7 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
         ImageLora.ImageLoraCatalog.ValidateRawPrompt(request.Prompt);
         ImageLora.ImageLoraCatalog.ValidateUses(request.Loras, request.ModelId);
         if (!ImageOutputDimensions.IsSupported(request.OutputLongestSide)) throw new ArgumentException("Generation.InvalidOutputSize");
+        var senseNova = request.ModelId == VisualSenseNova.Id;
         if (_worker is ImageGenerationNativeWorker)
         {
             var saved = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.SingleOrDefault(t => t.Request.Id == request.Id);
@@ -289,14 +291,25 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
             var receiptPath = Path.Combine(request.SessionDirectory, request.Id + "_" + i + ".runtime.json");
             var receipt = previous?.Runtime ?? (File.Exists(receiptPath)
                 ? JsonSerializer.Deserialize<ImageGenerationRuntimeReceipt>(await File.ReadAllTextAsync(receiptPath, token)) : null);
+            if (senseNova) receipt = VisualSenseNova.NormalizeReceipt(receipt);
             // A pause may arrive after a valid PNG was published but before the checkpoint.
             if (!IsValidImage(target, request))
             {
                 var partial = Path.Combine(request.SessionDirectory, request.Id + "_" + i + ".pending.png");
-                if (File.Exists(partial)) File.Delete(partial);
-                receipt = await _worker.GenerateWithReceiptAsync(request, i, cards, promptFile, partial, token);
-                token.ThrowIfCancellationRequested();
-                if (!IsValidImage(partial, request)) throw new BackgroundOperationFailedException("Generation.InvalidImage");
+                // A saved SenseNova receipt proves the staged frame passed validation before export.
+                if (!senseNova || receipt is not { ComponentId: VisualSenseNova.Profile, EngineSetId: null }
+                    || !IsValidImage(partial, request))
+                {
+                    if (File.Exists(partial)) File.Delete(partial);
+                    if (senseNova && File.Exists(receiptPath))
+                    {
+                        Lopata.Updates.SafeUpdatePath.RejectLinks(receiptPath);
+                        File.Delete(receiptPath);
+                    }
+                    receipt = await _worker.GenerateWithReceiptAsync(request, i, cards, promptFile, partial, token);
+                    token.ThrowIfCancellationRequested();
+                    if (!IsValidImage(partial, request)) throw new BackgroundOperationFailedException("Generation.InvalidImage");
+                }
                 if (receipt is not null) await SaveReceiptAsync(receiptPath, receipt, token);
                 if (request.Metadata is not null || request.OutputFormat != ImageGenerationFileFormat.Png)
                 {

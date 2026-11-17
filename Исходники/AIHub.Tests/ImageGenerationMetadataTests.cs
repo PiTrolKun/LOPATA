@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Windows.Media.Imaging;
 using AIHub.Models;
 using AIHub.Services;
+using AIHub.Services.VisualScenario;
 using SkiaSharp;
 
 namespace AIHub.Tests;
@@ -19,6 +20,86 @@ public sealed class ImageGenerationMetadataTests
         "  Замок <на скале> & кот 🐈\nDo not rewrite this.  ", 256, 256, [123, 456], "unused-models-root", ImageGenerationSessionStore.Create(_root))
         { Metadata = new("  Тестовый автор 🐈  "), SubmittedAt = new DateTimeOffset(2026, 10, 4, 6, 7, 8, TimeSpan.FromHours(7)),
             FirstGenerationNumber = 7, OutputFolder = Path.Combine(_root, "export") };
+
+    [TestMethod]
+    [DataRow(ImageGenerationFileFormat.Png)]
+    [DataRow(ImageGenerationFileFormat.Jpeg)]
+    [DataRow(ImageGenerationFileFormat.WebP)]
+    public async Task SenseNovaExportsWithItsOwnBackendAndModelFiles(ImageGenerationFileFormat format)
+    {
+        var request = Request(VisualSenseNova.Id) with { Seeds = [123], OutputFormat = format, EngineSetId = "002" };
+        var worker = new Worker { Receipt = VisualSenseNova.RenderReceipt() };
+        var turn = await new ImageGenerationRuntime(worker).RunAsync(request, [], null, default);
+        var result = turn.Results.Single();
+
+        Assert.IsTrue(result.Exported, result.ProcessingError ?? result.ExportError);
+        Assert.IsTrue(ImageGenerationOutput.IsReady(request, 0));
+        Assert.AreEqual(1, worker.Calls);
+        AssertSenseNovaMetadata(request);
+    }
+
+    [TestMethod]
+    public async Task SenseNovaFinalizesStagedPixelsFromLegacyReceiptWithoutDrawingAgain()
+    {
+        var request = Request(VisualSenseNova.Id) with { Seeds = [123], EngineSetId = "002" };
+        var partial = Path.Combine(request.SessionDirectory, request.Id + "_0.pending.png");
+        var writer = new Worker();
+        await writer.GenerateAsync(request, 0, [], "", partial, default);
+        await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_0.runtime.json"),
+            JsonSerializer.Serialize(VisualSenseNova.RenderReceipt() with { EngineSetId = "managed-python" }));
+        var worker = new Worker { FailAt = 0 };
+        var runtime = new ImageGenerationRuntime(worker);
+
+        var turn = await runtime.RunAsync(request, [], null, default);
+        var resumed = await runtime.RunAsync(request, [], null, default);
+
+        Assert.AreEqual(0, worker.Calls);
+        Assert.IsFalse(File.Exists(partial));
+        Assert.IsTrue(turn.Results.Single().Exported);
+        Assert.AreEqual(turn.Results.Single().ExportPath, resumed.Results.Single().ExportPath);
+        Assert.HasCount(1, Directory.GetFiles(request.OutputFolder));
+        Assert.IsNull(turn.Results.Single().Runtime!.EngineSetId);
+        var actual = File.ReadAllBytes(ImageGenerationSessionStore.ResultPath(request, 0));
+        CollectionAssert.AreEqual(Chunks(writer.Bytes[0], "IDAT").SelectMany(bytes => bytes).ToArray(),
+            Chunks(actual, "IDAT").SelectMany(bytes => bytes).ToArray());
+        AssertSenseNovaMetadata(request);
+    }
+
+    [TestMethod]
+    public async Task SavedSenseNovaFrameResumesThroughNormalExport()
+    {
+        var fixture = Environment.GetEnvironmentVariable("LOPATA_SENSENOVA_EXPORT_FIXTURE");
+        if (string.IsNullOrWhiteSpace(fixture)) Assert.Inconclusive("Opt-in staged render fixture.");
+        using var saved = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(fixture, "drawing-job.json")));
+        var source = saved.RootElement.GetProperty("input").GetProperty("Request").Deserialize<ImageGenerationRequest>()!;
+        var request = source with { SessionDirectory = ImageGenerationSessionStore.Create(_root), OutputFolder = Path.Combine(fixture, "verified-export") };
+        File.Copy(Path.Combine(fixture, "cyberpunk-smiley.png"), Path.Combine(request.SessionDirectory, request.Id + "_0.pending.png"));
+        File.Copy(Path.Combine(fixture, "legacy-runtime.json"), Path.Combine(request.SessionDirectory, request.Id + "_0.runtime.json"));
+        var worker = new Worker { FailAt = 0 };
+
+        var turn = await new ImageGenerationRuntime(worker).RunAsync(request, [], null, default);
+
+        Assert.AreEqual(0, worker.Calls);
+        Assert.IsTrue(turn.Results.Single().Exported);
+        AssertSenseNovaMetadata(request);
+    }
+
+    private static void AssertSenseNovaMetadata(ImageGenerationRequest request)
+    {
+        var fields = PngTextMetadata.Read(ImageGenerationSessionStore.ResultPath(request, 0));
+        Assert.AreEqual(request.Prompt, fields["Prompt"]);
+        StringAssert.Contains(fields["LOPATA_PRODUCER"], VisualSenseNova.Backend);
+        Assert.IsFalse(fields.ContainsKey("LOPATA_ENGINE_SET"));
+        using var document = JsonDocument.Parse(fields["LOPATA"]);
+        var metadata = document.RootElement;
+        Assert.AreEqual(VisualSenseNova.Backend, metadata.GetProperty("Backend").GetString());
+        Assert.AreEqual(JsonValueKind.Null, metadata.GetProperty("EngineSetId").ValueKind);
+        Assert.AreEqual(VisualSenseNova.Revision, metadata.GetProperty("ModelRevision").GetString());
+        Assert.AreEqual(VisualSenseNova.Profile, metadata.GetProperty("Runtime").GetProperty("ComponentId").GetString());
+        Assert.AreEqual("8-step V2", metadata.GetProperty("Runtime").GetProperty("Schedule").GetString());
+        Assert.AreEqual(VisualSenseNova.Id, metadata.GetProperty("Components")[0].GetProperty("Id").GetString());
+        Assert.AreEqual(VisualSenseNova.Artifact.Files.Length, metadata.GetProperty("Components")[0].GetProperty("Files").GetArrayLength());
+    }
 
     [TestMethod]
     public async Task RuntimeEmbedsUnicodeWindowsPropertiesAndActualParametersWithoutChangingPixels()

@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using AIHub.Models;
+using AIHub.Services.VisualScenario;
 
 namespace AIHub.Services;
 
@@ -27,11 +28,15 @@ public static class ImageGenerationMetadata
         ImageGenerationRuntimeReceipt? runtime = null)
     {
         var model = ImageGenerationCatalog.Get(request.ModelId);
+        var senseNova = model.Id == VisualSenseNova.Id;
+        if (senseNova) runtime = VisualSenseNova.NormalizeReceipt(runtime);
+        var engineSetId = senseNova ? null : runtime?.EngineSetId;
         var author = Author(request.Metadata?.Author);
         var title = $"{model.Name} #{request.FirstGenerationNumber + index}";
         var version = typeof(ImageGenerationMetadata).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
-        var producer = EngineSetMetadataIdentity.Producer(version, runtime?.EngineSetId);
-        var engineSetDate = EngineSetMetadataIdentity.Date(runtime?.EngineSetId);
+        var producer = senseNova ? $"LOPATA {version}, {VisualSenseNova.Backend}"
+            : EngineSetMetadataIdentity.Producer(version, engineSetId);
+        var engineSetDate = EngineSetMetadataIdentity.Date(engineSetId);
         var seed = request.Seeds[index];
         var keywords = new[] { "LOPATA", "AI", model.Name };
         var size = $"{request.Width}x{request.Height}";
@@ -61,7 +66,7 @@ public static class ImageGenerationMetadata
         {
             Schema = 1, Author = author, Program = "LOPATA", ProgramVersion = version,
             Scenario = request.Metadata?.Scenario ?? "image-generation/simple", OperationId = request.Id,
-            EngineSetId = runtime?.EngineSetId, EngineSetDate = engineSetDate,
+            EngineSetId = engineSetId, EngineSetDate = engineSetDate,
             Model = model.Name, ModelId = model.Id, ModelRevision = runtime?.ArtistRevision ?? request.Metadata?.ArtistRevision,
             AdditionalModels = request.Metadata?.AdditionalModels ?? [], GenerationNumber = request.FirstGenerationNumber + index,
             request.Prompt, request.SubmittedAt, CreatedAt = createdAt, Seed = seed, request.Width, request.Height,
@@ -69,18 +74,20 @@ public static class ImageGenerationMetadata
             OutputFormat = "PNG", ReferenceImageCount = request.ReferenceImages.Length,
             model.Steps, model.Cfg, model.Sampler, model.ClipSkip,
             FlowShift = model.Id == "krea" ? (double?)1.15 : null,
-            Backend = "stable-diffusion.cpp", BackendCommit = runtime?.BackendCommit,
+            Backend = senseNova ? VisualSenseNova.Backend : "stable-diffusion.cpp", BackendCommit = runtime?.BackendCommit,
             Runtime = runtime, RuntimeHistory = runtime is null ? "unknown" : "executed-receipt",
             AppliedLoras = runtime?.Loras ?? [],
             LoraPrompt = runtime?.Loras.Length > 0 ? string.Join(", ", runtime.Loras.Select(l => l.Trigger).Where(t => t.Length > 0 && !request.Prompt.Contains(t, StringComparison.OrdinalIgnoreCase))
                 .Distinct().Append(request.Prompt)) : null,
-            DiffusionFlashAttention = true,
-            OffloadToCpu = runtime is null ? (bool?)null : runtime.Placement == nameof(ImageGenerationGpuPlacement.Hybrid),
-            VaeTiling = true,
+            DiffusionFlashAttention = senseNova ? (bool?)null : true,
+            OffloadToCpu = runtime is null ? (bool?)null
+                : runtime.Placement == (senseNova ? "balanced" : nameof(ImageGenerationGpuPlacement.Hybrid)),
+            VaeTiling = senseNova ? (bool?)null : true,
             // Engine delivery is recorded above from the actual attempt; static model weights stay separate.
             Components = model.Components.Where(id => id != "generation-runtime").Select(id =>
             {
-                var artifact = ImageGenerationCatalog.Manifest.Artifacts.Single(a => a.Id == id);
+                var artifact = id == VisualSenseNova.Id ? VisualSenseNova.Artifact
+                    : ImageGenerationCatalog.Manifest.Artifacts.Single(a => a.Id == id);
                 return new { artifact.Id, artifact.Repository, artifact.Revision,
                     Files = artifact.Files.Select(f => new { f.RelativePath, f.Sha256 }) };
             })
@@ -93,7 +100,7 @@ public static class ImageGenerationMetadata
             ["LOPATA_PRODUCER"] = producer,
             ["Keywords"] = string.Join("; ", keywords), ["parameters"] = parameters, ["LOPATA"] = structured.ToJsonString()
         };
-        EngineSetMetadataIdentity.AddTags(fields, runtime?.EngineSetId);
+        if (!senseNova) EngineSetMetadataIdentity.AddTags(fields, engineSetId);
         return fields;
     }
 

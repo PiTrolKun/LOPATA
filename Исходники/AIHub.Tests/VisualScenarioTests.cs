@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -16,6 +17,22 @@ namespace AIHub.Tests;
 [TestClass, DoNotParallelize]
 public sealed class VisualScenarioTests
 {
+    [TestMethod]
+    public void AdvisorHistoryKeepsNaturalLanguageInsideItsJson()
+    {
+        var message = new VisualMessage("reply", false, "Нарисуй \"улыбку\".",
+            [new("option", "Синий неон", true)], []);
+
+        var history = VisualScenarioControl.SerializeAdvisorHistory(message);
+        StringAssert.Contains(history, "Нарисуй");
+        StringAssert.Contains(history, "Синий неон");
+        using var document = JsonDocument.Parse(history);
+        Assert.AreEqual(message.Text, document.RootElement.GetProperty("reply").GetString());
+        var option = document.RootElement.GetProperty("fragments")[0];
+        Assert.AreEqual(message.Fragments[0].Text, option.GetProperty("Text").GetString());
+        Assert.IsTrue(option.GetProperty("Selected").GetBoolean());
+    }
+
     [TestMethod]
     public void ProjectKeepsOriginalPromptReferencesAndIndependentDraft()
     {
@@ -156,7 +173,7 @@ public sealed class VisualScenarioTests
         var root = files.File("models");
         var references = new[] { files.File("z.png"), files.File("a.png") };
         foreach (var path in references) File.WriteAllBytes(path, [1]);
-        foreach (var id in VisualComponents.Artists)
+        foreach (var id in new[] { VisualComponents.Base, VisualComponents.Turbo })
         {
             var model = ImageGenerationCatalog.Get(id);
             var cards = ImageGenerationCatalog.CreateCards(root).Where(card => model.Components.Contains(card.ModelArtifactId)).ToList();
@@ -201,12 +218,50 @@ public sealed class VisualScenarioTests
         var buttons = ScenarioNavigationTests.LogicalDescendants(nav).OfType<Button>().ToArray();
         Assert.IsTrue(buttons.Any(button => AutomationProperties.GetAutomationId(button) == "Visual.Draw"));
         Assert.IsTrue(buttons.Any(button => AutomationProperties.GetAutomationId(button) == "Visual.Attach"));
+        Assert.AreEqual(1, buttons.Count(button => AutomationProperties.GetAutomationId(button) == "Visual.RemoveAdvisor"));
+        Assert.IsFalse(buttons.Single(button => AutomationProperties.GetAutomationId(button) == "Visual.RemoveArtist").IsEnabled);
         var reopened = projects.Load(current.Id);
         Assert.AreEqual(current.Draft, reopened.Draft);
         Assert.AreEqual(VisualComponents.Gemma, reopened.Advisor);
         Assert.IsTrue(nav.GoBack());
         Assert.IsFalse(nav.IsVisualScenario);
     });
+
+    [TestMethod]
+    public void VisualRemovalReleasesOnlyTheReviewedBundleAndKeepsSharedFiles()
+    {
+        using var files = new VideoPreparationTests.TestFiles();
+        var root = files.File("models");
+        var cards = ImageGenerationCatalog.CreateCards(root).ToDictionary(card => card.ModelArtifactId);
+        string Write(string id)
+        {
+            var card = cards[id];
+            Directory.CreateDirectory(card.InstallDirectory);
+            var path = Path.Combine(card.InstallDirectory, card.Files.Single().RelativePath);
+            File.WriteAllBytes(path, [1, 2, 3]);
+            return path;
+        }
+
+        var turbo = Write("generation-qwen-image-21-turbo-int8");
+        var baseWeights = Write("generation-qwen-image-21-base-gguf");
+        var shared = Write("generation-qwen-image-21-vae");
+        var active = true;
+        var settings = new StorageSettings { Models = new() { Locations = [new() { Path = root }] } };
+        var components = new VisualComponents(settings, 1, new DelegateModelUsageGuard(_ => active));
+        Assert.IsTrue(components.HasRemovableFiles(VisualComponents.Turbo, artist: true));
+        Assert.ThrowsExactly<InvalidOperationException>(() => components.ReviewRemoval(VisualComponents.Turbo, artist: true));
+        active = false;
+
+        var plan = components.ReviewRemoval(VisualComponents.Turbo, artist: true);
+        Assert.IsNotNull(plan);
+        Assert.HasCount(1, plan.Preserved);
+        Assert.IsTrue(File.Exists(turbo));
+        Assert.AreEqual(3L, plan.Remove());
+        Assert.IsFalse(File.Exists(turbo));
+        Assert.IsTrue(File.Exists(baseWeights));
+        Assert.IsTrue(File.Exists(shared));
+        Assert.IsFalse(components.HasRemovableFiles(VisualComponents.Turbo, artist: true));
+    }
 
     [TestMethod]
     public Task PromptCardsShareOneSwitchAcrossRepeatedDrawingsAndRestoreLegacySelection() => ScenarioNavigationTests.Sta(() =>
@@ -403,6 +458,12 @@ public sealed class VisualScenarioTests
         var projectsButton = elements.OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button) == "Visual.Projects");
         var composer = elements.OfType<TextBox>().Single(box => box.Text == project.Draft);
         var advisor = elements.OfType<ComboBox>().First();
+        var artist = elements.OfType<ComboBox>().Skip(1).First();
+        foreach (var modelList in new[] { advisor, artist })
+        {
+            var senseNova = modelList.Items.OfType<ComboBoxItem>().Single(item => item.Tag as string == VisualSenseNova.Id);
+            Assert.AreEqual("SenseNova U1.5 · Visual.SenseNovaExperimental", senseNova.Content);
+        }
         var fragment = elements.OfType<CheckBox>().Single();
         var aspect = elements.OfType<ComboBox>().Single(box => AutomationProperties.GetAutomationId(box) == "Visual.Aspect");
         var size = elements.OfType<ComboBox>().Single(box => AutomationProperties.GetAutomationId(box) == "Visual.Size");

@@ -38,6 +38,8 @@
     <Content Include="..\..\Runtime\OfficeReader\djvulibre-3.5.29\*" Link="OfficeReaderRuntime\DjVuLibre\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\OfficeReader\sources\*" Link="OfficeReaderRuntime\Sources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\image-loras.json" LogicalName="AIHub.ImageLoras" />
+    <EmbeddedResource Include="Tools\SenseNova\files.json" LogicalName="AIHub.SenseNovaFiles" />
+    <Content Include="Tools\SenseNova\worker.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\image-lora-signatures.json" LogicalName="AIHub.ImageLoraSignatures" />
     <EmbeddedResource Include="Content\ChatComposer.js" LogicalName="AIHub.ChatComposerScript" />
     <EmbeddedResource Include="Content\LetItOutSystem.txt" LogicalName="AIHub.LetItOutSystem" />

@@ -24,13 +24,15 @@ internal sealed partial class VisualScenarioControl
         async Task<StudioContextMeter?> Measure(IReadOnlySet<string> exclude, string? summary, CancellationToken token)
         {
             var (messages, hasImages) = await BuildMessagesAsync(request, token, exclude, summary);
-            var prepared = await _advisor.PrepareAsync(path, request.Advisor == VisualComponents.Gemma, hasImages, token);
+            var prepared = await _advisor.PrepareAsync(path, request.Advisor == VisualComponents.Gemma, hasImages, token,
+                senseNova: request.Advisor == VisualSenseNova.Id);
             return prepared.Measure(await _advisor.CountAsync(prepared, messages, token));
         }
         async Task<StudioCompactionResult> Generate(StudioContextMethod method, double ratio,
             IProgress<StudioCompactionProgress> progress, CancellationToken token)
         {
-            var prepared = await _advisor.PrepareAsync(path, request.Advisor == VisualComponents.Gemma, false, token);
+            var prepared = await _advisor.PrepareAsync(path, request.Advisor == VisualComponents.Gemma, false, token,
+                senseNova: request.Advisor == VisualSenseNova.Id);
             Task<int> Count(IReadOnlyList<ImageAnalysisHiddenMessage> input, CancellationToken ct) =>
                 _advisor.CountAsync(prepared, input.Select(message => VisualAdvisor.Message(message.Role, message.Content)).ToArray(), ct);
             var service = new LiteraryContextCompaction(

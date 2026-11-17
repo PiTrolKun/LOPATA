@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,6 +26,7 @@ internal sealed partial class VisualScenarioControl
     private ContextMenu? _chatTextMenu;
     private Task? _advisorWarmup;
     private readonly Dictionary<string, CheckBox> _fragmentSwitches = [];
+    private static readonly JsonSerializerOptions AdvisorPromptJson = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     private VisualFragment[] SelectedFragments() => _project.Messages.SelectMany(message => message.Fragments).Where(fragment => fragment.Selected).ToArray();
 
@@ -40,7 +42,7 @@ internal sealed partial class VisualScenarioControl
         _input.IsEnabled = free || _warmingAdvisor;
         _send.IsEnabled = _draw.IsEnabled = _attach.IsEnabled = free;
         if (_generationSettings is not null) _generationSettings.IsEnabled = CanEditSettings;
-        _attach.Visibility = _project.Advisor == VisualComponents.Gemma ? Visibility.Visible : Visibility.Collapsed;
+        _attach.Visibility = VisualComponents.CanSeeImages(_project.Advisor) ? Visibility.Visible : Visibility.Collapsed;
         _pause.Visibility = _continue.Visibility = _cancel.Visibility = pending is not null || _busy ? Visibility.Visible : Visibility.Collapsed;
         _pause.IsEnabled = pending?.Phase == BackgroundOperationPhase.Running;
         _continue.IsEnabled = pending?.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting;
@@ -62,6 +64,8 @@ internal sealed partial class VisualScenarioControl
                 if (PrepareArtist(id, true) is not null)
                 {
                     await _artistSession.RetireAsync();
+                    if (_project.Artist == VisualSenseNova.Id && _project.Advisor != VisualSenseNova.Id)
+                        await _senseNova.RetireAsync();
                     _project.Artist = id;
                 }
             }
@@ -83,6 +87,7 @@ internal sealed partial class VisualScenarioControl
             Save();
         }
         finally { _changingModel = false; Render(); }
+        if (id == (artist ? _project.Artist : _project.Advisor)) ShowSenseNovaHint(id, artist);
         if (warmAdvisor) await WarmAdvisorAsync();
     }
 
@@ -99,7 +104,7 @@ internal sealed partial class VisualScenarioControl
 
     private async Task AttachAsync()
     {
-        if (_project.Advisor != VisualComponents.Gemma || _busy || Pending is not null) return;
+        if (!VisualComponents.CanSeeImages(_project.Advisor) || _busy || Pending is not null) return;
         var dialog = new Microsoft.Win32.OpenFileDialog { Title = T("Attach"), Multiselect = true,
             Filter = T("ImageFilter"), CheckFileExists = true };
         if (dialog.ShowDialog(OwnerWindow) != true) return;
@@ -283,7 +288,7 @@ internal sealed partial class VisualScenarioControl
     private async Task SendAsync()
     {
         if (_busy || Pending is not null) return;
-        if (_project.DraftImages.Count > 0 && _project.Advisor != VisualComponents.Gemma)
+        if (_project.DraftImages.Count > 0 && !VisualComponents.CanSeeImages(_project.Advisor))
             throw new InvalidOperationException("Visual.SelectGemma");
         var text = _project.Draft.Trim();
         var retry = text.Length == 0 && _project.DraftImages.Count == 0;
@@ -344,11 +349,11 @@ internal sealed partial class VisualScenarioControl
                 {
                     var vision = gemma && (_project.DraftImages.Count > 0 || _project.Messages.Any(message =>
                         message.User && !_project.Hidden.Contains(message.Id) && (message.Images.Length > 0 || job.Images.Length > 0)));
-                    await _advisor.PrepareAsync(path, gemma, vision, ct, job.ForceCpu);
+                    await _advisor.PrepareAsync(path, gemma, vision, ct, job.ForceCpu, job.Advisor == VisualSenseNova.Id);
                     return true;
                 }
                 var (messages, images) = await BuildMessagesAsync(job, ct);
-                var prepared = await _advisor.PrepareAsync(path, gemma, images, ct, job.ForceCpu);
+                var prepared = await _advisor.PrepareAsync(path, gemma, images, ct, job.ForceCpu, job.Advisor == VisualSenseNova.Id);
                 if (!job.Compose) _meter = prepared.Measure(await _advisor.CountAsync(prepared, messages, ct));
                 string answer;
                 try { answer = await _advisor.CompleteAsync(prepared, messages, ct, structured: true); }
@@ -414,7 +419,7 @@ internal sealed partial class VisualScenarioControl
     {
         List<object> messages = [];
         var role = job.Compose ? """
-            Build one coherent scene description for Qwen-Image from the approved project material.
+            Build one coherent scene description for the selected image generation model from the approved project material.
             Review every approved fragment. Carry forward every distinct compatible visual detail
             in full descriptive sentences. Scale the detail to the material, covering the subject,
             clothing, pose, framing, setting, lighting, and effects wherever supplied.
@@ -435,7 +440,7 @@ internal sealed partial class VisualScenarioControl
             savedPrompt = job.Compose ? null : _project.SelectedPrompt?.Prompt.Text,
             draftForRevision = job.Compose ? _project.DraftForRevision : null,
             images = job.Images.Select((image, index) => new { number = index + 1, image.Role, image.IsBase })
-        });
+        }, AdvisorPromptJson);
         if (job.Compose)
         {
             messages.Add(VisualAdvisor.Message("system", role));
@@ -451,10 +456,9 @@ internal sealed partial class VisualScenarioControl
         var lastUser = visible.LastOrDefault(message => message.User);
         foreach (var message in visible)
         {
-            var text = message.User ? message.Text : JsonSerializer.Serialize(new
-            { reply = message.Text, fragments = message.Fragments.Select(fragment => new { fragment.Text, fragment.Selected }) });
+            var text = message.User ? message.Text : SerializeAdvisorHistory(message);
             var embedded = message == lastUser ? message.Images.Concat(job.Images.Select(image => image.ImageId)).Distinct().ToArray() : message.Images;
-            if (!message.User || job.Advisor != VisualComponents.Gemma || embedded.Length == 0)
+            if (!message.User || !VisualComponents.CanSeeImages(job.Advisor) || embedded.Length == 0)
             {
                 messages.Add(VisualAdvisor.Message(message.User ? "user" : "assistant", text));
                 continue;
@@ -467,4 +471,11 @@ internal sealed partial class VisualScenarioControl
         }
         return (messages, hasImages);
     }
+
+    // This JSON becomes text inside the model conversation, separately from the HTTP JSON envelope.
+    internal static string SerializeAdvisorHistory(VisualMessage message) => JsonSerializer.Serialize(new
+    {
+        reply = message.Text,
+        fragments = message.Fragments.Select(fragment => new { fragment.Text, fragment.Selected })
+    }, AdvisorPromptJson);
 }

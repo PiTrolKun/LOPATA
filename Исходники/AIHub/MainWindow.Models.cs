@@ -111,7 +111,10 @@ public partial class MainWindow
         }
     }
 
-    private bool IsManagedModelActive(string modelArtifactId)
+    private bool IsManagedModelActive(string modelArtifactId) =>
+        _visualScenario?.UsesResidentModel(modelArtifactId) == true || IsManagedModelActiveOutsideVisual(modelArtifactId);
+
+    private bool IsManagedModelActiveOutsideVisual(string modelArtifactId)
     {
         if (_musicPoetryWindow?.IsWorking == true || _musicPoetryWindow?.IsModelDownloadActive == true) return true;
         if (MusicPage.UsesArtifact(modelArtifactId)) return true;

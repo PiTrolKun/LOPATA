@@ -1,3 +1,7 @@
+## 18.11.2026 — SenseNova U1.5, пробный комплект
+
+`sensenova-u1-5` использует полные BF16-веса `a2462cc1b549bace2c0896143bbbcbb3fa217c76`, адаптер 8-step V2 и код авторов `414f82e9ff458a33190c47639a798994cc53d2a0`. Веса, код и адаптер опубликованы под Apache-2.0. Пакеты Python поставляются в оригинальных wheel с их уведомлениями. Комплект из 65 файлов проходит общую проверку наличия и SHA-256. Первая конфигурация использует подготовленную среду Python CUDA 12.6 и штатный локальный выбор совместимой карты этим профилем. [ТЗ](../ТЗ/Архив/2026-11-17_SenseNova_U1_5_в_визуальном_сценарии.md) · [Источник](https://github.com/OpenSenseNova/SenseNova-U1)
+
 ## 17.11.2026 — Kitten TTS 2 Mini
 
 [Модель ONNX INT8](https://huggingface.co/KittenML/kitten-tts-2-mini/tree/c01797caec3967b400da457656e011eb81f530a4) на CPU и [kittenml 0.9.8](https://pypi.org/project/kittenml/0.9.8/) поддерживают озвучивание на русском и английском. Веса под Apache-2.0. Условия библиотек указаны в каталоге лицензий. Включено в [0.8.43-beta](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.8.43-beta).

@@ -13,9 +13,11 @@ public partial class MainWindow
     {
         try
         {
-            var components = new VisualComponents(_storageSettings, _appSettings.ModelDownloads.MaximumParallelConnections);
+            var components = new VisualComponents(_storageSettings, _appSettings.ModelDownloads.MaximumParallelConnections,
+                new DelegateModelUsageGuard(id => _backgroundOperations?.IsRunning == true || IsManagedModelActiveOutsideVisual(id)));
             _visualScenario ??= new(L, metadataAuthor: () => _userProfile.DisplayName);
-            var pair = prepare ? VisualPreparation.Enter(this, L, components, _visualScenario.Preferred) : null;
+            var pair = prepare ? VisualPreparation.Enter(this, L, components, _visualScenario.Preferred,
+                _visualScenario.ReleaseModelAsync) : null;
             if (prepare && pair is null) return null;
             _visualScenario.Configure(L, components, pair);
             if (prepare) _visualScenario.WarmAdvisorOnEntry();

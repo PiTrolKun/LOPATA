@@ -95,7 +95,8 @@ internal sealed partial class VisualScenarioControl
     private void SetActivePrompt(string? id)
     {
         _project.ActivePrompt = id;
-        if (id is null) RunUi(_artistSession.RetireAsync);
+        if (id is null) RunUi(_project.Artist == VisualSenseNova.Id && _project.Advisor != VisualSenseNova.Id
+            ? _senseNova.RetireAsync : _artistSession.RetireAsync);
     }
 
     private void UseGalleryImage(VisualResult result, bool edit)
@@ -220,12 +221,14 @@ internal sealed partial class VisualScenarioControl
         var request = new ImageGenerationRequest(Guid.NewGuid().ToString("N"), model.Id, prompt.Text, size.Width, size.Height,
             [(long)RandomNumberGenerator.GetInt32(int.MaxValue)], _components.Root, _projects.DirectoryFor(_project.Id))
         {
-            EngineSetId = EngineSetSelection.ActiveId, SubmittedAt = DateTimeOffset.Now, FirstGenerationNumber = _project.Results.Count + 1,
+            EngineSetId = model.Id == VisualSenseNova.Id ? null : EngineSetSelection.ActiveId,
+            SubmittedAt = DateTimeOffset.Now, FirstGenerationNumber = _project.Results.Count + 1,
             OutputFolder = _project.Folder, OutputFormat = _project.OutputFormat,
             Metadata = new(ImageGenerationMetadata.Author(_metadataAuthor()), "image-generation/visual-scenario")
             {
                 AdditionalModels = prompt.Advisor is { } advisor ? [advisor] : [],
-                ArtistRevision = cards.FirstOrDefault(card => card.Files.Any(file => file.Purpose == "diffusion"))?.Revision
+                ArtistRevision = model.Id == VisualSenseNova.Id ? VisualSenseNova.Revision
+                    : cards.FirstOrDefault(card => card.Files.Any(file => file.Purpose == "diffusion"))?.Revision
             },
             ReferenceImages = prompt.Images.Select(input => _projects.ImagePath(_project, input.ImageId)).ToArray()
         };
@@ -258,9 +261,12 @@ internal sealed partial class VisualScenarioControl
             {
                 _projects.EnsureDrawingSession(job);
                 var resident = _project.SelectedPrompt is null || job.Standalone ? null : _artistSession;
-                await ApplicationBackgroundOperations.RetireModelsExceptAsync(resident);
-                var turn = await new ImageGenerationRuntime(new ImageGenerationNativeWorker(frames, resident))
-                    .RunAsync(job.Request, cards, null, ct);
+                var senseNova = job.Request.ModelId == VisualSenseNova.Id;
+                if (!senseNova) await ApplicationBackgroundOperations.RetireModelsExceptAsync(resident);
+                var worker = senseNova ? (IImageGenerationWorker)_senseNova : new ImageGenerationNativeWorker(frames, resident);
+                var turn = await new ImageGenerationRuntime(worker).RunAsync(job.Request, cards, null, ct);
+                if (senseNova && _project.Advisor != VisualSenseNova.Id && _project.SelectedPrompt is null)
+                    await _senseNova.RetireAsync();
                 var result = turn.Results.Single();
                 var path = ImageGenerationSessionStore.ResultPath(job.Request, result.Index);
                 if (_project.Results.All(item => item.Id != job.Request.Id))

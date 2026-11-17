@@ -48,6 +48,22 @@ internal sealed class VideoPreparationWindow : Window
         Closed += (_, _) => { _cancel.Cancel(); _cancel.Dispose(); };
     }
     private string T(string key) => _l("VideoEditor." + key);
+    internal async Task RunChoiceActionAsync(Func<Task> action)
+    {
+        if (_busy) return;
+        _busy = true;
+        _verify.IsEnabled = _download.IsEnabled = false;
+        if (_choices is not null) _choices.IsEnabled = false;
+        try { await action(); }
+        finally
+        {
+            _busy = false;
+            _verify.IsEnabled = _download.IsEnabled = true;
+            if (_choices is not null) _choices.IsEnabled = true;
+            if (_closing) Close();
+        }
+    }
+
     internal async Task ExecuteAsync(bool download)
     {
         if (_busy) return; _busy = true; _verify.IsEnabled = _download.IsEnabled = false; _progress.IsIndeterminate = true;

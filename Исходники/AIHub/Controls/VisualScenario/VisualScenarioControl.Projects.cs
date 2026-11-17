@@ -56,7 +56,12 @@ internal sealed partial class VisualScenarioControl
 
     private void ResetWorkspace()
     {
-        RunUi(_artistSession.RetireAsync);
+        RunUi(async () =>
+        {
+            await _artistSession.RetireAsync();
+            if (_project.Advisor != VisualSenseNova.Id) await _senseNova.RetireAsync();
+            else WarmAdvisorOnEntry();
+        });
         _settings.IsExpanded = !_project.Messages.Any(message => message.User);
         _contextRejected = false;
         _meter = null;
