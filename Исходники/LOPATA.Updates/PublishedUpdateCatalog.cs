@@ -6,8 +6,12 @@ namespace Lopata.Updates;
 
 public enum UpdateDelivery { FullInstaller, FilePatch }
 public sealed record InstallerArtifact(string FileName, string Url, long Size, string Sha256);
+public sealed record PublishedUpdateVersion(string Version, string Tag);
 public sealed record UpdateOffer(string Version, UpdateDelivery Delivery, UpdateNote[] Notes,
-    InstallerArtifact? Installer, SignedManifest? SignedFiles, UpdateManifest? Files, bool NotesIncomplete = false);
+    InstallerArtifact? Installer, SignedManifest? SignedFiles, UpdateManifest? Files, bool NotesIncomplete = false)
+{
+    public PublishedUpdateVersion[] PublishedVersions { get; init; } = [];
+}
 
 public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<string, string> publicKeys)
 {
@@ -77,7 +81,16 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
                 || (files is null && !feedComplete)
                 || candidates.Where(c => UpdateManifest.NumericVersion(c.Version!) <= UpdateManifest.NumericVersion(version))
                     .Any(c => !notes.Any(n => n.Version == c.Version));
-            return new(version, delivery, notes.OrderBy(n => UpdateManifest.NumericVersion(n.Version)).ToArray(), artifact, envelope, files, missing);
+            var published = candidates
+                .Where(c => UpdateManifest.NumericVersion(c.Version!) <= UpdateManifest.NumericVersion(version))
+                .Where(c => delivery == UpdateDelivery.FilePatch
+                    ? Asset(c.Release, FileManifestName) is not null ||
+                      (preferFreshManifest && Asset(c.Release, EngineSetTransition.FreshManifestName) is not null)
+                    : Asset(c.Release, $"LOPATA_Setup_{c.Version}.exe") is not null && Asset(c.Release, "lopata-update.json") is not null)
+                .Select(c => new PublishedUpdateVersion(c.Version!, c.Release.GetProperty("tag_name").GetString()!))
+                .DistinctBy(c => UpdateManifest.NumericVersion(c.Version)).ToArray();
+            return new(version, delivery, notes.OrderBy(n => UpdateManifest.NumericVersion(n.Version)).ToArray(), artifact, envelope, files, missing)
+                { PublishedVersions = published };
         }
         return null;
     }
@@ -87,7 +100,7 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
         && uri.IsDefaultPort && uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0
         && uri.AbsolutePath == $"/{Repository}/releases/download/{tag}/{name}";
 
-    private static string? VersionFromTag(string? tag)
+    public static string? VersionFromTag(string? tag)
     {
         var value = tag?.StartsWith('v') == true ? tag[1..] : tag;
         return value is not null && Regex.IsMatch(value, @"^\d{1,8}\.\d{1,8}\.\d{1,8}(-beta)?$") ? value : null;

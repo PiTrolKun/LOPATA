@@ -9,14 +9,7 @@ internal static class CollectionAudioOrigin
 
     public static CollectionOrigin? Read(Stream input)
     {
-        Span<byte> magic = stackalloc byte[12];
-        if (input.Read(magic) < 4) return null;
-        input.Position = 0;
-        var tags = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (magic[..3].SequenceEqual("ID3"u8)) ReadId3(input, tags);
-        else if (magic[..4].SequenceEqual("fLaC"u8)) ReadFlac(input, tags);
-        else if (magic[..4].SequenceEqual("OggS"u8)) ReadOgg(input, tags);
-        else if (magic[..4].SequenceEqual("RIFF"u8) && magic[8..].SequenceEqual("WAVE"u8)) ReadWave(input, tags);
+        var tags = ReadTags(input, includeMusic: false);
         foreach (var key in new[] { "LOPATA_PROVENANCE", "LOPATA.Provenance", "LOPATA_VIDEO" })
             if (tags.TryGetValue(key, out var value) && CollectionOriginReader.Json(value) is { } origin) return origin;
         // Old music exports used a job identity plus producer/version, not an arbitrary title.
@@ -26,13 +19,27 @@ internal static class CollectionAudioOrigin
         return null;
     }
 
+    internal static Dictionary<string, string> ReadTags(Stream input, bool includeMusic)
+    {
+        Span<byte> magic = stackalloc byte[12];
+        var tags = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var read = input.ReadAtLeast(magic, magic.Length, throwOnEndOfStream: false);
+        if (read < 4) return tags;
+        input.Position = 0;
+        if (magic[..3].SequenceEqual("ID3"u8)) ReadId3(input, tags, includeMusic);
+        else if (magic[..4].SequenceEqual("fLaC"u8)) ReadFlac(input, tags, includeMusic);
+        else if (magic[..4].SequenceEqual("OggS"u8)) ReadOgg(input, tags, includeMusic);
+        else if (read >= 12 && magic[..4].SequenceEqual("RIFF"u8) && magic[8..].SequenceEqual("WAVE"u8)) ReadWave(input, tags, includeMusic);
+        return tags;
+    }
+
     private static int Synchsafe(ReadOnlySpan<byte> value)
     {
         if (value.Length < 4 || value[..4].ToArray().Any(b => b > 127)) throw new InvalidDataException("Invalid ID3 size.");
         return (value[0] << 21) | (value[1] << 14) | (value[2] << 7) | value[3];
     }
 
-    private static void ReadId3(Stream input, Dictionary<string, string> tags, long? containerEnd = null)
+    private static void ReadId3(Stream input, Dictionary<string, string> tags, bool includeMusic, long? containerEnd = null)
     {
         Span<byte> header = stackalloc byte[10]; input.ReadExactly(header);
         if (!header[..3].SequenceEqual("ID3"u8) || header[3] is not (3 or 4) || (header[5] & 0xc0) != 0) return;
@@ -49,20 +56,51 @@ internal static class CollectionAudioOrigin
             var length = header[3] == 4 ? Synchsafe(frame[4..8]) : checked((int)BinaryPrimitives.ReadUInt32BigEndian(frame[4..8]));
             if (length < 1 || length > end - input.Position) return;
             var flags = frame[8] | frame[9];
-            if (flags != 0 || type != "TXXX" || length > Limit || bytesRead + length > Limit)
+            var standard = includeMusic && type is "TIT2" or "TPE1" or "TALB" or "USLT" or "APIC";
+            if (flags != 0 || type != "TXXX" && !standard || length > Limit || bytesRead + length > Limit)
             {
                 input.Position += length;
                 continue;
             }
             var body = new byte[length]; input.ReadExactly(body); bytesRead += length;
+            if (type == "APIC")
+            {
+                ReadId3Picture(body, tags);
+                continue;
+            }
+            if (standard && type != "USLT")
+            {
+                tags[type switch { "TIT2" => "TITLE", "TPE1" => "ARTIST", _ => "ALBUM" }] =
+                    Decode(body[0], body.AsSpan(1)).TrimEnd('\0');
+                continue;
+            }
+            if (type == "USLT" && body.Length < 5) continue;
             var width = body[0] is 1 or 2 ? 2 : 1;
-            var split = 1;
+            var valueStart = type == "USLT" ? 4 : 1;
+            var split = valueStart;
             while (split + width <= body.Length && (body[split] != 0 || width == 2 && body[split + 1] != 0)) split += width;
             if (split + width > body.Length) continue;
-            var name = Decode(body[0], body.AsSpan(1, split - 1));
+            if (type == "USLT")
+            {
+                tags.TryAdd("LYRICS", Decode(body[0], body.AsSpan(split + width)).TrimEnd('\0'));
+                continue;
+            }
+            var name = Decode(body[0], body.AsSpan(valueStart, split - valueStart));
             if (name.StartsWith("LOPATA", StringComparison.OrdinalIgnoreCase))
                 tags[name] = Decode(body[0], body.AsSpan(split + width)).TrimEnd('\0');
         }
+    }
+
+    private static void ReadId3Picture(ReadOnlySpan<byte> body, Dictionary<string, string> tags)
+    {
+        if (body.Length < 8) return;
+        var mimeEnd = body[1..].IndexOf((byte)0) + 1;
+        if (mimeEnd < 2 || mimeEnd + 3 >= body.Length) return;
+        var offset = mimeEnd + 2;
+        var width = body[0] is 1 or 2 ? 2 : 1;
+        while (offset + width <= body.Length && (body[offset] != 0 || width == 2 && body[offset + 1] != 0))
+            offset += width;
+        if (offset + width < body.Length) tags.TryAdd("COVER_BYTES", Convert.ToBase64String(body[(offset + width)..]));
     }
 
     private static string Decode(byte type, ReadOnlySpan<byte> value) => type switch
@@ -74,7 +112,7 @@ internal static class CollectionAudioOrigin
         _ => throw new InvalidDataException("Invalid ID3 encoding.")
     };
 
-    private static void ReadFlac(Stream input, Dictionary<string, string> tags)
+    private static void ReadFlac(Stream input, Dictionary<string, string> tags, bool includeMusic)
     {
         input.Position = 4;
         Span<byte> header = stackalloc byte[4];
@@ -84,14 +122,21 @@ internal static class CollectionAudioOrigin
             if (length > input.Length - input.Position) return;
             if ((header[0] & 0x7f) == 4 && length <= Limit)
             {
-                var bytes = new byte[length]; input.ReadExactly(bytes); ReadComments(bytes, tags); return;
+                var bytes = new byte[length]; input.ReadExactly(bytes); ReadComments(bytes, tags, includeMusic);
+                if (!includeMusic) return;
             }
-            input.Position += length;
+            else if (includeMusic && (header[0] & 0x7f) == 6 && length <= Limit && !tags.ContainsKey("METADATA_BLOCK_PICTURE"))
+            {
+                var bytes = new byte[length];
+                input.ReadExactly(bytes);
+                tags.TryAdd("METADATA_BLOCK_PICTURE", Convert.ToBase64String(bytes));
+            }
+            else input.Position += length;
             if ((header[0] & 0x80) != 0) return;
         }
     }
 
-    private static void ReadComments(ReadOnlySpan<byte> bytes, Dictionary<string, string> tags)
+    private static void ReadComments(ReadOnlySpan<byte> bytes, Dictionary<string, string> tags, bool includeMusic)
     {
         if (bytes.Length < 8) return;
         var vendorLength = BinaryPrimitives.ReadUInt32LittleEndian(bytes);
@@ -105,11 +150,15 @@ internal static class CollectionAudioOrigin
             if (size > bytes.Length - offset) return;
             var text = new UTF8Encoding(false, true).GetString(bytes.Slice(offset, (int)size)); offset += (int)size;
             var split = text.IndexOf('=');
-            if (split > 0 && text.AsSpan(0, split).StartsWith("LOPATA", StringComparison.OrdinalIgnoreCase)) tags[text[..split]] = text[(split + 1)..];
+            if (split <= 0) continue;
+            var key = text[..split];
+            if (key.StartsWith("LOPATA", StringComparison.OrdinalIgnoreCase) ||
+                includeMusic && key.ToUpperInvariant() is "TITLE" or "ARTIST" or "ALBUM" or "LYRICS" or "UNSYNCEDLYRICS" or "SYNCEDLYRICS" or "METADATA_BLOCK_PICTURE")
+                tags[key] = text[(split + 1)..];
         }
     }
 
-    private static void ReadOgg(Stream input, Dictionary<string, string> tags)
+    private static void ReadOgg(Stream input, Dictionary<string, string> tags, bool includeMusic)
     {
         using var packet = new MemoryStream();
         var header = new byte[27]; uint? serial = null;
@@ -127,14 +176,14 @@ internal static class CollectionAudioOrigin
                 packet.Write(data);
                 if (length == 255) continue;
                 var bytes = packet.ToArray();
-                if (bytes.AsSpan().StartsWith("OpusTags"u8)) { ReadComments(bytes.AsSpan(8), tags); return; }
-                if (bytes.Length >= 7 && bytes[0] == 3 && bytes.AsSpan(1, 6).SequenceEqual("vorbis"u8)) { ReadComments(bytes.AsSpan(7), tags); return; }
+                if (bytes.AsSpan().StartsWith("OpusTags"u8)) { ReadComments(bytes.AsSpan(8), tags, includeMusic); return; }
+                if (bytes.Length >= 7 && bytes[0] == 3 && bytes.AsSpan(1, 6).SequenceEqual("vorbis"u8)) { ReadComments(bytes.AsSpan(7), tags, includeMusic); return; }
                 packet.SetLength(0);
             }
         }
     }
 
-    private static void ReadWave(Stream input, Dictionary<string, string> tags)
+    private static void ReadWave(Stream input, Dictionary<string, string> tags, bool includeMusic)
     {
         input.Position = 12; Span<byte> header = stackalloc byte[8];
         for (var count = 0; count < 4096 && input.Position + 8 <= input.Length; count++)
@@ -143,7 +192,7 @@ internal static class CollectionAudioOrigin
             if (size > input.Length - input.Position) return;
             var end = input.Position + size + (size & 1);
             if (header[..4].SequenceEqual("id3 "u8) || header[..4].SequenceEqual("ID3 "u8))
-                ReadId3(input, tags, input.Position + size);
+                ReadId3(input, tags, includeMusic, input.Position + size);
             input.Position = end;
         }
     }

@@ -77,6 +77,28 @@ public sealed class LocalizationService
         return key;
     }
 
+    internal Dictionary<string, string> IslandCaptions()
+    {
+        const string prefix = "NabyScape.";
+        var result = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Open LOPATA"] = T("Island.Open"),
+            ["Close island"] = T("Island.Close"),
+            ["Above windows"] = T("Island.Above"),
+            ["Updates are managed by LOPATA"] = T("Island.UpdatesViaLopata")
+        };
+        // The island has the built-in strings in its own package. Only send additions and
+        // overrides from the selected user file, which may be a copy of the entire base.
+        if (!File.Exists(GetUserLocalizationPath(CurrentLanguageCode))) return result;
+        var builtIn = ReadDictionary(GetBuiltInLocalizationPath(CurrentLanguageCode));
+        foreach (var (key, value) in _current)
+            if (key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && key.Length > prefix.Length
+                && !string.IsNullOrWhiteSpace(value)
+                && (!builtIn.TryGetValue(key, out var original) || value != original))
+                result[key[prefix.Length..]] = value;
+        return result;
+    }
+
     public static string GetWindowsLanguageCode()
     {
         return NormalizeLanguageCode(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
@@ -113,7 +135,11 @@ public sealed class LocalizationService
         var path = File.Exists(GetUserLocalizationPath(languageCode))
             ? GetUserLocalizationPath(languageCode)
             : GetBuiltInLocalizationPath(languageCode);
+        return ReadDictionary(path);
+    }
 
+    private static Dictionary<string, string> ReadDictionary(string path)
+    {
         if (!File.Exists(path))
         {
             return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

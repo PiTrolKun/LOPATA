@@ -309,6 +309,20 @@ public sealed partial class LetItOutChatControl : UserControl, IDisposable
         if (_flowInput is not null) _flowInput.FocusEditor(); else _input.Focus();
     }
 
+    internal bool ReceiveIslandDraft(string text)
+    {
+        var previous = _input.Text;
+        _input.Text = string.IsNullOrWhiteSpace(previous) ? text : previous + Environment.NewLine + text;
+        if (!SaveConversationForExit())
+        {
+            _input.Text = previous;
+            return false;
+        }
+        _input.CaretIndex = _input.Text.Length;
+        if (_flowInput is not null) _flowInput.FocusEditor(); else _input.Focus();
+        return true;
+    }
+
     private static bool IsMemoryStatus(string? key) => key is "LetItOut.RamRequired" or "LetItOut.VramChanged" or "LetItOut.Preparation.EngineRequired";
 
     private void RenderHistory()

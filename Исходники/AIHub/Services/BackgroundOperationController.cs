@@ -26,6 +26,8 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
     public bool IsRunning { get { lock (_gate) return _running || _auxiliaryRunning; } }
     internal bool IsInOperationScope { get { lock (_gate) return _running && _scope.Value is not null && _scope.Value == _state?.Id; } }
     public bool HasPending { get { lock (_gate) return _state is not null && !IsFinal(_state.Phase); } }
+    private (DateTimeOffset At, string? Id) _islandFailure;
+    internal (DateTimeOffset At, string? Id) IslandFailure { get { lock (_gate) return _islandFailure; } }
     public bool CanRestore { get { lock (_gate) return _state is not null && _restorers.ContainsKey(_state.Kind); } }
     public event Action? Changed;
     public event Action<BackgroundOperationNotice>? Completed;
@@ -212,6 +214,8 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
             }
             lock (_gate)
             {
+                if (!_emergencyStopRequested && error is not (BackgroundOperationWaitingException or OperationCanceledException))
+                    _islandFailure = (DateTimeOffset.UtcNow, Guid.NewGuid().ToString("N"));
                 try { Persist(_state! with {
                     Phase = terminal ? BackgroundOperationPhase.Failed : BackgroundOperationPhase.Waiting,
                     RequiresDecision = !terminal,

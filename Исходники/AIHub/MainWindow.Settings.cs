@@ -89,12 +89,14 @@ public partial class MainWindow
         Section("engines", "\uE713", engines);
         Section("downloads", "\uE896", SettingsDownloadsCard);
         Section("utilities", "\uE90F", utilities);
+        Section("island", "\uE7F4", _settingsCards.Card(_islandSettingsHost));
         Section("diagnostics", "\uE9D9", SettingsDiagnosticsCard);
         Section("about", "\uE946", about);
 
         void Target(string id, string section, string title, string help, FrameworkElement? element = null) =>
             SettingsNavigator.AddTarget(new(id, section, title, help, "Settings.Keywords." + section), element);
         Target("updates", "updates", "Updates.Title", "Settings.Navigation.UpdatesHelp");
+        Target("island", "island", "Island.Title", "Island.Description", _islandSettingsHost);
         Target("close", "general", "Settings.Behavior.Close", "Settings.Behavior.CloseHelp", _closeBehavior);
         Target("autostart", "general", "Settings.Behavior.Autostart", "Settings.Behavior.AutostartHelp", _autostartSwitch);
         Target("autoresume", "general", "Settings.Behavior.AutoResume", "Settings.Behavior.AutoResumeHelp", _autoResumeSwitch);

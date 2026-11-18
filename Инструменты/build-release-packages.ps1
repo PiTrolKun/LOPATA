@@ -4,6 +4,7 @@ param(
     [Parameter(Mandatory)][string]$OutputDirectory,
     [string]$PreviousManifestPath,
     [string]$HistoryPath,
+    [string]$IslandForkDirectory,
     [switch]$StandBuild,
     [switch]$Resume
 )
@@ -17,6 +18,11 @@ if (!$StandBuild -and !$PreviousManifestPath) { throw 'A production release requ
 $out = [IO.Path]::GetFullPath($OutputDirectory)
 New-Item -ItemType Directory -Path $out -Force | Out-Null
 . (Join-Path $PSScriptRoot 'ReleaseBuildCheckpoint.ps1')
+$islandCommit = ''
+if (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'nabyscape-release-commit.txt')) {
+    . (Join-Path $PSScriptRoot 'IslandReleasePayload.ps1')
+    $islandCommit = Get-IslandReleaseCommit
+}
 $statePath=Join-Path $out 'release-build-state.json'
 $lock=$null;$state=$null
 try {
@@ -35,7 +41,8 @@ try {
         # poka-yoke: checkpoints from another commit/version/notes cannot label stale binaries as the new release.
         if($state.schemaVersion -ne 1 -or $state.version -cne $Version -or $state.sourceCommit -cne $commit -or
            $state.notesSha256 -cne $notesHash -or $state.previousManifestSha256 -cne $previousHash -or
-           $state.historySha256 -cne $historyHash -or [bool]$state.standBuild -ne [bool]$StandBuild){
+           $state.historySha256 -cne $historyHash -or [string]$state.islandCommit -cne $islandCommit -or
+           [bool]$state.standBuild -ne [bool]$StandBuild){
             $state=$null;throw 'Build checkpoint inputs changed. Use a new output directory.'
         }
         Assert-ReleaseStagePath $out $state.publishDirectory 'payload-'
@@ -44,7 +51,7 @@ try {
     else {
         if(Test-Path -LiteralPath $statePath){throw 'An existing build must be continued with -Resume or kept in another output directory.'}
         $state=[ordered]@{schemaVersion=1;version=$Version;sourceCommit=$commit;notesSha256=$notesHash;
-            previousManifestSha256=$previousHash;historySha256=$historyHash;standBuild=[bool]$StandBuild;
+            previousManifestSha256=$previousHash;historySha256=$historyHash;standBuild=[bool]$StandBuild;islandCommit=$islandCommit;
             publishDirectory=(Join-Path $out ('payload-'+[guid]::NewGuid().ToString('N')));
             hostDirectory=(Join-Path $out ('host-'+[guid]::NewGuid().ToString('N')));appReady=$false;hostReady=$false;phase='starting'}
     }
@@ -59,6 +66,7 @@ try {
             -p:PublishSingleFile=false -p:PublishReadyToRun=false "-p:AIHubVersion=$Version" "-p:DefineConstants=$constants"
         if($LASTEXITCODE){throw 'Application publish failed.'}
         if(!(Test-Path -LiteralPath (Join-Path $publish 'AIHub.dll'))){throw 'Application publish is incomplete.'}
+        if ($islandCommit) { Add-IslandReleasePayload $publish $islandCommit $IslandForkDirectory }
         if($StandBuild){'Isolated stand. Never publish.' | Set-Content -LiteralPath (Join-Path $publish 'lopata-stand-build.marker') -Encoding utf8}
         Write-ReleaseBuildCheckpoint $appSnapshot @(Get-ReleaseBuildInventory $publish 'Updater/LOPATA.Updater.exe')
         $state.appReady=$true;$state.phase='app-ready';Write-ReleaseBuildCheckpoint $statePath $state

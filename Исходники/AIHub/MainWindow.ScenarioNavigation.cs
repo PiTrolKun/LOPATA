@@ -92,6 +92,9 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.ImageGeneration:
                     OpenImageGenerationScenario();
                     break;
+                case ScenarioNavigationCatalog.Island:
+                    OpenIslandEditor();
+                    break;
                 case ScenarioNavigationCatalog.Capture:
                     OpenCaptureScenario();
                     break;

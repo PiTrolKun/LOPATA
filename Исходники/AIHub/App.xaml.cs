@@ -10,6 +10,7 @@ namespace AIHub;
 public partial class App : System.Windows.Application
 {
     private Services.SingleApplicationInstance? _instance;
+    private Services.IslandHostServer? _islandServer;
     public static bool BackgroundLaunch { get; private set; }
     public static bool ImageShellLaunch { get; private set; }
     public static bool AudioShellLaunch { get; private set; }
@@ -18,6 +19,12 @@ public partial class App : System.Windows.Application
     public static bool ReaderFileLaunch { get; private set; }
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (e.Args is ["--island-core", var islandCorePipe])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = RunIslandCoreAsync(islandCorePipe);
+            return;
+        }
         if (e.Args is ["--initialize-collection"])
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -139,6 +146,9 @@ public partial class App : System.Windows.Application
             _instance.SetImageShellHandler(request => Dispatcher.InvokeAsync(() => window.AcceptImageShellRequest(request)).Task);
             if (audioRequest is not null) window.AcceptAudioShellRequest(audioRequest);
             _instance.SetAudioShellHandler(request => Dispatcher.InvokeAsync(() => window.AcceptAudioShellRequest(request)).Task);
+            _islandServer = new((request, token) =>
+                Dispatcher.InvokeAsync(() => window.HandleIslandRequestAsync(request, token),
+                    System.Windows.Threading.DispatcherPriority.Normal, token).Task.Unwrap());
             _instance.DeliverPendingOpen();
         }
         catch (Exception error) when (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch)
@@ -161,6 +171,7 @@ public partial class App : System.Windows.Application
     }
 
     private async Task RunDictationWorkerAsync() => Shutdown(await Services.Dictation.DictationWorker.RunAsync());
+    private async Task RunIslandCoreAsync(string pipe) => Shutdown(await Services.IslandCoreWorker.RunAsync(pipe));
 
     private async Task InitializeCollectionAsync()
     {
@@ -178,10 +189,10 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _islandServer?.Dispose();
         AIHub.Services.OwnedProcessRegistry.Shared.Dispose();
         _instance?.Dispose(); _instance = null;
         base.OnExit(e);
         CompleteRecoveryExit(e.ApplicationExitCode);
     }
 }
-

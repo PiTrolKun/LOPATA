@@ -46,6 +46,16 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     { get { lock (_gate) return _jobs.Values.Where(job => job.HasPending).Select(job => job.State!).OrderBy(state => state.Id).ToArray(); } }
     internal (bool Active, long Version) AuxiliaryState { get { lock (_gate) return (_auxiliary, _auxiliaryVersion); } }
 
+    internal string? RecentIslandFailure()
+    {
+        var cutoff = DateTimeOffset.UtcNow.AddSeconds(-5);
+        lock (_gate)
+            return _jobs.Values.Select(job => job.IslandFailure)
+                .Where(failure => failure.At >= cutoff)
+                .DefaultIfEmpty()
+                .MaxBy(failure => failure.At).Id;
+    }
+
     private BackgroundOperationState? VisibleState()
     {
         if (_selected?.State is not { } state) return null;
@@ -232,6 +242,18 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
     public Task PauseAsync(string id)
     { BackgroundOperationExecution? job; lock (_gate) job = _jobs.GetValueOrDefault(id); return job?.PauseAsync() ?? Task.CompletedTask; }
     public Task ResumeAsync(CancellationToken token) => ResumeAsync(null, token);
+    internal BackgroundOperationState? FindIslandOperation(string id)
+    { lock (_gate) return _jobs.GetValueOrDefault(id)?.State; }
+
+    internal bool CanResumeFromIsland(string id)
+    {
+        lock (_gate)
+            return !Busy && !_emergencyFailed && !_loadFailed
+                && _jobs.GetValueOrDefault(id) is { HasPending: true, State: { RequiresDecision: false } state } job
+                && Parked(job) && (job.IsRunning || _restorers.ContainsKey(state.Kind))
+                && _jobs.Values.All(other => ReferenceEquals(other, job) || !other.HasPending || Parked(other));
+    }
+
     public async Task ResumeAsync(string? id, CancellationToken token)
     {
         using var restoreCancellation = CancellationTokenSource.CreateLinkedTokenSource(token);

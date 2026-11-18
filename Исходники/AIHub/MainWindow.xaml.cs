@@ -175,6 +175,7 @@ public partial class MainWindow : Window
         InitializeApplicationUpdates();
         InitializeVoiceNotifications();
         InitializeSettingsWorkspace();
+        Activated += (_, _) => RefreshSavedIslandSettings();
         InitializeScreenCapture();
         InitializeApplicationTray();
         InitializeBackgroundOperations();
@@ -252,6 +253,7 @@ public partial class MainWindow : Window
             ? L("Theme.SwitchToLight")
             : L("Theme.SwitchToDark");
 
+        RefreshIslandTheme();
         ApplySystemTitleBarTheme();
         _debugChatWindow?.ApplyTheme(_isDarkTheme);
         _sessionTreeWindow?.ApplyTheme(_isDarkTheme);
@@ -505,6 +507,7 @@ public partial class MainWindow : Window
     {
         using var voiceLocalization = Services.VoiceNotifications.VoiceNotificationEvents.Suppress();
         LocalizeVoiceNotifications();
+        RefreshIslandLanguage();
         StartupBusyOverlay.Message = L("Startup.Checking");
         Language = System.Windows.Markup.XmlLanguage.GetLanguage(
             _localizationService.CurrentLanguageCode.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "en-US" : "ru-RU");
@@ -2498,6 +2501,7 @@ public partial class MainWindow : Window
 
     private void ShowSettingsPage()
     {
+        RefreshSavedIslandSettings();
         if (SettingsPage.Visibility != Visibility.Visible)
         {
             _settingsReturnPage = FindVisiblePageBeforeSettings();

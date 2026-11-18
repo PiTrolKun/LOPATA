@@ -26,6 +26,7 @@ public static class ScenarioNavigationCatalog
     public const string Sandbox = "uncertainty";
     public const string Finance = "finance";
     public const string Capture = "screen_capture";
+    public const string Island = "nabyscape_island";
     public const string ImageGeneration = "image_generation";
     public const string VisualScenario = "visual_scenario";
     public const string VideoGeneration = "video_generation";
@@ -73,6 +74,7 @@ public static class ScenarioNavigationCatalog
         Node("utilities_capture", ScenarioNavigationKind.Group, Utilities, "Capture.Group", "", "tools"),
         Node(Capture, ScenarioNavigationKind.Scenario, "utilities_capture", "Capture.Title", "Capture.Description", "analyze",
             tags: ["screenshot", "screen_capture", "gif_capture", "video_capture"], related: []),
+        Node(Island, ScenarioNavigationKind.Scenario, "utilities_capture", "Island.Title", "Island.Description", "tools"),
         Node("utilities_images", ScenarioNavigationKind.Group, Utilities, "Navigation.Images", "", "tools"),
         Node("utilities_video", ScenarioNavigationKind.Group, Utilities, "LyricVideo.Group", "", "tools"),
         Node(LyricVideo, ScenarioNavigationKind.Scenario, "utilities_video", "LyricVideo.Title", "LyricVideo.Description", "tools",
@@ -128,6 +130,8 @@ public static class ScenarioNavigationCatalog
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
+        new ScenarioNavigationTag("island_model_tasks", "Island.ModelTasks", "Island.ModelTasksDescription", Island),
+        new ScenarioNavigationTag("island_core_chat", "Island.CoreChat", "Island.CoreChatDescription", Island),
         new ScenarioNavigationTag("onec_assistance", "OneC.Title", "OneC.Description", OneC),
         new ScenarioNavigationTag("onec_projects", "OneC.Projects", "OneC.ProjectsDescription", OneC),
         new ScenarioNavigationTag("onec_checks", "OneC.CheckFile", "OneC.CheckerPreparationHint", OneC),

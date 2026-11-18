@@ -4,6 +4,7 @@ param(
     [string]$NotesPath,
     [string]$PreviousManifestPath,
     [string]$HistoryPath,
+    [string]$IslandForkDirectory,
     [switch]$ExplicitFullInstaller,
     [switch]$GenerationRelease,
     [string]$StandDataRoot
@@ -148,6 +149,8 @@ if (-not $SkipPublish) {
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet publish завершился с ошибкой: $LASTEXITCODE"
     }
+    . (Join-Path $PSScriptRoot 'IslandReleasePayload.ps1')
+    Add-IslandReleasePayload $publishDir (Get-IslandReleaseCommit) $IslandForkDirectory
 }
 else {
     Write-Step "Publish skipped"

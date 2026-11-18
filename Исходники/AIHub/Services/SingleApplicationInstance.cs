@@ -1,8 +1,7 @@
 using System.IO;
 using System.IO.Pipes;
-using System.Security.Cryptography;
-using System.Text;
 using AIHub.Models;
+using Lopata.Island;
 
 namespace AIHub.Services;
 
@@ -26,8 +25,7 @@ internal sealed class SingleApplicationInstance : IDisposable
 
     public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null, VideoEditor.VideoFileRequest? videoRequest = null, OfficeReader.ReaderFileRequest? readerRequest = null)
     {
-        var identity = Environment.UserDomainName + "\\" + Environment.UserName + "|" + Path.GetFullPath(AppContext.BaseDirectory).ToUpperInvariant();
-        var name = "LOPATA-" + Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(identity)))[..32];
+        var name = IslandLink.InstallationName(AppContext.BaseDirectory);
         var mutex = new Mutex(true, @"Local\" + name, out var first);
         if (first) return new(mutex, name);
         mutex.Dispose();

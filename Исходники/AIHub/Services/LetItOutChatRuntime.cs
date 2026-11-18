@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using AIHub.Models;
+using Lopata.Island;
 
 namespace AIHub.Services;
 
@@ -35,6 +36,7 @@ public sealed partial class LetItOutChatRuntime(UserContextService userContext) 
     {
         token.ThrowIfCancellationRequested();
         await LetItOutModel.VerifyForUseAsync(modelPath, token);
+        await IslandLink.WaitForCoreRetirementAsync(AppContext.BaseDirectory, token);
         await ApplicationBackgroundOperations.RetireModelsExceptAsync(_runtime);
         _runtime.ConfigureLetItOut(DecideGpu, ModeChanged);
         await _runtime.WarmLetItOutAsync(new DebugModelInfo { Name = LetItOutModel.DisplayName,
@@ -48,6 +50,7 @@ public sealed partial class LetItOutChatRuntime(UserContextService userContext) 
         if (!string.Equals(Path.GetFileName(request.CoreModelPath), LetItOutModel.FileName, StringComparison.OrdinalIgnoreCase))
             throw new LetItOutModelChangedException();
         await LetItOutModel.VerifyForUseAsync(request.CoreModelPath, token);
+        await IslandLink.WaitForCoreRetirementAsync(AppContext.BaseDirectory, token);
         await ApplicationBackgroundOperations.RetireModelsExceptAsync(_runtime);
         _runtime.ConfigureLetItOut(DecideGpu, ModeChanged);
         var model = new DebugModelInfo { Name = LetItOutModel.DisplayName,

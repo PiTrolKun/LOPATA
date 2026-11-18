@@ -21,6 +21,8 @@ New-Item -ItemType Directory -Path $out -Force | Out-Null
 $packaging = Join-Path $out 'build-inputs'
 New-Item -ItemType Directory -Path $packaging -Force | Out-Null
 $roots = [ordered]@{ app = (Resolve-Path -LiteralPath $PublishDir).Path }
+. (Join-Path $PSScriptRoot 'IslandReleasePayload.ps1')
+Assert-IslandReleasePayload $roots.app (Get-IslandReleaseCommit)
 foreach ($required in @('Updater/LOPATA.Updater.exe', 'Licenses/installer.txt', 'Licenses/installer-receipt.json', 'Installer/bootstrap-v1.txt')) {
     if (!(Test-Path -LiteralPath (Join-Path $roots.app $required))) { throw "Fresh installation payload is incomplete: $required" }
 }
