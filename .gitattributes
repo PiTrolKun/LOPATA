@@ -128,3 +128,6 @@ Runtime/MusicHeartMuLa/source.zip binary
 
 # Original 1C idea retains intentional Markdown hard breaks.
 ТЗ/Архив/LOPATA_идея_сценария_программирования_1С.md -whitespace
+
+# The evaluated scenario prompt is a byte-exact resource.
+Исходники/AIHub/Content/LetItOutSystem.txt -text -eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
