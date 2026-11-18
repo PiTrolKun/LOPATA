@@ -1,3 +1,7 @@
+## 19.11.2026 — Остров в 0.8.47-beta
+
+Поставляемый остров закреплён на [теге редакции](https://github.com/PiTrolKun/NabyScape-LOPATA-Edition/tree/lopata-v0.8.47-beta), коммит `1181bb67ba31a552be8ccc7ea9d74ac789397d7d`. Список «Музыка ЛОПАТЫ» хранится в локальном профиле острова и сверяется с Коллекцией в фоне.
+
 ## 18.11.2026 — NabyScape — LOPATA Edition
 
 [Штатный форк](https://github.com/PiTrolKun/NabyScape-LOPATA-Edition) оригинала NabyScape, лицензия MIT. Исходники поставляемого острова закреплены на `2746beda76ae6cdd962c94b712a44d31e7fda60c`. Исполняемый файл Windows x64 публикуется в `NabyScape/LopataIsland.exe` в составе ЛОПАТЫ, вместе с `island-package.json` и лицензиями. Точный коммит, способ сборки и проверка комплекта зафиксированы в [инструментах поставки](../Инструменты/IslandReleasePayload.ps1).
