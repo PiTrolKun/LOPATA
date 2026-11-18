@@ -2,7 +2,12 @@ using System.Diagnostics;
 
 namespace Lopata.Collection;
 
-public sealed record CollectionScanResult(IReadOnlyList<CollectionItem> Items, string? Error, bool Limited, int Examined);
+public sealed record CollectionScanResult(IReadOnlyList<CollectionItem> Items, string? Error, bool Limited, int Examined)
+{
+    public int OriginReads { get; init; }
+}
+
+public sealed record CollectionOriginStamp(long Length, long Modified, long Created, string Scenario);
 
 public sealed class CollectionScanner : IDisposable
 {
@@ -21,19 +26,38 @@ public sealed class CollectionScanner : IDisposable
         _timeBudget = localTimeBudget ?? TimeSpan.FromSeconds(12);
     }
 
+    public void RestoreOriginCache(IEnumerable<KeyValuePair<string, CollectionOriginStamp>> cached)
+    {
+        foreach (var (path, stamp) in cached)
+            _cache.TryAdd(path, new(stamp.Length, stamp.Modified, stamp.Created, new(stamp.Scenario)));
+    }
+
+    public CollectionOriginStamp? GetOriginStamp(string path) =>
+        _cache.TryGetValue(path, out var cached) && cached.Origin is { } origin
+            ? new(cached.Length, cached.Modified, cached.Created, origin.Scenario) : null;
+
     public CollectionScanResult Scan(string directory, CollectionConfig config, CancellationToken token,
         Action<IReadOnlyList<CollectionItem>>? localResults = null, IReadOnlyList<CollectionItem>? previousResults = null)
+        => ScanCore(directory, config, token, localResults, previousResults, null, null);
+
+    public CollectionScanResult ScanFiltered(string directory, CollectionConfig config, CancellationToken token,
+        Func<string, bool> fileFilter, IEnumerable<string> additionalPaths)
+        => ScanCore(directory, config, token, null, null, fileFilter, additionalPaths);
+
+    private CollectionScanResult ScanCore(string directory, CollectionConfig config, CancellationToken token,
+        Action<IReadOnlyList<CollectionItem>>? localResults, IReadOnlyList<CollectionItem>? previousResults,
+        Func<string, bool>? fileFilter, IEnumerable<string>? additionalPaths)
     {
         var items = new Dictionary<string, CollectionItem>(StringComparer.OrdinalIgnoreCase);
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var examined = 0; var limited = false; var snapshotBytes = 20;
+        var examined = 0; var originReads = 0; var limited = false; var snapshotBytes = 20;
         void Add(string path, string? scenario = null, CollectionJournalEntry? journal = null)
         {
             token.ThrowIfCancellationRequested();
             try
             {
                 path = Path.GetFullPath(path);
-                if (!visited.Add(path) || !CollectionFilePolicy.IsAllowed(path, config)) return;
+                if ((fileFilter is not null && !fileFilter(path)) || !visited.Add(path) || !CollectionFilePolicy.IsAllowed(path, config)) return;
                 var file = new FileInfo(path);
                 if (!file.Exists || !CollectionFilePolicy.CanRead(file)) return;
                 examined++;
@@ -46,6 +70,7 @@ public sealed class CollectionScanner : IDisposable
                     var beforeLength = file.Length;
                     var beforeModified = file.LastWriteTimeUtc.Ticks;
                     var beforeCreated = file.CreationTimeUtc.Ticks;
+                    originReads++;
                     origin = CollectionOriginReader.Read(path) ?? CollectionJournal.TryResolveOrigin(path, directory);
                     file.Refresh();
                     if (!file.Exists || file.Length != beforeLength || file.LastWriteTimeUtc.Ticks != beforeModified || file.CreationTimeUtc.Ticks != beforeCreated) return;
@@ -71,6 +96,14 @@ public sealed class CollectionScanner : IDisposable
         {
             if (items.Count >= CollectionSnapshot.MaxEntries) { limited = true; break; }
             Add(entry.Path, entry.Scenario, entry);
+        }
+        if (additionalPaths is not null)
+        {
+            foreach (var path in additionalPaths)
+            {
+                if (items.Count >= CollectionSnapshot.MaxEntries) { limited = true; break; }
+                Add(path);
+            }
         }
         var scope = CollectionPublication.Revision(config);
         if (_knownScope != scope)
@@ -114,7 +147,7 @@ public sealed class CollectionScanner : IDisposable
             }
         }
         if (_cache.Count > 50_000) _cache.Clear();
-        return new(Sorted(items.Values), error, limited, examined);
+        return new(Sorted(items.Values), error, limited, examined) { OriginReads = originReads };
     }
 
     private static IReadOnlyList<CollectionItem> Sorted(IEnumerable<CollectionItem> values) =>
