@@ -1,6 +1,6 @@
 ## 18.11.2026 — NabyScape — LOPATA Edition принято
 
-[ТЗ в архиве](Архив/2026-11-18_NabyScape_LOPATA_Edition.md). Завершены все шесть этапов.
+[ТЗ в архиве](Архив/2026-11-18_NabyScape_LOPATA_Edition.md). Завершены все шесть этапов. [Подписанный патч](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.8.46-beta).
 
 ## 17.11.2026 — визуальный сценарий и форматы генерации приняты
 
