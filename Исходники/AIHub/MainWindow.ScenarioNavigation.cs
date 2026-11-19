@@ -95,6 +95,9 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.Island:
                     OpenIslandEditor();
                     break;
+                case ScenarioNavigationCatalog.MailHub:
+                    OpenMailHub();
+                    break;
                 case ScenarioNavigationCatalog.Capture:
                     OpenCaptureScenario();
                     break;

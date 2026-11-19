@@ -11,6 +11,8 @@ public partial class App : System.Windows.Application
 {
     private Services.SingleApplicationInstance? _instance;
     private Services.IslandHostServer? _islandServer;
+    private CancellationTokenSource? _mailHubLifetime;
+    private Mutex? _mailHubProcess;
     public static bool BackgroundLaunch { get; private set; }
     public static bool ImageShellLaunch { get; private set; }
     public static bool AudioShellLaunch { get; private set; }
@@ -19,6 +21,13 @@ public partial class App : System.Windows.Application
     public static bool ReaderFileLaunch { get; private set; }
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (e.Args is ["--mail-hub-island", var mailPid, var mailStart]
+            && int.TryParse(mailPid, out var ownerId) && long.TryParse(mailStart, out var ownerStart))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = RunIslandMailHubAsync(ownerId, ownerStart);
+            return;
+        }
         if (e.Args is ["--island-core", var islandCorePipe])
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -155,6 +164,7 @@ public partial class App : System.Windows.Application
             _islandServer = new((request, token) =>
                 Dispatcher.InvokeAsync(() => window.HandleIslandRequestAsync(request, token),
                     System.Windows.Threading.DispatcherPriority.Normal, token).Task.Unwrap());
+            StartMailHub(window);
             _instance.DeliverPendingOpen();
         }
         catch (Exception error) when (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch)
@@ -181,6 +191,27 @@ public partial class App : System.Windows.Application
         Shutdown(await Task.Run(Services.IslandMusicVoiceWorker.RunAsync));
     private async Task RunIslandCoreAsync(string pipe) => Shutdown(await Services.IslandCoreWorker.RunAsync(pipe));
 
+    private async Task RunIslandMailHubAsync(int pid, long ticks)
+    {
+        try { Shutdown(await Task.Run(() => Services.MailHub.MailHubScheduler.RunIslandAsync(pid, ticks))); }
+        catch (Exception error)
+        {
+            Services.OwnedProcessRegistry.Log("mail_hub_worker_failed", "MailHub", detail: error.GetType().Name);
+            Shutdown(2);
+        }
+    }
+
+    private void StartMailHub(MainWindow window)
+    {
+        var files = new Lopata.MailHub.MailHubFiles(Services.AppDataPaths.BaseDirectory);
+        _mailHubProcess = files.ProcessMarker(island: false);
+        var lifetime = _mailHubLifetime = new();
+        var scheduler = new Services.MailHub.MailHubScheduler(files, headless: false,
+            () => Dispatcher.InvokeAsync(window.IsMailHubChatBusy).Task,
+            (status, details) => Dispatcher.BeginInvoke(() => window.ShowMailHubNotice(status, details)));
+        _ = Task.Run(() => scheduler.RunAsync(lifetime.Token));
+    }
+
     private async Task InitializeCollectionAsync()
     {
         var exitCode = 0;
@@ -197,6 +228,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _mailHubLifetime?.Cancel();
+        _mailHubProcess?.Dispose();
         _islandServer?.Dispose();
         AIHub.Services.OwnedProcessRegistry.Shared.Dispose();
         _instance?.Dispose(); _instance = null;

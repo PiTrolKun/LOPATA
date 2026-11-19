@@ -5870,5 +5870,22 @@
       "texts/sensenova-LICENSE.txt"
     ],
     "Terms": "712CDF16B88DE797EB4D1C07B74F5161E7CC701AED880E373F99A18D6A9CF56E"
+  },
+  {
+    "Id": "nuget.MailKit",
+    "Name": "MailKit",
+    "Version": "4.17.0",
+    "Author": ".NET Foundation and Contributors",
+    "License": "MIT",
+    "Source": "https://github.com/jstedfast/MailKit/blob/4.17.0/LICENSE",
+    "Checked": "2026-11-20",
+    "Ru": "Защищённое подключение IMAP для чтения писем почтовым хабом.",
+    "En": "Secure, read-only IMAP access for the mail hub.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "C6C76A7A5E9554CF9DC30094D495EE1DCFC7EC96AF56062871976C74499A8500",
+    "Texts": [
+      "texts/MailKit-LICENSE.txt"
+    ]
   }
 ]

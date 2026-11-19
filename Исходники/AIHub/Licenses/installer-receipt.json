@@ -530,5 +530,12 @@
     "Terms": "7652CB23C320C981B56712E18A3482C3365CC378D85045B77EF73EC205CB6EEB",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
+  },
+  {
+    "Id": "nuget.MailKit",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "C6C76A7A5E9554CF9DC30094D495EE1DCFC7EC96AF56062871976C74499A8500",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
   }
 ]

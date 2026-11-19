@@ -27,6 +27,7 @@ public static class ScenarioNavigationCatalog
     public const string Finance = "finance";
     public const string Capture = "screen_capture";
     public const string Island = "nabyscape_island";
+    public const string MailHub = "smart_mail_hub";
     public const string ImageGeneration = "image_generation";
     public const string VisualScenario = "visual_scenario";
     public const string VideoGeneration = "video_generation";
@@ -59,6 +60,7 @@ public static class ScenarioNavigationCatalog
         Node(SpeechAssets, ScenarioNavigationKind.Scenario, "utilities_audio", "SpeechAssets.Title", "SpeechAssets.Description", "tools", tags: ["speech_assets"]),
         Node("utilities_text", ScenarioNavigationKind.Group, Utilities, "BookConverter.Group", "", "tools"),
         Node(OfficeReader, ScenarioNavigationKind.Scenario, "utilities_text", "Reader.Entry", "Reader.Description", "tools", tags: ["office_reader", "office_reader_ai", "office_reader_speech", "office_reader_translation", "office_document_summary"]),
+        Node(MailHub, ScenarioNavigationKind.Scenario, "utilities_text", "MailHub.Title", "MailHub.Description", "tools"),
         Node(OfficeEditor, ScenarioNavigationKind.Scenario, "utilities_text", "OfficeEditor.Entry", "OfficeEditor.Description", "tools", tags: ["office_editor", "office_editor_capture", "office_editor_project", "office_project_sheets", "office_project_journals", "office_workbook_formulas", "office_book_editing", "office_slide_editing","office_paragraph_translation", "office_document_summary", "office_selection_actions", "office_editor_web_search", "office_special_characters", "office_symbol_suggestions"]),
         Node(Dictation,ScenarioNavigationKind.Scenario,"utilities_text","Dictation.Title","Dictation.Help","tools",tags:["voice_input"]),
         Node(BookConversion, ScenarioNavigationKind.Scenario, "utilities_text", "BookConverter.Title", "BookConverter.Description", "tools",

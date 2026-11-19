@@ -155,6 +155,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <PackageReference Include="MimeKit" Version="4.17.0" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
     <PackageReference Include="NAudio.Wasapi" Version="2.3.0" />
     <PackageReference Include="NAudio.WinMM" Version="2.3.0" />
     <Reference Include="sherpa-onnx"><HintPath>..\..\Runtime\VoiceInput\sherpa-onnx-1.13.8\sherpa-onnx.dll</HintPath><Private>true</Private></Reference>

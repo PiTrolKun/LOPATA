@@ -3948,6 +3948,7 @@ HUB не считает наличие GGUF и projector доказательс�
 | Markdig | Разбор Markdown и безопасное текстовое представление | 1.3.2 | BSD-2-Clause | NuGet `Markdig` | Включается в publish |
 | YamlDotNet | Чтение и нормализация YAML | 18.1.0 | MIT | NuGet `YamlDotNet` | Включается в publish |
 | MimeKit | Чтение EML/MIME и списка вложений | 4.17.0 | MIT | NuGet `MimeKit` | Включается в publish; вложения не запускаются |
+| MailKit | Чтение почтовых ящиков по IMAP | 4.17.0 | MIT | NuGet `MailKit` | Включается в publish. Почтовый хаб использует защищённое подключение и чтение без изменения флагов. |
 | Microsoft.Data.Sqlite | Read-only просмотр структуры локальных SQLite-файлов | 10.0.10 | MIT | NuGet `Microsoft.Data.Sqlite` | Включается в publish; соединение открывается в режиме ReadOnly |
 | SQLitePCLRaw.bundle_e_sqlite3 | Нативный SQLite runtime для Microsoft.Data.Sqlite | 2.1.12 | Apache-2.0, SQLite public domain для нативного движка | NuGet `SQLitePCLRaw.bundle_e_sqlite3` | Явно закреплён на 2.1.12 вместо транзитивной 2.1.11 с опубликованным advisory |
 

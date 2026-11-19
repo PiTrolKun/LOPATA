@@ -358,6 +358,7 @@ binary dependencies has not been completed. Pinned artifact hashes and delivery 
 | Markdig | 1.3.2 | Markdown | BSD-2-Clause |
 | YamlDotNet | 18.1.0 | YAML | MIT |
 | MimeKit | 4.17.0 | EML/MIME | MIT |
+| MailKit | 4.17.0 | Read-only IMAP access | MIT |
 | Microsoft.Data.Sqlite | 10.0.10 | SQLite | MIT |
 | SQLitePCLRaw.bundle_e_sqlite3 | 2.1.12 | Нативный SQLite runtime | Apache-2.0; SQLite public domain |
 

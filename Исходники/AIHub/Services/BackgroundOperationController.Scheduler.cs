@@ -175,7 +175,8 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         if (execution is null) throw new InvalidOperationException("No matching operation scope.");
         execution.SaveCheckpoint(checkpoint);
     }
-    public async Task<T> RunAsync<T>(BackgroundOperationState input, Func<CancellationToken, Task<T>> execute, Func<Task> releaseModels, CancellationToken lifetime)
+    public async Task<T> RunAsync<T>(BackgroundOperationState input, Func<CancellationToken, Task<T>> execute,
+        Func<Task> releaseModels, CancellationToken lifetime, bool allowIdleQueue = false)
     {
         BackgroundOperationExecution execution = null!;
         Task<T> running;
@@ -193,7 +194,7 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
             {
                 if (_loadFailed || _auxiliary || _resumingId is not null && _resumingId != input.Id
                     || _jobs.Values.Any(job => job.IsRunning && !Parked(job))
-                    || _jobs.Values.Any(job => job.HasPending && !Parked(job) && job.State?.Id != input.Id))
+                    || !allowIdleQueue && _jobs.Values.Any(job => job.HasPending && !Parked(job) && job.State?.Id != input.Id))
                     throw Blocked("Another background operation requires attention or is running.");
                 execution = _jobs.TryGetValue(input.Id, out var previous) ? previous : Add(input.Id)!;
             }
