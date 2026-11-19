@@ -24,7 +24,8 @@ internal static partial class ManagedPythonRuntime
     internal static string CpuDirectory => new ComponentManager().GetInstallDirectory(ComponentCatalog.Find(HardwareRuntimeCatalog.PythonCpuId)!);
 
     internal static async Task<ManagedPythonSelection> ResolveAsync(string requested, CancellationToken token,
-        IReadOnlySet<string>? allowedProfiles = null, Action<string>? log = null, bool requireReliableGpuProbe = false)
+        IReadOnlySet<string>? allowedProfiles = null, Action<string>? log = null, bool requireReliableGpuProbe = false,
+        bool probeCpuWithTorch = true)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         using var auditLog = ComponentAudit.CaptureLog(log);
@@ -73,8 +74,11 @@ internal static partial class ManagedPythonRuntime
         var root = manager.GetInstallDirectory(cpu.Entry);
         log?.Invoke("[Prepare] Python profile · cpu");
         await PythonRuntimeBundleVerifier.VerifyCpuAsync(root, token);
+        var executable = Path.Combine(root, "python.exe");
+        if (!probeCpuWithTorch)
+            return new(cpu.Entry, PythonRuntimeProfile.Cpu, executable, "cpu", 0, "Fixed CPU profile");
         var cpuProbe = await ManagedPythonHardwareProbe.ReadAsync(PythonRuntimeProfile.Cpu, root, "cpu", token);
-        return new(cpu.Entry, PythonRuntimeProfile.Cpu, Path.Combine(root, "python.exe"), "cpu", cpuProbe.FreeBytes,
+        return new(cpu.Entry, PythonRuntimeProfile.Cpu, executable, "cpu", cpuProbe.FreeBytes,
             requested == "cpu" ? "Requested CPU" : "No compatible prepared GPU; using CPU");
     }
 

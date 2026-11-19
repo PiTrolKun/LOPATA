@@ -35,6 +35,12 @@ public partial class App : System.Windows.Application
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             _=RunDictationWorkerAsync();return;
         }
+        if (e.Args is ["--island-music-voice"])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = RunIslandMusicVoiceAsync();
+            return;
+        }
         if (e.Args is ["--remove-book-shell"])
         {
             try { new Services.Books.BookShellIntegration(Environment.ProcessPath!).Apply(false, _ => ""); Shutdown(); }
@@ -171,6 +177,8 @@ public partial class App : System.Windows.Application
     }
 
     private async Task RunDictationWorkerAsync() => Shutdown(await Services.Dictation.DictationWorker.RunAsync());
+    private async Task RunIslandMusicVoiceAsync() =>
+        Shutdown(await Task.Run(Services.IslandMusicVoiceWorker.RunAsync));
     private async Task RunIslandCoreAsync(string pipe) => Shutdown(await Services.IslandCoreWorker.RunAsync(pipe));
 
     private async Task InitializeCollectionAsync()

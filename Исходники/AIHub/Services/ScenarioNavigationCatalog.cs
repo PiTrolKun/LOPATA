@@ -132,6 +132,7 @@ public static class ScenarioNavigationCatalog
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
         new ScenarioNavigationTag("island_model_tasks", "Island.ModelTasks", "Island.ModelTasksDescription", Island),
         new ScenarioNavigationTag("island_core_chat", "Island.CoreChat", "Island.CoreChatDescription", Island),
+        new ScenarioNavigationTag("island_player_voice", "Island.VoiceCommands", "Island.VoiceDescription", Island),
         new ScenarioNavigationTag("onec_assistance", "OneC.Title", "OneC.Description", OneC),
         new ScenarioNavigationTag("onec_projects", "OneC.Projects", "OneC.ProjectsDescription", OneC),
         new ScenarioNavigationTag("onec_checks", "OneC.CheckFile", "OneC.CheckerPreparationHint", OneC),

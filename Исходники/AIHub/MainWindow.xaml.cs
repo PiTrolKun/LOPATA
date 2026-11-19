@@ -197,6 +197,7 @@ public partial class MainWindow : Window
         if (!_engineSetsInitialized) { StatusText.Text = L("EngineSets.Working"); return; }
         try { await ComponentLicenseGate.EnsureAsync("basic", CancellationToken.None); }
         catch (OperationCanceledException) { return; }
+        if (!await EnsureIslandMusicVoiceAsync()) return;
         if (_appState.HasCompletedSetup)
         {
             var coreModelCheck = _coreModelManager.Check(_storageSettings);

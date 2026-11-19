@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using NAudio.Wave;
+using Lopata.Island;
 
 namespace AIHub.Services.Dictation;
 
@@ -13,6 +14,7 @@ public sealed class DictationAudioCapture(Action<DictationChunk> submit) : IDisp
     private readonly MemoryStream _phrase=new();
     private readonly TaskCompletionSource _stopped=new(TaskCreationOptions.RunContinuationsAsynchronously);
     private WaveInEvent? _capture;
+    private FileStream? _microphoneLease;
     private bool _speech;
     private double _silence;
     private int _segment;
@@ -21,6 +23,7 @@ public sealed class DictationAudioCapture(Action<DictationChunk> submit) : IDisp
     public event Action<Exception>? Failed;
     public void Start(int device)
     {
+        _microphoneLease=IslandMicrophoneLease.TryAcquire() ?? throw new InvalidOperationException("Dictation.IslandMicrophoneBusy");
         _capture=new(){DeviceNumber=device,WaveFormat=new WaveFormat(16000,16,1),BufferMilliseconds=50};
         _capture.DataAvailable+=(_,e)=>{try{Push(e.Buffer.AsSpan(0,e.BytesRecorded));}catch(Exception error){Failed?.Invoke(error);}};
         _capture.RecordingStopped+=(_,e)=>{if(e.Exception is {} error)Failed?.Invoke(error);_stopped.TrySetResult();};
@@ -50,5 +53,5 @@ public sealed class DictationAudioCapture(Action<DictationChunk> submit) : IDisp
         Finish();
     }
     public void Finish(){lock(_gate){if(_speech&&_phrase.Length>0)Snapshot(true);_phrase.SetLength(0);_speech=false;Level=0;}}
-    public void Dispose(){_capture?.Dispose();_phrase.Dispose();}
+    public void Dispose(){try{_capture?.Dispose();}finally{_microphoneLease?.Dispose();_phrase.Dispose();}}
 }

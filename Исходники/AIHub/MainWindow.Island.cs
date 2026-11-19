@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using ContentControl = System.Windows.Controls.ContentControl;
 using AIHub.Controls;
 using AIHub.Services;
+using Lopata.Island;
 
 namespace AIHub;
 
@@ -24,7 +25,7 @@ public partial class MainWindow
 
     private IslandEditor NewIslandSettings()
     {
-        var editor = new IslandEditor(L, showPreview: false);
+        var editor = new IslandEditor(L, showPreview: false, openVoiceCommands: () => OpenIslandVoiceCommands(edit: false));
         editor.SetDarkTheme(_isDarkTheme);
         editor.PreferencesApplied += RefreshSavedIslandSettings;
         return editor;
@@ -40,7 +41,8 @@ public partial class MainWindow
 
     private IslandEditor NewIslandEditor()
     {
-        var editor = new IslandEditor(L, showPreview: true) { Margin = new Thickness(18, 14, 18, 16) };
+        var editor = new IslandEditor(L, showPreview: true, openVoiceCommands: () => OpenIslandVoiceCommands(edit: true))
+            { Margin = new Thickness(18, 14, 18, 16) };
         editor.SetDarkTheme(_isDarkTheme);
         editor.PreferencesApplied += RefreshSavedIslandSettings;
         return editor;
@@ -50,8 +52,6 @@ public partial class MainWindow
     {
         if (_islandSettingsHost.Content is IslandEditor global) global.SetDarkTheme(_isDarkTheme);
         if (_islandEditor is not { } window) return;
-        foreach (var key in new[] { "WindowBackgroundBrush", "TextPrimaryBrush", "TextSecondaryBrush" })
-            if (TryFindResource(key) is { } resource) window.Resources[key] = resource;
         if (window.Content is IslandEditor editor) editor.SetDarkTheme(_isDarkTheme);
     }
 
@@ -68,10 +68,20 @@ public partial class MainWindow
             MinWidth = 655, WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Content = NewIslandEditor()
         };
+        _islandEditor.Resources.MergedDictionaries.Add(Resources);
         RefreshIslandTheme();
         _islandEditor.SetResourceReference(Window.BackgroundProperty, "WindowBackgroundBrush");
         _islandEditor.Activated += (_, _) => RefreshSavedIslandSettings();
         _islandEditor.Closed += (_, _) => _islandEditor = null;
         _islandEditor.Show();
+    }
+
+    private void OpenIslandVoiceCommands(bool edit)
+    {
+        if (edit) OpenIslandEditor();
+        var window = new IslandVoiceSettingsWindow(edit ? _islandEditor! : this, L,
+            IslandVoicePreferences.IsRussian(_localizationService.CurrentLanguageCode), edit,
+            edit ? null : () => OpenIslandVoiceCommands(edit: true));
+        window.ShowDialog();
     }
 }

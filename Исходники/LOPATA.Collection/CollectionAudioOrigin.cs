@@ -56,7 +56,7 @@ internal static class CollectionAudioOrigin
             var length = header[3] == 4 ? Synchsafe(frame[4..8]) : checked((int)BinaryPrimitives.ReadUInt32BigEndian(frame[4..8]));
             if (length < 1 || length > end - input.Position) return;
             var flags = frame[8] | frame[9];
-            var standard = includeMusic && type is "TIT2" or "TPE1" or "TALB" or "USLT" or "APIC";
+            var standard = includeMusic && type is "TIT2" or "TPE1" or "TALB" or "TCON" or "TBPM" or "TRCK" or "USLT" or "APIC";
             if (flags != 0 || type != "TXXX" && !standard || length > Limit || bytesRead + length > Limit)
             {
                 input.Position += length;
@@ -70,7 +70,8 @@ internal static class CollectionAudioOrigin
             }
             if (standard && type != "USLT")
             {
-                tags[type switch { "TIT2" => "TITLE", "TPE1" => "ARTIST", _ => "ALBUM" }] =
+                tags[type switch { "TIT2" => "TITLE", "TPE1" => "ARTIST", "TCON" => "GENRE", "TBPM" => "BPM",
+                    "TRCK" => "TRACKNUMBER", _ => "ALBUM" }] =
                     Decode(body[0], body.AsSpan(1)).TrimEnd('\0');
                 continue;
             }
@@ -86,7 +87,7 @@ internal static class CollectionAudioOrigin
                 continue;
             }
             var name = Decode(body[0], body.AsSpan(valueStart, split - valueStart));
-            if (name.StartsWith("LOPATA", StringComparison.OrdinalIgnoreCase))
+            if (name.StartsWith("LOPATA", StringComparison.OrdinalIgnoreCase) || includeMusic && IsSearchMetadata(name))
                 tags[name] = Decode(body[0], body.AsSpan(split + width)).TrimEnd('\0');
         }
     }
@@ -153,10 +154,15 @@ internal static class CollectionAudioOrigin
             if (split <= 0) continue;
             var key = text[..split];
             if (key.StartsWith("LOPATA", StringComparison.OrdinalIgnoreCase) ||
-                includeMusic && key.ToUpperInvariant() is "TITLE" or "ARTIST" or "ALBUM" or "LYRICS" or "UNSYNCEDLYRICS" or "SYNCEDLYRICS" or "METADATA_BLOCK_PICTURE")
+                includeMusic && IsSearchMetadata(key))
                 tags[key] = text[(split + 1)..];
         }
     }
+
+    private static bool IsSearchMetadata(string name) => name.ToUpperInvariant() is
+        "TITLE" or "ARTIST" or "ALBUM" or "ALBUMARTIST" or "VERSION" or "GENRE" or "BPM" or "TRACKNUMBER"
+        or "MOOD" or "DESCRIPTION" or "COMMENT" or "VOCAL" or "LYRICS" or "UNSYNCEDLYRICS" or "SYNCEDLYRICS"
+        or "METADATA_BLOCK_PICTURE";
 
     private static void ReadOgg(Stream input, Dictionary<string, string> tags, bool includeMusic)
     {

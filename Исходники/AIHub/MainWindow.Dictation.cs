@@ -146,6 +146,8 @@ public partial class MainWindow
             if (_dictationTarget is IDictationInferenceTarget observing)
                 observing.BindStop(() => ReferenceEquals(_dictationTarget, observing) ? StopDictationAsync() : Task.CompletedTask);
             _dictation.Start(_appSettings.Dictation.DeviceNumber);
+        }catch(InvalidOperationException error) when(error.Message=="Dictation.IslandMicrophoneBusy"){
+            _dictationIntent=false;_dictationAcceptInput=false;_dictationError=error.Message;
         }finally{_dictationStarting=false;RefreshDictation();}
     }
     private async Task StopDictationAsync(){_dictationIntent=false;if(_dictation is {} session)await session.StopAsync();RefreshDictation();}

@@ -21,6 +21,7 @@ internal sealed class IslandEditor : System.Windows.Controls.UserControl
     private readonly Func<string, string> _localize;
     private readonly bool _showPreview;
     private readonly bool _allowStartup;
+    private readonly Action? _openVoiceCommands;
     private readonly StackPanel _extended = new() { Margin = new(0, 0, 0, 8) };
     private readonly Border _preview = new()
     {
@@ -36,12 +37,13 @@ internal sealed class IslandEditor : System.Windows.Controls.UserControl
     private string? _appliedControlTheme;
     private ResourceDictionary? _controlTheme;
 
-    internal IslandEditor(Func<string, string> localize, bool showPreview, bool allowStartup = true)
+    internal IslandEditor(Func<string, string> localize, bool showPreview, bool allowStartup = true, Action? openVoiceCommands = null)
     {
         _localize = localize;
         _view = 2;
         _showPreview = showPreview;
         _allowStartup = allowStartup;
+        _openVoiceCommands = openVoiceCommands;
         _draft = _saved;
         AutomationProperties.SetAutomationId(this, showPreview ? "Island.Editor" : "Island.Global");
         Content = Build();
@@ -130,6 +132,13 @@ internal sealed class IslandEditor : System.Windows.Controls.UserControl
             finally { launch.IsEnabled = IslandRuntime.IsAvailable; }
         };
         commands.Children.Add(launch);
+        if (_openVoiceCommands is not null)
+        {
+            var voice = new Button { Content = _localize("Island.VoiceCommands"), Margin = new(8, 0, 0, 0) };
+            AutomationProperties.SetAutomationId(voice, "Island.VoiceCommands");
+            voice.Click += (_, _) => _openVoiceCommands();
+            commands.Children.Add(voice);
+        }
         controls.Children.Add(commands);
         _status.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush");
         controls.Children.Add(_status);

@@ -27,7 +27,9 @@ internal static class VideoNarratorDevice
     }
     internal static async Task<ManagedPythonSelection> ResolveAsync(string id, string policy, string overlay, string expanded, CancellationToken token)
     {
-        if (id == VideoNarratorCatalog.KittenMini) return await ManagedPythonRuntime.ResolveAsync("cpu", token);
+        // Mini uses a fixed ONNX CPU backend. Successful inference verifies the runtime.
+        if (id == VideoNarratorCatalog.KittenMini)
+            return await ManagedPythonRuntime.ResolveAsync("cpu", token, probeCpuWithTorch: false);
         var cpu = policy == "cpu" || policy == "auto" && !PreferGpu(id);
         if (id == "orpheus3b")
         {
