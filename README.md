@@ -9,7 +9,7 @@
 > [!WARNING]
 > **LOPATA находится в активной разработке.**
 >
-> Актуальный публичный выпуск — [**0.8.56-beta**](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.8.56-beta), рабочая версия — **0.8.66-dev**. В файловое обновление входит настольный остров NabyScape — LOPATA Edition. Это тестовая бета. Модели могут ошибаться, а качество и скорость зависят от задания и оборудования.
+> Актуальный публичный выпуск — [**0.8.66-beta**](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.8.66-beta), рабочая версия — **0.8.66-dev**. В файловое обновление входит настольный остров NabyScape — LOPATA Edition. Это тестовая бета. Модели могут ошибаться, а качество и скорость зависят от задания и оборудования.
 
 Коллекция ЛОПАТЫ объединяет созданные работы в Проводнике Windows, поддерживает группы по типу/сценарию и работает при закрытом основном приложении.
 
@@ -654,6 +654,8 @@ Experiments, bug reports, careful improvements and attempts to continue the proj
 ---
 
 ## История публикаций
+
+В [0.8.66-beta](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.8.66-beta) добавлен почтовый хаб с локальными аудиосводками, расписанием и виджетом Острова. [Выпуск Острова](https://github.com/PiTrolKun/NabyScape-LOPATA-Edition/releases/tag/lopata-v0.8.66-beta) · [Проверки](Документы_проекта/Релизы/0.8.66-beta_проверки.md).
 
 В [0.8.56-beta](https://github.com/PiTrolKun/LOPATA/releases/tag/v0.8.56-beta) добавлено голосовое управление островом, поиск музыки и локальная озвучка Kitten TTS 2 Mini. [Выпуск острова](https://github.com/PiTrolKun/NabyScape-LOPATA-Edition/releases/tag/lopata-v0.8.56-beta) · [Протокол выпуска](Документы_проекта/Релизы/0.8.56-beta_проверки.md)
 
