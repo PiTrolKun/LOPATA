@@ -155,7 +155,7 @@ public sealed class ApplicationUpdateWindow : Window
     private async Task CheckAsync()
     {
         if (_closed || _backgroundCheckBusy || IsBusy || _direction is null) return;
-        var operation = new CancellationTokenSource(TimeSpan.FromSeconds(45));
+        var operation = new CancellationTokenSource(ApplicationUpdateCoordinator.CheckTimeout);
         _operation = operation; _checkFailed = false; RefreshButtons(); _checkStatus.Text = _text("Updates.Checking");
         try
         {

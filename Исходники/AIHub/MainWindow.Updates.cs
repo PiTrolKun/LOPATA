@@ -92,7 +92,7 @@ public partial class MainWindow
             }
             if (!_appSettings.Updates.CheckOnStartup || _updateService.ReadDirection() is not { } direction) return;
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_updateLifetime.Token);
-            timeout.CancelAfter(TimeSpan.FromSeconds(45));
+            timeout.CancelAfter(ApplicationUpdateCoordinator.CheckTimeout);
             var offer = await _updateService.CheckAsync(GetAppVersion(), direction, timeout.Token);
             if (_updateLifetime.IsCancellationRequested) return;
             checkSucceeded = true;

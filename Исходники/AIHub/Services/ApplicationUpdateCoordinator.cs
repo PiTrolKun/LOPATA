@@ -8,6 +8,8 @@ namespace AIHub.Services;
 /// <summary>Connects delivery selection and durable consent to the UI without changing installed files.</summary>
 public sealed class ApplicationUpdateCoordinator
 {
+    internal static readonly TimeSpan CheckTimeout = TimeSpan.FromMinutes(3);
+
     private readonly HttpClient _http;
     private readonly ApplicationUpdateService _installers;
     private readonly string _updatesDirectory;
