@@ -19,3 +19,7 @@ AI_HUB — русскоязычный локальный AI-хаб для Window
 Пока сторонние материалы, библиотеки, модели и backends не добавлены.
 
 Все будущие зависимости должны фиксироваться в `Документы_проекта/REESTR.md` и `THIRD_PARTY_NOTICES.md`.
+
+## MiniMax H3-Image
+
+MiniMax-H3-Image is licensed under the MiniMax-H3-Image Community License Agreement, Copyright © 2026 MiniMax. All Rights Reserved.

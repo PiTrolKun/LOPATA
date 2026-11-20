@@ -58,6 +58,7 @@ public partial class MainWindow
     }
     private void RegisterImageGenerationBackgroundOperation()
     {
+        GenerationPage.EnableModelWarmup();
         GenerationPage.CanRemoveModel = CanRemoveImageGenerationModel;
         GenerationPage.RemoveModelRequested = RemoveImageGenerationModelAsync;
         GenerationPage.WorkspaceChanged += RefreshGenerationHeader;
@@ -65,6 +66,8 @@ public partial class MainWindow
         ConfigureImageGeneration(); RefreshGenerationSettings();
         _backgroundOperations!.Register(ImageGenerationCatalog.BackgroundKind, async (state, token) =>
         { ConfigureImageGeneration(); await GenerationPage.ResumeAsync(state, token); });
+        _backgroundOperations.Register(ImageGenerationControl.WarmupKind, async (state, token) =>
+        { ConfigureImageGeneration(); await GenerationPage.ResumeWarmupAsync(state, token); });
         _backgroundOperations.Register(ImagePromptAssistant.BackgroundKind, async (state, token) =>
         { ConfigureImageGeneration(); await GenerationPage.ResumePromptAsync(state, token); });
         _backgroundOperations.Register(ImageReferenceAnalyzer.BackgroundKind, async (state, token) =>

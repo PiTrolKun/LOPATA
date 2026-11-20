@@ -24,6 +24,7 @@ internal sealed class ReaderTranslationRuntime(OfficeAiJournal? journal = null) 
     private async Task PrepareAsync(ManagedModelArtifactCard card, CancellationToken token)
     {
         if (_model is not null) return;
+        card = ModelStorageAddresses.Current.Resolve(card);
         _llama.ConfigurePrivateNoRetry();
         await ComponentLicenseGate.EnsureAsync(card.ModelArtifactId, token);
         var file = card.Files.FirstOrDefault(f => f.Purpose is "main_model" or "executor_model")

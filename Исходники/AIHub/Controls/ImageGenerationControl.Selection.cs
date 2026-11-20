@@ -33,7 +33,7 @@ public sealed partial class ImageGenerationControl
     {
         panel.Children.Add(Text(L("ChooseModel")));
         panel.Children.Add(Text(L("Examples.TestNote")));
-        foreach (var model in ImageGenerationCatalog.Manifest.Models)
+        foreach (var model in AvailableModels)
         {
             var key = model.Family ?? model.Id;
             var row = new Grid { Margin = new Thickness(0, 8, 0, 16) };
@@ -69,15 +69,16 @@ public sealed partial class ImageGenerationControl
             }
             var examples = new Grid(); Grid.SetColumn(examples, 1); row.Children.Add(examples);
             examples.ColumnDefinitions.Add(new ColumnDefinition()); examples.ColumnDefinitions.Add(new ColumnDefinition());
-            var selected = ImageGenerationExamples.All.Where(e => e.ModelId == model.Id).Take(2).ToArray();
+            var selected = ImageGenerationExamples.All.Where(e => e.ModelId == model.Id).ToArray();
             for (var i = 0; i < selected.Length; i++)
             {
+                if (i % 2 == 0) examples.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                 var example = selected[i];
                 var content = new StackPanel();
                 content.Children.Add(ExamplePreview(example));
                 content.Children.Add(Text(L("Examples." + example.TitleKey)));
                 var button = new Button { Content = content, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Top, Padding = new Thickness(10), Margin = new Thickness(0, 0, 10, 0), ToolTip = L("Examples.Open") };
+                    VerticalAlignment = VerticalAlignment.Top, Padding = new Thickness(10), Margin = new Thickness(0, 0, 10, 10), ToolTip = L("Examples.Open") };
                 AutomationProperties.SetAutomationId(button, "Generation.Example." + example.Id);
                 button.Click += (_, _) =>
                 {
@@ -89,7 +90,9 @@ public sealed partial class ImageGenerationControl
                     }
                     catch (Exception ex) { Error(ex); }
                 };
-                Grid.SetColumn(button, i); examples.Children.Add(button);
+                Grid.SetRow(button, i / 2);
+                Grid.SetColumn(button, i % 2);
+                examples.Children.Add(button);
             }
             panel.Children.Add(row);
         }
@@ -136,7 +139,7 @@ public sealed partial class ImageGenerationControl
         const int side = 512;
         var source = ImageGenerationExamples.Image(example, side);
         var canvas = new Grid { Width = side, Height = side, ClipToBounds = true };
-        canvas.Children.Add(new Image { Source = source, Stretch = Stretch.Fill });
+        canvas.Children.Add(new Image { Source = source, Stretch = example.SourceUrl is null ? Stretch.Fill : Stretch.Uniform });
         foreach (var region in example.BlurRegions)
         {
             var overlay = new Image { Source = source, Stretch = Stretch.Fill,

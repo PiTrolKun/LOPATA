@@ -22,13 +22,16 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
 {
     private readonly IProgress<BitmapSource>? _previewFrames;
     private readonly ImageGenerationResident? _resident;
+    private readonly Action<bool>? _starting;
 
     public ImageGenerationNativeWorker() { }
 
-    internal ImageGenerationNativeWorker(IProgress<BitmapSource> previewFrames, ImageGenerationResident? resident = null)
+    internal ImageGenerationNativeWorker(IProgress<BitmapSource>? previewFrames, ImageGenerationResident? resident = null,
+        Action<bool>? starting = null)
     {
         _previewFrames = previewFrames;
         _resident = resident;
+        _starting = starting;
     }
 
     public static ProcessStartInfo Command(ImageGenerationRequest request, int index,
@@ -49,6 +52,10 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         {
             Arg("--prompt-file", promptFile); Arg("--output", output);
             Arg("--width", request.Width); Arg("--height", request.Height); Arg("--seed", request.Seeds[index]);
+        }
+        else
+        {
+            Arg("--width", model.DefaultWidth); Arg("--height", model.DefaultHeight);
         }
         Arg("--steps", model.Steps); Arg("--cfg-scale", model.Cfg); Arg("--sampling-method", model.Sampler);
         if (model.Sigmas is { } sigmas) Arg("--sigmas", sigmas);
@@ -90,21 +97,20 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         token.ThrowIfCancellationRequested();
         var model = ImageGenerationCatalog.Get(request.ModelId);
         var setId = request.EngineSetId ?? EngineSetSelection.ActiveId;
-        if (!ImageGenerationCatalog.SupportsEngineSet(model, setId))
-            throw new BackgroundOperationFailedException("Generation.Qwen.EngineSetRequired");
-        var store = new ManagedModelLibraryStore();
-        foreach (var card in cards)
-            await ManagedModelRuntimeAudit.VerifyAsync(store, card.ModelArtifactId, token);
-        if (cards.SingleOrDefault(card => card.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
-            await ImageGenerationInstallation.EnsureRuntimeAsync(legacyRuntime, token);
-        var selection = await SdRuntimeSelector.SelectAsync(cards, false, token, setId, requireGpu: model.RequiresGpu);
+        var selection = await SelectVerifiedRuntimeAsync(request, cards, token);
         using var prepared = ImageGenerationReferences.NeedsPreparation(request)
             ? await Task.Run(() => ImageGenerationReferences.Prepare(request.ReferenceImages, token), token)
             : null;
         if (prepared is not null) request = request with { ReferenceImages = prepared.Paths };
-        var result = _resident is null
-            ? await AttemptAsync(request, index, cards, promptFile, output, selection, model.RequiresGpu, token)
-            : await _resident.GenerateAsync(request, index, cards, output, selection, _previewFrames, token);
+        var resident = _resident;
+        (int ExitCode, string Log, ImageGenerationGpuPlacement Placement) result;
+        if (resident is not null && CanUseServer(request, selection))
+            result = await resident.GenerateAsync(request, index, cards, output, selection, _previewFrames, token, _starting);
+        else
+        {
+            if (resident is not null) await resident.RetireAsync();
+            result = await AttemptAsync(request, index, cards, promptFile, output, selection, model.RequiresGpu, token);
+        }
         if (!model.RequiresGpu && result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log))
         {
             token.ThrowIfCancellationRequested();
@@ -129,12 +135,43 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         if (result.ExitCode != 0) throw new BackgroundOperationFailedException("Generation.RuntimeError");
         if (request.Loras.Length > 0 && (LoraRejected(result.Log) || !LorasApplied(result.Log, request.Loras)))
             throw new BackgroundOperationFailedException("Generation.Lora.NotApplied");
-        return new(selection.EngineSetId, selection.Version, selection.Revision, selection.Backend, selection.ComponentId) {
+        return new(selection.PackageRevision is null ? selection.EngineSetId : null,
+            selection.Version, selection.Revision, selection.Backend, selection.ComponentId) {
             Placement = model.RequiresGpu ? result.Placement.ToString() : null,
             Schedule = model.Sigmas,
             ArtistRevision = cards.FirstOrDefault(card => card.Files.Any(file => file.Purpose == "diffusion"))?.Revision,
             Loras = request.Loras.Select(u => { var d = ImageLora.ImageLoraCatalog.Find(u.Id);
                 return new ImageLoraApplied(u.Id, d.Repository, u.Revision, d.Files.Single().Sha256, u.Strength, d.Trigger); }).ToArray() };
+    }
+
+    internal async Task<bool> WarmAsync(ImageGenerationRequest request, IReadOnlyList<ManagedModelArtifactCard> cards,
+        CancellationToken token)
+    {
+        if (_resident is not { } resident) return false;
+        using var audit = ComponentAudit.CaptureOperation();
+        var selection = await SelectVerifiedRuntimeAsync(request, cards, token);
+        if (!CanUseServer(request, selection)) return false;
+        await resident.WarmAsync(request, cards, selection, token);
+        return true;
+    }
+
+    internal static bool CanUseServer(ImageGenerationRequest request, SdRuntimeSelection selection) =>
+        request.Loras.Length == 0 && selection.SupportsModernArguments
+        && File.Exists(Path.Combine(selection.Directory, "sd-server.exe"));
+
+    private static async Task<SdRuntimeSelection> SelectVerifiedRuntimeAsync(ImageGenerationRequest request,
+        IReadOnlyList<ManagedModelArtifactCard> cards, CancellationToken token)
+    {
+        var model = ImageGenerationCatalog.Get(request.ModelId);
+        var setId = request.EngineSetId ?? EngineSetSelection.ActiveId;
+        if (!ImageGenerationCatalog.SupportsEngineSet(model, setId))
+            throw new BackgroundOperationFailedException("Generation.Qwen.EngineSetRequired");
+        var store = new ManagedModelLibraryStore();
+        foreach (var card in cards)
+            await ManagedModelRuntimeAudit.VerifyAsync(store, card.ModelArtifactId, token);
+        if (cards.SingleOrDefault(card => card.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
+            await ImageGenerationInstallation.EnsureRuntimeAsync(legacyRuntime, token);
+        return await SdRuntimeSelector.SelectAsync(cards, false, token, setId, requireGpu: model.RequiresGpu);
     }
 
     internal static ProcessStartInfo ManagedCommand(ImageGenerationRequest request, int index,
@@ -143,7 +180,7 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
     {
         var executable = server ? Path.Combine(selection.Directory, "sd-server.exe") : selection.Executable;
         var info = CreateCommand(request, index, cards, promptFile, output, executable, server);
-        if (selection.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
+        if (selection.SupportsModernArguments)
         {
             info.ArgumentList.Remove("--diffusion-fa");
             info.ArgumentList.Add("--flash-attn"); info.ArgumentList.Add("off,diffusion=on");
@@ -157,9 +194,17 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         RuntimeDeviceProbe.ClearBackendOverrides(info);
         info.ArgumentList.Remove("--offload-to-cpu");
         info.ArgumentList.Add("--auto-fit"); info.ArgumentList.Add("on");
-        if (ImageGenerationCatalog.Get(request.ModelId).RequiresGpu && (long)request.Width * request.Height > 1024L * 1024)
+        var model = ImageGenerationCatalog.Get(request.ModelId);
+        var miniMax = model.Id == MiniMaxImageRuntime.ModelId;
+        if (selection.UsesGpu && server && miniMax)
         {
-            // A negative native budget reserves this much live VRAM for the larger image.
+            // Leave space for driver allocations and workspace during the transition from encoding to sampling.
+            info.ArgumentList.Add("--max-vram"); info.ArgumentList.Add("-4");
+        }
+        else if (selection.UsesGpu && (model.RequiresGpu || miniMax)
+            && (server || (long)request.Width * request.Height > 1024L * 1024))
+        {
+            // The server can receive a larger job without changing its startup arguments.
             info.ArgumentList.Add("--max-vram");
             info.ArgumentList.Add("-1");
         }
@@ -187,7 +232,7 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output,
         SdRuntimeSelection selection, bool requireGpu, CancellationToken token)
     {
-        using var preview = _previewFrames is not null && selection.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet
+        using var preview = _previewFrames is not null && selection.SupportsModernArguments
             ? ImageGenerationLivePreview.TryCreate() : null;
         using var process = OwnedProcessRegistry.Shared.Start(
             ManagedCommand(request, index, cards, promptFile, output, selection, preview?.OutputPattern), "ImageGeneration");
@@ -214,9 +259,11 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
             var outputLog = await stdout + Environment.NewLine + await stderr;
             if (rejected.Task.IsCompletedSuccessfully) placement = rejected.Task.Result;
             var model = ImageGenerationCatalog.Get(request.ModelId);
-            var log = $"Backend: {selection.Revision}; engineSet={selection.EngineSetId}; version={selection.Version}; runtime={selection.ComponentId}; backend={selection.Backend}; executable={selection.Executable}\nExit: 0x{process.ExitCode:X8}\n"
+            var log = $"Backend: {selection.Revision}; engineSet={(selection.PackageRevision is null ? selection.EngineSetId : "dedicated")}; version={selection.Version}; runtime={selection.ComponentId}; backend={selection.Backend}; executable={selection.Executable}\nExit: 0x{process.ExitCode:X8}\n"
                 + (requireGpu ? $"Placement: {placement}; model={request.ModelId}; seed={request.Seeds[index]}; size={request.Width}x{request.Height}\n"
-                    + $"Sampling: {model.Sampler}, steps={model.Steps}, cfg={model.Cfg}, sigmas={model.Sigmas ?? "automatic"}\n" : "")
+                    : "")
+                + (requireGpu || selection.PackageRevision is not null
+                    ? $"Sampling: {model.Sampler}, steps={model.Steps}, cfg={model.Cfg}, sigmas={model.Sigmas ?? "automatic"}\n" : "")
                 + outputLog;
             return (process.ExitCode, log, placement);
         }
@@ -256,6 +303,9 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
 public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null)
 {
     private readonly IImageGenerationWorker _worker = worker ?? new ImageGenerationNativeWorker();
+    internal Task<bool> WarmAsync(ImageGenerationRequest request, IReadOnlyList<ManagedModelArtifactCard> cards,
+        CancellationToken token) => _worker is ImageGenerationNativeWorker native
+        ? native.WarmAsync(request, cards, token) : Task.FromResult(false);
     public async Task<ImageGenerationTurn> RunAsync(ImageGenerationRequest request,
         IReadOnlyList<ManagedModelArtifactCard> cards, Action? changed, CancellationToken token)
     {

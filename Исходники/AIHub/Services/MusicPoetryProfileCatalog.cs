@@ -46,7 +46,7 @@ public static class MusicPoetryProfileCatalog
     }
     public static MusicPoetryProfile? Find(string candidateId) => All.FirstOrDefault(p => "profile-" + p.Id == candidateId);
     public static IReadOnlyList<ManagedModelArtifactCard> Cards(string root) => All.Select(p => Card(p, root)).ToArray();
-    public static ManagedModelArtifactCard Card(MusicPoetryProfile profile, string root) => new()
+    public static ManagedModelArtifactCard Card(MusicPoetryProfile profile, string root) => ModelStorageAddresses.Current.Resolve(new()
     {
         ModelArtifactId = profile.ArtifactId, Family = profile.DisplayName, DisplayName = profile.DisplayName,
         Role = ManagedModelRoles.Tool, Provider = "Hugging Face", RepositoryId = profile.RepositoryId,
@@ -60,7 +60,7 @@ public static class MusicPoetryProfileCatalog
         Consumers = [new() { Id = "music-poetry", DisplayName = "Music songwriting chat", Kind = "subscenario" }],
         Files = profile.Files.Select(f => new ManagedModelArtifactFile { RelativePath = f.RelativePath,
             SourceUrl = f.SourceUrl, SizeBytes = f.SizeBytes, Sha256 = f.Sha256, Purpose = f.Purpose }).ToList()
-    };
+    });
     public static DebugModelInfo? Installed(MusicPoetryProfile profile, string root)
     {
         var card = Card(profile, root);

@@ -34,8 +34,12 @@ public static class ImageGenerationMetadata
         var author = Author(request.Metadata?.Author);
         var title = $"{model.Name} #{request.FirstGenerationNumber + index}";
         var version = typeof(ImageGenerationMetadata).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
-        var producer = senseNova ? $"LOPATA {version}, {VisualSenseNova.Backend}"
-            : EngineSetMetadataIdentity.Producer(version, engineSetId);
+        var producer = model.Id switch
+        {
+            VisualSenseNova.Id => $"LOPATA {version}, {VisualSenseNova.Backend}",
+            MiniMaxImageRuntime.ModelId => $"LOPATA {version}, stable-diffusion.cpp",
+            _ => EngineSetMetadataIdentity.Producer(version, engineSetId)
+        };
         var engineSetDate = EngineSetMetadataIdentity.Date(engineSetId);
         var seed = request.Seeds[index];
         var keywords = new[] { "LOPATA", "AI", model.Name };
@@ -84,7 +88,7 @@ public static class ImageGenerationMetadata
                 : runtime.Placement == (senseNova ? "balanced" : nameof(ImageGenerationGpuPlacement.Hybrid)),
             VaeTiling = senseNova ? (bool?)null : true,
             // Engine delivery is recorded above from the actual attempt; static model weights stay separate.
-            Components = model.Components.Where(id => id != "generation-runtime").Select(id =>
+            Components = model.Components.Where(id => !ImageGenerationCatalog.IsRuntimeArtifact(id)).Select(id =>
             {
                 var artifact = id == VisualSenseNova.Id ? VisualSenseNova.Artifact
                     : ImageGenerationCatalog.Manifest.Artifacts.Single(a => a.Id == id);

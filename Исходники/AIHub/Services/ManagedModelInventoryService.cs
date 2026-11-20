@@ -27,6 +27,7 @@ public sealed class ManagedModelInventoryService
     {
         foreach (var predefined in ManagedModelCatalog.CreatePredefined(settings))
         {
+            _store.Addresses.Resolve(predefined);
             ApplyFastFileState(predefined, _store.Load(predefined.ModelArtifactId));
             _store.Upsert(predefined);
         }

@@ -104,7 +104,7 @@ public static class MusicAceCatalog
         return [Card(Variation, "ACE-Step/acestep-v15-xl-turbo", ModelRevision, manifest.Model, "ACE-Step 1.5 · XL Turbo · 4B"),
             Card(Companions, "ACE-Step/Ace-Step1.5", CompanionRevision, manifest.Companions, "ACE · VAE + Qwen3-Embedding + LM 1.7B"),
             Card(RuntimeId, "ACE-Step/ACE-Step-1.5", SourceRevision, manifest.Runtime, "ACE · Python libraries")];
-        ManagedModelArtifactCard Card(string id, string repo, string rev, List<ManagedModelArtifactFile> files, string name) => new() {
+        ManagedModelArtifactCard Card(string id, string repo, string rev, List<ManagedModelArtifactFile> files, string name) => ModelStorageAddresses.Current.Resolve(new() {
             ModelArtifactId = id, DisplayName = name, Family = ModelName, Role = ManagedModelRoles.Tool,
             Provider = id == RuntimeId ? "PyPI" : "Hugging Face", RepositoryId = repo, Revision = rev,
             Format = id == RuntimeId ? "Python wheels" : "Safetensors", License = id == RuntimeId ? "Upstream package licenses" : "MIT; Qwen Apache-2.0",
@@ -113,7 +113,7 @@ public static class MusicAceCatalog
             InstallDirectory = string.IsNullOrWhiteSpace(root) ? "" : Path.Combine(root, "Music", id, rev[..12]),
             Origin = ManagedModelOrigins.PredefinedScenario,
             Consumers = [new() { Id = ScenarioNavigationCatalog.Music, DisplayName = "Музыка / Music", Kind = "scenario" }], Files = files
-        };
+        });
     }
     private sealed record Files(List<ManagedModelArtifactFile> Model, List<ManagedModelArtifactFile> Companions, List<ManagedModelArtifactFile> Runtime);
 }

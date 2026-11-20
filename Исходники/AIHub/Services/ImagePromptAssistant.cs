@@ -19,6 +19,7 @@ public sealed class ImagePromptAssistant(UserContextService context) : IImagePro
 
     public async Task<string> GenerateAsync(ImagePromptAssistRequest request, CancellationToken token)
     {
+        request = request with { ModelPath = ModelStorageAddresses.Current.ResolvePreviousPath(request.ModelPath) };
         if (!File.Exists(request.ModelPath) || new FileInfo(request.ModelPath).Length != CoreModelManager.CoreModelTotalBytes)
             throw new BackgroundOperationWaitingException("Generation.PromptCoreMissing");
         _runtime ??= new(context);

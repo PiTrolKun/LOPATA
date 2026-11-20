@@ -17,17 +17,20 @@ public sealed class ManagedModelLibraryStore
 
     private readonly string _entriesDirectory;
     private readonly string _eventsPath;
+    internal ModelStorageAddresses Addresses { get; }
 
     public ManagedModelLibraryStore(string? libraryDirectory = null)
     {
         var root = libraryDirectory ?? AppDataPaths.ManagedModelLibraryDirectory;
         _entriesDirectory = Path.Combine(root, "Entries");
         _eventsPath = Path.Combine(root, "events.jsonl");
+        Addresses = new(root);
     }
 
     public IReadOnlyList<ManagedModelArtifactCard> LoadAll()
     {
         EnsureDirectory();
+        var addresses = Addresses.Read();
         var cards = new List<ManagedModelArtifactCard>();
         foreach (var path in Directory.EnumerateFiles(_entriesDirectory, "*.json", SearchOption.TopDirectoryOnly))
         {
@@ -43,7 +46,7 @@ public sealed class ManagedModelLibraryStore
                 }
 
                 Normalize(card);
-                cards.Add(card);
+                cards.Add(ModelStorageAddresses.Apply(card, addresses));
             }
             catch (Exception ex)
             {
@@ -74,7 +77,7 @@ public sealed class ManagedModelLibraryStore
             {
                 Normalize(card);
             }
-            return card;
+            return card is null ? null : Addresses.Resolve(card);
         }
         catch (Exception ex)
         {
@@ -100,6 +103,7 @@ public sealed class ManagedModelLibraryStore
                 candidate.ModelArtifactId = existing.ModelArtifactId;
             }
         }
+        Addresses.Resolve(candidate);
         if (existing is not null)
         {
             var sameDirectory = ManagedModelPathIdentity.SameDirectory(existing.InstallDirectory, candidate.InstallDirectory);

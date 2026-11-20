@@ -16,8 +16,7 @@ public sealed class CoreModelManager
     public const long CoreModelTotalBytes = 5_027_783_488;
     public const long RecommendedFreeBytes = 10L * 1024 * 1024 * 1024;
 
-    private const string CoreModelFolderName = "Qwen3-8B";
-    private const string ManifestFileName = "core-model.json";
+    internal const string ManifestFileName = "core-model.json";
     private const string PartialExtension = ".part";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -41,7 +40,8 @@ public sealed class CoreModelManager
         }
 
         var paths = BuildPaths(modelsRoot);
-        var freeBytes = GetFreeBytes(modelsRoot);
+        modelsRoot = paths.ModelsRoot;
+        var freeBytes = GetFreeBytes(paths.ModelsRoot);
         var result = new CoreModelCheckResult
         {
             ModelsRoot = modelsRoot,
@@ -107,6 +107,7 @@ public sealed class CoreModelManager
 
     public async Task<CoreModelCheckResult> VerifyInstalledAsync(StorageSettings storageSettings, CancellationToken cancellationToken)
     {
+        using var work = await ModelStorageWorkGate.Current.EnterWorkAsync(cancellationToken);
         var result = Check(storageSettings);
         if (result.ModelPath is null || !File.Exists(result.ModelPath))
         {
@@ -165,6 +166,7 @@ public sealed class CoreModelManager
         IProgress<CoreModelDownloadProgress> progress,
         CancellationToken cancellationToken)
     {
+        using var work = await ModelStorageWorkGate.Current.EnterWorkAsync(cancellationToken);
         using var auditInstallation = ComponentAudit.Installation();
         await ComponentLicenseGate.EnsureAsync(ManagedModelCatalog.CoreArtifactId, cancellationToken);
         var modelsRoot = GetModelsRoot(storageSettings);
@@ -176,7 +178,7 @@ public sealed class CoreModelManager
         var paths = BuildPaths(modelsRoot);
         Directory.CreateDirectory(paths.ModelDirectory);
 
-        var freeBytes = GetFreeBytes(modelsRoot);
+        var freeBytes = GetFreeBytes(paths.ModelsRoot);
         if (freeBytes >= 0 && freeBytes < RecommendedFreeBytes)
         {
             throw new IOException("Not enough free space for core model download.");
@@ -286,12 +288,13 @@ public sealed class CoreModelManager
 
     private static CoreModelPaths BuildPaths(string modelsRoot)
     {
-        var modelDirectory = Path.Combine(modelsRoot, "Core", CoreModelFolderName);
+        var core = ManagedModelCatalog.CreateCore(modelsRoot);
+        var modelDirectory = core.InstallDirectory;
         return new CoreModelPaths(
             modelDirectory,
             Path.Combine(modelDirectory, CoreModelFileName),
             Path.Combine(modelDirectory, CoreModelFileName + PartialExtension),
-            Path.Combine(modelDirectory, ManifestFileName));
+            Path.Combine(modelDirectory, ManifestFileName), core.ModelsRoot);
     }
 
     private static CoreModelManifest CreateManifest(string status = "missing", long downloadedBytes = 0)
@@ -358,5 +361,6 @@ public sealed class CoreModelManager
         string ModelDirectory,
         string ModelPath,
         string PartialPath,
-        string ManifestPath);
+        string ManifestPath,
+        string ModelsRoot);
 }

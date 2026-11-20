@@ -9,10 +9,11 @@ public sealed record GenerationExample(string Id, string ModelId, string TitleKe
     string SourceLanguage, string PromptRu, string PromptEn, long Seed, string RequestId, string Sha256,
     GenerationBlurRegion[] BlurRegions)
 {
+    public string? SourceUrl { get; init; }
     public string Prompt(string language) => language == "ru" ? PromptRu : PromptEn;
 }
 
-/// <summary>Original test assets; preview masking never modifies the embedded image.</summary>
+/// <summary>Original gallery assets; preview masking never modifies the embedded image.</summary>
 public static class ImageGenerationExamples
 {
     public static IReadOnlyList<GenerationExample> All { get; } = Load();

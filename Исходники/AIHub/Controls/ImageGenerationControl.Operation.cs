@@ -8,7 +8,7 @@ namespace AIHub.Controls;
 public sealed partial class ImageGenerationControl
 {
     private string[] _activeLoraArtifacts = [];
-    private static bool IsGenerationOperation(string kind) => kind is ImageGenerationCatalog.BackgroundKind or ImagePromptAssistant.BackgroundKind or ImageReferenceAnalyzer.BackgroundKind;
+    private static bool IsGenerationOperation(string kind) => kind is ImageGenerationCatalog.BackgroundKind or WarmupKind or ImagePromptAssistant.BackgroundKind or ImageReferenceAnalyzer.BackgroundKind;
     private bool HasPendingGeneration() => ApplicationBackgroundOperations.Current is { HasPending: true, State: { } state } && IsGenerationOperation(state.Kind);
     private async Task PauseResumeAsync()
     {
@@ -56,18 +56,25 @@ public sealed partial class ImageGenerationControl
         _busy = true; _cancel = CancellationTokenSource.CreateLinkedTokenSource(token); Status(L("Generating")); Render();
         try
         {
+            var useStandalone = ImageGenerationResident.RequiresStandalone(restored?.Detail) || _standaloneModel == request.ModelId;
+            var runtime = useStandalone && _resident is not null ? new ImageGenerationRuntime() : _runtime;
             await ApplicationBackgroundOperations.RunAsync(ImageGenerationCatalog.BackgroundKind, L("Title"), request.SessionDirectory, request,
                 async attempt =>
                 {
                     var cards = await _installation.PrepareAsync(request.ModelsRoot, request.ModelId, false, null, attempt);
-                    await ApplicationBackgroundOperations.RetireModelsAsync();
-                    return await _runtime.RunAsync(request, cards, () => Dispatcher.InvokeAsync(() =>
+                    await ApplicationBackgroundOperations.RetireModelsExceptAsync(useStandalone || request.Loras.Length > 0 ? null : _resident);
+                    return await runtime.RunAsync(request, cards, () => Dispatcher.InvokeAsync(() =>
                     { _selectedTurnId = request.Id; _selectedResultIndex = ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Single(t => t.Request.Id == request.Id).Results.Last().Index; if (_page == 2) Render(); }), attempt);
                 }, _cancel.Token, restored);
             Status(L("Ready"));
         }
         catch (OperationCanceledException) { Status(L("Canceled")); }
         catch (Exception error) { Error(error); }
-        finally { _busy = false; _activeLoraArtifacts = []; _cancel.Dispose(); _cancel = null; Render(); }
+        finally
+        {
+            _busy = false; _activeLoraArtifacts = []; _cancel.Dispose(); _cancel = null;
+            if (_releaseWhenIdle) EndWarmupOnExit();
+            Render();
+        }
     }
 }

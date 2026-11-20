@@ -22,6 +22,14 @@ public sealed class DebugModelInfo
 
     public string SemanticDescriptionEn { get; set; } = string.Empty;
 
+    internal DebugModelInfo WithPath(string path)
+    {
+        if (string.Equals(Path, path, StringComparison.OrdinalIgnoreCase)) return this;
+        var model = (DebugModelInfo)MemberwiseClone();
+        model.Path = path;
+        return model;
+    }
+
     public override string ToString()
     {
         var role = string.IsNullOrWhiteSpace(Role) ? "no manifest" : Role;

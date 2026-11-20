@@ -62,9 +62,9 @@ public sealed class ImageGenerationTests
     [TestMethod]
     public void ManifestPinsEveryArtifactAndKeepsNavigationResolvable()
     {
-        CollectionAssert.AreEqual(new[] { "z-image", "krea", "qwen-image-21-turbo-int8", "qwen-image-21-base-gguf" },
+        CollectionAssert.AreEqual(new[] { "z-image", "krea", "qwen-image-21-turbo-int8", "qwen-image-21-base-gguf", MiniMaxImageRuntime.ModelId },
             ImageGenerationCatalog.Manifest.Models.Select(m => m.Id).ToArray());
-        Assert.AreEqual(12, ImageGenerationCatalog.Manifest.Artifacts.Length);
+        Assert.AreEqual(14, ImageGenerationCatalog.Manifest.Artifacts.Length);
         var licenseRoot = Path.Combine(AppContext.BaseDirectory, "Licenses");
         var licenseService = new ComponentLicenseService(licenseRoot, Path.Combine(_root, "licenses.json"));
         foreach (var artifact in ImageGenerationCatalog.Manifest.Artifacts)
@@ -93,6 +93,84 @@ public sealed class ImageGenerationTests
             }
         }
     }
+
+    [TestMethod]
+    [DataRow("vulkan", true)]
+    [DataRow("cpu", false)]
+    public void MiniMaxUsesDedicatedRuntimeAndPinnedSamplingProfile(string backend, bool usesGpu)
+    {
+        var request = Request(MiniMaxImageRuntime.ModelId) with { Width = 4096, Height = 4096 };
+        var model = ImageGenerationCatalog.Get(request.ModelId);
+        ImageGenerationCatalog.Validate(request);
+        Assert.IsFalse(ImageGenerationCatalog.VideoReferenceModels.Contains(model));
+        var cards = ImageGenerationCatalog.CreateCards(request.ModelsRoot).Where(card => model.Components.Contains(card.ModelArtifactId)).ToArray();
+        var runtime = cards.Single(card => card.ModelArtifactId == MiniMaxImageRuntime.ArtifactId);
+        var weights = cards.Single(card => card.ModelArtifactId != runtime.ModelArtifactId);
+        var directory = MiniMaxImageRuntime.BackendDirectory(runtime, backend);
+        var selection = new SdRuntimeSelection(runtime.ModelArtifactId, directory, usesGpu)
+        { Backend = backend, PackageRevision = MiniMaxImageRuntime.Commit, PackageVersion = runtime.Revision };
+        var command = ImageGenerationNativeWorker.ManagedCommand(request, 0, cards, "raw input.txt", "out.png", selection);
+        var args = command.ArgumentList;
+        string Value(string flag) => args[args.IndexOf(flag) + 1];
+        Assert.AreEqual(Path.Combine(directory, "sd-cli.exe"), command.FileName);
+        Assert.AreEqual("minimax-h3-image", Value("--sigmas"));
+        Assert.AreEqual("6", Value("--steps"));
+        Assert.AreEqual("1", Value("--cfg-scale"));
+        Assert.AreEqual("euler", Value("--sampling-method"));
+        Assert.AreEqual("on", Value("--auto-fit"));
+        Assert.AreEqual("raw input.txt", Value("--prompt-file"));
+        Assert.AreEqual(49_289_162_266L, weights.TotalBytes);
+        foreach (var (flag, purpose) in new[] { ("--diffusion-model", "diffusion"), ("--llm", "llm"), ("--vae", "vae") })
+            Assert.AreEqual(Path.Combine(weights.InstallDirectory, weights.Files.Single(file => file.Purpose == purpose).RelativePath), Value(flag));
+        if (usesGpu) Assert.AreEqual("-1", Value("--max-vram"));
+        else Assert.AreEqual("cpu", Value("--backend"));
+        Assert.IsFalse(args.Contains("--diffusion-fa"));
+        var server = ImageGenerationNativeWorker.ManagedCommand(request, 0, cards, "raw input.txt", "out.png", selection, server: true);
+        var repeat = ImageGenerationNativeWorker.ManagedCommand(request with { Prompt = "Another prompt", Seeds = [123] },
+            0, cards, "another input.txt", "another.png", selection, server: true);
+        Assert.AreEqual(Path.Combine(directory, "sd-server.exe"), server.FileName);
+        Assert.AreEqual((1024, 1024), ImageGenerationResident.WarmupSize(model));
+        Assert.AreEqual("1024", server.ArgumentList[server.ArgumentList.IndexOf("--width") + 1]);
+        Assert.AreEqual("1024", server.ArgumentList[server.ArgumentList.IndexOf("--height") + 1]);
+        var warmupServer = ImageGenerationNativeWorker.ManagedCommand(
+            request with { Width = model.DefaultWidth, Height = model.DefaultHeight },
+            0, cards, "", "", selection, server: true);
+        CollectionAssert.AreEqual(server.ArgumentList.ToArray(), warmupServer.ArgumentList.ToArray());
+        if (usesGpu)
+            Assert.AreEqual("-4", server.ArgumentList[server.ArgumentList.IndexOf("--max-vram") + 1]);
+        else
+            Assert.IsFalse(server.ArgumentList.Contains("--max-vram"));
+        Assert.DoesNotContain("--prompt-file", server.ArgumentList);
+        Assert.DoesNotContain("--output", server.ArgumentList);
+        CollectionAssert.AreEqual(server.ArgumentList.ToArray(), repeat.ArgumentList.ToArray());
+    }
+
+    [TestMethod]
+    public void MiniMaxRemainingBytesIncludeCompletedFilesAndPartialDownloads()
+    {
+        var model = ImageGenerationCatalog.Get(MiniMaxImageRuntime.ModelId);
+        var cards = ImageGenerationCatalog.CreateCards(_root, new ModelStorageAddresses(_root))
+            .Where(card => model.Components.Contains(card.ModelArtifactId)).ToArray();
+        var weights = cards.Single(card => card.ModelArtifactId != MiniMaxImageRuntime.ArtifactId);
+        var vae = weights.Files.Single(file => file.Purpose == "vae");
+        var path = Path.Combine(weights.InstallDirectory, vae.RelativePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path + ".part", new byte[128]);
+        cards.Single(card => card.ModelArtifactId == MiniMaxImageRuntime.ArtifactId).Status = ManagedModelStatuses.Installed;
+        Assert.AreEqual(weights.TotalBytes - 128, MiniMaxImageRuntime.RemainingDownloadBytes(cards));
+    }
+
+    [TestMethod]
+    public void ResidentOnlyRejectsCpuOrDiskPlacementForGpuRequiredProfiles()
+    {
+        var miniMax = ImageGenerationCatalog.Get(MiniMaxImageRuntime.ModelId);
+        foreach (var placement in new[] { ImageGenerationGpuPlacement.GpuUnavailable, ImageGenerationGpuPlacement.MemoryUnavailable })
+        {
+            Assert.IsFalse(ImageGenerationResident.RejectsPlacement(miniMax.RequiresGpu, placement));
+            Assert.IsTrue(ImageGenerationResident.RejectsPlacement(true, placement));
+        }
+        Assert.IsFalse(ImageGenerationResident.RejectsPlacement(true, ImageGenerationGpuPlacement.Hybrid));
+    }
     [TestMethod]
     [DataRow("z-image", 8, "1")]
     [DataRow("krea", 8, "1")]
@@ -114,6 +192,17 @@ public sealed class ImageGenerationTests
         Assert.IsFalse(command.UseShellExecute);
         Assert.IsFalse(args.Contains("--clip-skip"));
         if (id == "krea") Assert.AreEqual("1.15", Value("--flow-shift"));
+
+        var runtime = new SdRuntimeSelection("test", directory, true)
+            { EngineSetId = NativeRuntimeReleasePolicy.UpdatedSet, Backend = "vulkan" };
+        Assert.IsFalse(ImageGenerationNativeWorker.CanUseServer(request, runtime));
+        File.WriteAllText(Path.Combine(directory, "sd-server.exe"), "stub");
+        Assert.IsTrue(ImageGenerationNativeWorker.CanUseServer(request, runtime));
+        Assert.AreEqual((256, 256), ImageGenerationResident.WarmupSize(ImageGenerationCatalog.Get(id)));
+        var server = ImageGenerationNativeWorker.ManagedCommand(request, 0, cards, "", "", runtime, server: true);
+        var largerServer = ImageGenerationNativeWorker.ManagedCommand(request with { Width = 2048, Height = 2048 },
+            1, cards, "other input.txt", "other.png", runtime, server: true);
+        CollectionAssert.AreEqual(server.ArgumentList.ToArray(), largerServer.ArgumentList.ToArray());
     }
 
     [TestMethod]
@@ -148,6 +237,13 @@ public sealed class ImageGenerationTests
         var larger = ImageGenerationNativeWorker.ManagedCommand(request with { Width = 2048, Height = 2048 },
             0, cards, "raw input.txt", "out.png", selection).ArgumentList.ToArray();
         Assert.AreEqual("-1", larger[Array.IndexOf(larger, "--max-vram") + 1]);
+        Assert.AreEqual((1024, 1024), ImageGenerationResident.WarmupSize(model));
+        var server = ImageGenerationNativeWorker.ManagedCommand(request with { Width = 1024, Height = 1024 },
+            0, cards, "", "", selection, server: true);
+        var largerServer = ImageGenerationNativeWorker.ManagedCommand(request with { Width = 2048, Height = 2048 },
+            1, cards, "other input.txt", "other.png", selection, server: true);
+        CollectionAssert.AreEqual(server.ArgumentList.ToArray(), largerServer.ArgumentList.ToArray());
+        Assert.AreEqual("-1", server.ArgumentList[server.ArgumentList.IndexOf("--max-vram") + 1]);
         if (steps == 8) Assert.AreEqual("qwen-image-2.1-turbo", Value("--sigmas"));
         else Assert.IsFalse(args.Contains("--sigmas"));
         var expectedEncoder = cards.SelectMany(card => card.Files).Single(file => file.Purpose == "llm");
@@ -425,9 +521,11 @@ public sealed class ImageGenerationTests
         Assert.Contains("generation-qwen-image-21-text-gguf", models[1].Components);
     }
     [TestMethod]
-    public async Task CancellationRetainsFinishedImagesAndResumeDoesNotGenerateThemAgain()
+    [DataRow("z-image")]
+    [DataRow(MiniMaxImageRuntime.ModelId)]
+    public async Task CancellationRetainsFinishedImagesAndResumeDoesNotGenerateThemAgain(string modelId)
     {
-        var request = Request(); var worker = new Worker(request.Prompt) { CancelAt = 1 };
+        var request = Request(modelId); var worker = new Worker(request.Prompt) { CancelAt = 1 };
         var runtime = new ImageGenerationRuntime(worker);
         await Assert.ThrowsAsync<OperationCanceledException>(() => runtime.RunAsync(request, [], null, CancellationToken.None));
         var saved = ImageGenerationSessionStore.Load(request.SessionDirectory);

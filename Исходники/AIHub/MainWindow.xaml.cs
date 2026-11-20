@@ -5530,10 +5530,6 @@ public partial class MainWindow : Window
 
     private void SaveStorageSettingsFromControls()
     {
-        _storageSettings.Models.TotalLimitGb = ParseGb(ModelsTotalLimitInput.Text);
-        _storageSettings.Models.AllowTemporaryOverflow = ModelsAllowOverflowCheckBox.IsChecked == true;
-        _storageSettings.Models.TemporaryOverflowGb = ParseGb(ModelsTemporaryOverflowInput.Text);
-
         _storageSettings.Results.TotalLimitGb = ParseGb(ResultsTotalLimitInput.Text);
         _storageSettings.Results.AllowTemporaryOverflow = ResultsAllowOverflowCheckBox.IsChecked == true;
         _storageSettings.Results.TemporaryOverflowGb = ParseGb(ResultsTemporaryOverflowInput.Text);
@@ -5541,15 +5537,16 @@ public partial class MainWindow : Window
 
     private void RefreshStorageLists()
     {
-        RefreshLocationList(ModelsLocationList, _storageSettings.Models);
+        RefreshLocationList(ModelsLocationList, _storageSettings.Models, showLimits: false);
         RefreshLocationList(ResultsLocationList, _storageSettings.Results);
     }
 
-    private void RefreshLocationList(System.Windows.Controls.ListBox listBox, StorageCategorySettings category)
+    private void RefreshLocationList(System.Windows.Controls.ListBox listBox, StorageCategorySettings category, bool showLimits = true)
     {
         var selectedIndex = listBox.SelectedIndex;
         listBox.ItemsSource = category.Locations
-            .Select((location, index) => LF("Storage.ListItem", index + 1, location.Path, FormatGbForText(location.LimitGb)))
+            .Select((location, index) => showLimits ? LF("Storage.ListItem", index + 1, location.Path, FormatGbForText(location.LimitGb))
+                : LF("ModelStorage.ListItem", index + 1, location.Path))
             .ToList();
 
         if (selectedIndex >= 0 && selectedIndex < category.Locations.Count)
@@ -5665,11 +5662,11 @@ public partial class MainWindow : Window
 
     private void UpdateStorageSteps()
     {
-        ModelsStorageStepText.Text = BuildStorageSummary(_storageSettings.Models, L("Home.ModelsStorageEmpty"));
+        ModelsStorageStepText.Text = BuildStorageSummary(_storageSettings.Models, L("Home.ModelsStorageEmpty"), showLimits: false);
         ResultsStorageStepText.Text = BuildStorageSummary(_storageSettings.Results, L("Home.ResultsStorageEmpty"));
     }
 
-    private string BuildStorageSummary(StorageCategorySettings category, string emptyText)
+    private string BuildStorageSummary(StorageCategorySettings category, string emptyText, bool showLimits = true)
     {
         if (category.Locations.Count == 0)
         {
@@ -5687,6 +5684,8 @@ public partial class MainWindow : Window
         {
             additionalText += LF("Storage.SummaryHidden", hiddenCount);
         }
+
+        if (!showLimits) return LF("ModelStorage.Summary", category.Locations.Count, defaultPath, additionalText);
 
         var overflowText = category.AllowTemporaryOverflow
             ? $"+{FormatGbForText(category.TemporaryOverflowGb)} {L("Units.Gb")}"

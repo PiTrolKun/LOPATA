@@ -130,5 +130,52 @@
     "RequestId": "ffba8a6cf72448889ac4e1392eabad78",
     "Sha256": "46E7E2F6AB8D7645B7C77B01C080DDF7C01696839970A7B9F57B290D80E82178",
     "BlurRegions": []
+  },
+
+  {
+    "Id": "minimax-portrait",
+    "ModelId": "minimax-h3-image-int8",
+    "TitleKey": "Portrait",
+    "Resource": "minimax-portrait.png",
+    "SourceLanguage": "ru",
+    "PromptRu": "Фотореалистичный студийное фото женщины с длинными тёмными волосами и яркими голубыми глазами. Девушку стоит во весь рост, стоит боком. Стройная фигура, уверенный спокойный взгляд в камеру. Она стоит перед тёмным фактурным фоном, её нагота частично прикрыта расстёгнутая ярко-синяя рубашка. Мягкий студийный свет, естественные тени, реалистичная кожа, фотографическая детализация, чувственная эстетика. Легкая эротика. Частичная нагота.",
+    "PromptEn": "A photorealistic studio photograph of a woman with long dark hair and bright blue eyes. She stands full-length and sideways, with a slim figure and a calm, confident gaze into the camera. She stands in front of a dark textured backdrop, with her nudity partially covered by an unbuttoned bright blue shirt. Soft studio lighting, natural shadows, realistic skin, photographic detail, and sensual aesthetics. Mild eroticism. Partial nudity.",
+    "Seed": 840226661,
+    "RequestId": "cd600b9356b74b33958e9cf19769b9ea",
+    "Sha256": "5BB97C8BBD6323A2B93300F2F5B42EA04E59459F0CC9159E63E4161EBEB69E2B",
+    "BlurRegions": [
+      {
+        "X": 0.385,
+        "Y": 0.363,
+        "Width": 0.166,
+        "Height": 0.104
+      }
+    ]
+  },
+  {
+    "Id": "minimax-fantasy",
+    "ModelId": "minimax-h3-image-int8",
+    "TitleKey": "Fantasy",
+    "Resource": "minimax-fantasy.png",
+    "SourceLanguage": "ru",
+    "PromptRu": "Обои для рабочего стола в стиле dark fantasy, cinematic, highly detailed, realistic fantasy art, 4K, 16:9.\nЛунная ночь, холодный серебристый свет луны, мрачная атмосфера. На фоне возвышается большой готический замок с башнями, арками и тускло освещёнными окнами, лёгкий туман у земли, глубокие тени, тёмная палитра с акцентами лунного света.\nНа переднем плане стоит взрослая ведьма — уверенная, опасная, красивая, в духе чародеек из мрачного славянского фэнтези. Внешность вдохновлена образом рыжеволосой чародейки: длинные волнистые медно-рыжие волосы, стройная женственная фигура, бледная кожа, выразительное лицо, пронзительный взгляд. В руке магический посох с мягким мистическим свечением.\nОдежда вызывающая, но логичная и реалистичная: минимум одежды без откровенной наготы, без абсурдной “бронелифчик”-эстетики. Наряд выглядит как практичное тёмное ритуальное одеяние / ведьмовской боевой костюм из кожи, ткани и ремней: открытые плечи, глубокое декольте, частично открытая спина, высокий разрез на юбке или асимметричный подол, подчёркнутая талия, длинные сапоги, изящные детали, слегка готический стиль. Одежда должна выглядеть соблазнительно, но оставаться правдоподобной и функциональной.\nРядом с ведьмой находится чёрная кошка, спокойная и загадочная, как её спутник. Композиция цельная и атмосферная: ведьма — главный акцент кадра, замок читается на фоне, кошка хорошо заметна рядом.\nБез хэллоуинской стилистики, без остроконечной шляпы, без комичного образа, без поп-культурной “мультяшной ведьмы”. Нужен серьёзный, взрослый, мрачный, чувственный образ. Mood: seductive but elegant, mysterious, dark, magical, gothic.",
+    "PromptEn": "Desktop wallpaper in a dark fantasy style, cinematic, highly detailed, realistic fantasy art, 4K, 16:9.\nA moonlit night, cold silver moonlight, a dark and gloomy atmosphere. In the background rises a large Gothic castle with towers, arches, and dimly lit windows, with light mist near the ground, deep shadows, and a dark color palette accented by moonlight.\nIn the foreground stands an adult witch — confident, dangerous, and beautiful, in the spirit of sorceresses from dark Slavic fantasy. Her appearance is inspired by a red-haired sorceress: long, wavy copper-red hair, a slim feminine figure, pale skin, an expressive face, and a piercing gaze. She holds a magical staff with a soft mystical glow.\nHer clothing is revealing but logical and realistic: minimal clothing without explicit nudity and without an absurd “bikini armor” aesthetic. The outfit looks like practical dark ritual clothing / a witch's combat outfit made of leather, fabric, and straps: bare shoulders, a deep neckline, a partially exposed back, a high slit in the skirt or an asymmetrical hem, an accentuated waist, tall boots, elegant details, and a slightly Gothic style. The clothing should look seductive while remaining believable and functional.\nBeside the witch is a black cat, calm and mysterious, acting as her companion. The composition is cohesive and atmospheric: the witch is the main focus of the image, the castle is clearly visible in the background, and the cat is clearly noticeable beside her.\nNo Halloween styling, no pointed witch hat, no comedic appearance, no pop-culture “cartoon witch.” The image should feel serious, adult, dark, and sensual. Mood: seductive but elegant, mysterious, dark, magical, gothic.",
+    "Seed": 1891587437,
+    "RequestId": "2731b98708ac41859c6c5dcf65e538a6",
+    "Sha256": "D576556F23AE3A0BFD45CFEF5D34A064821209B8FDB169363425C1D91842D6FB",
+    "BlurRegions": []
+  },
+  {
+    "Id": "minimax-new-year",
+    "ModelId": "minimax-h3-image-int8",
+    "TitleKey": "NewYear",
+    "Resource": "minimax-new-year.png",
+    "SourceLanguage": "ru",
+    "PromptRu": "Создай красивую, праздничную и юмористическую новогоднюю открытку в квадратном формате 1:1, с очень высокой детализацией, выразительным освещением и цельной художественной композицией.\n\nСцена: волшебная снежная ночь в небольшом сказочном городке. На центральной площади стоит большая пушистая новогодняя ёлка, украшенная разноцветными гирляндами, сияющими шарами и золотой звездой. Вокруг мягко падает снег, на заднем плане видны уютные домики с тёплым светом в окнах, а в небе сверкают праздничные фейерверки.\n\nНа переднем плане собралась весёлая компания из трёх необычных, но милых сказочных персонажей: пушистый чёрный кот в красной шапке Деда Мороза, маленький забавный снеговик в огромном шарфе и лохматый лесной зверёк с удивлённым выражением мордочки. Все трое выглядят слегка чудаковато, словно только что устроили совершенно нелепую новогоднюю вечеринку. Один держит огромный блестящий ёлочный шар, другой запутался в гирлянде, третий радостно машет зрителю. Юмор добрый, понятный и визуальный, без grotesque, уродливых пропорций и пугающих существ.\n\nГлавная надпись на открытке, точно на русском языке: «С новым годом чудики!!!». Размести её крупно в верхней части изображения, в две строки: «С новым годом» и «чудики!!!». Буквы кириллические, хорошо читаемые, без ошибок, пропусков и дополнительных символов. Шрифт праздничный, объёмный, золотисто-белый с мягким свечением, надпись гармонично вписана в композицию. Оставь вокруг текста достаточно свободного пространства.\n\nХудожественный стиль: высококачественная кинематографичная фэнтезийная иллюстрация с реалистичными фактурами шерсти, снега, ткани и праздничных украшений. Насыщенные, но приятные цвета: глубокий зимний синий, красный, изумрудный, тёплое золото. Мягкий объёмный свет, красивые отражения и снежное сияние. Атмосфера весёлая, уютная, праздничная, немного абсурдная, но не хаотичная.\n\nВажные ограничения: только одна указанная поздравительная надпись. Никаких других слов, мелкого текста, рекламных блоков, таблиц, карточек товаров, цен, рейтингов, схем, случайных предметов, водяных знаков и псевдобукв. Не создавай инфографику или рекламный плакат. Это должна быть единая художественная новогодняя открытка, а не коллаж.",
+    "PromptEn": "Create a beautiful, festive, humorous New Year's card in a square 1:1 format, with very high detail, expressive lighting and a cohesive composition.\n\nSetting: a magical snowy night in a small fairy-tale town. A large, full Christmas tree stands in the central square, decorated with colorful string lights, shining ornaments and a golden star. Snow falls softly, cozy houses glow warmly in the background, and fireworks sparkle in the sky.\n\nIn the foreground, three unusual but lovable fairy-tale characters gather: a fluffy black cat in a red Santa hat, a funny little snowman in an oversized scarf, and a shaggy woodland creature with a surprised expression. They all look a little goofy, as if they have just thrown an absurd New Year's party. One holds a huge shiny ornament, another is tangled in lights, and the third waves cheerfully. The humor is friendly, clear and visual, with no grotesque imagery, distorted proportions or frightening creatures.\n\nThe main greeting must be exactly in Russian: «С новым годом чудики!!!». Set it in large lettering at the top on two lines: «С новым годом» and «чудики!!!». Use legible Cyrillic lettering with no errors, omissions or extra symbols. Make the lettering festive, three-dimensional and golden-white with a soft glow that fits the composition. Leave enough space around it.\n\nArt style: a high-quality cinematic fantasy illustration with realistic fur, snow, fabric and ornament textures. Rich, pleasing winter blues, reds, emerald greens and warm golds. Soft volumetric light, beautiful reflections and a snowy glow. The atmosphere is cheerful, cozy, festive and slightly absurd, without becoming chaotic.\n\nInclude only the specified greeting. No other words, fine print, ads, tables, product cards, prices, ratings, diagrams, stray objects, watermarks or pseudo-lettering. Make one coherent illustrated New Year's card, with no infographic, advertisement or collage.",
+    "Seed": 862129568,
+    "RequestId": "462d65454dd044a6a18c4db365885770",
+    "Sha256": "8873EC5C8C16CE4AE88C0715780E498C11F641F8B3830C722EE6FFA697F94AC9",
+    "BlurRegions": []
   }
 ]

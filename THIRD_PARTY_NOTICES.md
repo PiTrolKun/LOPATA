@@ -1,3 +1,7 @@
+## MiniMax H3-Image
+
+Powered by MiniMax-H3-Image. The model files and compatible stable-diffusion.cpp archives are downloaded separately. The gallery examples are AI-generated. MiniMax-H3-Image is licensed under the MiniMax-H3-Image Community License Agreement, Copyright © 2026 MiniMax. All Rights Reserved.
+
 ## NabyScape — LOPATA Edition
 
 The island is based on [NabyScape by BillyNabil](https://github.com/BillyNabil/nabyscape) under the MIT License. The corresponding fork is [NabyScape — LOPATA Edition](https://github.com/PiTrolKun/NabyScape-LOPATA-Edition). The island package contains the original copyright and license in `NabyScape/LICENSE` and the notices for bundled dependencies in `NabyScape/licenses`.

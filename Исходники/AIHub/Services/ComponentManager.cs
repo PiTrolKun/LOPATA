@@ -122,6 +122,7 @@ public sealed partial class ComponentManager
         CancellationToken cancellationToken,
         bool forceReinstall = false)
     {
+        using var work = await ModelStorageWorkGate.Current.EnterWorkAsync(cancellationToken);
         using var auditInstallation = ComponentAudit.Installation();
         var ordered = ComponentCatalog.ResolveDependencies([componentId]);
         await ComponentLicenseGate.EnsureAsync(ordered.SelectMany(x =>

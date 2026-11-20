@@ -13,7 +13,8 @@ internal sealed class MusicPoetryProfileRemoval(ManagedModelLibraryStore store, 
             ?? throw new InvalidOperationException("Music.Poetry.ModelUnsupported");
         return settings.Models.Locations.Select(l => l.Path).Where(p => !string.IsNullOrWhiteSpace(p))
             .Select(Path.GetFullPath).Distinct(StringComparer.OrdinalIgnoreCase)
-            .Select(root => MusicPoetryProfileCatalog.Card(profile, root)).ToArray();
+            .Select(root => MusicPoetryProfileCatalog.Card(profile, root))
+            .DistinctBy(card => card.InstallDirectory, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
     public static bool HasFiles(MusicPoetryModelCandidate candidate, StorageSettings settings)

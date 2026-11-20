@@ -43,6 +43,6 @@ internal static class VideoH3LiteCatalog
             Files = p.Files.Select(f => new ManagedModelArtifactFile { RelativePath = f.RelativePath, SourceUrl = f.SourceUrl,
                 SizeBytes = f.SizeBytes, Sha256 = f.Sha256, Purpose = "h3lite-acquisition", IsRequired = true }).ToList(),
             Consumers = [new() { Id = "video_generation", DisplayName = Name, Kind = "scenario" }]
-        }).ToArray();
+        }).Select(ModelStorageAddresses.Current.Resolve).ToArray();
     }
 }

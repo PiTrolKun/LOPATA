@@ -38,7 +38,7 @@ public partial class MainWindow
             }
             var components = string.Join("\n", plan.Components.Select(component => "• " + component.Card.DisplayName));
             var message = LF("Generation.Remove.Confirm", model.Name, components, ComponentCardViewModel.FormatBytes(plan.Bytes));
-            if (ImageGenerationCatalog.VideoReferenceModels.Any(candidate => candidate.Id == model.Id))
+            if (ImageGenerationCatalog.VideoWorkspaceModels.Any(candidate => candidate.Id == model.Id))
                 message += "\n\n" + L("Generation.Remove.VideoReferences");
             if (plan.Preserved.Length > 0)
                 message += "\n\n" + L("Music.Models.Remove.Shared") + "\n" + string.Join("\n", plan.Preserved.Select(name => "• " + name));

@@ -315,6 +315,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         await _startupGate.WaitAsync(cancellationToken);
         try
         {
+            model = model.WithPath(ModelStorageAddresses.Current.ResolvePreviousPath(model.Path));
             if (!IsAvailable)
             {
                 throw new FileNotFoundException("llama-server.exe was not found.", ExpectedExecutablePath);

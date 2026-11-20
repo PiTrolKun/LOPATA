@@ -40,16 +40,21 @@ public static class ApplicationBackgroundOperations
         Func<Task>? releaseModels = null, bool allowIdleQueue = false)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
+        async Task<T> RunWithLease(CancellationToken attempt)
+        {
+            using var lease = await ModelStorageWorkGate.Current.EnterWorkAsync(attempt);
+            return await execute(attempt);
+        }
         if (Current is not { } controller)
         {
-            try { return await execute(token); }
+            try { return await RunWithLease(token); }
             catch (Exception error) { ComponentAuditFailures.Report(error); throw; }
         }
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, ExitToken);
         var operation = restored ?? new BackgroundOperationState
             { Kind = kind, Title = title, Project = project, Input = JsonSerializer.SerializeToElement(input) };
         using var voiceOperation = VoiceNotifications.VoiceNotificationEvents.Operation(operation.Id, project);
-        try { return await controller.RunAsync(operation, execute, releaseModels ?? RetireModelsAsync, lifetime.Token, allowIdleQueue); }
+        try { return await controller.RunAsync(operation, RunWithLease, releaseModels ?? RetireModelsAsync, lifetime.Token, allowIdleQueue); }
         catch (OperationCanceledException) when (token.IsCancellationRequested && !ExitToken.IsCancellationRequested)
         { controller.DiscardPending(operation.Id); throw; }
         catch (Exception error) { ComponentAuditFailures.Report(error); throw; }

@@ -7,8 +7,11 @@ internal sealed record SdRuntimeSelection(string ComponentId, string Directory, 
 {
     public string EngineSetId { get; init; } = NativeRuntimeReleasePolicy.LegacySet;
     public string Backend { get; init; } = "cpu";
-    public string Version => NativeRuntimeReleasePolicy.SdVersion(EngineSetId);
-    public string Revision => NativeRuntimeReleasePolicy.SdRevision(EngineSetId);
+    public string? PackageVersion { get; init; }
+    public string? PackageRevision { get; init; }
+    public bool SupportsModernArguments => PackageRevision is not null || EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet;
+    public string Version => PackageVersion ?? NativeRuntimeReleasePolicy.SdVersion(EngineSetId);
+    public string Revision => PackageRevision ?? NativeRuntimeReleasePolicy.SdRevision(EngineSetId);
     public string Executable => Path.Combine(Directory, "sd-cli.exe");
 }
 
@@ -37,6 +40,8 @@ internal static class SdRuntimeSelector
         bool forceCpu, CancellationToken token, string? engineSetId = null, bool requireGpu = false)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
+        if (cards.SingleOrDefault(card => card.ModelArtifactId == MiniMaxImageRuntime.ArtifactId) is { } miniMax)
+            return await MiniMaxImageRuntime.SelectAsync(miniMax, cards, forceCpu, token);
         var setId = NativeRuntimeReleasePolicy.ValidateSetId(engineSetId ?? EngineSetSelection.ActiveId);
         var manager = new ComponentManager();
         var backends = requireGpu ? new[] { "vulkan", "cuda12" }

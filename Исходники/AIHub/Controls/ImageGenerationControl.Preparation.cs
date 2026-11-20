@@ -39,7 +39,12 @@ public sealed partial class ImageGenerationControl
                 : card.Status == ManagedModelStatuses.Installed ? L("Preparation.Available") : L("Preparation.Missing");
             panel.Children.Add(Text(card.DisplayName + " — " + state));
         }
-        if (_preparationChecked && !_preparationReady && ImageGenerationCatalog.Get(_modelId).RequiresGpu)
+        if (_preparationChecked && !_preparationReady && _modelId == MiniMaxImageRuntime.ModelId)
+        {
+            var bytes = MiniMaxImageRuntime.RemainingDownloadBytes(_preparationCards);
+            panel.Children.Add(Text(string.Format(L("MiniMax.PendingSize"), bytes / 1_000_000_000d)));
+        }
+        else if (_preparationChecked && !_preparationReady && ImageGenerationCatalog.Get(_modelId).RequiresGpu)
         {
             var bytes = _preparationCards.Where(card => card.Status != ManagedModelStatuses.Installed)
                 .Sum(card => card.TotalBytes);
@@ -113,5 +118,6 @@ public sealed partial class ImageGenerationControl
         if (!EnsureOutputFolder()) return;
         _sessionDirectory ??= ImageGenerationSessionStore.Create(_resultsRoot);
         _page = 2; Status(""); Render();
+        await WarmSelectedModelAsync(_preparationCards);
     }
 }

@@ -137,6 +137,15 @@ public partial class App : System.Windows.Application
             if (Services.ApplicationUpdateStartup.HealthTransactionId is null) StartRecoveryMonitoring(recovering);
             else Services.ApplicationUpdateStartup.PrepareVoiceSettingsRecovery();
             base.OnStartup(e);
+            if (System.IO.File.Exists(Services.ModelStorageAddresses.Current.JournalPath))
+                try
+                {
+                    using var relocation = Services.ModelStorageWorkGate.Current.TryBeginTransfer();
+                    if (relocation is not null)
+                        new Services.ModelStorageTransfer(Services.ModelStorageAddresses.Current).TryRecover(leaveCommittedForLater: true);
+                }
+                catch (Exception error) when (error is System.IO.IOException or UnauthorizedAccessException)
+                { Services.OwnedProcessRegistry.Log("model_transfer_recovery_pending", "ModelStorage", detail: error.GetType().Name); }
             Services.OwnedProcessRegistry.Log("startup_window_construct_begin", "Application", Environment.ProcessId);
             var window = new MainWindow(); MainWindow = window;
             window.InitializeCrashWorkspaceRecovery(recovering && !SafeCrashRecoveryLaunch);

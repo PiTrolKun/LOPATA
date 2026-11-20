@@ -14,6 +14,7 @@ public sealed partial class VideoConceptAssistant : IVideoConceptAssistant, IVid
 {
     public async Task<VideoConceptAnswer> GenerateAsync(VideoConceptRequest request, CancellationToken token)
     {
+        request = request with { ModelPath = ModelStorageAddresses.Current.ResolvePreviousPath(request.ModelPath) };
         if (VideoShotsProtocol.IsRequest(request)) return await GenerateShotsAsync(request, null, token);
         Validate(request);
         var translating = VideoTranslationProtocol.IsTranslation(request);

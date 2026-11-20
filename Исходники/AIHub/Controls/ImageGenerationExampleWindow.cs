@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -30,20 +32,36 @@ public sealed class ImageGenerationExampleWindow : Window
         var image = new Image { Source = ImageGenerationExamples.Image(example), Stretch = Stretch.Uniform };
         AutomationProperties.SetAutomationId(image, "Generation.Example.Original");
         root.Children.Add(image);
-        var label = new TextBlock { Text = L("Prompt") + " · " + (language == example.SourceLanguage ? L("Original") : L("Translation")), Margin = new Thickness(0, 12, 0, 6) };
+        var label = new TextBlock { Text = example.SourceUrl is null
+            ? L("Prompt") + " · " + (language == example.SourceLanguage ? L("Original") : L("Translation"))
+            : L("OfficialDescription"), Margin = new Thickness(0, 12, 0, 6) };
         Grid.SetRow(label, 1); root.Children.Add(label);
         var prompt = new TextBox { Text = example.Prompt(language), IsReadOnly = true, TextWrapping = TextWrapping.Wrap,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto, MaxHeight = 180, Padding = new Thickness(10) };
         AutomationProperties.SetAutomationId(prompt, "Generation.Example.Prompt"); Grid.SetRow(prompt, 2); root.Children.Add(prompt);
         var actions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) }; Grid.SetRow(actions, 3); root.Children.Add(actions);
-        var copy = new Button { Content = L("CopyPrompt"), Margin = new Thickness(0, 0, 8, 0) };
-        AutomationProperties.SetAutomationId(copy, "Generation.Example.CopyPrompt");
-        copy.Click += (_, _) =>
+        if (example.SourceUrl is { } source)
         {
-            try { Clipboard.SetText(prompt.Text); }
-            catch (System.Runtime.InteropServices.ExternalException) { label.Text = L("CopyFailed"); }
-        };
-        actions.Children.Add(copy);
+            var openSource = new Button { Content = L("Source"), Margin = new Thickness(0, 0, 8, 0) };
+            AutomationProperties.SetAutomationId(openSource, "Generation.Example.Source");
+            openSource.Click += (_, _) =>
+            {
+                try { using var browser = Process.Start(new ProcessStartInfo(source) { UseShellExecute = true }); }
+                catch (Exception error) when (error is Win32Exception or InvalidOperationException) { label.Text = L("SourceFailed"); }
+            };
+            actions.Children.Add(openSource);
+        }
+        else
+        {
+            var copy = new Button { Content = L("CopyPrompt"), Margin = new Thickness(0, 0, 8, 0) };
+            AutomationProperties.SetAutomationId(copy, "Generation.Example.CopyPrompt");
+            copy.Click += (_, _) =>
+            {
+                try { Clipboard.SetText(prompt.Text); }
+                catch (System.Runtime.InteropServices.ExternalException) { label.Text = L("CopyFailed"); }
+            };
+            actions.Children.Add(copy);
+        }
         var close = new Button { Content = L("Close") }; close.Click += (_, _) => Close(); actions.Children.Add(close);
     }
 }

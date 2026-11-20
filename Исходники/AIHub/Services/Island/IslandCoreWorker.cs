@@ -65,6 +65,7 @@ internal static class IslandCoreWorker
 
     private static async Task<IslandResponse> GenerateAsync(string text, IslandTurn[] history, CancellationToken token)
     {
+        using var work = await ModelStorageWorkGate.Current.EnterWorkAsync(token);
         token.ThrowIfCancellationRequested();
         if (!File.Exists(AppDataPaths.StorageSettingsPath)) return new("core_missing");
         if (File.Exists(AppDataPaths.SettingsPath))

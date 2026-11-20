@@ -11,6 +11,7 @@ public sealed partial class VideoConceptAssistant : IVideoShotsProgress
 {
     public async Task<VideoConceptAnswer> GenerateShotsAsync(VideoConceptRequest request, Action<string>? reasoning, CancellationToken token)
     {
+        request = request with { ModelPath = ModelStorageAddresses.Current.ResolvePreviousPath(request.ModelPath) };
         VideoShotsWork.ValidateRequest(request);
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token); deadline.CancelAfter(TimeSpan.FromMinutes(10));
         await _residentGate.WaitAsync(deadline.Token);

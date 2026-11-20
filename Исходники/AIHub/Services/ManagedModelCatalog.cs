@@ -54,7 +54,7 @@ public static partial class ManagedModelCatalog
         ];
     }
 
-    public static ManagedModelArtifactCard CreateCore(string modelsRoot) => new()
+    public static ManagedModelArtifactCard CreateCore(string modelsRoot) => ModelStorageAddresses.Current.Resolve(new()
     {
         ModelArtifactId = CoreArtifactId,
         Family = "Qwen3-8B",
@@ -91,7 +91,7 @@ public static partial class ManagedModelCatalog
                 "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
                 "main_model")
         ]
-    };
+    });
 
     public static ManagedModelArtifactCard CreateQwen25OmniHeavy(string modelsRoot) => new()
     {

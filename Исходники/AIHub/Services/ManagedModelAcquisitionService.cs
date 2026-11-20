@@ -35,6 +35,7 @@ public sealed class ManagedModelAcquisitionService : IDisposable
         IProgress<ManagedModelDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
+        using var work = await ModelStorageWorkGate.Current.EnterWorkAsync(cancellationToken);
         using var auditInstallation = ComponentAudit.Installation();
         var card = _store.Load(modelArtifactId)
             ?? throw new InvalidOperationException("The model card is not registered in the LOPATA library.");
@@ -105,6 +106,7 @@ public sealed class ManagedModelAcquisitionService : IDisposable
         IProgress<ManagedModelDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
+        using var work = await ModelStorageWorkGate.Current.EnterWorkAsync(cancellationToken);
         using var auditInstallation = ComponentAudit.Installation();
         var card = _store.Load(modelArtifactId)
             ?? throw new InvalidOperationException("The model card is not registered in the LOPATA library.");
@@ -164,6 +166,7 @@ public sealed class ManagedModelAcquisitionService : IDisposable
         IProgress<ManagedModelDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
+        using var work = await ModelStorageWorkGate.Current.EnterWorkAsync(cancellationToken);
         var card = _store.Load(modelArtifactId)
             ?? throw new InvalidOperationException("The model card is not registered in the LOPATA library.");
         EnsureManagedPath(card);

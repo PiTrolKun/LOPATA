@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using AIHub.Controls;
+using AIHub.Services;
 using ComboBox = System.Windows.Controls.ComboBox;
 
 namespace AIHub;
@@ -10,6 +11,7 @@ public partial class MainWindow
     private SettingsCardFactory? _settingsCards;
     private readonly ComboBox _closeBehavior = new() { MaxWidth = 440, HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch, Margin = new(0, 0, 0, 12) };
     private System.Windows.Controls.Button? _settingsThemeButton;
+    private ModelStorageRelocationControl? _modelStorageRelocation;
     private bool _refreshingSettingsWorkspace;
     private System.Windows.Controls.CheckBox? _autostartSwitch, _autoResumeSwitch;
 
@@ -87,7 +89,20 @@ public partial class MainWindow
         Section("models", "\uE8F1", SettingsAutonomyCard, ManagedModelsExpander);
         Section("components", "\uE74C", ProcessingComponentsExpander, ViewerComponentsExpander, _settingsCards.Card(ComponentLicensesButton));
         Section("engines", "\uE713", engines);
-        Section("downloads", "\uE896", SettingsDownloadsCard);
+        _modelStorageRelocation = new(L, () => _storageSettings, () =>
+        {
+            _storageSettingsStore.Save(_storageSettings);
+            RefreshStorageLists();
+            UpdateStorageSteps();
+        }, () => _managedModelOperationActive, _backgroundLifetime.Token);
+        _modelStorageRelocation.AddressesChanged += () =>
+        {
+            if (!_managedModelsInitialized) return;
+            _managedModelLibrary = new ManagedModelLibraryStore().LoadAll();
+            ApplyManagedModelFilter();
+        };
+        var storageCard = _settingsCards.Card(_modelStorageRelocation);
+        Section("downloads", "\uE896", SettingsDownloadsCard, storageCard);
         Section("utilities", "\uE90F", utilities);
         Section("island", "\uE7F4", _settingsCards.Card(_islandSettingsHost));
         Section("diagnostics", "\uE9D9", SettingsDiagnosticsCard);
@@ -133,6 +148,7 @@ public partial class MainWindow
         Target("licenses", "components", "licenses.title", "Settings.Navigation.components.Help", ComponentLicensesButton);
         Target("engine-sets", "engines", "EngineSets.Title", "EngineSets.Help", _engineSets);
         Target("connections", "downloads", "Settings.ModelDownloadConnections", "Settings.ModelDownloadsHelp", ModelDownloadConnectionsComboBox);
+        Target("model-storage", "downloads", "ModelStorage.Title", "ModelStorage.Help", storageCard);
         Target("utilities", "utilities", "Capture.Title", "Capture.Description", utilities);
         Target("logging", "diagnostics", "Diagnostics.Literary.Enabled", "Diagnostics.Literary.Hint", DetailedLiteraryDiagnosticsCheckBox);
         Target("logs", "diagnostics", "Diagnostics.Literary.Open", "Diagnostics.Literary.Hint", OpenLiteraryDiagnosticsButton);
@@ -174,6 +190,7 @@ public partial class MainWindow
             RefreshDictation();
             RefreshGenerationSettings();
             _engineSets.Localize(L);
+            _modelStorageRelocation?.Localize(L);
             RefreshEngineSetIndicator();
         }
         finally { _refreshingSettingsWorkspace = false; }

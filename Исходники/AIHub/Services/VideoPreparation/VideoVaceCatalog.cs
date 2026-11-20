@@ -26,7 +26,7 @@ internal static class VideoVaceCatalog
         if (string.IsNullOrWhiteSpace(modelsRoot) || !Path.IsPathFullyQualified(modelsRoot))
             throw new InvalidOperationException("VideoEditor.StorageRequired");
         var root = Path.GetFullPath(modelsRoot);
-        return [new()
+        return [ModelStorageAddresses.Current.Resolve(new()
         {
             ModelArtifactId = ComponentId, Family = "Wan2.1 VACE", DisplayName = "Wan2.1 VACE 1.3B · FP16 + UMT5 FP8 + VAE",
             Role = ManagedModelRoles.Tool, Provider = "ComfyUI", RepositoryId = Repository, Revision = Revision,
@@ -40,6 +40,6 @@ internal static class VideoVaceCatalog
                 SourceUrl = "https://huggingface.co/" + Repository + "/resolve/" + Revision + "/" + f.Path
             }).ToList(),
             Consumers = [new() { Id = "video_generation", DisplayName = "Wan2.1 VACE 1.3B", Kind = "scenario" }]
-        }];
+        })];
     }
 }

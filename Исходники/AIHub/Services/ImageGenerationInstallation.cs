@@ -26,7 +26,7 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
         root = Path.GetFullPath(root);
         var components = ImageGenerationCatalog.Get(modelId).Components
             .Where(id => id != "generation-runtime" || SdRuntimeSelector.AvailableExecutable() is null).ToArray();
-        return ImageGenerationCatalog.CreateCards(root).Where(c => components.Contains(c.ModelArtifactId)).Select(card =>
+        return ImageGenerationCatalog.CreateCards(root, _store.Addresses).Where(c => components.Contains(c.ModelArtifactId)).Select(card =>
         {
             var prior = _store.Load(card.ModelArtifactId);
             if (prior is not null && ManagedModelPathIdentity.SameDirectory(prior.InstallDirectory, card.InstallDirectory))
@@ -53,7 +53,9 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
         EnsureCompatibleEngine(modelId);
         var cards = Register(root, modelId);
         // Confirm every inherited component before any download or model use.
-        await ComponentLicenseGate.EnsureAsync(cards.Select(c => c.ModelArtifactId).ToArray(), token);
+        var licenses = cards.Select(c => c.ModelArtifactId);
+        if (modelId == MiniMaxImageRuntime.ModelId) licenses = licenses.Concat(MiniMaxImageRuntime.DependencyLicenses);
+        await ComponentLicenseGate.EnsureAsync(licenses.ToArray(), token);
         foreach (var card in cards)
         {
             token.ThrowIfCancellationRequested();
@@ -68,6 +70,8 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
         cards = Register(root, modelId);
         if (cards.SingleOrDefault(c => c.ModelArtifactId == "generation-runtime") is { } legacyRuntime)
             await EnsureRuntimeAsync(legacyRuntime, token);
+        if (cards.SingleOrDefault(c => c.ModelArtifactId == MiniMaxImageRuntime.ArtifactId) is { } miniMaxRuntime)
+            await MiniMaxImageRuntime.PrepareAsync(miniMaxRuntime, token);
         return cards;
     }
     public async Task<IReadOnlyList<ManagedModelArtifactCard>> CheckAsync(string root, string modelId,
@@ -90,6 +94,12 @@ public sealed class ImageGenerationInstallation : IImageGenerationPreparation
     }
     public static string Executable(IReadOnlyList<ManagedModelArtifactCard> cards)
     {
+        if (cards.SingleOrDefault(c => c.ModelArtifactId == MiniMaxImageRuntime.ArtifactId) is { } miniMax)
+        {
+            var path = Path.Combine(MiniMaxImageRuntime.BackendDirectory(miniMax, "vulkan"), "sd-cli.exe");
+            if (!File.Exists(path)) throw new FileNotFoundException("Generation.DownloadRequired");
+            return path;
+        }
         if (SdRuntimeSelector.AvailableExecutable() is { } managed) return managed;
         var runtime = cards.Single(c => c.ModelArtifactId == "generation-runtime");
         var executable = RuntimePaths(runtime).Single(path => Path.GetFileName(path).Equals("sd-cli.exe", StringComparison.OrdinalIgnoreCase));

@@ -740,6 +740,7 @@
                                 <TextBlock x:Name="ModelsLimitLabelText"
                                            Grid.Column="1"
                                            Text="Лимит адреса, ГБ"
+                                           Visibility="Collapsed"
                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                            FontSize="{DynamicResource UiFont12}"
                                            Margin="8,0,0,0" />
@@ -751,6 +752,7 @@
                                 <TextBox x:Name="ModelsLocationLimitInput"
                                          Grid.Row="2"
                                          Grid.Column="1"
+                                         Visibility="Collapsed"
                                          Height="34"
                                          Margin="8,0,0,0"
                                          VerticalContentAlignment="Center"
@@ -792,7 +794,7 @@
                                         Margin="8,0,0,0"
                                         Click="RemoveModelsLocationButton_Click" />
                             </StackPanel>
-                            <Grid Margin="0,14,0,0">
+                            <Grid Margin="0,14,0,0" Visibility="Collapsed">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="100" />

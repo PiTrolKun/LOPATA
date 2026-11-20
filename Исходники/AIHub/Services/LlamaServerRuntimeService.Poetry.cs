@@ -26,6 +26,7 @@ public sealed partial class LlamaServerRuntimeService
         Func<LlamaGpuAdmission, CancellationToken, Task<LlamaGpuDecision>>? gpuAdmission = null,
         bool adaptivePlacement = false, LlamaPlacementMode? requiredPlacement = null, bool requireFullPrompt = false)
     {
+        model = model.WithPath(ModelStorageAddresses.Current.ResolvePreviousPath(model.Path));
         var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), token);
         var capacity = adaptivePlacement ? memory.ModelContextTokens
             : Math.Min(CoreContextRuntimeLimits.CurrentBackendContextLimit, memory.ModelContextTokens);

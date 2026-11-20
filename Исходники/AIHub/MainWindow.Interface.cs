@@ -325,6 +325,13 @@ public partial class MainWindow
     private bool _processShutdownComplete, _processShutdownPending;
     protected override async void OnClosing(CancelEventArgs e)
     {
+        if (_modelStorageRelocation?.IsTransferring == true)
+        {
+            e.Cancel = true;
+            System.Windows.MessageBox.Show(this, L("ModelStorage.CloseBusy"), L("ModelStorage.Title"), MessageBoxButton.OK);
+            base.OnClosing(e);
+            return;
+        }
         if (_processShutdownPending) { e.Cancel = true; base.OnClosing(e); return; }
         if (!TryResolveCloseBehavior(out bool closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }
         if (TryHideToTray(closeToTray)) { e.Cancel = true; base.OnClosing(e); return; }

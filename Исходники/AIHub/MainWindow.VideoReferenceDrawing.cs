@@ -16,7 +16,8 @@ public partial class MainWindow
         _manualReferencePrompts = new(this, L, p); _manualReferencePrompts.Show();
         if (_manualReferenceWindow is null)
         {
-            var page = new ImageGenerationControl(); _manualReferenceGenerator = page;
+            var page = new ImageGenerationControl { IsVideoReferenceWorkspace = true };
+            _manualReferenceGenerator = page;
             ConfigureImageGeneration(page);
             var window = new Window(); VideoReferenceWindowUi.Configure(window, this, L("Generation.Title"));
             var root = new DockPanel(); var tools = new WrapPanel(); DockPanel.SetDock(tools, Dock.Top); root.Children.Add(tools);

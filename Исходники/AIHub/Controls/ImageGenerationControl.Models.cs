@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using AIHub.Models;
 using AIHub.Services;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
@@ -9,10 +10,14 @@ namespace AIHub.Controls;
 
 public sealed partial class ImageGenerationControl
 {
+    internal bool IsVideoReferenceWorkspace { get; init; }
+    private IEnumerable<ImageGenerationModel> AvailableModels => IsVideoReferenceWorkspace
+        ? ImageGenerationCatalog.VideoWorkspaceModels : ImageGenerationCatalog.Manifest.Models;
+
     public ContextMenu ModelMenu()
     {
         var menu = new ContextMenu();
-        var installed = ImageGenerationCatalog.Manifest.Models.Where(m => _installation.IsReady(_modelsRoot, m.Id)).ToArray();
+        var installed = AvailableModels.Where(m => _installation.IsReady(_modelsRoot, m.Id)).ToArray();
         foreach (var model in installed)
         {
             var item = new MenuItem { Header = new TextBlock { Text = model.Name }, IsCheckable = true,
@@ -23,7 +28,7 @@ public sealed partial class ImageGenerationControl
         if (installed.Length == 0) menu.Items.Add(new MenuItem { Header = L("NoInstalledModels"), IsEnabled = false });
         menu.Items.Add(new Separator());
         var more = new MenuItem { Header = L("OtherModels"), IsEnabled = CanChangeModel };
-        more.Click += (_, _) => { _page = 0; Render(); }; menu.Items.Add(more); return menu;
+        more.Click += (_, _) => { EndWarmupOnExit(); _page = 0; Render(); }; menu.Items.Add(more); return menu;
     }
     public void ShowModelMenu(FrameworkElement target)
     { var menu = ModelMenu(); menu.PlacementTarget = target; menu.Placement = PlacementMode.Bottom; menu.IsOpen = true; }
@@ -33,7 +38,11 @@ public sealed partial class ImageGenerationControl
         var previous = _modelId; _modelId = id;
         // Installed profiles still require integrity and license checks before use.
         if (!await PrepareAsync(false)) _modelId = previous;
-        else (_width, _height) = ImageGenerationDimensions.Fit(_width, _height, Math.Max(_width, _height), ImageGenerationCatalog.Get(id).MaximumSide);
+        else
+        {
+            (_width, _height) = ImageGenerationDimensions.Fit(_width, _height, Math.Max(_width, _height), ImageGenerationCatalog.Get(id).MaximumSide);
+            await WarmSelectedModelAsync(_preparationCards);
+        }
         Render();
     }
 }

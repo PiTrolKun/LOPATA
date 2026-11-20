@@ -16,13 +16,13 @@ namespace AIHub.Controls;
 public sealed partial class ImageGenerationControl : UserControl
 {
     private readonly IImageGenerationPreparation _installation;
-    private readonly ImageGenerationRuntime _runtime;
+    private ImageGenerationRuntime _runtime;
     private Func<string, string> _l = key => key;
     private string _languageCode = "ru";
     private string _modelsRoot = "", _resultsRoot = "", _modelId = "z-image", _prompt = "", _statusText = "";
     private string? _sessionDirectory;
     private string? _statusKey;
-    private static readonly string[] StatusKeys = ["Ready", "Generating", "Paused", "Canceled", "Verifying", "FolderRequired", "Preparation.Ready", "Preparation.NeedsDownload", "PromptWorking", "PromptReady", "PromptCoreMissing", "ReferenceWorking", "ReferenceReady", "ReferenceRetry", "ReferenceNotReady"];
+    private static readonly string[] StatusKeys = ["Ready", "Generating", "Warming", "WarmReady", "WarmUnavailable", "WarmFailed", "Paused", "Canceled", "Verifying", "FolderRequired", "Preparation.Ready", "Preparation.NeedsDownload", "PromptWorking", "PromptReady", "PromptCoreMissing", "ReferenceWorking", "ReferenceReady", "ReferenceRetry", "ReferenceNotReady"];
     private int _page, _width = 2048, _height = 2048, _count = 1;
     private bool _busy;
     private CancellationTokenSource? _cancel;
@@ -70,7 +70,7 @@ public sealed partial class ImageGenerationControl : UserControl
         if (ApplicationBackgroundOperations.Current?.State is { } state && IsGenerationOperation(state.Kind) && _busy)
         {
             if (state.Phase is BackgroundOperationPhase.Paused or BackgroundOperationPhase.Waiting) Status(L("Paused"));
-            else if (state.Phase == BackgroundOperationPhase.Running) Status(L(IsReferenceOperation ? "ReferenceWorking" : IsPromptOperation ? "PromptWorking" : "Generating"));
+            else if (state.Phase == BackgroundOperationPhase.Running) Status(L(_warming ? "Warming" : IsReferenceOperation ? "ReferenceWorking" : IsPromptOperation ? "PromptWorking" : "Generating"));
         }
         if (_page == 2)
         {
@@ -78,6 +78,8 @@ public sealed partial class ImageGenerationControl : UserControl
             if (_operationStatus is not null) _operationStatus.Text = _statusText;
             if (_pauseButton is not null) _pauseButton.IsEnabled = HasPendingGeneration();
             if (_stopButton is not null) _stopButton.IsEnabled = _busy || HasPendingGeneration();
+            RefreshWarmupIndicator();
+            TryWarmSelectedWhenIdle();
             WorkspaceChanged?.Invoke();
         }
     }
@@ -139,6 +141,7 @@ public sealed partial class ImageGenerationControl : UserControl
     {
         if (_page == 0) return false;
         if (_page == 1) _cancel?.Cancel();
+        EndWarmupOnExit();
         _page = 0; Render(); return true; // Navigation preserves running generation work.
     }
     public async Task ResumeAsync(BackgroundOperationState state, CancellationToken token)
@@ -161,6 +164,11 @@ public sealed partial class ImageGenerationControl : UserControl
         else
         { _modelId = "z-image"; var model = ImageGenerationCatalog.Get(_modelId); _width = model.DefaultWidth; _height = model.DefaultHeight; }
         _page = 2; Render();
+        if (_resident is not null)
+        {
+            _warmOnIdle = true;
+            TryWarmSelectedWhenIdle();
+        }
     }
-    public void DisposeRuntime() { _cancel?.Cancel(); _installation.Dispose(); }
+    public void DisposeRuntime() { _cancel?.Cancel(); EndWarmupOnExit(); _installation.Dispose(); }
 }

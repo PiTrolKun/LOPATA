@@ -18,14 +18,18 @@ public sealed class ImageGenerationGalleryTests
     [TestMethod]
     public Task EmbeddedExamplesKeepOriginalPixelsAndLocalizedPrompts() => OnUi(() =>
     {
-        Assert.HasCount(8, ImageGenerationExamples.All);
-        foreach (var group in ImageGenerationExamples.All.GroupBy(e => e.ModelId)) Assert.HasCount(2, group);
+        Assert.HasCount(11, ImageGenerationExamples.All);
+        foreach (var group in ImageGenerationExamples.All.GroupBy(e => e.ModelId))
+            Assert.HasCount(group.Key == MiniMaxImageRuntime.ModelId ? 3 : 2, group);
         foreach (var example in ImageGenerationExamples.All)
         {
             using var stream = System.Windows.Application.GetResourceStream(new Uri("/AIHub;component/Assets/GenerationExamples/" + example.Resource, UriKind.Relative))!.Stream;
             Assert.AreEqual(example.Sha256.ToLowerInvariant(), Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant());
-            var side = example.ModelId.StartsWith("qwen-image-21-", StringComparison.Ordinal) ? 3840 : 2048;
-            var image = ImageGenerationExamples.Image(example); Assert.AreEqual(side, image.PixelWidth); Assert.AreEqual(side, image.PixelHeight);
+            var side = example.ModelId == MiniMaxImageRuntime.ModelId
+                || example.ModelId.StartsWith("qwen-image-21-", StringComparison.Ordinal) ? 3840 : 2048;
+            var image = ImageGenerationExamples.Image(example);
+            Assert.AreEqual(example.SourceUrl is null ? side : 1280, image.PixelWidth);
+            Assert.AreEqual(example.SourceUrl is null ? side : 719, image.PixelHeight);
             Assert.IsTrue(image.IsFrozen);
             foreach (var language in new[] { "ru", "en" })
             {
@@ -33,10 +37,16 @@ public sealed class ImageGenerationGalleryTests
                 var window = new ImageGenerationExampleWindow(example, l.T);
                 var shown = Descendants(window).OfType<System.Windows.Controls.Image>().Single();
                 Assert.IsNull(shown.Effect); Assert.IsNull(shown.Clip);
-                Assert.AreEqual(side, ((BitmapSource)shown.Source).PixelWidth);
+                Assert.AreEqual(image.PixelWidth, ((BitmapSource)shown.Source).PixelWidth);
                 var prompt = Descendants(window).OfType<TextBox>().Single(); Assert.AreEqual(example.Prompt(language), prompt.Text);
                 Assert.IsTrue(prompt.IsReadOnly);
-                Assert.IsTrue(Descendants(window).OfType<Button>().Any(b => AutomationProperties.GetAutomationId(b) == "Generation.Example.CopyPrompt"));
+                var buttonId = example.SourceUrl is null ? "Generation.Example.CopyPrompt" : "Generation.Example.Source";
+                Assert.IsTrue(Descendants(window).OfType<Button>().Any(b => AutomationProperties.GetAutomationId(b) == buttonId));
+                if (example.SourceUrl is { } source)
+                {
+                    Assert.StartsWith("https://github.com/MiniMax-AI/MiniMax-H3-Image/blob/", source);
+                    Assert.IsTrue(Descendants(window).OfType<TextBlock>().Any(t => t.Text == l.T("Generation.Examples.OfficialDescription")));
+                }
                 Assert.AreEqual(language, l.T("Generation.Examples.Language"));
                 window.Close();
             }
@@ -60,7 +70,7 @@ public sealed class ImageGenerationGalleryTests
                 Theme(control); control.Configure(l.T, new StorageSettings(), 4);
                 var buttons = Descendants(control).OfType<Button>().ToArray();
                 var modelButtons = buttons.Where(b => AutomationProperties.GetAutomationId(b).StartsWith("Generation.Model.")).ToArray();
-                Assert.HasCount(4, modelButtons);
+                Assert.HasCount(5, modelButtons);
                 foreach (var model in ImageGenerationCatalog.Manifest.Models)
                 {
                     var card = modelButtons.Single(button => AutomationProperties.GetAutomationId(button) == "Generation.Model." + model.Id);
@@ -68,8 +78,8 @@ public sealed class ImageGenerationGalleryTests
                     Assert.AreEqual(title, AutomationProperties.GetName(card));
                     Assert.AreEqual(title, Descendants(card).OfType<TextBlock>().First().Text);
                 }
-                Assert.HasCount(8, buttons.Where(b => AutomationProperties.GetAutomationId(b).StartsWith("Generation.Example.")).ToArray());
-                var previews = Descendants(control).OfType<Viewbox>().ToArray(); Assert.HasCount(8, previews);
+                Assert.HasCount(11, buttons.Where(b => AutomationProperties.GetAutomationId(b).StartsWith("Generation.Example.")).ToArray());
+                var previews = Descendants(control).OfType<Viewbox>().ToArray(); Assert.HasCount(11, previews);
                 foreach (var example in ImageGenerationExamples.All)
                 {
                     var button = buttons.Single(b => AutomationProperties.GetAutomationId(b) == "Generation.Example." + example.Id);
@@ -82,6 +92,19 @@ public sealed class ImageGenerationGalleryTests
                         var clip = (RectangleGeometry)overlay.Clip; Assert.IsTrue(clip.Rect.Width < 512 && clip.Rect.Height < 512);
                     }
                 }
+                var newYear = buttons.Single(b => AutomationProperties.GetAutomationId(b) == "Generation.Example.minimax-new-year");
+                Assert.AreEqual(1, Grid.GetRow(newYear));
+                var portrait = ImageGenerationExamples.All.Single(e => e.Id == "minimax-portrait");
+                Assert.HasCount(1, portrait.BlurRegions);
+                SavePreview(ImageGenerationControl.ExamplePreview(portrait), language + "-minimax-portrait-preview");
+
+                var videoWorkspace = new ImageGenerationControl(installer, new()) { IsVideoReferenceWorkspace = true };
+                Theme(videoWorkspace); videoWorkspace.Configure(l.T, new StorageSettings(), 4);
+                Assert.HasCount(4, Descendants(videoWorkspace).OfType<Button>()
+                    .Where(b => AutomationProperties.GetAutomationId(b).StartsWith("Generation.Model.")).ToArray());
+                Assert.IsFalse(Descendants(videoWorkspace).OfType<Button>().Any(b =>
+                    AutomationProperties.GetAutomationId(b) == "Generation.Model." + MiniMaxImageRuntime.ModelId));
+
                 SavePreview(control, language + "-selection");
                 control.Localize(l.T); Assert.IsFalse(Directory.Exists(Path.Combine(root, "models")));
             }
@@ -94,6 +117,7 @@ public sealed class ImageGenerationGalleryTests
     [DataRow("krea")]
     [DataRow("qwen-image-21-turbo-int8")]
     [DataRow("qwen-image-21-base-gguf")]
+    [DataRow(MiniMaxImageRuntime.ModelId)]
     public Task MissingComponentCheckDoesNotDownloadOrAskForLicense(string modelId) => OnUi(async () =>
     {
         var root = Path.Combine(Path.GetTempPath(), "lopata-preparation-" + Guid.NewGuid().ToString("N"));
@@ -114,6 +138,8 @@ public sealed class ImageGenerationGalleryTests
             Assert.IsFalse(Descendants(control).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Generation.OpenChat").IsEnabled);
             Assert.IsTrue(Descendants(control).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Generation.Download").IsEnabled);
             Assert.IsTrue(Descendants(control).OfType<TextBlock>().Any(t => t.Text == l.T("Generation.Preparation.NeedsDownload")));
+            if (modelId == MiniMaxImageRuntime.ModelId)
+                Assert.IsTrue(Descendants(control).OfType<TextBlock>().Any(t => t.Text == string.Format(l.T("Generation.MiniMax.PendingSize"), 49.337833888d)));
             SavePreview(control, "ru-preparation-missing-" + modelId);
             Descendants(control).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "Generation.Download").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.AreEqual(1, confirmations);

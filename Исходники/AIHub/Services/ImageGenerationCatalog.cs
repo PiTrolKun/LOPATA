@@ -15,7 +15,10 @@ public static class ImageGenerationCatalog
     };
 
     public static ImageGenerationManifest Manifest { get; } = Load();
-    public static IEnumerable<ImageGenerationModel> VideoReferenceModels => Manifest.Models.Where(m => m.Family is null);
+    internal static IEnumerable<ImageGenerationModel> VideoWorkspaceModels =>
+        Manifest.Models.Where(m => m.Id != MiniMaxImageRuntime.ModelId);
+    public static IEnumerable<ImageGenerationModel> VideoReferenceModels => VideoWorkspaceModels.Where(m => m.Family is null);
+    internal static bool IsRuntimeArtifact(string id) => id is "generation-runtime" or MiniMaxImageRuntime.ArtifactId;
     public static bool IsAvailable(string id) => Manifest.Models.Any(m => m.Id == id);
     public static ImageGenerationModel Get(string id) => id == VisualScenario.VisualSenseNova.Id
         ? VisualScenario.VisualSenseNova.Model : Manifest.Models.SingleOrDefault(m => m.Id == id)
@@ -42,22 +45,30 @@ public static class ImageGenerationCatalog
             throw new InvalidDataException("Invalid image generation manifest.");
         return data;
     }
-    public static IEnumerable<ManagedModelArtifactCard> CreateCards(string root) => Manifest.Artifacts.Select(a => new ManagedModelArtifactCard
+    public static IEnumerable<ManagedModelArtifactCard> CreateCards(string root) => CreateCards(root, ModelStorageAddresses.Current);
+
+    internal static IEnumerable<ManagedModelArtifactCard> CreateCards(string root, ModelStorageAddresses addresses) => Manifest.Artifacts.Select(a => new ManagedModelArtifactCard
     {
         ModelArtifactId = a.Id, DisplayName = a.Name, Family = "ImageGeneration", Role = ManagedModelRoles.Tool,
         RepositoryId = a.Repository, Revision = a.Revision, License = a.License,
-        SourcePage = a.Id == "generation-runtime" ? "https://github.com/leejet/stable-diffusion.cpp" : "https://huggingface.co/" + a.Repository,
-        Provider = a.Id == "generation-runtime" ? "GitHub" : "Hugging Face", IsManaged = true, CanRemoveFiles = true,
-        Format = a.Id == "generation-runtime" ? "ZIP" : "GGUF / Safetensors", RuntimeBackend = "stable-diffusion.cpp",
+        SourcePage = a.Id switch
+        {
+            MiniMaxImageRuntime.ArtifactId => $"https://github.com/{a.Repository}/releases/tag/{a.Revision}",
+            "generation-runtime" => "https://github.com/leejet/stable-diffusion.cpp",
+            _ => "https://huggingface.co/" + a.Repository
+        },
+        Provider = IsRuntimeArtifact(a.Id) ? "GitHub" : "Hugging Face", IsManaged = true, CanRemoveFiles = true,
+        Format = IsRuntimeArtifact(a.Id) ? "ZIP" : "GGUF / Safetensors", RuntimeBackend = "stable-diffusion.cpp",
         ModelsRoot = root, InstallDirectory = string.IsNullOrWhiteSpace(root) ? "" : Path.Combine(root, "ImageGeneration", a.Id, a.Revision[..12]),
         Origin = ManagedModelOrigins.PredefinedScenario,
         Consumers = [new() { Id = "simple-generation", DisplayName = "Простая генерация / Simple generation", Kind = "scenario" },
-            .. (VideoReferenceModels.Any(m => m.Components.Contains(a.Id))
-                ? new ManagedModelConsumer[] { new() { Id = "video-reference-images", DisplayName = "Референсы видео / Video references", Kind = "scenario" } }
+            new() { Id = "video-reference-images", DisplayName = "Референсы видео / Video references", Kind = "scenario" },
+            .. (Get("z-image").Components.Contains(a.Id)
+                ? new ManagedModelConsumer[] { new() { Id = MusicCoverWork.Kind, DisplayName = "Обложка песни / Song cover", Kind = "scenario" } }
                 : [])],
         Files = a.Files.Select(f => new ManagedModelArtifactFile { RelativePath = f.RelativePath, SourceUrl = f.SourceUrl,
             SizeBytes = f.SizeBytes, Sha256 = f.Sha256, Purpose = f.Purpose }).ToList()
-    });
+    }).Select(addresses.Resolve);
     public static void Validate(ImageGenerationRequest request)
     {
         var model = Get(request.ModelId);

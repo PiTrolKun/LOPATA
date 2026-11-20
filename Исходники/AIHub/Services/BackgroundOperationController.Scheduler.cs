@@ -210,11 +210,13 @@ public sealed class BackgroundOperationController(BackgroundOperationStore store
         }
         return await running;
     }
-    public IDisposable BeginAuxiliary()
+    public IDisposable BeginAuxiliary() => BeginAuxiliary("Music.Poetry.OtherOperation");
+
+    internal IDisposable BeginAuxiliary(string blockedMessage)
     {
         lock (_gate)
         {
-            if (BlocksNewWork) throw Blocked("Music.Poetry.OtherOperation");
+            if (BlocksNewWork) throw Blocked(blockedMessage);
             _auxiliary = true; ++_auxiliaryVersion; _auxiliaryIdle = new(TaskCreationOptions.RunContinuationsAsynchronously);
         }
         Notify(); return new Lease(this);

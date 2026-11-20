@@ -105,7 +105,9 @@ public sealed partial class ImageGenerationControl
             thumb.ContextMenu = ImageMenu(turn, old); thumbnails.Children.Add(thumb);
         }
         var history = new ScrollViewer { Content = thumbnails, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
-        AutomationProperties.SetAutomationId(history, "Generation.Images"); Grid.SetColumn(history, 2); work.Children.Add(history); Content = grid;
+        AutomationProperties.SetAutomationId(history, "Generation.Images"); Grid.SetColumn(history, 2); work.Children.Add(history);
+        AddWarmupIndicator(grid);
+        Content = grid;
     }
 
     private void RenderCurrentImage(Grid panel, ImageGenerationTurn turn, ImageGenerationResult result)
