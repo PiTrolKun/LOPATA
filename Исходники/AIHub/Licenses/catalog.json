@@ -5922,5 +5922,127 @@
       "texts/generation-sd-LICENSE.txt",
       "texts/generation-ggml-LICENSE.txt"
     ]
+  },
+  {
+    "Id": "runtime.image-layers-opencv",
+    "Name": "OpenCV / NumPy — разбор изображения на слои",
+    "Version": "4.10.0.84 / 2.3.5 / CPython 3.12.10",
+    "Author": "OpenCV, NumPy, CPython and bundled library contributors",
+    "License": "Apache-2.0; BSD-3-Clause; PSF-2.0; original bundled dependency notices",
+    "Source": "https://pypi.org/project/opencv-contrib-python/4.10.0.84/",
+    "Checked": "2026-11-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "BE177285C6A4BACC93030AC82BA93E3F4DA5FD4876438C9CD0CBF3FE97B24E30",
+    "Texts": [
+      "texts/python-3.12.10-LICENSE.txt",
+      "texts/book-smart-python-wheels-NOTICES.txt"
+    ],
+    "Ru": "Локальная обработка границ на CPU. Программа получает закреплённые архивы Python, NumPy и OpenCV от их поставщиков или использует их копии из локального кеша. Оригинальные лицензии и уведомления сохраняются.",
+    "En": "Local CPU contour processing. Pinned Python, NumPy and OpenCV archives are obtained from their upstream providers or reused from the local cache. Original licenses and notices are retained."
+  },
+  {
+    "Id": "model-image-layers-sam2-1-tiny",
+    "Name": "SAM 2.1 Hiera Tiny",
+    "Version": "de431c4043854a71d8101e17995dfe596bf101a5",
+    "Author": "Meta AI (FAIR)",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/facebook/sam2.1-hiera-tiny/tree/de431c4043854a71d8101e17995dfe596bf101a5",
+    "Checked": "2026-11-21",
+    "Ru": "Официальные веса Meta для масок изображений. В комплект включены Safetensors, настройки и карточка модели. Карточка указывает Apache-2.0. Условия и уведомления оригинального проекта опубликованы на https://github.com/facebookresearch/sam2.",
+    "En": "Official Meta weights for still-image masks. This component includes Safetensors weights, configuration, and the model card. The model card declares Apache-2.0. Original terms and notices are published at https://github.com/facebookresearch/sam2.",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "3ACD59D21EE1935622A047ABF017AC323B004BD11B9CE952026614E0F3FD14E2",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "runtime.image-layers-portrait",
+    "Name": "MediaPipe / PyMatting / ONNX Runtime — разбор на слои",
+    "Version": "MediaPipe 1.2.3 / PyMatting 1.1.16 / ONNX Runtime 1.23.2",
+    "Author": "MediaPipe, PyMatting, Microsoft and upstream wheel contributors",
+    "License": "Apache-2.0; MIT; original dependency notices",
+    "Source": "https://pypi.org/project/PyMatting/1.1.16/",
+    "Checked": "2026-11-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "C44F6C76FC1499FDFAF971DDB93868932DCD88DBE387B069EA018D09EF68480D",
+    "Texts": [
+      "texts/image-layers-verified-MIT.txt",
+      "texts/Apache-2.0.txt"
+    ],
+    "Ru": "Локальные операции с портретами и мягким краем на CPU. Закреплённые пакеты PyPI включают оригинальные уведомления. Список версий, URL и SHA-256 хранится в составе программы.",
+    "En": "Local CPU portrait and soft-edge operations. Pinned PyPI archives retain their original notices. The program includes the version, URL and SHA-256 lock."
+  },
+  {
+    "Id": "model-image-layers-mediapipe",
+    "Name": "MediaPipe SelfieMulticlass",
+    "Version": "c7b7e9e0f1e73c10a12114379077b5257e60c25c",
+    "Author": "Google",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/litert-community/MediaPipe-ImageSegmenter-Selfie-Multiclass/tree/c7b7e9e0f1e73c10a12114379077b5257e60c25c",
+    "Checked": "2026-11-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "C6748B1253A99067EF71F7E26CA71096CD449BAEFA8F101900EA23016507E0E0",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Ru": "Веса Google SelfieMulticlass float32. Применяются локально к вырезам с людьми.",
+    "En": "Google SelfieMulticlass float32 weights. Used locally on detected person crops."
+  },
+  {
+    "Id": "model-image-layers-modnet",
+    "Name": "MODNet — photographic portrait matting",
+    "Version": "28165a451e4610c9d77cfdf925a94610bb2810fb",
+    "Author": "MODNet authors and ONNX contributor Manthan Patel (manthan3C273)",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/ZHKKKe/MODNet/blob/28165a451e4610c9d77cfdf925a94610bb2810fb/onnx/README.md",
+    "Checked": "2026-11-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "07C308CF0FC7E6E8B2065A12ED7FC07E1DE8FEBB7DC7839D7B7F15DD66584DF9",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Ru": "ONNX-конверсия портретной модели по ссылке авторов. Применяется для прозрачного силуэта человека на CPU.",
+    "En": "ONNX conversion linked by the portrait model authors. Used for transparent person cutouts on CPU."
+  },
+  {
+    "Id": "model-image-layers-florence-base-ft",
+    "Name": "Microsoft Florence-2-base-ft",
+    "Version": "f6c1a25888ffc1d945ee8a1a77ac833c7303d46e",
+    "Author": "Microsoft and Hugging Face contributors",
+    "License": "MIT; Apache-2.0 (conversion mapping)",
+    "Source": "https://huggingface.co/microsoft/Florence-2-base-ft/tree/f6c1a25888ffc1d945ee8a1a77ac833c7303d46e",
+    "Checked": "2026-11-21",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "58757D657FF44051314C8030B68E04CB1BB618CA9A4885418F111F6FB708185A",
+    "Texts": [
+      "texts/image-layers-verified-MIT.txt",
+      "texts/Apache-2.0.txt"
+    ],
+    "Ru": "Исходные веса Microsoft, закреплённый процессор Transformers и официальная таблица преобразования тензоров. Для поиска областей по описанию на CPU.",
+    "En": "Original Microsoft weights, a pinned Transformers processor, and the official tensor conversion mapping. Used for CPU phrase grounding."
+  },
+  {
+    "Id": "model-image-layers-ppocr",
+    "Name": "PP-OCRv6 Small / PP-OCRv5 Cyrillic",
+    "Version": "rapidocr-v3.10.0",
+    "Author": "PaddleOCR authors and RapidOCR contributors",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/RapidAI/RapidOCR/blob/main/python/MODEL_LICENSES.md",
+    "Checked": "2026-11-22",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "DD71BB93CBADC180650E87BA5C508725EF468D0B727082258937560ACF6E2A85",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Ru": "Модели PaddleOCR в ONNX-конверсии RapidOCR, опубликованной под Apache-2.0. Применяются для локального выделения надписей и распознавания символов.",
+    "En": "PaddleOCR models converted to ONNX by RapidOCR and distributed under Apache-2.0. Used to detect and recognize text locally."
   }
 ]

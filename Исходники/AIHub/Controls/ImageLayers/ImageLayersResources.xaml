@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ControlTemplate x:Key="ImageLayersListTemplate" TargetType="ItemsControl">
+        <Border Background="{TemplateBinding Background}">
+            <ScrollViewer Focusable="False" CanContentScroll="True"
+                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                          VerticalScrollBarVisibility="Auto">
+                <ItemsPresenter />
+            </ScrollViewer>
+        </Border>
+    </ControlTemplate>
+    <Style TargetType="TreeView">
+        <Setter Property="Template" Value="{StaticResource ImageLayersListTemplate}" />
+        <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+    </Style>
+    <Style TargetType="ListBox">
+        <Setter Property="Template" Value="{StaticResource ImageLayersListTemplate}" />
+        <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+    <Style TargetType="TreeViewItem">
+        <Setter Property="Padding" Value="3" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+    <Style TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#2859B8" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#40547D" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="White" />
+</ResourceDictionary>

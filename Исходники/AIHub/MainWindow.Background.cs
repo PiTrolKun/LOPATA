@@ -28,6 +28,7 @@ public partial class MainWindow
         _backgroundOperations.Register(Controls.LiteraryImportControl.BackgroundKind,
             (state, token) => LiteraryPage.ResumeBackgroundImportAsync(state, token));
         RegisterImageBackgroundOperations();
+        _backgroundOperations.Register(Services.ImageLayers.LayerAnalysisWork.Kind, ResumeImageLayerAnalysisAsync);
         RegisterSandboxBackgroundOperations();
         RegisterFinancialBackgroundOperation();
         RegisterImageGenerationBackgroundOperation();
@@ -212,6 +213,12 @@ public partial class MainWindow
         {
             if (_backgroundOperations is null) return;
             var state = _backgroundOperations.State;
+            if (state?.Kind == Services.ImageLayers.LayerAnalysisWork.Kind && !_backgroundOperations.HasLiveOperation(state.Id))
+            {
+                if (state.RequiresDecision) RestoreFromTray();
+                _ = ContinueSavedImageLayerAnalysisAsync(state.Id);
+                return;
+            }
             if (state?.Kind is RagBookAcquisitionWork.Kind or RagBookPreparation.Kind)
             {
                 if (state.RequiresDecision) RevealRagBooksPage(state.Kind == RagBookAcquisitionWork.Kind);
@@ -253,6 +260,10 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind == Services.ImageLayers.LayerAnalysisWork.Kind)
+            {
+                await ViewImageLayerResultAsync(notice); return;
+            }
             if (notice.Kind is Services.LivingArcade.LivingArcadeGeneration.Kind or Services.LivingArcade.LivingArcadeGeneration.WarmupKind or Services.LivingArcade.LivingArcadeGeneration.FirstEventsKind)
             { ViewLivingArcadeResult(notice); return; }
             if (notice.Kind == ChatSpeechWork.Kind)

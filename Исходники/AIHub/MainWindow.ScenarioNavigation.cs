@@ -19,17 +19,7 @@ public partial class MainWindow
         ScenarioNavigationPage.LetItOutChatCreated += ConfigureLetItOutChat;
         ScenarioNavigationPage.ScenarioRequested += async id =>
         {
-            CapturePage.Visibility = Visibility.Collapsed;
-            GenerationPage.Visibility = Visibility.Collapsed;
-            VectorPage.Visibility = Visibility.Collapsed;
-            ImageUtilityPage.Visibility = Visibility.Collapsed;
-            MusicPage.Visibility = Visibility.Collapsed;
-            RagBooksPageHost.Visibility = Visibility.Collapsed;
-            if (id != ScenarioNavigationCatalog.Finance)
-            {
-                FinancialPage.Visibility = Visibility.Collapsed;
-                ScenarioNavigationPage.Visibility = Visibility.Visible;
-            }
+            PrepareScenarioNavigation(id);
             switch (id)
             {
                 case ScenarioNavigationCatalog.GameSounds:
@@ -110,11 +100,29 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.Images:
                     SelectImageAnalysisButton_Click(this, new RoutedEventArgs());
                     break;
+                case ScenarioNavigationCatalog.ImageLayers:
+                    await OpenImageLayersAsync();
+                    break;
                 case ScenarioNavigationCatalog.Sandbox:
                     SelectReasoningModeButton_Click(this, new RoutedEventArgs());
                     break;
             }
         };
+    }
+
+    private void PrepareScenarioNavigation(string id)
+    {
+        CapturePage.Visibility = Visibility.Collapsed;
+        GenerationPage.Visibility = Visibility.Collapsed;
+        VectorPage.Visibility = Visibility.Collapsed;
+        ImageUtilityPage.Visibility = Visibility.Collapsed;
+        MusicPage.Visibility = Visibility.Collapsed;
+        RagBooksPageHost.Visibility = Visibility.Collapsed;
+        if (id != ScenarioNavigationCatalog.Finance)
+        {
+            FinancialPage.Visibility = Visibility.Collapsed;
+            ScenarioNavigationPage.Visibility = Visibility.Visible;
+        }
     }
 
     private void RefreshScenarioNavigationState()
@@ -123,6 +131,7 @@ public partial class MainWindow
         if (WorkStartPage.Visibility != Visibility.Visible) return;
         if (ScenarioNavigationPage.IsShorts && ScenarioNavigationPage.Shorts is { } shorts) ConfigureShorts(shorts);
         BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade ? Visibility.Collapsed : Visibility.Visible;
+        if (ScenarioNavigationPage.IsImageLayers) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.IsVisualScenario || ScenarioNavigationPage.IsShorts || ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.PlaceholderScenarioId is not null) { StatusText.Text = L("Navigation.Soon"); return; }
         if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }

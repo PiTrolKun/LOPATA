@@ -158,7 +158,7 @@ internal sealed partial class VisualComponents(StorageSettings settings, int par
 
     private string VisionDirectory => Path.Combine(Root, "ImageGeneration", VisionEncoder, Revision[..12]);
 
-    private static async Task DownloadEngineSetAsync(IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
+    internal static async Task DownloadEngineSetAsync(IProgress<ManagedModelDownloadProgress>? progress, CancellationToken token)
     {
         var sets = EngineSetService.Shared;
         var selected = sets.GetCatalog().Single(set => set.Id == NativeRuntimeReleasePolicy.UpdatedSet);

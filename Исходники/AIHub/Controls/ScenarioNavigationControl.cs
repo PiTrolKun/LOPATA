@@ -31,6 +31,8 @@ public sealed partial class ScenarioNavigationControl : UserControl
     internal Func<bool, VisualScenario.VisualScenarioControl?>? OpenVisualWorkspace { get; set; }
     internal VisualScenario.VisualScenarioControl? VisualWorkspace { get; private set; }
     internal bool IsVisualScenario { get; private set; }
+    private ImageLayers.ImageLayersControl? _imageLayers;
+    internal bool IsImageLayers => _imageLayers is not null && ReferenceEquals(Content, _imageLayers);
     public event Action<SongClipControl>? SongClipCreated;
     public LetItOutChatControl? LetItOutChat { get; private set; }
     public bool IsLetItOutChat { get; private set; }
@@ -79,6 +81,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsImageLayers) { LeaveImageLayers(); if (!ReturnFromScenario()) Render(); return true; }
         if (IsVisualScenario) { if (LeaveVisualScenario() && !ReturnFromScenario()) Render(); return true; }
         if (IsGameSounds) { if (LeaveGameSounds() && !ReturnFromScenario()) Render(); return true; }
         if (IsOneC) { if (OneCView?.Checkpoint() == false) return true; IsOneC = false; Render(); return true; }
@@ -139,6 +142,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         if (VideoPreparation?.Checkpoint() == false) return;
         IsVideoPreparation = false;
         IsLetItOutChat = false;
+        LeaveImageLayers();
         PlaceholderScenarioId = null;
         _tagReturnDirection = null;
         SelectedDirectionId = null;
@@ -162,6 +166,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         if (VideoPreparation?.Checkpoint() == false) return;
         IsVideoPreparation = false;
         IsLetItOutChat = false;
+        LeaveImageLayers();
         PlaceholderScenarioId = null;
         SelectedDirectionId = id;
         IsSandboxLanding = false;
@@ -201,6 +206,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsShorts = id == ScenarioNavigationCatalog.Shorts;
         IsVisualScenario = id == ScenarioNavigationCatalog.VisualScenario;
         IsLetItOutChat = false;
+        LeaveImageLayers();
         if (IsVisualScenario) { Render(); return; }
         if (id == ScenarioNavigationCatalog.LetItOut)
         {
@@ -328,6 +334,19 @@ public sealed partial class ScenarioNavigationControl : UserControl
         return true;
     }
 
+    internal void ShowImageLayers(ImageLayers.ImageLayersControl workspace)
+    {
+        _imageLayers = workspace;
+        SelectedDirectionId = ScenarioNavigationCatalog.Analysis;
+        Content = workspace;
+        StateChanged?.Invoke();
+    }
+
+    private void LeaveImageLayers()
+    {
+        if (IsImageLayers) Content = null;
+    }
+
     private void Render()
     {
         if (IsVisualScenario) { Content = VisualWorkspace; StateChanged?.Invoke(); return; }
@@ -356,6 +375,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
             VideoPreparation!.Configure(_localize);
             Content = VideoPreparation; StateChanged?.Invoke(); return;
         }
+        if (IsImageLayers) { StateChanged?.Invoke(); return; }
         if (_historyHost.Parent is System.Windows.Controls.Panel previous) previous.Children.Remove(_historyHost);
         if (TagCloud.Parent is System.Windows.Controls.Panel previousCloud) previousCloud.Children.Remove(TagCloud);
         _directionBody = null; _scenarioScroll = null;

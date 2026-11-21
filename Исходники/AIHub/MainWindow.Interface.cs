@@ -352,6 +352,7 @@ public partial class MainWindow
             _processShutdownPending = true;
             try
             {
+                if (_imageLayers is { } layers && !await layers.ConfirmExitAsync()) { _fullExitRequested = false; return; }
                 if (!await CloseOfficeEditorsAsync()) { _fullExitRequested = false; return; }
                 if (_gifTask is { } gifTask) { StopGif(); await gifTask; }
                 if (_videoTask is { } videoTask) { StopCaptureRecording(); await videoTask; }
@@ -374,6 +375,7 @@ public partial class MainWindow
                 {
                     _applicationUpdateStart = null;
                     application?.CancelRecoveryExit();
+                    _imageLayers?.ReviewWhenVisible();
                 }
             }
             _ = Dispatcher.BeginInvoke(new Action(Close));

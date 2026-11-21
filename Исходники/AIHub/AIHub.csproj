@@ -60,6 +60,13 @@
     <Content Include="..\..\Runtime\MusicScore\score-c3e214f3-4\**\*" Link="MusicScoreRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\**\*" Link="MusicLoraStudioRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\BookSmart\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\ImageLayers\raster.py" LogicalName="AIHub.ImageLayers.Raster" />
+    <EmbeddedResource Include="Tools\ImageLayers\sam2.py" LogicalName="AIHub.ImageLayers.Sam2" />
+    <EmbeddedResource Include="Tools\ImageLayers\portrait.py" LogicalName="AIHub.ImageLayers.Portrait" />
+    <EmbeddedResource Include="Tools\ImageLayers\text.py" LogicalName="AIHub.ImageLayers.Text" />
+    <EmbeddedResource Include="Tools\ImageLayers\edge_details.py" LogicalName="AIHub.ImageLayers.EdgeDetails" />
+    <EmbeddedResource Include="Tools\ImageLayers\florence.py" LogicalName="AIHub.ImageLayers.Florence" />
+    <EmbeddedResource Include="Tools\ImageLayers\windows-cp312-portrait-wheel-lock.json" LogicalName="AIHub.ImageLayers.PortraitWheels" />
     <Content Include="..\..\Runtime\BookConverter\calibre-9.16.0\**\*" Link="BookConverterRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\book-converter-files.json" LogicalName="AIHub.BookConverterManifest" />
     <Content Include="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\**\*" Condition="'$(BookOfficeArchive)' != 'true'" Exclude="..\..\Runtime\BookConverter\libreoffice-26.2.4.2\*.msi" Link="BookOfficeRuntime\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

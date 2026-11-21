@@ -342,8 +342,13 @@ public sealed class ManagedModelAcquisitionService : IDisposable
         }
     }
 
+    // Dedicated image-layer models are exercised by their own audited executor.
+    // The generic vision compatibility check uses a different inference protocol.
     private static bool RequiresRuntimeSmokeCheck(ManagedModelArtifactCard card) =>
-        card.ModelArtifactId is not (ManagedModelCatalog.Qwen25OmniHeavyArtifactId or ManagedModelCatalog.OmniAlphaArtifactId or ManagedModelCatalog.OmniBetaArtifactId or ManagedModelCatalog.OmniGammaArtifactId)
+        card.ModelArtifactId is not (ManagedModelCatalog.Qwen25OmniHeavyArtifactId or ManagedModelCatalog.OmniAlphaArtifactId
+            or ManagedModelCatalog.OmniBetaArtifactId or ManagedModelCatalog.OmniGammaArtifactId or ManagedModelCatalog.ImageLayerSam2Id
+            or ManagedModelCatalog.ImageLayerMediaPipeId or ManagedModelCatalog.ImageLayerModNetId or ManagedModelCatalog.ImageLayerFlorenceId
+            or ManagedModelCatalog.ImageLayerTextId)
         && card.Role is (ManagedModelRoles.Vision or ManagedModelRoles.Localizer);
 
     private static void EnsureDownloadable(ManagedModelArtifactCard card)

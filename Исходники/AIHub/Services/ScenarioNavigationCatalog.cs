@@ -23,6 +23,7 @@ public static class ScenarioNavigationCatalog
     public const string SpeechAssets = "speech_assets";
     public const string Literary = "literary";
     public const string Images = "image_analysis";
+    public const string ImageLayers = "image_layers";
     public const string Sandbox = "uncertainty";
     public const string Finance = "finance";
     public const string Capture = "screen_capture";
@@ -122,6 +123,8 @@ public static class ScenarioNavigationCatalog
             tags: ["advisor", "writer", "retelling", "rag", "jelly", "export"], related: [Images]),
         Node(Images, ScenarioNavigationKind.Scenario, "analysis_images", "ImageAnalysis.Scenario.Title", "ImageAnalysis.Scenario.Description", "analyze",
             tags: ["image_description", "batch_description", "speech", "export"], related: [Literary]),
+        Node(ImageLayers, ScenarioNavigationKind.Scenario, "analysis_images", "ImageLayers.Title", "ImageLayers.Description", "analyze",
+            tags: ["image_layers", "image_layer_contours", "image_layer_history", "image_layer_text"], related: [Images]),
         Node(Sandbox, ScenarioNavigationKind.Scenario, "experiment_tests", "WorkStart.ReasoningTitle", "WorkStart.ReasoningDescription", "experiment",
             tags: ["research", "tools", "executor"], related: [])
     ]);
@@ -131,6 +134,13 @@ public static class ScenarioNavigationCatalog
     // Mechanic labels and canonical entrances share this catalog; no per-page tag lists.
     public static IReadOnlyList<ScenarioNavigationTag> CloudTags { get; } = Array.AsReadOnly<ScenarioNavigationTag>(
     [
+        new ScenarioNavigationTag("image_layers", "ImageLayers.Title", "ImageLayers.Description", ImageLayers),
+        new ScenarioNavigationTag("image_layer_contours", "ImageLayers.ContoursTag", "ImageLayers.ContoursTagHelp", ImageLayers),
+        new ScenarioNavigationTag("image_layer_history", "ImageLayers.History", "ImageLayers.HistoryTagHelp", ImageLayers),
+        new ScenarioNavigationTag("image_layer_text", "ImageLayers.TextTag", "ImageLayers.TextTagHelp", ImageLayers),
+        new ScenarioNavigationTag("image_layer_lasso", "ImageLayers.Lasso", "ImageLayers.LassoHelp", ImageLayers),
+        new ScenarioNavigationTag("image_layer_review", "ImageLayers.ReviewScene", "ImageLayers.ReviewSceneHelp", ImageLayers),
+        new ScenarioNavigationTag("image_layer_background", "ImageLayers.CompleteFrame", "ImageLayers.CompleteFrameHelp", ImageLayers),
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
         new ScenarioNavigationTag("island_model_tasks", "Island.ModelTasks", "Island.ModelTasksDescription", Island),
         new ScenarioNavigationTag("island_core_chat", "Island.CoreChat", "Island.CoreChatDescription", Island),

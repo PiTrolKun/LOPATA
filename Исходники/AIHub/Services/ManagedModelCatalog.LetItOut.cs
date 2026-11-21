@@ -17,7 +17,8 @@ public static partial class ManagedModelCatalog
         SourcePage = $"https://huggingface.co/{LetItOutRepository}", IsManaged = true, CanRemoveFiles = true, ModelsRoot = root,
         InstallDirectory = CombineIfRoot(root, "Experimental", "Gemma4", "Vision"),
         Origin = ManagedModelOrigins.PredefinedScenario, RuntimeBackend = "llama.cpp mtmd (CPU)",
-        Consumers = [Consumer("let_it_out", "Если накипело", "scenario_bundle")],
+        Consumers = [Consumer("let_it_out", "Если накипело", "scenario_bundle"),
+            Consumer(ScenarioNavigationCatalog.ImageLayers, "Разбор изображения на слои", "scenario_bundle")],
         Files = [File("mmproj-F16.gguf", $"https://huggingface.co/{LetItOutRepository}/resolve/{LetItOutRevision}/mmproj-F16.gguf",
             1_193_058_784, "d00f211a7d4f7fb19bd9b75d8e9342eccffb5920b08fd9562167560fdfcc5dd1", "vision_projector")]
     };
@@ -36,7 +37,8 @@ public static partial class ManagedModelCatalog
         // Reuse the evaluated download, without copying fourteen gigabytes or changing the global core.
         InstallDirectory = CombineIfRoot(modelsRoot, "Experimental", "Gemma4", "unsloth--gemma-4-26B-A4B-it-qat-GGUF"),
         Origin = ManagedModelOrigins.PredefinedScenario, RuntimeBackend = "llama.cpp (Vulkan / CPU)",
-        Consumers = [Consumer("let_it_out", "Если накипело", "scenario_bundle")],
+        Consumers = [Consumer("let_it_out", "Если накипело", "scenario_bundle"),
+            Consumer(ScenarioNavigationCatalog.ImageLayers, "Разбор изображения на слои", "scenario_bundle")],
         Files = [File(LetItOutModel.FileName,
             $"https://huggingface.co/{LetItOutRepository}/resolve/{LetItOutRevision}/{LetItOutModel.FileName}",
             LetItOutModel.TotalBytes, "a7c5bc715f5ff8e99a3e8901ce7d2b42b402c669bf24f7c5250747633d0f5891", "main_model")]

@@ -3,7 +3,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using AIHub.Controls;
+using AIHub.Controls.ImageLayers;
 using AIHub.Services;
+using AIHub.Services.ImageLayers;
 
 namespace AIHub.Tests;
 
@@ -34,6 +36,45 @@ public sealed class ScenarioNavigationTests
             }
         }
     }
+
+    [TestMethod]
+    public Task ImageLayersOpenAsTheNextPageAndKeepThePaletteWhileBusy() => Sta(() =>
+    {
+        var navigation = Create("ru", 1, true);
+        var owner = new Window { Content = navigation };
+        var library = new ManagedModelLibraryStore();
+        var page = new ImageLayersControl(owner, key => key, () => true, new ImageLayerAnalyzer(library),
+            () => throw new InvalidOperationException("Navigation must not prepare models"));
+        navigation.ScenarioRequested += id =>
+        {
+            if (id == ScenarioNavigationCatalog.ImageLayers) navigation.ShowImageLayers(page);
+        };
+        navigation.SelectDirection(ScenarioNavigationCatalog.Analysis);
+        var card = LogicalDescendants(navigation).OfType<Button>().Single(button =>
+            System.Windows.Automation.AutomationProperties.GetAutomationId(button) == "Navigation.image_layers");
+        card.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.AreSame(page, navigation.Content);
+        Assert.AreEqual(ScenarioNavigationCatalog.ImageLayers, navigation.RecoveryScenarioId);
+        Assert.IsNull(LogicalDescendants(page).OfType<LayerCanvas>().Single().ToolTip);
+
+        page.Measure(new Size(1200, 750)); page.Arrange(new Rect(0, 0, 1200, 750)); page.UpdateLayout();
+        foreach (var list in LogicalDescendants(page).OfType<ItemsControl>().Where(control => control is TreeView or ListBox))
+        {
+            list.ApplyTemplate();
+            var frame = (Border)VisualTreeHelper.GetChild(list, 0);
+            list.IsEnabled = false;
+            Assert.AreEqual(Color.FromRgb(23, 32, 50), ((SolidColorBrush)frame.Background).Color);
+            list.IsEnabled = true;
+            Assert.AreEqual(Color.FromRgb(23, 32, 50), ((SolidColorBrush)frame.Background).Color);
+        }
+
+        Assert.IsTrue(navigation.GoBack());
+        Assert.AreEqual(ScenarioNavigationCatalog.Analysis, navigation.SelectedDirectionId);
+        Assert.AreNotSame(page, navigation.Content);
+        navigation.OpenScenario(ScenarioNavigationCatalog.ImageLayers);
+        Assert.AreSame(page, navigation.Content);
+        owner.Close();
+    });
 
     [TestMethod]
     public Task SandboxLandingDoesNotStartTaskAndRetainsHistoryAcrossNavigation() => Sta(() =>

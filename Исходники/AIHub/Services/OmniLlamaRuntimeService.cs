@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -11,9 +12,12 @@ namespace AIHub.Services;
 public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore library, OmniLlamaProfile? profile = null, bool forceCpu = false, HttpMessageHandler? testHandler = null) : IOmniTextRuntime
 {
     private readonly OmniRuntimeMemoryOverride? _memoryOverride;
+    private readonly int _minimumImageTokens;
     internal OmniLlamaRuntimeService(ManagedModelLibraryStore library, OmniLlamaProfile profile,
         OmniRuntimeMemoryOverride memoryOverride, bool forceCpu = false) : this(library, profile, forceCpu)
         => _memoryOverride = memoryOverride ?? throw new ArgumentNullException(nameof(memoryOverride));
+    internal OmniLlamaRuntimeService(ManagedModelLibraryStore library, OmniLlamaProfile profile, int minimumImageTokens)
+        : this(library, profile) => _minimumImageTokens = minimumImageTokens;
     private readonly OmniLlamaProfile _profile = profile ?? OmniLlamaProfile.Alpha;
     private readonly HttpClient _http = testHandler is null ? new() { Timeout = Timeout.InfiniteTimeSpan }
         : new(testHandler, disposeHandler: false) { Timeout = Timeout.InfiniteTimeSpan };
@@ -119,6 +123,11 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
                 StandardErrorEncoding = Encoding.UTF8, StandardOutputEncoding = Encoding.UTF8
             };
             foreach (var arg in OmniLlamaProtocol.Arguments(model, projector, _port, _selectedRuntime.DeviceId, _selectedRuntime.UsesGpu)) info.ArgumentList.Add(arg);
+            if (_minimumImageTokens > 0 && _selectedRuntime.Bundle.EngineSetId == NativeRuntimeReleasePolicy.UpdatedSet)
+            {
+                info.ArgumentList.Add("--image-min-tokens");
+                info.ArgumentList.Add(_minimumImageTokens.ToString(CultureInfo.InvariantCulture));
+            }
             RuntimeDeviceProbe.ClearBackendOverrides(info);
             lock (_stderr) _stderr.Clear();
             var timer = Stopwatch.StartNew();

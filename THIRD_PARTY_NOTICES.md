@@ -1,3 +1,7 @@
+## 2026-11-22 — Image layer text recognition
+
+The optional OCR bundle contains the PaddleOCR PP-OCRv6 Small detector and recognizer and the PP-OCRv5 Cyrillic recognizer. The ONNX conversions by RapidOCR contributors are distributed under Apache-2.0. The original license is available in the component license catalog. The pinned files are recorded in the managed model catalog. [PaddleOCR project](https://github.com/PaddlePaddle/PaddleOCR) · [RapidOCR model license notice](https://github.com/RapidAI/RapidOCR/blob/main/python/MODEL_LICENSES.md)
+
 ## MiniMax H3-Image
 
 Powered by MiniMax-H3-Image. The model files and compatible stable-diffusion.cpp archives are downloaded separately. The gallery examples are AI-generated. MiniMax-H3-Image is licensed under the MiniMax-H3-Image Community License Agreement, Copyright © 2026 MiniMax. All Rights Reserved.
