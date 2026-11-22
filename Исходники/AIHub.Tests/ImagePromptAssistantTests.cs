@@ -130,7 +130,7 @@ public sealed class ImagePromptAssistantTests
     }
 
     [TestMethod]
-    public Task NativeMenuUsesTheCurrentThemeIncludingSuggestionText() => OnUi(async () =>
+    public Task NativeMenuKeepsThemeSuggestionsAndCommandAccessKeys() => OnUi(async () =>
     {
         var input = new TextBox { Text = "helo", Width = 300, Height = 100 };
         LiterarySpellChecking.Enable(input, "en");
@@ -153,12 +153,37 @@ public sealed class ImagePromptAssistantTests
                 var menu = (ContextMenu)Activator.CreateInstance(menuType, true)!;
                 var item = (MenuItem)Activator.CreateInstance(itemType, true)!;
                 var suggestion = new TextBlock { Text = "hello", FontWeight = FontWeights.Bold }; item.Header = suggestion;
-                menu.Items.Add(item); menu.PlacementTarget = input; menu.IsOpen = true;
+                menu.Items.Add(item);
+                var commands = new (string Header, char Key, string Gesture)[]
+                {
+                    ("_Пропустить все", 'П', ""),
+                    ("_Копировать", 'К', "Ctrl+C"),
+                    ("Вст_авить", 'А', "Ctrl+V"),
+                    ("Cu_t", 'T', "Ctrl+X")
+                };
+                foreach (var command in commands)
+                {
+                    var commandItem = (MenuItem)Activator.CreateInstance(itemType, true)!;
+                    commandItem.Header = command.Header;
+                    commandItem.InputGestureText = command.Gesture;
+                    menu.Items.Add(commandItem);
+                }
+                menu.PlacementTarget = input; menu.IsOpen = true;
                 try
                 {
                     await Dispatcher.Yield(DispatcherPriority.ContextIdle); menu.UpdateLayout();
                     Assert.AreEqual(foreground.Color, ((SolidColorBrush)suggestion.Foreground).Color);
-                    var borders = VisualChildren(menu).OfType<Border>().Where(b => b.Background is SolidColorBrush).ToArray();
+                    var visuals = VisualChildren(menu).ToArray();
+                    var headers = visuals.OfType<AccessText>().ToArray();
+                    foreach (var command in commands)
+                    {
+                        var header = headers.SingleOrDefault(text => text.Text == command.Header);
+                        Assert.IsNotNull(header, $"The native command {command.Header} must use AccessText.");
+                        Assert.AreEqual(command.Key, char.ToUpperInvariant(header.AccessKey));
+                        if (command.Gesture.Length > 0)
+                            Assert.IsTrue(visuals.OfType<TextBlock>().Any(text => text.Text == command.Gesture));
+                    }
+                    var borders = visuals.OfType<Border>().Where(b => b.Background is SolidColorBrush).ToArray();
                     Assert.IsTrue(borders.Any(b => ((SolidColorBrush)b.Background).Color == background.Color),
                         string.Join(", ", borders.Select(b => b.Name + ":" + b.Background)));
                     var previews = Environment.GetEnvironmentVariable("LOPATA_WORKSPACE_PREVIEWS");

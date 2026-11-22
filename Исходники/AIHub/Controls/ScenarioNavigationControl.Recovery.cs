@@ -5,6 +5,7 @@ namespace AIHub.Controls;
 public sealed partial class ScenarioNavigationControl
 {
     internal string? RecoveryScenarioId =>
+        IsCharacterKnowledge ? ScenarioNavigationCatalog.CharacterKnowledge :
         IsImageLayers ? ScenarioNavigationCatalog.ImageLayers :
         IsGameSounds ? ScenarioNavigationCatalog.GameSounds :
         IsOneC ? ScenarioNavigationCatalog.OneC :

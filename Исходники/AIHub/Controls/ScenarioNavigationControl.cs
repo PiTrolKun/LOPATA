@@ -81,6 +81,11 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsCharacterKnowledge)
+        {
+            if (LeaveCharacterKnowledge() && !ReturnFromScenario()) Render();
+            return true;
+        }
         if (IsImageLayers) { LeaveImageLayers(); if (!ReturnFromScenario()) Render(); return true; }
         if (IsVisualScenario) { if (LeaveVisualScenario() && !ReturnFromScenario()) Render(); return true; }
         if (IsGameSounds) { if (LeaveGameSounds() && !ReturnFromScenario()) Render(); return true; }
@@ -130,6 +135,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
+        if (!LeaveCharacterKnowledge()) return;
         if (!LeaveVisualScenario()) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
@@ -152,6 +158,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
+        if (!LeaveCharacterKnowledge()) return;
         if (!LeaveVisualScenario()) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
@@ -177,6 +184,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     internal void OpenScenario(string id, bool prepareShorts, bool prepareVisual = true)
     {
+        if (!LeaveCharacterKnowledge()) return;
         if (id == ScenarioNavigationCatalog.VisualScenario)
         {
             var workspace = OpenVisualWorkspace?.Invoke(prepareVisual);
@@ -349,6 +357,13 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (IsCharacterKnowledge)
+        {
+            CharacterKnowledgeView!.Configure(_localize);
+            Content = CharacterKnowledgeView;
+            StateChanged?.Invoke();
+            return;
+        }
         if (IsVisualScenario) { Content = VisualWorkspace; StateChanged?.Invoke(); return; }
         if (IsGameSounds) { GameSoundsView!.Configure(_localize); Content = GameSoundsView; StateChanged?.Invoke(); return; }
         if (IsOneC) { OneCView!.Configure(_localize); Content = OneCView; StateChanged?.Invoke(); return; }

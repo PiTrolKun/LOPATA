@@ -10,7 +10,7 @@ public partial class MainWindow
         var useWorkspaceLayout = ImageUtilityPage.Visibility == Visibility.Visible ||
             (ScenarioNavigationPage.Visibility == Visibility.Visible && (ScenarioNavigationPage.IsSongClip ||
                 ScenarioNavigationPage.IsLivingArcade || ScenarioNavigationPage.IsOneC || ScenarioNavigationPage.IsGameSounds
-                || ScenarioNavigationPage.IsVisualScenario || ScenarioNavigationPage.IsImageLayers));
+                || ScenarioNavigationPage.IsVisualScenario || ScenarioNavigationPage.IsImageLayers || ScenarioNavigationPage.IsCharacterKnowledge));
         if (ScenarioNavigationPage.Visibility == Visibility.Visible && ScenarioNavigationPage.IsLetItOutChat)
         {
             WorkStartPage.MaxWidth = double.PositiveInfinity;
