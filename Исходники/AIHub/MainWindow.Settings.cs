@@ -105,7 +105,7 @@ public partial class MainWindow
         Section("downloads", "\uE896", SettingsDownloadsCard, storageCard);
         Section("utilities", "\uE90F", utilities);
         Section("island", "\uE7F4", _settingsCards.Card(_islandSettingsHost));
-        Section("diagnostics", "\uE9D9", SettingsDiagnosticsCard);
+        Section("diagnostics", "\uE9D9", CreateInspectorSettings(_settingsCards), SettingsDiagnosticsCard);
         Section("about", "\uE946", about);
 
         void Target(string id, string section, string title, string help, FrameworkElement? element = null) =>
@@ -150,6 +150,7 @@ public partial class MainWindow
         Target("connections", "downloads", "Settings.ModelDownloadConnections", "Settings.ModelDownloadsHelp", ModelDownloadConnectionsComboBox);
         Target("model-storage", "downloads", "ModelStorage.Title", "ModelStorage.Help", storageCard);
         Target("utilities", "utilities", "Capture.Title", "Capture.Description", utilities);
+        Target("pc-inspector", "diagnostics", "Inspector.Title", "Inspector.Help", _inspectorSwitch);
         Target("logging", "diagnostics", "Diagnostics.Literary.Enabled", "Diagnostics.Literary.Hint", DetailedLiteraryDiagnosticsCheckBox);
         Target("logs", "diagnostics", "Diagnostics.Literary.Open", "Diagnostics.Literary.Hint", OpenLiteraryDiagnosticsButton);
         Target("processes", "diagnostics", "Processes.Title", "Settings.Navigation.diagnostics.Help", OpenProcessesButton);
@@ -189,6 +190,7 @@ public partial class MainWindow
             RefreshDictationSettings();
             RefreshDictation();
             RefreshGenerationSettings();
+            RefreshInspectorSettings();
             _engineSets.Localize(L);
             _modelStorageRelocation?.Localize(L);
             RefreshEngineSetIndicator();

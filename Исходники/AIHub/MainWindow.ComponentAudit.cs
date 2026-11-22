@@ -46,6 +46,7 @@ public partial class MainWindow
             ApplyComponentAuditChoice(_appSettings.Behavior, enabled);
             _appSettingsStore.Save(_appSettings);
             ComponentAudit.Configure(enabled); RefreshComponentAudit();
+            QueueInspectorAudit(enabled);
         }
         catch (Exception error) {
             _appSettings.Behavior.ComponentAuditEnabled = previous;

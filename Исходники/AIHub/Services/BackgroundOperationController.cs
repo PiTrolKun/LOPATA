@@ -135,6 +135,7 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
             _previousElapsed = input.ElapsedSeconds; _elapsed.Restart();
         }
         _scope.Value = input.Id;
+        using var inspection = ApplicationInspector.Enter(input);
         NotifyChanged();
         try
         {
@@ -264,6 +265,7 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
         var previous = _state;
         var next = state with { UpdatedUtc = DateTimeOffset.UtcNow };
         _store.Save(next); _state = next;
+        ApplicationInspector.StateChanged(previous, next);
         if (previous is not null) VoiceNotifications.VoiceNotificationEvents.Background(previous, next);
         return true;
     }

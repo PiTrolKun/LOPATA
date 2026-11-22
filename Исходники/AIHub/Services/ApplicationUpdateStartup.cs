@@ -84,11 +84,11 @@ internal static class ApplicationUpdateStartup
         if (registration is null) return false; // Legacy installations use their existing launch path until migration.
         if (!Path.GetFullPath(registration.AppDirectory).TrimEnd(Path.DirectorySeparatorChar)
             .Equals(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)) return false;
-        // Older installed launchers do not forward file arguments, and a prepared full installer
-        // cannot preserve this request. The verified installed application accepts it directly.
+        // Older installed launchers do not forward direct activation requests, and a prepared
+        // full installer cannot preserve them. The verified installed application accepts them directly.
         // Ordinary launches retain the complete update/recovery route.
         if (IsImageShellLaunch(args) || AudioShellRequest.ParseArguments(args) is not null
-            || IsVectorFileLaunch(args) || IsVideoFileLaunch(args)) return false;
+            || IsVectorFileLaunch(args) || IsVideoFileLaunch(args) || IsInspectorReportLaunch(args)) return false;
         var start = Launcher("--launch");
         if (args.Contains("--background", StringComparer.Ordinal)) start.ArgumentList.Add("--background");
         if (args.Contains("--recover-safe", StringComparer.Ordinal)) start.ArgumentList.Add("--recover-safe");
@@ -101,6 +101,9 @@ internal static class ApplicationUpdateStartup
     internal static bool IsImageShellLaunch(string[] args) => ImageShellRequest.ParseArguments(args) is not null;
     internal static bool IsVectorFileLaunch(string[] args) => VectorEditor.VectorFileRequest.Parse(args) is not null;
     internal static bool IsVideoFileLaunch(string[] args) => VideoEditor.VideoFileRequest.Parse(args) is not null;
+    internal static bool IsInspectorReportLaunch(string[] args) =>
+        args.Where(argument => argument is not ("--recover-session" or "--recover-safe")).Take(2).ToArray()
+            is ["--inspector-report"];
 
     public static ProcessStartInfo Launcher(string command)
     {

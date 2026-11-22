@@ -90,6 +90,7 @@ public partial class App : System.Windows.Application
         SafeCrashRecoveryLaunch = e.Args.Contains("--recover-safe", StringComparer.Ordinal);
         var recovering = SafeCrashRecoveryLaunch || e.Args.Contains("--recover-session", StringComparer.Ordinal);
         var args = e.Args.Where(argument => argument is not ("--recover-session" or "--recover-safe")).ToArray();
+        var inspectorReport = Services.ApplicationUpdateStartup.IsInspectorReportLaunch(args);
         ImageShellLaunch = args.Contains("--shell-image", StringComparer.Ordinal);
         AudioShellLaunch = args.Contains("--shell-audio", StringComparer.Ordinal);
         VectorFileLaunch = args.Contains("--svg", StringComparer.Ordinal);
@@ -111,7 +112,7 @@ public partial class App : System.Windows.Application
             readerRequest = Services.OfficeReader.ReaderFileRequest.Parse(args);
             if (new[] {ImageShellLaunch,AudioShellLaunch,VectorFileLaunch,VideoFileLaunch,ReaderFileLaunch}.Count(v=>v)>1) throw new System.IO.InvalidDataException("Mixed shell requests.");
             BackgroundLaunch = ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch || args.Contains("--background", StringComparer.Ordinal);
-            _instance = Services.SingleApplicationInstance.Acquire(BackgroundLaunch, imageRequest, audioRequest, vectorRequest, videoRequest, readerRequest);
+            _instance = Services.SingleApplicationInstance.Acquire(BackgroundLaunch, imageRequest, audioRequest, vectorRequest, videoRequest, readerRequest, inspectorReport);
             if (_instance is null) { Shutdown(); return; }
             if (Services.ApplicationUpdateStartup.RedirectInstalledLaunch(e.Args))
             {
@@ -149,8 +150,10 @@ public partial class App : System.Windows.Application
             Services.OwnedProcessRegistry.Log("startup_window_construct_begin", "Application", Environment.ProcessId);
             var window = new MainWindow(); MainWindow = window;
             window.InitializeCrashWorkspaceRecovery(recovering && !SafeCrashRecoveryLaunch);
+            window.InitializeSystemInspector();
             Services.OwnedProcessRegistry.Log("startup_window_construct_end", "Application", Environment.ProcessId);
             _instance.OpenRequested += () => Dispatcher.BeginInvoke(window.OpenFromSecondInstance);
+            _instance.InspectorReportRequested += () => Dispatcher.InvokeAsync(window.OpenInspectorReportAsync);
             var startInTray = !SafeCrashRecoveryLaunch && (window.CrashWorkspaceStartsInTray ?? BackgroundLaunch);
             if (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch || (startInTray && window.CanStartInTray))
             {
@@ -175,6 +178,8 @@ public partial class App : System.Windows.Application
                     System.Windows.Threading.DispatcherPriority.Normal, token).Task.Unwrap());
             StartMailHub(window);
             _instance.DeliverPendingOpen();
+            if (inspectorReport) _ = window.OpenInspectorReportAsync();
+            _instance.DeliverPendingInspectorReport();
         }
         catch (Exception error) when (ImageShellLaunch || AudioShellLaunch || VectorFileLaunch || VideoFileLaunch || ReaderFileLaunch)
         {

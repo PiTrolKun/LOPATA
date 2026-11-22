@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AIHub.Models;
 using AIHub.Services;
+using Lopata.Inspector;
 
 namespace AIHub.Tests;
 
@@ -22,6 +24,7 @@ public sealed class ImageEngineSetNativeIntegrationTests
         var outputRoot = Environment.GetEnvironmentVariable("AIHUB_ENGINE_NATIVE_OUTPUT");
         if (string.IsNullOrWhiteSpace(modelRoot) || string.IsNullOrWhiteSpace(outputRoot))
             Assert.Inconclusive("Explicit existing model and isolated output directories are required.");
+        var inspector = PrepareInspectorStand(setId, modelId, outputRoot);
         var folder = Path.Combine(Path.GetFullPath(outputRoot), "image-" + setId + "-" + modelId + "-" + Guid.NewGuid().ToString("N"));
         var session = ImageGenerationSessionStore.Create(folder);
         var ids = ImageGenerationCatalog.Get(modelId).Components;
@@ -34,6 +37,11 @@ public sealed class ImageEngineSetNativeIntegrationTests
             Assert.IsTrue(File.Exists(path), "An existing model artifact is required: " + file.RelativePath);
             Assert.AreEqual(file.SizeBytes, new FileInfo(path).Length);
         }
+        if (inspector is not null)
+        {
+            var library = new ManagedModelLibraryStore();
+            foreach (var card in cards) library.Upsert(card);
+        }
         var qwen = ImageGenerationCatalog.Get(modelId).Family is not null;
         var side = qwen ? 1024 : 512;
         var request = new ImageGenerationRequest(Guid.NewGuid().ToString("N"), modelId,
@@ -45,7 +53,9 @@ public sealed class ImageEngineSetNativeIntegrationTests
         };
         using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         using var pauseToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);
-        var runtime = new ImageGenerationRuntime();
+        var resident = inspector is null ? null : new ImageGenerationResident();
+        var runtime = resident is null ? new ImageGenerationRuntime()
+            : new ImageGenerationRuntime(new ImageGenerationNativeWorker(null, resident));
         byte[]? firstBytes = null;
         if (pause)
         {
@@ -56,7 +66,9 @@ public sealed class ImageEngineSetNativeIntegrationTests
             Assert.AreEqual(setId, saved.Request.EngineSetId);
             firstBytes = File.ReadAllBytes(ImageGenerationSessionStore.ResultPath(request, 0));
         }
-        var result = await runtime.RunAsync(request, cards, null, timeout.Token);
+        var result = inspector is null
+            ? await runtime.RunAsync(request, cards, null, timeout.Token)
+            : await RunInspectedAsync(inspector, request, cards, runtime, resident!, timeout.Token);
         Assert.HasCount(request.Seeds.Length, result.Results);
         foreach (var image in result.Results)
         {
@@ -78,5 +90,66 @@ public sealed class ImageEngineSetNativeIntegrationTests
         await runtime.RunAsync(request, cards, null, timeout.Token);
         CollectionAssert.AreEqual(times, result.Results.Select(image => File.GetLastWriteTimeUtc(ImageGenerationSessionStore.ResultPath(request, image.Index))).ToArray());
         Assert.HasCount(request.Seeds.Length, Directory.GetFiles(request.OutputFolder, "*.png"));
+    }
+
+    private static InspectorStore? PrepareInspectorStand(string setId, string modelId, string outputRoot)
+    {
+        if (Environment.GetEnvironmentVariable("AIHUB_INSPECTOR_NATIVE_TEST") != "1") return null;
+        if ((setId, modelId) != ("002", "krea")) Assert.Inconclusive("The inspector stand covers Krea in engine set 002.");
+        var root = Environment.GetEnvironmentVariable("LOPATA_UPDATE_STAND_ROOT");
+        Assert.IsNotNull(root, "An isolated UPDATE_STAND profile is required.");
+        Assert.AreEqual(Path.GetFullPath(root), AppDataPaths.BaseDirectory,
+            "The test must use the UPDATE_STAND profile.");
+        var ordinary = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AI_HUB");
+        Assert.IsFalse(string.Equals(AppDataPaths.BaseDirectory, ordinary, StringComparison.OrdinalIgnoreCase));
+        Assert.IsTrue(Path.GetFullPath(outputRoot).StartsWith(
+            Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
+            StringComparison.OrdinalIgnoreCase), "Artifacts must remain inside the stand profile.");
+        return ApplicationInspector.Initialize();
+    }
+
+    private static async Task<ImageGenerationTurn> RunInspectedAsync(InspectorStore inspector,
+        ImageGenerationRequest request, IReadOnlyList<ManagedModelArtifactCard> cards,
+        ImageGenerationRuntime runtime, ImageGenerationResident resident, CancellationToken token)
+    {
+        var execution = new BackgroundOperationExecution(new BackgroundOperationStore(
+            Path.Combine(request.SessionDirectory, "inspector-operation.json")));
+        var input = new BackgroundOperationState
+        {
+            Id = request.Id,
+            Kind = ImageGenerationCatalog.BackgroundKind,
+            Title = "Isolated Krea inspector test",
+            Input = JsonSerializer.SerializeToElement(request)
+        };
+        ImageGenerationTurn turn;
+        try
+        {
+            turn = await execution.RunAsync(input, attempt => runtime.RunAsync(request, cards, null, attempt),
+                resident.RetireAsync, token);
+        }
+        finally { await resident.RetireAsync(); }
+
+        var json = new JsonSerializerOptions(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
+        var queue = Path.Combine(inspector.DirectoryPath, "queue");
+        var events = Directory.GetFiles(queue, "*.json").Order().Select(file =>
+            JsonSerializer.Deserialize<InspectorEvent>(File.ReadAllText(file), json)!)
+            .Where(item => item.OperationId == request.Id).ToArray();
+        var kinds = events.Select(item => item.Kind).ToArray();
+        Assert.IsTrue(Array.IndexOf(kinds, InspectorEventKind.Preflight) >= 0);
+        Assert.IsTrue(Array.IndexOf(kinds, InspectorEventKind.Preflight) < Array.IndexOf(kinds, InspectorEventKind.AttemptStarted));
+        Assert.HasCount(1, events.Where(item => item.Kind == InspectorEventKind.ProcessStarted &&
+            item.ProcessId > 0 && item.ProcessStartedUtc is not null));
+        var samplingSteps = events.Where(item => item.Kind == InspectorEventKind.Progress && item.Stage == "generating"
+                && item.Detail?.StartsWith("step ", StringComparison.Ordinal) == true).Select(item => item.Detail!).ToArray();
+        var expectedSteps = ImageGenerationCatalog.Get(request.ModelId).Steps;
+        Assert.Contains($"step {expectedSteps}/{expectedSteps}", samplingSteps);
+        Assert.IsTrue(samplingSteps.All(step => step.EndsWith($"/{expectedSteps}", StringComparison.Ordinal)));
+        Assert.IsTrue(events.Any(item => item.Kind == InspectorEventKind.Progress && item.Stage == "model_loading"));
+        Assert.IsTrue(events.Any(item => item.Kind == InspectorEventKind.Progress && item.Stage == "image_decoding"));
+        Assert.IsTrue(events.Any(item => item.Kind == InspectorEventKind.Saved && item.Outcome == InspectorOutcome.Success));
+        Assert.IsTrue(events.Any(item => item.Kind == InspectorEventKind.AttemptFinished && item.Outcome == InspectorOutcome.Success));
+        Assert.IsTrue(events.Any(item => item.Kind == InspectorEventKind.OperationFinished && item.Outcome == InspectorOutcome.Success));
+        Assert.IsTrue(events.Any(item => item.Kind == InspectorEventKind.ProcessExited && item.ProcessId > 0));
+        return turn;
     }
 }

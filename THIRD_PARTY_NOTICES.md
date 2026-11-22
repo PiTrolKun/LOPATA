@@ -1,3 +1,7 @@
+## 2026-11-22 — LOPATA PC Inspector
+
+The local report component includes IBM Granite TSPulse R1 at revision `2e64fcdc2a06d3565dfadaf0065c0ab5055f80f2` and the official `granite-tsfm` 0.3.12 pipeline, both under Apache-2.0. It uses the managed CPython and PyTorch CPU environment with its existing acquisition and licence flow. The locked overlay retains upstream license files in the installed wheel metadata. [IBM model](https://huggingface.co/ibm-granite/granite-timeseries-tspulse-r1/tree/2e64fcdc2a06d3565dfadaf0065c0ab5055f80f2) · [IBM pipeline](https://github.com/ibm-granite/granite-tsfm/tree/v0.3.12) · [Overlay lock](Инструменты/Inspector/tspulse-wheels-win-x64.txt)
+
 ## 2026-11-22 — Image layer text recognition
 
 The optional OCR bundle contains the PaddleOCR PP-OCRv6 Small detector and recognizer and the PP-OCRv5 Cyrillic recognizer. The ONNX conversions by RapidOCR contributors are distributed under Apache-2.0. The original license is available in the component license catalog. The pinned files are recorded in the managed model catalog. [PaddleOCR project](https://github.com/PaddlePaddle/PaddleOCR) · [RapidOCR model license notice](https://github.com/RapidAI/RapidOCR/blob/main/python/MODEL_LICENSES.md)

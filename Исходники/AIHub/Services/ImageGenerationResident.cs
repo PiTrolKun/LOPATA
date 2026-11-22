@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Windows.Media.Imaging;
 using AIHub.Models;
+using Lopata.Inspector;
 
 namespace AIHub.Services;
 
@@ -35,14 +36,16 @@ internal sealed class ImageGenerationResident
     }
 
     internal async Task WarmAsync(ImageGenerationRequest request, IReadOnlyList<ManagedModelArtifactCard> cards,
-        SdRuntimeSelection selection, CancellationToken token)
+        SdRuntimeSelection selection, CancellationToken token, ImageInspectorAttempt? inspection = null)
     {
         var model = ImageGenerationCatalog.Get(request.ModelId);
         var command = ImageGenerationNativeWorker.ManagedCommand(request, 0, cards, "", "", selection, server: true);
         await _gate.WaitAsync(token);
         try
         {
-            var session = await ReadySessionAsync(command, model.RequiresGpu, token);
+            if (inspection is not null && !(_warm && _session?.Matches(command) == true))
+                await BeginInspectionAsync(inspection, command, token);
+            var session = await ReadySessionAsync(command, model.RequiresGpu, token, inspection);
             if (_warm) return;
             // A server that answers capabilities can still defer loading model weights to its first inference.
             var (width, height) = WarmupSize(model);
@@ -53,6 +56,7 @@ internal sealed class ImageGenerationResident
             await SaveWarmupLogAsync(request, selection, session.Process.Id, "ready", session.ReadLog());
             OwnedProcessRegistry.Log("resident_warmed", "ImageGeneration", session.Process.Id, request.ModelId);
         }
+        catch (OperationCanceledException error) when (error.Message == ApplicationInspector.Deferred) { throw; }
         catch (Exception error)
         {
             if (_session is { } failed)
@@ -95,16 +99,18 @@ internal sealed class ImageGenerationResident
 
     internal async Task<(int ExitCode, string Log, ImageGenerationGpuPlacement Placement)> GenerateAsync(
         ImageGenerationRequest request, int index, IReadOnlyList<ManagedModelArtifactCard> cards, string output,
-        SdRuntimeSelection selection, IProgress<BitmapSource>? preview, CancellationToken token, Action<bool>? starting = null)
+        SdRuntimeSelection selection, IProgress<BitmapSource>? preview, CancellationToken token, Action<bool>? starting = null,
+        ImageInspectorAttempt? inspection = null)
     {
         var command = ImageGenerationNativeWorker.ManagedCommand(request, index, cards, "", output, selection, server: true);
         await _gate.WaitAsync(token);
         var cold = false;
         try
         {
+            if (inspection is not null) await BeginInspectionAsync(inspection, command, token);
             cold = starting is not null && (!_warm || _session is not { } previous || !previous.Matches(command));
             if (cold) starting!(true);
-            var session = await ReadySessionAsync(command, ImageGenerationCatalog.Get(request.ModelId).RequiresGpu, token);
+            var session = await ReadySessionAsync(command, ImageGenerationCatalog.Get(request.ModelId).RequiresGpu, token, inspection);
             var success = !session.Rejected && await session.DrawAsync(request, index, output, preview, token);
             if (success) _warm = true;
             if (!success && session.Process.HasExited && !session.Rejected)
@@ -117,6 +123,7 @@ internal sealed class ImageGenerationResident
             if (!success) await CloseSessionAsync();
             return (success ? 0 : 1, receipt, placement);
         }
+        catch (OperationCanceledException error) when (error.Message == ApplicationInspector.Deferred) { throw; }
         catch (Exception error) when (!token.IsCancellationRequested && _session is { } failed
             && (error is HttpRequestException { StatusCode: null } or OperationCanceledException))
         {
@@ -136,12 +143,21 @@ internal sealed class ImageGenerationResident
         }
     }
 
-    private async Task<Session> ReadySessionAsync(ProcessStartInfo command, bool requireGpu, CancellationToken token)
+    private async Task BeginInspectionAsync(ImageInspectorAttempt inspection, ProcessStartInfo command, CancellationToken token)
     {
-        if (_session is { } current && current.Matches(command)) return current;
+        var current = _session is { } existing && existing.Matches(command) ? existing : null;
+        inspection.SetWarm(current is not null && _warm);
+        if (current is not null) inspection.Attach(current.Process, announce: false);
+        await inspection.BeginAsync(token);
+    }
+
+    private async Task<Session> ReadySessionAsync(ProcessStartInfo command, bool requireGpu, CancellationToken token,
+        ImageInspectorAttempt? inspection)
+    {
+        if (_session is { } current && current.Matches(command)) { current.Track(inspection); return current; }
         await CloseSessionAsync();
         token.ThrowIfCancellationRequested();
-        _session = new(command, requireGpu);
+        _session = new(command, requireGpu, inspection);
         await _session.WaitUntilReadyAsync(token);
         return _session;
     }
@@ -187,9 +203,10 @@ internal sealed class ImageGenerationResident
         private readonly Task _logs;
         private readonly StringBuilder _log = new();
         private ImageGenerationGpuPlacement _placement;
+        private ImageInspectorAttempt? _inspection;
         internal Process Process { get; }
 
-        internal Session(ProcessStartInfo command, bool requireGpu)
+        internal Session(ProcessStartInfo command, bool requireGpu, ImageInspectorAttempt? inspection)
         {
             _executable = command.FileName;
             _arguments = command.ArgumentList.ToArray();
@@ -204,7 +221,14 @@ internal sealed class ImageGenerationResident
             command.ArgumentList.Add("--listen-port");
             command.ArgumentList.Add(port.ToString(CultureInfo.InvariantCulture));
             Process = OwnedProcessRegistry.Shared.Start(command, "ImageGeneration");
+            Track(inspection);
             _logs = Task.WhenAll(DrainAsync(Process.StandardOutput), DrainAsync(Process.StandardError));
+        }
+
+        internal void Track(ImageInspectorAttempt? inspection)
+        {
+            inspection?.Attach(Process);
+            Volatile.Write(ref _inspection, inspection);
         }
 
         internal bool Matches(ProcessStartInfo command) => !Process.HasExited
@@ -220,6 +244,7 @@ internal sealed class ImageGenerationResident
 
         internal async Task WaitUntilReadyAsync(CancellationToken token)
         {
+            _inspection?.Progress("worker_connect");
             while (!Process.HasExited && !Rejected)
             {
                 try
@@ -259,6 +284,7 @@ internal sealed class ImageGenerationResident
             if (warmup) OwnedProcessRegistry.Log("resident_warmup_job", "ImageGeneration", Process.Id, id);
             var poll = Address("jobs/" + Uri.EscapeDataString(id));
             (int Pass, int Step) lastFrame = default;
+            string? lastStatus = null;
             while (!Process.HasExited && !Rejected)
             {
                 using var result = await Http.GetAsync(poll, token);
@@ -267,13 +293,21 @@ internal sealed class ImageGenerationResident
                 if (job is null) return RecordFailure("poll returned an empty job");
                 var state = job.RootElement;
                 var status = state.GetProperty("status").GetString();
+                if (status != lastStatus)
+                {
+                    if (status is "queued" or "generating") _inspection?.Progress(status);
+                    lastStatus = status;
+                }
                 switch (status)
                 {
                     case "completed":
                         var image = state.GetProperty("result").GetProperty("images")[0].GetProperty("b64_json");
                         if (output is null) return image.ValueKind == JsonValueKind.String && image.GetString() is { Length: > 0 }
                             || RecordFailure("job completed without an image");
-                        await File.WriteAllBytesAsync(output, image.GetBytesFromBase64(), token);
+                        _inspection?.Progress("output_write");
+                        try { await File.WriteAllBytesAsync(output, image.GetBytesFromBase64(), token); }
+                        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                        { _inspection?.Complete(InspectorOutcome.SaveFailure); throw; }
                         return true;
                     case "generating":
                         if (preview is not null && state.TryGetProperty("preview", out var frame) && frame.ValueKind == JsonValueKind.Object)
@@ -281,6 +315,7 @@ internal sealed class ImageGenerationResident
                             var position = (frame.GetProperty("pass").GetInt32(), frame.GetProperty("step").GetInt32());
                             if (position != lastFrame)
                             {
+                                _inspection?.Progress("generating", $"step {position.Item2}");
                                 using var stream = new MemoryStream(frame.GetProperty("b64_json").GetBytesFromBase64());
                                 var bitmap = new PngBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad).Frames[0];
                                 bitmap.Freeze();
@@ -324,6 +359,7 @@ internal sealed class ImageGenerationResident
         {
             while (await stream.ReadLineAsync() is { } line)
             {
+                Volatile.Read(ref _inspection)?.ObserveNativeProgress(line);
                 var placement = ImageGenerationPlacementLog.Read(line);
                 lock (_log)
                 {
@@ -346,7 +382,9 @@ internal sealed class ImageGenerationResident
 
         internal async Task StopAsync()
         {
+            _inspection?.Emit(InspectorEventKind.ReleaseRequested);
             await ModelProcessRetirement.StopAsync(Process, () => ImageGenerationNativeWorker.Stop(Process));
+            _inspection?.Emit(InspectorEventKind.ProcessExited);
             try { await _logs; }
             finally { Process.Dispose(); }
         }

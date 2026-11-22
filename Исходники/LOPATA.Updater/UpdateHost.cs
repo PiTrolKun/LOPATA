@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
+using Lopata.Inspector;
 using Lopata.Recovery;
 using Lopata.Updates;
 
@@ -9,8 +11,22 @@ internal sealed class UpdateHost(Action<string> status,
     Action<CoreVoiceRollbackStore, string>? reportSettingsRollback = null)
 {
     private static readonly IReadOnlyDictionary<string, string> Keys = UpdateReleaseKeys.Trusted;
+    private string? _inspectorResumePath;
 
     public async Task RunAsync(string[] args, CancellationToken token = default)
+    {
+        try { await RunCoreAsync(args, token); }
+        finally
+        {
+            if (_inspectorResumePath is { } application)
+            {
+                _inspectorResumePath = null;
+                ResumeInspector(application);
+            }
+        }
+    }
+
+    private async Task RunCoreAsync(string[] args, CancellationToken token)
     {
         var worker = args.Contains("--worker", StringComparer.Ordinal);
         args = args.Where(a => a != "--worker").ToArray();
@@ -64,6 +80,8 @@ internal sealed class UpdateHost(Action<string> status,
             new PreparedUpdateStore(installation.StateDirectory, Keys).Clear();
             status(HostText.Get("UpdateHost.InitializingCollection"));
             await CollectionInstallation.InitializeAsync(installation, signed, Keys, HostText.Get, token);
+            ResumeInspector(Path.Combine(installation.AppDirectory, "AIHub.exe"));
+            _inspectorResumePath = null;
             return;
         }
         var state = InstalledUpdateState.Read() ?? throw new IOException("The transition installer has not registered this installation.");
@@ -122,11 +140,20 @@ internal sealed class UpdateHost(Action<string> status,
             }
             var startup = new StartupRegistration(InstalledUpdateState.LauncherPath);
             if (startup.IsRegistered) startup.SetEnabled(false);
+            var application = Path.Combine(state.AppDirectory, "AIHub.exe");
+            if (File.Exists(Path.Combine(state.AppDirectory, InspectorStartup.ExecutableName)))
+                InspectorStartup.RemoveAutomaticStart(InstalledUpdateState.UserDataDirectory, application);
             await RemoveManagedFilesAsync(state, transaction);
-            RecoveryTask.TryUnregister(Path.Combine(state.AppDirectory, "AIHub.exe"), InstalledUpdateState.UserDataDirectory);
+            _inspectorResumePath = null;
+            RecoveryTask.TryUnregister(application, InstalledUpdateState.UserDataDirectory);
             return;
         }
-        if (mode == "--recover") return;
+        if (mode == "--recover")
+        {
+            // Full installer preflight. The newly registered installation resumes the inspector.
+            _inspectorResumePath = null;
+            return;
+        }
         if (journal is { Phase: UpdatePhase.RolledBack } && reportSettingsRollback is not null)
         {
             using var reportLease = voiceRecovery.TryBeginReport(journal.Id);
@@ -142,7 +169,7 @@ internal sealed class UpdateHost(Action<string> status,
         var pending = pendingStore.Read();
         if (pending is not null && (mode == "--apply" || recoveryArgument is null && pending.ApplyOnNextLaunch))
         {
-            await WaitForInstallationMutationAsync(state, token);
+            await WaitForInstallationMutationAsync(state, token, suspendInspector: pending.Delivery != UpdateDelivery.FullInstaller);
             if (pending.Delivery == UpdateDelivery.FullInstaller)
             {
                 if (!await UpdatePlanner.MatchesAsync(pending.InstallerPath!, pending.Installer!.Size, pending.Installer.Sha256))
@@ -219,10 +246,16 @@ internal sealed class UpdateHost(Action<string> status,
         }
     }
 
-    private static async Task WaitForInstallationMutationAsync(InstalledUpdateState state, CancellationToken token)
+    private async Task WaitForInstallationMutationAsync(InstalledUpdateState state, CancellationToken token, bool suspendInspector = true)
     {
         EnsureNotRunning(state);
-        RecoverySession.RequestUpdateHandoff(Path.Combine(state.AppDirectory, "AIHub.exe"), InstalledUpdateState.UserDataDirectory);
+        var application = Path.Combine(state.AppDirectory, "AIHub.exe");
+        if (suspendInspector && File.Exists(Path.Combine(state.AppDirectory, InspectorStartup.ExecutableName)))
+        {
+            _inspectorResumePath = application;
+            await InspectorStartup.SuspendForServicingAsync(InstalledUpdateState.UserDataDirectory, application, token);
+        }
+        RecoverySession.RequestUpdateHandoff(application, InstalledUpdateState.UserDataDirectory);
         var executable = Path.Combine(state.AppDirectory, "LOPATA.Recovery.exe");
         var candidates = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(executable));
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
@@ -249,6 +282,16 @@ internal sealed class UpdateHost(Action<string> status,
             foreach (var process in candidates) process.Dispose();
         }
         EnsureNotRunning(state);
+    }
+
+    private static void ResumeInspector(string application)
+    {
+        try { InspectorStartup.Reconcile(InstalledUpdateState.UserDataDirectory, application); }
+        catch (Exception error) when (error is IOException or COMException or UnauthorizedAccessException
+            or InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            Trace.TraceWarning("Could not restore the inspector startup registration: {0}", error.Message);
+        }
     }
 
     private static void StartApplication(InstalledUpdateState state, string? transactionId, bool background, string? recoveryArgument = null)

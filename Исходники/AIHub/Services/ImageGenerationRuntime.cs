@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Windows.Media.Imaging;
 using AIHub.Models;
+using Lopata.Inspector;
 using AIHub.Services.VisualScenario;
 
 namespace AIHub.Services;
@@ -103,21 +104,42 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
             : null;
         if (prepared is not null) request = request with { ReferenceImages = prepared.Paths };
         var resident = _resident;
+        var inspection = ImageInspectorAttempt.Create(request, selection, cards, index);
         (int ExitCode, string Log, ImageGenerationGpuPlacement Placement) result;
-        if (resident is not null && CanUseServer(request, selection))
-            result = await resident.GenerateAsync(request, index, cards, output, selection, _previewFrames, token, _starting);
-        else
+        try
         {
-            if (resident is not null) await resident.RetireAsync();
-            result = await AttemptAsync(request, index, cards, promptFile, output, selection, model.RequiresGpu, token);
+            if (resident is not null && CanUseServer(request, selection))
+                result = await resident.GenerateAsync(request, index, cards, output, selection, _previewFrames, token, _starting, inspection);
+            else
+            {
+                if (resident is not null) await resident.RetireAsync();
+                result = await AttemptAsync(request, index, cards, promptFile, output, selection, model.RequiresGpu, token, inspection);
+            }
         }
-        if (!model.RequiresGpu && result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log))
+        catch (Exception error)
+        {
+            inspection?.Complete(ImageInspectorAttempt.Evaluate(error, token));
+            throw;
+        }
+        var retryOnCpu = !model.RequiresGpu && result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log);
+        inspection?.Complete(ImageInspectorAttempt.Evaluate(result.ExitCode, result.Log, result.Placement, selection.UsesGpu));
+        if (retryOnCpu)
         {
             token.ThrowIfCancellationRequested();
             var cpu = await SdRuntimeSelector.SelectAsync(cards, true, token, setId);
-            var retry = await AttemptAsync(request, index, cards, promptFile, output, cpu, false, token);
-            result = (retry.ExitCode, result.Log + "\nCPU retry:\n" + retry.Log, retry.Placement);
-            selection = cpu;
+            var cpuInspection = ImageInspectorAttempt.Create(request, cpu, cards, index, retry: true);
+            try
+            {
+                var retry = await AttemptAsync(request, index, cards, promptFile, output, cpu, false, token, cpuInspection);
+                cpuInspection?.Complete(ImageInspectorAttempt.Evaluate(retry.ExitCode, retry.Log, retry.Placement, false));
+                result = (retry.ExitCode, result.Log + "\nCPU retry:\n" + retry.Log, retry.Placement);
+                selection = cpu;
+            }
+            catch (Exception error)
+            {
+                cpuInspection?.Complete(ImageInspectorAttempt.Evaluate(error, token));
+                throw;
+            }
         }
         await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_" + index + ".runtime.log"), result.Log, token);
         if (model.RequiresGpu)
@@ -151,7 +173,19 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         using var audit = ComponentAudit.CaptureOperation();
         var selection = await SelectVerifiedRuntimeAsync(request, cards, token);
         if (!CanUseServer(request, selection)) return false;
-        await resident.WarmAsync(request, cards, selection, token);
+        var (width, height) = ImageGenerationResident.WarmupSize(ImageGenerationCatalog.Get(request.ModelId));
+        var inspection = ImageInspectorAttempt.Create(request with { Width = width, Height = height },
+            selection, cards, 0, warmup: true);
+        try
+        {
+            await resident.WarmAsync(request, cards, selection, token, inspection);
+            inspection?.Complete(InspectorOutcome.Success);
+        }
+        catch (Exception error)
+        {
+            inspection?.Complete(ImageInspectorAttempt.Evaluate(error, token));
+            throw;
+        }
         return true;
     }
 
@@ -230,26 +264,34 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
 
     private async Task<(int ExitCode, string Log, ImageGenerationGpuPlacement Placement)> AttemptAsync(ImageGenerationRequest request, int index,
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output,
-        SdRuntimeSelection selection, bool requireGpu, CancellationToken token)
+        SdRuntimeSelection selection, bool requireGpu, CancellationToken token, ImageInspectorAttempt? inspection)
     {
+        if (inspection is not null)
+        {
+            inspection.SetWarm(false);
+            await inspection.BeginAsync(token);
+        }
         using var preview = _previewFrames is not null && selection.SupportsModernArguments
             ? ImageGenerationLivePreview.TryCreate() : null;
         using var process = OwnedProcessRegistry.Shared.Start(
             ManagedCommand(request, index, cards, promptFile, output, selection, preview?.OutputPattern), "ImageGeneration");
+        inspection?.Attach(process);
         using var stopPreview = preview is null ? null : new CancellationTokenSource();
         var watchPreview = preview?.WatchAsync(_previewFrames!, stopPreview!.Token) ?? Task.CompletedTask;
         var rejected = new TaskCompletionSource<ImageGenerationGpuPlacement>(TaskCreationOptions.RunContinuationsAsynchronously);
         var placement = ImageGenerationGpuPlacement.Unknown;
         void Observe(string line)
         {
+            inspection?.ObserveNativeProgress(line);
+            if (!requireGpu || !line.Contains("auto-fit:", StringComparison.Ordinal)) return;
             var observed = ImageGenerationPlacementLog.Read(line);
             if (observed is ImageGenerationGpuPlacement.GpuUnavailable or ImageGenerationGpuPlacement.MemoryUnavailable)
                 rejected.TrySetResult(observed);
             else if (observed != ImageGenerationGpuPlacement.Unknown)
                 placement = observed;
         }
-        var stdout = DrainAsync(process.StandardOutput, requireGpu ? Observe : null);
-        var stderr = DrainAsync(process.StandardError, requireGpu ? Observe : null);
+        var stdout = DrainAsync(process.StandardOutput, requireGpu || inspection is not null ? Observe : null);
+        var stderr = DrainAsync(process.StandardError, requireGpu || inspection is not null ? Observe : null);
         try
         {
             var exit = process.WaitForExitAsync(token);
@@ -270,8 +312,10 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         finally
         {
             stopPreview?.Cancel();
+            inspection?.Emit(InspectorEventKind.ReleaseRequested);
             Stop(process);
             await process.WaitForExitAsync(CancellationToken.None);
+            inspection?.Emit(InspectorEventKind.ProcessExited);
             await Task.WhenAll(stdout, stderr, watchPreview);
         }
     }
@@ -284,6 +328,7 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
     private static async Task<string> DrainAsync(StreamReader reader, Action<string>? observe = null)
     {
         var tail = new StringBuilder(); var buffer = new char[4096]; int count; var rejected = false; var previous = "";
+        var observerTail = "";
         var applied = new HashSet<string>(StringComparer.Ordinal);
         while ((count = await reader.ReadAsync(buffer)) > 0)
         { var chunk = previous + new string(buffer, 0, count); rejected |= LoraRejected(chunk);
@@ -292,10 +337,15 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
                 if (applied.Count < 64 && line.Contains("LoRA tensors have been applied", StringComparison.Ordinal))
                     applied.Add(line.Trim());
             if (observe is not null)
-                for (var i = 0; i < lines.Length - 1; i++)
-                    if (lines[i].Contains("auto-fit:", StringComparison.Ordinal)) observe(lines[i]);
+            {
+                var received = (observerTail + new string(buffer, 0, count)).Split('\r', '\n');
+                for (var i = 0; i < received.Length - 1; ++i)
+                    if (received[i].Length > 0) observe(received[i]);
+                observerTail = received[^1][^Math.Min(received[^1].Length, 4096)..];
+            }
             previous = chunk[^Math.Min(chunk.Length, 4096)..];
             tail.Append(buffer, 0, count); if (tail.Length > 65536) tail.Remove(0, tail.Length - 65536); }
+        if (observe is not null && observerTail.Length > 0) observe(observerTail);
         return (rejected ? "LOPATA_LORA_REJECTED\n" : "") + string.Join('\n', applied) + "\n" + tail;
     }
 }
@@ -373,7 +423,17 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
             if (previous is null) ImageGenerationSessionStore.PutResult(request, result);
             result = await Task.Run(() => ImageGenerationOutput.Prepare(request, result, token), token);
             if (result.ProcessingError is null)
-                await Task.Run(() => ImageGenerationExport.Save(request, result), token);
+                result = await Task.Run(() => ImageGenerationExport.Save(request, result), token);
+            if (ApplicationInspector.DescribeImage(request, i * 2 + 1) is { } inspectorResult)
+            {
+                var saved = result.ProcessingError is null && result.ExportError is null;
+                ApplicationInspector.Publish(inspectorResult with
+                {
+                    Kind = InspectorEventKind.Saved,
+                    Stage = "output_write",
+                    Outcome = saved ? InspectorOutcome.Success : InspectorOutcome.SaveFailure
+                });
+            }
             ApplicationBackgroundOperations.Current?.SaveCheckpoint(new { request.Id, Completed = i + 1 });
             changed?.Invoke();
         }

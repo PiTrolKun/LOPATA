@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>LOPATA Controller PC</AssemblyName>
+    <Product>LOPATA</Product>
+    <FileDescription>LOPATA Controller PC</FileDescription>
+    <ApplicationIcon>Inspector.ico</ApplicationIcon>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LOPATA.Inspector\LOPATA.Inspector.csproj" />
+    <Compile Include="..\LOPATA.Recovery\WindowsToast.cs" Link="WindowsToast.cs" />
+  </ItemGroup>
+</Project>

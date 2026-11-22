@@ -152,6 +152,11 @@
     <ProjectReference Include="..\LOPATA.Collection\LOPATA.Collection.csproj" />
     <ProjectReference Include="..\LOPATA.Capture\LOPATA.Capture.csproj" />
     <ProjectReference Include="..\LOPATA.Recovery\LOPATA.Recovery.csproj" />
+    <ProjectReference Include="..\LOPATA.Inspector\LOPATA.Inspector.csproj" />
+    <ProjectReference Include="..\LOPATA.PcInspector\LOPATA.PcInspector.csproj" />
+    <Content Include="Tools\Inspector\analyze.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\Runtime\Inspector\tspulse-win-x64.zip;..\..\Runtime\Inspector\tspulse-win-x64.manifest.json"
+             Link="InspectorRuntime\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="AngleSharp" Version="1.5.2" />
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
@@ -261,6 +266,10 @@
     </Content>
   </ItemGroup>
 
+  <Target Name="CheckInspectorRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('..\..\Runtime\Inspector\tspulse-win-x64.zip') Or !Exists('..\..\Runtime\Inspector\tspulse-win-x64.manifest.json')"
+           Text="Bundled inspector runtime is missing. Run py -3.12 Инструменты/Inspector/prepare-tspulse.py before building LOPATA." />
+  </Target>
   <Target Name="CheckMusicRuntime" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Error Condition="!Exists('..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\manifest.json') Or !Exists('..\..\Runtime\MusicLoraStudio\v3.6.0-lopata-lora-2\music-server.exe')" Text="Pinned Studio LoRA wrapper is missing. Follow Инструменты/MusicLora/README.md." />
     <Error Condition="!Exists('..\..\Runtime\MusicAce\source.zip')" Text="Pinned official ACE source archive is missing. Run Инструменты/MusicAce/pack-source.ps1." />

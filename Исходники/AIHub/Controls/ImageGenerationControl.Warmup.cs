@@ -90,7 +90,8 @@ public sealed partial class ImageGenerationControl
                     var prepared = cards ?? await _installation.PrepareAsync(request.ModelsRoot, request.ModelId, false, null, attempt);
                     await ApplicationBackgroundOperations.RetireModelsExceptAsync(resident);
                     try { return await _runtime.WarmAsync(request, prepared, attempt); }
-                    catch (OperationCanceledException) when (attempt.IsCancellationRequested) { throw; }
+                    catch (OperationCanceledException error) when (attempt.IsCancellationRequested
+                        || error.Message == ApplicationInspector.Deferred) { throw; }
                     catch (Exception error) when (error is HttpRequestException or OperationCanceledException or System.Text.Json.JsonException)
                     { throw new BackgroundOperationFailedException("Generation.WarmFailed", error); }
                 }, cancel.Token, saved);

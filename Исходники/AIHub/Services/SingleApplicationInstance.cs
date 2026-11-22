@@ -8,6 +8,7 @@ namespace AIHub.Services;
 /// <summary>Per-user, per-installation instance. A dev checkout cannot take over the installed copy.</summary>
 internal sealed class SingleApplicationInstance : IDisposable
 {
+    private const byte InspectorReportMarker = 7;
     private readonly Mutex _mutex;
     private readonly string _pipe;
     private readonly CancellationTokenSource _stop = new();
@@ -18,12 +19,14 @@ internal sealed class SingleApplicationInstance : IDisposable
     private readonly TaskCompletionSource<Func<VideoEditor.VideoFileRequest, Task>> _videoHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<OfficeReader.ReaderFileRequest, Task>> _readerHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public event Action? OpenRequested;
+    public event Action? InspectorReportRequested;
     private int _pendingOpen;
+    private int _pendingInspectorReport;
 
     private SingleApplicationInstance(Mutex mutex, string pipe)
     { _mutex = mutex; _pipe = pipe; _server = ListenAsync(); }
 
-    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null, VideoEditor.VideoFileRequest? videoRequest = null, OfficeReader.ReaderFileRequest? readerRequest = null)
+    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null, VideoEditor.VideoFileRequest? videoRequest = null, OfficeReader.ReaderFileRequest? readerRequest = null, bool inspectorReport = false)
     {
         var name = IslandLink.InstallationName(AppContext.BaseDirectory);
         var mutex = new Mutex(true, @"Local\" + name, out var first);
@@ -43,11 +46,11 @@ internal sealed class SingleApplicationInstance : IDisposable
         {
             SendImageAsync(name, imageRequest).GetAwaiter().GetResult();
         }
-        else if (!background)
+        else if (!background || inspectorReport)
         {
             using var pipe = new NamedPipeClientStream(".", name, PipeDirection.Out, PipeOptions.CurrentUserOnly);
             pipe.Connect(5000);
-            pipe.WriteByte(1); pipe.Flush();
+            pipe.WriteByte(inspectorReport ? InspectorReportMarker : (byte)1); pipe.Flush();
         }
         return null;
     }
@@ -115,6 +118,9 @@ internal sealed class SingleApplicationInstance : IDisposable
     public void DeliverPendingOpen()
     { if (Interlocked.Exchange(ref _pendingOpen, 0) != 0) OpenRequested?.Invoke(); }
 
+    public void DeliverPendingInspectorReport()
+    { if (Interlocked.Exchange(ref _pendingInspectorReport, 0) != 0) InspectorReportRequested?.Invoke(); }
+
     private async Task ListenAsync()
     {
         while (!_stop.IsCancellationRequested)
@@ -131,6 +137,11 @@ internal sealed class SingleApplicationInstance : IDisposable
                 {
                     Interlocked.Exchange(ref _pendingOpen, 1);
                     if (OpenRequested is not null) DeliverPendingOpen();
+                }
+                else if (request[0] == InspectorReportMarker)
+                {
+                    Interlocked.Exchange(ref _pendingInspectorReport, 1);
+                    if (InspectorReportRequested is not null) DeliverPendingInspectorReport();
                 }
                 else if (request[0] == ImageShellProtocol.RequestMarker)
                 {
