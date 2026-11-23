@@ -1,0 +1,64 @@
+<UserControl x:Class="AIHub.Controls.NeuroAutoView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    AutomationProperties.AutomationId="Neuro.AutoWorkspace">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="0,4,16,16">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" MaxWidth="670"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock x:Name="AutoTitle" Text="{Binding [AutoTitle]}" FontSize="{DynamicResource UiSectionFontSize}" FontWeight="SemiBold"/>
+                <TextBlock x:Name="TaskDescription" Text="{Binding [AutoTask]}" Style="{DynamicResource Hint}" Margin="0,6,0,12"/>
+                <StackPanel x:Name="Settings">
+                    <TextBlock Text="{Binding [AutoProfile]}" Style="{DynamicResource Label}"/>
+                    <ComboBox x:Name="Profile" AutomationProperties.AutomationId="Neuro.AutoProfile"
+                              AutomationProperties.Name="{Binding [AutoProfile]}" SelectionChanged="ProfileChanged"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="{Binding [AutoModels]}" Style="{DynamicResource Label}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding [AutoPlacement]}" Style="{DynamicResource Label}"/>
+                        <TextBlock Grid.Row="1" Text="{Binding [AutoLanguage]}" Margin="0,5,8,5" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Row="1" Grid.Column="1" x:Name="LanguagePlace" Margin="0,4"
+                                  AutomationProperties.Name="{Binding [AutoLanguage]}" SelectionChanged="PlacementChanged"/>
+                        <TextBlock Grid.Row="2" x:Name="VisionLabel" Text="{Binding [AutoVision]}" TextWrapping="Wrap" Margin="0,5,8,5" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="VisionPlace" Margin="0,4"
+                                  AutomationProperties.Name="{Binding [AutoVision]}" SelectionChanged="PlacementChanged"/>
+                        <CheckBox Grid.Row="3" x:Name="IncludeSpeech" VerticalAlignment="Center" Margin="0,5,8,5"
+                                  Checked="SpeechChanged" Unchecked="SpeechChanged" AutomationProperties.Name="{Binding [AutoSpeech]}">
+                            <TextBlock x:Name="SpeechLabel" Text="{Binding [AutoSpeech]}"/>
+                        </CheckBox>
+                        <ComboBox Grid.Row="3" Grid.Column="1" x:Name="SpeechPlace" Margin="0,4"
+                                  AutomationProperties.Name="{Binding [AutoSpeech]}" SelectionChanged="PlacementChanged"/>
+                    </Grid>
+                    <TextBlock Text="{Binding [AutoTuning]}" Style="{DynamicResource Label}"/>
+                    <ComboBox x:Name="Tuning" AutomationProperties.AutomationId="Neuro.AutoTuning" AutomationProperties.Name="{Binding [AutoTuning]}" SelectionChanged="TuningChanged"/>
+                    <StackPanel x:Name="CycleEditor" Visibility="Collapsed">
+                        <TextBlock Text="{Binding [AutoCycles]}" Style="{DynamicResource Label}"/>
+                        <TextBox x:Name="CycleCount" MinWidth="70" HorizontalAlignment="Left" Margin="0,0,0,4"
+                                 AutomationProperties.AutomationId="Neuro.AutoCycles" AutomationProperties.Name="{Binding [AutoCycles]}" LostFocus="CycleChanged"/>
+                    </StackPanel>
+                    <Expander Header="{Binding [AutoSourceLabel]}" Margin="0,8,0,6">
+                        <StackPanel>
+                            <TextBlock x:Name="SourceInfo" Style="{DynamicResource Hint}"/>
+                            <Button Content="{Binding [ChooseSourceFolder]}" HorizontalAlignment="Left" Style="{DynamicResource Action}" Click="PickSource"/>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+                <WrapPanel Margin="0,8,0,0">
+                    <Button x:Name="Build" AutomationProperties.AutomationId="Neuro.AutoBuild" Content="{Binding [AutoBuild]}"
+                            Style="{DynamicResource Action}" Click="BuildClicked"/>
+                    <Button x:Name="PauseWork" Content="{Binding [Pause]}" Style="{DynamicResource Action}" Visibility="Collapsed" Click="PauseClicked"/>
+                    <Button x:Name="ResumeWork" Content="{Binding [Resume]}" Style="{DynamicResource Action}" Visibility="Collapsed" Click="ResumeClicked"/>
+                    <Button x:Name="CancelWork" Content="{Binding [Cancel]}" Style="{DynamicResource Action}" Visibility="Collapsed" Click="CancelClicked"/>
+                </WrapPanel>
+                <TextBlock x:Name="StatusText" Style="{DynamicResource Label}" AutomationProperties.LiveSetting="Polite"/>
+                <ProgressBar x:Name="Progress" Height="7" Visibility="Collapsed" Margin="0,4"/>
+                <TextBlock x:Name="Timing" Style="{DynamicResource Hint}"/>
+                <TextBlock x:Name="Result" Margin="0,6" AutomationProperties.LiveSetting="Polite"/>
+                <Button x:Name="OpenResult" Content="{Binding [AutoOpenFolder]}" HorizontalAlignment="Left" Visibility="Collapsed"
+                        Style="{DynamicResource Action}" Click="OpenOutput"/>
+                <TextBlock x:Name="ErrorText" AutomationProperties.LiveSetting="Polite"/>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

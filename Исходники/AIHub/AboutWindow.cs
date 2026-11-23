@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Automation;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
@@ -46,16 +47,7 @@ public sealed class AboutWindow : Window
             Width = 24, Height = 24, Stretch = Stretch.Uniform,
             Fill = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 119, 255))
         };
-        const string vkUrl = "https://vk.ru/lopata_ai_localhub";
-        var vkButton = new Button { Content = vkIcon, Width = 44, MinWidth = 44,
-            Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 8),
-            ToolTip = text("About.VkCommunity") + "\n" + vkUrl };
-        vkButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
-        AutomationProperties.SetName(vkButton, text("About.VkCommunity"));
-        AutomationProperties.SetAutomationId(vkButton, "About.VkCommunity");
-        AutomationProperties.SetHelpText(vkButton, vkUrl);
-        vkButton.Click += (_, _) => OpenLink(vkUrl);
-        links.Children.Add(vkButton);
+        AddIconLink("About.VkCommunity", vkIcon, "https://vk.ru/lopata_ai_localhub");
         // YouTube geometry from the same Simple Icons revision (CC0).
         var youtubeIcon = new Canvas { Width = 24, Height = 24 };
         youtubeIcon.Children.Add(new System.Windows.Shapes.Path
@@ -67,16 +59,15 @@ public sealed class AboutWindow : Window
         {
             Data = Geometry.Parse("M9.545 15.568V8.432L15.818 12Z"), Fill = System.Windows.Media.Brushes.White
         });
-        const string youtubeUrl = "https://youtube.com/@lopata_ai_hub?si=dYbvJ3S6E-qbqjc0";
-        var youtubeButton = new Button { Content = youtubeIcon, Width = 44, MinWidth = 44,
-            Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 8),
-            ToolTip = text("About.YouTubeChannel") + "\n" + youtubeUrl };
-        youtubeButton.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
-        AutomationProperties.SetName(youtubeButton, text("About.YouTubeChannel"));
-        AutomationProperties.SetAutomationId(youtubeButton, "About.YouTubeChannel");
-        AutomationProperties.SetHelpText(youtubeButton, youtubeUrl);
-        youtubeButton.Click += (_, _) => OpenLink(youtubeUrl);
-        links.Children.Add(youtubeButton);
+        AddIconLink("About.YouTubeChannel", youtubeIcon, "https://youtube.com/@lopata_ai_hub?si=dYbvJ3S6E-qbqjc0");
+        var huggingFaceLogo = new BitmapImage();
+        huggingFaceLogo.BeginInit();
+        huggingFaceLogo.UriSource = new Uri("pack://application:,,,/AIHub;component/Assets/hugging-face.png");
+        huggingFaceLogo.DecodePixelWidth = 96;
+        huggingFaceLogo.EndInit();
+        var huggingFaceIcon = new System.Windows.Controls.Image { Source = huggingFaceLogo, Width = 24, Height = 24 };
+        RenderOptions.SetBitmapScalingMode(huggingFaceIcon, BitmapScalingMode.HighQuality);
+        AddIconLink("About.HuggingFaceModels", huggingFaceIcon, "https://huggingface.co/LOPATA-AI-Hub");
         AddButton("About.Repository", () => OpenLink("https://github.com/PiTrolKun/LOPATA/releases"), "https://github.com/PiTrolKun/LOPATA/releases");
         AddButton("Updates.Check", updates);
         foreach (var key in new[] { "Intro", "Choice", "Control" }) panel.Children.Add(Paragraph("About." + key));
@@ -122,6 +113,22 @@ public sealed class AboutWindow : Window
                 FontSize = 15, Margin = new Thickness(0, 0, 0, 12) };
             block.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
             return block;
+        }
+        void AddIconLink(string key, UIElement icon, string url)
+        {
+            var label = text(key);
+            var button = new Button
+            {
+                Content = icon, Width = 44, MinWidth = 44,
+                Padding = new Thickness(8, 0, 8, 0), Margin = new Thickness(0, 0, 8, 8),
+                ToolTip = label + "\n" + url
+            };
+            button.SetResourceReference(StyleProperty, "SecondaryButtonStyle");
+            AutomationProperties.SetName(button, label);
+            AutomationProperties.SetAutomationId(button, key);
+            AutomationProperties.SetHelpText(button, url);
+            button.Click += (_, _) => OpenLink(url);
+            links.Children.Add(button);
         }
         void AddButton(string key, Action action, string? tooltip = null)
         {

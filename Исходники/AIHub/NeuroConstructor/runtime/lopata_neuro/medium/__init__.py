@@ -1,0 +1,1 @@
+"""Medium heterogeneous model profile."""

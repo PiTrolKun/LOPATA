@@ -1,0 +1,98 @@
+[
+  {
+    "image": "pair-0.png",
+    "text": "Нужна команда «поиск»",
+    "audio": [],
+    "slot": 3,
+    "expected": 1,
+    "source_row": 0
+  },
+  {
+    "image": "pair-17.png",
+    "text": "Отметь значок home page",
+    "audio": [],
+    "slot": 3,
+    "expected": 2,
+    "source_row": 17
+  },
+  {
+    "image": "pair-34.png",
+    "text": "Please point to settings",
+    "audio": [],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 34
+  },
+  {
+    "image": "pair-52.png",
+    "text": "Please point to search",
+    "audio": [],
+    "slot": 0,
+    "expected": 0,
+    "source_row": 52
+  },
+  {
+    "image": "pair-69.png",
+    "text": "Нужна команда «главная»",
+    "audio": [],
+    "slot": 1,
+    "expected": 1,
+    "source_row": 69
+  },
+  {
+    "image": "pair-86.png",
+    "text": "Покажи settings на панели",
+    "audio": [],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 86
+  },
+  {
+    "image": "pair-104.png",
+    "text": "Отметь значок search",
+    "audio": [],
+    "slot": 1,
+    "expected": 1,
+    "source_row": 104
+  },
+  {
+    "image": "pair-121.png",
+    "text": "Which icon means home page?",
+    "audio": [],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 121
+  },
+  {
+    "image": "pair-138.png",
+    "text": "Где пункт «настройки»?",
+    "audio": [],
+    "slot": 3,
+    "expected": 0,
+    "source_row": 138
+  },
+  {
+    "image": "pair-156.png",
+    "text": "Где пункт «поиск»?",
+    "audio": [],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 156
+  },
+  {
+    "image": "pair-173.png",
+    "text": "Покажи home page на панели",
+    "audio": [],
+    "slot": 1,
+    "expected": 3,
+    "source_row": 173
+  },
+  {
+    "image": "pair-191.png",
+    "text": "Отметь значок save file",
+    "audio": [],
+    "slot": 1,
+    "expected": 0,
+    "source_row": 191
+  }
+]

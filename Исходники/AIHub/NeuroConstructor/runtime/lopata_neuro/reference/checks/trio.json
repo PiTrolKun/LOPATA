@@ -1,0 +1,134 @@
+[
+  {
+    "image": "trio-0.png",
+    "text": "выбери первое слово",
+    "audio": [
+      "089.wav",
+      "114.wav"
+    ],
+    "slot": 3,
+    "expected": 3,
+    "source_row": 0
+  },
+  {
+    "image": "trio-17.png",
+    "text": "second of the two",
+    "audio": [
+      "105.wav",
+      "115.wav"
+    ],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 17
+  },
+  {
+    "image": "trio-34.png",
+    "text": "первый из двух",
+    "audio": [
+      "103.wav",
+      "109.wav"
+    ],
+    "slot": 1,
+    "expected": 2,
+    "source_row": 34
+  },
+  {
+    "image": "trio-52.png",
+    "text": "use the first word",
+    "audio": [
+      "095.wav",
+      "110.wav"
+    ],
+    "slot": 1,
+    "expected": 2,
+    "source_row": 52
+  },
+  {
+    "image": "trio-69.png",
+    "text": "вариант two",
+    "audio": [
+      "095.wav",
+      "119.wav"
+    ],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 69
+  },
+  {
+    "image": "trio-86.png",
+    "text": "first of the two",
+    "audio": [
+      "112.wav",
+      "094.wav"
+    ],
+    "slot": 0,
+    "expected": 0,
+    "source_row": 86
+  },
+  {
+    "image": "trio-104.png",
+    "text": "нужен first пункт",
+    "audio": [
+      "089.wav",
+      "103.wav"
+    ],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 104
+  },
+  {
+    "image": "trio-121.png",
+    "text": "выбери второе слово",
+    "audio": [
+      "096.wav",
+      "111.wav"
+    ],
+    "slot": 2,
+    "expected": 0,
+    "source_row": 121
+  },
+  {
+    "image": "trio-138.png",
+    "text": "вариант one",
+    "audio": [
+      "102.wav",
+      "114.wav"
+    ],
+    "slot": 0,
+    "expected": 1,
+    "source_row": 138
+  },
+  {
+    "image": "trio-156.png",
+    "text": "первый из двух",
+    "audio": [
+      "119.wav",
+      "088.wav"
+    ],
+    "slot": 3,
+    "expected": 1,
+    "source_row": 156
+  },
+  {
+    "image": "trio-173.png",
+    "text": "use the second word",
+    "audio": [
+      "108.wav",
+      "097.wav"
+    ],
+    "slot": 2,
+    "expected": 2,
+    "source_row": 173
+  },
+  {
+    "image": "trio-191.png",
+    "text": "выбери второе слово",
+    "audio": [
+      "114.wav",
+      "097.wav"
+    ],
+    "slot": 1,
+    "expected": 2,
+    "source_row": 191
+  }
+]

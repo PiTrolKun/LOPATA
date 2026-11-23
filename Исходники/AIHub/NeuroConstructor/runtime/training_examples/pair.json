@@ -1,0 +1,722 @@
+[
+ {
+  "image": "train-00.png",
+  "text": "Выбери: поиск",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-00.png",
+  "text": "Choose home",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-00.png",
+  "text": "Покажи preferences",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-00.png",
+  "text": "Мне нужно: сохранения",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-01.png",
+  "text": "Select search",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-01.png",
+  "text": "Find кнопку home",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-01.png",
+  "text": "Выбери: параметров",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-01.png",
+  "text": "Choose save file",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-02.png",
+  "text": "Покажи search",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-02.png",
+  "text": "Мне нужно: домой",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-02.png",
+  "text": "Select preferences",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-02.png",
+  "text": "Find кнопку save file",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-03.png",
+  "text": "Мне нужно: поиск",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-03.png",
+  "text": "Select home page",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-03.png",
+  "text": "Find кнопку preferences",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-03.png",
+  "text": "Выбери: сохранить",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-04.png",
+  "text": "Choose search",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-04.png",
+  "text": "Покажи home page",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-04.png",
+  "text": "Мне нужно: параметров",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-04.png",
+  "text": "Select save",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-05.png",
+  "text": "Find кнопку search",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-05.png",
+  "text": "Выбери: главная",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-05.png",
+  "text": "Choose preferences",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-05.png",
+  "text": "Покажи save",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-06.png",
+  "text": "Выбери: поиска",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-06.png",
+  "text": "Choose home page",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-06.png",
+  "text": "Покажи settings",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-06.png",
+  "text": "Мне нужно: сохранить",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-07.png",
+  "text": "Select find",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-07.png",
+  "text": "Find кнопку home page",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-07.png",
+  "text": "Выбери: настройки",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-07.png",
+  "text": "Choose save",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-08.png",
+  "text": "Покажи find",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-08.png",
+  "text": "Мне нужно: главная",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-08.png",
+  "text": "Select settings",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-08.png",
+  "text": "Find кнопку save",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-09.png",
+  "text": "Мне нужно: поиска",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-09.png",
+  "text": "Select home",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-09.png",
+  "text": "Find кнопку settings",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-09.png",
+  "text": "Выбери: сохранения",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-10.png",
+  "text": "Choose find",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-10.png",
+  "text": "Покажи home",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-10.png",
+  "text": "Мне нужно: настройки",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-10.png",
+  "text": "Select save file",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-11.png",
+  "text": "Find кнопку find",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-11.png",
+  "text": "Выбери: домой",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-11.png",
+  "text": "Choose settings",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-11.png",
+  "text": "Покажи save file",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-12.png",
+  "text": "Выбери: поиск",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-12.png",
+  "text": "Choose home",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-12.png",
+  "text": "Покажи preferences",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-12.png",
+  "text": "Мне нужно: сохранения",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-13.png",
+  "text": "Select search",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-13.png",
+  "text": "Find кнопку home",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-13.png",
+  "text": "Выбери: параметров",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-13.png",
+  "text": "Choose save file",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-14.png",
+  "text": "Покажи search",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "train-14.png",
+  "text": "Мне нужно: домой",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-14.png",
+  "text": "Select preferences",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-14.png",
+  "text": "Find кнопку save file",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-15.png",
+  "text": "Мне нужно: поиск",
+  "slot": 3,
+  "split": "train"
+ },
+ {
+  "image": "train-15.png",
+  "text": "Select home page",
+  "slot": 0,
+  "split": "train"
+ },
+ {
+  "image": "train-15.png",
+  "text": "Find кнопку preferences",
+  "slot": 2,
+  "split": "train"
+ },
+ {
+  "image": "train-15.png",
+  "text": "Выбери: сохранить",
+  "slot": 1,
+  "split": "train"
+ },
+ {
+  "image": "dev-00.png",
+  "text": "Покажи значок «поиск»",
+  "slot": 2,
+  "split": "dev"
+ },
+ {
+  "image": "dev-00.png",
+  "text": "Open home please",
+  "slot": 0,
+  "split": "dev"
+ },
+ {
+  "image": "dev-00.png",
+  "text": "Где здесь preferences?",
+  "slot": 1,
+  "split": "dev"
+ },
+ {
+  "image": "dev-00.png",
+  "text": "Кнопка «дискета»",
+  "slot": 3,
+  "split": "dev"
+ },
+ {
+  "image": "dev-01.png",
+  "text": "Locate the search control",
+  "slot": 3,
+  "split": "dev"
+ },
+ {
+  "image": "dev-01.png",
+  "text": "Выбери home please",
+  "slot": 2,
+  "split": "dev"
+ },
+ {
+  "image": "dev-01.png",
+  "text": "Покажи значок «параметры»",
+  "slot": 1,
+  "split": "dev"
+ },
+ {
+  "image": "dev-01.png",
+  "text": "Open save file please",
+  "slot": 0,
+  "split": "dev"
+ },
+ {
+  "image": "dev-02.png",
+  "text": "Где здесь search?",
+  "slot": 2,
+  "split": "dev"
+ },
+ {
+  "image": "dev-02.png",
+  "text": "Кнопка «главная»",
+  "slot": 1,
+  "split": "dev"
+ },
+ {
+  "image": "dev-02.png",
+  "text": "Locate the preferences control",
+  "slot": 3,
+  "split": "dev"
+ },
+ {
+  "image": "dev-02.png",
+  "text": "Выбери save file please",
+  "slot": 0,
+  "split": "dev"
+ },
+ {
+  "image": "dev-03.png",
+  "text": "Кнопка «поиск»",
+  "slot": 0,
+  "split": "dev"
+ },
+ {
+  "image": "dev-03.png",
+  "text": "Locate the home page control",
+  "slot": 3,
+  "split": "dev"
+ },
+ {
+  "image": "dev-03.png",
+  "text": "Выбери preferences please",
+  "slot": 2,
+  "split": "dev"
+ },
+ {
+  "image": "dev-03.png",
+  "text": "Покажи значок «сохранить»",
+  "slot": 1,
+  "split": "dev"
+ },
+ {
+  "image": "dev-04.png",
+  "text": "Open search please",
+  "slot": 1,
+  "split": "dev"
+ },
+ {
+  "image": "dev-04.png",
+  "text": "Где здесь home page?",
+  "slot": 3,
+  "split": "dev"
+ },
+ {
+  "image": "dev-04.png",
+  "text": "Кнопка «параметры»",
+  "slot": 2,
+  "split": "dev"
+ },
+ {
+  "image": "dev-04.png",
+  "text": "Locate the save control",
+  "slot": 0,
+  "split": "dev"
+ },
+ {
+  "image": "dev-05.png",
+  "text": "Выбери search please",
+  "slot": 2,
+  "split": "dev"
+ },
+ {
+  "image": "dev-05.png",
+  "text": "Покажи значок «домой»",
+  "slot": 0,
+  "split": "dev"
+ },
+ {
+  "image": "dev-05.png",
+  "text": "Open preferences please",
+  "slot": 3,
+  "split": "dev"
+ },
+ {
+  "image": "dev-05.png",
+  "text": "Где здесь save?",
+  "slot": 1,
+  "split": "dev"
+ },
+ {
+  "image": "test-00.png",
+  "text": "Нужна команда «поиск»",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-00.png",
+  "text": "Which icon means home?",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-00.png",
+  "text": "Отметь значок preferences",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-00.png",
+  "text": "Где пункт «запись»?",
+  "slot": 0,
+  "split": "test"
+ },
+ {
+  "image": "test-01.png",
+  "text": "Please point to search",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-01.png",
+  "text": "Покажи home на панели",
+  "slot": 0,
+  "split": "test"
+ },
+ {
+  "image": "test-01.png",
+  "text": "Нужна команда «параметры»",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-01.png",
+  "text": "Which icon means save file?",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-02.png",
+  "text": "Отметь значок search",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-02.png",
+  "text": "Где пункт «домой»?",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-02.png",
+  "text": "Please point to preferences",
+  "slot": 0,
+  "split": "test"
+ },
+ {
+  "image": "test-02.png",
+  "text": "Покажи save file на панели",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-03.png",
+  "text": "Где пункт «поиск»?",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-03.png",
+  "text": "Please point to home page",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-03.png",
+  "text": "Покажи preferences на панели",
+  "slot": 0,
+  "split": "test"
+ },
+ {
+  "image": "test-03.png",
+  "text": "Нужна команда «сохранить»",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-04.png",
+  "text": "Which icon means search?",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-04.png",
+  "text": "Отметь значок home page",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-04.png",
+  "text": "Где пункт «параметры»?",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-04.png",
+  "text": "Please point to save",
+  "slot": 0,
+  "split": "test"
+ },
+ {
+  "image": "test-05.png",
+  "text": "Покажи search на панели",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-05.png",
+  "text": "Нужна команда «главная»",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-05.png",
+  "text": "Which icon means preferences?",
+  "slot": 0,
+  "split": "test"
+ },
+ {
+  "image": "test-05.png",
+  "text": "Отметь значок save",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-06.png",
+  "text": "Нужна команда «найти»",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-06.png",
+  "text": "Which icon means home page?",
+  "slot": 0,
+  "split": "test"
+ },
+ {
+  "image": "test-06.png",
+  "text": "Отметь значок settings",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-06.png",
+  "text": "Где пункт «сохранить»?",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-07.png",
+  "text": "Please point to find",
+  "slot": 1,
+  "split": "test"
+ },
+ {
+  "image": "test-07.png",
+  "text": "Покажи home page на панели",
+  "slot": 2,
+  "split": "test"
+ },
+ {
+  "image": "test-07.png",
+  "text": "Нужна команда «настройки»",
+  "slot": 3,
+  "split": "test"
+ },
+ {
+  "image": "test-07.png",
+  "text": "Which icon means save?",
+  "slot": 0,
+  "split": "test"
+ }
+]

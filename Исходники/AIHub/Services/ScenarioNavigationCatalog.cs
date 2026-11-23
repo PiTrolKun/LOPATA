@@ -25,6 +25,7 @@ public static class ScenarioNavigationCatalog
     public const string Images = "image_analysis";
     public const string ImageLayers = "image_layers";
     public const string Sandbox = "uncertainty";
+    public const string NeuroConstructor = "neuro_constructor";
     public const string Finance = "finance";
     public const string Capture = "screen_capture";
     public const string Island = "nabyscape_island";
@@ -130,7 +131,9 @@ public static class ScenarioNavigationCatalog
         Node(ImageLayers, ScenarioNavigationKind.Scenario, "analysis_images", "ImageLayers.Title", "ImageLayers.Description", "analyze",
             tags: ["image_layers", "image_layer_contours", "image_layer_history", "image_layer_text"], related: [Images]),
         Node(Sandbox, ScenarioNavigationKind.Scenario, "experiment_tests", "WorkStart.ReasoningTitle", "WorkStart.ReasoningDescription", "experiment",
-            tags: ["research", "tools", "executor"], related: [])
+            tags: ["research", "tools", "executor"], related: []),
+        Node(NeuroConstructor, ScenarioNavigationKind.Scenario, "experiment_tests", "Neuro.Title", "Neuro.Description", "experiment",
+            tags: ["neuro_constructor"])
     ]);
 
     public static ScenarioNavigationNode Get(string id) => Nodes.First(node => node.Id == id);
@@ -218,6 +221,8 @@ public static class ScenarioNavigationCatalog
         Tag("export", Literary), Tag("calibration", Literary),
         Tag("image_description", Images), Tag("batch_description", Images), Tag("speech", Images),
         Tag("research", Sandbox), Tag("tools", Sandbox), Tag("executor", Sandbox),
+        new ScenarioNavigationTag("neuro_constructor", "Neuro.Title", "Neuro.Description", NeuroConstructor),
+        new ScenarioNavigationTag("neuro_auto_build", "Neuro.AutoTag", "Neuro.AutoTagDescription", NeuroConstructor),
         Tag("literature", "creation_literature"), Tag("images", "analysis_images"),
         Tag("experiments", Experiments), Tag("finance", Finance), Tag("budget", Finance),
         Tag("expenses", Finance), Tag("income", Finance), Tag("external_coverage", Finance), Tag("financial_behavior", Finance), Tag("savings_discussion", Finance),

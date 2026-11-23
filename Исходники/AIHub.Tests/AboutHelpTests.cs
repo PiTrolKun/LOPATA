@@ -1,6 +1,8 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using AIHub.Services;
 
 namespace AIHub.Tests;
@@ -25,6 +27,15 @@ public sealed class AboutHelpTests
                     owner.Resources["TextPrimaryBrush"] = dark ? Brushes.White : Brushes.Black;
                     owner.Show();
                     var help = new AboutWindow(owner, "LOPATA", "0.3.32-dev", localizer.T, () => { });
+                    const string modelsKey = "About.HuggingFaceModels";
+                    const string modelsUrl = "https://huggingface.co/LOPATA-AI-Hub";
+                    var models = Descendants(help).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == modelsKey);
+                    var label = localizer.T(modelsKey);
+                    Assert.AreNotEqual(modelsKey, label);
+                    Assert.AreEqual(label, AutomationProperties.GetName(models));
+                    Assert.AreEqual(modelsUrl, AutomationProperties.GetHelpText(models));
+                    Assert.AreEqual(label + "\n" + modelsUrl, models.ToolTip);
+                    Assert.IsTrue(models.Content is Image { Source: BitmapSource { PixelWidth: > 0, PixelHeight: > 0 } });
                     var sections = Descendants(help).OfType<Expander>().ToArray();
                     foreach (var key in new[]
                              {

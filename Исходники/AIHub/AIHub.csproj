@@ -21,6 +21,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <NeuroRuntimeFile Include="NeuroConstructor\runtime\**\*" Exclude="NeuroConstructor\runtime\**\__pycache__\**;NeuroConstructor\runtime\**\*.pyc;NeuroConstructor\runtime\**\*.egg-info\**;NeuroConstructor\runtime\build\**;NeuroConstructor\runtime\dist\**">
+      <RuntimePath>%(RecursiveDir)%(Filename)%(Extension)</RuntimePath>
+    </NeuroRuntimeFile>
+    <Content Include="@(NeuroRuntimeFile)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)neuro-runtime.sha256" LogicalName="AIHub.NeuroConstructor.RuntimeFiles" />
     <Content Include="Assets\VoiceNotifications\*.json;Assets\VoiceNotifications\*.zip" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -200,6 +205,7 @@
     <EmbeddedResource Include="Content\AliceChatDom.js" LogicalName="AIHub.AliceChatDom" />
     <EmbeddedResource Include="Content\DeepSeekChatDom.js" LogicalName="AIHub.DeepSeekChatDom" />
     <Resource Include="Assets\lopata_brand.png" />
+    <Resource Include="Assets\hugging-face.png" />
     <Resource Include="Assets\scenario-calibration.png" />
     <Resource Include="Assets\music-rhyme-creative.png" />
     <EmbeddedResource Include="Assets\music-default-cover.png" LogicalName="AIHub.MusicDefaultCover" />
@@ -299,6 +305,13 @@
     <Error Condition="'$(BookOfficeArchive)' == 'true' And !Exists('..\..\Runtime\BookConverter\libreoffice-26.2.4.2.bundle.zip')" Text="Bundled office archive is missing. Run python Инструменты/BookConverter/package-office.py." />
     <Error Condition="!Exists('..\..\Runtime\BookConverter\calibre-9.16.0\Calibre Portable\Calibre\ebook-convert.exe')" Text="Bundled calibre is missing. Run Инструменты/BookConverter/prepare.py --prepare before building." />
     <Error Condition="!Exists('..\..\Runtime\BookConverter\libreoffice-26.2.4.2\program\soffice.com') Or !Exists('Tools\book-office-files.json')" Text="Bundled LibreOffice is missing. Run Инструменты/BookConverter/prepare-office.py --prepare before building." />
+  </Target>
+  <Target Name="GenerateNeuroRuntimeInventory" BeforeTargets="PrepareForBuild">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <GetFileHash Files="@(NeuroRuntimeFile)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_NeuroRuntimeHash" />
+    </GetFileHash>
+    <WriteLinesToFile File="$(IntermediateOutputPath)neuro-runtime.sha256" Lines="@(_NeuroRuntimeHash->'%(FileHash)|%(RuntimePath)')" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
   </Target>
   <Target Name="GenerateApplicationBuildVersion" BeforeTargets="CoreCompile">
     <WriteLinesToFile File="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs"

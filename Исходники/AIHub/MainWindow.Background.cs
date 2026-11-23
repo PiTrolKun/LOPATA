@@ -30,6 +30,8 @@ public partial class MainWindow
         RegisterImageBackgroundOperations();
         _backgroundOperations.Register(Services.ImageLayers.LayerAnalysisWork.Kind, ResumeImageLayerAnalysisAsync);
         RegisterSandboxBackgroundOperations();
+        _backgroundOperations.Register(Services.NeuroConstructor.NeuroService.TrainingKind, Services.NeuroConstructor.NeuroService.RestoreAsync);
+        _backgroundOperations.Register(Services.NeuroConstructor.NeuroService.PackageKindId, Services.NeuroConstructor.NeuroService.RestorePackageAsync);
         RegisterFinancialBackgroundOperation();
         RegisterImageGenerationBackgroundOperation();
         RegisterVectorBackgroundOperation();
@@ -260,6 +262,27 @@ public partial class MainWindow
         if (notice is null) return;
         try
         {
+            if (notice.Kind == Services.NeuroConstructor.NeuroService.PackageKindId)
+            {
+                var operation=_backgroundOperations!.LoadResult(notice.Id) ?? _backgroundOperations.State!;
+                var file=Services.NeuroConstructor.NeuroService.PackageResult(operation.Input.GetProperty("Job").GetString()!);
+                RestoreFromTray();
+                _fileViewerService.Open(this,file,_appSettings.FileViewer,_isDarkTheme,_localizationService);
+                _backgroundOperations.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind == Services.NeuroConstructor.NeuroService.TrainingKind && notice.Project is { } neuroProject)
+            {
+                var controller = _backgroundOperations!;
+                var operation = controller.LoadResult(notice.Id) ?? controller.FindIslandOperation(notice.Id);
+                if (operation?.Project != neuroProject) return;
+                var input = operation.Input;
+                var runId = input.TryGetProperty("AutoBuild", out var automatic) && automatic.GetBoolean()
+                    ? input.GetProperty("RunId").GetString() : null;
+                RestoreFromTray();
+                if (ShowNeuroConstructorResult(neuroProject, runId)) controller.Acknowledge(notice.Id);
+                return;
+            }
             if (notice.Kind == Services.ImageLayers.LayerAnalysisWork.Kind)
             {
                 await ViewImageLayerResultAsync(notice); return;

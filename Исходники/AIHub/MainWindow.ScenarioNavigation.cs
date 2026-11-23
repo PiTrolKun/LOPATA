@@ -134,7 +134,7 @@ public partial class MainWindow
         if (WorkStartPage.Visibility != Visibility.Visible) return;
         if (ScenarioNavigationPage.IsShorts && ScenarioNavigationPage.Shorts is { } shorts) ConfigureShorts(shorts);
         BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade ? Visibility.Collapsed : Visibility.Visible;
-        if (ScenarioNavigationPage.IsImageLayers || ScenarioNavigationPage.IsCharacterKnowledge) { StatusText.Text = ""; return; }
+        if (ScenarioNavigationPage.IsImageLayers || ScenarioNavigationPage.IsCharacterKnowledge || ScenarioNavigationPage.IsNeuroConstructor) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.IsVisualScenario || ScenarioNavigationPage.IsShorts || ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.PlaceholderScenarioId is not null) { StatusText.Text = L("Navigation.Soon"); return; }
         if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }
@@ -142,5 +142,14 @@ public partial class MainWindow
         if (ScenarioNavigationPage.IsSandboxLanding) RefreshPreviousSessions();
         StatusText.Text = L(ScenarioNavigationPage.IsSandboxLanding
             ? "Navigation.SandboxStatus" : "Status.WorkStartOpened");
+    }
+
+    internal bool ShowNeuroConstructorResult(string projectId, string? runId = null)
+    {
+        ShowBackgroundScenarioPage(WorkStartPage);
+        PrepareScenarioNavigation(ScenarioNavigationCatalog.NeuroConstructor);
+        ScenarioNavigationPage.OpenScenario(ScenarioNavigationCatalog.NeuroConstructor);
+        return ScenarioNavigationPage.IsNeuroConstructor
+            && ScenarioNavigationPage.NeuroConstructorPage?.ShowResult(projectId, runId) == true;
     }
 }

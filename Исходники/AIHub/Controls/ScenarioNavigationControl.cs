@@ -20,6 +20,8 @@ public sealed partial class ScenarioNavigationControl : UserControl
     private UniformGrid? _tiles;
     public string? SelectedDirectionId { get; private set; }
     public bool IsSandboxLanding { get; private set; }
+    internal bool IsNeuroConstructor { get; private set; }
+    internal NeuroConstructorControl? NeuroConstructorPage { get; private set; }
     public string? PlaceholderScenarioId { get; private set; }
     public VideoPreparationControl? VideoPreparation { get; private set; }
     public bool IsVideoPreparation { get; private set; }
@@ -73,6 +75,13 @@ public sealed partial class ScenarioNavigationControl : UserControl
         Render();
     }
 
+    protected override void OnContentChanged(object oldContent, object newContent)
+    {
+        if (oldContent is NeuroConstructorControl && !ReferenceEquals(oldContent, newContent))
+            IsNeuroConstructor = false;
+        base.OnContentChanged(oldContent, newContent);
+    }
+
     public void AttachSandboxHistory(FrameworkElement history)
     {
         _historyHost.Content = history;
@@ -81,6 +90,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsNeuroConstructor) { IsNeuroConstructor = false; if (!ReturnFromScenario()) Render(); return true; }
         if (IsCharacterKnowledge)
         {
             if (LeaveCharacterKnowledge() && !ReturnFromScenario()) Render();
@@ -146,6 +156,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsSongClip = false;
         IsShorts = false;
         if (VideoPreparation?.Checkpoint() == false) return;
+        IsNeuroConstructor = false;
         IsVideoPreparation = false;
         IsLetItOutChat = false;
         LeaveImageLayers();
@@ -171,6 +182,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         var node = ScenarioNavigationCatalog.Get(id);
         if (node.Kind != ScenarioNavigationKind.Direction || !node.IsAvailable) return;
         if (VideoPreparation?.Checkpoint() == false) return;
+        IsNeuroConstructor = false;
         IsVideoPreparation = false;
         IsLetItOutChat = false;
         LeaveImageLayers();
@@ -207,6 +219,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         if (node.Kind != ScenarioNavigationKind.Scenario || !node.IsAvailable) return;
         var group = ScenarioNavigationCatalog.Get(node.ParentId!);
         SelectedDirectionId = group.ParentId;
+        IsNeuroConstructor = id == ScenarioNavigationCatalog.NeuroConstructor;
         PlaceholderScenarioId = null;
         IsSandboxLanding = false;
         IsVideoPreparation = id == ScenarioNavigationCatalog.VideoGeneration;
@@ -215,6 +228,13 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsVisualScenario = id == ScenarioNavigationCatalog.VisualScenario;
         IsLetItOutChat = false;
         LeaveImageLayers();
+        if (IsNeuroConstructor)
+        {
+            NeuroConstructorPage ??= new NeuroConstructorControl(_localize);
+            NeuroConstructorPage.ShowModeChoice();
+            Render();
+            return;
+        }
         if (IsVisualScenario) { Render(); return; }
         if (id == ScenarioNavigationCatalog.LetItOut)
         {
@@ -391,6 +411,13 @@ public sealed partial class ScenarioNavigationControl : UserControl
             Content = VideoPreparation; StateChanged?.Invoke(); return;
         }
         if (IsImageLayers) { StateChanged?.Invoke(); return; }
+        if (IsNeuroConstructor && NeuroConstructorPage is { } neuro)
+        {
+            neuro.Configure(_localize);
+            Content = neuro;
+            StateChanged?.Invoke();
+            return;
+        }
         if (_historyHost.Parent is System.Windows.Controls.Panel previous) previous.Children.Remove(_historyHost);
         if (TagCloud.Parent is System.Windows.Controls.Panel previousCloud) previousCloud.Children.Remove(TagCloud);
         _directionBody = null; _scenarioScroll = null;

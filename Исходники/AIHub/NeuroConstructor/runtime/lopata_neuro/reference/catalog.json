@@ -1,0 +1,199 @@
+{
+  "ids": {
+    "language": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "vision": "microsoft/OmniParser-v2.0",
+    "speech": "openai/whisper-base"
+  },
+  "models": {
+    "language": {
+      "revision": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+      "license": "apache-2.0"
+    },
+    "vision": {
+      "revision": "f55d0750e5b94db2125ef0b45b0fa4a85ddc59b4",
+      "license": "mit"
+    },
+    "speech": {
+      "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+      "license": "apache-2.0"
+    }
+  },
+  "files": [
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "1_Pooling/config.json",
+      "sha256": "4be450dde3b0273bb9787637cfbd28fe04a7ba6ab9d36ac48e92b11e350ffc23",
+      "size": 190
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "README.md",
+      "sha256": "1e98ea05b0de579fcaad3d625b62ea55647142ed674d5f5ebf1440e4bbbb6f23",
+      "size": 3888
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "config.json",
+      "sha256": "6300193cb75e01cf80c96decef7187dfb33094d97cc1490b7ead6ff134476e4e",
+      "size": 645
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "config_sentence_transformers.json",
+      "sha256": "b8c64b5cece00d8424b4896ea75b512b6008576088497609dfeb6bd63e6d36b8",
+      "size": 122
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "model.safetensors",
+      "sha256": "eaa086f0ffee582aeb45b36e34cdd1fe2d6de2bef61f8a559a1bbc9bd955917b",
+      "size": 470641600
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "modules.json",
+      "sha256": "8f4b264b80206c830bebbdcae377e137925650a433b689343a63bdc9b3145460",
+      "size": 229
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "sentence_bert_config.json",
+      "sha256": "70f4448f31320443fe3557cacea5abf2dcc4915dda8c80646bec9f3bb0aa5a1f",
+      "size": 53
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "sentencepiece.bpe.model",
+      "sha256": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+      "size": 5069051
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "special_tokens_map.json",
+      "sha256": "378eb3bf733eb16e65792d7e3fda5b8a4631387ca04d2015199c4d4f22ae554d",
+      "size": 239
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "tokenizer.json",
+      "sha256": "2c3387be76557bd40970cec13153b3bbf80407865484b209e655e5e4729076b8",
+      "size": 9081518
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "tokenizer_config.json",
+      "sha256": "5036ea374ffedd706e3bef33e2e0d6953cb868ef8a490e76e32ba0faa37a6b9b",
+      "size": 526
+    },
+    {
+      "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "file": "unigram.json",
+      "sha256": "71b44701d7efd054205115acfa6ef126c5d2f84bd3affe0c59e48163674d19a6",
+      "size": 14763234
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "README.md",
+      "sha256": "72895b74a093b6a84ded3eecb5d9c8ebaa2d271d16d37ee0fb0115b6fe62c36c",
+      "size": 19811
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "added_tokens.json",
+      "sha256": "9715fd2243b6f06a5858b5e32950d2853f73dd5bc201aafcf76f5082a2d8acd1",
+      "size": 34604
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "config.json",
+      "sha256": "a153c53883a6799b6f056b4a8d1a515c9926d03994682ba88a7616618d7da0c1",
+      "size": 1983
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "generation_config.json",
+      "sha256": "444b3f636d2fff89dd9ecf549e2a085b61f7ff0fa0246d4628bac6a3b8cc9ba4",
+      "size": 3807
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "merges.txt",
+      "sha256": "2df2990a395e35e8dfbc7511e08c12d56018d8d04691e0133e5d63b21e154dc6",
+      "size": 493869
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "model.safetensors",
+      "sha256": "07cadb9f25677c8d50df603e66a98fbd842cce45047139baeb16e6219a1e807b",
+      "size": 290403936
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "normalizer.json",
+      "sha256": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd",
+      "size": 52666
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "preprocessor_config.json",
+      "sha256": "9b5cd03a36fbb8a627c64d98a5b5b126ead95a77720723944487311f0110b666",
+      "size": 184990
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "special_tokens_map.json",
+      "sha256": "e67ae3a0aaa99abcd9f187138e12db1f65c16a14761c50ef10eef2c174a7a691",
+      "size": 2194
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "tokenizer.json",
+      "sha256": "27fc476bfe7f17299480be2273fc0608e4d5a99aba2ab5dec5374b4482d1a566",
+      "size": 2480466
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "tokenizer_config.json",
+      "sha256": "2a4c4281cf9f51ac6ccc406fdc711a087afe6530f671fa7b80953edc498275ce",
+      "size": 282683
+    },
+    {
+      "repo": "openai/whisper-base",
+      "file": "vocab.json",
+      "sha256": "8f680bba319e01a653d2e8a5dbc17a9157179e0576e6ce74ce0c06356c6e24f9",
+      "size": 835550
+    },
+    {
+      "repo": "microsoft/OmniParser-v2.0",
+      "file": "README.md",
+      "sha256": "6ae154d65bfc2755703440be02acf63a37b741a1101b7c42b666da93a4ed2310",
+      "size": 7820
+    },
+    {
+      "repo": "microsoft/OmniParser-v2.0",
+      "file": "icon_detect_v3/LICENSE",
+      "sha256": "646f8936b8ddcd14e13e578ff6857e368780b0d1a4f6066bee89211923a373e2",
+      "size": 1073
+    },
+    {
+      "repo": "microsoft/OmniParser-v2.0",
+      "file": "icon_detect_v3/model.pt",
+      "sha256": "11c6cbb77f22569fab22d86c76407a83ec81ab89dbfe28279854822d6e3fb00c",
+      "size": 281182680
+    }
+  ],
+  "packages": {
+    "torch": "2.10.0+cu126",
+    "transformers": "5.3.0",
+    "numpy": "2.5.3",
+    "Pillow": "11.3.0"
+  },
+  "topology": "late",
+  "weights": {
+    "feedback": "948ff4082c7cf941e12f848a68252f846ac06a8847fdb0b0b1bd98845ebf688b",
+    "pair": "ad162430e24dc328d2c21c52769a1aec314817d4a2a06a2dd91db1eb3346b872",
+    "trio": "b1dea33849f238c6200ea89cb58412c45a9435ee411afe2cf7b68bdbb1e4829f",
+    "router": "37cd8756d6a1574a55b6876e38a604400bf2a47e3076e36ede1f157ae3cad956",
+    "byte": "aba8a14c9449f05c723dcfb264e569e5bbcaa43a7330fce41f3eba7e46c5571a"
+  }
+}

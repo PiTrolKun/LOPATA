@@ -956,3 +956,11 @@ The local DOCX editor uses EigenPal Core 2.35.0 (Apache-2.0), bundled font subst
 ## Prepared voice notification recordings
 
 RU recordings were generated with Silero v5.6 RU (xenia), EN with KittenTTS 2 (Iris). Model weights are not included in these notification archives. Powered by KittenML. Attribution, original model licence references and provenance are provided in `Исходники/AIHub/Licenses/texts/VoiceNotificationRecordings-NOTICE.txt` and the existing model licence files. These data notices do not replace the project source-code licence.
+
+## Hugging Face icon
+
+The About window uses the official Hugging Face logo to link to LOPATA’s models and research. The bundled PNG comes from the [Hugging Face brand assets](https://huggingface.co/brand). [Original logo](https://huggingface.co/datasets/huggingface/brand-assets/blob/233827f481bf0f0f413795f1f3cd1b131f77e55a/hf-logo.png)
+
+## Neuroconstructor models
+
+The exported model includes selected local weights and their original notices. The model cards for Sentence Transformers paraphrase-multilingual-MiniLM-L12-v2 and OpenAI Whisper Base identify Apache License 2.0. The separate Microsoft OmniParser icon_detect_v3 detector includes its own MIT license. The pinned versions and source locations are listed in the [component catalog](Исходники/AIHub/Licenses/neuroconstructor-entries.json).

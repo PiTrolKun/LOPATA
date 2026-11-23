@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lopata-neuro"
+version = "1.2.0"
+description = "Offline execution of LOPATA Neuroconstructor model packages"
+license = {file = "LICENSE"}
+requires-python = ">=3.11"
+dependencies = ["torch==2.10.0", "transformers==5.3.0", "numpy==2.5.3", "Pillow==11.3.0"]
+
+[project.scripts]
+lopata-neuro = "lopata_neuro.cli:main"
+
+[tool.setuptools]
+packages = ["lopata_neuro", "lopata_neuro.medium"]
+
+[tool.setuptools.package-data]
+lopata_neuro = ["reference/*.json", "reference/weights/*.pt", "reference/checks/*", "reference/licenses/*"]
+"lopata_neuro.medium" = ["*.json"]

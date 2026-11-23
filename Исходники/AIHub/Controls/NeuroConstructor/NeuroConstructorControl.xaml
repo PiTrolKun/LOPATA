@@ -1,0 +1,211 @@
+<UserControl x:Class="AIHub.Controls.NeuroConstructorControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:AIHub.Controls"
+    AutomationProperties.AutomationId="Neuro.Workspace" Foreground="{DynamicResource TextPrimaryBrush}"
+    FontSize="{DynamicResource UiBodyFontSize}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/AIHub;component/Controls/OneC/OneCResources.xaml"/>
+                <ResourceDictionary Source="/AIHub;component/Controls/VideoEditor/VideoEditorResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="TextBlock">
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            </Style>
+            <Style x:Key="Label" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                <Setter Property="Margin" Value="0,12,0,5"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+            <Style x:Key="Hint" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                <Setter Property="Margin" Value="0,5,0,6"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            </Style>
+            <Style x:Key="Action" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="Margin" Value="0,4,8,4"/>
+                <Setter Property="Padding" Value="12,7"/>
+                <Setter Property="Cursor" Value="Hand"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <Button x:Name="ChangeMode" DockPanel.Dock="Right" VerticalAlignment="Top" Style="{StaticResource Action}"
+                    Content="{Binding [ChangeMode]}" Click="ChangeModeClicked" Visibility="Collapsed"/>
+            <StackPanel>
+                <TextBlock Text="{Binding [Title]}" FontSize="{DynamicResource UiPageTitleFontSize}" FontWeight="SemiBold"/>
+                <TextBlock x:Name="ProjectLabel" Style="{StaticResource Hint}" Visibility="Collapsed"/>
+            </StackPanel>
+        </DockPanel>
+        <TextBlock x:Name="Notice" DockPanel.Dock="Bottom" Margin="0,8,0,0" AutomationProperties.LiveSetting="Polite"/>
+        <Grid>
+        <ScrollViewer x:Name="ModeChoice" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,12,12,0" MaxWidth="600" HorizontalAlignment="Left">
+                <TextBlock Text="{Binding [ChooseMode]}" FontSize="{DynamicResource UiSectionFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <Button x:Name="AutoMode" AutomationProperties.AutomationId="Neuro.AutoMode" AutomationProperties.Name="{Binding [AutoMode]}"
+                        Style="{StaticResource Action}" HorizontalContentAlignment="Stretch" Padding="16,12" Click="AutoModeClicked">
+                    <StackPanel>
+                        <TextBlock Text="{Binding [AutoMode]}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding [AutoModeHint]}" Style="{StaticResource Hint}"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="ProMode" AutomationProperties.AutomationId="Neuro.ProMode" AutomationProperties.Name="{Binding [ProMode]}"
+                        Style="{StaticResource Action}" HorizontalContentAlignment="Stretch" Padding="16,12" Click="ProModeClicked">
+                    <StackPanel>
+                        <TextBlock Text="{Binding [ProMode]}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding [ProModeHint]}" Style="{StaticResource Hint}"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+        <local:NeuroAutoView x:Name="AutoView" Visibility="Collapsed"/>
+        <TabControl x:Name="Pages" Visibility="Collapsed">
+            <TabItem Header="{Binding [BuildTab]}" AutomationProperties.AutomationId="Neuro.BuildTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="16" x:Name="BuildPanel">
+                    <WrapPanel>
+                        <Button Style="{StaticResource Action}" Content="{Binding [New]}" Click="NewClicked"/>
+                        <Button x:Name="OpenTemplate" Style="{StaticResource Action}" Content="{Binding [UsePreset]}" Click="ChoosePreset"/>
+                        <Button Style="{StaticResource Action}" Content="{Binding [Derive]}" Click="ImportClicked"/>
+                        <Button Style="{StaticResource Action}" Content="{Binding [OpenProject]}" Click="ChooseProject"/>
+                    </WrapPanel>
+                    <StackPanel x:Name="Picker" Visibility="Collapsed" Margin="0,6,0,10">
+                        <TextBlock x:Name="PickerLabel" Style="{StaticResource Label}"/>
+                        <ComboBox x:Name="PickerItems"/>
+                        <TextBox x:Name="PresetName" Visibility="Collapsed"/>
+                        <CheckBox x:Name="IncludeExamples" Content="{Binding [IncludeExamples]}" Visibility="Collapsed"/>
+                        <TextBlock x:Name="PresetHint" Text="{Binding [PresetHint]}" Style="{StaticResource Hint}" Visibility="Collapsed"/>
+                        <WrapPanel>
+                            <Button x:Name="PickerApply" Style="{StaticResource Action}" Click="ApplyPicker"/>
+                            <Button Style="{StaticResource Action}" Content="{Binding [Close]}" Click="ClosePicker"/>
+                        </WrapPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="EditSettings">
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [TaskName]}"/>
+                    <TextBox x:Name="TaskName" LostFocus="FieldChanged"/>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Composition]}"/>
+                    <ComboBox x:Name="Composition" AutomationProperties.AutomationId="Neuro.Composition" SelectionChanged="SettingChanged"/>
+                    <TextBlock x:Name="TaskHint" Style="{StaticResource Hint}"/>
+                    <DockPanel Margin="0,3,0,4">
+                        <UniformGrid DockPanel.Dock="Left" Rows="2" Columns="2" Width="84" Height="64"
+                                     Background="{DynamicResource WindowBackgroundBrush}" AutomationProperties.Name="{Binding [DemoPanel]}">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE80F;" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE721;" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <Border BorderThickness="2" CornerRadius="4" BorderBrush="{DynamicResource AccentBrush}">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            </Border>
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </UniformGrid>
+                        <TextBlock x:Name="DemoAnswer" VerticalAlignment="Center" Margin="12,0"/>
+                    </DockPanel>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Connection]}"/>
+                    <ComboBox x:Name="Connection" SelectionChanged="SettingChanged"/>
+                    <StackPanel x:Name="HearingOptions">
+                        <TextBlock Style="{StaticResource Label}" Text="{Binding [AudioPolicy]}"/>
+                        <ComboBox x:Name="AudioPolicy" SelectionChanged="SettingChanged"/>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Channel]}"/>
+                    <ComboBox x:Name="Channel" SelectionChanged="SettingChanged"/>
+                    <TextBlock x:Name="SettingsHint" Style="{StaticResource Hint}"/>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Dataset]}"/>
+                    <ComboBox x:Name="Dataset" SelectionChanged="SettingChanged"/>
+                    <TextBlock x:Name="DatasetHint" Style="{StaticResource Hint}"/>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Source]}"/>
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource Action}" Content="{Binding [Choose]}" Click="ChooseSource"/>
+                        <TextBox x:Name="SourcePath" IsReadOnly="True" VerticalContentAlignment="Center" Margin="0,4,8,4"/>
+                    </DockPanel>
+                    <Button x:Name="Prepare" Style="{StaticResource Action}" Content="{Binding [Prepare]}" HorizontalAlignment="Left" Click="PrepareClicked"/>
+                    <TextBlock x:Name="PreparationResult" Style="{StaticResource Hint}" AutomationProperties.LiveSetting="Polite"/>
+                    <Expander Header="{Binding [Details]}" Margin="0,12,0,8">
+                        <StackPanel Margin="8">
+                            <TextBlock Style="{StaticResource Label}" Text="{Binding [Device]}"/>
+                            <ComboBox x:Name="Device" SelectionChanged="SettingChanged"/>
+                            <TextBox x:Name="CustomDevice" Margin="0,4,0,0" LostFocus="FieldChanged" AutomationProperties.Name="{Binding [DeviceId]}"/>
+                            <TextBlock Style="{StaticResource Label}" Text="{Binding [Memory]}"/>
+                            <TextBox x:Name="Memory" LostFocus="FieldChanged"/>
+                            <TextBlock Style="{StaticResource Label}" Text="{Binding [Cycles]}"/>
+                            <TextBox x:Name="Cycles" LostFocus="FieldChanged"/>
+                            <TextBlock Style="{StaticResource Label}" Text="{Binding [Attempts]}"/>
+                            <TextBox x:Name="Attempts" LostFocus="FieldChanged"/>
+                        </StackPanel>
+                    </Expander>
+                    <WrapPanel>
+                        <Button x:Name="SaveTemplate" Style="{StaticResource Action}" Content="{Binding [SavePreset]}" Click="SavePreset"/>
+                        <Button Style="{StaticResource Action}" Content="{Binding [GoExamples]}" Click="GoExamples"/>
+                        <Button Style="{StaticResource Action}" Content="{Binding [GoTraining]}" Click="GoTraining"/>
+                    </WrapPanel>
+                    </StackPanel>
+                </StackPanel></ScrollViewer>
+            </TabItem>
+            <TabItem Header="{Binding [ExamplesTab]}" AutomationProperties.AutomationId="Neuro.ExamplesTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="16">
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Panel]}"/>
+                    <WrapPanel><Button Style="{StaticResource Action}" Content="{Binding [ChooseImage]}" Click="ChooseImage"/>
+                        <TextBlock x:Name="ImageName" Margin="0,8" VerticalAlignment="Center"/></WrapPanel>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Request]}"/>
+                    <TextBox x:Name="Prompt" TextWrapping="Wrap" AutomationProperties.AutomationId="Neuro.Request"/>
+                    <StackPanel x:Name="AudioFiles">
+                        <TextBlock Style="{StaticResource Hint}" Text="{Binding [AudioHint]}"/>
+                        <WrapPanel><Button Style="{StaticResource Action}" Content="{Binding [FirstWav]}" Click="FirstWavClicked"/>
+                            <TextBlock x:Name="FirstAudioName" VerticalAlignment="Center"/></WrapPanel>
+                        <WrapPanel><Button Style="{StaticResource Action}" Content="{Binding [SecondWav]}" Click="SecondWavClicked"/>
+                            <TextBlock x:Name="SecondAudioName" VerticalAlignment="Center"/></WrapPanel>
+                        <Button Style="{StaticResource Action}" Content="{Binding [ClearAudio]}" HorizontalAlignment="Left" Click="ClearAudio"/>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Purpose]}"/>
+                    <ComboBox x:Name="Split"/>
+                    <WrapPanel>
+                        <Button x:Name="Mark" AutomationProperties.AutomationId="Neuro.Mark" Style="{StaticResource Action}" Content="{Binding [ShowCorrect]}" Click="BeginMarking"/>
+                        <Button x:Name="Predict" Style="{StaticResource Action}" Content="{Binding [Predict]}" Click="PredictClicked"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="MarkHint" Style="{StaticResource Hint}"/>
+                    <Viewbox MaxWidth="320" MaxHeight="320" HorizontalAlignment="Left" StretchDirection="DownOnly" x:Name="Preview" Visibility="Collapsed">
+                        <Grid Width="300" Height="300">
+                            <Image x:Name="Picture" Stretch="Fill"/>
+                            <UniformGrid x:Name="Quadrants" Rows="2" Columns="2" Visibility="Collapsed"/>
+                        </Grid>
+                    </Viewbox>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [SavedExamples]}"/>
+                    <ComboBox x:Name="SavedExamples" SelectionChanged="ReadExample"/>
+                </StackPanel></ScrollViewer>
+            </TabItem>
+            <TabItem Header="{Binding [ResultsTab]}" AutomationProperties.AutomationId="Neuro.ResultsTab">
+                <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="16">
+                    <TextBlock Text="{Binding [TrainingHint]}" Style="{StaticResource Hint}"/>
+                    <WrapPanel>
+                        <Button x:Name="Train" Style="{StaticResource Action}" Content="{Binding [Train]}" Click="TrainClicked" AutomationProperties.AutomationId="Neuro.Train"/>
+                        <Button x:Name="Evaluate" Style="{StaticResource Action}" Content="{Binding [Evaluate]}" Click="EvaluateClicked" AutomationProperties.AutomationId="Neuro.Evaluate"/>
+                        <Button x:Name="Pause" Style="{StaticResource Action}" Content="{Binding [Pause]}" Click="PauseClicked"/>
+                        <Button x:Name="Resume" Style="{StaticResource Action}" Content="{Binding [Resume]}" Click="ResumeClicked"/>
+                        <Button x:Name="Cancel" Style="{StaticResource Action}" Content="{Binding [Cancel]}" Click="CancelClicked"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="ProgressText" Style="{StaticResource Label}" AutomationProperties.LiveSetting="Polite"/>
+                    <ProgressBar x:Name="Progress" Height="8" Margin="0,4,0,6" Foreground="{DynamicResource AccentBrush}"/>
+                    <TextBlock x:Name="Timing" Style="{StaticResource Hint}"/>
+                    <StackPanel x:Name="Results" Visibility="Collapsed">
+                        <TextBlock Style="{StaticResource Label}" Text="{Binding [Comparison]}"/>
+                        <TextBlock x:Name="ReportState" FontWeight="SemiBold" Margin="0,2,0,6"/>
+                        <TextBlock x:Name="Comparison"/>
+                        <TextBlock x:Name="ResourcesUsed" Style="{StaticResource Hint}"/>
+                        <TextBlock Style="{StaticResource Label}" Text="{Binding [Review]}"/>
+                        <ComboBox x:Name="Review" SelectionChanged="ReviewChanged"/>
+                        <TextBlock x:Name="Reviewed" Style="{StaticResource Hint}"/>
+                        <Expander Header="{Binding [ConnectionChecks]}" Margin="0,5">
+                            <TextBlock x:Name="ControlScores" Style="{StaticResource Hint}"/>
+                        </Expander>
+                        <Button Style="{StaticResource Action}" HorizontalAlignment="Left" Content="{Binding [ReportFile]}" Click="OpenReport"/>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Label}" Text="{Binding [Portable]}"/>
+                    <WrapPanel>
+                        <Button x:Name="Export" Style="{StaticResource Action}" Content="{Binding [Export]}" Click="ExportClicked"/>
+                        <Button x:Name="Check" Style="{StaticResource Action}" Content="{Binding [Check]}" Click="CheckClicked"/>
+                        <Button Style="{StaticResource Action}" Content="{Binding [ExternalRuntime]}" Click="OpenRuntime"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="PortableResult" TextWrapping="Wrap"/>
+                </StackPanel></ScrollViewer>
+            </TabItem>
+        </TabControl>
+        </Grid>
+    </DockPanel>
+</UserControl>

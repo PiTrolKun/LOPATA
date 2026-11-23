@@ -6044,5 +6044,91 @@
     ],
     "Ru": "Модели PaddleOCR в ONNX-конверсии RapidOCR, опубликованной под Apache-2.0. Применяются для локального выделения надписей и распознавания символов.",
     "En": "PaddleOCR models converted to ONNX by RapidOCR and distributed under Apache-2.0. Used to detect and recognize text locally."
+  },
+  {
+    "Id": "neuroconstructor.language",
+    "Name": "MiniLM L12 multilingual",
+    "Version": "e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+    "Author": "Sentence Transformers",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/blob/e8f8c211226b894fcb81acc59f3b34ba3efd5f42/README.md",
+    "Checked": "2026-11-23",
+    "Ru": "Используется локальная копия выбранной редакции. При экспорте веса входят в файл сборки вместе с уведомлением о лицензии.",
+    "En": "The selected revision is used locally. The exported model contains its weights and license notice.",
+    "Basic": false,
+    "Delivery": "local-import",
+    "Terms": "2342483625F13170A15AC7D1FF64A2CA62E890D5236247757C99246812186283",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "neuroconstructor.speech",
+    "Name": "Whisper Base",
+    "Version": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+    "Author": "OpenAI",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/openai/whisper-base/blob/e37978b90ca9030d5170a5c07aadb050351a65bb/README.md",
+    "Checked": "2026-11-23",
+    "Ru": "Используется локальная копия выбранной редакции. При экспорте веса входят в файл сборки вместе с уведомлением о лицензии.",
+    "En": "The selected revision is used locally. The exported model contains its weights and license notice.",
+    "Basic": false,
+    "Delivery": "local-import",
+    "Terms": "2342483625F13170A15AC7D1FF64A2CA62E890D5236247757C99246812186283",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "neuroconstructor.vision",
+    "Name": "OmniParser icon_detect_v3",
+    "Version": "f55d0750e5b94db2125ef0b45b0fa4a85ddc59b4",
+    "Author": "Microsoft Corporation",
+    "License": "MIT",
+    "Source": "https://huggingface.co/microsoft/OmniParser-v2.0/blob/f55d0750e5b94db2125ef0b45b0fa4a85ddc59b4/icon_detect_v3/LICENSE",
+    "Checked": "2026-11-23",
+    "Ru": "Используется локальная копия выбранной редакции. При экспорте веса входят в файл сборки вместе с уведомлением о лицензии.",
+    "En": "The selected revision is used locally. The exported model contains its weights and license notice.",
+    "Basic": false,
+    "Delivery": "local-import",
+    "Terms": "6FB79F2BFF0DE6ECB6426C3260DC3225E5ABFD36C127B4A90DD1259F59968432",
+    "Texts": [
+      "texts/OmniParser-icon-detect-v3-MIT.txt"
+    ]
+  },
+  {
+    "Id": "neuroconstructor.medium",
+    "Name": "Qwen3-ASR, OmniParser caption, PP-OCRv5, PP-DocLayoutV2, PaddleOCR-VL, Qwen3-VL",
+    "Version": "medium-2026-11-23",
+    "Author": "Qwen, Microsoft, PaddlePaddle",
+    "License": "Apache-2.0 / MIT",
+    "Source": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B",
+    "Checked": "2026-11-23",
+    "Ru": "Локальный средний набор. При экспорте файл включает веса, редакции, карточки издателей и исходные уведомления. Детектор OmniParser v3 и описание значков используют MIT, модели Qwen и PaddlePaddle используют Apache-2.0.",
+    "En": "Local medium set. Exports include weights, revisions, model cards and original notices. OmniParser v3 and icon caption use MIT; Qwen and PaddlePaddle models use Apache-2.0.",
+    "Basic": false,
+    "Delivery": "local-import",
+    "Texts": [
+      "texts/Apache-2.0.txt",
+      "texts/OmniParser-icon-detect-v3-MIT.txt"
+    ],
+    "Terms": "9230DE408972993FBD141D15E5708C3026848ED9CBB64F6D41A191AF5DF4CFA8"
+  },
+  {
+    "Id": "neuroconstructor.heavy",
+    "Name": "Qwen3-ASR-1.7B / Qwen3-VL-8B-Instruct",
+    "Version": "7278e1e70fe206f11671096ffdd38061171dd6e5 / 0c351dd01ed87e9c1b53cbc748cba10e6187ff3b",
+    "Author": "Qwen",
+    "License": "Apache-2.0",
+    "Source": "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct",
+    "Checked": "2026-11-23",
+    "Ru": "Локальный импорт двух моделей Qwen под Apache-2.0. В сборку включаются все использованные части оригинальных весов, редакции и карточки моделей.",
+    "En": "Local import of two Apache-2.0 Qwen checkpoints. The exported file includes every original weight shard, the revisions and model cards.",
+    "Basic": false,
+    "Delivery": "local-import",
+    "Texts": [
+      "texts/Apache-2.0.txt"
+    ],
+    "Terms": "4D959BA09D8A75F97551B3550E99303EA1439B9AF776476F722280BECB130BFE"
   }
 ]
