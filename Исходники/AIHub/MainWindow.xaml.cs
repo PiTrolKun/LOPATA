@@ -183,7 +183,8 @@ public partial class MainWindow : Window
         InitializeComponentAudit();
         InitializeDictation();
         var agentPreparation = new Services.ExternalAgents.AgentEnvironmentJobs(
-            () => _storageSettings, () => _appSettings.ModelDownloads.MaximumParallelConnections, _updateLifetime.Token);
+            () => _storageSettings, () => _appSettings.ModelDownloads.MaximumParallelConnections, _updateLifetime.Token,
+            presence: Services.ExternalAgents.AgentPresenceStore.Current);
         _ = Services.ExternalAgents.AgentEnvironmentConnection.ListenAsync(request =>
         {
 #if DEBUG
@@ -206,6 +207,7 @@ public partial class MainWindow : Window
             Services.ExternalAgents.AgentModelPlan.Validate(request.Scenario, request.Operation);
             return agentPreparation.Handle(request);
         }, _updateLifetime.Token);
+        InitializeAgentIndicators();
         StartupMark("complete");
     }
 

@@ -371,6 +371,10 @@
                     <Button x:Name="ChatSpeechSettingsButton" Content="🔊" Visibility="Collapsed"
                             Style="{StaticResource ThemeButtonStyle}" Margin="0,0,10,0"
                             Click="ChatSpeechSettings_Click" AutomationProperties.AutomationId="LetItOut.Speech.Settings" />
+                    <Image x:Name="ExternalAgentActivityImage" Visibility="Collapsed"
+                           AutomationProperties.AutomationId="ExternalAgents.Activity"
+                           Width="{DynamicResource UiThemeButtonSize}" Height="{DynamicResource UiThemeButtonSize}"
+                           Stretch="Uniform" Margin="0,0,14,0" />
                     <Button x:Name="EmergencyStopButton"
                             Width="{DynamicResource UiThemeButtonSize}" Height="{DynamicResource UiThemeButtonSize}"
                             Margin="0,0,14,0" Padding="0" Cursor="Hand"

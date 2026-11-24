@@ -7,7 +7,7 @@ using Lopata.Island;
 
 namespace AIHub.Services.ExternalAgents;
 
-internal sealed record AgentEnvironmentRequest(string Action, string Scenario, string Operation);
+internal sealed record AgentEnvironmentRequest(string Action, string Scenario, string Operation, AgentIdentity? Client = null);
 
 // Component acquisition belongs to the running desktop host, which owns the license UI and job state.
 // Queries about saved logs or plain project drafts never need this connection.
@@ -17,7 +17,7 @@ internal static class AgentEnvironmentConnection
     private const PipeOptions Options = PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly;
     private static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-    internal static async Task<object> RequestAsync(string action, string scenario, string operation)
+    internal static async Task<object> RequestAsync(string action, string scenario, string operation, AgentIdentity? client = null)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(45));
         using var pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, Options);
@@ -38,7 +38,7 @@ internal static class AgentEnvironmentConnection
         }
         using var writer = new StreamWriter(pipe, Utf8, leaveOpen: true) { AutoFlush = true };
         using var reader = new StreamReader(pipe, Utf8, leaveOpen: true);
-        await writer.WriteLineAsync(JsonSerializer.Serialize(new AgentEnvironmentRequest(action, scenario, operation)));
+        await writer.WriteLineAsync(JsonSerializer.Serialize(new AgentEnvironmentRequest(action, scenario, operation, client)));
         var response = await reader.ReadLineAsync(timeout.Token) ?? throw new IOException("LOPATA closed during preparation.");
         return JsonSerializer.Deserialize<JsonElement>(response);
     }

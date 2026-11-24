@@ -52,7 +52,7 @@ internal static class AgentTools
 
     internal static object List() => Tools;
 
-    internal static async Task<object> CallAsync(string name, JsonElement args)
+    internal static async Task<object> CallAsync(string name, JsonElement args, AgentIdentity? client = null)
     {
         var tool = Tools.FirstOrDefault(t => t.Name == name) ?? throw new ArgumentException("Unknown tool: " + name);
         if (args.ValueKind != JsonValueKind.Object) throw new ArgumentException("Expected a JSON object for arguments.");
@@ -73,6 +73,7 @@ internal static class AgentTools
         foreach (var key in tool.InputSchema.Required)
             if (!args.TryGetProperty(key, out _)) throw new ArgumentException("Missing field: " + key);
 
+        using var activity = client == null ? null : AgentPresenceStore.Current.Begin(client, name);
         switch (name)
         {
             case "lopata_info":
@@ -107,7 +108,7 @@ internal static class AgentTools
                     return new { scenario, operation, state = "ready", requiresModels = false };
                 }
                 AgentModelPlan.Validate(scenario, operation);
-                return await AgentEnvironmentConnection.RequestAsync(name, scenario, operation);
+                return await AgentEnvironmentConnection.RequestAsync(name, scenario, operation, client);
         }
     }
 

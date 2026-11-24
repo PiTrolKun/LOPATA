@@ -13,6 +13,21 @@ internal static class AgentProtocol
     internal static async Task<int> RunAsync(string[] args)
     {
         Console.InputEncoding = Console.OutputEncoding = new UTF8Encoding(false);
+        var configured = AgentIdentity.Anonymous;
+        var codexPlugin = args is ["--codex-plugin"];
+        if (codexPlugin)
+        {
+            configured = AgentIdentity.FromName("Codex");
+            args = [];
+        }
+        else if (args is ["--client", var clientName, ..])
+        {
+            configured = AgentIdentity.FromName(clientName);
+            args = args[2..];
+        }
+        AgentIdentity Caller(AgentIdentity identity) => AgentIdentity.ResolveCaller(identity,
+            Environment.GetEnvironmentVariable("CODEX_THREAD_ID"), Environment.GetEnvironmentVariable("CODEX_TOOL_CALL_ID"));
+        var client = Caller(configured);
         if (args.Length != 0)
         {
             try
@@ -21,9 +36,10 @@ internal static class AgentProtocol
                 if (args is ["--tools"]) result = AgentTools.List();
                 else if (args is ["--call", var name])
                 {
-                    var input = await Console.In.ReadToEndAsync();
+                    var input = (await Console.In.ReadToEndAsync()).TrimStart('\uFEFF');
                     var parameters = string.IsNullOrWhiteSpace(input) ? Empty : JsonSerializer.Deserialize<JsonElement>(input);
-                    result = await AgentTools.CallAsync(name, parameters);
+                    result = await AgentTools.CallAsync(name, parameters, client);
+                    AgentPresenceStore.Current.Remember(client);
                 }
                 else throw new ArgumentException("Use MCP over stdio, --tools, or --call TOOL with a JSON object on stdin.");
                 await WriteAsync(result);
@@ -43,7 +59,7 @@ internal static class AgentProtocol
             JsonElement? id = null;
             try
             {
-                using var document = JsonDocument.Parse(line);
+                using var document = JsonDocument.Parse(line.TrimStart('\uFEFF'));
                 var request = document.RootElement;
                 if (request.ValueKind != JsonValueKind.Object || !request.TryGetProperty("jsonrpc", out var version)
                     || !version.ValueEquals("2.0") || !request.TryGetProperty("method", out var method)
@@ -61,6 +77,8 @@ internal static class AgentProtocol
                 {
                     case "initialize":
                         var requested = parameters.TryGetProperty("protocolVersion", out var pv) ? pv.GetString() : null;
+                        client = Caller(AgentIdentity.FromHandshake(parameters, configured));
+                        if (!codexPlugin) AgentPresenceStore.Current.Remember(client);
                         result = new
                         {
                             protocolVersion = requested is "2024-11-05" or "2025-03-26" or "2025-06-18" ? requested : ProtocolVersion,
@@ -76,7 +94,7 @@ internal static class AgentProtocol
                         var tool = AgentTools.RequiredString(parameters, "name");
                         try
                         {
-                            var answer = await AgentTools.CallAsync(tool, parameters.TryGetProperty("arguments", out var arguments) ? arguments : Empty);
+                            var answer = await AgentTools.CallAsync(tool, parameters.TryGetProperty("arguments", out var arguments) ? arguments : Empty, client);
                             result = ToolResult(JsonSerializer.Serialize(answer, Json), false);
                         }
                         catch (Exception ex) { result = ToolResult(ex.Message, true); }

@@ -41,7 +41,7 @@ internal sealed class AgentConnectionSetup(string applicationDirectory, string p
         WriteAsset(plugin, "emblem.png", "assets");
         WriteJson(Path.Combine(plugin, ".mcp.json"), new
         {
-            mcpServers = new Dictionary<string, object> { [PluginName] = new { command = _agent, args = Array.Empty<string>() } }
+            mcpServers = new Dictionary<string, object> { [PluginName] = new { command = _agent, args = new[] { "--codex-plugin" } } }
         });
         WriteJson(Path.Combine(plugin, ".codex-plugin", "plugin.json"), new
         {
@@ -77,7 +77,7 @@ internal sealed class AgentConnectionSetup(string applicationDirectory, string p
 
                 {_agent}
 
-            Initialize the MCP session, list its tools and use lopata_info to verify this copy. A client that can launch local processes may instead run the same executable with --tools or --call TOOL_NAME. For --call, pass a JSON object encoded as UTF-8 through standard input, then close standard input. Pass arguments as individual values; never execute a project description as shell code.
+            Initialize the MCP session with your actual application name in clientInfo, list its tools and use lopata_info to verify this copy. A client that can launch local processes may instead run the same executable with --tools or --call TOOL_NAME. When your application name is known, put --client "Your application name" before --call so LOPATA can identify your connection and show your icon during work. For --call, pass a JSON object encoded as UTF-8 through standard input, then close standard input. Pass arguments as individual values; never execute a project description as shell code.
 
             {tools}
             """;

@@ -8,7 +8,7 @@ internal delegate Task<bool> PrepareAgentModels(StorageSettings storage, int con
     bool download, IProgress<ManagedModelDownloadProgress> progress, CancellationToken token);
 
 internal sealed class AgentEnvironmentJobs(Func<StorageSettings> storage, Func<int> connections, CancellationToken lifetime,
-    PrepareAgentModels? prepare = null)
+    PrepareAgentModels? prepare = null, AgentPresenceStore? presence = null)
 {
     private readonly PrepareAgentModels _prepare = prepare ?? AgentModelPlan.PrepareAsync;
     private sealed class Job
@@ -18,6 +18,7 @@ internal sealed class AgentEnvironmentJobs(Func<StorageSettings> storage, Func<i
         public required CancellationTokenSource Stop { get; init; }
         public bool Download { get; set; }
         public bool Running { get; set; } = true;
+        public IDisposable? Activity { get; set; }
         public string State { get; set; } = "checking";
         public string? Reason { get; set; }
         public ManagedModelDownloadProgress? Progress { get; set; }
@@ -39,12 +40,18 @@ internal sealed class AgentEnvironmentJobs(Func<StorageSettings> storage, Func<i
             if (r.Action is not ("environment_prepare" or "environment_check")) throw new ArgumentException("Unknown action.");
             if (job?.Running == true)
             {
+                if (!job.Download && r.Action == "environment_prepare" && r.Client is { } requester)
+                {
+                    job.Activity?.Dispose();
+                    job.Activity = presence?.Begin(requester, r.Action);
+                }
                 job.Download |= r.Action == "environment_prepare";
                 return Snapshot(job);
             }
             if (_jobs.Values.FirstOrDefault(j => j.Running) is { } active)
                 return new { state = "busy", active.Scenario, active.Operation };
             job = new Job { Scenario = r.Scenario, Operation = r.Operation,
+                Activity = r.Client == null ? null : presence?.Begin(r.Client, r.Action),
                 Download = r.Action == "environment_prepare", Stop = CancellationTokenSource.CreateLinkedTokenSource(lifetime) };
             _jobs[key] = job;
             _ = Task.Run(() => RunAsync(job));
@@ -96,6 +103,7 @@ internal sealed class AgentEnvironmentJobs(Func<StorageSettings> storage, Func<i
             job.State = state;
             job.Reason = reason;
             job.Running = false;
+            job.Activity?.Dispose();
             job.Stop.Dispose();
         }
     }

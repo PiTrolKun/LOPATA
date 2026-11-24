@@ -104,7 +104,7 @@ internal sealed class ExternalAgentConnectionWindow : Window
         var list = new Expander
         {
             Header = string.Format(_text("ExternalAgents.Scenarios"), available.Length),
-            Content = rows, Margin = new Thickness(0, 12, 0, 0), IsExpanded = true
+            Content = rows, Margin = new Thickness(0, 12, 0, 0), IsExpanded = false
         };
         AutomationProperties.SetAutomationId(list, "ExternalAgents.Scenarios");
         return list;

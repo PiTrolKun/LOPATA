@@ -13,6 +13,27 @@ public sealed class LocalizationService
 
     public string CurrentLanguageCode { get; private set; } = FallbackLanguageCode;
 
+    internal static LocalizationService ForCurrentInterface()
+    {
+        var code = FallbackLanguageCode;
+        try
+        {
+            using var settings = JsonDocument.Parse(File.ReadAllText(AppDataPaths.SettingsPath));
+            if (settings.RootElement.ValueKind == JsonValueKind.Object
+                && settings.RootElement.TryGetProperty("languageCode", out var saved)
+                && saved.ValueKind == JsonValueKind.String && saved.GetString() is { } value
+                && value.IndexOfAny(Path.GetInvalidFileNameChars()) < 0)
+                code = value;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            // The standalone agent can be queried before the first desktop launch.
+        }
+        var language = new LocalizationService();
+        language.Load(code);
+        return language;
+    }
+
     public IReadOnlyList<LanguageOption> GetAvailableLanguages()
     {
         var codes = Directory
