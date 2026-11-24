@@ -36,6 +36,7 @@ public partial class MainWindow
             ScenarioNavigationCatalog.LetItOut => ScenarioNavigationPage.LetItOutChat?.SessionId,
             ScenarioNavigationCatalog.SongClip => ScenarioNavigationPage.SongClip?.RecoveryProjectId,
             ScenarioNavigationCatalog.VisualScenario => ScenarioNavigationPage.VisualWorkspace?.RecoveryProjectId,
+            ScenarioNavigationCatalog.AnimatedAssets => ScenarioNavigationPage.AnimatedAssetsWorkspace?.RecoveryPath,
             ScenarioNavigationCatalog.Music => MusicPage.RecoveryProjectId,
             ScenarioNavigationCatalog.VideoGeneration => ScenarioNavigationPage.VideoPreparation?.Session.Project.Id,
             _ => null
@@ -96,6 +97,11 @@ public partial class MainWindow
                     case ScenarioNavigationCatalog.VisualScenario:
                         var visual = RevealVisualScenario();
                         if (page.Project is { } projectId) visual.RestoreProject(projectId);
+                        break;
+                    case ScenarioNavigationCatalog.AnimatedAssets:
+                        var animation = ShowAnimatedAssets();
+                        if (page.Project is { } draft && File.Exists(draft))
+                            await animation.OpenRecoveryAsync(draft);
                         break;
                     case ScenarioNavigationCatalog.VideoGeneration:
                         OpenVideoConcept().RestoreRecoveryProject(page.Project, page.File);

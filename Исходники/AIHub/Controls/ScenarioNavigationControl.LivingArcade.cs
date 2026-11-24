@@ -22,14 +22,16 @@ public sealed partial class ScenarioNavigationControl
         Render();
     }
 
-    private Button CreateArcadeEntrance()
+    private Button CreateArcadeEntrance() => CreateHomeShortcut("gamepad", "Arcade.Title", "Arcade.Open", ScenarioNavigationCatalog.LivingArcade);
+
+    private Button CreateHomeShortcut(string glyph, string titleKey, string automationId, string scenarioId)
     {
-        var icon = ScenarioNavigationIcon.Create("gamepad");
+        var icon = ScenarioNavigationIcon.Create(glyph);
         icon.Width = icon.Height = 30;
         var button = new Button
         {
             Content = icon, Width = 58, Height = 52, Margin = new Thickness(8, 14, 0, 8),
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Left, ToolTip = _localize("Arcade.Title"),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left, ToolTip = _localize(titleKey),
             Background = Brushes.Transparent, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(0)
         };
         var surface = new FrameworkElementFactory(typeof(Border));
@@ -39,9 +41,9 @@ public sealed partial class ScenarioNavigationControl
         content.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
         surface.AppendChild(content);
         button.Template = new ControlTemplate(typeof(Button)) { VisualTree = surface };
-        AutomationProperties.SetAutomationId(button, "Arcade.Open");
-        AutomationProperties.SetName(button, _localize("Arcade.Title"));
-        button.Click += (_, _) => ScenarioRequested?.Invoke(ScenarioNavigationCatalog.LivingArcade);
+        AutomationProperties.SetAutomationId(button, automationId);
+        AutomationProperties.SetName(button, _localize(titleKey));
+        button.Click += (_, _) => OpenScenario(scenarioId);
         return button;
     }
 }

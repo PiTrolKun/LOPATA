@@ -9,16 +9,27 @@ public sealed class GifStreamEncoder : IDisposable
 {
     private readonly BinaryWriter _writer;
     private readonly int _width, _height;
+    private readonly byte? _transparentIndex;
     private bool _finished;
     public GifStreamEncoder(Stream stream, int width, int height, bool loop, string? comment = null)
+        : this(stream, width, height, loop, comment, null, null) { }
+
+    internal GifStreamEncoder(Stream stream, int width, int height, bool loop, string? comment,
+        byte[]? palette, byte? transparentIndex)
     {
         if (width is < 1 or > 65535 || height is < 1 or > 65535) throw new ArgumentOutOfRangeException(nameof(width));
-        _width = width; _height = height; _writer = new(stream, Encoding.ASCII, leaveOpen: true);
+        if (palette is not null && palette.Length != 256 * 3) throw new ArgumentException("Invalid GIF palette.", nameof(palette));
+        _width = width; _height = height; _transparentIndex = transparentIndex;
+        _writer = new(stream, Encoding.ASCII, leaveOpen: true);
         _writer.Write(Encoding.ASCII.GetBytes("GIF89a")); _writer.Write((ushort)width); _writer.Write((ushort)height);
-        _writer.Write((byte)0xF7); _writer.Write((byte)0); _writer.Write((byte)0);
-        for (var r = 0; r < 6; r++) for (var g = 0; g < 6; g++) for (var b = 0; b < 6; b++)
-        { _writer.Write((byte)(r * 51)); _writer.Write((byte)(g * 51)); _writer.Write((byte)(b * 51)); }
-        for (var i = 0; i < 40; i++) { var grey = (byte)Math.Round(i * 255d / 39); _writer.Write(grey); _writer.Write(grey); _writer.Write(grey); }
+        _writer.Write((byte)0xF7); _writer.Write(transparentIndex ?? 0); _writer.Write((byte)0);
+        if (palette is not null) _writer.Write(palette);
+        else
+        {
+            for (var r = 0; r < 6; r++) for (var g = 0; g < 6; g++) for (var b = 0; b < 6; b++)
+            { _writer.Write((byte)(r * 51)); _writer.Write((byte)(g * 51)); _writer.Write((byte)(b * 51)); }
+            for (var i = 0; i < 40; i++) { var grey = (byte)Math.Round(i * 255d / 39); _writer.Write(grey); _writer.Write(grey); _writer.Write(grey); }
+        }
         if (loop)
         { _writer.Write(new byte[] { 0x21, 0xFF, 11 }); _writer.Write(Encoding.ASCII.GetBytes("NETSCAPE2.0")); _writer.Write(new byte[] { 3, 1, 0, 0, 0 }); }
         if (comment is not null) Comment(comment);
@@ -47,8 +58,9 @@ public sealed class GifStreamEncoder : IDisposable
     public void Add(byte[] indices, int centiseconds, CancellationToken token = default)
     {
         if (_finished || indices.Length != checked(_width * _height)) throw new InvalidOperationException("Invalid GIF frame.");
-        _writer.Write(new byte[] { 0x21, 0xF9, 4, 4 }); // Keep previous image, no transparency.
-        _writer.Write((ushort)Math.Clamp(centiseconds, 1, 65535)); _writer.Write((byte)0); _writer.Write((byte)0);
+        // Transparent frames dispose to background so moving artwork does not leave trails.
+        _writer.Write(new byte[] { 0x21, 0xF9, 4, _transparentIndex.HasValue ? (byte)9 : (byte)4 });
+        _writer.Write((ushort)Math.Clamp(centiseconds, 1, 65535)); _writer.Write(_transparentIndex ?? 0); _writer.Write((byte)0);
         _writer.Write((byte)0x2C); _writer.Write((ushort)0); _writer.Write((ushort)0);
         _writer.Write((ushort)_width); _writer.Write((ushort)_height); _writer.Write((byte)0); _writer.Write((byte)8);
         var block = new byte[255]; var count = 0; uint accumulator = 0; var pendingBits = 0; var codeBits = 9;

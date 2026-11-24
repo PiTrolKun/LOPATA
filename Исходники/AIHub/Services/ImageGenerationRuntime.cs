@@ -356,8 +356,12 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
     internal Task<bool> WarmAsync(ImageGenerationRequest request, IReadOnlyList<ManagedModelArtifactCard> cards,
         CancellationToken token) => _worker is ImageGenerationNativeWorker native
         ? native.WarmAsync(request, cards, token) : Task.FromResult(false);
-    public async Task<ImageGenerationTurn> RunAsync(ImageGenerationRequest request,
-        IReadOnlyList<ManagedModelArtifactCard> cards, Action? changed, CancellationToken token)
+    public Task<ImageGenerationTurn> RunAsync(ImageGenerationRequest request,
+        IReadOnlyList<ManagedModelArtifactCard> cards, Action? changed, CancellationToken token) =>
+        RunAsync(request, cards, changed, token, recordBackgroundCheckpoint: true);
+
+    internal async Task<ImageGenerationTurn> RunAsync(ImageGenerationRequest request,
+        IReadOnlyList<ManagedModelArtifactCard> cards, Action? changed, CancellationToken token, bool recordBackgroundCheckpoint)
     {
         ImageGenerationCatalog.Validate(request);
         ImageLora.ImageLoraCatalog.ValidateRawPrompt(request.Prompt);
@@ -434,7 +438,8 @@ public sealed class ImageGenerationRuntime(IImageGenerationWorker? worker = null
                     Outcome = saved ? InspectorOutcome.Success : InspectorOutcome.SaveFailure
                 });
             }
-            ApplicationBackgroundOperations.Current?.SaveCheckpoint(new { request.Id, Completed = i + 1 });
+            if (recordBackgroundCheckpoint)
+                ApplicationBackgroundOperations.Current?.SaveCheckpoint(new { request.Id, Completed = i + 1 });
             changed?.Invoke();
         }
         return ImageGenerationSessionStore.Load(request.SessionDirectory).Turns.Single(t => t.Request.Id == request.Id);

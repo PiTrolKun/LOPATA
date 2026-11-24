@@ -80,12 +80,13 @@ internal sealed class VisualAdvisor
     }
 
     internal async Task<string> CompleteAsync(VisualPreparedAdvisor prepared, IReadOnlyList<object> messages,
-        CancellationToken token, bool structured = false)
+        CancellationToken token, bool structured = false, object? responseFormat = null, int? maximumReplyTokens = null)
     {
         var used = await CountAsync(prepared, messages, token);
         var replyTokens = prepared.ReplyTokens(used);
+        if (maximumReplyTokens is int maximum) replyTokens = Math.Min(replyTokens, maximum);
         if (prepared.SenseNova) return await _senseNova!.CompleteAsync(prepared.Model.Path, messages, replyTokens, token);
-        var json = Payload(messages, replyTokens, structured);
+        var json = Payload(messages, replyTokens, structured, responseFormat);
         if (prepared.Gemma)
         {
             try
@@ -113,14 +114,15 @@ internal sealed class VisualAdvisor
             : _text.CountPrivatePromptAsync(Payload(messages), token);
 
     private static string Payload(IReadOnlyList<object> messages,
-        int replyTokens = LiteraryAutomaticBudget.MinimumReply, bool structured = false)
+        int replyTokens = LiteraryAutomaticBudget.MinimumReply, bool structured = false, object? responseFormat = null)
     {
         var fields = new Dictionary<string, object>
         {
             ["messages"] = messages, ["stream"] = true, ["max_tokens"] = replyTokens, ["temperature"] = .65,
             ["chat_template_kwargs"] = new { enable_thinking = false }
         };
-        if (structured) fields["response_format"] = new { type = "json_object" };
+        if (responseFormat is not null) fields["response_format"] = responseFormat;
+        else if (structured) fields["response_format"] = new { type = "json_object" };
         return JsonSerializer.Serialize(fields);
     }
 

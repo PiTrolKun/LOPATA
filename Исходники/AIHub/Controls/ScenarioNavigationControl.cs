@@ -90,6 +90,17 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public bool GoBack()
     {
+        if (IsAnimatedAssetsPreparation)
+        {
+            BackFromAnimatedAssetsPreparation();
+            return true;
+        }
+        if (IsAnimatedAssets)
+        {
+            if (_animatedAssets!.Back()) return true;
+            if (LeaveAnimatedAssets() && !ReturnFromScenario()) ShowHome();
+            return true;
+        }
         if (IsNeuroConstructor) { IsNeuroConstructor = false; if (!ReturnFromScenario()) Render(); return true; }
         if (IsCharacterKnowledge)
         {
@@ -145,7 +156,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void ShowHome()
     {
-        if (!LeaveCharacterKnowledge()) return;
+        if (!LeaveCharacterKnowledge() || !LeaveAnimatedAssets()) return;
         if (!LeaveVisualScenario()) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
@@ -169,7 +180,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     public void SelectDirection(string id)
     {
-        if (!LeaveCharacterKnowledge()) return;
+        if (!LeaveCharacterKnowledge() || !LeaveAnimatedAssets()) return;
         if (!LeaveVisualScenario()) return;
         if (!LeaveGameSounds()) return;
         if (!LeaveOneC()) return;
@@ -196,7 +207,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     internal void OpenScenario(string id, bool prepareShorts, bool prepareVisual = true)
     {
-        if (!LeaveCharacterKnowledge()) return;
+        if (!LeaveCharacterKnowledge() || !LeaveAnimatedAssets()) return;
         if (id == ScenarioNavigationCatalog.VisualScenario)
         {
             var workspace = OpenVisualWorkspace?.Invoke(prepareVisual);
@@ -217,6 +228,11 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsLivingArcade = false;
         var node = ScenarioNavigationCatalog.Get(id);
         if (node.Kind != ScenarioNavigationKind.Scenario || !node.IsAvailable) return;
+        if (id == ScenarioNavigationCatalog.AnimatedAssets)
+        {
+            ScenarioRequested?.Invoke(id);
+            return;
+        }
         var group = ScenarioNavigationCatalog.Get(node.ParentId!);
         SelectedDirectionId = group.ParentId;
         IsNeuroConstructor = id == ScenarioNavigationCatalog.NeuroConstructor;
@@ -329,6 +345,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
             case ScenarioNavigationKind.Group: SelectDirection(target.ParentId!); break;
             case ScenarioNavigationKind.Scenario:
                 OpenScenario(target.Id);
+                if (target.Id == ScenarioNavigationCatalog.AnimatedAssets && !IsAnimatedAssets && !IsAnimatedAssetsPreparation) _tagReturnDirection = returnDirection;
                 if (target.Id == ScenarioNavigationCatalog.Shorts && !IsShorts
                     || target.Id == ScenarioNavigationCatalog.VisualScenario && !IsVisualScenario) _tagReturnDirection = returnDirection;
                 break;
@@ -377,6 +394,18 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     private void Render()
     {
+        if (IsAnimatedAssetsPreparation)
+        {
+            _animationPreparation!.Configure(_localize);
+            StateChanged?.Invoke();
+            return;
+        }
+        if (IsAnimatedAssets)
+        {
+            _animatedAssets!.Configure(_localize);
+            StateChanged?.Invoke();
+            return;
+        }
         if (IsCharacterKnowledge)
         {
             CharacterKnowledgeView!.Configure(_localize);
@@ -448,7 +477,10 @@ public sealed partial class ScenarioNavigationControl : UserControl
             foreach (var node in ScenarioNavigationCatalog.Children(null))
                 _tiles.Children.Add(Card(node, () => SelectDirection(node.Id), direction: true));
             body.Children.Add(_tiles);
-            body.Children.Add(CreateArcadeEntrance());
+            var shortcuts = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+            shortcuts.Children.Add(CreateArcadeEntrance());
+            shortcuts.Children.Add(CreateAnimatedAssetsEntrance());
+            body.Children.Add(shortcuts);
         }
         else if (placeholder is not null)
         {

@@ -48,6 +48,8 @@ public partial class MainWindow
             (state, token) => RevealVisualScenario().RestoreAsync(state, token));
         _backgroundOperations.Register(Services.VisualScenario.VisualAdvisor.ChatKind,
             (state, token) => RevealVisualScenario().RestoreAsync(state, token));
+        _backgroundOperations.Register(Services.AnimatedAssets.AnimationModelService.OperationKind,
+            (state, token) => ShowAnimatedAssets().RestoreOperationAsync(state, token));
         RegisterLetItOutBackgroundOperation();
         RegisterLivingArcadeBackgroundOperations();
         RegisterChatSpeech();
@@ -82,6 +84,7 @@ public partial class MainWindow
                 RefreshBackgroundTray();
                 ScenarioNavigationPage.Shorts?.RefreshActions();
                 ScenarioNavigationPage.VisualWorkspace?.UpdateCommands();
+                ScenarioNavigationPage.AnimatedAssetsWorkspace?.RefreshBackgroundState();
             });
         };
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
@@ -441,6 +444,13 @@ public partial class MainWindow
                 && notice.Project is { } visualId)
             {
                 RevealVisualScenario().RestoreProject(visualId);
+                _backgroundOperations!.Acknowledge(notice.Id);
+                return;
+            }
+            if (notice.Kind == Services.AnimatedAssets.AnimationModelService.OperationKind && notice.Project is { } animationPath)
+            {
+                RestoreFromTray();
+                await ShowAnimatedAssets().OpenRecoveryAsync(animationPath, ApplicationBackgroundOperations.ExitToken);
                 _backgroundOperations!.Acknowledge(notice.Id);
                 return;
             }

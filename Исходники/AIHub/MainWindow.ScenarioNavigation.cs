@@ -31,6 +31,9 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.SpeechAssets:
                     ScenarioNavigationPage.ShowSpeechAssets(this);
                     break;
+                case ScenarioNavigationCatalog.AnimatedAssets:
+                    OpenAnimatedAssets();
+                    break;
                 case ScenarioNavigationCatalog.LivingArcade:
                     await OpenLivingArcadeAsync();
                     break;
@@ -134,7 +137,8 @@ public partial class MainWindow
         if (WorkStartPage.Visibility != Visibility.Visible) return;
         if (ScenarioNavigationPage.IsShorts && ScenarioNavigationPage.Shorts is { } shorts) ConfigureShorts(shorts);
         BackFromWorkStartButton.Visibility = ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade ? Visibility.Collapsed : Visibility.Visible;
-        if (ScenarioNavigationPage.IsImageLayers || ScenarioNavigationPage.IsCharacterKnowledge || ScenarioNavigationPage.IsNeuroConstructor) { StatusText.Text = ""; return; }
+        if (ScenarioNavigationPage.IsAnimatedAssets || ScenarioNavigationPage.IsAnimatedAssetsPreparation
+            || ScenarioNavigationPage.IsImageLayers || ScenarioNavigationPage.IsCharacterKnowledge || ScenarioNavigationPage.IsNeuroConstructor) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.IsVisualScenario || ScenarioNavigationPage.IsShorts || ScenarioNavigationPage.IsVideoPreparation || ScenarioNavigationPage.IsSongClip || ScenarioNavigationPage.IsLetItOutChat || ScenarioNavigationPage.IsLivingArcade) { StatusText.Text = ""; return; }
         if (ScenarioNavigationPage.PlaceholderScenarioId is not null) { StatusText.Text = L("Navigation.Soon"); return; }
         if (RagBooksPageHost.Visibility == Visibility.Visible) { StatusText.Text = ""; return; }

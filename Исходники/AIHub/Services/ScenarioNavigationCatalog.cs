@@ -32,6 +32,7 @@ public static class ScenarioNavigationCatalog
     public const string MailHub = "smart_mail_hub";
     public const string ImageGeneration = "image_generation";
     public const string VisualScenario = "visual_scenario";
+    public const string AnimatedAssets = "animated_assets";
     public const string VideoGeneration = "video_generation";
     public const string SongClip = "song_clip";
     public const string Shorts = "shorts";
@@ -111,6 +112,8 @@ public static class ScenarioNavigationCatalog
             tags: ["image_generation", "image_variation", "generation_history", "image_autosave", "generation_model_switch", "generation_model_remove", "prompt_spelling", "prompt_assistant", "image_reference", "image_metadata", "image_resize", "minimax_h3_image", "image_generation_warmup"], related: [Images]),
         Node(VisualScenario, ScenarioNavigationKind.Scenario, "creation_images", "Visual.Title", "Visual.Description", "create",
             tags: ["visual_scenario", "visual_scenario_references", "visual_sensenova_solo", "generation_model_remove"], related: [ImageGeneration]),
+        Node(AnimatedAssets, ScenarioNavigationKind.Scenario, "creation_images", "Animation.Title", "Animation.Description", "smile",
+            tags: ["animated_assets", "animation_quick", "animation_story", "animation_pack", "animation_auto_pack"], related: [VisualScenario]),
         Node(VectorGeneration, ScenarioNavigationKind.Scenario, "creation_images", "Vector.Title", "Vector.Description", "create", tags: ["vector_graphics", "svg_generation"], related: [ImageGeneration]),
         Node(VectorEditor, ScenarioNavigationKind.Scenario, "utilities_images", "Vector.Editor.Title", "Vector.Editor.Description", "tools", tags: ["svg_viewer", "svg_editor", "svg_project", "svg_plasticity"], related: [VectorGeneration]),
         Node("analysis_images", ScenarioNavigationKind.Group, Analysis, "Navigation.Images", "", "analyze"),
@@ -232,6 +235,11 @@ public static class ScenarioNavigationCatalog
         Tag("image_generation", ImageGeneration), Tag("image_variation", ImageGeneration), Tag("minimax_h3_image", ImageGeneration), Tag("image_generation_warmup", ImageGeneration),
         Tag("visual_scenario", VisualScenario), Tag("visual_scenario_references", VisualScenario),
         Tag("visual_sensenova_solo", VisualScenario),
+        new ScenarioNavigationTag("animated_assets", "Animation.Title", "Animation.Description", AnimatedAssets),
+        new ScenarioNavigationTag("animation_quick", "Animation.Quick", "Animation.QuickHelp", AnimatedAssets),
+        new ScenarioNavigationTag("animation_story", "Animation.Scene", "Animation.SceneHelp", AnimatedAssets),
+        new ScenarioNavigationTag("animation_pack", "Animation.Pack", "Animation.PackHelp", AnimatedAssets),
+        new ScenarioNavigationTag("animation_auto_pack", "Animation.AutoPackCreate", "Animation.AutoPackHelp", AnimatedAssets),
         Tag("generation_model_remove", ImageGeneration),
         Tag("generation_history", ImageGeneration), Tag("image_autosave", ImageGeneration), Tag("generation_model_switch", ImageGeneration), Tag("prompt_spelling", ImageGeneration), Tag("prompt_assistant", ImageGeneration), Tag("image_reference", ImageGeneration), Tag("image_metadata", ImageGeneration), Tag("image_resize", "utilities_images"),
         Tag("image_upscale", ImageUtility), Tag("image_convert", ImageUtility), Tag("image_batch", ImageUtility), Tag("image_shell", ImageUtility),

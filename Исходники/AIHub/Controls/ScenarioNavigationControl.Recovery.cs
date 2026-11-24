@@ -16,6 +16,7 @@ public sealed partial class ScenarioNavigationControl
         IsSongClip ? ScenarioNavigationCatalog.SongClip :
         IsShorts ? ScenarioNavigationCatalog.Shorts :
         IsVisualScenario ? ScenarioNavigationCatalog.VisualScenario :
+        IsAnimatedAssets ? ScenarioNavigationCatalog.AnimatedAssets :
         IsVideoPreparation ? ScenarioNavigationCatalog.VideoGeneration :
         IsSandboxLanding ? ScenarioNavigationCatalog.Sandbox : PlaceholderScenarioId;
 
