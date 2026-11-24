@@ -26,12 +26,28 @@ public partial class MainWindow
             {
                 await _componentLicenses.EnsureAsync(selected, async entries =>
                 {
-                    var separate = entries.Where(e => e.Id == "generation-krea").ToArray();
-                    var common = entries.Except(separate).ToArray();
-                    if (common.Length > 0 && !await Dispatcher.InvokeAsync(() => ShowComponentLicenses(common, true))) return false;
-                    foreach (var entry in separate)
-                        if (!await Dispatcher.InvokeAsync(() => ShowComponentLicenses([entry], true))) return false;
-                    return true;
+                    var agentDecision = Services.ExternalAgents.AgentEnvironmentJobs.UserDecision.Value;
+                    agentDecision?.Invoke(true);
+                    try
+                    {
+                        if (agentDecision is not null) await Dispatcher.InvokeAsync(() => { if (!IsVisible) RestoreFromTray(); });
+                        var separate = entries.Where(e => e.Id == "generation-krea").ToArray();
+                        var common = entries.Except(separate).ToArray();
+                        if (common.Length > 0 && !await Confirm(common)) return false;
+                        foreach (var entry in separate)
+                            if (!await Confirm([entry])) return false;
+                        return true;
+
+                        async Task<bool> Confirm(IReadOnlyList<ComponentLicenseEntry> group)
+                        {
+                            var accepted = await Dispatcher.InvokeAsync(() =>
+                                ShowComponentLicenses(group, true, agentDecision is null ? default : token));
+                            token.ThrowIfCancellationRequested();
+                            if (!accepted && agentDecision is not null) throw new Services.ExternalAgents.AgentConsentDeclinedException();
+                            return accepted;
+                        }
+                    }
+                    finally { agentDecision?.Invoke(false); }
                 }, token);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -48,13 +64,13 @@ public partial class MainWindow
         if (_componentLicenses is not null) ShowComponentLicenses(_componentLicenses.Entries, false);
     }
 
-    private bool ShowComponentLicenses(IReadOnlyList<ComponentLicenseEntry> entries, bool accept)
+    private bool ShowComponentLicenses(IReadOnlyList<ComponentLicenseEntry> entries, bool accept, CancellationToken token = default)
         => ShowComponentLicenses(this, System.Windows.Application.Current.Windows.OfType<Window>(),
-            _componentLicenses!, L, _localizationService.CurrentLanguageCode == "ru", entries, accept);
+            _componentLicenses!, L, _localizationService.CurrentLanguageCode == "ru", entries, accept, token);
 
     internal static bool ShowComponentLicenses(Window fallbackOwner, IEnumerable<Window> windows,
         ComponentLicenseService licenses, Func<string, string> L, bool russian,
-        IReadOnlyList<ComponentLicenseEntry> entries, bool accept)
+        IReadOnlyList<ComponentLicenseEntry> entries, bool accept, CancellationToken token = default)
     {
         static bool OfficeWindow(Window? window)
         {
@@ -131,6 +147,8 @@ public partial class MainWindow
         };
         list.SelectedIndex = 0;
         window.Content = panel;
+        token.ThrowIfCancellationRequested();
+        using var registration = token.Register(() => window.Dispatcher.BeginInvoke(() => { if (window.IsVisible) window.Close(); }));
         return window.ShowDialog() == true;
     }
 }

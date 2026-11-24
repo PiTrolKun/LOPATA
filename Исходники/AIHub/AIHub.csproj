@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <StartupObject>AIHub.LopataEntryPoint</StartupObject>
     <UseWindowsForms>true</UseWindowsForms>
     <BookOfficeArchive Condition="'$(BookOfficeArchive)' == '' And '$(Configuration)' == 'Release'">true</BookOfficeArchive>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
@@ -21,6 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Assets\ExternalAgents\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <NeuroRuntimeFile Include="NeuroConstructor\runtime\**\*" Exclude="NeuroConstructor\runtime\**\__pycache__\**;NeuroConstructor\runtime\**\*.pyc;NeuroConstructor\runtime\**\*.egg-info\**;NeuroConstructor\runtime\build\**;NeuroConstructor\runtime\dist\**">
       <RuntimePath>%(RecursiveDir)%(Filename)%(Extension)</RuntimePath>
     </NeuroRuntimeFile>
@@ -320,6 +322,18 @@
     <ItemGroup>
       <Compile Remove="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs" />
       <Compile Include="$(IntermediateOutputPath)ApplicationBuildVersion.g.cs" />
+    </ItemGroup>
+  </Target>
+  <!-- A console apphost for the same installed services, independent of WPF startup. -->
+  <Target Name="BuildExternalAgentHost" AfterTargets="CopyFilesToOutputDirectory"
+          Condition="'$(DesignTimeBuild)' != 'true' And '$(UseAppHost)' == 'true'"
+          Inputs="$(AppHostSourcePath);$(TargetPath)" Outputs="$(TargetDir)Lopata.Agent.exe">
+    <CreateAppHost AppHostSourcePath="$(AppHostSourcePath)" AppHostDestinationPath="$(TargetDir)Lopata.Agent.exe"
+                   AppBinaryName="$(TargetFileName)" IntermediateAssembly="$(TargetPath)" WindowsGraphicalUserInterface="false" />
+  </Target>
+  <Target Name="PublishExternalAgentHost" BeforeTargets="ComputeFilesToPublish" DependsOnTargets="BuildExternalAgentHost">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(TargetDir)Lopata.Agent.exe" RelativePath="Lopata.Agent.exe" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
   <Target Name="PrepareExplorerCollection" AfterTargets="Build" BeforeTargets="ComputeFilesToPublish"

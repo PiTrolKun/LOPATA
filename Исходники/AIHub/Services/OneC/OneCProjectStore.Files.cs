@@ -34,11 +34,17 @@ internal sealed partial class OneCProjectStore
     }
     internal OneCFile AddMaterial(OneCProject project, string name, string code, string encoding = "utf-8")
     {
+        var file = AttachMaterial(project, name, code, encoding);
+        Save(project);
+        return file;
+    }
+    internal static OneCFile AttachMaterial(OneCProject project, string name, string code, string encoding = "utf-8")
+    {
         if (code.Length is < 1 or > 2_000_000) throw new InvalidDataException("OneC.InputLimit");
         var file = new OneCFile { Name = Name(name), Code = code, Encoding = encoding, SavedCodeHash = Hash(code) };
         project.Files.Add(file);
         project.History.Add(new(OneCIds.New(), "importMaterial", file.Id, DateTimeOffset.UtcNow));
-        Save(project); return file;
+        return file;
     }
     internal OneCFile Import(OneCProject project, string path)
     {

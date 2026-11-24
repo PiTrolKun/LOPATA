@@ -45,7 +45,9 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         LiteraryChatRuntime? preparedRuntime = null, bool restoringBackground = false)
     {
         _entry = entry; _project = project; _l = localize;
-        if (restoringBackground) { _readinessShown = true; _memoryStarted = true; }
+        _memoryStarted = restoringBackground || project.ExternalAgentProject;
+        _readinessShown = restoringBackground;
+        _editedPartNeedsMemory = project.ExternalAgentProject;
         _memoryPreparation = memoryPreparation;
         _runtime = preparedRuntime ?? new LiteraryChatRuntime(entry.ProjectPath);
         _draft = new LiteraryDraftControl(entry.ProjectPath, localize);
@@ -61,7 +63,9 @@ public sealed partial class LiteraryWorkspaceControl : UserControl
         _draft.ChapterChanged += async () =>
         {
             EditorHost.Content = _legacyLayout || _paragraphWindow is not null ? BuildEditor() : BuildStudioEditor();
-            _studio?.RefreshSources(); await PrepareMemoryAsync();
+            _studio?.RefreshSources();
+            if (_project.ExternalAgentProject) { _editedPartNeedsMemory = true; return; }
+            await PrepareMemoryAsync();
             if (_memoryRetry.Visibility != Visibility.Visible) _editedPartNeedsMemory = false;
         };
         _draft.PartSaved += _ => _editedPartNeedsMemory = true;

@@ -29,6 +29,48 @@ public sealed partial class VideoPreparationControl
     private void BuildFinish(StackPanel page)
     {
         if (BuildFinishProgress(page)) return;
+        if (Session.Project.ExternalAgentProject)
+        {
+            var title = Text("Title", true);
+            title.Text = Session.Project.Title;
+            page.Children.Add(title);
+            var idea = Text("CheckIdea");
+            idea.Text = Session.Project.IdeaText;
+            page.Children.Add(idea);
+            if (Session.Project.References?.Plan is { Items.Count: > 0 } plan)
+            {
+                page.Children.Add(Text("RefPlanPrompts", true));
+                foreach (var item in plan.Items)
+                {
+                    var line = Text("RefPlanName");
+                    line.Text = string.Join("\n", new[] { item.Name, item.Brief, item.Native, item.English }
+                        .Where(value => !string.IsNullOrWhiteSpace(value)).Distinct());
+                    page.Children.Add(line);
+                }
+                if (!VideoReferenceDrawings.Ready(Session.Project))
+                {
+                    var edit = Action("Step.references", () =>
+                    {
+                        Session.Project.CurrentStep = "references";
+                        plan.Page = VideoReferencePlans.Ready(Session.Project) ? "ready" : "prompts";
+                        Changed(); Checkpoint(); Render();
+                    });
+                    page.Children.Add(edit);
+                }
+            }
+            if (Session.Project.Shots is { Scenes.Count: > 0 } shots)
+            {
+                page.Children.Add(Text("Step.shots", true));
+                foreach (var scene in shots.Scenes)
+                {
+                    var line = Text("Step.shots");
+                    line.Text = string.Join("\n", new[] { scene.Name, scene.Intent }.Concat(scene.Shots.Select(s => s.Name))
+                        .Where(value => !string.IsNullOrWhiteSpace(value)));
+                    page.Children.Add(line);
+                }
+            }
+            BuildPackage(page);
+        }
         page.Children.Add(Text("FinishHint"));
         var actions = new WrapPanel();
         actions.Children.Add(Action("FinishExport", () => _ = ExportPreparationAsync()));
@@ -83,6 +125,7 @@ public sealed partial class VideoPreparationControl
     }
     public string? AskOpenRoute(VideoPreparationProject candidate)
     {
+        if (candidate.ExternalAgentProject && candidate.CurrentStep == "finish") return "finish";
         if (candidate.Generator?.FinalReached != true && candidate.CurrentStep is not ("finish" or "generator")) return candidate.CurrentStep;
         var question = T("OpenRouteQuestion");
         if (VideoGeneratorPlan.Selected(candidate) is { } selected && !VideoGeneratorPlan.IsAvailable(selected.Settings.ModelId))

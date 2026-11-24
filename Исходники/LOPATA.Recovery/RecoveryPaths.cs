@@ -11,6 +11,7 @@ internal sealed class RecoveryPaths
     internal string Supervisor { get; }
     internal string StateRoot { get; }
     internal string DirectoryPath { get; }
+    internal string EventsFile => Path.Combine(DirectoryPath, "events.jsonl");
     internal string TaskName { get; }
 
     internal RecoveryPaths(string application, string stateRoot)
@@ -73,7 +74,7 @@ internal sealed class RecoveryPaths
         try
         {
             Directory.CreateDirectory(DirectoryPath);
-            var file = Path.Combine(DirectoryPath, "events.jsonl");
+            var file = EventsFile;
             if (new FileInfo(file) is { Exists: true, Length: > 512 * 1024 })
                 File.Move(file, file + ".previous", overwrite: true);
             File.AppendAllText(file, JsonSerializer.Serialize(new

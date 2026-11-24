@@ -162,7 +162,7 @@ internal sealed partial class SpeechAssetsControl : UserControl
         if (_busy) return;
         _saveTimer.Stop();
         if (!TrySave()) return; StopAudio(); _session = _store.Load(id); RememberProject(); Refresh();
-        _ = WarmSelectedModelAsync();
+        if (!_session.ExternalAgentProject) _ = WarmSelectedModelAsync();
     }
     private async Task ExportAsync()
     {

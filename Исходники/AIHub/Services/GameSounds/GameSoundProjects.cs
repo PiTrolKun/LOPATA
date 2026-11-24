@@ -22,6 +22,7 @@ internal sealed class GameSoundProject
     public DateTimeOffset CreatedUtc { get; init; } = DateTimeOffset.UtcNow;
     public string Name { get; set; } = "";
     public string Draft { get; set; } = "";
+    public bool ExternalAgentProject { get; set; }
     public string OutputName { get; set; } = "";
     public string OutputFolder { get; set; } = "";
     public MusicAudioFormat OutputFormat { get; set; } = MusicAudioFormat.Wav;

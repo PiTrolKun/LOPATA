@@ -207,6 +207,12 @@ public sealed partial class ScenarioNavigationControl : UserControl
 
     internal void OpenScenario(string id, bool prepareShorts, bool prepareVisual = true)
     {
+        if (id == ScenarioNavigationCatalog.ExternalAgents)
+        {
+            if (Window.GetWindow(this) is { } owner)
+                new ExternalAgentConnectionWindow(owner, _localize).ShowDialog();
+            return;
+        }
         if (!LeaveCharacterKnowledge() || !LeaveAnimatedAssets()) return;
         if (id == ScenarioNavigationCatalog.VisualScenario)
         {
@@ -330,6 +336,11 @@ public sealed partial class ScenarioNavigationControl : UserControl
         // Use canonical catalog data; the description cannot provide an arbitrary target.
         var target = ScenarioNavigationCatalog.Get(ScenarioNavigationCatalog.GetTag(tag.Id).TargetId);
         if (!target.IsAvailable) return;
+        if (target.Id == ScenarioNavigationCatalog.ExternalAgents)
+        {
+            OpenScenario(target.Id);
+            return;
+        }
         var destinationDirection = target.Kind switch
         {
             ScenarioNavigationKind.Direction => target.Id,
@@ -480,6 +491,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
             var shortcuts = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
             shortcuts.Children.Add(CreateArcadeEntrance());
             shortcuts.Children.Add(CreateAnimatedAssetsEntrance());
+            shortcuts.Children.Add(CreateHomeShortcut("external-agents", "ExternalAgents.Title", "ExternalAgents.Open", ScenarioNavigationCatalog.ExternalAgents));
             body.Children.Add(shortcuts);
         }
         else if (placeholder is not null)

@@ -5,6 +5,7 @@ namespace AIHub.Services.VideoEditor;
 
 public sealed class VideoProject
 {
+    public bool ExternalAgentProject { get; set; }
     public int Schema { get; set; } = 1;
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Name { get; set; } = "Video";

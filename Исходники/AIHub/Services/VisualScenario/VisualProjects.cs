@@ -35,6 +35,8 @@ internal sealed class VisualProject
     public string Name { get; set; } = "";
     public bool Manual { get; set; }
     public bool Persistent { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; set; }
     public string Advisor { get; set; } = VisualComponents.Core;
     public string Artist { get; set; } = VisualComponents.Base;
     public string Draft { get; set; } = "";

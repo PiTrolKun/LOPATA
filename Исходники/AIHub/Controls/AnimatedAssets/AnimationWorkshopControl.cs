@@ -17,7 +17,7 @@ namespace AIHub.Controls.AnimatedAssets;
 internal sealed partial class AnimationWorkshopControl : UserControl
 {
     private const int StartPage = 0, ReferencePage = 1, PackPage = 2, SketchPage = 3,
-        MotionPage = 4, PosesPage = 5, PreviewPage = 6;
+        MotionPage = 4, PosesPage = 5, PreviewPage = AnimationProject.ReviewPage;
     private static readonly string RecoveryFolder = Path.Combine(AppDataPaths.BaseDirectory, "AnimatedAssets", "Projects");
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(900) };
     private readonly SemaphoreSlim _saveGate = new(1);

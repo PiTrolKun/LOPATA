@@ -17,6 +17,7 @@ internal sealed record LayerProposal(LayerCandidate[] Layers, OutputModelUse[] M
 
 internal sealed partial class LayerDocument
 {
+    internal bool ExternalAgentProject { get; init; }
     internal const string ScenarioId = "image_layers";
     internal const string AnalyzeKind = "analysis";
     internal const string RefineKind = "cross-check";

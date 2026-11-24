@@ -14,6 +14,74 @@ namespace AIHub.Tests;
 public sealed class GameSoundsTests
 {
     [TestMethod]
+    public Task OpeningAgentSoundDraftFromLibrarySkipsOnlyItsOwnModelPreparation() => ScenarioNavigationTests.Sta(() =>
+    {
+        var root = Directory.CreateTempSubdirectory("lopata-agent-sound-").FullName;
+        var owner = new System.Windows.Window { Left = -30000, Top = -30000, ShowInTaskbar = false, Width = 120, Height = 100 };
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+        try
+        {
+            var store = new GameSoundProjects(root);
+            var agent = store.Create();
+            agent.ExternalAgentProject = true;
+            agent.Draft = "Звон монеты";
+            store.Save(agent);
+            var manual = store.Create();
+            manual.Draft = "Ручной проект";
+            manual.Options = manual.Options with { ModelId = "intentionally-unavailable-model" };
+            store.Save(manual);
+            var legacy = store.Create();
+            legacy.Options = manual.Options;
+            store.Save(legacy);
+            var manualJson = JsonNode.Parse(File.ReadAllBytes(Path.Combine(root, manual.Id + ".json")))!.AsObject();
+            Assert.IsFalse(manualJson["externalAgentProject"]!.GetValue<bool>());
+            var legacyPath = Path.Combine(root, legacy.Id + ".json");
+            var legacyJson = JsonNode.Parse(File.ReadAllBytes(legacyPath))!.AsObject();
+            Assert.IsTrue(legacyJson.Remove("externalAgentProject"));
+            File.WriteAllText(legacyPath, legacyJson.ToJsonString());
+            owner.Show();
+            var editor = new Controls.GameSounds.GameSoundsControl(owner, key => key, () => "ru", store);
+            var dialogs = new List<string>();
+            timer.Tick += (_, _) =>
+            {
+                foreach (System.Windows.Window window in owner.OwnedWindows)
+                {
+                    if (!window.IsVisible) continue;
+                    var id = System.Windows.Automation.AutomationProperties.GetAutomationId(window);
+                    var elements = ScenarioNavigationTests.LogicalDescendants(window).ToArray();
+                    var buttonId = id == "GameSounds.ChooseModel.Window" ? "GameSounds.Projects" : "GameSounds.OpenProject";
+                    if (id == "GameSounds.Projects.Window")
+                    {
+                        var list = elements.OfType<System.Windows.Controls.ListBox>().Single();
+                        list.SelectedItem = list.Items.OfType<System.Windows.Controls.ListBoxItem>().Single(item => Equals(item.Tag, agent.Id));
+                    }
+                    var button = elements.OfType<System.Windows.Controls.Button>().SingleOrDefault(b =>
+                        System.Windows.Automation.AutomationProperties.GetAutomationId(b) == buttonId);
+                    dialogs.Add(id);
+                    if (button is null) window.Close();
+                    else button.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+                    break;
+                }
+            };
+            timer.Start();
+            Assert.IsTrue(editor.EnterAsync().GetAwaiter().GetResult());
+            timer.Stop();
+            CollectionAssert.AreEqual(new[] { "GameSounds.ChooseModel.Window", "GameSounds.Projects.Window" }, dialogs);
+            var prompt = ScenarioNavigationTests.LogicalDescendants(editor).OfType<System.Windows.Controls.TextBox>()
+                .Single(box => System.Windows.Automation.AutomationProperties.GetAutomationId(box) == "GameSounds.Prompt");
+            Assert.AreEqual(agent.Draft, prompt.Text);
+            foreach (var localProject in new[] { manual, legacy })
+            {
+                var error = Assert.ThrowsExactly<InvalidDataException>(() => editor.OpenProjectAsync(localProject.Id).GetAwaiter().GetResult());
+                Assert.AreEqual("GameSounds.NoModel", error.Message);
+                Assert.AreEqual(agent.Draft, prompt.Text);
+            }
+            Assert.IsTrue(editor.Leave());
+        }
+        finally { timer.Stop(); owner.Close(); Directory.Delete(root, recursive: true); }
+    });
+
+    [TestMethod]
     public void SixPresetsAreReproducibleAndPartialEditPreservesOtherSettings()
     {
         var first = new HashSet<string>();

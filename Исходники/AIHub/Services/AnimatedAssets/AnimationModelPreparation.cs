@@ -34,6 +34,11 @@ internal sealed partial class AnimationModelService
     internal string ArtistName => ImageGenerationCatalog.DisplayName(ArtistId);
     internal string FfmpegPath => VideoEncoder.Executable;
 
+    internal async Task<bool> PrepareSelectedModelAsync(bool artist, bool download,
+        IProgress<ManagedModelDownloadProgress> progress, CancellationToken token) =>
+        artist ? await _components.PrepareArtistAsync(ArtistId, true, download, progress, token) is not null
+               : await _components.PrepareAdvisorAsync(AdvisorId, download, progress, token) is not null;
+
     internal async Task DownloadMissingModelsAsync(IProgress<ManagedModelDownloadProgress> progress, CancellationToken token)
     {
         using var audit = ComponentAudit.CaptureOperation();

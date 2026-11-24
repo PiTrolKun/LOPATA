@@ -1,12 +1,41 @@
 using System.IO;
 using System.Text.Json;
 using AIHub.Models;
+using AIHub.Services.OfficeReader;
 
 namespace AIHub.Services.GameSounds;
 
 internal static class GameSoundModels
 {
     private const string BigQwenId = ManagedModelCatalog.Qwen36ExecutorArtifactId;
+
+    internal static async Task<bool> PrepareAsync(ManagedModelArtifactCard card, GameSoundPlacement placement,
+        int connections, bool download, IProgress<ManagedModelDownloadProgress> progress, CancellationToken token)
+    {
+        using var preparation = new ReaderTextPreparation(new()) { ParallelConnections = connections };
+        if (!await preparation.PrepareAsync(card, download, progress, token)) return false;
+        var needsGpu = placement is GameSoundPlacement.Vram or GameSoundPlacement.Hybrid;
+        bool RuntimeReady() => LlamaRuntimeSelector.InstalledBundles().Any(b =>
+            needsGpu ? b.Backend == "Vulkan" : placement != GameSoundPlacement.Cpu || b.Backend == "CPU");
+        if (RuntimeReady()) return true;
+        if (!download) return false;
+        var setId = EngineSetSelection.ActiveId;
+        if (setId == NativeRuntimeReleasePolicy.UpdatedSet)
+        {
+            var sets = EngineSetService.Shared;
+            var definition = sets.GetCatalog().Single(s => s.Id == setId);
+            await ComponentLicenseGate.EnsureAsync(definition.LicenseIds, token);
+            using var installation = ComponentAudit.Installation();
+            await sets.DownloadAsync(setId, progress, token);
+        }
+        else
+        {
+            var id = needsGpu ? HardwareRuntimeCatalog.LlamaVulkanId : HardwareRuntimeCatalog.LlamaCpuId;
+            await new ComponentManager().DownloadAndInstallAsync(id, new Progress<ComponentDownloadProgress>(p =>
+                progress.Report(new(p.ComponentId, "llama.cpp", p.DownloadedBytes, p.TotalBytes, p.BytesPerSecond, p.Stage))), token);
+        }
+        return RuntimeReady();
+    }
 
     internal static ManagedModelArtifactCard[] Available(StorageSettings settings, ManagedModelLibraryStore library)
     {

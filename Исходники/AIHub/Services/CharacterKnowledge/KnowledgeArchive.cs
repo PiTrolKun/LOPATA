@@ -22,7 +22,7 @@ internal static class KnowledgeArchive
         };
         _ = provenance.Json();
         var manifest = new Manifest(KnowledgeFormat.SchemaVersion, project.Base.BaseId, project.Base.Name,
-            project.Base.CreatedUtc, provenance);
+            project.Base.CreatedUtc, provenance) { ExternalAgentProject = project.ExternalAgentProject };
 
         KnowledgeStore.Write(path, stream =>
         {
@@ -64,7 +64,7 @@ internal static class KnowledgeArchive
             var draft = members.TryGetValue(DraftFile, out var draftEntry)
                 ? Deserialize<KnowledgeDraft>(draftEntry, file.Length) : null;
             var project = new KnowledgeProject(new(manifest.BaseId, manifest.Name, manifest.CreatedUtc),
-                knowledge, Guid.Empty, draft);
+                knowledge, Guid.Empty, draft) { ExternalAgentProject = manifest.ExternalAgentProject };
             KnowledgeFormat.Validate(project);
             return project;
         }
@@ -120,5 +120,9 @@ internal static class KnowledgeArchive
     }
 
     private sealed record Manifest(int SchemaVersion, Guid BaseId, string Name,
-        DateTimeOffset? CreatedUtc = null, OutputProvenance? Provenance = null);
+        DateTimeOffset? CreatedUtc = null, OutputProvenance? Provenance = null)
+    {
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+        public bool ExternalAgentProject { get; init; }
+    }
 }

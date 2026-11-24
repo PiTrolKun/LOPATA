@@ -20,6 +20,8 @@ internal sealed class SpeechAssetSession
     public string Name { get; set; } = "";
     public DateTimeOffset CreatedUtc { get; set; } = DateTimeOffset.UtcNow;
     public bool Persistent { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; set; }
     public bool Manual { get; set; }
     public List<SpeechAssetRun> Runs { get; set; } = [];
 }

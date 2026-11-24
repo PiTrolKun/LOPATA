@@ -69,6 +69,8 @@ internal sealed record KnowledgeContents(KnowledgeEntry[] Entries, KnowledgeRule
 
 internal sealed record KnowledgeProject(KnowledgeBase Base, KnowledgeContents Knowledge, Guid Revision, KnowledgeDraft? Draft = null)
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; init; }
     public int SchemaVersion { get; init; } = KnowledgeFormat.SchemaVersion;
 }
 

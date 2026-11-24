@@ -16,6 +16,8 @@ public sealed class VideoPreparationProject : VideoPreparationText
     public VideoGeneratorPlan? Generator { get; set; }
     public string LastAssistantModelId { get; set; } = "";
     public string CurrentStep { get; set; } = "form";
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; set; }
     public DateTimeOffset CreatedUtc { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset ModifiedUtc { get; set; } = DateTimeOffset.UtcNow;
     public List<VideoPreparationAttachment> Attachments { get; set; } = [];

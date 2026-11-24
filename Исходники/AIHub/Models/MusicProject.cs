@@ -77,6 +77,8 @@ public sealed record MusicProjectStep(int Number, string JobId, DateTimeOffset C
 
 public sealed record MusicProject(string Id, long Number, DateTimeOffset CreatedAt)
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; init; }
     public int Schema { get; init; } = 1;
     public string Name { get; init; } = "";
     public bool Manual { get; init; }

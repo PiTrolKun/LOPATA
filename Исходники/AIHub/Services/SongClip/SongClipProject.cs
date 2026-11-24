@@ -7,6 +7,8 @@ namespace AIHub.Services.SongClip;
 
 internal sealed class SongClipProject
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; set; }
     public int Schema { get; set; } = 1;
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Name { get; set; } = "";

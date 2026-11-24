@@ -24,7 +24,20 @@ internal sealed partial class GameSoundsControl
         try
         {
             LoadCards();
-            var options = ChooseModel(new());
+            if (Project.ExternalAgentProject)
+            {
+                _entered = true;
+                Render();
+                return true;
+            }
+            var openSaved = false;
+            var options = ChooseModel(new(), _projects.List().Count > 0 ? () => openSaved = true : null);
+            if (openSaved)
+            {
+                _switching = false;
+                await ProjectsAsync(openExistingOnly: true);
+                return _entered;
+            }
             if (options is null || !Prepare(options)) return false;
             await WarmAsync(options, initial: true, ApplicationBackgroundOperations.ExitToken);
             if (!Project.Persistent && Project.Number == 0) Project = NewProject();
@@ -79,7 +92,7 @@ internal sealed partial class GameSoundsControl
     private ManagedModelArtifactCard Card(GameSoundModelOptions options) =>
         _cards.FirstOrDefault(c => c.ModelArtifactId == options.ModelId) ?? throw new InvalidDataException("GameSounds.NoModel");
 
-    private GameSoundModelOptions? ChooseModel(GameSoundModelOptions current)
+    private GameSoundModelOptions? ChooseModel(GameSoundModelOptions current, Action? chooseProject = null)
     {
         var model = Select(_cards.Select(c => $"{c.DisplayName} · {ReaderAiModelCatalog.Size(c.Files.Sum(f => f.SizeBytes))}"));
         System.Windows.Automation.AutomationProperties.SetName(model, T("Model"));
@@ -94,6 +107,8 @@ internal sealed partial class GameSoundsControl
         panel.Children.Add(Label("Model", true)); panel.Children.Add(model);
         panel.Children.Add(Label("Placement", true)); panel.Children.Add(placement);
         panel.Children.Add(Label("PlacementHint"));
+        if (chooseProject is not null)
+            panel.Children.Add(Action("Projects", () => { chooseProject(); window.DialogResult = false; }));
         panel.Children.Add(MusicWishUi.Footer(_localize, () => window.DialogResult = true, () => window.DialogResult = false));
         window.Content = panel;
         return window.ShowDialog() == true ? current with
@@ -102,35 +117,11 @@ internal sealed partial class GameSoundsControl
 
     private bool Prepare(GameSoundModelOptions options)
     {
-        using var preparation = new ReaderTextPreparation(new());
         var card = Card(options);
         var connections = new AppSettingsStore().LoadOrCreate().ModelDownloads.MaximumParallelConnections;
-        preparation.ParallelConnections = connections;
-        var window = new VideoPreparationWindow(_owner, _localize, card.DisplayName, async (download, progress, token) =>
-        {
-            if (!await preparation.PrepareAsync(card, download, progress, token)) return false;
-            var needsGpu = options.Placement is GameSoundPlacement.Vram or GameSoundPlacement.Hybrid;
-            var needsCpu = options.Placement == GameSoundPlacement.Cpu;
-            if (LlamaRuntimeSelector.InstalledBundles().Any(b => needsGpu ? b.Backend == "Vulkan" : !needsCpu || b.Backend == "CPU"))
-                return true;
-            if (!download) return false;
-            var setId = EngineSetSelection.ActiveId;
-            if (setId == NativeRuntimeReleasePolicy.UpdatedSet)
-            {
-                var sets = EngineSetService.Shared;
-                var definition = sets.GetCatalog().Single(s => s.Id == setId);
-                await ComponentLicenseGate.EnsureAsync(definition.LicenseIds, token);
-                using var installation = ComponentAudit.Installation();
-                await sets.DownloadAsync(setId, progress, token);
-            }
-            else
-            {
-                var id = needsGpu ? HardwareRuntimeCatalog.LlamaVulkanId : HardwareRuntimeCatalog.LlamaCpuId;
-                await new ComponentManager().DownloadAndInstallAsync(id, new Progress<ComponentDownloadProgress>(p =>
-                    progress.Report(new(p.ComponentId, "llama.cpp", p.DownloadedBytes, p.TotalBytes, p.BytesPerSecond, p.Stage))), token);
-            }
-            return LlamaRuntimeSelector.InstalledBundles().Any(b => needsGpu ? b.Backend == "Vulkan" : !needsCpu || b.Backend == "CPU");
-        }, ApplicationBackgroundOperations.ExitToken);
+        var window = new VideoPreparationWindow(_owner, _localize, card.DisplayName,
+            (download, progress, token) => GameSoundModels.PrepareAsync(card, options.Placement, connections, download, progress, token),
+            ApplicationBackgroundOperations.ExitToken);
         return window.ShowDialog() == true;
     }
 

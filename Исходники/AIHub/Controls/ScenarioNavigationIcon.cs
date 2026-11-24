@@ -10,6 +10,15 @@ internal static class ScenarioNavigationIcon
 {
     public static FrameworkElement Create(string name)
     {
+        if (name == "external-agents")
+        {
+            var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "ExternalAgents", "emblem.png");
+            return new System.Windows.Controls.Image
+            {
+                Source = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconPath)),
+                Stretch = Stretch.Uniform
+            };
+        }
         var geometry = name switch
         {
             "gamepad" => "M6,7 L18,7 Q21,7 22,11 L23,17 Q23,21 20,20 L16,17 L8,17 L4,20 Q1,21 1,17 L2,11 Q3,7 6,7 Z M5,11 L5,15 M3,13 L7,13 M17,11 L17.1,11 M20,14 L20.1,14",

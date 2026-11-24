@@ -20,7 +20,7 @@ internal static class LayerProjectArchive
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     private sealed record Manifest(string Format, int Schema, Guid Id, string ImageName, int Width, int Height,
-        string SourceSha256, OutputProvenance Provenance);
+        string SourceSha256, OutputProvenance Provenance, bool ExternalAgentProject = false);
 
     internal static void Save(string path, LayerDocument document)
     {
@@ -44,7 +44,7 @@ internal static class LayerProjectArchive
             : mattes.Length > 0 || document.History.Any(step => LayerAdditionalMethods.IsOperation(step.Kind))
                 ? MatteSchema : hasPointLayout ? PointLayoutSchema : LegacySchema;
         var manifest = new Manifest(Format, schema, document.Id, source.Name, source.Width, source.Height,
-            Hash(source.Original), provenance);
+            Hash(source.Original), provenance, document.ExternalAgentProject);
         var publicHistory = JsonSerializer.SerializeToUtf8Bytes(document.History, Json);
         var used = document.History.SelectMany(step => step.Changes)
             .SelectMany(change => new[] { change.Before?.Mask, change.After.Mask })
@@ -102,7 +102,8 @@ internal static class LayerProjectArchive
         var source = LayerSource.Load(manifest.ImageName, original);
         if (source.Width != manifest.Width || source.Height != manifest.Height)
             throw new InvalidDataException("ImageLayers.InvalidProject");
-        var document = new LayerDocument(source, manifest.Id, manifest.Provenance.CreatedUtc);
+        var document = new LayerDocument(source, manifest.Id, manifest.Provenance.CreatedUtc)
+            { ExternalAgentProject = manifest.ExternalAgentProject };
         var steps = JsonSerializer.Deserialize<LayerOperation[]>(Read("history.json", MaxMetadata), Json);
         if (steps is null || steps.Length > MaxOperations)
             throw new InvalidDataException("ImageLayers.InvalidProject");

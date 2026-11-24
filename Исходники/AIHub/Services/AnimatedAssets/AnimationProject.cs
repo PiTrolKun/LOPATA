@@ -4,6 +4,9 @@ internal sealed record AnimationModelUse(string Role, string Id, string? Revisio
 
 internal sealed class AnimationProject
 {
+    internal const int ReviewPage = 6;
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; set; }
     public string Purpose { get; set; } = "chat";
     public bool IsPack { get; set; }
     public bool IsTeasePack { get; set; }

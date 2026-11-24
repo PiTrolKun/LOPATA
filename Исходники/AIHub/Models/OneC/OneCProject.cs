@@ -10,6 +10,8 @@ internal static class OneCIds
 
 internal sealed class OneCProject
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; set; }
     public int Schema { get; set; } = 1;
     public string Id { get; set; } = OneCIds.New();
     public int Number { get; set; }

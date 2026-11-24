@@ -9,6 +9,8 @@ public sealed record NeuroStatus(string Status, string Stage, int Step, int Tota
 
 public sealed record NeuroProject
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; init; }
     public string Id { get; init; } = Guid.NewGuid().ToString("N");
     public string Mode { get; init; } = "pro";
     public string Composition { get; set; } = "pair";

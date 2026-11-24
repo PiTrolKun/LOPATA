@@ -19,7 +19,7 @@ public sealed partial class VideoPreparationControl
     private VideoShotOptionsWindow? _shotOptions;
     private void ScheduleShots()
     {
-        if (_shotsScheduled || _shotsStarting || _shotsBusy || _assistant is null || !IsLoaded || !IsVisible
+        if (Session.Project.ExternalAgentProject || _shotsScheduled || _shotsStarting || _shotsBusy || _assistant is null || !IsLoaded || !IsVisible
             || Session.Project.CurrentStep != "shots" || Session.Project.Shots?.Attempted == true || ConceptBusy || PendingConcept) return;
         _shotsScheduled = true;
         Dispatcher.BeginInvoke(async () =>
@@ -34,7 +34,7 @@ public sealed partial class VideoPreparationControl
     {
         if (ConceptBusy || PendingConcept || _shotsStarting || _assistant is null) return;
         var p = Session.Project; var d = VideoShots.Ensure(p);
-        if (automatic && d.Attempted) return;
+        if (automatic && (p.ExternalAgentProject || d.Attempted)) return;
         _drawingStage = false; _warmDeferred = false;
         d.Attempted = true; Session.Changed();
         _shotsStarting = true;

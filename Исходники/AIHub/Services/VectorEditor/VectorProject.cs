@@ -8,6 +8,7 @@ public sealed record VectorObject(string Id, string Name, string Svg, string? Jo
 /// <summary>The complete editable document. Source paths and model runtimes are not project dependencies.</summary>
 public sealed record VectorProject
 {
+    public bool ExternalAgentProject { get; init; }
     public int Schema { get; init; } = 1;
     public string Id { get; init; } = Guid.NewGuid().ToString("N");
     public string Name { get; set; } = "";

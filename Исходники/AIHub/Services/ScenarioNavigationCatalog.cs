@@ -53,6 +53,7 @@ public static class ScenarioNavigationCatalog
     public const string Dictation = "voice_input";
     public const string LetItOut = "let_it_out";
     public const string LivingArcade = "living_arcade";
+    public const string ExternalAgents = "external_agents";
 
     public static IReadOnlyList<ScenarioNavigationNode> Nodes { get; } = Array.AsReadOnly<ScenarioNavigationNode>(
     [
@@ -70,6 +71,7 @@ public static class ScenarioNavigationCatalog
         Node(BookConversion, ScenarioNavigationKind.Scenario, "utilities_text", "BookConverter.Title", "BookConverter.Description", "tools",
             tags: ["text_to_book", "book_merge", "book_shell", "book_view", "book_editor", "book_smart", "book_logs"], related: [RagBooks]),
         Node("utilities_knowledge", ScenarioNavigationKind.Group, Utilities, "RagBooks.Group", "", "tools"),
+        Node(ExternalAgents, ScenarioNavigationKind.Scenario, "utilities_knowledge", "ExternalAgents.Title", "ExternalAgents.Description", "external-agents", tags: ["external_agents"]),
         Node(RagBooks, ScenarioNavigationKind.Scenario, "utilities_knowledge", "RagBooks.Title", "RagBooks.Description", "tools",
             tags: ["rag_books", "rag_lexicon", "stress_tables"], related: []),
         Node(CharacterKnowledge, ScenarioNavigationKind.Scenario, "utilities_knowledge",
@@ -165,6 +167,7 @@ public static class ScenarioNavigationCatalog
         new ScenarioNavigationTag("game_sound_export", "GameSounds.SaveAudio", "GameSounds.ExportDescription", GameSounds),
         new ScenarioNavigationTag("speech_assets", "SpeechAssets.Title", "SpeechAssets.Description", SpeechAssets),
         new ScenarioNavigationTag("living_arcade", "Arcade.Title", "Arcade.Description", LivingArcade),
+        new ScenarioNavigationTag("external_agents", "ExternalAgents.Title", "ExternalAgents.Description", ExternalAgents),
         new ScenarioNavigationTag("living_arcade_levels", "Arcade.Tag.Levels", "Arcade.Tag.LevelsHelp", LivingArcade),
         new ScenarioNavigationTag("living_arcade_saves", "Arcade.Tag.Saves", "Arcade.Tag.SavesHelp", LivingArcade),
         new ScenarioNavigationTag("living_arcade_audio", "Arcade.Tag.Audio", "Arcade.Tag.AudioHelp", LivingArcade),
@@ -257,7 +260,7 @@ public static class ScenarioNavigationCatalog
         Nodes.Where(node => node.ParentId == parentId);
 
     public static IEnumerable<ScenarioNavigationNode> ScenarioCards(string groupId) =>
-        Children(groupId).Where(node => node.Id is not (OfficeReader or Dictation));
+        Children(groupId).Where(node => node.Id is not (OfficeReader or Dictation or ExternalAgents));
 
     private static ScenarioNavigationNode Node(string id, ScenarioNavigationKind kind, string? parent,
         string title, string hint, string icon, bool available = true, string[]? tags = null, string[]? related = null, bool placeholder = false) =>

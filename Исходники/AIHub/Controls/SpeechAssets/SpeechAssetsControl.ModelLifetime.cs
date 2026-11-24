@@ -18,11 +18,11 @@ internal sealed partial class SpeechAssetsControl
         if (ScenarioActive) return;
         _hasEntered = true;
         var lifetime = _scenarioLifetime = CancellationTokenSource.CreateLinkedTokenSource(ApplicationBackgroundOperations.ExitToken);
-        if (_session.Persistent && _session.Rows.Count > 0) _ = ResumeAsync();
+        if (!_session.ExternalAgentProject && _session.Persistent && _session.Rows.Count > 0) _ = ResumeAsync();
         async Task ResumeAsync()
         {
             await _leaving;
-            if (ReferenceEquals(_scenarioLifetime, lifetime)) await WarmSelectedModelAsync();
+            if (ReferenceEquals(_scenarioLifetime, lifetime) && !_session.ExternalAgentProject) await WarmSelectedModelAsync();
         }
     }
 

@@ -7,7 +7,9 @@ namespace AIHub.Controls.GameSounds;
 
 internal sealed partial class GameSoundsControl
 {
-    private async Task ProjectsAsync()
+    private Task ProjectsAsync() => ProjectsAsync(openExistingOnly: false);
+
+    private async Task ProjectsAsync(bool openExistingOnly)
     {
         if (_switching || _exporting || _running is { IsCompleted: false }) { _status.Text = T("ProjectBusy"); return; }
         if (!Checkpoint()) return;
@@ -30,7 +32,8 @@ internal sealed partial class GameSoundsControl
             if (list.SelectedItem is not ListBoxItem { Tag: string id }) return;
             openId = id; window.DialogResult = true;
         }
-        commands.Children.Add(Action("NewProject", () => { create = true; window.DialogResult = true; }));
+        if (!openExistingOnly)
+            commands.Children.Add(Action("NewProject", () => { create = true; window.DialogResult = true; }));
         commands.Children.Add(Action("OpenProject", OpenSelected));
         commands.Children.Add(Action("RenameProject", () =>
         {
@@ -51,10 +54,19 @@ internal sealed partial class GameSoundsControl
         DockPanel.SetDock(commands, Dock.Bottom); panel.Children.Add(commands);
         panel.Children.Add(list); window.Content = panel;
         list.MouseDoubleClick += (_, _) => OpenSelected();
-        if (window.ShowDialog() != true || !create && openId == Project.Id) return;
+        if (window.ShowDialog() != true || !openExistingOnly && !create && openId == Project.Id) return;
         if (create)
         {
             var currentOptions = Project.Options;
+            if (Project.ExternalAgentProject && _model.Session is null)
+            {
+                var options = ChooseModel(currentOptions);
+                if (options is null || !Prepare(options)) return;
+                _switching = true; UpdateCommands();
+                try { await WarmAsync(options, initial: true, ApplicationBackgroundOperations.ExitToken); }
+                finally { _switching = false; UpdateCommands(); }
+                currentOptions = options;
+            }
             Project = NewProject(); Project.Options = currentOptions;
             _dirty = false; _previous.Clear(); Render();
         }
@@ -63,19 +75,23 @@ internal sealed partial class GameSoundsControl
 
     internal async Task OpenProjectAsync(string id, bool fromTray = false)
     {
+        if (_leaving is not null) await _leaving;
         if (_switching || !Checkpoint()) return;
         var project = _projects.Load(id);
         var changedModel = _model.Session is null || Project.Options.ModelId != project.Options.ModelId ||
             Project.Options.Placement != project.Options.Placement;
         if (!_entered) { LoadCards(); changedModel = true; }
-        if (changedModel)
+        if (changedModel && (!project.ExternalAgentProject || _model.Session is not null))
         {
             _switching = true; UpdateCommands();
             try
             {
                 await _model.RetireAsync();
-                if (!Prepare(project.Options)) return;
-                await WarmAsync(project.Options, initial: true, ApplicationBackgroundOperations.ExitToken);
+                if (!project.ExternalAgentProject)
+                {
+                    if (!Prepare(project.Options)) return;
+                    await WarmAsync(project.Options, initial: true, ApplicationBackgroundOperations.ExitToken);
+                }
             }
             finally { _switching = false; UpdateCommands(); }
         }

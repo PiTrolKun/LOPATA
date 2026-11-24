@@ -10,6 +10,7 @@ internal sealed record OfficeAiAction(DateTimeOffset AtUtc, string Action, Outpu
 
 internal sealed record OfficeTextManifest
 {
+    public bool ExternalAgentProject { get; init; }
     public string Format { get; init; } = "LOPATAdoxAI";
     public int Schema { get; init; } = 2;
     public string Kind { get; init; } = "text";

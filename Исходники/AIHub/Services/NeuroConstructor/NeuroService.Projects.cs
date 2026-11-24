@@ -85,13 +85,22 @@ public static partial class NeuroService
         Save(project);
         return project;
     }
-    public static void Save(NeuroProject p)
+    internal static NeuroProject NewForLibrary(string title, string composition, int cycles, int attempts)
+    {
+        var project = new NeuroProject { ExternalAgentProject = true, TaskName = title, Composition = composition, Source = DefaultSource(composition),
+            Connection = composition == "pair" ? "inside" : "late", Cycles = cycles, Attempts = attempts };
+        Save(project, makeCurrent: false);
+        return project;
+    }
+    public static void Save(NeuroProject p) => Save(p, makeCurrent: true);
+    private static void Save(NeuroProject p, bool makeCurrent)
     {
         if (p.Mode is not ("auto" or "pro") || p.Composition is not ("pair" or "trio") && !NeuroProfiles.Full(p.Composition) || p.Cycles < 1 || p.Attempts < 1 || p.MemoryMiB < 0)
             throw new ArgumentException("Neuro.Settings");
         lock (Gate)
         {
             NeuroFiles.Write(Path.Combine(NeuroFiles.Project(p.Id),"project.json"),p);
+            if (!makeCurrent) return;
             NeuroFiles.Write(LastProject(p.Mode),p.Id);
             if (p.Mode=="auto") NeuroFiles.Write(AutoProfilePointer(NeuroProfiles.Id(p.Composition)),p.Id);
         }

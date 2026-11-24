@@ -38,6 +38,7 @@ public sealed partial class VideoPreparationControl
     }
     private void ScheduleWarmup()
     {
+        if (Session.Project.ExternalAgentProject) return;
         if (_drawingStage || Session.Project.CurrentStep is "storyboard" or "package" or "finish" or "generator" || ShotsOwnWarmup || _openingProject || _warmScheduled || _warming || Resident is null) return;
         _warmScheduled = true;
         // A file-launch handler must finish loading its project before the warmup
@@ -78,6 +79,7 @@ public sealed partial class VideoPreparationControl
     }
     private async Task WarmDefaultAsync()
     {
+        if (Session.Project.ExternalAgentProject) return;
         if (_drawingStage || Session.Project.CurrentStep is "storyboard" or "package" or "finish" or "generator" || ShotsOwnWarmup || ConceptBusy || Resident is null || _openingProject || _warming || !IsVisible) return;
         if (ApplicationBackgroundOperations.Current is { BlocksNewWork: true } blocker) { blocker.ReportBlocked(); _warmDeferred = true; _warmError = "WarmDeferred"; Render(); return; }
         _warming = true; _warmError = ""; Render();

@@ -182,6 +182,30 @@ public partial class MainWindow : Window
         StartupMark("background");
         InitializeComponentAudit();
         InitializeDictation();
+        var agentPreparation = new Services.ExternalAgents.AgentEnvironmentJobs(
+            () => _storageSettings, () => _appSettings.ModelDownloads.MaximumParallelConnections, _updateLifetime.Token);
+        _ = Services.ExternalAgents.AgentEnvironmentConnection.ListenAsync(request =>
+        {
+#if DEBUG
+            if (request.Action == "dev_desktop") return new { processId = Environment.ProcessId };
+            if (request.Action == "dev_open_scenario")
+            {
+                var target = ScenarioNavigationCatalog.Nodes.SingleOrDefault(n => n.Id == request.Scenario
+                    && n.Kind == ScenarioNavigationKind.Scenario && n.IsAvailable)
+                    ?? throw new ArgumentException("Unknown or unavailable development scenario.");
+                Dispatcher.BeginInvoke(() =>
+                {
+                    RestoreFromTray();
+                    ShowBackgroundScenarioPage(WorkStartPage);
+                    PrepareScenarioNavigation(target.Id);
+                    ScenarioNavigationPage.OpenScenario(target.Id);
+                });
+                return new { scenario = target.Id, state = "requested" };
+            }
+#endif
+            Services.ExternalAgents.AgentModelPlan.Validate(request.Scenario, request.Operation);
+            return agentPreparation.Handle(request);
+        }, _updateLifetime.Token);
         StartupMark("complete");
     }
 

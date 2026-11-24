@@ -49,10 +49,13 @@ internal sealed class KnowledgeStore(string directory)
         Write(RecentPath, stream => JsonSerializer.Serialize(stream, new RecentBase(id), KnowledgeFormat.Json), keepPrevious: false);
     }
 
-    internal KnowledgeProject Create(string name)
+    internal KnowledgeProject Create(string name, KnowledgeContents? contents = null, bool externalAgentProject = false)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new KnowledgeProblem("BaseNameRequired");
-        return Add(new(new(Guid.NewGuid(), name.Trim(), DateTimeOffset.UtcNow), new([], []), Guid.Empty));
+        var project = new KnowledgeProject(new(Guid.NewGuid(), name.Trim(), DateTimeOffset.UtcNow), contents ?? new([], []), Guid.Empty)
+            { ExternalAgentProject = externalAgentProject };
+        KnowledgeFormat.Validate(project);
+        return Add(project);
     }
 
     internal KnowledgeProject Import(string path) => Add(KnowledgeArchive.Read(path));

@@ -28,10 +28,11 @@ internal sealed partial class OneCProjectStore(string? root = null)
         if (!path.StartsWith(directory, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("OneC.InvalidPath");
         SafeUpdatePath.RejectLinks(path); return path;
     }
-    internal OneCProject Create(string name)
+    internal OneCProject Create(string name, Action<OneCProject>? initialize = null)
     {
         var project = new OneCProject { Name = Name(name), Number = List().Select(p => p.Number).DefaultIfEmpty().Max() + 1 };
         project.ActiveTaskId = project.Tasks[0].Id;
+        initialize?.Invoke(project);
         Save(project); return project;
     }
     internal IReadOnlyList<OneCProject> List()

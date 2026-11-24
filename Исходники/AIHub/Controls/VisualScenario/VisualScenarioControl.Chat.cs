@@ -307,7 +307,10 @@ internal sealed partial class VisualScenarioControl
         await RunAdvisorAsync(new(_project.Id, Guid.NewGuid().ToString("N"), _project.Advisor, false, CurrentImages()), model);
     }
 
-    internal void WarmAdvisorOnEntry() => RunUi(WarmAdvisorAsync);
+    internal void WarmAdvisorOnEntry()
+    {
+        if (!_project.ExternalAgentProject) RunUi(WarmAdvisorAsync);
+    }
 
     private async Task WarmAdvisorAsync()
     {

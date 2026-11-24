@@ -80,7 +80,7 @@ internal sealed partial class AnimationWorkshopControl
         var project = await AnimationProjectStore.LoadAsync(path, token);
         if (project.Page is < StartPage or > PreviewPage) project.Page = StartPage;
         if (recovery) project.Page = DraftResumePage(project);
-        if (project.Page > ReferencePage && !project.ReferenceApproved)
+        if (project.Page > ReferencePage && !project.ReferenceApproved && !(project.ExternalAgentProject && project.Page == PreviewPage))
             project.Page = ReferencePage;
         if (project.Page >= SketchPage && project.Cards.Count == 0)
             project.Page = project.IsPack ? PackPage : ReferencePage;
@@ -124,10 +124,29 @@ internal sealed partial class AnimationWorkshopControl
     private void ShowPreview()
     {
         Label("Preview");
+        if (_project.ExternalAgentProject)
+        {
+            ChooseCard();
+            var item = Card;
+            _form.Children.Add(LiteraryUi.Text(_project.ReferenceDescription));
+            _form.Children.Add(LiteraryUi.Text(item.Name + " · " + item.ReactionDetails));
+            if (!_project.ReferenceApproved || _project.Reference is null)
+            {
+                _form.Children.Add(LiteraryUi.Text(_localize("AnimatedAssets.Error.ImageMissing")));
+                AddButtons(PlainButton("Reference", () => GoTo(ReferencePage)));
+                return;
+            }
+            if (item.Motion == "frames" && (item.Poses.Count == 0 || item.Poses.Any(pose => pose.Image is null)))
+            {
+                ShowTimeline(item, _form);
+                AddButtons(PlainButton("EditPoses", () => GoTo(item.Poses.Count == 0 ? MotionPage : PosesPage)));
+                return;
+            }
+        }
         var autoPack = IsAutoEmojiPack(_project);
         if (autoPack)
             _form.Children.Add(LiteraryUi.Text(F("AutoPackReady", _project.Cards.Count)));
-        ChooseCard();
+        if (!_project.ExternalAgentProject) ChooseCard();
         var card = Card;
         AddButtons(Command("Play", () => PreparePreviewAsync(card)),
             PlainButton(_darkPreview ? "LightBackground" : "DarkBackground", () =>

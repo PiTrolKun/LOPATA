@@ -14,7 +14,7 @@ public static class VectorProjectArchive
     private static readonly UTF8Encoding Utf8 = new(false, true);
     private sealed record Entry(string Id, string Name, string File, string? JobId = null, double Zoom = 1, double PanX = 0, double PanY = 0);
     private sealed record Manifest(int Schema, string Id, string Name, DateTimeOffset CreatedUtc, DateTimeOffset ModifiedUtc,
-        string ActiveSheetId, Entry[] Sheets, Entry[] Objects, OutputProvenance Provenance);
+        string ActiveSheetId, Entry[] Sheets, Entry[] Objects, OutputProvenance Provenance, bool ExternalAgentProject = false);
     public static Summary Describe(string source)
     {
         Lopata.Updates.SafeUpdatePath.RejectLinks(Path.GetFullPath(source));
@@ -39,7 +39,8 @@ public static class VectorProjectArchive
                     var sheets = project.Sheets.Select(s => new Entry(s.Id, s.Name, "sheets/" + s.Id + ".svg", Zoom: s.Zoom, PanX: s.PanX, PanY: s.PanY)).ToArray();
                     var objects = project.Objects.Select(s => new Entry(s.Id, s.Name, "objects/" + s.Id + ".svg", s.JobId)).ToArray();
                     var manifest = new Manifest(1, project.Id, project.Name, project.CreatedUtc, DateTimeOffset.UtcNow,
-                        project.ActiveSheetId, sheets, objects, VectorEditorSvg.Facts(project.Sheets.Select(s => s.Svg).Concat(project.Objects.Select(s => s.Svg)), project.CreatedUtc, "vector-editor/project"));
+                        project.ActiveSheetId, sheets, objects, VectorEditorSvg.Facts(project.Sheets.Select(s => s.Svg).Concat(project.Objects.Select(s => s.Svg)), project.CreatedUtc, "vector-editor/project"),
+                        project.ExternalAgentProject);
                     Write(zip, "project.json", JsonSerializer.Serialize(manifest));
                     for (var i = 0; i < sheets.Length; i++) Write(zip, sheets[i].File, project.Sheets[i].Svg);
                     for (var i = 0; i < objects.Length; i++) Write(zip, objects[i].File, project.Objects[i].Svg);
@@ -69,7 +70,7 @@ public static class VectorProjectArchive
             || zip.Entries.Count != 1 + manifest.Sheets.Length + manifest.Objects.Length)
             throw new InvalidDataException("Vector.Editor.Error.Archive");
         var project = new VectorProject { Schema = 1, Id = manifest.Id, Name = manifest.Name, CreatedUtc = manifest.CreatedUtc,
-            ModifiedUtc = manifest.ModifiedUtc, ActiveSheetId = manifest.ActiveSheetId };
+            ModifiedUtc = manifest.ModifiedUtc, ActiveSheetId = manifest.ActiveSheetId, ExternalAgentProject = manifest.ExternalAgentProject };
         foreach (var item in manifest.Sheets)
         {
             if (item.File != "sheets/" + item.Id + ".svg") throw new InvalidDataException("Vector.Editor.Error.Archive");

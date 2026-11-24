@@ -9,6 +9,8 @@ internal sealed record ShortsProjectStep(string JobId, DateTimeOffset CreatedAt,
 
 internal sealed record ShortsProject(string Id, DateTimeOffset CreatedAt, ShortsDraft Workspace)
 {
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
+    public bool ExternalAgentProject { get; init; }
     public int Schema { get; init; } = 1;
     public string Name { get; init; } = "";
     public bool Manual { get; init; }

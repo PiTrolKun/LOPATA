@@ -17,6 +17,9 @@ public static class RecoveryTask
     public static string GetName(string applicationPath, string stateRoot) =>
         "LOPATA-Recovery-" + Identity(applicationPath, stateRoot);
 
+    public static string GetEventsPath(string applicationPath, string stateRoot) =>
+        new RecoveryPaths(applicationPath, stateRoot).EventsFile;
+
     public static void TryUnregister(string applicationPath, string stateRoot)
     {
         try

@@ -33,6 +33,12 @@ internal sealed partial class UpscaleWindow
             var fresh = new UpscaleProject { Name = Path.GetFileNameWithoutExtension(dialog.FileName), Source = Path.GetFullPath(dialog.FileName), Media = media,
                 SourceLength = new FileInfo(dialog.FileName).Length, SourceSha256 = await UpscaleMediaTools.Hash(dialog.FileName, _lifetime.Token), Mode = _project.Mode,
                 Steps = UpscaleStore.Clone(_project.Steps), PreviewLength = Math.Min(5, media.Duration) };
+            if (_project.ExternalAgentProject && _project.Source.Length == 0 && File.Exists(UpscaleStore.ProjectPath(_project.Id)))
+            {
+                fresh.Id = _project.Id;
+                fresh.Name = _project.Name;
+                fresh.ExternalAgentProject = true;
+            }
             fresh.Workspace = UpscaleStore.Work(fresh.Id); _project = fresh; Save(); await RefreshMedia();
         } finally { SetBusy(false); }
     }
@@ -42,7 +48,25 @@ internal sealed partial class UpscaleWindow
         var dialog = new Microsoft.Win32.OpenFileDialog { Filter = T("ProjectFilter"), InitialDirectory = Path.Combine(UpscaleStore.Root, "Projects") };
         if (dialog.ShowDialog(this) != true) return;
         var next = UpscaleStore.Load<UpscaleProject>(dialog.FileName); UpscaleCatalog.Validate(next, allowEmptyChain: true);
-        _project = next; NormalizeProject(); RefreshSteps(); await RefreshMedia(); Save();
+        _project = next; NormalizeProject(); RefreshSteps();
+        if (next.Source.Length == 0)
+        {
+            _rangeRefresh.Stop();
+            Interlocked.Increment(ref _proxyRevision);
+            _sourceText.Text = next.Name;
+            _previewText.Text = "";
+            _sourceProxy = null;
+            _playing = false;
+            _range.Thumbnails.Clear();
+            _range.ClipName = "";
+            _at = 0;
+            UpdateRangeText();
+            Clock();
+            await _original.LoadAsync(new VideoProject(), 0, false);
+            await _result.LoadAsync(new VideoProject(), 0, false);
+        }
+        else await RefreshMedia();
+        Save();
     }
     private void SaveAs()
     {
