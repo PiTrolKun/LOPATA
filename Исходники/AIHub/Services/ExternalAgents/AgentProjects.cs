@@ -44,6 +44,9 @@ internal static partial class AgentProjects
 
     public static object List() => Scenarios.Select(s => new { scenario = s.Id, title = s.Title, openIn = s.OpenIn }).ToArray();
 
+    internal static IEnumerable<ScenarioNavigationNode> NavigationEntries() =>
+        Scenarios.Select(s => ScenarioNavigationCatalog.Get(s.Id));
+
     public static object Describe(string scenario)
     {
         var s = Find(scenario);

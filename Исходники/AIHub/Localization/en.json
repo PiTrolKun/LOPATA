@@ -2,6 +2,7 @@
   "ExternalAgents.Title": "Connect an agent",
   "ExternalAgents.Description": "Connect the AI assistant you already chat with to prepare projects for LOPATA together. You only need to connect it once.",
   "ExternalAgents.ProjectTitle": "What you’ll get",
+  "ExternalAgents.Scenarios": "Supported scenarios ({0})",
   "ExternalAgents.ProjectExample": "For example, ask in chat, “Plan a video about a city at night in three scenes.” The agent saves the idea and scenes in a video project and tells you where to open it. LOPATA opens the project at the review step. You can edit scenes, add materials and start generation when you’re ready.",
   "ExternalAgents.HelpTitle": "Other ways the agent can help",
   "ExternalAgents.Help": "If your task needs a model, the agent can start its download through LOPATA. If something goes wrong, ask it to check the log and explain the failure. Saved logs are available even when the app is closed.",

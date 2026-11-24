@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
+using AIHub.Services;
 using AIHub.Services.ExternalAgents;
 using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
@@ -42,6 +43,7 @@ internal sealed class ExternalAgentConnectionWindow : Window
         var body = new StackPanel();
         body.Children.Add(Label(text("ExternalAgents.Description")));
         AddSection("ExternalAgents.ProjectTitle", "ExternalAgents.ProjectExample");
+        body.Children.Add(ScenarioList());
         AddSection("ExternalAgents.HelpTitle", "ExternalAgents.Help");
         AddSection("ExternalAgents.ConnectTitle", "ExternalAgents.ConnectHelp");
         var privacy = Label(text("ExternalAgents.Privacy"));
@@ -77,6 +79,40 @@ internal sealed class ExternalAgentConnectionWindow : Window
             heading.Margin = new Thickness(0, 14, 0, 3);
             body.Children.Add(heading);
             body.Children.Add(Label(text(bodyKey)));
+        }
+    }
+
+    private Expander ScenarioList()
+    {
+        var available = AgentProjects.NavigationEntries().ToArray();
+        var rows = new StackPanel();
+        var groups = available.ToLookup(scenario => Direction(scenario).Id);
+        foreach (var direction in ScenarioNavigationCatalog.Nodes.Where(n => groups.Contains(n.Id)))
+        {
+            var heading = Label(_text(direction.TitleKey));
+            heading.FontWeight = FontWeights.SemiBold;
+            heading.Margin = new Thickness(0, 6, 0, 2);
+            rows.Children.Add(heading);
+            rows.Children.Add(Label(string.Join(" · ", groups[direction.Id].Select(scenario =>
+            {
+                var name = _text(scenario.TitleKey);
+                if (scenario.Id is ScenarioNavigationCatalog.OfficeEditor or ScenarioNavigationCatalog.SpeechAssets)
+                    return _text(ScenarioNavigationCatalog.Get(scenario.ParentId!).TitleKey) + " / " + name;
+                return name;
+            }))));
+        }
+        var list = new Expander
+        {
+            Header = string.Format(_text("ExternalAgents.Scenarios"), available.Length),
+            Content = rows, Margin = new Thickness(0, 12, 0, 0), IsExpanded = true
+        };
+        AutomationProperties.SetAutomationId(list, "ExternalAgents.Scenarios");
+        return list;
+
+        static ScenarioNavigationNode Direction(ScenarioNavigationNode item)
+        {
+            while (item.ParentId is { } parent) item = ScenarioNavigationCatalog.Get(parent);
+            return item;
         }
     }
 
