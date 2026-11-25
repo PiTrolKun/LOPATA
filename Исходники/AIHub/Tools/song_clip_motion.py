@@ -33,6 +33,7 @@ SOURCE_REVISION = "361624fb406b63eb6694442eac6c895fc1533a70"
 LEGACY_ADAPTER_SHA256 = "5a75c63aa6f1a947689f995e8c5baa5185dc591303f9059024c4b26adf384cfe"
 SINGLE_REFERENCE_ADAPTER_SHA256 = "685a48ad75e18c61b337d244054bd9525c7a1a2d1c435ed8cd473c50753ed7b5"
 PRE_ASPECT_ADAPTER_SHA256 = "14bd9498c755b2aee2ce84ea2047bfa210f21b5d0d54ff74b8c0bc385f443f28"
+PRE_STORAGE_ADAPTER_SHA256 = "278fb74f1f0ce80660b17f7443c685db1580ac31fa5a92b876f962021d47887d"
 FPS = 24
 AUDIO_RATE = 32000
 
@@ -102,18 +103,27 @@ def visual_prompt(request, index):
 
 
 def reference_inputs(request):
-    """New role-aware inputs are ordered, owned project images. Missing key is legacy."""
+    """Resolve ordered images using project attachments or saved source references."""
     if "references" not in request:
         return [{"file": request["reference"], "kind": "", "description": ""}] if request.get("reference") else []
     references = request["references"]
     if not isinstance(references, list) or (request.get("generationMode") != "montage" and len(references) > 9):
         raise ValueError("Invalid H3 reference list.")
-    job = Path(request["job"]).absolute()
-    if job.parent.name != "attempts":
-        raise ValueError("Role-aware H3 references require a project attempt directory.")
-    project = job.parent.parent.resolve()
+    storage = request.get("referenceStorage")
+    if storage is None:
+        job = Path(request["job"]).absolute()
+        if job.parent.name != "attempts":
+            raise ValueError("Role-aware H3 references require a project attempt directory.")
+        project = job.parent.parent.resolve()
+    else:
+        if (not isinstance(storage, dict) or not isinstance(storage.get("project"), str)
+                or not Path(storage["project"]).is_absolute() or not isinstance(storage.get("files"), list)
+                or len(storage["files"]) != len(references)):
+            raise ValueError("Invalid H3 reference storage.")
+        project = Path(storage["project"])
+        reject_links(project)
     paths = []
-    for reference in references:
+    for index, reference in enumerate(references):
         if (not isinstance(reference, dict) or set(reference) != {"file", "kind", "description"}
                 or reference.get("kind") not in ("performer", "world", "object")
                 or not isinstance(reference.get("description"), str) or not reference["description"].strip()
@@ -121,8 +131,22 @@ def reference_inputs(request):
             raise ValueError("Invalid H3 reference role.")
         path = Path(reference["file"])
         reject_links(path)
-        if path.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp") or not path.is_file() or not path.resolve().is_relative_to(project):
-            raise ValueError("The H3 reference must be an owned image in this project.")
+        if path.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp") or not path.is_file():
+            raise ValueError("The H3 reference must be an existing image: " + str(path))
+        if storage is None:
+            matched = path.resolve().is_relative_to(project)
+        else:
+            name = storage["files"][index]
+            if not isinstance(name, str):
+                raise ValueError("Invalid H3 reference storage.")
+            entry = contained(project, name)
+            if re.fullmatch(r"sources/[0-9a-f]{64}\.json", name):
+                source = json.loads(entry.read_text(encoding="utf-8")) if entry.stat().st_size <= 65536 else None
+                matched = isinstance(source, str) and Path(source).is_absolute() and Path(source).resolve() == path.resolve()
+            else:
+                matched = entry == path.resolve()
+        if not matched:
+            raise ValueError("The H3 reference differs from the image saved in the project.")
         key = os.path.normcase(str(path.resolve()))
         if key in paths:
             raise ValueError("Duplicate H3 reference image.")
@@ -209,7 +233,7 @@ def checkpoint_identity(job, request, identity):
     existing = json.loads(path.read_text(encoding="utf-8"))
     stored = existing.get("identity", {})
     known = stored.get("adapterSha256") if isinstance(stored, dict) else None
-    if known != PRE_ASPECT_ADAPTER_SHA256 and ("references" in request or known not in
+    if known not in (PRE_STORAGE_ADAPTER_SHA256, PRE_ASPECT_ADAPTER_SHA256) and ("references" in request or known not in
                                                (SINGLE_REFERENCE_ADAPTER_SHA256, LEGACY_ADAPTER_SHA256)):
         return identity, None
     if known == LEGACY_ADAPTER_SHA256 and "visualPlan" in request:

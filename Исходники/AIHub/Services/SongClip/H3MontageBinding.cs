@@ -20,6 +20,10 @@ internal static class H3MontageBinding
     internal static readonly PinnedTreeFile PriorMedia = new("song_clip_montage_media.py", 3741,
         "4132875023B58DDEB1EE5A8DF1775129964BEBBEAF193F92E6F2225EDEAE815A");
     internal const string PriorWorkerSha = "925C49C1E5DBD34DC4C77B642EBF1E8181E5DAD8DFC85B651D63D449B0987F1C";
+    internal const string PreStorageWorkerSha = "2302A708198E9D7741FF7236647C3E17D2E6FEA2434FBDB89B84615DB25AF63A";
+    private static readonly PinnedTreeFile[] PreStorageAdapters = [
+        new("song_clip_montage.py", 36064, PreStorageWorkerSha),
+        new("song_clip_motion.py", 40370, "278FB74F1F0CE80660B17F7443C685DB1580AC31FA5A92B876F962021D47887D")];
     private static readonly PinnedTreeFile PriorDenoFinisher = new(SongClipDeno.FinishWorker, 6025,
         "14230B421A173E166F5D146EFBF16A98EA4DB7A8FD8921CDE5036448E3B6CAB5");
     private static readonly PinnedTreeFile WorkshopDenoFinisher = new(SongClipDeno.FinishWorker, 6332,
@@ -59,8 +63,10 @@ internal static class H3MontageBinding
         var path = Path.Combine(job, "montage-input-binding.json");
         if (File.Exists(path)) {
             var recorded = JsonSerializer.Deserialize<Binding>(await File.ReadAllTextAsync(path, token));
-            if (recorded != expected && recorded != Identity(WithAdapters(adapters, deno ? [PriorDenoFinisher] : PriorAdapters))
-                && (!deno || recorded != Identity(WithAdapters(adapters, [WorkshopDenoFinisher]))))
+            PinnedTreeFile[][] compatible = deno
+                ? [PreStorageAdapters, [.. PreStorageAdapters, PriorDenoFinisher], [.. PreStorageAdapters, WorkshopDenoFinisher]]
+                : [PreStorageAdapters, PriorAdapters];
+            if (recorded != expected && !compatible.Any(previous => recorded == Identity(WithAdapters(adapters, previous))))
                 throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
             return;
         }

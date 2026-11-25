@@ -206,6 +206,8 @@ internal static class H3MontageRunner
             modelFolders = VideoH3Profile.Folders(h3, false), modelId = H3MusicRunner.ModelId, sourceRevision = H3MusicComponents.SourceRevision,
             pins, memoryMode = "auto", vramReserveGb = accelerated ? 4 : 2
         })!.AsObject();
+        if (H3MusicRunner.ReferenceStorage(attempt, store, job) is { } referenceStorage)
+            request["referenceStorage"] = JsonSerializer.SerializeToNode(referenceStorage);
         if (deno is not null)
         {
             var output = SongClipDeno.Output(settings);

@@ -103,6 +103,7 @@ internal static class H3MusicRunner
                 song = store.Resolve(attempt.ProjectId, attempt.Song),
                 reference = attempt.Reference.Length == 0 ? "" : store.Resolve(attempt.ProjectId, attempt.Reference),
                 references = ReferencePayload(attempt, store),
+                referenceStorage = ReferenceStorage(attempt, store, job),
                 referencePrompts = attempt.References is { Length: > 0 } && plan is not null
                     ? plan.Scenes.Select(scene => SongClipReferencePrompt.Compose(attempt, plan, scene.Index)).ToArray() : null,
                 prompt = settings.Prompt, visualPlan = plan, lyrics = attempt.Lyrics, timings = attempt.Timings,
@@ -145,6 +146,17 @@ internal static class H3MusicRunner
     internal static object[]? ReferencePayload(SongClipAttempt attempt, SongClipStore store) => attempt.References?
         .Select(reference => (object)new { file = store.Resolve(attempt.ProjectId, reference.File),
             kind = reference.Kind, description = reference.Description }).ToArray();
+
+    internal static object? ReferenceStorage(SongClipAttempt attempt, SongClipStore store, string job)
+    {
+        if (attempt.References is not { } references) return null;
+        var project = store.Folder(attempt.ProjectId);
+        var legacyJob = Path.Combine(project, "attempts", attempt.Id);
+        if (string.Equals(job, legacyJob, StringComparison.OrdinalIgnoreCase)
+            && references.All(reference => !reference.File.StartsWith("sources/", StringComparison.Ordinal)))
+            return null;
+        return new { project, files = references.Select(reference => reference.File).ToArray() };
+    }
 
     internal static async Task ValidateReferenceReceiptAsync(JsonElement receipt, SongClipAttempt attempt,
         SongClipStore store, SongClipVisualPlan? plan, CancellationToken token)

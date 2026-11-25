@@ -27,7 +27,8 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from song_clip_motion import (AUDIO_RATE, NativeMotion, SOURCE_REVISION, decode_master_audio,
-                              emit, integer, probe_audio_seconds, reference_inputs, reference_receipt)
+                              emit, integer, probe_audio_seconds, reference_inputs, reference_receipt,
+                              PRE_STORAGE_ADAPTER_SHA256)
 from song_clip_motion_state import atomic_json, canonical, contained, file_hash, operation_lock, reject_links
 from song_clip_montage_state import MontageState, FPS, object_hash, read_document, shot_frames, validate_plan
 from song_clip_montage_media import join_video, scale_video
@@ -412,8 +413,11 @@ def compatible_identity(job, current):
     path = contained(job, "montage-state.json")
     if not path.exists():
         return current
+    stored = read_document(path, maximum=None).get("identity")
     prior = {**current, **PRIOR_ADAPTERS}
-    return prior if read_document(path, maximum=None).get("identity") == prior else current
+    pre_storage = {**current, "adapterSha256": "2302a708198e9d7741ff7236647c3e17d2e6fea2434fbdb89b84615db25af63a",
+                   "motionAdapterSha256": PRE_STORAGE_ADAPTER_SHA256}
+    return stored if stored in (prior, pre_storage) else current
 
 
 def verify_result(request, request_file, state, identity, actual_adapter, facts, receipts, previous_hash, duration):

@@ -15,7 +15,7 @@ internal static class SongClipWorkerRequest
         else request["visualPlan"] = JsonSerializer.SerializeToNode(plan);
         // Null means a historical single-reference contract. Do not add keys
         // that would change its durable request identity merely by upgrading.
-        foreach (var key in new[] { "references", "referencePrompts" })
+        foreach (var key in new[] { "references", "referencePrompts", "referenceStorage" })
             if (request.TryGetPropertyValue(key, out var value) && value is null) request.Remove(key);
         SongClipStore.Atomic(path, request);
     }

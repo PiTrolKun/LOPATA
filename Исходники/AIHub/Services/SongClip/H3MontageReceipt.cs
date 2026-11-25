@@ -18,7 +18,8 @@ internal static class H3MontageReceipt
             || Text("hostRequestSha256") != await H3MontageBinding.HashAsync(request, token)
             || receipt.GetProperty("completedShots").GetInt32() != plan.Shots.Length
             || (Text("actualAdapterSha256") != H3MontageBinding.AdapterFiles().Single(f => f.Path == "song_clip_montage.py").Sha256.ToLowerInvariant()
-                && Text("actualAdapterSha256") != H3MontageBinding.PriorWorkerSha.ToLowerInvariant()))
+                && Text("actualAdapterSha256") != H3MontageBinding.PriorWorkerSha.ToLowerInvariant()
+                && Text("actualAdapterSha256") != H3MontageBinding.PreStorageWorkerSha.ToLowerInvariant()))
             throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
         var expectedReferences = new List<object>();
         foreach (var (reference, index) in SongClipReferences.For(attempt).Select((reference, index) => (reference, index + 1)))
