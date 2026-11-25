@@ -3,7 +3,7 @@ name: lopata
 description: Use LOPATA (ЛОПАТА), the user's local Windows application, to prepare a native project, check required components, or explain application failures from its saved logs.
 ---
 
-Start with `lopata_info` to identify the responding copy, its version and available operations. Respect the user's instruction about which copy to use. Call `project_scenarios` to list available scenarios. Pass the selected scenario ID to `project_instructions` and use its required fields and allowed values. A project can be an editable draft with clearly identified missing materials.
+Start with `lopata_info` to identify the responding copy, its version and available operations. Respect the user's instruction about which copy to use. Call `project_scenarios` to list available scenarios. Pass the selected scenario ID to `project_instructions` and use its required fields and allowed values. A project can be an editable draft with clearly identified missing materials. Refresh the version and capabilities when starting a new task or when MCP reports changed tools. Use `project_instructions` for the selected build's supported settings and `modelOperations` to choose component preparation. Entries in `mechanics` describe what is available in LOPATA. The project schema tells you which options can be saved through the agent.
 
 Identify your client by its actual application name in MCP clientInfo. When using the command-line fallback, put --client "Your application name" before --call so LOPATA can show which application is working. Omit the name when it is unknown.
 

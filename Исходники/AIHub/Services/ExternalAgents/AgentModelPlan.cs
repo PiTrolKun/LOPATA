@@ -14,11 +14,13 @@ internal static partial class AgentModelPlan
     {
         var catalog = new Dictionary<string,string[]>
         {
-        [ScenarioNavigationCatalog.VideoGeneration] = [VideoH3Catalog.ModelId, VideoH3LiteCatalog.ModelId, VideoVaceCatalog.ModelId, VideoLtxCatalog.ModelId],
+        [ScenarioNavigationCatalog.VideoGeneration] = [VideoH3Catalog.ModelId, VideoH3LiteCatalog.ModelId, VideoVaceCatalog.ModelId, VideoLtxCatalog.ModelId,
+            .. VideoGeneratorPlan.AvailableCandidates.SelectMany(model => new[] { model.Id + "/deno", model.Id + "/deno-accelerated" })],
         [ScenarioNavigationCatalog.AnimatedAssets] = ["advisor", "artist"],
         [ScenarioNavigationCatalog.VisualScenario] = [.. VisualComponents.Advisors.Select(id => "advisor/" + id),
             .. VisualComponents.Artists.Select(id => "artist/" + id)],
-        [ScenarioNavigationCatalog.SongClip] = [.. SongClipVariantCatalog.VisibleVariants.Where(v => v.Available).Select(v => v.Id)]
+        [ScenarioNavigationCatalog.SongClip] = [.. SongClipVariantCatalog.VisibleVariants.Where(v => v.Available).Select(v => v.Id),
+            AgentProjects.AcceleratedDenoOperation]
         };
         AddOtherOperations(catalog);
         AddAssistantOperations(catalog);
@@ -50,7 +52,9 @@ internal static partial class AgentModelPlan
                     ? await visual.PrepareArtistAsync(id, true, download, progress, token) is not null
                     : await visual.PrepareAdvisorAsync(id, download, progress, token) is not null;
             case ScenarioNavigationCatalog.SongClip:
-                using (var plan = new VideoH3Preparation(root, cards: SongClipVariantCatalog.Cards(operation, root)) { ParallelConnections = connections })
+                var accelerated = operation == AgentProjects.AcceleratedDenoOperation;
+                var variant = accelerated ? SongClipDeno.Mode : operation;
+                using (var plan = new VideoH3Preparation(root, cards: SongClipVariantCatalog.Cards(variant, root, accelerated)) { ParallelConnections = connections })
                     return await plan.PrepareAsync(download, progress, token);
             case ScenarioNavigationCatalog.VideoGeneration:
                 switch (operation)
@@ -62,8 +66,15 @@ internal static partial class AgentModelPlan
                         using (var plan = new VideoLtxPreparation(root) { ParallelConnections = connections })
                             return await plan.PrepareAsync(download, progress, token);
                     default:
-                        using (var plan = new VideoH3Preparation(root, cards: operation == VideoH3LiteCatalog.ModelId
-                            ? VideoH3LiteCatalog.Cards(root) : null) { ParallelConnections = connections })
+                        var parts = operation.Split('/', 2);
+                        var lite = parts[0] == VideoH3LiteCatalog.ModelId;
+                        ManagedModelArtifactCard[]? cards = lite ? VideoH3LiteCatalog.Cards(root).ToArray() : null;
+                        if (parts.Length == 2)
+                        {
+                            var profile = new VideoH3DenoProfile(parts[1] == AgentProjects.AcceleratedDenoOperation);
+                            cards = [.. (cards ?? VideoH3Catalog.Cards(root).ToArray()), .. profile.AdditionalCards(root, lite)];
+                        }
+                        using (var plan = new VideoH3Preparation(root, cards: cards) { ParallelConnections = connections })
                             return await plan.PrepareAsync(download, progress, token);
                 }
             case ScenarioNavigationCatalog.GameSounds or ScenarioNavigationCatalog.OneC or ScenarioNavigationCatalog.CharacterKnowledge or ScenarioNavigationCatalog.NeuroConstructor:

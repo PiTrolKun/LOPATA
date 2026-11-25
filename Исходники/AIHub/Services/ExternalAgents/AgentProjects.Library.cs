@@ -53,12 +53,24 @@ internal static partial class AgentProjects
         public required string Prompt { get; init; }
         public string Lyrics { get; init; } = "";
         public string Timings { get; init; } = "";
+        public string Variant { get; init; } = "glitchframe";
+        public int? PiH3Steps { get; init; }
+        public DenoProjectOptions? Deno { get; init; }
         internal override object Create(Scenario scenario)
         {
             RequireText(Prompt, "prompt");
+            var variant = SongVariants.SingleOrDefault(v => v.Id == Variant)
+                ?? throw new InvalidDataException("Unknown song clip variant. Read project_instructions for current variants.");
+            if (PiH3Steps is { } steps && (Variant != PiH3Components.VariantId || !PiH3Components.SupportsSteps(steps)))
+                throw new InvalidDataException("piH3Steps must be 2 or 4 and requires the pi-h3-dwd variant.");
+            if (Deno is not null && Variant != SongClipDeno.Mode)
+                throw new InvalidDataException("deno settings require the deno variant.");
+            var settings = new SongClipSettings { Prompt = Prompt, Motion = new() { Mode = variant.Mode } };
+            if (Variant == PiH3Components.VariantId) settings.Geek = new() { PiH3Steps = PiH3Steps ?? PiH3Components.DefaultSteps };
+            if (Variant == SongClipDeno.Mode) settings.Deno = (Deno ?? new()).Resolve();
             var project = new SongClipProject { ExternalAgentProject = true, Name = Title, Lyrics = Lyrics, Timings = Timings,
-                Settings = new() { Prompt = Prompt } };
-            new SongClipStore().Save(project);
+                Model = variant.Model, Settings = settings };
+            new SongClipStore(DestinationDirectory).Save(project);
             return InLibrary(scenario, project.Id);
         }
     }
@@ -67,12 +79,19 @@ internal static partial class AgentProjects
     {
         public required string Prompt { get; init; }
         public int Seconds { get; init; } = 15;
+        public bool FromSong { get; init; }
+        public string? Variant { get; init; }
+        public bool? Accelerate { get; init; }
         internal override object Create(Scenario scenario)
         {
             RequireText(Prompt, "prompt");
             if (Seconds is < 1 or > ShortsJob.MaximumSeconds) throw new InvalidDataException("seconds must be 1–179.");
-            var store = ShortsProjects.Default;
-            var content = new ShortsDraft(Seconds: Seconds, Prompt: Prompt);
+            var profile = ShortsProfile(FromSong, Variant, Accelerate);
+            var store = DestinationDirectory is { } directory ? new ShortsProjects(directory) : ShortsProjects.Default;
+            var content = new ShortsDraft(FromSong: FromSong, Seconds: Seconds, Prompt: Prompt)
+            {
+                UseDeno = profile.Deno, AccelerateDeno = profile.Accelerate
+            };
             var draft = store.New(content) with { ExternalAgentProject = true };
             var project = store.SaveWorkspace(store.Rename(draft, Title), content, manual: true);
             return InLibrary(scenario, project.Id);

@@ -29,6 +29,17 @@ foreach ($required in @('Updater/LOPATA.Updater.exe', 'Licenses/installer.txt', 
 if ([IO.File]::ReadAllText((Join-Path $roots.app 'Installer/bootstrap-v1.txt')).Trim() -ne '1') { throw 'Unsupported bootstrap protocol.' }
 $payloadVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $PublishDir 'AIHub.dll')).ProductVersion
 if ($payloadVersion -ne $Version) { throw "Application payload version differs from target version: $payloadVersion / $Version" }
+if (!$StandBuild) {
+    $agentPath = Join-Path $PublishDir 'Lopata.Agent.exe'
+    $agentInfoJson = '{}' | & $agentPath --call lopata_info
+    if ($LASTEXITCODE -ne 0) { throw 'The packaged LOPATA agent could not report its capabilities.' }
+    $agentInfo = $agentInfoJson | ConvertFrom-Json
+    if ($agentInfo.version -cne $Version -or $agentInfo.capabilitiesRevision -cnotmatch '^[0-9a-f]{64}$' -or
+        !@($agentInfo.mechanics).Count -or $agentInfo.developmentTools -ne $false) {
+        throw 'Packaged LOPATA agent version or capability catalog does not match this release.'
+    }
+    Write-Host "Verified packaged agent $($agentInfo.version), capabilities $($agentInfo.capabilitiesRevision)."
+}
 if ((Test-Path -LiteralPath (Join-Path $PublishDir 'lopata-stand-build.marker')) -and !$StandBuild) {
     throw 'Stand payload cannot be packaged as a public update.'
 }

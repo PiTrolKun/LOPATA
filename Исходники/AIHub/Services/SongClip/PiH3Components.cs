@@ -17,7 +17,8 @@ internal static class PiH3Components
     internal const string ExtensionId = "song-clip-pi-h3-extension";
     internal const string LibrariesId = "song-clip-pi-h3-libraries";
     internal const int DefaultSteps = 4;
-    internal static bool SupportsSteps(int steps) => steps is 2 or 4;
+    internal static IReadOnlyList<int> StepOptions { get; } = Array.AsReadOnly(new[] { 2, 4 });
+    internal static bool SupportsSteps(int steps) => StepOptions.Contains(steps);
     internal static string AdapterFile(int steps) => SupportsSteps(steps)
         ? $"pi_h3_{steps}step_dwd_adapter_int8_convrot.safetensors"
         : throw new InvalidDataException("SongClip.InvalidSettings");

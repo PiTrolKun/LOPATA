@@ -31,7 +31,7 @@ public sealed partial class SongClipControl
     {
         var settings = _project.Settings.Geek ?? new();
         SelectGenerationSize(_geekSize, new(settings.Width,settings.Height), _project.PendingAttemptId.Length > 0);
-        _geekSteps.ItemsSource = IsPiH3 ? new[] { 2, 4 } : new[] { 12, 16, 20, 24, 30, 40 };
+        _geekSteps.ItemsSource = IsPiH3 ? PiH3Components.StepOptions : new[] { 12, 16, 20, 24, 30, 40 };
         _geekSteps.SelectedItem = IsPiH3 ? settings.PiH3Steps ?? PiH3Components.DefaultSteps : settings.Steps;
         _geekCardSteps.SelectedItem = settings.CardSteps;
         _geekSeconds.SelectedItem = settings.ClipSeconds; _geekStrength.SelectedItem = settings.ReferenceStrength;

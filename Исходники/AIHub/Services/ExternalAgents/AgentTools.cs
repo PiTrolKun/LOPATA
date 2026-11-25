@@ -1,4 +1,5 @@
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
 using AIHub.Services.VideoPreparation;
 
@@ -52,6 +53,10 @@ internal static class AgentTools
 
     internal static object List() => Tools;
 
+    private static readonly Lazy<string> CapabilitiesRevision = new(() => Convert.ToHexStringLower(SHA256.HashData(
+        JsonSerializer.SerializeToUtf8Bytes(new { tools = Tools, projects = AgentProjects.Contracts(),
+            operations = AgentModelPlan.Operations, mechanics = ScenarioNavigationCatalog.CloudTags }, AgentProtocol.Json))));
+
     internal static async Task<object> CallAsync(string name, JsonElement args, AgentIdentity? client = null)
     {
         var tool = Tools.FirstOrDefault(t => t.Name == name) ?? throw new ArgumentException("Unknown tool: " + name);
@@ -79,7 +84,9 @@ internal static class AgentTools
             case "lopata_info":
                 return new { version = ApplicationBuildVersion.Value, executable = Environment.ProcessPath, directory = AppContext.BaseDirectory,
                     developmentTools = Tools.Any(t => t.Name.StartsWith("dev_", StringComparison.Ordinal)),
-                    modelOperations = AgentModelPlan.Operations };
+                    capabilitiesRevision = CapabilitiesRevision.Value,
+                    modelOperations = AgentModelPlan.Operations,
+                    mechanics = ScenarioNavigationCatalog.CloudTags.Select(tag => new { tag.Id, scenario = tag.TargetId }) };
             case "project_scenarios": return AgentProjects.List();
             case "project_instructions": return AgentProjects.Describe(RequiredString(args, "scenario"));
             case "project_create": return AgentProjects.Create(RequiredString(args, "scenario"), args.GetProperty("data"));

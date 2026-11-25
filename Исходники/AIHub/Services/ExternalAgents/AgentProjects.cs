@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Schema;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Lopata.Updates;
 
@@ -66,7 +67,8 @@ internal static partial class AgentProjects
         return Scenarios.Select(type =>
         {
             var location = type.Locate(language);
-            return new { scenario = location.Id, title = location.Title, openIn = location.OpenIn, fileExtension = type.FileExtension };
+            return new { scenario = location.Id, title = location.Title, openIn = location.OpenIn, fileExtension = type.FileExtension,
+                mechanics = ScenarioMechanics(location.Id).Select(tag => tag.Id) };
         }).ToArray();
     }
 
@@ -77,8 +79,23 @@ internal static partial class AgentProjects
     {
         var type = Find(scenario);
         var location = type.Locate(LocalizationService.ForCurrentInterface());
+        var language = LocalizationService.ForCurrentInterface();
         return new { scenario = location.Id, title = location.Title, openIn = location.OpenIn, fileExtension = type.FileExtension,
-            instructions = type.Instructions, dataSchema = Json.GetJsonSchemaAsNode(type.Input, new() { TreatNullObliviousAsNonNullable = true }) };
+            instructions = type.Instructions, dataSchema = Schema(type),
+            modelOperations = AgentModelPlan.Operations.GetValueOrDefault(scenario, []),
+            mechanics = ScenarioMechanics(scenario).Select(tag => new { tag.Id, title = language.T(tag.TitleKey), description = language.T(tag.DescriptionKey) }) };
+    }
+
+    internal static object Contracts() => Scenarios.Select(type => new { type.Id, type.Instructions, schema = Schema(type) });
+
+    private static IEnumerable<ScenarioNavigationTag> ScenarioMechanics(string scenario) =>
+        ScenarioNavigationCatalog.CloudTags.Where(tag => tag.TargetId == scenario);
+
+    private static JsonNode Schema(ProjectType type)
+    {
+        var schema = Json.GetJsonSchemaAsNode(type.Input, new() { TreatNullObliviousAsNonNullable = true });
+        DescribeVideoOptions(type.Id, schema);
+        return schema;
     }
 
     public static object Create(string scenario, JsonElement data, string? projectDirectory = null)
@@ -97,7 +114,7 @@ internal static partial class AgentProjects
     private abstract class Draft
     {
         public required string Title { get; init; }
-        internal string? DestinationDirectory { private get; set; }
+        internal string? DestinationDirectory { get; set; }
         internal abstract object Create(Scenario scenario);
         protected object SaveFile(Scenario scenario, string extension, Action<string> save)
         {

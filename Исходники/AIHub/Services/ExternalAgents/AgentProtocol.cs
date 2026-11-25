@@ -34,6 +34,17 @@ internal static class AgentProtocol
             {
                 object result;
                 if (args is ["--tools"]) result = AgentTools.List();
+                else if (args is ["--relay"])
+                {
+                    using var relay = JsonDocument.Parse(await Console.In.ReadToEndAsync());
+                    var request = relay.RootElement;
+                    if (request.GetProperty("build").Deserialize<AgentInstallation.Build>(Json) != AgentInstallation.Running)
+                        throw new IOException(AgentInstallation.UpdateInProgress);
+                    client = AgentIdentity.FromHandshake(request, AgentIdentity.Anonymous);
+                    result = request.TryGetProperty("tool", out var tool) && tool.ValueKind == JsonValueKind.String
+                        ? await AgentTools.CallAsync(tool.GetString()!, request.GetProperty("arguments"), client)
+                        : AgentTools.List();
+                }
                 else if (args is ["--call", var name])
                 {
                     var input = (await Console.In.ReadToEndAsync()).TrimStart('\uFEFF');
@@ -53,8 +64,23 @@ internal static class AgentProtocol
         }
 
         bool initialized = false;
-        while (await Console.In.ReadLineAsync() is { } line)
+        var advertisedBuild = AgentInstallation.Running;
+        using var poll = new PeriodicTimer(TimeSpan.FromSeconds(2));
+        var nextPoll = poll.WaitForNextTickAsync().AsTask();
+        using var mcpInput = new StreamReader(Console.OpenStandardInput(), Encoding.UTF8);
+        var nextLine = mcpInput.ReadLineAsync();
+        while (true)
         {
+            var completed = await Task.WhenAny(nextPoll, nextLine);
+            if (completed == nextPoll)
+            {
+                nextPoll = poll.WaitForNextTickAsync().AsTask();
+                if (initialized) await RefreshToolsAsync(AgentInstallation.ReadBuild());
+                continue;
+            }
+            var line = await nextLine;
+            if (line is null) break;
+            nextLine = mcpInput.ReadLineAsync();
             if (string.IsNullOrWhiteSpace(line)) continue;
             JsonElement? id = null;
             try
@@ -79,22 +105,31 @@ internal static class AgentProtocol
                         var requested = parameters.TryGetProperty("protocolVersion", out var pv) ? pv.GetString() : null;
                         client = Caller(AgentIdentity.FromHandshake(parameters, configured));
                         if (!codexPlugin) AgentPresenceStore.Current.Remember(client);
+                        advertisedBuild = AgentInstallation.ReadBuild() ?? AgentInstallation.Running;
                         result = new
                         {
                             protocolVersion = requested is "2024-11-05" or "2025-03-26" or "2025-06-18" ? requested : ProtocolVersion,
-                            capabilities = new { tools = new { } },
-                            serverInfo = new { name = "lopata", version = ApplicationBuildVersion.Value },
-                            instructions = "Ask project_instructions for the selected scenario. Use logs_search and logs_read when the user asks about a failure."
+                            capabilities = new { tools = new { listChanged = true } },
+                            serverInfo = new { name = "lopata", version = advertisedBuild.Version },
+                            instructions = "Call lopata_info for the current installed build and capabilities revision. Ask project_instructions for the current fields before creating a project. After tools/list_changed, refresh the tools and scenario instructions. Use logs_search and logs_read for failures."
                         };
                         initialized = true;
                         break;
                     case "ping": result = Empty; break;
-                    case "tools/list" when initialized: result = new { tools = AgentTools.List() }; break;
+                    case "tools/list" when initialized:
+                        var listBuild = await CurrentToolsAsync();
+                        result = new { tools = listBuild == AgentInstallation.Running ? AgentTools.List()
+                            : await AgentInstallation.CallAsync(listBuild, null, Empty, client) };
+                        break;
                     case "tools/call" when initialized:
                         var tool = AgentTools.RequiredString(parameters, "name");
                         try
                         {
-                            var answer = await AgentTools.CallAsync(tool, parameters.TryGetProperty("arguments", out var arguments) ? arguments : Empty, client);
+                            var currentBuild = await CurrentToolsAsync();
+                            var arguments = parameters.TryGetProperty("arguments", out var supplied) ? supplied : Empty;
+                            var answer = currentBuild == AgentInstallation.Running
+                                ? await AgentTools.CallAsync(tool, arguments, client)
+                                : await AgentInstallation.CallAsync(currentBuild, tool, arguments, client);
                             result = ToolResult(JsonSerializer.Serialize(answer, Json), false);
                         }
                         catch (Exception ex) { result = ToolResult(ex.Message, true); }
@@ -109,6 +144,20 @@ internal static class AgentProtocol
             catch (Exception ex) { await ErrorAsync(id, -32602, ex.Message); }
         }
         return 0;
+
+        async Task RefreshToolsAsync(AgentInstallation.Build? build)
+        {
+            if (build is null || build == advertisedBuild) return;
+            advertisedBuild = build;
+            await WriteAsync(new { jsonrpc = "2.0", method = "notifications/tools/list_changed" });
+        }
+
+        async Task<AgentInstallation.Build> CurrentToolsAsync()
+        {
+            var build = AgentInstallation.ReadBuild() ?? throw new IOException(AgentInstallation.UpdateInProgress);
+            await RefreshToolsAsync(build);
+            return build;
+        }
     }
 
     private static object ToolResult(string text, bool isError) => new { content = new[] { new { type = "text", text } }, isError };

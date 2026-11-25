@@ -19,7 +19,7 @@ internal static partial class AgentModelPlan
         catalog.Add(ScenarioNavigationCatalog.OfficeEditor, ["text/selected", .. voices]);
         catalog.Add(ScenarioNavigationCatalog.Music, MusicModelSelectionCatalog.All.SelectMany(m => m.Variants)
             .Where(v => v.Connected).Select(v => MusicModelVariants.Normalize(v.Id)).Distinct().ToArray());
-        catalog.Add(ScenarioNavigationCatalog.Shorts, ["generate"]);
+        catalog.Add(ScenarioNavigationCatalog.Shorts, AgentProjects.ShortsOperations.Keys.ToArray());
         catalog.Add(ScenarioNavigationCatalog.VideoUpscale, Enum.GetValues<UpscaleEngine>().Where(e => e != UpscaleEngine.Scale)
             .Select(e => e.ToString()).ToArray());
         catalog.Add(ScenarioNavigationCatalog.VectorEditor, [VectorModels.Ridge]);
@@ -47,7 +47,7 @@ internal static partial class AgentModelPlan
                 using (var editor = new VideoModelPreparation { ParallelConnections = connections })
                     return await editor.PrepareAsync(root, need, download, progress, token);
             case ScenarioNavigationCatalog.Shorts:
-                return await ShortsComponents.PrepareAsync(root, connections, download, progress, token);
+                return await ShortsComponents.PrepareAsync(root, connections, AgentProjects.ShortsOperations[operation], download, progress, token);
             case ScenarioNavigationCatalog.VideoUpscale:
                 var project = new UpscaleProject { Steps = [UpscaleCatalog.New(Enum.Parse<UpscaleEngine>(operation))] };
                 using (var upscale = new UpscaleComponents(connections))

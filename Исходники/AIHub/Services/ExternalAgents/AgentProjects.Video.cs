@@ -14,6 +14,8 @@ internal static partial class AgentProjects
         public string EnglishDevelopment { get; init; } = "";
         public ReferenceDraft[] References { get; init; } = [];
         public SceneDraft[] Scenes { get; init; } = [];
+        public string? Model { get; init; }
+        public DenoProjectOptions? Deno { get; init; }
 
         internal override object Create(Scenario scenario)
         {
@@ -69,6 +71,21 @@ internal static partial class AgentProjects
                 shots.SelectedSceneId = shots.Scenes[0].Id;
                 shots.SelectedShotId = shots.Scenes[0].Shots.FirstOrDefault()?.Id ?? "";
                 VideoShots.Capture(project);
+            }
+            if (Model is not null || Deno is not null)
+            {
+                var model = Model ?? VideoH3Catalog.ModelId;
+                if (!VideoGeneratorPlan.IsAvailable(model)) throw new InvalidDataException("Unknown video generation model.");
+                var settings = VideoH3WorkspaceState.Ensure(project, model).Settings;
+                if (Deno is { } deno)
+                {
+                    var output = deno.Resolve();
+                    settings.Aspect = output.Width < output.Height ? "9:16" : "16:9";
+                    VideoH3WorkspaceState.Resolution(settings, model == VideoH3LiteCatalog.ModelId ? .4 : .98);
+                    settings.OutputHeight = settings.DenoOutput = deno.Resolution;
+                    settings.DenoAccelerate = output.Accelerate;
+                }
+                VideoGeneratorPlan.SaveChoice(project, new(model, settings.Width, settings.Height, 24, settings.Seed, ""));
             }
             return SaveFile(scenario, VideoPreparationArchive.Extension, file => VideoPreparationArchive.Save(project, file));
         }

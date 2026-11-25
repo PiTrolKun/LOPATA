@@ -69,12 +69,23 @@ internal static partial class AgentProjects
     {
         public required int Width { get; init; }
         public required int Height { get; init; }
-        public string Algorithm { get; init; } = "lanczos";
+        public string? Algorithm { get; init; }
+        public string Preset { get; init; } = "manual";
         internal override object Create(Scenario scenario)
         {
-            var step = UpscaleCatalog.New(UpscaleEngine.Scale, Width, Height);
-            step.Algorithm = Algorithm;
-            var project = new UpscaleProject { Name = Title, Mode = UpscaleMode.Manual, Steps = [step], ExternalAgentProject = true };
+            var mode = Preset switch
+            {
+                "manual" => UpscaleMode.Manual,
+                "deno" => UpscaleMode.Deno,
+                _ => throw new InvalidDataException("preset must be manual or deno.")
+            };
+            if (Algorithm is not null && mode != UpscaleMode.Manual)
+                throw new InvalidDataException("algorithm is available only for the manual preset.");
+            var steps = UpscaleCatalog.Preset(mode, Width < Height);
+            steps[0].Width = Width;
+            steps[0].Height = Height;
+            if (Algorithm is not null) steps[0].Algorithm = Algorithm;
+            var project = new UpscaleProject { Name = Title, Mode = mode, Steps = steps, ExternalAgentProject = true };
             project.Workspace = UpscaleStore.Work(project.Id);
             UpscaleCatalog.Validate(project);
             UpscaleStore.SaveProject(project);
