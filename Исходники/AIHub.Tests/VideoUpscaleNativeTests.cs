@@ -1,5 +1,7 @@
 using System.IO;
+using System.Text.Json;
 using AIHub.Services;
+using AIHub.Services.SongClip;
 using AIHub.Services.VideoUpscale;
 
 namespace AIHub.Tests;
@@ -7,6 +9,62 @@ namespace AIHub.Tests;
 [TestClass, DoNotParallelize]
 public sealed class VideoUpscaleNativeTests
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task DenoPresetProcessesUhdWithSourceRateAndAudio(bool preview)
+    {
+        var root = Environment.GetEnvironmentVariable("LOPATA_UPSCALE_NATIVE_ROOT");
+        var stand = Environment.GetEnvironmentVariable("LOPATA_DENO_UPSCALE_STAND");
+        if (root is null || stand is null) { Assert.Inconclusive("Opt-in installed Deno test."); return; }
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+        var token = timeout.Token;
+        var folder = Path.Combine(stand, preview ? "portrait-preview" : "landscape-export");
+        Directory.CreateDirectory(folder);
+        using var storage = UpscaleStore.UseTestRoot(Path.Combine(folder, "projects"));
+        using var audit = ComponentAudit.UseTestStore(Path.Combine(stand, "audit"), enabled: !preview);
+        var confirm = ComponentLicenseGate.ConfirmAsync; ComponentLicenseGate.ConfirmAsync = (_, _) => Task.CompletedTask;
+        try
+        {
+            await UpscaleFfmpeg.PrepareAsync(token);
+            var source = preview ? Environment.GetEnvironmentVariable("LOPATA_DENO_UPSCALE_SAMPLE") : null;
+            if (source is null)
+            {
+                source = Path.Combine(folder, "source.mkv");
+                await UpscaleFfmpeg.RunAsync(false, ["-v", "error", "-y", "-f", "lavfi", "-i",
+                    preview ? "testsrc2=size=360x640:rate=24:duration=1.2" : "testsrc2=size=640x360:rate=30000/1001:duration=1.2",
+                    "-f", "lavfi", "-i", "sine=duration=1.2", "-c:v", "ffv1", "-c:a", "pcm_s16le", "-shortest", source], token);
+            }
+            var media = await UpscaleMediaTools.Describe(source, token);
+            var hash = await UpscaleMediaTools.Hash(source, token);
+            var project = new UpscaleProject
+            {
+                Source = source, SourceLength = new FileInfo(source).Length, SourceSha256 = hash, Media = media,
+                Mode = UpscaleMode.Deno, Steps = UpscaleCatalog.Preset(UpscaleMode.Deno, media.Height > media.Width),
+                PreviewStart = preview ? .25 : 0, PreviewLength = Math.Min(1, media.Duration), ChunkSeconds = .65
+            };
+            var cards = UpscaleComponents.Cards(root, project);
+            Assert.AreEqual(SongClipDenoComponents.VfxId, cards.Single().ModelArtifactId);
+            var job = UpscalePipeline.Create(project, preview, Path.Combine(folder, "deno-4k.mp4"));
+            await new UpscalePipeline().Start(job, root, new PrintProgress(), token);
+            var dimensions = preview ? (2160, 3840) : (3840, 2160);
+            await UpscaleMediaTools.Check(job.Output, job.Frames, dimensions.Item1, dimensions.Item2, token);
+            var result = await UpscaleMediaTools.Describe(job.Output, token);
+            Assert.AreEqual(media.Fps, result.Fps, .08);
+            Assert.AreEqual(media.AudioStreams, result.AudioStreams);
+            Assert.AreEqual(hash, await UpscaleMediaTools.Hash(source, token));
+            using var probe = await UpscaleFfmpeg.ProbeAsync(job.Output, token);
+            var tags = probe.RootElement.GetProperty("format").GetProperty("tags");
+            var facts = JsonSerializer.Deserialize<OutputProvenance>(tags.GetProperty("comment").GetString()!)!;
+            Assert.IsTrue(facts.Models.Any(m => m.Id == SongClipDenoComponents.VfxId));
+            var saved = UpscaleStore.Load<UpscaleJob>(UpscaleStore.JobPath(job));
+            Assert.IsTrue(saved.Complete);
+            Assert.IsTrue(saved.Parts.Count > 1);
+            Console.WriteLine("PASS DENO " + job.Output);
+        }
+        finally { ComponentLicenseGate.ConfirmAsync = confirm; }
+    }
+
     [DataRow("Flash", "turbo")]
     [DataRow("NeuralRendering", "")]
     [DataRow("RtxVideo", "")]

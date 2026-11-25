@@ -14,7 +14,6 @@ public partial class MainWindow
         ScenarioNavigationPage.IsVisibleChanged += (_, _) => RefreshWorkStartWorkspaceLayout();
         ScenarioNavigationPage.VideoPreparationCreated += ConfigureVideoConcept;
         ScenarioNavigationPage.SongClipCreated += ConfigureSongClip;
-        ScenarioNavigationPage.PrepareShorts = PrepareShortsEntry;
         ScenarioNavigationPage.OpenVisualWorkspace = ConfigureVisualScenario;
         ScenarioNavigationPage.LetItOutChatCreated += ConfigureLetItOutChat;
         ScenarioNavigationPage.ScenarioRequested += async id =>

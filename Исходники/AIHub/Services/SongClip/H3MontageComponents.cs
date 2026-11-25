@@ -47,7 +47,7 @@ internal static class H3MontageComponents
     }
 
     internal static async Task<H3MontageEnvironment> PrepareAsync(string root, int connections,
-        CancellationToken token, Action<string> log)
+        CancellationToken token, Action<string> log, string device = "auto")
     {
         using var audit = ComponentAudit.CaptureOperation();
         var cards = Cards(root);
@@ -71,7 +71,7 @@ internal static class H3MontageComponents
             wheels: true, token, repair: true);
         // No acquisition is started here. Shared H3 and Motion components use
         // their established licence, audit, installation and GPU checks.
-        var motion = await H3MusicComponents.PrepareAsync(root, connections, token, log);
+        var motion = await H3MusicComponents.PrepareAsync(root, connections, token, log, device);
         return new(motion, source, Path.Combine(analysis, "Lib", "site-packages"), cards);
     }
 

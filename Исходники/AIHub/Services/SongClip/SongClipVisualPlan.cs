@@ -114,7 +114,7 @@ internal static partial class SongClipVisualProtocol
                 scenes.Add(Slot(index + 1, (long)index * advance / 24d, Math.Min(duration, ((long)index * advance + motion.RawFrames) / 24d), source));
         }
         else if (attempt.Model == InfiniteTalkRunner.ModelId) return InfiniteTalkSlots(attempt, duration, source);
-        else if (attempt.Model == GeekatplayRunner.ModelId) {
+        else if (GeekatplayRunner.Handles(attempt.Model)) {
             var interval = (attempt.Settings.Geek ?? new SongClipGeekSettings()).ClipSeconds;
             if (interval is < 5 or > 10) throw new InvalidDataException(InvalidReply);
             var count = Math.Max(1, (int)Math.Ceiling(duration / interval));
@@ -261,7 +261,7 @@ internal static partial class SongClipVisualProtocol
         var payload = JsonSerializer.SerializeToNode(new {
             task = "Create a lyric-grounded coherent visual plan for these exact native slots", durationSeconds = duration,
             songTitle = attempt.Name, semanticAnchor,
-            output = attempt.Model == "glitchframe" ? "still-image keyframes" : attempt.Model == InfiniteTalkRunner.ModelId ? "continuous audio-driven performance by the single referenced performer" : attempt.Model == GeekatplayRunner.ModelId ? "storyboard keyframes and first-to-last-frame video transitions" : "video continuation with overlapping context",
+            output = attempt.Model == "glitchframe" ? "still-image keyframes" : attempt.Model == InfiniteTalkRunner.ModelId ? "continuous audio-driven performance by the single referenced performer" : GeekatplayRunner.Handles(attempt.Model) ? "storyboard keyframes and first-to-last-frame video transitions" : "video continuation with overlapping context",
             songStyle = source.Style, lyricsLines = source.Lines, songSections = source.Sections, knownTimingCues = cues,
             timingCoverage = source.Timings.Length == 0 ? "unknown; thematic anchors only" : "known markers only; coverage may be partial",
             creativeDirection = attempt.Settings.Prompt == new SongClipSettings().Prompt ? "" : attempt.Settings.Prompt,
@@ -367,7 +367,7 @@ internal static partial class SongClipVisualProtocol
 
     private static SongClipVisualScene[] Batch(SongClipAttempt attempt, double duration, IReadOnlyList<SongClipVisualScene>? slots, IReadOnlyList<SongClipVisualScene>? timeline = null)
     {
-        if (timeline is not null && attempt.Model != GeekatplayRunner.ModelId) {
+        if (timeline is not null && !GeekatplayRunner.Handles(attempt.Model)) {
             if (attempt.Model != InfiniteTalkRunner.ModelId) throw new InvalidDataException(InvalidReply);
             var native = Slots(attempt, duration);
             if (timeline.Count != native.Length || timeline.Where((scene,index) => scene is null

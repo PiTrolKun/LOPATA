@@ -13,6 +13,7 @@ internal sealed record ShortsProgress(ShortsStage Stage = ShortsStage.Prepare, s
         if (message is "Shorts.Upscaling" or "Shorts.Dlss" or "Shorts.SoftwareScale")
             return new(ShortsStage.Upscale, message);
         if (message == "Shorts.Exporting") return new(ShortsStage.Save, message);
+        if (message == "SongClip.DenoFinishing") return new(ShortsStage.Upscale, message);
         if (message == "SongClip.PlanReady") return new(ShortsStage.Prepare, message);
         if (message == "SongClip.Finalizing") return new(ShortsStage.Generate, "SongClip.MotionVerify");
         const string h3Prefix = "[H3 event] ";
@@ -51,6 +52,7 @@ internal sealed record ShortsProgress(ShortsStage Stage = ShortsStage.Prepare, s
     {
         "montage-analysis" => new(ShortsStage.Prepare, "SongClip.MontageAnalysis"),
         "montage-assembly" or "assembling" => new(ShortsStage.Generate, "Shorts.Assembling"),
+        "deno-finish" => new(ShortsStage.Upscale, "SongClip.DenoFinishing"),
         "decoding" when h3 => this with { Detail = "VideoPrep.H3Stage.decoding", Step = 0, Steps = 0 },
         "sampling" or "render" => this with { Stage = ShortsStage.Generate, Detail = "Shorts.Generating" },
         "conditioning" or "loading-text-encoder" or "loading-vae" or "loading-diffusion" or "connecting-plans" when h3 =>

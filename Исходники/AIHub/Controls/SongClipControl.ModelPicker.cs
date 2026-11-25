@@ -28,7 +28,8 @@ public sealed partial class SongClipControl
         if(_busy || OwnOperation || !Checkpoint())return;
         try {
             if(!Path.IsPathFullyQualified(_root)){_status.Text=_l("Generation.StorageRequired");return;}
-            var picker=new SongClipModelWindow(Window.GetWindow(this),_l,_root,_project.Model,_project.Settings.Motion.Mode);
+            var picker=new SongClipModelWindow(Window.GetWindow(this),_l,_root,_project.Model,_project.Settings.Motion.Mode,
+                denoAccelerated:_project.Settings.Deno?.Accelerate==true);
             if(picker.ShowDialog()!=true || picker.Request is not {} request)return;
             // ShowDialog has returned: the picker is closed before any downloader is constructed.
             ApplyPickerRequest(request);
@@ -42,18 +43,19 @@ public sealed partial class SongClipControl
             &&SongClipVariantCatalog.Find(request.Id).Retired){_status.Text=_l(SongClipVariantCatalog.RetiredMessageKey);return;}
         if(request.Action==SongClipPickerAction.Use) {
             if(!SelectVariant(request.Id))return;
-            if(SongClipVariantCatalog.Presence(SongClipVariantCatalog.Cards(request.Id,_root)).Ready)return;
+            if(SongClipVariantCatalog.Presence(SongClipVariantCatalog.Cards(request.Id,_root,_project.Settings.Deno?.Accelerate==true)).Ready)return;
         }
         if(ApplicationBackgroundOperations.Current is {BlocksNewWork:true} background){background.ReportBlocked();_status.Text=_l("SongClip.OtherOperation");return;}
         var isGroup=request.Action is SongClipPickerAction.DownloadGroup or SongClipPickerAction.DownloadBase;
         var variant=isGroup?SongClipVariantCatalog.AvailableFamily(request.Id):SongClipVariantCatalog.Find(request.Id);
         if(variant is null){_status.Text=_l(SongClipVariantCatalog.Variants.Any(v=>v.Family==request.Id&&v.Retired)
             ?SongClipVariantCatalog.RetiredMessageKey:"SongClip.Pending");return;}
+        var accelerated=_project.Settings.Deno?.Accelerate==true;
         var cards=request.Action==SongClipPickerAction.DownloadBase?SongClipVariantCatalog.BaseCards(request.Id,_root)
-            :request.Action==SongClipPickerAction.DownloadGroup?SongClipVariantCatalog.GroupCards(request.Id,_root):null;
+            :request.Action==SongClipPickerAction.DownloadGroup?SongClipVariantCatalog.GroupCards(request.Id,_root,accelerated):null;
         if(cards is {Length:0})return;
         if(new SongClipDownloadWindow(Window.GetWindow(this),_l,_root,_connections,variant.Model,variant.Mode,
-            autoDownload:true,requestedCards:cards).ShowDialog()==true)_status.Text=_l("SongClip.ComponentsReady");
+            autoDownload:true,requestedCards:cards,denoAccelerated:accelerated).ShowDialog()==true)_status.Text=_l("SongClip.ComponentsReady");
         RefreshModelLabel();
     }
     private void OpenComponents()

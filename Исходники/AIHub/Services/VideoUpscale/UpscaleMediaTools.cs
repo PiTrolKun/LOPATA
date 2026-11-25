@@ -20,11 +20,18 @@ internal static class UpscaleMediaTools
         var fps = double.Parse(numbers[0], CultureInfo.InvariantCulture) / double.Parse(numbers.ElementAtOrDefault(1) ?? "1", CultureInfo.InvariantCulture);
         // Audio padding or a second, longer audio stream must not create extra video frames.
         var duration = video.TryGetProperty("duration", out var videoDuration) && double.TryParse(videoDuration.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds)
-            ? seconds : video.TryGetProperty("tags", out var tags) && tags.TryGetProperty("DURATION", out var tagDuration) && TimeSpan.TryParse(tagDuration.GetString(), CultureInfo.InvariantCulture, out var span)
+            ? seconds : video.TryGetProperty("tags", out var tags) && tags.TryGetProperty("DURATION", out var tagDuration) && TryMatroskaDuration(tagDuration.GetString(), out var span)
                 ? span.TotalSeconds : double.Parse(doc.RootElement.GetProperty("format").GetProperty("duration").GetString()!, CultureInfo.InvariantCulture);
         if (!double.IsFinite(duration) || duration <= 0 || !double.IsFinite(fps) || fps is <= 0 or > 1000) throw new InvalidDataException("VideoUpscale.InvalidSource");
         return new() { Width = video.GetProperty("width").GetInt32(), Height = video.GetProperty("height").GetInt32(), Duration = duration,
             Fps = fps, Rate = rate, Frames = (long)Math.Round(duration * fps), AudioStreams = streams.Count(s => s.GetProperty("codec_type").GetString() == "audio") };
+    }
+    private static bool TryMatroskaDuration(string? text, out TimeSpan duration)
+    {
+        // Matroska writes nine fractional digits, while TimeSpan accepts seven.
+        if (text is not null && text.IndexOf('.') is var point && point >= 0 && text.Length > point + 8)
+            text = text[..(point + 8)];
+        return TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out duration);
     }
     internal static async Task<UpscalePart> Check(string path, long frames, int width, int height, CancellationToken token)
     {

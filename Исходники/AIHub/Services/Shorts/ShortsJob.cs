@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using AIHub.Models;
 using AIHub.Services.SongClip;
@@ -14,6 +15,10 @@ internal sealed record ShortsDraft(bool FromSong = false, int Seconds = 15, stri
     double Start = 0, ShortsReference[]? References = null, string? JobId = null, string? OutputPath = null,
     int? ExcerptFrames = null, bool FadeEnding = false, string? ProjectId = null)
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool UseDeno { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool AccelerateDeno { get; init; }
     internal ShortsReference[] Images => References ?? [];
     internal double SongSeconds => (ExcerptFrames ?? Seconds * ShortsJob.Fps) / (double)ShortsJob.Fps;
 }
@@ -54,13 +59,10 @@ internal sealed record ShortsJob(string Id, bool FromSong, int Seconds, string M
 
     internal void Save() => SongClipStore.Atomic(JobFile(Id), this);
 
-    internal static ManagedModelArtifactCard[] Cards(bool fromSong, string root) => fromSong
-        ? SongClipVariantCatalog.Cards(SongClipVariantCatalog.Current(H3MusicRunner.ModelId, SongClipModes.Montage).Id, root)
-        : [.. VideoH3Catalog.Cards(root), VideoH3RuntimeCatalog.Card(root)];
-
     internal static async Task<ShortsJob> CreateAsync(ShortsDraft draft, string modelsRoot, int connections, CancellationToken token)
     {
         Validate(draft);
+        var profile = ShortsGenerationProfile.FromDraft(draft);
         var id = Guid.NewGuid().ToString("N");
         var output = ValidateOutputPath(draft.OutputPath ?? SuggestOutputPath());
         var owned = new List<SongClipReference>();
@@ -85,19 +87,21 @@ internal sealed record ShortsJob(string Id, bool FromSong, int Seconds, string M
             song = new(id, id, "song.wav", owned.FirstOrDefault()?.File ?? "", Path.GetFileNameWithoutExtension(draft.Song),
                 lyrics, sliceTimings, new SongClipSettings
                 {
-                    Width = NativeWidth, Height = NativeHeight, Fps = Fps,
+                    Width = Width, Height = Height, Fps = Fps,
                     Prompt = "Create a vertical music video for this excerpt. Cut to the rhythm. Each supplied image represents the named song performer.",
-                    Motion = new() { Mode = SongClipModes.Montage },
-                    Montage = new() { Width = NativeWidth, Height = NativeHeight, ClipSeconds = FastPassSeconds, Steps = FastSteps }
+                    Motion = new() { Mode = SongClipDeno.Mode },
+                    Deno = new(Width, Height) { Accelerate = true }
                 }, modelsRoot, connections)
             { Model = H3MusicRunner.ModelId, PlanningVersion = SongClipVisualProtocol.Version, References = [.. owned] };
             Assets.EnsureAttemptSnapshot(song);
         }
         else
         {
+            var deno = profile.Deno ? new VideoH3DenoProfile(profile.Accelerate) : null;
             var settings = new VideoH3Settings
             {
-                Aspect = "9:16", Width = NativeWidth, Height = NativeHeight, ClipSeconds = FastPassSeconds, Steps = FastSteps,
+                Aspect = "9:16", Width = deno?.Width ?? NativeWidth, Height = deno?.Height ?? NativeHeight,
+                ClipSeconds = FastPassSeconds, Steps = deno?.Steps ?? FastSteps, VramReserveGb = profile.Deno ? 4 : 2,
                 Continuation = "extend", AudioMode = "native", AudioContextFrames = 39
             };
             VideoH3WorkspaceState.Validate(new() { Settings = settings });
@@ -105,7 +109,8 @@ internal sealed record ShortsJob(string Id, bool FromSong, int Seconds, string M
             // take's video and audio context. It keeps the model loaded between passes.
             var images = owned.Select(x => Assets.Resolve(id, x.File)).ToArray();
             var item = new VideoH3Item(id, id, Describe(draft.Prompt, images.Length), draft.Seconds, -1, images, [], [], "extend");
-            description = VideoH3Job.CreateForItems(new() { Id = id }, JobFile(id), modelsRoot, connections, VideoH3Catalog.ModelId, settings, [item]);
+            description = VideoH3Job.CreateForItems(new() { Id = id }, JobFile(id), modelsRoot, connections,
+                VideoH3Catalog.ModelId, settings, [item], deno);
         }
         var job = new ShortsJob(id, draft.FromSong, draft.Seconds, modelsRoot, connections, output, DateTimeOffset.UtcNow, song, description,
             ExcerptFrames: draft.FromSong ? draft.ExcerptFrames : null, FadeEnding: draft.FadeEnding, ProjectId: draft.ProjectId);

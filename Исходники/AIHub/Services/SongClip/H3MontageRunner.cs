@@ -13,9 +13,13 @@ internal static class H3MontageRunner
     internal static void ValidateSettings(SongClipAttempt attempt)
     {
         SongClipReferences.ValidateNewAttempt(attempt);
-        var s = attempt.Settings; var m = s.Montage ?? new SongClipMontageSettings();
+        var s = attempt.Settings;
+        var deno = SongClipModes.IsDeno(attempt);
+        var m = deno ? SongClipDeno.Generation(s) : s.Montage ?? new();
+        var validSize = deno ? SongClipDeno.Sizes.Contains(SongClipDeno.Output(s) with { Accelerate = false })
+            : s.Width is >= 256 and <= 3840 && s.Height is >= 256 and <= 2160 && s.Width % 2 == 0 && s.Height % 2 == 0;
         if (!SongClipModes.IsMontage(attempt) || attempt.Model != H3MusicRunner.ModelId || attempt.PlanningVersion != 1
-            || s.Fps != 24 || s.Width is < 256 or > 3840 || s.Height is < 256 or > 2160 || s.Width % 2 != 0 || s.Height % 2 != 0
+            || s.Fps != 24 || !validSize
             || s.Quality is < 1 or > 100 || m.Width is < 256 or > 1536 || m.Height is < 256 or > 1536
             || m.Width % 32 != 0 || m.Height % 32 != 0 || m.Steps is < 8 or > 50 || m.ClipSeconds is < 2 or > 15
             || attempt.References is null && !string.IsNullOrWhiteSpace(attempt.Reference))
@@ -30,7 +34,9 @@ internal static class H3MontageRunner
         await VideoRuntime.PrepareAsync(token);
         var job = store.Resolve(attempt.ProjectId, "attempts/" + Guid.ParseExact(attempt.Id, "N").ToString("N"));
         Directory.CreateDirectory(job);
-        await H3MontageBinding.EnsureAsync(attempt, store, job, H3MontageComponents.Cards(attempt.ModelsRoot), token);
+        var cards = SongClipVariantCatalog.Cards(SongClipModes.IsDeno(attempt) ? SongClipDeno.Mode : SongClipModes.Montage,
+            attempt.ModelsRoot, SongClipDeno.Accelerated(attempt));
+        await H3MontageBinding.EnsureAsync(attempt, store, job, cards, token);
         var clock = Path.Combine(job, "elapsed.json");
         var prior = File.Exists(clock) ? JsonSerializer.Deserialize<double>(await File.ReadAllTextAsync(clock, token)) : 0;
         if (!double.IsFinite(prior) || prior < 0) throw new InvalidDataException("Invalid generation clock.");
@@ -51,10 +57,15 @@ internal static class H3MontageRunner
         await ApplicationBackgroundOperations.RetireModelsAsync();
         if (!File.Exists(Path.Combine(job, "worker-result.json")))
             await SongClipResources.CheckH3AudioAsync(store.Resolve(attempt.ProjectId, attempt.Song), token);
-        var environment = await H3MontageComponents.PrepareAsync(attempt.ModelsRoot, attempt.Connections, token, message => progress(0, message));
-        await RuntimeFileAudit.VerifyAsync("SongClip.H3Montage.Adapter", Path.Combine(AppContext.BaseDirectory, "Tools"),
-            ApplicationBuildVersion.Value, H3MontageBinding.AdapterFiles(), token);
-        var payload = Request(attempt, store, job, environment);
+        void Log(string message) => progress(0, message);
+        var accelerated = SongClipDeno.Accelerated(attempt);
+        var deno = SongClipModes.IsDeno(attempt)
+            ? await SongClipDenoComponents.PrepareAsync(attempt.ModelsRoot, attempt.Connections, token, Log, accelerated) : null;
+        var environment = deno?.Montage
+            ?? await H3MontageComponents.PrepareAsync(attempt.ModelsRoot, attempt.Connections, token, Log);
+        await RuntimeFileAudit.VerifyAsync(deno is null ? "SongClip.H3Montage.Adapter" : "SongClip.Deno.Adapter", Path.Combine(AppContext.BaseDirectory, "Tools"),
+            ApplicationBuildVersion.Value, H3MontageBinding.AdapterFiles(deno is not null, accelerated), token);
+        var payload = Request(attempt, store, job, environment, deno);
         var final = Path.Combine(job, "clip.mp4");
         var plan = await PreparePlanAsync(attempt, store, job, payload, environment.Motion.H3.Python.Python,
             progress, token, measureWarmOverlap, plannerId);
@@ -67,21 +78,41 @@ internal static class H3MontageRunner
         }
         else { token.ThrowIfCancellationRequested(); SongClipStore.Atomic(request, payload); }
         var receiptPath = Path.Combine(job, "worker-result.json");
-        if (!File.Exists(receiptPath))
-            await H3MusicRunner.RunWorkerAsync(environment.Motion.H3.Python.Python, request, job,
-                (value, message) => progress(.08 + .90 * value, message), token, montage: true);
-        else await H3MusicRunner.RunWorkerAsync(environment.Motion.H3.Python.Python, request, job,
-            (value, message) => progress(.08 + .90 * value, message), token, montage: true, verify: true);
+        var worker = accelerated ? SongClipDeno.AcceleratedWorker : deno is not null ? SongClipDeno.Worker : null;
+        await H3MusicRunner.RunWorkerAsync(environment.Motion.H3.Python.Python, request, job,
+            (value, message) => progress(.08 + (deno is null ? .90 : .82) * value, message), token,
+            montage: true, verify: File.Exists(receiptPath), worker: worker);
         using var receipt = JsonDocument.Parse(await File.ReadAllTextAsync(receiptPath, token));
         await H3MontageReceipt.ValidateAsync(receipt.RootElement, request, attempt, store, plan, token);
-        var facts = new OutputProvenance {
-            Scenario = "song-to-clip/h3_music_context", CreatedUtc = DateTimeOffset.UtcNow, GenerationSeconds = elapsed(),
-            ModelHistory = "recorded-inference; montage", Models = [..H3MusicRunner.Facts(environment.Cards), ..plan.Assistants,
-                new(H3MontageComponents.SourceId, "H3 Any Song montage", H3MontageComponents.SourceRevision, "beat analysis and montage routing")]
-        };
-        if (File.Exists(final)) return await H3MusicRunner.CheckResult(final, attempt, store, facts.Models, token);
+        var models = H3MusicRunner.Facts(environment.Cards).Concat(plan.Assistants)
+            .Append(new(H3MontageComponents.SourceId, "H3 Any Song montage", H3MontageComponents.SourceRevision, "beat analysis and montage routing"));
+        if (deno is not null)
+            models = models.Concat(environment.Cards.Where(card => card.ModelArtifactId is
+                "video-h3-upscale-model" or "video-h3-source-upscaler" or SongClipDenoComponents.VfxId)
+                .Select(card => new OutputModelUse(card.ModelArtifactId, card.DisplayName, card.Revision,
+                    card.ModelArtifactId == SongClipDenoComponents.VfxId ? "RTX denoising and output finishing" : "progressive H3 latent upscaling")));
+        if (accelerated)
+        {
+            var torch = environment.Cards.Single(card => card.ModelArtifactId == SongClipDenoComponents.SolTorchId);
+            models = models.Append(new(torch.ModelArtifactId, torch.DisplayName, torch.Revision, "accelerated H3 runtime"));
+        }
+        var expectedModels = models.ToArray();
+        if (File.Exists(final)) return await H3MusicRunner.CheckResult(final, attempt, store, expectedModels, token);
         var raw = receipt.RootElement.GetProperty("output").GetString() ?? throw new InvalidDataException("Missing montage output.");
         raw = RuntimeFileAudit.Contained(job, Path.GetRelativePath(job, Path.GetFullPath(raw)));
+        if (deno is not null)
+        {
+            progress(.90, "SongClip.DenoFinishing");
+            await H3MusicRunner.RunWorkerAsync(environment.Motion.H3.Python.Python, request, job,
+                (value, message) => progress(.90 + .08 * value, message), token,
+                montage: true, worker: SongClipDeno.FinishWorker, action: "--finish");
+            raw = RuntimeFileAudit.Contained(job, "deno-finished.mp4");
+        }
+        var facts = new OutputProvenance {
+            Scenario = "song-to-clip/h3_music_context", CreatedUtc = DateTimeOffset.UtcNow, GenerationSeconds = elapsed(),
+            ModelHistory = accelerated ? "recorded-inference; deno; acceleration enabled"
+                : deno is null ? "recorded-inference; montage" : "recorded-inference; deno", Models = expectedModels
+        };
         var staging = Path.Combine(job, "clip.installing.mp4"); progress(.99, "SongClip.Finalizing");
         SongClipResources.CheckMuxSpace(raw, staging);
         await VideoRuntime.RunAsync(false, ["-nostdin", "-v", "error", "-y", "-i", raw,
@@ -145,11 +176,23 @@ internal static class H3MontageRunner
         catch { await session.DisposeAsync(); throw; }
     }
 
-    private static JsonObject Request(SongClipAttempt attempt, SongClipStore store, string job, H3MontageEnvironment environment)
+    private static JsonObject Request(SongClipAttempt attempt, SongClipStore store, string job, H3MontageEnvironment environment,
+        SongClipDenoEnvironment? deno)
     {
-        var h3 = environment.Motion.H3; var settings = attempt.Settings; var montage = settings.Montage ?? new SongClipMontageSettings();
+        var h3 = environment.Motion.H3; var settings = attempt.Settings;
+        var montage = deno is null ? settings.Montage ?? new() : SongClipDeno.Generation(settings);
+        var intermediate = deno is null ? new(settings.Width, settings.Height) : SongClipDeno.Intermediate(settings);
+        var accelerated = SongClipDeno.Accelerated(attempt);
         var names = VideoH3Profile.Models(false);
-        return JsonSerializer.SerializeToNode(new {
+        var pins = environment.Cards.ToDictionary(card => card.ModelArtifactId, card => card.Revision);
+        if (deno is not null)
+        {
+            var adapters = H3MontageBinding.AdapterFiles(true, accelerated);
+            pins.Add("lopata-deno-adapter", adapters.Single(file => file.Path == SongClipDeno.Worker).Sha256);
+            if (accelerated)
+                pins.Add("lopata-deno-sol-adapter", adapters.Single(file => file.Path == SongClipDeno.AcceleratedWorker).Sha256);
+        }
+        var request = JsonSerializer.SerializeToNode(new {
             generationMode = "montage", libraries = h3.Libraries, comfy = h3.Comfy, motionSource = environment.Motion.MotionSource,
             analysisLibraries = environment.AnalysisLibraries,
             anySongSource = environment.AnySongSource, anySongSourceRevision = H3MontageComponents.SourceRevision, job,
@@ -157,11 +200,24 @@ internal static class H3MontageRunner
             reference = SongClipReferences.For(attempt).FirstOrDefault() is { } first ? store.Resolve(attempt.ProjectId, first.File) : "",
             references = H3MusicRunner.ReferencePayload(attempt, store) ?? [],
             clipSeconds = montage.ClipSeconds, width = montage.Width, height = montage.Height, steps = montage.Steps, seed = settings.Seed,
-            outputWidth = settings.Width, outputHeight = settings.Height, quality = settings.Quality,
+            outputWidth = intermediate.Width, outputHeight = intermediate.Height, quality = settings.Quality,
             ffmpeg = Path.Combine(VideoRuntime.DirectoryPath, "ffmpeg.exe"), ffprobe = Path.Combine(VideoRuntime.DirectoryPath, "ffprobe.exe"),
             device = h3.Python.Device, model = names["Diffusion"], encoder = names["Encoder"], videoVae = names["VideoVae"], audioVae = names["AudioVae"],
             modelFolders = VideoH3Profile.Folders(h3, false), modelId = H3MusicRunner.ModelId, sourceRevision = H3MusicComponents.SourceRevision,
-            pins = environment.Cards.ToDictionary(card => card.ModelArtifactId, card => card.Revision), memoryMode = "auto", vramReserveGb = 2
+            pins, memoryMode = "auto", vramReserveGb = accelerated ? 4 : 2
         })!.AsObject();
+        if (deno is not null)
+        {
+            var output = SongClipDeno.Output(settings);
+            request["deno"] = JsonSerializer.SerializeToNode(new {
+                width = output.Width, height = output.Height, upscaler = h3.Upscaler,
+                kjNodes = h3.KjNodes, libraries = deno.Attention.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries),
+                vfx = deno.Vfx
+            });
+            if (accelerated)
+                request["deno"]!["torch"] = deno.AcceleratedTorch
+                    ?? throw new InvalidDataException("Missing accelerated Deno runtime.");
+        }
+        return request;
     }
 }

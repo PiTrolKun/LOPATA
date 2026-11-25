@@ -13,7 +13,7 @@ internal static class VideoH3FinalizationRecovery
         const string invalid = "VideoPrep.H3ChangedProject";
         project.Validate();
         var prior = VideoH3WorkspaceState.Ensure(project, recorded.ModelId).Runs.SingleOrDefault(r => r.Id == recorded.Run.Id);
-        if (recorded.ModelId != fresh.ModelId || recorded.ProjectId != project.Id || fresh.ProjectId != project.Id || prior is null
+        if (recorded.ModelId != fresh.ModelId || recorded.Deno != fresh.Deno || recorded.ProjectId != project.Id || fresh.ProjectId != project.Id || prior is null
             || prior.InputHash != recorded.Run.InputHash || prior.Complete || prior.Results.Count != 0
             || prior.Takes.Count == 0 || fresh.Run.Id == prior.Id || fresh.Run.Complete
             || fresh.Run.Results.Count != 0

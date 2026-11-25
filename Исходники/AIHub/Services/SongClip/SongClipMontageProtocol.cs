@@ -64,7 +64,7 @@ internal static class SongClipMontageProtocol
     {
         analysis.Validate();
         if (attempt.PlanningVersion != 1 || attempt.Model != "h3_music_context" || attempt.Settings is null
-            || attempt.Settings.Fps != analysis.Fps || attempt.Settings.Motion?.Mode != "montage")
+            || attempt.Settings.Fps != analysis.Fps || !SongClipModes.IsMontage(attempt))
             throw new InvalidDataException(Mismatch);
         SongClipReferences.ValidateNewAttempt(attempt);
         if (attempt.References is null && !string.IsNullOrEmpty(attempt.Reference))
@@ -88,14 +88,18 @@ internal static class SongClipMontageProtocol
         ValidateInput(attempt, analysis); SongClipReferenceBrief.Validate(roles, attempt);
         var source = SongClipVisualProtocol.Source(attempt);
         var direction = attempt.Settings.Prompt == new SongClipSettings().Prompt ? "" : attempt.Settings.Prompt;
-        var generation = attempt.Settings.Montage ?? new SongClipMontageSettings();
+        var deno = SongClipModes.IsDeno(attempt);
+        var generation = deno ? SongClipDeno.Generation(attempt.Settings) : attempt.Settings.Montage ?? new();
+        var output = deno ? SongClipDeno.Output(attempt.Settings) : new(attempt.Settings.Width, attempt.Settings.Height);
+        if (deno)
+            direction = (direction + " For shots showing a singing performer, keep their mouth visible and in focus. Preserve the clothing in the character reference unless the brief requests a change.").Trim();
         // Keep the whole song for meaning, but send timed cues only for this batch.
         // All other cues remain in the immutable source and are bound to their own slots by the host.
         var cues = slots.SelectMany(slot => SongClipVisualProtocol.TimingSlice(source.Timings, slot.StartSeconds, slot.EndSeconds)).Distinct().ToArray();
         return JsonSerializer.Serialize(new {
             task = "Create varied lyric-grounded montage shots for these exact beat-derived slots",
             analysis.DurationSeconds, framesPerSecond = analysis.Fps, songTitle = attempt.Name,
-            frameFormat = new { generation.Width, generation.Height, outputWidth = attempt.Settings.Width, outputHeight = attempt.Settings.Height },
+            frameFormat = new { generation.Width, generation.Height, outputWidth = output.Width, outputHeight = output.Height },
             songStyle = source.Style, lyricsLines = source.Lines, songSections = source.Sections, knownTimingCues = cues,
             timingCoverage = source.Timings.Length == 0 ? "unknown; thematic anchors only"
                 : "known markers for current slots only; other source timings are retained by the host; coverage may be partial",

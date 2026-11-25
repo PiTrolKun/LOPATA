@@ -65,8 +65,12 @@ def main():
         launched = datetime.fromisoformat(request["WorkStartedAtUtc"].replace("Z", "+00:00"))
         request["ElapsedBeforeAttempt"] += max(0.0, (started_wall - launched).total_seconds())
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from h3_native import NativeH3
-    native = NativeH3(request, emit)
+    if request.get("Deno"):
+        from h3_deno import ProgressiveH3
+        native = ProgressiveH3(request, emit)
+    else:
+        from h3_native import NativeH3
+        native = NativeH3(request, emit)
     from h3_assemble import delivered_by_item, sequence_for, planned_spans
     if request.get("Probe"):
         emit("probe", ok=True)

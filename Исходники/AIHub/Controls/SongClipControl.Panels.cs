@@ -86,6 +86,7 @@ public sealed partial class SongClipControl
         optionHost.Children.Add(BuildMotionOptions());
         optionHost.Children.Add(BuildGeekOptions());
         optionHost.Children.Add(BuildInfiniteTalkOptions());
+        optionHost.Children.Add(BuildDenoOptions());
         var title = Label("Parameters"); title.FontWeight = FontWeights.SemiBold; title.ToolTip = _l("SongClip.GlitchHint");
         title.Margin = new(3, 7, 25, 5); top.Children.Add(title);
         foreach (var (key, choice) in new[] { ("Steps", _steps), ("Interval", _interval) })

@@ -2,7 +2,9 @@ using System.IO;
 using System.Text.Json;
 using AIHub.Models;
 using AIHub.Services;
+using AIHub.Services.SongClip;
 using AIHub.Services.VideoPreparation;
+using AIHub.Controls.VideoEditor;
 
 namespace AIHub.Controls;
 
@@ -49,6 +51,7 @@ public sealed partial class VideoPreparationControl
         try
         {
             var job = VideoH3Job.Create(Session.Project, Session.ArchivePath!, _h3ModelsRoot, _h3Connections, VideoGeneratorPlan.Selected(Session.Project)?.Settings.ModelId ?? VideoH3Catalog.ModelId) with { ScheduledUtc = scheduledUtc };
+            if (!PrepareDenoComponents(job, ApplicationBackgroundOperations.ExitToken)) return;
             Session.Changed(); await Task.Run(() => Session.Checkpoint()); _generatorPage?.RefreshResults();
             await RunH3Async(job, null, ApplicationBackgroundOperations.ExitToken);
         }
@@ -56,7 +59,9 @@ public sealed partial class VideoPreparationControl
         catch (Exception error)
         {
             ComponentAuditFailures.Report(error);
-            _generatorPage?.NotifyWorkspace(error.Message.StartsWith("VideoPrep.", StringComparison.Ordinal) && !error.Message.Contains(':') ? _localize(error.Message) : T("H3Failed"));
+            _generatorPage?.NotifyWorkspace((error.Message.StartsWith("VideoPrep.", StringComparison.Ordinal)
+                || error.Message.StartsWith("SongClip.", StringComparison.Ordinal)) && !error.Message.Contains(':')
+                ? _localize(error.Message) : T("H3Failed"));
         }
     }
     private async Task<string> RunH3Async(VideoH3Job job, BackgroundOperationState? restored, CancellationToken token)
@@ -120,7 +125,20 @@ public sealed partial class VideoPreparationControl
             state = state with { Input = JsonSerializer.SerializeToElement(fresh) };
         }
         else fresh = fresh with { FinalizeOnly = request.FinalizeOnly };
+        if (!PrepareDenoComponents(fresh, token)) throw new BackgroundOperationWaitingException("Tray.NeedsInput");
         return await RunH3Async(fresh with { ScheduledUtc = request.ScheduledUtc }, state, token);
+    }
+    private bool PrepareDenoComponents(VideoH3Job job, CancellationToken token)
+    {
+        if (job.Deno is null) return true;
+        var cards = job.Deno.AdditionalCards(job.ModelsRoot, job.ModelId == VideoH3LiteCatalog.ModelId);
+        if (!SongClipAutomaticPreparation.NeedsDownload(cards)) return true;
+        if (System.Windows.Window.GetWindow(this) is not { } owner) return false;
+        using var preparation = new VideoH3Preparation(job.ModelsRoot, cards: cards) { ParallelConnections = job.Connections };
+        var names = cards.ToDictionary(card => card.ModelArtifactId, card => card.DisplayName);
+        var details = string.Join("\n", cards.Select(card => card.DisplayName + " · " + ComponentCardViewModel.FormatBytes(card.TotalBytes)));
+        var dialog = new VideoPreparationWindow(owner, _localize, "Deno RTX", preparation.PrepareAsync, token, details, names);
+        return BackgroundUserDecision.ShowDialog(dialog, this, token) == true;
     }
     internal bool ShowH3Result(BackgroundOperationState state)
     {

@@ -24,6 +24,7 @@ from song_clip_montage_media import join_video, scale_video
 
 REVISION = '0482233d865c23e888e3046c592c40cf61fd5c57'
 MODEL = 'geekatplay_music_video'
+PI_H3 = 'pi_h3_dwd'
 FPS = 24
 
 
@@ -32,18 +33,30 @@ def emit(kind, **data):
 
 
 def validate(request):
-    if request.get('geekRevision') != REVISION or request.get('modelId') != MODEL:
+    model = request.get('modelId')
+    if request.get('geekRevision') != REVISION or model not in (MODEL, PI_H3):
         raise ValueError('Invalid Geekatplay revision or model.')
     for name in ['libraries', 'analysisLibraries', 'comfy', 'geekSource', 'sdxl', 'song', 'ffmpeg', 'ffprobe', 'job']:
         path = Path(request[name])
         if not path.is_absolute(): raise ValueError('An absolute owned component/input path is required.')
         reject_links(path)
         if not path.exists(): raise FileNotFoundError(name)
-    for key, low, high in [('width', 256, 1536), ('height', 256, 1536), ('steps', 8, 50),
+    for key, low, high in [('width', 256, 1536), ('height', 256, 1536),
                             ('cardSteps', 8, 40), ('clipSeconds', 5, 10), ('seed', 0, 2**53-1),
                             ('outputWidth', 256, 3840), ('outputHeight', 256, 2160), ('quality', 1, 100)]:
         if type(request.get(key)) is not int or not low <= request[key] <= high:
             raise ValueError('Invalid Geekatplay setting: ' + key)
+    steps = request.get('steps')
+    if type(steps) is not int or (steps not in (2, 4) if model == PI_H3 else not 8 <= steps <= 50):
+        raise ValueError('Invalid Geekatplay setting: steps')
+    if model == PI_H3:
+        pi = request['piH3']
+        for key in ('extension', 'libraries'):
+            path = Path(pi[key])
+            if not path.is_absolute() or not path.is_dir(): raise ValueError('Missing pi-H3 runtime.')
+            reject_links(path)
+        if pi['adapter'] != f'pi_h3_{steps}step_dwd_adapter_int8_convrot.safetensors':
+            raise ValueError('The pi-H3 adapter must match the step count.')
     if request['width'] % 32 or request['height'] % 32 or request['outputWidth'] % 2 or request['outputHeight'] % 2:
         raise ValueError('Invalid Geekatplay canvas grid.')
     if not isinstance(request.get('pins'), dict) or not request['pins']:
@@ -64,12 +77,14 @@ def validate(request):
 def identity(request, plan=True):
     data = dict(request)
     if not plan: data.pop('visualPlan', None)
+    scripts = ['song_clip_geek.py', 'song_clip_geek_native.py', 'song_clip_geek_state.py',
+               'song_clip_motion_state.py', 'song_clip_montage_media.py', 'h3_memory.py']
+    if request['modelId'] == PI_H3:
+        scripts.append('song_clip_pi_h3.py')
     return {'request': object_hash(data), 'song': file_hash(request['song']),
             'references': [file_hash(ref['file']) for ref in request.get('references', [])],
             'source': file_hash(Path(request['geekSource']) / 'nodes.py'),
-            'adapters': {name: file_hash(Path(__file__).parent / name) for name in
-                ('song_clip_geek.py', 'song_clip_geek_native.py', 'song_clip_geek_state.py',
-                 'song_clip_motion_state.py', 'song_clip_montage_media.py', 'h3_memory.py')}}
+            'adapters': {name: file_hash(Path(__file__).parent / name) for name in scripts}}
 
 
 PRIOR_MEDIA = {
@@ -82,15 +97,20 @@ PRIOR_ADAPTERS = {
     'song_clip_geek.py': '77c44af452b7b7f60b4f8bed14703ad87735a984874d3c7f7179318fca5023f1',
     'song_clip_geek_native.py': 'efbb219a256a134256672867ce8b01591066714535cf6cc355c244f8daec2c91',
 }
+BEFORE_PI_H3 = {
+    'song_clip_geek.py': '6ec05cb1db6b0016039cb8b6da7cb6a8219edd6e7e5044352ca9393fa6a54044',
+    'song_clip_geek_native.py': '5800f4aa1cb2cacfb825f555a8d27a2df1aa5c6f2b1645cda0647f178d66d27b',
+}
 
 
 def checkpoint_identity(recorded, current):
     if recorded == current:
         return current
-    for adapters in (PRIOR_MEDIA, PRIOR_ADAPTERS):
-        prior = {**current, 'adapters': {**current['adapters'], **adapters}}
-        if recorded == prior:
-            return prior
+    if 'song_clip_pi_h3.py' not in current['adapters']:
+        for adapters in (BEFORE_PI_H3, PRIOR_MEDIA, PRIOR_ADAPTERS):
+            prior = {**current, 'adapters': {**current['adapters'], **adapters}}
+            if recorded == prior:
+                return prior
     raise ValueError('Geekatplay checkpoint inputs changed; start a new attempt.')
 
 
@@ -174,12 +194,21 @@ def card_spec(request, plan, index):
 
 
 def facts(request, plan, index=None, stage='transitions'):
-    return dict(program='LOPATA', programVersion=producing_version(request), scenario='song-to-clip/geekatplay',
+    pi = request['modelId'] == PI_H3
+    model_keys = {'song-clip-glitch-sdxl'}
+    if stage != 'cards':
+        model_keys.update(('song-clip-geek-models', 'song-clip-geek-shared-models'))
+        if pi:
+            model_keys.add('song-clip-pi-h3-adapters')
+    data = dict(program='LOPATA', programVersion=producing_version(request),
+        scenario='song-to-clip/pi-h3-dwd' if pi else 'song-to-clip/geekatplay',
         operation=Path(request['job']).name,
         createdUtc=__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
-        models={key: value for key, value in request['pins'].items() if key in
-            ({'song-clip-glitch-sdxl'} if stage == 'cards' else {'song-clip-glitch-sdxl', 'song-clip-geek-models', 'song-clip-geek-shared-models'})},
+        models={key: value for key, value in request['pins'].items() if key in model_keys},
         components=request['pins'], assistants=plan['assistants'], stage=stage, index=index)
+    if pi and stage != 'cards':
+        data.update(adapter=request['piH3']['adapter'], steps=request['steps'])
+    return data
 
 
 def save_png(tensor, path, facts):
@@ -246,13 +275,17 @@ def run(request, action):
         state = GeekState(job, binding)
         slots = analysis['slots']; count = len(slots)
         state.validate_counts(count+1, count)
+        worker = NativeGeek
+        if request['modelId'] == PI_H3:
+            from song_clip_pi_h3 import NativePiH3
+            worker = NativePiH3
         native = None
         for index in range(count+1):
             prompt, ref = card_spec(request, plan, index)
             expected = object_hash(dict(prompt=prompt, reference=file_hash(ref['file']) if ref else None, index=index))
             if state.accepted('cards', index, expected): continue
             if action == '--verify': raise ValueError('Missing accepted storyboard card.')
-            native = native or NativeGeek(request, job, emit)
+            native = native or worker(request, job, emit)
             emit('stage', stage='geek-cards', fraction=.1+.22*index/(count+1))
             image = native.card(prompt, ref, index, count+1)
             relative = f'cards/card_{index:03d}.png'; path = contained(job, relative)
@@ -269,7 +302,7 @@ def run(request, action):
             if state.accepted('clips', index, expected):
                 emit('cached', index=index+1, total=count, fraction=.33+.58*(index+1)/count); continue
             if action == '--verify': raise ValueError('Missing accepted video segment.')
-            native = native or NativeGeek(request, job, emit)
+            native = native or worker(request, job, emit)
             emit('chunk-start', index=index+1, total=count, fraction=.33+.58*index/count)
             decoded = native.segment(contained(job,first), contained(job,last), prompt, slot['frames']/FPS, index, count)
             video = f'clips/clip_{index:03d}.mp4'; handoff = f'clips/handoff_{index:03d}.png'
@@ -301,7 +334,7 @@ def run(request, action):
             '-movflags','+faststart+use_metadata_tags',str(temporary)],check=True,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
         os.replace(temporary, output)
-        atomic_json(receipt,dict(schema=1,modelId=MODEL,sourceRevision=REVISION,identity=state.identity,
+        atomic_json(receipt,dict(schema=1,modelId=request['modelId'],sourceRevision=REVISION,identity=state.identity,
             requestSha256=file_hash(contained(job,'request.json')),output=str(output),sha256=file_hash(output),
             cards=count+1,clips=count,frames=sum(slot['frames'] for slot in slots)))
         emit('complete',fraction=.98)

@@ -12,14 +12,19 @@ internal static class GeekatplayRunner
 {
     internal const string ModelId = "geekatplay_music_video";
     private const string Scenario = "song-to-clip/geekatplay";
+    internal static bool Handles(string model) => model is ModelId or PiH3Components.ModelId;
+
     internal static void ValidateSettings(SongClipAttempt attempt)
     {
         SongClipReferences.ValidateNewAttempt(attempt);
         var s = attempt.Settings; var g = s.Geek ?? new();
-        if (attempt.Model != ModelId || attempt.PlanningVersion != 1 || s.Fps != 24 || s.Width is < 256 or > 3840
+        var validSteps = attempt.Model == PiH3Components.ModelId
+            ? PiH3Components.SupportsSteps(g.PiH3Steps ?? PiH3Components.DefaultSteps)
+            : g.Steps is >= 8 and <= 50;
+        if (!Handles(attempt.Model) || attempt.PlanningVersion != 1 || s.Fps != 24 || s.Width is < 256 or > 3840
             || s.Height is < 256 or > 2160 || s.Width % 2 != 0 || s.Height % 2 != 0 || s.Quality is < 1 or > 100
             || s.Seed is < 0 or > 9_007_199_254_740_991 || g.Width is < 256 or > 1536 || g.Height is < 256 or > 1536
-            || g.Width % 32 != 0 || g.Height % 32 != 0 || g.Steps is < 8 or > 50 || g.CardSteps is < 8 or > 40
+            || g.Width % 32 != 0 || g.Height % 32 != 0 || !validSteps || g.CardSteps is < 8 or > 40
             || g.ClipSeconds is < 5 or > 10 || !double.IsFinite(g.ReferenceStrength) || g.ReferenceStrength is < 0 or > 1)
             throw new InvalidDataException("SongClip.InvalidSettings");
     }
@@ -31,7 +36,7 @@ internal static class GeekatplayRunner
         using var auditLog = ComponentAudit.CaptureLog(message => progress(0, message));
         var job = store.Resolve(attempt.ProjectId, "attempts/" + Guid.ParseExact(attempt.Id, "N").ToString("N"));
         Directory.CreateDirectory(job);
-        await GeekatplayBinding.EnsureAsync(attempt, store, job, GeekatplayComponents.Cards(attempt.ModelsRoot), token);
+        await GeekatplayBinding.EnsureAsync(attempt, store, job, GeekatplayComponents.Cards(attempt.ModelsRoot, attempt.Model), token);
         var clock = Path.Combine(job, "elapsed.json");
         var previous = File.Exists(clock) ? JsonSerializer.Deserialize<double>(await File.ReadAllTextAsync(clock, token)) : 0;
         if (!double.IsFinite(previous) || previous < 0) throw new InvalidDataException("Invalid generation clock.");
@@ -49,9 +54,13 @@ internal static class GeekatplayRunner
         progress(0, "SongClip.Preparing");
         await ApplicationBackgroundOperations.RetireModelsAsync();
         await VideoRuntime.PrepareAsync(token);
-        var environment = await GeekatplayComponents.PrepareAsync(attempt.ModelsRoot, attempt.Connections, token, message => progress(0, message));
-        await RuntimeFileAudit.VerifyAsync("SongClip.Geek.Adapter", Path.Combine(AppContext.BaseDirectory, "Tools"),
-            ApplicationBuildVersion.Value, GeekatplayBinding.AdapterFiles(), token);
+        var environment = await GeekatplayComponents.PrepareAsync(attempt.ModelsRoot, attempt.Connections, token,
+            message => progress(0, message), attempt.Model);
+        var accelerated = environment.PiH3 is not null;
+        var scenario = accelerated ? "song-to-clip/pi-h3-dwd" : Scenario;
+        await RuntimeFileAudit.VerifyAsync(accelerated ? "SongClip.PiH3.Adapter" : "SongClip.Geek.Adapter",
+            Path.Combine(AppContext.BaseDirectory, "Tools"), ApplicationBuildVersion.Value,
+            GeekatplayBinding.AdapterFiles(accelerated), token);
         var request = Request(attempt, store, job, environment);
         var analysisRequest = Path.Combine(job, "geek-analysis-request.json");
         var input = Path.Combine(job, "request.json");
@@ -78,7 +87,7 @@ internal static class GeekatplayRunner
         await Worker(File.Exists(Path.Combine(job, "worker-result.json")) ? "--verify" : "--run", input);
         using var receipt = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(job, "worker-result.json"), token));
         var value = receipt.RootElement;
-        if (value.GetProperty("schema").GetInt32() != 1 || value.GetProperty("modelId").GetString() != ModelId
+        if (value.GetProperty("schema").GetInt32() != 1 || value.GetProperty("modelId").GetString() != attempt.Model
             || value.GetProperty("sourceRevision").GetString() != GeekatplayComponents.Revision
             || value.GetProperty("requestSha256").GetString() != await H3MontageBinding.HashAsync(input, token)
             || value.GetProperty("cards").GetInt32() != slots.Length + 1 || value.GetProperty("clips").GetInt32() != slots.Length
@@ -87,8 +96,16 @@ internal static class GeekatplayRunner
         var raw = RuntimeFileAudit.Contained(job, Path.GetRelativePath(job, value.GetProperty("output").GetString()!));
         if (value.GetProperty("sha256").GetString() != await H3MontageBinding.HashAsync(raw, token))
             throw new InvalidDataException("Geekatplay result checksum mismatch.");
-        var facts = new OutputProvenance { Scenario = Scenario, CreatedUtc = DateTimeOffset.UtcNow, GenerationSeconds = elapsed(),
-            ModelHistory = "recorded-inference; storyboard cards and FL2VA", Models = [..Facts(environment), ..plan.Assistants] };
+        var models = Facts(environment).ToList();
+        if (accelerated)
+        {
+            var adapter = environment.Cards.Single(card => card.ModelArtifactId == PiH3Components.AdaptersId);
+            var steps = request["steps"]!.GetValue<int>();
+            var file = PiH3Components.AdapterFile(steps);
+            models.Add(new(adapter.ModelArtifactId + "/" + file, $"pi-H3 DWD · {steps} steps", adapter.Revision, "video diffusion and direct frame decoding"));
+        }
+        var facts = new OutputProvenance { Scenario = scenario, CreatedUtc = DateTimeOffset.UtcNow, GenerationSeconds = elapsed(),
+            ModelHistory = "recorded-inference; storyboard cards and FL2VA", Models = [..models, ..plan.Assistants] };
         var final = Path.Combine(job, "clip.mp4");
         if (!File.Exists(final)) {
             var staging = Path.Combine(job, "clip.installing.mp4"); progress(.99, "SongClip.Finalizing");
@@ -106,8 +123,8 @@ internal static class GeekatplayRunner
         async Task<SongClipResult> Check(string path) {
             using var output = await VideoRuntime.ProbeAsync(path, token);
             using var source = await VideoRuntime.ProbeAsync(store.Resolve(attempt.ProjectId, attempt.Song), token);
-            var seconds = H3MusicResultValidation.Validate(output.RootElement, source.RootElement, attempt.Settings, attempt.Id, facts.Models, Scenario);
-            return new(attempt.Id, "attempts/" + attempt.Id + "/clip.mp4", ModelId, seconds, DateTimeOffset.UtcNow);
+            var seconds = H3MusicResultValidation.Validate(output.RootElement, source.RootElement, attempt.Settings, attempt.Id, facts.Models, scenario);
+            return new(attempt.Id, "attempts/" + attempt.Id + "/clip.mp4", attempt.Model, seconds, DateTimeOffset.UtcNow);
         }
     }
     internal static SongClipVisualScene[] Slots(SongClipAttempt attempt, JsonElement analysis)
@@ -140,18 +157,27 @@ internal static class GeekatplayRunner
         var h3 = environment.H3; var g = attempt.Settings.Geek ?? new();
         var shared = environment.Cards.Single(c => c.ModelArtifactId == "song-clip-geek-shared-models");
         var diffusion = environment.Cards.Single(c => c.ModelArtifactId == GeekatplayComponents.ModelId);
-        return JsonSerializer.SerializeToNode(new { job, programVersion = ApplicationBuildVersion.Value, libraries = h3.Libraries, comfy = h3.Comfy,
+        var steps = environment.PiH3 is null ? g.Steps : g.PiH3Steps ?? PiH3Components.DefaultSteps;
+        var request = JsonSerializer.SerializeToNode(new { job, programVersion = ApplicationBuildVersion.Value, libraries = h3.Libraries, comfy = h3.Comfy,
             analysisLibraries = environment.AnalysisLibraries, geekSource = environment.Source, geekRevision = GeekatplayComponents.Revision,
             sdxl = environment.Sdxl, song = store.Resolve(attempt.ProjectId, attempt.Song), references = H3MusicRunner.ReferencePayload(attempt, store) ?? [],
-            width = g.Width, height = g.Height, steps = g.Steps, cardSteps = g.CardSteps, clipSeconds = g.ClipSeconds,
+            width = g.Width, height = g.Height, steps, cardSteps = g.CardSteps, clipSeconds = g.ClipSeconds,
             referenceStrength = g.ReferenceStrength, seed = attempt.Settings.Seed, outputWidth = attempt.Settings.Width,
             outputHeight = attempt.Settings.Height, quality = attempt.Settings.Quality, device = h3.Python.Device,
             ffmpeg = Path.Combine(VideoRuntime.DirectoryPath, "ffmpeg.exe"), ffprobe = Path.Combine(VideoRuntime.DirectoryPath, "ffprobe.exe"),
             model = "minimax_h3_fl2va_pruned_int8_convrot.safetensors", encoder = "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
-            videoVae = "minimax_h3_video_vae_int8_convrot.safetensors", modelId = ModelId,
+            videoVae = "minimax_h3_video_vae_int8_convrot.safetensors", modelId = attempt.Model,
             modelFolders = new Dictionary<string, string> { ["diffusion_models"] = Path.Combine(diffusion.InstallDirectory, "diffusion_models"),
                 ["text_encoders"] = Path.Combine(shared.InstallDirectory, "text_encoders"), ["vae"] = Path.Combine(shared.InstallDirectory, "vae") },
             pins = environment.Cards.ToDictionary(c => c.ModelArtifactId, c => c.Revision)
         })!.AsObject();
+        if (environment.PiH3 is { } pi)
+        {
+            var adapters = environment.Cards.Single(c => c.ModelArtifactId == PiH3Components.AdaptersId);
+            request["modelFolders"]!["loras"] = Path.Combine(adapters.InstallDirectory, "loras");
+            request["piH3"] = new JsonObject { ["extension"] = pi.Extension, ["libraries"] = pi.Libraries,
+                ["adapter"] = PiH3Components.AdapterFile(steps) };
+        }
+        return request;
     }
 }

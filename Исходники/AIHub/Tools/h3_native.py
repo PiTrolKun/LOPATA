@@ -72,6 +72,8 @@ class NativeH3:
         from h3_memory import initialize_host_memory
         initialize_host_memory(s)
         import torch
+        if request.get("Deno") and device.startswith("cuda:"):
+            torch.cuda.set_device(torch.device(device))
         import folder_paths
         if s["MemoryMode"] == "gpu":
             if device == "cpu":
@@ -207,6 +209,54 @@ class NativeH3:
                 refs["ref_image_" + str(i)] = self.torch.from_numpy(np.array(image).astype("float32") / 255)[None]
         return refs
 
+    def apply_pins(self, item, parent, conditioning, latent):
+        s = self.settings
+        pins = []
+        if parent is not None:
+            self.emit("stage", text="connecting-plans")
+            if "_ParentEndFrame" in item:
+                # Adjacent plans often end at arbitrary 3/4/5 second cuts,
+                # outside the latent slice grid. The native pixel pin route
+                # re-encodes ONLY the window ending at that presented cut.
+                # It records the actual parent/hash in the saved sidecar.
+                window, mode = continuity_window(s["ContextFrames"], item["_ParentEndFrame"], s["PinMode"])
+                if mode != s["PinMode"]:
+                    self.emit("stage", text="short-context-guide")
+                specs = [dict(source_kind="clip_pixels", source_path=parent,
+                    take_from="at_frame", take_from_frame=item["_ParentEndFrame"],
+                    requested_window=window, place="before", place_at_frame=0,
+                    audio_window=min(s["AudioContextFrames"], window), mode=mode,
+                    mask_ramp_frames=s["MaskRampFrames"], mask_ramp_edge=0.0,
+                    mask_hold=s["MaskHold"], handover_edge=False)]
+                self.emit("continuity", parent=parent, end_frame=item["_ParentEndFrame"], grade="pixels", mode=mode, window=window)
+            else:
+                mctx = self.classes["H3LoadMCtx"]().load(parent)[0]
+                specs = self.classes["H3MCtxPinSpec"]().build(mctx, str(s["ContextFrames"]), "tail", 0, "before", 0,
+                    s["AudioContextFrames"], s["PinMode"], s["MaskRampFrames"], 0.0, s["MaskHold"])[0]
+                self.emit("continuity", parent=parent, grade="latents")
+            conditioning, latent, pins = self.classes["H3MCtxApplyPins"]().apply(conditioning=conditioning,
+                latent=latent, snap_window_down_to_available=True, freeze_audio=False, pin_specs=specs,
+                video_vae=self.video_vae, audio_vae=self.audio_vae)
+            if "_ParentEndFrame" in item:
+                # Pinned upstream pixel route records a delivered-file
+                # coordinate, whereas its saver/assembly lineage contract
+                # uses RAW parent coordinates. Translate the recipe after
+                # pixels have been sliced, not the requested decode cut.
+                from lopata_h3_timeline import mctx
+                from lopata_h3_timeline.nodes_load import resolve_clip_path
+                header = mctx.read_header(mctx.sidecar_path(resolve_clip_path(parent)))
+                offset = int(header.get("pinned_head_frames", 0) or 0)
+                raw_pixel_lineage(pins, offset)
+        return conditioning, latent, pins
+
+    def sample(self, item, parent, conditioning, latent):
+        s = self.settings
+        conditioning, latent, pins = self.apply_pins(item, parent, conditioning, latent)
+        self.emit("stage", text="sampling")
+        samples = self.nodes.KSampler().sample(self.model, item["Seed"], s["Steps"], 1.0,
+            s["Sampler"], s["Scheduler"], conditioning, conditioning, latent, denoise=1.0)[0]
+        return samples, conditioning, pins
+
     def generate(self, item, parent=None):
         if self.model is None:
             self.load(conditioning_only=True)
@@ -235,45 +285,7 @@ class NativeH3:
             conditioning, latent = copy.deepcopy(tuple(self._conditioned))
             if self.model is None:
                 self.load_diffusion()
-            pins = []
-            if parent is not None:
-                self.emit("stage", text="connecting-plans")
-                if "_ParentEndFrame" in item:
-                    # Adjacent plans often end at arbitrary 3/4/5 second cuts,
-                    # outside the latent slice grid. The native pixel pin route
-                    # re-encodes ONLY the window ending at that presented cut.
-                    # It records the actual parent/hash in the saved sidecar.
-                    window, mode = continuity_window(s["ContextFrames"], item["_ParentEndFrame"], s["PinMode"])
-                    if mode != s["PinMode"]:
-                        self.emit("stage", text="short-context-guide")
-                    specs = [dict(source_kind="clip_pixels", source_path=parent,
-                        take_from="at_frame", take_from_frame=item["_ParentEndFrame"],
-                        requested_window=window, place="before", place_at_frame=0,
-                        audio_window=min(s["AudioContextFrames"], window), mode=mode,
-                        mask_ramp_frames=s["MaskRampFrames"], mask_ramp_edge=0.0,
-                        mask_hold=s["MaskHold"], handover_edge=False)]
-                    self.emit("continuity", parent=parent, end_frame=item["_ParentEndFrame"], grade="pixels", mode=mode, window=window)
-                else:
-                    mctx = self.classes["H3LoadMCtx"]().load(parent)[0]
-                    specs = self.classes["H3MCtxPinSpec"]().build(mctx, str(s["ContextFrames"]), "tail", 0, "before", 0,
-                        s["AudioContextFrames"], s["PinMode"], s["MaskRampFrames"], 0.0, s["MaskHold"])[0]
-                    self.emit("continuity", parent=parent, grade="latents")
-                conditioning, latent, pins = self.classes["H3MCtxApplyPins"]().apply(conditioning=conditioning,
-                    latent=latent, snap_window_down_to_available=True, freeze_audio=False, pin_specs=specs,
-                    video_vae=self.video_vae, audio_vae=self.audio_vae)
-                if "_ParentEndFrame" in item:
-                    # Pinned upstream pixel route records a delivered-file
-                    # coordinate, whereas its saver/assembly lineage contract
-                    # uses RAW parent coordinates. Translate the recipe after
-                    # pixels have been sliced, not the requested decode cut.
-                    from lopata_h3_timeline import mctx
-                    from lopata_h3_timeline.nodes_load import resolve_clip_path
-                    header = mctx.read_header(mctx.sidecar_path(resolve_clip_path(parent)))
-                    offset = int(header.get("pinned_head_frames", 0) or 0)
-                    raw_pixel_lineage(pins, offset)
-            self.emit("stage", text="sampling")
-            samples = self.nodes.KSampler().sample(self.model, item["Seed"], s["Steps"], 1.0,
-                s["Sampler"], s["Scheduler"], conditioning, conditioning, latent, denoise=1.0)[0]
+            samples, conditioning, pins = self.sample(item, parent, conditioning, latent)
             if self.lite:
                 self.resource_snapshot("sampled")
                 import comfy.model_management as memory

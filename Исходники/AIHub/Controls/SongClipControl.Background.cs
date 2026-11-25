@@ -43,6 +43,7 @@ public sealed partial class SongClipControl
         var own = OwnOperationState;
         var resume = own is not null && CanResume(own);
         _model.IsEnabled = !_busy && own is null;
+        _denoAccelerate.IsEnabled = !_busy && own is null;
         // A parked operation resumes its immutable input, rather than the draft.
         // Keep its visible H3 contract fixed until it is finished or stopped.
         foreach (var choice in new[] { _h3Mode, _motionSize, _motionSteps, _montageClipSeconds, _geekSize, _geekSteps, _geekCardSteps, _geekSeconds, _geekStrength, _infiniteSize, _infiniteSteps, _infiniteAudioCfg, _infiniteVramReserve })

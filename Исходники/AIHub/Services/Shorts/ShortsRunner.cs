@@ -17,8 +17,9 @@ internal static class ShortsRunner
         ApplicationBackgroundOperations.RunAsync(ShortsJob.Kind, title, job.Id, job.Id,
             ct => RunAsync(ShortsJob.Load(job.Id), report, ct), token, restored);
 
-    private static async Task<string> RunAsync(ShortsJob job, Action<string> report, CancellationToken token)
+    internal static async Task<string> RunAsync(ShortsJob job, Action<string> report, CancellationToken token)
     {
+        using var audit = ComponentAudit.CaptureOperation();
         using var auditLog = ComponentAudit.CaptureLog(report);
         var watch = Stopwatch.StartNew();
         await VideoRuntime.PrepareAsync(token);
@@ -78,6 +79,27 @@ internal static class ShortsRunner
             crop = Crop(video.GetProperty("width").GetInt32(), video.GetProperty("height").GetInt32());
             original = Provenance(probe.RootElement);
         }
+        if (ShortsGenerationProfile.FromJob(job).Deno)
+        {
+            if (job.Description?.Deno is not null)
+            {
+                report("SongClip.DenoFinishing");
+                var finished = await ShortsDenoFinish.RunAsync(job, source, crop, report, token);
+                source = finished.File;
+                original = original with { Models = [.. original.Models, finished.Model] };
+            }
+            using var probe = await VideoRuntime.ProbeAsync(source, token);
+            var video = Stream(probe.RootElement, "video");
+            if (video.GetProperty("width").GetInt32() != ShortsJob.Width ||
+                video.GetProperty("height").GetInt32() != ShortsJob.Height)
+                throw new InvalidDataException("Shorts.InvalidResult");
+            var canCopy = !job.FadeEnding && video.GetProperty("nb_frames").GetString() == job.OutputFrames.ToString(CultureInfo.InvariantCulture)
+                && double.TryParse(probe.RootElement.GetProperty("format").GetProperty("duration").GetString(),
+                    NumberStyles.Float, CultureInfo.InvariantCulture, out var duration) && Math.Abs(duration - job.OutputSeconds) <= .001;
+            report("Shorts.Exporting");
+            await ExportAsync(job, source, "", original, null, token, direct: canCopy);
+            return;
+        }
         report("Shorts.Upscaling");
         var dlss = await TryDlssAsync(job, source, crop, report, token);
         OwnedProcessRegistry.Log("shorts_upscale_ready", "Shorts", detail: $"{job.Id} {stage.Elapsed.TotalSeconds:F1}s");
@@ -93,7 +115,7 @@ internal static class ShortsRunner
     }
 
     internal static async Task ExportAsync(ShortsJob job, string source, string crop, OutputProvenance original,
-        (string File, OutputModelUse Model)? dlss, CancellationToken token)
+        (string File, OutputModelUse Model)? dlss, CancellationToken token, bool direct = false)
     {
         var file = job.Output;
         Lopata.Updates.SafeUpdatePath.RejectLinks(file);
@@ -109,7 +131,7 @@ internal static class ShortsRunner
         List<string> args = ["-nostdin", "-v", "error", "-y"];
         args.AddRange(pipe ? ShortsFadePipe.InputArguments : ["-i", dlss?.File ?? source]);
         if (dlss is not null) args.AddRange(["-i", source]);
-        var normalize = (dlss is null ? crop + "," : "") +
+        var normalize = (dlss is null && crop.Length > 0 ? crop + "," : "") +
             $"scale={ShortsJob.Width}:{ShortsJob.Height}:flags=lanczos,setsar=1,fps={ShortsJob.Fps},format=yuv420p";
         var videoFilter = pipe ? "setsar=1" : normalize;
         if (job.FadeEnding)
@@ -120,9 +142,10 @@ internal static class ShortsRunner
             args.AddRange(["-af", ShortsJob.AudioFade(job.OutputSeconds)]);
         }
         args.AddRange(["-map", "0:v:0", "-map", dlss is null ? "0:a:0?" : "1:a:0?",
-            "-map_metadata", "-1", "-vf", videoFilter,
-            "-t", job.OutputSeconds.ToString("0.#########", CultureInfo.InvariantCulture), "-c:v", "libopenh264",
-            "-b:v", "12M", "-c:a", "aac", "-b:a", "192k",
+            "-map_metadata", "-1", "-t", job.OutputSeconds.ToString("0.#########", CultureInfo.InvariantCulture)]);
+        args.AddRange(direct ? ["-c", "copy"] : ["-vf", videoFilter, "-c:v", "libopenh264",
+            "-b:v", "12M", "-c:a", "aac", "-b:a", "192k"]);
+        args.AddRange([
             "-metadata", "encoded_by=LOPATA " + facts.ProgramVersion, "-metadata", "LOPATA_VIDEO=" + facts.Json(),
             "-metadata", "LOPATA_OPERATION=" + job.Id, "-movflags", "+faststart+use_metadata_tags", staging]);
         try
@@ -131,7 +154,7 @@ internal static class ShortsRunner
             {
                 await ShortsFadePipe.RenderAsync(dlss!.Value.File, normalize, job.OutputFrames, args, token);
             }
-            else if (job.FadeEnding)
+            else if (job.FadeEnding || crop.Length == 0)
             {
                 await VideoRuntime.PrepareAsync(token);
                 await VideoRuntime.RunAsync(false, args, token);

@@ -10,6 +10,9 @@ internal sealed partial class VideoH3WorkspaceControl
     private TextBlock _rawLabel = new();
     private System.Windows.Controls.ComboBox? _resolution;
     private System.Windows.Controls.Button _exportVideo = new(), _sendEditor = new();
+    internal Func<int, bool>? ConfirmDenoSwitch { get; set; }
+    private bool UsesDeno => S.DenoOutput != 0;
+    private string ResolutionChoice => UsesDeno ? "deno-" + S.DenoOutput : S.Width + " × " + S.Height;
     private void BuildSettings()
     {
         var building = _building; _building = true; _settings.Children.Clear();
@@ -21,10 +24,19 @@ internal sealed partial class VideoH3WorkspaceControl
         var draft = new VideoH3Settings { Aspect = S.Aspect }; VideoH3WorkspaceState.Resolution(draft, .4);
         var native = new VideoH3Settings { Aspect = S.Aspect }; VideoH3WorkspaceState.Resolution(native, .98);
         var resolutions = new[] { (draft.Width, draft.Height), (native.Width, native.Height), (S.Width, S.Height) }.Distinct().ToArray();
-        _resolution = Pick(basic, "H3Resolution", S.Width + " × " + S.Height, resolutions.Select(r => r.Item1 + " × " + r.Item2), v =>
+        _resolution = Pick(basic, "H3Resolution", ResolutionChoice,
+            resolutions.Select(r => r.Item1 + " × " + r.Item2).Concat(["deno-1080", "deno-2160"]), v =>
         {
-            var size = v.Split('×'); S.Width = int.Parse(size[0]); S.Height = int.Parse(size[1]);
+            if (v.StartsWith("deno-", StringComparison.Ordinal))
+                S.OutputHeight = S.DenoOutput = int.Parse(v.AsSpan(5), CultureInfo.InvariantCulture);
+            else
+            {
+                if (UsesDeno) S.OutputHeight = 0;
+                S.DenoOutput = 0;
+                var size = v.Split('×'); S.Width = int.Parse(size[0]); S.Height = int.Parse(size[1]);
+            }
             _drafts.Remove("H3Width"); _drafts.Remove("H3Height"); BuildSettings();
+            BuildFiles();
         }, true);
         for (var i = 0; i < resolutions.Length; i++)
         {
@@ -32,9 +44,14 @@ internal sealed partial class VideoH3WorkspaceControl
             var caption = id + (r == (draft.Width, draft.Height) ? " · " + T("H3DraftResolution") : r == (native.Width, native.Height) ? " · " + T("H3NativeResolution") : "");
             _resolution.Items[i] = new Choice(id, caption);
         }
-        _resolution.SelectedItem = _resolution.Items.OfType<Choice>().Single(c => c.Id == S.Width + " × " + S.Height);
+        _resolution.Items[resolutions.Length] = new Choice("deno-1080", "Deno RTX · 1080p");
+        _resolution.Items[resolutions.Length + 1] = new Choice("deno-2160", "Deno RTX · 4K");
+        _resolution.SelectedItem = _resolution.Items.OfType<Choice>().Single(c => c.Id == ResolutionChoice);
         Hint(basic, "H3FpsHint");
-        Preset(basic, "H3Steps", S.Steps, [8, 12, 16, 20, 24, 32, 40, 50], v => S.Steps = (int)v);
+        if (UsesDeno)
+            Preset(basic, "H3Steps", S.DenoSteps == 0 ? 30 : S.DenoSteps, [8, 12, 16, 20, 24, 30, 32, 40, 50], v => S.DenoSteps = (int)v);
+        else
+            Preset(basic, "H3Steps", S.Steps, [8, 12, 16, 20, 24, 32, 40, 50], v => S.Steps = (int)v);
         Number(basic, "H3Seed", S.Seed, -1, 9007199254740991, v => S.Seed = (long)v, true); Hint(basic, "H3SeedHint");
         Pick(basic, "H3Audio", S.AudioMode, ["native", "mute"], v => S.AudioMode = v);
         Pick(basic, "H3ReferenceSize", S.ReferenceSize, ["match", "max"], v => S.ReferenceSize = v); Hint(basic, "H3ReferenceSizeHint");
@@ -57,8 +74,11 @@ internal sealed partial class VideoH3WorkspaceControl
         Pick(engine, "H3Scheduler", S.Scheduler, ["simple", "beta"], v => S.Scheduler = v, true);
         Preset(engine, "H3VideoShift", S.VideoShift, [1, 3, 6, 8, 10, 12, 16, 20, 30, 40], v => S.VideoShift = (int)v);
         Preset(engine, "H3AudioShift", S.AudioShift, [1, 2, 3, 6, 8, 12, 20, 40], v => S.AudioShift = (int)v);
-        Pick(engine, "H3Attention", S.Attention, Lite ? ["pytorch"] : ["pytorch", "sage"], v => S.Attention = v, true);
-        if (!Lite)
+        if (UsesDeno)
+            Check(engine, "H3DenoAccelerate", S.DenoAccelerate, v => S.DenoAccelerate = v, hint: _l("SongClip.DenoAccelerateHint"));
+        else
+            Pick(engine, "H3Attention", S.Attention, Lite ? ["pytorch"] : ["pytorch", "sage"], v => S.Attention = v, true);
+        if (!Lite && !UsesDeno)
         {
         Check(engine, "H3Spectrum", S.Spectrum, v => S.Spectrum = v);
         Check(engine, "H3KitchenUnavailable", false, _ => { }, false);
@@ -73,7 +93,7 @@ internal sealed partial class VideoH3WorkspaceControl
         Preset(memory, "H3Overlap", S.OverlapSeconds, [0, .25, .5, 1, 1.3, 2, 3, 5], v => S.OverlapSeconds = v);
         }
         Preset(memory, "H3DecodeWindow", S.DecodeSeconds, [1, 2, 3, 5, 8, 10, 15], v => S.DecodeSeconds = v); Hint(memory, Lite ? "H3LiteMemoryHint" : "H3MemoryHint");
-        if (!Lite)
+        if (!Lite && !UsesDeno)
         {
         var upscale = Group(_settings, "H3UpscaleGroup");
         Check(upscale, "H3Upscale", S.Upscale, v => S.Upscale = v);
@@ -98,7 +118,8 @@ internal sealed partial class VideoH3WorkspaceControl
         _files.Children.Add(Label(_project.Title)); Hint(_files, "H3ProjectFormat");
         TextField(_files, "H3ExportName", S.ExportName, v => S.ExportName = v);
         QualityChoice(_files);
-        Preset(_files, "H3OutputHeight", S.OutputHeight, [0, 720, 1080, 2160], v => S.OutputHeight = (int)v, "H3AsVideo"); Hint(_files, "H3ScaleHint");
+        Preset(_files, "H3OutputHeight", S.OutputHeight, [0, 720, 1080, 2160], v => SetOutputHeight((int)v), "H3AsVideo");
+        Hint(_files, UsesDeno ? "H3DenoSizeHint" : "H3ScaleHint");
         Hint(_files, "H3FutureFile");
         _files.Children.Add(ActionButton("Save", "Save", () => Request(SaveRequested)));
         _files.Children.Add(ActionButton("H3SaveAs", "SaveAs", () => Request(SaveAsRequested)));
@@ -109,6 +130,24 @@ internal sealed partial class VideoH3WorkspaceControl
         _rawLabel = Label("");
         _files.Children.Add(_rawLabel); RefreshRequestedSummary();
         _building = building;
+    }
+    private void SetOutputHeight(int height)
+    {
+        S.OutputHeight = height;
+        var previous = S.DenoOutput;
+        if (height == 720) S.DenoOutput = 0;
+        else if (height is 1080 or 2160 && (UsesDeno || AskDenoSwitch(height)))
+            S.DenoOutput = height;
+        if (previous != S.DenoOutput) { BuildSettings(); BuildFiles(); }
+    }
+
+    private bool AskDenoSwitch(int height)
+    {
+        if (ConfirmDenoSwitch is { } confirm) return confirm(height);
+        if (Window.GetWindow(this) is not { } owner) return false;
+        var size = height == 2160 ? "4K" : "1080p";
+        return System.Windows.MessageBox.Show(owner, string.Format(CultureInfo.CurrentCulture, T("H3DenoSwitch"), size),
+            "Deno RTX", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes;
     }
     private void QualityChoice(StackPanel panel)
     {
@@ -127,7 +166,7 @@ internal sealed partial class VideoH3WorkspaceControl
         _resultMode.Text = T(S.RunMode == "review" ? "H3EmptyFragments" : "H3EmptyWholeVideo");
         if (_resolution is not null)
         {
-            var value = S.Width + " × " + S.Height;
+            var value = ResolutionChoice;
             var building = _building; _building = true;
             if (!_resolution.Items.OfType<Choice>().Any(c => c.Id == value)) _resolution.Items.Add(new Choice(value, value));
             _resolution.SelectedItem = _resolution.Items.OfType<Choice>().Single(c => c.Id == value); _building = building;

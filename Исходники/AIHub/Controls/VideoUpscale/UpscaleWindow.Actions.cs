@@ -33,6 +33,9 @@ internal sealed partial class UpscaleWindow
             var fresh = new UpscaleProject { Name = Path.GetFileNameWithoutExtension(dialog.FileName), Source = Path.GetFullPath(dialog.FileName), Media = media,
                 SourceLength = new FileInfo(dialog.FileName).Length, SourceSha256 = await UpscaleMediaTools.Hash(dialog.FileName, _lifetime.Token), Mode = _project.Mode,
                 Steps = UpscaleStore.Clone(_project.Steps), PreviewLength = Math.Min(5, media.Duration) };
+            if (fresh.Mode == UpscaleMode.Deno && fresh.Steps is [var deno] && deno.Engine == UpscaleEngine.Deno
+                && (deno.Width, deno.Height) is (3840, 2160) or (2160, 3840))
+                (deno.Width, deno.Height) = media.Height > media.Width ? (2160, 3840) : (3840, 2160);
             if (_project.ExternalAgentProject && _project.Source.Length == 0 && File.Exists(UpscaleStore.ProjectPath(_project.Id)))
             {
                 fresh.Id = _project.Id;

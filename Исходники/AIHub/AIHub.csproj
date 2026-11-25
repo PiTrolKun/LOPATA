@@ -121,7 +121,9 @@
     <EmbeddedResource Include="Tools\song_clip_geek.py" LogicalName="AIHub.SongClip.GeekWorker" />
     <EmbeddedResource Include="Tools\song_clip_geek_native.py" LogicalName="AIHub.SongClip.GeekNative" />
     <EmbeddedResource Include="Tools\song_clip_geek_state.py" LogicalName="AIHub.SongClip.GeekState" />
-    <Content Include="Tools\song_clip_geek.py;Tools\song_clip_geek_native.py;Tools\song_clip_geek_state.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Tools\song-clip-pi-h3-components.json.gz" LogicalName="AIHub.SongClip.PiH3Components" />
+    <EmbeddedResource Include="Tools\song_clip_pi_h3.py" LogicalName="AIHub.SongClip.PiH3Worker" />
+    <Content Include="Tools\song_clip_geek.py;Tools\song_clip_geek_native.py;Tools\song_clip_geek_state.py;Tools\song_clip_pi_h3.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\song-clip-motion-components.json" LogicalName="AIHub.SongClip.MotionComponents" />
     <EmbeddedResource Include="Tools\song-clip-motion-source-tree.json" LogicalName="AIHub.SongClip.MotionTree" />
     <EmbeddedResource Include="Tools\song_clip_motion.py" LogicalName="AIHub.SongClip.MotionWorker" />
@@ -131,6 +133,12 @@
     <EmbeddedResource Include="Tools\song_clip_montage.py" LogicalName="AIHub.SongClip.MontageWorker" />
     <EmbeddedResource Include="Tools\song_clip_montage_state.py" LogicalName="AIHub.SongClip.MontageState" />
     <EmbeddedResource Include="Tools\song_clip_montage_media.py" LogicalName="AIHub.SongClip.MontageMedia" />
+    <EmbeddedResource Include="Tools\song_clip_deno.py" LogicalName="AIHub.SongClip.DenoWorker" />
+    <EmbeddedResource Include="Tools\song_clip_deno_finish.py" LogicalName="AIHub.SongClip.DenoFinishWorker" />
+    <EmbeddedResource Include="Tools\song_clip_deno_sol.py" LogicalName="AIHub.SongClip.DenoSolWorker" />
+    <EmbeddedResource Include="Tools\song-clip-deno-trees.json.gz" LogicalName="AIHub.SongClip.DenoTrees" />
+    <EmbeddedResource Include="Tools\song-clip-deno-sol-trees.json.gz" LogicalName="AIHub.SongClip.DenoSolTrees" />
+    <Content Include="Tools\song_clip_deno.py;Tools\song_clip_deno_finish.py;Tools\song_clip_deno_sol.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\song_clip_montage.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\song_clip_montage_state.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Tools\song_clip_montage_media.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
@@ -143,6 +151,8 @@
     <EmbeddedResource Include="Tools\vace_native.py" LogicalName="AIHub.VaceNative" />
     <EmbeddedResource Include="Tools\vace_media.py" LogicalName="AIHub.VaceMedia" />
     <EmbeddedResource Include="Tools\h3_native.py" LogicalName="AIHub.H3Native" />
+    <EmbeddedResource Include="Tools\h3_deno.py" LogicalName="AIHub.H3Deno" />
+    <Content Include="Tools\h3_deno.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Tools\h3_memory.py" LogicalName="AIHub.H3Memory" />
     <EmbeddedResource Include="Tools\h3_assemble.py" LogicalName="AIHub.H3Assemble" />
     <EmbeddedResource Include="Tools\h3_refinement_cache.py" LogicalName="AIHub.H3RefinementCache" />

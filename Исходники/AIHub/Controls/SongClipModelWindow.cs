@@ -25,7 +25,7 @@ internal sealed partial class SongClipModelWindow : Window
     private bool _removalBusy;
     internal SongClipPickerRequest? Request { get; private set; }
     internal SongClipModelWindow(Window owner, Func<string,string> localize, string root, string model, string? mode,
-        Func<CancellationToken,Task<SongClipPickerInventory>>? inventoryLoader=null)
+        Func<CancellationToken,Task<SongClipPickerInventory>>? inventoryLoader=null, bool denoAccelerated=false)
     {
         Owner=owner; _l=localize; _root=root;
         var current=SongClipVariantCatalog.Current(model,mode);
@@ -47,7 +47,7 @@ internal sealed partial class SongClipModelWindow : Window
         var hint=new TextBlock {Text=T("PickerHint"),TextWrapping=TextWrapping.Wrap,Margin=new(5,0,5,10)};
         DockPanel.SetDock(hint,Dock.Top);panel.Children.Add(hint);
         panel.Children.Add(new ScrollViewer {Content=_groups,VerticalScrollBarVisibility=ScrollBarVisibility.Auto});
-        InitializeInventory(inventoryLoader);Render();
+        InitializeInventory(inventoryLoader,denoAccelerated);Render();
     }
     private string T(string key)=>_l("SongClip."+key);
     private static string Size(long bytes)=>bytes>=1_000_000_000?$"{bytes/1e9:F2} GB":$"{bytes/1e6:F2} MB";

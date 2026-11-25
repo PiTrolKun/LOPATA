@@ -12,9 +12,9 @@ internal sealed partial class SongClipModelWindow
     private Func<CancellationToken,Task<SongClipPickerInventory>> _inventoryLoader=null!;
     private readonly ProgressBar _inventoryProgress=new(){IsIndeterminate=true,Height=4,Margin=new(4,2,4,6)};
     internal Task InventoryReady {get;private set;}=Task.CompletedTask;
-    private void InitializeInventory(Func<CancellationToken,Task<SongClipPickerInventory>>? loader)
+    private void InitializeInventory(Func<CancellationToken,Task<SongClipPickerInventory>>? loader,bool denoAccelerated)
     {
-        _inventoryLoader=loader??(token=>Task.Run(()=>SongClipPickerInventory.Scan(_root,token),token));
+        _inventoryLoader=loader??(token=>Task.Run(()=>SongClipPickerInventory.Scan(_root,token,denoAccelerated),token));
         _inventoryProgress.SetResourceReference(ProgressBar.ForegroundProperty,"AccentBrush");
         _inventoryProgress.SetResourceReference(ProgressBar.BackgroundProperty,"PanelBrush");
         var panel=(DockPanel)Content;DockPanel.SetDock(_inventoryProgress,Dock.Top);panel.Children.Insert(panel.Children.Count-1,_inventoryProgress);

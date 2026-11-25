@@ -1,3 +1,13 @@
+## 2026-11-25 — Song to Clip / Deno RTX
+
+The optional generation speed-up uses the official PyTorch 2.10.0 CUDA 13 wheel (BSD-3-Clause with bundled third-party notices) and the CUDA 13 build of SageAttention 2.2.0 (Apache-2.0). The local runtime uses Comfy Kitchen for sparse sampling. [Component licenses](Исходники/AIHub/Licenses/catalog.json) · [Runtime file inventory](Исходники/AIHub/Tools/song-clip-deno-sol-trees.json.gz)
+
+The progressive H3 workflow uses the existing Any Song montage and LBH-123-AI latent upscaler. Deno2026's H3 workflows inspired the experiment. Optional local finishing uses the NVIDIA Video Effects SDK 0.2.0.0 under NVIDIA's terms, retained in the downloaded wheel. Compatible CUDA profiles use the Apache-2.0 SageAttention wheel built by Comfy-Org and the MIT-licensed Triton Windows dependency. [NVIDIA package](https://pypi.nvidia.com/nvidia-vfx/) · [Component licenses](Исходники/AIHub/Licenses/catalog.json)
+
+## 2026-11-25 — Song to Clip / pi-H3 DWD
+
+The optional pi-H3 DWD runtime uses Lakonik's INT8 ConvRot two-step and four-step adapters under the MiniMax H3 Community License. It also downloads ComfyUI 0.46.0 under GPL-3.0, the pinned ComfyUI-piFlow extension under Apache-2.0 and Comfy Kitchen 0.2.41 under Apache-2.0. The component license catalog records the release sources, notices and exact revisions. The option uses the existing Geekatplay FL2VA diffusion, text encoder, video VAE and SDXL storyboard weights. [Component licenses](Исходники/AIHub/Licenses/catalog.json) · [Runtime inventory](Исходники/AIHub/Tools/song-clip-pi-h3-components.json.gz)
+
 ## 2026-11-22 — LOPATA PC Inspector
 
 The local report component includes IBM Granite TSPulse R1 at revision `2e64fcdc2a06d3565dfadaf0065c0ab5055f80f2` and the official `granite-tsfm` 0.3.12 pipeline, both under Apache-2.0. It uses the managed CPython and PyTorch CPU environment with its existing acquisition and licence flow. The locked overlay retains upstream license files in the installed wheel metadata. [IBM model](https://huggingface.co/ibm-granite/granite-timeseries-tspulse-r1/tree/2e64fcdc2a06d3565dfadaf0065c0ab5055f80f2) · [IBM pipeline](https://github.com/ibm-granite/granite-tsfm/tree/v0.3.12) · [Overlay lock](Инструменты/Inspector/tspulse-wheels-win-x64.txt)

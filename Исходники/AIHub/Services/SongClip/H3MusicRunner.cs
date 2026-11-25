@@ -208,7 +208,8 @@ internal static class H3MusicRunner
         var glitch = worker == "song_clip_glitch.py";
         if (geek)
             info.Environment["LOPATA_GEEK_PROGRAM_VERSION"] = ApplicationBuildVersion.Value;
-        var label = geek ? "SongClip.Geekatplay" : glitch ? "SongClip.Glitchframe" : montage ? "SongClip.H3Montage" : "SongClip.H3Motion";
+        var label = geek ? "SongClip.Geekatplay" : glitch ? "SongClip.Glitchframe" : worker is SongClipDeno.Worker or SongClipDeno.AcceleratedWorker or SongClipDeno.FinishWorker
+            ? "SongClip.Deno" : montage ? "SongClip.H3Montage" : "SongClip.H3Motion";
         using var process = OwnedProcessRegistry.Shared.Start(info, label);
         void StopWorker()
         {
@@ -273,6 +274,7 @@ internal static class H3MusicRunner
             if (process.ExitCode != 0)
             {
                 if (failureType == "DiskSpaceError") throw new IOException("SongClip.MuxDiskSpace");
+                if (workerError is "SongClip.DenoGpuRequired" or "SongClip.DenoAccelerateUnavailable") throw new IOException(workerError);
                 throw new WorkerFailure(process.ExitCode, failureType, started, workerError,
                     $"{label} (0x{process.ExitCode:X8}) {workerError ?? diagnostics.ToString()}".TrimEnd());
             }
@@ -302,7 +304,13 @@ internal static class H3MusicRunner
     {
         using var output = await VideoRuntime.ProbeAsync(file, token);
         using var source = await VideoRuntime.ProbeAsync(store.Resolve(attempt.ProjectId, attempt.Song), token);
-        var seconds = H3MusicResultValidation.Validate(output.RootElement, source.RootElement, attempt.Settings, attempt.Id, expected);
+        var settings = attempt.Settings;
+        if (SongClipModes.IsDeno(attempt))
+        {
+            var size = SongClipDeno.Output(settings);
+            settings = settings with { Width = size.Width, Height = size.Height };
+        }
+        var seconds = H3MusicResultValidation.Validate(output.RootElement, source.RootElement, settings, attempt.Id, expected);
         return new(attempt.Id, "attempts/" + attempt.Id + "/clip.mp4", ModelId, seconds, DateTimeOffset.UtcNow) {
             Mode = SongClipModes.Normalize(attempt.Settings.Motion.Mode) };
     }

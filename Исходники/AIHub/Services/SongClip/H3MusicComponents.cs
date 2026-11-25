@@ -42,7 +42,7 @@ internal static class H3MusicComponents
     }
 
     internal static async Task<H3MusicEnvironment> PrepareAsync(string root, int connections,
-        CancellationToken token, Action<string> log)
+        CancellationToken token, Action<string> log, string device = "auto")
     {
         using var audit = ComponentAudit.CaptureOperation();
         var cards = Cards(root);
@@ -58,8 +58,9 @@ internal static class H3MusicComponents
         // Missing music nodes are an acquisition prerequisite, so reject them
         // before auditing the much larger shared H3 runtime and model bundle.
         VideoH3Environment h3;
-        try { h3 = await VideoH3Runtime.PrepareAsync(root, connections, token, log, requireReliableGpuProbe: true); }
+        try { h3 = await VideoH3Runtime.PrepareAsync(root, connections, token, log, requireReliableGpuProbe: true, device: device); }
         catch (ManagedPythonGpuProbeFailedException error) { throw new IOException("SongClip.GpuProbeFailed", error); }
+        catch (PythonHardwareProbeException error) when (device == "cuda") { throw new IOException("SongClip.DenoGpuRequired", error); }
         return new(h3, source, cards);
     }
 

@@ -163,7 +163,11 @@ internal sealed partial class ShortsControl
                         ? SongClipReferences.For(song).Select(reference =>
                             new ShortsReference(ShortsJob.Assets.Resolve(job.Id, reference.File), reference.Description)).ToArray()
                         : item?.Images.Select(image => new ShortsReference(image)).ToArray(),
-                    JobId: job.Id, OutputPath: job.Output, ExcerptFrames: job.ExcerptFrames, FadeEnding: job.FadeEnding);
+                    JobId: job.Id, OutputPath: job.Output, ExcerptFrames: job.ExcerptFrames, FadeEnding: job.FadeEnding)
+                {
+                    UseDeno = job.Description?.Deno is not null,
+                    AccelerateDeno = job.Description?.Deno?.Accelerate == true
+                };
                 var recovered = _projects.Restore(draft);
                 ActivateProject(recovered, recovered.Workspace);
             }

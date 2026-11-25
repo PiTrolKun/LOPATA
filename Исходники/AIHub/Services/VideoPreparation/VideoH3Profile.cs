@@ -11,11 +11,16 @@ internal static class VideoH3Profile
         ["VideoVae"] = "minimax_h3_video_vae_int8_convrot.safetensors", ["AudioVae"] = "minimax_h3_audio_vae_fp32.safetensors",
         ["Projection"] = lite ? "mmh3-4b-ClipProj-v3.1-mlp.safetensors" : ""
     };
-    internal static Dictionary<string, string> Folders(VideoH3Environment environment, bool lite)
+    internal static Dictionary<string, string> Folders(VideoH3Environment environment, bool lite, bool deno = false)
     {
         string Root(string id) => environment.Cards.Single(c => c.ModelArtifactId == id).InstallDirectory;
-        if (lite) return new() { ["diffusion_models"] = Root("video-h3lite-models"), ["text_encoders"] = Root("video-h3lite-encoder"),
-            ["vae"] = Path.Combine(Root("video-h3lite-vaes"), "vae"), ["clip_projections"] = Root("video-h3lite-projection") };
+        if (lite)
+        {
+            var folders = new Dictionary<string, string> { ["diffusion_models"] = Root("video-h3lite-models"), ["text_encoders"] = Root("video-h3lite-encoder"),
+                ["vae"] = Path.Combine(Root("video-h3lite-vaes"), "vae"), ["clip_projections"] = Root("video-h3lite-projection") };
+            if (deno) folders["latent_upscale_models"] = Path.Combine(Root("video-h3-upscale-model"), "latent_upscale_models");
+            return folders;
+        }
         var root = Root("video-h3-models");
         return new() { ["diffusion_models"] = Path.Combine(root, "diffusion_models"), ["text_encoders"] = Path.Combine(root, "text_encoders"),
             ["vae"] = Path.Combine(root, "vae"), ["vae_approx"] = Path.Combine(Root("video-h3-preview-model"), "vae_approx"),

@@ -29,6 +29,49 @@ public sealed class VideoH3WorkspaceUiTests
     private static T Find<T>(DependencyObject root, string id) where T : DependencyObject => ScenarioNavigationTests.LogicalDescendants(root)
         .OfType<T>().Single(x => AutomationProperties.GetAutomationId(x) == "VideoH3.Workspace." + id);
     private static void Click(DependencyObject root, string id) => Find<Button>(root, id).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    [TestMethod]
+    public Task LiteWorkspaceSelectsDenoInEitherListAndPersistsAcceleration() => Ui.Value.InvokeAsync(() =>
+    {
+        var language = new LocalizationService(); language.Load("ru");
+        var project = VideoPreparationFinishTests.ReadyProject();
+        const string model = VideoH3LiteCatalog.ModelId;
+        var settings = VideoH3WorkspaceState.Ensure(project, model).Settings;
+        settings.Aspect = "9:16";
+        settings.AudioMode = "mute";
+        var page = new VideoH3WorkspaceControl(language.T, project, modelId: model);
+        void Select(string id, string label)
+        {
+            var combo = Find<ComboBox>(page, id);
+            combo.SelectedItem = combo.Items.Cast<object>().Single(item => item.ToString() == label);
+        }
+        VideoH3Settings Saved() => VideoH3WorkspaceState.Get(project, model)!.Settings;
+        var offers = new List<int>();
+        page.ConfirmDenoSwitch = size => { offers.Add(size); return size == 2160; };
+        Select("H3OutputHeight", "1080");
+        Assert.AreEqual((0, 1080), (Saved().DenoOutput, Saved().OutputHeight));
+        Select("H3OutputHeight", "2160");
+        Assert.AreEqual((2160, 2160), (Saved().DenoOutput, Saved().OutputHeight));
+        CollectionAssert.AreEqual(new[] { 1080, 2160 }, offers.ToArray());
+        Assert.AreEqual("Deno RTX · 4K", Find<ComboBox>(page, "H3Resolution").SelectedItem!.ToString());
+        var check = Find<System.Windows.Controls.CheckBox>(page, "H3DenoAccelerate");
+        StringAssert.Contains((string)check.ToolTip, "1–2");
+        Assert.IsFalse(check.IsChecked);
+        check.IsChecked = true;
+        Select("H3Steps", "24");
+        Select("H3Resolution", "Deno RTX · 1080p");
+        Assert.AreEqual((1080, 1080, 24, true, "mute"), (Saved().DenoOutput, Saved().OutputHeight,
+            Saved().DenoSteps, Saved().DenoAccelerate, Saved().AudioMode));
+        var job = VideoH3Job.Create(project, "test", Path.GetTempPath(), 4, model);
+        Assert.AreEqual(model, job.ModelId);
+        Assert.AreEqual((288, 512, 24), (job.Settings.Width, job.Settings.Height, job.Settings.Steps));
+        Assert.AreEqual(1080, job.Deno!.Output);
+        Assert.AreEqual(24, job.Deno.Passes(job.Settings).Sum(pass => pass.Steps));
+        page = new VideoH3WorkspaceControl(language.T, project, modelId: model);
+        Assert.IsTrue(Find<System.Windows.Controls.CheckBox>(page, "H3DenoAccelerate").IsChecked);
+        Assert.AreEqual("Deno RTX · 1080p", Find<ComboBox>(page, "H3Resolution").SelectedItem!.ToString());
+        Select("H3OutputHeight", "720");
+        Assert.AreEqual((0, 720), (Saved().DenoOutput, Saved().OutputHeight));
+    }).Task;
     [TestMethod, DataRow("ru", true, 1500d, 900d), DataRow("en", false, 880d, 660d)]
     public Task CompactPresetsResultOnlyViewAndActionsWorkInBothThemes(string language, bool dark, double width, double height) => Ui.Value.InvokeAsync(async () =>
     {

@@ -15,7 +15,7 @@ internal static class SongClipAutomaticPreparation
         var variant = SongClipVariantCatalog.Current(attempt.Model, attempt.Settings.Motion.Mode);
         if (variant.Model != attempt.Model || !variant.Available || variant.Retired)
             throw new InvalidOperationException("SongClip.Pending");
-        var cards = SongClipVariantCatalog.Cards(variant.Id, attempt.ModelsRoot);
+        var cards = SongClipVariantCatalog.Cards(variant.Id, attempt.ModelsRoot, SongClipDeno.Accelerated(attempt));
         if (cards.Length == 0) throw new InvalidDataException("SongClip.DownloadRequired");
         return !NeedsDownload(cards) || prepare(variant);
     }

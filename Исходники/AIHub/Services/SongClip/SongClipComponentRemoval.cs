@@ -24,12 +24,14 @@ internal static class SongClipComponentRemoval
     internal static SongClipRemovalPlan Plan(string root,string[] variantIds,ManagedModelLibraryStore? store=null)
     {
         var selected=variantIds.ToHashSet(StringComparer.Ordinal);
-        var targets=SongClipVariantCatalog.Files(variantIds.SelectMany(id=>SongClipVariantCatalog.Cards(id,root)));
+        var optional=SongClipDenoComponents.AcceleratedCards(root);
+        var targets=SongClipVariantCatalog.Files(variantIds.SelectMany(id=>SongClipVariantCatalog.Cards(id,root))
+            .Concat(selected.Contains(SongClipDeno.Mode)?optional:[]));
         var targetPaths=targets.Select(f=>f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var retained=SongClipVariantCatalog.Variants.Where(v=>v.Available&&!selected.Contains(v.Id))
             .Where(v=>SongClipVariantCatalog.DescribeFiles(SongClipVariantCatalog.Cards(v.Id,root)).All(f=>File.Exists(f.Path))).ToArray();
         var knownIds=SongClipVariantCatalog.Variants.Where(v=>v.Available||v.Retired).SelectMany(v=>SongClipVariantCatalog.Cards(v.Id,root))
-            .Select(c=>c.ModelArtifactId).ToHashSet(StringComparer.Ordinal);
+            .Concat(optional).Select(c=>c.ModelArtifactId).ToHashSet(StringComparer.Ordinal);
         var foreign=Registered(root,store).Where(c=>!knownIds.Contains(c.ModelArtifactId)||c.Consumers.Any(c=>c.Id!="song_clip"))
             .Select(c=>(Card:c,Files:SongClipVariantCatalog.DescribeFiles([c]).Where(f=>targetPaths.Contains(f.Path)).ToArray()))
             .Where(p=>p.Files.Length>0).ToArray();
@@ -83,6 +85,10 @@ internal static class SongClipComponentRemoval
                     InfiniteTalkComponents.ExtrasId=>"infinitetalk/libraries", _=>null};
                 if(card.ModelArtifactId.StartsWith("video-h3-",StringComparison.Ordinal))
                     ComponentAudit.Invalidate(Path.Combine(AppDataPaths.BaseDirectory,"VideoPreparation","H3"));
+                if (card.ModelArtifactId is PiH3Components.ComfyId or PiH3Components.ExtensionId or PiH3Components.LibrariesId)
+                    ComponentAudit.Invalidate(PiH3Components.RuntimeDirectory(card.ModelArtifactId, card.Revision));
+                if (card.ModelArtifactId is SongClipDenoComponents.SolTorchId or SongClipDenoComponents.SolSageId)
+                    ComponentAudit.Invalidate(SongClipDenoComponents.RuntimeDirectory(card.ModelArtifactId,card.Revision));
                 if(derived is not null)ComponentAudit.Invalidate(Path.Combine(AppDataPaths.BaseDirectory,"SongClip","Runtime",derived,card.Revision));
             }
         }

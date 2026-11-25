@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Text.Json;
 using AIHub.Models;
 using AIHub.Services.SongClip;
+using CheckBox = System.Windows.Controls.CheckBox;
 using ComboBox = System.Windows.Controls.ComboBox;
 using Orientation = System.Windows.Controls.Orientation;
 
@@ -14,9 +15,11 @@ public sealed partial class SongClipControl
 {
     private readonly WrapPanel _glitchOptions = new();
     private readonly WrapPanel _motionOptions = new();
+    private readonly CheckBox _denoAccelerate = new();
     private TextBlock? _referenceHeading, _referenceUse, _promptHeading;
     private string _deviceSummary = "";
     private bool IsMotion => _project.Model == "h3_music_context";
+    private bool IsDeno => IsMotion && _project.Settings.Motion.Mode == SongClipDeno.Mode;
     private string ReferenceHintKey => SongClipVariantCatalog.IsRetiredModel(_project.Model)?SongClipVariantCatalog.RetiredMessageKey
         : IsInfiniteTalk ? "SongClip.InfiniteReferenceHint" : !HasSceneReferences ? "SongClip.ReferenceHint" : IsGeek ? "SongClip.GeekReferenceHint"
         : SongClipModes.IsMontage(_loadedH3Mode) ? "SongClip.MontageReferenceHint" : "SongClip.MotionReferenceHint";
@@ -45,6 +48,25 @@ public sealed partial class SongClipControl
         LoadModeSettings(); LoadGeekSettings(); LoadInfiniteTalkSettings();
     }
 
+    private FrameworkElement BuildDenoOptions()
+    {
+        _denoAccelerate.Content = _l("SongClip.DenoAccelerate");
+        _denoAccelerate.ToolTip = _l("SongClip.DenoAccelerateHint");
+        _denoAccelerate.Margin = new(4, 4, 0, 8);
+        _denoAccelerate.Padding = new(5, 3, 0, 3);
+        _denoAccelerate.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+        _denoAccelerate.SetResourceReference(CheckBox.ForegroundProperty, "TextPrimaryBrush");
+        AutomationProperties.SetAutomationId(_denoAccelerate, "SongClip.DenoAccelerate");
+        AutomationProperties.SetHelpText(_denoAccelerate, (string)_denoAccelerate.ToolTip);
+        void Save(object sender, RoutedEventArgs e)
+        {
+            if (IsDeno && !_loading && !_busy && !OwnOperation) Checkpoint();
+        }
+        _denoAccelerate.Checked += Save;
+        _denoAccelerate.Unchecked += Save;
+        return _denoAccelerate;
+    }
+
     private void CaptureMotionSettings()
     {
         CaptureModeSettings(); CaptureGeekSettings(); CaptureInfiniteTalkSettings();
@@ -56,7 +78,8 @@ public sealed partial class SongClipControl
         _geekOptions.Visibility = IsGeek ? Visibility.Visible : Visibility.Collapsed;
         _infiniteOptions.Visibility = IsInfiniteTalk&&!SongClipVariantCatalog.IsRetiredModel(_project.Model) ? Visibility.Visible : Visibility.Collapsed;
         _glitchOptions.Visibility = HasSceneReferences ? Visibility.Collapsed : Visibility.Visible;
-        _motionOptions.Visibility = IsMotion ? Visibility.Visible : Visibility.Collapsed;
+        _motionOptions.Visibility = IsMotion && !IsDeno ? Visibility.Visible : Visibility.Collapsed;
+        _denoAccelerate.Visibility = IsDeno ? Visibility.Visible : Visibility.Collapsed;
         RefreshModePresentation();
         var hint = _l(ReferenceHintKey);
         if (_referenceHeading is not null)
@@ -82,6 +105,7 @@ public sealed partial class SongClipControl
         "glitchframe" => "Glitchframe",
         "h3_music_context" => "MiniMax H3",
         GeekatplayRunner.ModelId => "Geekatplay Music-to-Video",
+        PiH3Components.ModelId => "pi-H3 DWD",
         InfiniteTalkRunner.ModelId => "InfiniteTalk · Wan2.1",
         _ => model
     };
@@ -127,6 +151,10 @@ public sealed partial class SongClipControl
                 "cached" => value.TryGetProperty("windows", out _) ? Format("InfiniteCached", Number("windows"))
                     : Format("MotionCached", Number("index"), Number("total")),
                 "complete" => _l("SongClip.MotionVerify"),
+                "deno-pass" => Format("DenoPass", Number("index"), Number("width"), Number("height"), Number("steps")),
+                "deno-accelerated" when Number("calls") > 0 => Format("DenoAcceleratedShot", Number("index")),
+                "deno-finish-progress" => Format("DenoFinishProgress", Number("index"), Number("total")),
+                "deno-finish-complete" => _l("SongClip.Finalizing"),
                 "error" => value.TryGetProperty("message", out var error) ? error.GetString() ?? message : message,
                 "stage" => value.TryGetProperty("stage", out var stage) ? stage.GetString() switch
                 {
@@ -142,6 +170,9 @@ public sealed partial class SongClipControl
                     "mux" => _l("SongClip.MotionMux"),
                     "montage-analysis" => _l("SongClip.MontageAnalysis"),
                     "montage-assembly" => _l("SongClip.MontageAssembly"),
+                    "deno-finish" => _l("SongClip.DenoFinishing"),
+                    "deno-acceleration" => _l("SongClip.DenoAccelerationPreparing"),
+                    "deno-attention" => value.TryGetProperty("message", out var attention) ? attention.GetString() ?? SongClipDeno.Title : SongClipDeno.Title,
                     _ => _l("SongClip.Preparing")
                 } : _l("SongClip.Preparing"),
                 _ => _l("SongClip.Preparing")
@@ -155,7 +186,7 @@ public sealed partial class SongClipControl
         {
             "glitchframe" => GlitchframeRunner.RunAsync(attempt, _store, progress, token),
             "h3_music_context" => H3MusicRunner.RunAsync(attempt, _store, progress, token),
-            GeekatplayRunner.ModelId => GeekatplayRunner.RunAsync(attempt, _store, progress, token),
+            GeekatplayRunner.ModelId or PiH3Components.ModelId => GeekatplayRunner.RunAsync(attempt, _store, progress, token),
             InfiniteTalkRunner.ModelId => InfiniteTalkRunner.RunAsync(attempt, _store, progress, token),
             _ => throw new InvalidOperationException(_l("SongClip.Pending"))
         };

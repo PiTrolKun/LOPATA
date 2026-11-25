@@ -16,7 +16,7 @@ namespace AIHub.Tests;
 public sealed class ShortsTests
 {
     [TestMethod]
-    public void EntryBundleIncludesBothH3ModesTheRegisteredPlannerAndDlss()
+    public void ComponentBundleMatchesTheSelectedVariant()
     {
         using var files = new VideoPreparationTests.TestFiles();
         var root = files.File("models");
@@ -25,17 +25,60 @@ public sealed class ShortsTests
         existing.InstallDirectory = Path.Combine(root, "Existing");
         library.Upsert(existing);
 
-        var cards = ShortsComponents.Cards(root, library);
+        var song = ShortsGenerationProfile.FromDraft(new(FromSong: true));
+        var cards = ShortsComponents.Cards(root, song, library);
         var ids = cards.Select(card => card.ModelArtifactId).ToHashSet();
-        foreach (var fromSong in new[] { false, true })
-            Assert.IsTrue(ShortsJob.Cards(fromSong, root).All(card => ids.Contains(card.ModelArtifactId)));
+        Assert.AreEqual(new ShortsGenerationProfile(true, true, true), song);
+        Assert.IsTrue(song.Cards(root).All(card => ids.Contains(card.ModelArtifactId)));
         Assert.HasCount(cards.Length, ids);
         var planner = cards.Single(card => card.ModelArtifactId == ManagedModelCatalog.Qwen36ExecutorArtifactId);
         Assert.AreEqual(existing.InstallDirectory, planner.InstallDirectory);
         Assert.AreEqual(ManagedModelCatalog.Qwen36ExecutorSha256, planner.Files.Single().Sha256);
-        Assert.IsTrue(ids.Contains("video-upscale-visual-enhancer"));
+        Assert.IsTrue(ids.Contains(SongClipDenoComponents.VfxId));
+        Assert.IsTrue(ids.Contains(SongClipDenoComponents.SolTorchId));
+        Assert.IsFalse(ids.Contains("video-upscale-visual-enhancer"));
+        var standard = ShortsComponents.Cards(root, default, library).Select(card => card.ModelArtifactId).ToHashSet();
+        Assert.IsTrue(standard.Contains("video-upscale-visual-enhancer"));
+        Assert.IsFalse(standard.Contains(ManagedModelCatalog.Qwen36ExecutorArtifactId));
+        var deno = ShortsComponents.Cards(root, new(false, true, false), library).Select(card => card.ModelArtifactId).ToHashSet();
+        Assert.IsTrue(deno.Contains(SongClipDenoComponents.VfxId));
+        Assert.IsFalse(deno.Contains(SongClipDenoComponents.SolTorchId));
+        Assert.IsFalse(deno.Contains(H3MontageComponents.SourceId));
         Assert.IsTrue(SongClipAutomaticPreparation.NeedsDownload(cards));
     }
+
+    [TestMethod]
+    public Task DescriptionVariantsAreSavedAndHiddenInSongMode() => ScenarioNavigationTests.Sta(() =>
+    {
+        using var files = new VideoPreparationTests.TestFiles();
+        var store = new ShortsProjects(files.File("shorts"));
+        var localize = new LocalizationService();
+        localize.Load("ru");
+        var control = new ShortsControl(localize.T, new(Prompt: "A ticking clock"), store);
+        T Find<T>(ShortsControl page, string id) where T : System.Windows.DependencyObject =>
+            ScenarioNavigationTests.LogicalDescendants(page).OfType<T>()
+                .Single(item => AutomationProperties.GetAutomationId(item) == "Shorts." + id);
+        var standard = Find<RadioButton>(control, "Variant.Standard");
+        var deno = Find<RadioButton>(control, "Variant.Deno");
+        var accelerate = Find<CheckBox>(control, "Variant.Accelerate");
+        Assert.IsTrue(standard.IsChecked);
+        Assert.AreEqual(System.Windows.Visibility.Collapsed, accelerate.Visibility);
+        deno.IsChecked = true;
+        Assert.IsFalse(standard.IsChecked);
+        Assert.AreEqual(System.Windows.Visibility.Visible, accelerate.Visibility);
+        Assert.IsFalse(accelerate.IsChecked);
+        StringAssert.Contains((string)accelerate.ToolTip, "1–2");
+        accelerate.IsChecked = true;
+        Find<ComboBox>(control, "Mode").SelectedIndex = 1;
+        Assert.AreEqual(System.Windows.Visibility.Collapsed, deno.Visibility);
+        Assert.AreEqual(System.Windows.Visibility.Collapsed, accelerate.Visibility);
+        Find<ComboBox>(control, "Mode").SelectedIndex = 0;
+        control.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.FrameworkElement.UnloadedEvent));
+
+        var reopened = new ShortsControl(localize.T, projects: store);
+        Assert.IsTrue(Find<RadioButton>(reopened, "Variant.Deno").IsChecked);
+        Assert.IsTrue(Find<CheckBox>(reopened, "Variant.Accelerate").IsChecked);
+    });
 
     [TestMethod]
     public Task OpeningShortsWaitsForComponentsAndRestoringItsWorkspaceSkipsEntryPrompt() => ScenarioNavigationTests.Sta(() =>
@@ -232,7 +275,7 @@ public sealed class ShortsTests
         var root = Environment.GetEnvironmentVariable("LOPATA_SHORTS_H3_MODELS");
         var output = Environment.GetEnvironmentVariable("LOPATA_SHORTS_H3_OUTPUT");
         if (string.IsNullOrEmpty(root) || string.IsNullOrEmpty(output)) { Assert.Inconclusive("Opt-in installed H3 test."); return; }
-        var cards = ShortsJob.Cards(false, root);
+        var cards = ShortsGenerationProfile.FromDraft(new()).Cards(root);
         Assert.IsFalse(SongClipAutomaticPreparation.NeedsDownload(cards), "The installed-only test requires prepared H3 source files.");
         const string prompt = "A static vertical shot of a small old brass clock on a workbench in sunlight. The second hand moves and we hear the clock ticking.";
         var resumeId = Environment.GetEnvironmentVariable("LOPATA_SHORTS_H3_RESUME");

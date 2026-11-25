@@ -41,6 +41,8 @@ internal sealed record SongClipSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public SongClipMontageSettings? Montage { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public SongClipDenoSettings? Deno { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public SongClipGeekSettings? Geek { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public SongClipInfiniteTalkSettings? InfiniteTalk { get; set; }
@@ -60,6 +62,8 @@ internal sealed record SongClipGeekSettings
     public int Width { get; set; } = 608;
     public int Height { get; set; } = 352;
     public int Steps { get; set; } = 20;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? PiH3Steps { get; set; }
     public int CardSteps { get; set; } = 20;
     public int ClipSeconds { get; set; } = 6;
     public double ReferenceStrength { get; set; } = .55;

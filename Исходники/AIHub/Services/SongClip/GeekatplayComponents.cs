@@ -6,7 +6,7 @@ using AIHub.Services.VideoPreparation;
 namespace AIHub.Services.SongClip;
 
 internal sealed record GeekatplayEnvironment(VideoH3Environment H3, string Source, string AnalysisLibraries,
-    string Sdxl, IReadOnlyList<ManagedModelArtifactCard> Cards);
+    string Sdxl, IReadOnlyList<ManagedModelArtifactCard> Cards, PiH3Runtime? PiH3 = null);
 
 /// <summary>Geekatplay's FL2VA branch, reusing the pinned SDXL, encoder, VAEs and runtime installations.</summary>
 internal static class GeekatplayComponents
@@ -20,7 +20,7 @@ internal static class GeekatplayComponents
         return JsonSerializer.Deserialize<T>(stream) ?? throw new InvalidDataException("Invalid Geekatplay manifest.");
     }
     internal static long TotalBytes => Cards(Path.GetTempPath()).Sum(c => c.TotalBytes);
-    internal static ManagedModelArtifactCard[] Cards(string root)
+    internal static ManagedModelArtifactCard[] Cards(string root, string model = GeekatplayRunner.ModelId)
     {
         var common = VideoH3Catalog.Cards(root);
         var original = common.Single(c => c.ModelArtifactId == "video-h3-models");
@@ -43,14 +43,18 @@ internal static class GeekatplayComponents
             IsManaged = true, IsPinned = true, CanRemoveFiles = false, Origin = ManagedModelOrigins.PredefinedScenario,
             Files = p.Files.ToList(), Consumers = [new() { Id = "song_clip", DisplayName = "Geekatplay Music-to-Video", Kind = "scenario" }]
         });
-        return [..common.Where(c => VideoH3RuntimeCatalog.Data.Trees.ContainsKey(c.ModelArtifactId)),
+        var runtime = model == PiH3Components.ModelId
+            ? PiH3Components.Cards(root)
+            : common.Where(c => VideoH3RuntimeCatalog.Data.Trees.ContainsKey(c.ModelArtifactId)).ToArray();
+        return [..runtime,
             VideoH3RuntimeCatalog.Card(root), shared, ..extra,
             ..GlitchframeComponents.Cards(root).Where(c => c.ModelArtifactId is "song-clip-glitch-sdxl" or "song-clip-glitch-libraries")];
     }
-    internal static async Task<GeekatplayEnvironment> PrepareAsync(string root, int connections, CancellationToken token, Action<string> log)
+    internal static async Task<GeekatplayEnvironment> PrepareAsync(string root, int connections, CancellationToken token,
+        Action<string> log, string model = GeekatplayRunner.ModelId)
     {
         using var audit = ComponentAudit.CaptureOperation();
-        var cards = Cards(root);
+        var cards = Cards(root, model);
         await ComponentLicenseGate.EnsureAsync(cards.Select(c => c.ModelArtifactId).ToArray(), token);
         var store = new ManagedModelLibraryStore();
         using var acquisition = new ManagedModelAcquisitionService(store) { MaximumParallelConnections = connections };
@@ -59,17 +63,20 @@ internal static class GeekatplayComponents
             if ((await acquisition.VerifyAsync(card.ModelArtifactId, null, token)).Status != ManagedModelStatuses.Installed)
                 throw new IOException("SongClip.DownloadRequired");
         }
-        foreach (var card in cards.Where(c => c.ModelArtifactId is SourceId or ModelId or "song-clip-geek-shared-models" or "song-clip-glitch-sdxl"))
+        foreach (var card in cards.Where(c => c.ModelArtifactId is SourceId or ModelId or "song-clip-geek-shared-models"
+            or "song-clip-glitch-sdxl" or PiH3Components.AdaptersId))
             await RuntimeFileAudit.VerifyAsync(card.ModelArtifactId == "song-clip-glitch-sdxl" ? "SongClip.SDXL" : "SongClip.Geek." + card.ModelArtifactId, card.InstallDirectory, card.Revision,
                 card.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray(), token, log);
         var source = await PrepareSourceAsync(cards.Single(c => c.ModelArtifactId == SourceId), token);
         var analysisCard = cards.Single(c => c.ModelArtifactId == H3MontageComponents.AnalysisLibrariesId);
         var analysis = await GlitchframeComponents.InstallTreeAsync(analysisCard, GlitchframeComponents.Read<PinnedTreeFile[]>("LibraryTree"),
             Path.Combine(AppDataPaths.BaseDirectory, "SongClip", "Runtime", "libraries", analysisCard.Revision), true, token, true);
-        var h3 = await VideoH3Runtime.PrepareAsync(root, connections, token, log, requireReliableGpuProbe: true,
-            profile: cards.Where(c => c.ModelArtifactId.StartsWith("video-h3-", StringComparison.Ordinal)).ToArray());
+        var (h3, pi) = model == PiH3Components.ModelId
+            ? await PiH3Components.PrepareAsync(cards, token, log)
+            : (await VideoH3Runtime.PrepareAsync(root, connections, token, log, requireReliableGpuProbe: true,
+                profile: cards.Where(c => c.ModelArtifactId.StartsWith("video-h3-", StringComparison.Ordinal)).ToArray()), null);
         return new(h3, source, Path.Combine(analysis, "Lib", "site-packages"),
-            cards.Single(c => c.ModelArtifactId == "song-clip-glitch-sdxl").InstallDirectory, cards);
+            cards.Single(c => c.ModelArtifactId == "song-clip-glitch-sdxl").InstallDirectory, cards, pi);
     }
     internal static async Task<string> PrepareSourceAsync(ManagedModelArtifactCard sourceCard, CancellationToken token)
     {

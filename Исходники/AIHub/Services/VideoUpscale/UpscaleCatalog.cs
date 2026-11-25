@@ -40,21 +40,28 @@ internal static class UpscaleCatalog
         UpscaleEngine.DlssSr => [new("upscale_dlss_mode", "Quality", Choices: ["DLAA", "Quality", "Balanced", "Performance", "Ultra Performance"]), new("gpu", "auto")],
         UpscaleEngine.VfxVsr => [new("vfx_vsr_mode", "3", 0, 3), new("vfx_vsr_strength", "1", 0, 1), new("gpu", "auto")],
         UpscaleEngine.VfxUpscale => [new("vfx_upscale_strength", "0.4", 0, 1), new("gpu", "auto")],
+        UpscaleEngine.Deno => [new("device", "auto")],
         _ => [new("sharpen", "0", 0, 2), new("denoise", "0", 0, 10)]
     };
-    internal static List<UpscaleStep> Preset(UpscaleMode mode) => mode switch {
+    internal static List<UpscaleStep> Preset(UpscaleMode mode, bool vertical = false) => mode switch {
         UpscaleMode.Manual => [New(UpscaleEngine.Scale, 3840, 2160)],
         UpscaleMode.Heavy => [New(UpscaleEngine.Flash, 1920, 1080), New(UpscaleEngine.Scale, 2560, 1440),
             new() { Engine = UpscaleEngine.Flash, Width = 2560, Height = 1440, Mix = .25 }, New(UpscaleEngine.Scale, 3840, 2160)],
+        UpscaleMode.Deno => [New(UpscaleEngine.Deno, vertical ? 2160 : 3840, vertical ? 3840 : 2160)],
         _ => [New(UpscaleEngine.Flash, 1920, 1080), New(UpscaleEngine.Scale, 3840, 2160)]
     };
     internal static UpscaleStep New(UpscaleEngine engine, int width = 3840, int height = 2160) => new() { Engine = engine, Width = width, Height = height };
     internal static double Number(UpscaleStep step, string key, string fallback) => double.Parse(step.Get(key, fallback), CultureInfo.InvariantCulture);
-    internal static string Fingerprint(UpscaleProject p) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-        JsonSerializer.Serialize(new { Pipeline = "encoded-parts-2", p.SourceSha256, p.Steps, p.Codec, p.BitrateMbps, p.CpuThreads, p.ChunkSeconds }))));
+    internal static string Fingerprint(UpscaleProject p)
+    {
+        var pipeline = p.Steps.Any(s => s.Enabled && s.Engine == UpscaleEngine.Deno)
+            ? "encoded-parts-2/deno-1" : "encoded-parts-2";
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(new { Pipeline = pipeline, p.SourceSha256, p.Steps, p.Codec, p.BitrateMbps, p.CpuThreads, p.ChunkSeconds }))));
+    }
     internal static void Validate(UpscaleProject p, bool allowEmptyChain = false)
     {
-        if (!Guid.TryParseExact(p.Id, "N", out _) || p.Schema != 1 || p.Media is null || p.Steps is null || p.Steps.Count > 64 || p.Media.Fps is <= 0 or > 1000 || !double.IsFinite(p.Media.Fps)
+        if (!Guid.TryParseExact(p.Id, "N", out _) || p.Schema != 1 || !Enum.IsDefined(p.Mode) || p.Media is null || p.Steps is null || p.Steps.Count > 64 || p.Media.Fps is <= 0 or > 1000 || !double.IsFinite(p.Media.Fps)
             || !double.IsFinite(p.PreviewStart) || !double.IsFinite(p.PreviewLength) || p.PreviewStart < 0 || p.PreviewLength is <= 0 or > 5
             || !System.Text.RegularExpressions.Regex.IsMatch(p.Media.Rate, "^[0-9]{1,8}/[1-9][0-9]{0,7}$"))
             throw new InvalidDataException("VideoUpscale.InvalidProject");
@@ -64,6 +71,8 @@ internal static class UpscaleCatalog
             if (!Guid.TryParseExact(step.Id, "N", out _) || !Enum.IsDefined(step.Engine) || step.Width is < 128 or > 16384 || step.Height is < 128 or > 16384
                 || step.Width % 2 != 0 || step.Height % 2 != 0 || !double.IsFinite(step.Mix) || step.Mix is < 0 or > 1 || !Algorithms.Contains(step.Algorithm))
                 throw new InvalidOperationException("VideoUpscale.InvalidParameter");
+            if (step.Engine == UpscaleEngine.Deno && !UpscaleDeno.SupportsSize(step.Width, step.Height))
+                throw new InvalidOperationException("VideoUpscale.DenoSize");
             var fields = Parameters(step.Engine);
             if (step.Parameters.Keys.Any(k => fields.All(f => f.Key != k))) throw new InvalidOperationException("VideoUpscale.InvalidParameter");
             foreach (var f in fields) {

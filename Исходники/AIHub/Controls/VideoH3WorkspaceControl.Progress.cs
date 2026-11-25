@@ -16,6 +16,7 @@ internal sealed partial class VideoH3WorkspaceControl
     private double _elapsedBefore, _stepSeconds, _displayedElapsed;
     private int _passIndex, _passTotal, _itemIndex, _itemTotal, _step, _steps;
     private int _refinementIndex, _refinementTotal, _refinementStep, _refinementSteps;
+    private int _denoFrame, _denoFrames;
     private bool _finalizing;
     private string _stage = "";
     private DateTimeOffset? _scheduled;
@@ -101,6 +102,11 @@ internal sealed partial class VideoH3WorkspaceControl
                     _refinementIndex = Number("index", 0); _refinementTotal = Number("total", _refinementTotal);
                     _refinementStep = _refinementSteps = 0;
                 }
+                else if (kind == "deno-finish-progress")
+                {
+                    _finalizing = true; _stage = "deno-finishing";
+                    _denoFrame = Number("index", 0); _denoFrames = Number("total", 0);
+                }
                 else if (kind == "retry")
                 {
                     _stepSeconds = 0; _lastStepAt = 0;
@@ -118,7 +124,12 @@ internal sealed partial class VideoH3WorkspaceControl
         if (line.StartsWith("[H3] ", StringComparison.Ordinal))
         {
             var detail = line[5..]; var key = "H3Stage." + detail;
-            if (T(key) != "VideoPrep." + key) { _stage = detail; Notify(T(key)); }
+            if (T(key) != "VideoPrep." + key)
+            {
+                _stage = detail;
+                if (detail == "deno-finishing") { _finalizing = true; _denoFrame = _denoFrames = 0; }
+                Notify(T(key));
+            }
             else if (!detail.Contains('/')) Notify(T("H3Generating") + " · " + detail);
         }
         else if (line.StartsWith("[Prepare]", StringComparison.Ordinal) || line.StartsWith("[Download]", StringComparison.Ordinal)) Notify(T("H3PreparingRuntime"));
@@ -138,7 +149,9 @@ internal sealed partial class VideoH3WorkspaceControl
         var parts = new List<string>();
         if (_finalizing)
         {
-            if (_refinementTotal > 0 && _refinementIndex > 0)
+            if (_stage == "deno-finishing" && _denoFrames > 0)
+                parts.Add(string.Format(CultureInfo.CurrentCulture, _l("SongClip.DenoFinishProgress"), _denoFrame, _denoFrames));
+            else if (_refinementTotal > 0 && _refinementIndex > 0)
                 parts.Add(string.Format(CultureInfo.CurrentCulture, T("H3ProgressRefinement"), _refinementIndex, _refinementTotal));
             if (_stage == "refinement-sampling" && _refinementSteps > 0)
                 parts.Add(string.Format(CultureInfo.CurrentCulture, T("H3ProgressStep"), _refinementStep, _refinementSteps));
@@ -158,6 +171,7 @@ internal sealed partial class VideoH3WorkspaceControl
         {
             var portion = _refinementSteps > 0 ? Math.Clamp(_refinementStep / (double)_refinementSteps, 0, 1) : 0;
             var progress = _refinementTotal > 0 && _refinementIndex > 0 ? (_refinementIndex - 1 + portion) / _refinementTotal : 0;
+            if (_stage == "deno-finishing" && _denoFrames > 0) progress = _denoFrame / (double)_denoFrames;
             _fluid.Value = Math.Max(_fluid.Value, Math.Clamp(93 + progress * 6, 93, 99));
         }
         else if (_fluid.Value < 100 && _passTotal > 0)

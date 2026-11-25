@@ -9,6 +9,48 @@ namespace AIHub.Tests;
 public sealed class GeekatplayTests
 {
     [TestMethod]
+    public void PiH3UsesExistingWeightPathsAndItsOwnRuntime()
+    {
+        var root = Path.GetTempPath();
+        var variant = SongClipVariantCatalog.Find(PiH3Components.VariantId);
+        Assert.AreEqual("MiniMax H3", variant.Family);
+        Assert.AreEqual(PiH3Components.ModelId, variant.Model);
+        var baseline = SongClipVariantCatalog.DescribeFiles(GeekatplayComponents.Cards(root));
+        var accelerated = SongClipVariantCatalog.Cards(variant.Id, root);
+        var files = SongClipVariantCatalog.DescribeFiles(accelerated);
+        foreach (var id in new[] { GeekatplayComponents.ModelId, "song-clip-geek-shared-models", "song-clip-glitch-sdxl" })
+        {
+            var oldPaths = baseline.Where(f => f.Card.ModelArtifactId == id).Select(f => f.Path).ToArray();
+            Assert.IsNotEmpty(oldPaths);
+            CollectionAssert.AreEqual(oldPaths, files.Where(f => f.Card.ModelArtifactId == id).Select(f => f.Path).ToArray());
+        }
+        Assert.IsTrue(accelerated.Any(card => card.ModelArtifactId == PiH3Components.ComfyId));
+        Assert.IsFalse(accelerated.Any(card => card.ModelArtifactId == "video-h3-source-comfy"));
+        var adapters = accelerated.Single(card => card.ModelArtifactId == PiH3Components.AdaptersId);
+        CollectionAssert.AreEquivalent(new[] { "loras/" + PiH3Components.AdapterFile(2), "loras/" + PiH3Components.AdapterFile(4) },
+            adapters.Files.Select(file => file.RelativePath).ToArray());
+        Assert.IsTrue(GeekatplayBinding.AdapterFiles(true).Any(file => file.Path == "song_clip_pi_h3.py"));
+    }
+
+    [TestMethod]
+    public void PiH3StepCountDoesNotChangeTheGeekatplaySetting()
+    {
+        var original = Attempt();
+        var accelerated = original with { Model = PiH3Components.ModelId };
+        GeekatplayRunner.ValidateSettings(accelerated);
+        var geek = original.Settings.Geek!;
+        foreach (int steps in new[] { 2, 4 })
+        {
+            geek.PiH3Steps = steps;
+            GeekatplayRunner.ValidateSettings(accelerated);
+            GeekatplayRunner.ValidateSettings(original);
+        }
+        Assert.AreEqual(20, geek.Steps);
+        geek.PiH3Steps = 20;
+        Assert.Throws<InvalidDataException>(() => GeekatplayRunner.ValidateSettings(accelerated));
+    }
+
+    [TestMethod]
     public void Fl2vaIsDistinctAndSharedSdxlEncoderVaeFilesReuseTheirOriginalInstallations()
     {
         var root=Path.GetTempPath();var cards=GeekatplayComponents.Cards(root);

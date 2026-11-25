@@ -2,6 +2,7 @@ using System.IO;
 using System.Text.Json;
 using AIHub.Models;
 using AIHub.Services.VideoEditor;
+using AIHub.Services.SongClip;
 
 namespace AIHub.Services.VideoUpscale;
 
@@ -34,7 +35,9 @@ internal sealed class UpscaleComponents : IDisposable
                     weights.Where(w => roles.Contains(w.Role)).Select(w => new ManagedModelArtifactFile { RelativePath = w.RelativePath, SourceUrl = w.SourceUrl, SizeBytes = w.SizeBytes, Sha256 = w.Sha256, Purpose = "model" }).ToList(), "Apache-2.0", "https://huggingface.co/ruchangyao/FlashVSR_plus"));
             }
         }
-        if (project.Steps.Any(s => s.Enabled && s.Engine is not (UpscaleEngine.Scale or UpscaleEngine.Flash)))
+        if (project.Steps.Any(s => s.Enabled && s.Engine == UpscaleEngine.Deno))
+            cards.Add(SongClipDenoComponents.VfxCard(root));
+        if (project.Steps.Any(s => s.Enabled && s.Engine is not (UpscaleEngine.Scale or UpscaleEngine.Flash or UpscaleEngine.Deno)))
             cards.Add(Card(root, "video-upscale-visual-enhancer", "Visual Enhancer CLI · NVIDIA RTX/VFX/NR", "21.0",
                 [new() { RelativePath = "Visual.Enhancer.v21.0.zip", SourceUrl = "https://github.com/Merserk/dlss5-visual-enhancer/releases/download/v21.0/Visual.Enhancer.v21.0.zip", SizeBytes = 824005214, Sha256 = "a28ea3ae0f3c3fcaa5100fdc0025b60f26236ac2b30107e7e5fad0cb0d25573d", Purpose = "runtime" }], "Visual Enhancer custom licence; NVIDIA proprietary components", "https://github.com/Merserk/dlss5-visual-enhancer"));
         return cards;
@@ -59,7 +62,9 @@ internal sealed class UpscaleComponents : IDisposable
             var fetched = actual.Status != ManagedModelStatuses.Installed && download;
             if (fetched) actual = await _download.DownloadAsync(card.ModelArtifactId, progress, token);
             if (actual.Status != ManagedModelStatuses.Installed) { ready = false; continue; }
-            if (card.Files.Any(f => f.Purpose != "model")) {
+            if (card.ModelArtifactId == SongClipDenoComponents.VfxId) {
+                await SongClipDenoComponents.PrepareVfxAsync(actual, token);
+            } else if (card.Files.Any(f => f.Purpose != "model")) {
                 void Report(string stage) => progress?.Report(new(card.ModelArtifactId, "", 0, 0, 0, stage));
                 Task<string> PrepareRuntime(bool reinstall) =>
                     Task.Run(() => UpscaleRuntime.PrepareAsync(actual, token, reinstall, Report), token);

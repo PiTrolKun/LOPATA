@@ -64,7 +64,7 @@ public sealed partial class SongClipControl
 
     private void CaptureModeSettings()
     {
-        if (!IsMotion) return;
+        if (!IsMotion || IsDeno) return;
         if (SongClipModes.IsMontage(_loadedH3Mode))
         {
             var previous = _project.Settings.Montage;
@@ -94,7 +94,7 @@ public sealed partial class SongClipControl
 
     private void ChangeClipMode()
     {
-        if (_loading || _modeSettingsLoading || _busy) return;
+        if (_loading || _modeSettingsLoading || _busy || IsDeno) return;
         CaptureModeSettings();
         var mode = (_h3Mode.SelectedItem as ComboBoxItem)?.Tag as string;
         _project.Settings.Motion = _project.Settings.Motion with { Mode = SongClipModes.Normalize(mode) };
@@ -112,7 +112,8 @@ public sealed partial class SongClipControl
     {
         var engine = EngineName(result.Model);
         if (result.Model == "h3_music_context")
-            engine += " · " + _l(SongClipModes.IsMontage(result.Mode) ? "SongClip.MontageMode" : "SongClip.ConnectedMode");
+            engine += " · " + (result.Mode == SongClipDeno.Mode ? SongClipDeno.Title
+                : _l(SongClipModes.IsMontage(result.Mode) ? "SongClip.MontageMode" : "SongClip.ConnectedMode"));
         return $"{engine} · {result.Seconds:F1} s · {result.CreatedUtc.ToLocalTime():g}";
     }
 }

@@ -18,6 +18,7 @@ internal sealed partial class UpscaleWindow
         var options = new List<UpscaleSettingOption>();
         foreach (var vertical in new[] { false, true }) foreach (var resolution in Resolutions) {
             var w = vertical ? resolution.Height : resolution.Width; var h = vertical ? resolution.Width : resolution.Height;
+            if (step.Engine == UpscaleEngine.Deno && !UpscaleDeno.SupportsSize(w, h)) continue;
             options.Add(new(w + "x" + h, resolution.Name, T(vertical ? "Portrait" : "Landscape") + Environment.NewLine + $"{w} × {h}", w / (double)h));
         }
         var current = step.Width + "x" + step.Height;
@@ -30,11 +31,21 @@ internal sealed partial class UpscaleWindow
         }, true); panel.Children.Add(selector);
         panel.Children.Add(MusicWishUi.Text(T("Resolution.Help")));
         if (manual) {
-            Field(custom, "Width", step.Width.ToString(), text => { step.Width = Dimension(text); UpscaleSettingControls.Select(selector, step.Width + "x" + step.Height); }, () => step.Width.ToString());
-            Field(custom, "Height", step.Height.ToString(), text => { step.Height = Dimension(text); UpscaleSettingControls.Select(selector, step.Width + "x" + step.Height); }, () => step.Height.ToString());
+            Field(custom, "Width", step.Width.ToString(), text => {
+                var value = Dimension(text); EnsureSize(value, step.Height); step.Width = value;
+                UpscaleSettingControls.Select(selector, step.Width + "x" + step.Height);
+            }, () => step.Width.ToString());
+            Field(custom, "Height", step.Height.ToString(), text => {
+                var value = Dimension(text); EnsureSize(step.Width, value); step.Height = value;
+                UpscaleSettingControls.Select(selector, step.Width + "x" + step.Height);
+            }, () => step.Height.ToString());
             panel.Children.Add(new Expander { Header = T("CustomSize"), Content = custom, Margin = new(0, 4, 0, 8) });
         }
         static int Dimension(string text) { var number = int.Parse(text, CultureInfo.InvariantCulture); return number is >= 128 and <= 16384 && number % 2 == 0 ? number : throw new FormatException(); }
+        void EnsureSize(int w, int h)
+        {
+            if (step.Engine == UpscaleEngine.Deno && !UpscaleDeno.SupportsSize(w, h)) throw new FormatException();
+        }
     }
     private Panel EnginePicker(UpscaleEngine current, Action<UpscaleEngine> changed) => UpscaleSettingControls.Choices("VideoUpscale.EngineChoice",
         Enum.GetValues<UpscaleEngine>().Select(engine => new UpscaleSettingOption(engine.ToString(), T("Engine." + engine), T("Engine." + engine + ".Help"))), current.ToString(), value => changed(Enum.Parse<UpscaleEngine>(value)));

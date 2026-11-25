@@ -3,8 +3,8 @@ using System.Text.Json;
 
 namespace AIHub.Services.VideoUpscale;
 
-internal enum UpscaleMode { Manual, Balanced, Heavy }
-internal enum UpscaleEngine { Scale, Flash, NeuralRendering, RtxVideo, VfxVsr, VfxUpscale, DlssSr }
+internal enum UpscaleMode { Manual, Balanced, Heavy, Deno }
+internal enum UpscaleEngine { Scale, Flash, NeuralRendering, RtxVideo, VfxVsr, VfxUpscale, DlssSr, Deno }
 
 internal sealed class UpscaleStep
 {

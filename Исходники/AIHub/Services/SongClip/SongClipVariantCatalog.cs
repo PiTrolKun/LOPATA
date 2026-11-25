@@ -14,7 +14,9 @@ internal static class SongClipVariantCatalog
         new("glitchframe", "SDXL", "glitchframe", null, "Glitchframe", "PickerGlitch"),
         new("motion", "MiniMax H3", "h3_music_context", null, "Motion Context", "PickerMotion"),
         new("montage", "MiniMax H3", "h3_music_context", "montage", "Any Song", "PickerMontage"),
+        new(SongClipDeno.Mode, "MiniMax H3", "h3_music_context", SongClipDeno.Mode, SongClipDeno.Title, "PickerDeno"),
         new("geekatplay", "MiniMax H3", GeekatplayRunner.ModelId, null, "Geekatplay", "PickerGeek"),
+        new(PiH3Components.VariantId, "MiniMax H3", PiH3Components.ModelId, null, "pi-H3 DWD", "PickerPiH3"),
         new("infinitetalk", "Wan2.1", "infinitetalk", null, "InfiniteTalk", "PickerInfinite", false, true),
         new("longcat_avatar_15", "LongCat-Video", "longcat_avatar_15", null, "LongCat Avatar 1.5", "PickerLongCat", false, true)];
     // Historical identities remain readable and maintainable without offering a retired pipeline.
@@ -25,12 +27,14 @@ internal static class SongClipVariantCatalog
     internal const string RetiredMessageKey = "SongClip.ModelRetired";
     internal static SongClipVariant Find(string id) => Variants.Single(v => v.Id == id);
     internal static SongClipVariant Current(string model, string? mode) => Variants.FirstOrDefault(v => v.Model == model
-        && (model != "h3_music_context" || SongClipModes.IsMontage(mode) == SongClipModes.IsMontage(v.Mode))) ?? Variants[0];
-    internal static ManagedModelArtifactCard[] Cards(string id, string root) => id switch {
+        && (model != "h3_music_context" || SongClipModes.Normalize(mode) == v.Mode)) ?? Variants[0];
+    internal static ManagedModelArtifactCard[] Cards(string id, string root, bool denoAccelerated = false) => id switch {
         "glitchframe" => GlitchframeComponents.Cards(root),
         "motion" => H3MusicComponents.Cards(root).ToArray(),
         "montage" => H3MontageComponents.Cards(root).ToArray(),
+        SongClipDeno.Mode => [..H3MontageComponents.Cards(root), ..SongClipDenoComponents.Cards(root, denoAccelerated)],
         "geekatplay" => GeekatplayComponents.Cards(root),
+        PiH3Components.VariantId => GeekatplayComponents.Cards(root, PiH3Components.ModelId),
         "infinitetalk" => InfiniteTalkComponents.Cards(root),
         _ => []
     };
@@ -64,8 +68,8 @@ internal static class SongClipVariantCatalog
         }
         return new(files.Sum(f => f.File.SizeBytes), missing, present, files.Length > 0 && files.All(f => System.IO.File.Exists(f.Path)));
     }
-    internal static ManagedModelArtifactCard[] GroupCards(string family, string root) => Union(Variants
-        .Where(v => v.Available && v.Family == family).SelectMany(v => Cards(v.Id, root)));
+    internal static ManagedModelArtifactCard[] GroupCards(string family, string root, bool denoAccelerated = false) => Union(Variants
+        .Where(v => v.Available && v.Family == family).SelectMany(v => Cards(v.Id, root, denoAccelerated)));
     internal static ManagedModelArtifactCard[] Union(IEnumerable<ManagedModelArtifactCard> cards)
     {
         // Keep complete canonical manifests; omit a smaller alias fully covered by another card.

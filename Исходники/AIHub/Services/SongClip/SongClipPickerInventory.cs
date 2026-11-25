@@ -8,10 +8,10 @@ internal sealed record SongClipPickerInventory(IReadOnlyDictionary<string,SongCl
     SongClipPickerRow H3Base,IReadOnlyDictionary<string,long> FamilyBytes)
 {
     // A per-window, read-only snapshot. No hashes, library scans, removal plans or runtime warmup.
-    internal static SongClipPickerInventory Scan(string root,CancellationToken token)
+    internal static SongClipPickerInventory Scan(string root,CancellationToken token,bool denoAccelerated=false)
     {
         var choices=SongClipVariantCatalog.VisibleVariants.ToArray();
-        var cards=choices.ToDictionary(v=>v.Id,v=>SongClipVariantCatalog.Cards(v.Id,root));
+        var cards=choices.ToDictionary(v=>v.Id,v=>SongClipVariantCatalog.Cards(v.Id,root,denoAccelerated));
         var files=cards.ToDictionary(p=>p.Key,p=>SongClipVariantCatalog.DescribeFiles(p.Value));
         var baseFiles=SongClipVariantCatalog.DescribeFiles(SongClipVariantCatalog.BaseCards("MiniMax H3",root));
         var basePaths=baseFiles.Select(f=>f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -29,6 +29,12 @@ internal sealed record SongClipPickerInventory(IReadOnlyDictionary<string,SongCl
         }
         var variants=choices.ToDictionary(v=>v.Id,v=>Summarize(files[v.Id],v.Family=="MiniMax H3"
             ?files[v.Id].Where(f=>!basePaths.Contains(f.Path)).Sum(f=>f.File.SizeBytes):0));
+        if(variants.TryGetValue(SongClipDeno.Mode,out var deno) && !deno.HasArtifacts)
+        {
+            var alternate=SongClipVariantCatalog.DescribeFiles(SongClipDenoComponents.Cards(root,!denoAccelerated));
+            variants[SongClipDeno.Mode]=deno with {HasArtifacts=alternate.Any(f=>File.Exists(f.Path)
+                ||SegmentedModelFileDownloader.GetPartialArtifactPaths(f.Path).Any(File.Exists))};
+        }
         var families=choices.GroupBy(v=>v.Family).ToDictionary(g=>g.Key,g=>g.SelectMany(v=>files[v.Id])
             .DistinctBy(f=>f.Path,StringComparer.OrdinalIgnoreCase).Sum(f=>f.File.SizeBytes));
         return new(variants,Summarize(baseFiles),families);

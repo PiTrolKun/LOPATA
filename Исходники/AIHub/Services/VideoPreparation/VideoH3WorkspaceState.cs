@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json.Serialization;
 
 namespace AIHub.Services.VideoPreparation;
 
@@ -8,6 +9,12 @@ public sealed class VideoH3Settings
     public string RunMode { get; set; } = "automatic";
     public int RetryCount { get; set; } = 3;
     public int OutputHeight { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int DenoOutput { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool DenoAccelerate { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int DenoSteps { get; set; }
     public double TargetSeconds { get; set; }
     public double ClipSeconds { get; set; } = 5;
     public string Aspect { get; set; } = "16:9";
@@ -124,7 +131,9 @@ public sealed class VideoH3WorkspaceState
             || !Range(s.VramReserveGb, 0, 64) || !Range(s.WindowSeconds, 1, 15) || !Range(s.OverlapSeconds, 0, 14)
             || !Range(s.DecodeSeconds, 1, 15) || !Range(s.UpscaleMegapixels, .1, 8) || !Range(s.RefineAmount, 0, 1)
             || s.RefineSteps is < 1 or > 100 || s.Crf is < 0 or > 51 || s.RetryCount is < 1 or > 5
-            || s.OutputHeight is not (0 or 720 or 1080 or 2160) || !FileName(s.ExportName) || s.ExportName.Length == 0) Invalid();
+            || s.OutputHeight is not (0 or 720 or 1080 or 2160)
+            || s.DenoOutput is not (0 or 1080 or 2160) || s.DenoSteps is < 0 or > 100 or 1 or 2
+            || !FileName(s.ExportName) || s.ExportName.Length == 0) Invalid();
         foreach (var (id, v) in state.Plans!)
             if (!Guid.TryParseExact(id, "N", out _) || v is null || v.Prompt?.Length > 100000 || !Range(v.Seconds, 0, 86400)
                 || v.Seed is < -1 || !Operations.Contains(v.Operation) || v.ReferenceIds is { } refs && (refs.Count > 512

@@ -2,12 +2,66 @@ using System.IO;
 using System.Text.Json;
 using AIHub.Services;
 using AIHub.Services.VideoPreparation;
+using AIHub.Services.VideoEditor;
 
 namespace AIHub.Tests;
 
 [TestClass, DoNotParallelize]
 public sealed class VideoH3PhysicalTests
 {
+    [TestMethod, TestCategory("InstalledRuntime")]
+    [DataRow(1080, true)]
+    [DataRow(2160, false)]
+    public async Task WorkshopDenoProducesExactOutputOnTheSelectedModel(int height, bool accelerated)
+    {
+        var models = Environment.GetEnvironmentVariable("LOPATA_WORKSHOP_DENO_MODELS");
+        var directory = Environment.GetEnvironmentVariable("LOPATA_WORKSHOP_DENO_STAND");
+        if (models is null || directory is null) { Assert.Inconclusive("Opt-in installed Workshop Deno test."); return; }
+        using var audit = ComponentAudit.UseTestStore(ComponentAudit.StoreDirectory, enabled: false);
+        using var stop = new CancellationTokenSource(TimeSpan.FromMinutes(20));
+        const string model = VideoH3LiteCatalog.ModelId;
+        var project = VideoPreparationFinishTests.ReadyProject();
+        project.Storyboard!.Frames = project.Storyboard.Frames.Take(1).ToList();
+        var state = VideoH3WorkspaceState.Ensure(project, model);
+        state.Settings = new()
+        {
+            DenoOutput = height, DenoAccelerate = accelerated, DenoSteps = 12, TargetSeconds = 5,
+            Aspect = accelerated ? "9:16" : "16:9", AudioMode = accelerated ? "native" : "mute",
+            Seed = 12345, MemoryMode = "auto", VramReserveGb = 4
+        };
+        var shot = project.Storyboard.Frames[0].ShotId;
+        state.Plans[shot] = new() { Prompt = "A close-up of a brass clock on a wooden table in daylight. Hear the clock ticking.", ReferenceIds = [] };
+        Directory.CreateDirectory(directory);
+        var archive = Path.Combine(directory, $"deno-{height}-{project.Id}.lopataAIVid");
+        var job = VideoH3Job.Create(project, archive, models, 8, model);
+        var log = Path.Combine(directory, $"deno-{height}.log");
+        File.WriteAllText(log, $"H3 run {job.Run.Id}{Environment.NewLine}");
+        var gate = new object();
+        void Log(string line) { lock (gate) File.AppendAllText(log, line + Environment.NewLine); }
+        await VideoH3Runner.RunAsync(job, project, () => { VideoPreparationArchive.Save(project, archive); return Task.CompletedTask; }, Log, stop.Token);
+        Assert.IsTrue(job.Run.Complete);
+        var result = job.Run.Results.Single();
+        Assert.IsTrue(result.Models.Any(m => m.Id.Contains("video-h3lite-models")));
+        Assert.IsTrue(result.Models.Any(m => m.Id == "song-clip-deno-nvidia-vfx"));
+        var videoFile = project.Attachments.Single(a => a.Role == result.VideoRole).Path;
+        var destination = Path.Combine(directory, $"deno-{height}-{project.Id[..8]}.mp4");
+        File.Copy(videoFile, destination);
+        using var probe = await VideoRuntime.ProbeAsync(destination, stop.Token);
+        var streams = probe.RootElement.GetProperty("streams").EnumerateArray().ToArray();
+        var video = streams.Single(s => s.GetProperty("codec_type").GetString() == "video");
+        var geometry = accelerated ? (1080, 1920) : (3840, 2160);
+        Assert.AreEqual(geometry, (video.GetProperty("width").GetInt32(), video.GetProperty("height").GetInt32()));
+        Assert.AreEqual(accelerated, streams.Any(s => s.GetProperty("codec_type").GetString() == "audio"));
+        var tags = probe.RootElement.GetProperty("format").GetProperty("tags");
+        var facts = JsonSerializer.Deserialize<OutputProvenance>(tags.GetProperty("LOPATA_VIDEO").GetString()!)!;
+        Assert.IsTrue(facts.GenerationSeconds is > 0 && facts.GenerationSeconds <= job.Run.GenerationSeconds);
+        Assert.IsTrue(tags.TryGetProperty("LOPATA_GENERATION_SECONDS", out _));
+        var events = File.ReadAllText(log);
+        var finalizing = events.IndexOf("\"deno-finish-complete\"", StringComparison.Ordinal);
+        Assert.IsTrue(finalizing >= 0 && finalizing < events.IndexOf("\"kind\":\"done\"", StringComparison.Ordinal));
+        Log(destination);
+    }
+
     [TestMethod, Timeout(3600000)]
     public async Task PinnedNativeRuntimeAndThreePassesWhenExplicitlyRequested()
     {

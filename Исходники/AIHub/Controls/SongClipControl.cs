@@ -90,7 +90,11 @@ public sealed partial class SongClipControl:UserControl
     private void Capture()
     {
         _project.Name=_name.Text;_project.Lyrics=_lyrics.Text;_project.Timings=_timings.Text;_project.Settings.Prompt=_prompt.Text;
-        if(_size.SelectedItem is FrameSize size){_project.Settings.Width=size.Width;_project.Settings.Height=size.Height;}
+        if(_size.SelectedItem is FrameSize size)
+        {
+            if(IsDeno) _project.Settings.Deno = new(size.Width, size.Height) { Accelerate = _denoAccelerate.IsChecked == true };
+            else { _project.Settings.Width=size.Width; _project.Settings.Height=size.Height; }
+        }
         if(_steps.SelectedItem is int steps)_project.Settings.Steps=steps;
         if(_interval.SelectedItem is int interval)_project.Settings.Interval=interval;
         CaptureMotionSettings();
@@ -100,9 +104,8 @@ public sealed partial class SongClipControl:UserControl
         _loading=true;
         try{
             _name.Text=_project.Name;_lyrics.Text=_project.Lyrics;_timings.Text=_project.Timings;_prompt.Text=_project.Settings.Prompt;
-            var output = new FrameSize(_project.Settings.Width, _project.Settings.Height);
-            _size.ItemsSource=OutputSizes.Contains(output)?OutputSizes:[..OutputSizes,output];
-            _size.SelectedItem=output;
+            LoadOutputSize();
+            _denoAccelerate.IsChecked = _project.Settings.Deno?.Accelerate == true;
             _steps.SelectedItem=_project.Settings.Steps;_interval.SelectedItem=_project.Settings.Interval;
             LoadMotionSettings();RefreshEnginePresentation();
             RefreshReference();
@@ -167,7 +170,7 @@ public sealed partial class SongClipControl:UserControl
         if(!TryValidateStartAttempt(attempt))return;
         if (!SongClipAutomaticPreparation.PrepareIfNeeded(attempt, variant =>
             new SongClipDownloadWindow(Window.GetWindow(this), _l, attempt.ModelsRoot, attempt.Connections,
-                variant.Model, variant.Mode, autoDownload: true).ShowDialog() == true)) return;
+                variant.Model, variant.Mode, autoDownload: true, denoAccelerated: SongClipDeno.Accelerated(attempt)).ShowDialog() == true)) return;
         _store.EnsureAttemptSnapshot(attempt);
         _project.PendingAttemptId=attempt.Id;_store.Save(_project);
         _cancel=CancellationTokenSource.CreateLinkedTokenSource(token);_busy=true;_stopRequested=false;_deviceSummary="";SetInputs(false);RefreshActions();_started=DateTimeOffset.UtcNow;_fraction=0;_clock.Start();_progressTimer.Start();

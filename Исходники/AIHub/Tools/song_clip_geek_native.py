@@ -21,9 +21,9 @@ def load_author(request):
 
 
 class NativeGeek:
-    def __init__(self, request, job, emit):
+    def __init__(self, request, job, emit, library_prefix=()):
         self.request, self.job, self.emit = request, job, emit
-        sys.path[:0] = [request['libraries'], request['comfy']]
+        sys.path[:0] = [*library_prefix, request['libraries'], request['comfy']]
         os.environ.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', HF_HUB_DISABLE_TELEMETRY='1')
         device = request['device']
         sys.argv = ['lopata-geek', '--offline', '--disable-auto-launch', '--reserve-vram', '2', '--use-pytorch-cross-attention']
@@ -87,6 +87,12 @@ class NativeGeek:
             image.thumbnail((2048, 2048))
             return self.torch.from_numpy(np.array(image).astype('float32') / 255)[None]
 
+    def require_model(self, category, name):
+        expected = contained(self.request['modelFolders'][category], name)
+        resolved = self.paths.get_full_path(category, name)
+        if not resolved or Path(resolved).resolve() != expected.resolve():
+            raise ValueError('Model loader resolved outside the audited installation.')
+
     def evaluate(self, id):
         if id in self.cache: return self.cache[id]
         node = self.graph[id]
@@ -137,10 +143,7 @@ class NativeGeek:
             self.card_models = None
             self.reset()
         for key, category in [('model', 'diffusion_models'), ('encoder', 'text_encoders'), ('videoVae', 'vae')]:
-            expected = contained(self.request['modelFolders'][category], self.request[key])
-            resolved = self.paths.get_full_path(category, self.request[key])
-            if not resolved or Path(resolved).resolve() != expected.resolve():
-                raise ValueError('Model loader resolved outside the audited installation.')
+            self.require_model(category, self.request[key])
         self.phase, self.index, self.total = 'video', index + 1, total
         model = self.nodes.UNETLoader().load_unet(self.request['model'], 'default')[0]
         from comfy_extras.nodes_minimax_h3 import MiniMaxH3SigmaShift

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using AIHub.Services.SongClip;
 using ComboBox = System.Windows.Controls.ComboBox;
 
 namespace AIHub.Controls;
@@ -7,14 +8,22 @@ namespace AIHub.Controls;
 public sealed partial class SongClipControl
 {
     private static readonly FrameSize[] OutputSizes = [new(640, 360), new(1280, 720), new(1920, 1080), new(720, 1280), new(720, 720)];
+    private static readonly FrameSize[] DenoOutputSizes = SongClipDeno.Sizes.Select(size => new FrameSize(size.Width, size.Height, true)).ToArray();
     private static readonly FrameSize[] MotionSizes = [new(512, 288), new(1024, 576), new(288, 512), new(576, 1024), new(512, 512)];
     private bool _syncingSizes;
 
-    private readonly record struct FrameSize(int Width, int Height)
+    private readonly record struct FrameSize(int Width, int Height, bool ShowAspect = false)
     {
         internal int Orientation => Width.CompareTo(Height);
         internal double Ratio => (double)Width / Height;
-        public string Label => $"{Math.Min(Width, Height)}p";
+        public string Label
+        {
+            get
+            {
+                var quality = Math.Min(Width, Height) == 2160 ? "4K" : $"{Math.Min(Width, Height)}p";
+                return ShowAspect ? quality + (Orientation > 0 ? " · 16:9" : " · 9:16") : quality;
+            }
+        }
         private double IconScale => 19d / Math.Max(1, Math.Max(Width, Height));
         public double IconWidth => Math.Max(0, Width) * IconScale;
         public double IconHeight => Math.Max(0, Height) * IconScale;
@@ -34,9 +43,25 @@ public sealed partial class SongClipControl
     private FrameSize OutputSize => _size.SelectedItem is FrameSize selected
         ? selected : new(_project.Settings.Width, _project.Settings.Height);
 
+    private void LoadOutputSize()
+    {
+        if (IsDeno)
+        {
+            var saved = SongClipDeno.Output(_project.Settings);
+            var size = new FrameSize(saved.Width, saved.Height, true);
+            _size.ItemsSource = DenoOutputSizes;
+            _size.SelectedItem = DenoOutputSizes.Contains(size) ? size : DenoOutputSizes[0];
+            return;
+        }
+        var output = new FrameSize(_project.Settings.Width, _project.Settings.Height);
+        _size.ItemsSource = OutputSizes.Contains(output) ? OutputSizes : [..OutputSizes, output];
+        _size.SelectedItem = output;
+    }
+
     private void ChangeOutputSize()
     {
         if (_loading || _busy || _syncingSizes) return;
+        if (IsDeno) { Checkpoint(); return; }
         var motion = _motionSize.SelectedItem as FrameSize?;
         var geek = _geekSize.SelectedItem as FrameSize?;
         _syncingSizes = true;

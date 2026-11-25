@@ -117,7 +117,7 @@ public sealed class VideoUpscaleUiTests
     }
 
     [TestMethod]
-    public async Task ThreeRealWindowsHaveDifferentDetailAndTwoInitializedPlayers()
+    public async Task PresetWindowsHaveDifferentDetailAndTwoInitializedPlayers()
     {
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() => {
@@ -195,19 +195,55 @@ public sealed class VideoUpscaleUiTests
                         if (size.Item1 == 1900) await Capture(window, players, Path.Combine(folder, mode + "-busy.png"));
                         typeof(UpscaleWindow).GetMethod("SetBusy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(window, [false]);
                     }
-                    if (mode == UpscaleMode.Manual) CheckManualSteps(window);
+                    if (mode == UpscaleMode.Manual)
+                    {
+                        CheckManualSteps(window);
+                        await CheckDenoModePicker(window, folder);
+                    }
                 } finally { window.Close(); }
             }
         } finally { owner.Close(); ComponentLicenseGate.ConfirmAsync = confirm; }
     }
+    private static async Task CheckDenoModePicker(UpscaleWindow host, string folder)
+    {
+        var inspect = host.Dispatcher.InvokeAsync(() =>
+        {
+            var dialog = host.OwnedWindows.OfType<Window>().Single(w => w.IsVisible);
+            try
+            {
+                dialog.UpdateLayout();
+                var choices = Descendants(dialog).OfType<Button>().Where(b =>
+                    AutomationProperties.GetAutomationId(b).StartsWith("VideoUpscale.Mode.", StringComparison.Ordinal)).ToArray();
+                CollectionAssert.AreEqual(new[] { "Manual", "Balanced", "Heavy", "Deno" }, choices.Select(b =>
+                    AutomationProperties.GetAutomationId(b)["VideoUpscale.Mode.".Length..]).ToArray());
+                Assert.IsTrue(choices[^1].ActualHeight > 0);
+                CaptureWpf(dialog, Path.Combine(folder, "presets.png"));
+                choices[^1].RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            }
+            finally { if (dialog.IsVisible) dialog.Close(); }
+        }, DispatcherPriority.Background);
+        Descendants(host).OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "VideoUpscale.Mode")
+            .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await inspect.Task;
+        Assert.AreEqual(UpscaleMode.Deno, host.Project.Mode);
+        Assert.AreEqual(UpscaleEngine.Deno, host.Project.Steps.Single().Engine);
+        Assert.AreEqual(UpscaleMode.Deno, UpscaleStore.Load<UpscaleProject>(UpscaleStore.ProjectPath(host.Project.Id)).Mode);
+    }
+
     private static void CheckSettings(Window dialog, UpscaleProject project, string folder)
     {
         T Find<T>(string id) where T : FrameworkElement => Descendants(dialog).OfType<T>().Single(e => AutomationProperties.GetAutomationId(e) == id);
         void Select(string id) => Find<CheckBox>(id).RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
         Assert.AreEqual("VideoUpscale.Settings", AutomationProperties.GetAutomationId(dialog));
         Assert.IsFalse(Descendants(dialog).OfType<System.Windows.Controls.ComboBox>().Any(), "No hidden dropdown choices");
-        Assert.AreEqual(7, Descendants(dialog).OfType<CheckBox>().Count(e => AutomationProperties.GetAutomationId(e).StartsWith("VideoUpscale.EngineChoice.")));
-        var step = project.Steps.First(s => s.Engine == UpscaleEngine.Scale);
+        Assert.AreEqual(8, Descendants(dialog).OfType<CheckBox>().Count(e => AutomationProperties.GetAutomationId(e).StartsWith("VideoUpscale.EngineChoice.")));
+        var step = project.Steps.FirstOrDefault(s => s.Engine == UpscaleEngine.Scale) ?? project.Steps.Single();
+        if (project.Mode == UpscaleMode.Deno)
+        {
+            Assert.IsTrue(Find<CheckBox>("VideoUpscale.EngineChoice.Deno").IsChecked == true);
+            Assert.IsFalse(Descendants(dialog).OfType<CheckBox>().Any(e => AutomationProperties.GetAutomationId(e) == "VideoUpscale.Resolution.7680x4320"));
+            Select("VideoUpscale.EngineChoice.Scale");
+        }
         if (project.Mode == UpscaleMode.Manual) {
             Assert.IsTrue(Find<CheckBox>("VideoUpscale.Resolution.1000x1000").IsChecked == true, "Legacy custom size is preserved on opening");
             Assert.AreEqual(1000, step.Width); Assert.AreEqual(1000, step.Height);
@@ -234,7 +270,7 @@ public sealed class VideoUpscaleUiTests
         var check = window.Dispatcher.InvokeAsync(() => {
             var dialog = window.OwnedWindows.OfType<Window>().Single(w => w.IsVisible);
             try {
-                Assert.AreEqual(7, Descendants(dialog).OfType<CheckBox>().Count());
+                Assert.AreEqual(8, Descendants(dialog).OfType<CheckBox>().Count());
                 Descendants(dialog).OfType<CheckBox>().Single(e => AutomationProperties.GetAutomationId(e) == "VideoUpscale.EngineChoice.Flash").RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
                 Descendants(dialog).OfType<Button>().Single(e => AutomationProperties.GetAutomationId(e) == "VideoUpscale.AddSelectedStep").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             } finally { if (dialog.IsVisible) dialog.Close(); }

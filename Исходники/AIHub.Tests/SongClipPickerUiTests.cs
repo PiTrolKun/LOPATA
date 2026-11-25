@@ -24,7 +24,12 @@ public sealed class SongClipPickerUiTests
         try {
             picker.Show();Flush(picker);WaitInventory(picker);
             var nodes=ScenarioNavigationTests.LogicalDescendants(picker).ToArray();
-            var radios=nodes.OfType<RadioButton>().ToArray();Assert.AreEqual(4,radios.Length);Assert.IsFalse(radios.Any(r=>AutomationProperties.GetAutomationId(r) is "SongClip.Model.Variant.infinitetalk" or "SongClip.Model.Variant.longcat_avatar_15"));Assert.AreEqual(0,radios.Count(r=>!r.IsEnabled));
+            var radios=nodes.OfType<RadioButton>().ToArray();Assert.AreEqual(6,radios.Length);Assert.IsFalse(radios.Any(r=>AutomationProperties.GetAutomationId(r) is "SongClip.Model.Variant.infinitetalk" or "SongClip.Model.Variant.longcat_avatar_15"));Assert.AreEqual(0,radios.Count(r=>!r.IsEnabled));
+            Assert.IsTrue(radios.Any(r=>AutomationProperties.GetAutomationId(r)=="SongClip.Model.Variant."+PiH3Components.VariantId));
+            Assert.IsTrue(radios.Any(r=>AutomationProperties.GetAutomationId(r)=="SongClip.Model.Variant."+SongClipDeno.Mode));
+            var piH3Hint=nodes.OfType<TextBlock>().Single(t=>t.Text==l.T("SongClip.PickerPiH3"));
+            Assert.IsTrue(piH3Hint.IsVisible);
+            Assert.AreEqual(TextWrapping.Wrap,piH3Hint.TextWrapping);
             Assert.IsTrue(radios.Single(r=>AutomationProperties.GetAutomationId(r).EndsWith("montage",StringComparison.Ordinal)).IsChecked);
             Assert.AreEqual(dark?Colors.Black:Colors.White,((SolidColorBrush)picker.Background).Color);
             foreach(var radio in radios){

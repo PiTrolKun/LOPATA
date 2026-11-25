@@ -45,7 +45,7 @@ public sealed partial class SongClipControl
             }
             catch (InvalidDataException error) { _stage = FormatEngineProgress(error.Message); _status.Text = _stage; return false; }
         }
-        if (attempt.Model == GeekatplayRunner.ModelId) {
+        if (GeekatplayRunner.Handles(attempt.Model)) {
             try { GeekatplayRunner.ValidateSettings(attempt); return true; }
             catch (InvalidDataException error) { _stage = FormatEngineProgress(error.Message); _status.Text = _stage; return false; }
         }

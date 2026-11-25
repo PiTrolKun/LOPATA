@@ -23,9 +23,14 @@ public sealed class VideoUpscaleTests
     {
         foreach (var mode in Enum.GetValues<UpscaleMode>()) {
             var p = new UpscaleProject { Mode = mode, Steps = UpscaleCatalog.Preset(mode) }; UpscaleCatalog.Validate(p);
-            Assert.AreEqual(UpscaleEngine.Scale, p.Steps[^1].Engine); Assert.AreEqual(3840, p.Steps[^1].Width);
+            Assert.AreEqual(mode == UpscaleMode.Deno ? UpscaleEngine.Deno : UpscaleEngine.Scale, p.Steps[^1].Engine);
+            Assert.AreEqual(3840, p.Steps[^1].Width);
             if (mode == UpscaleMode.Heavy) { Assert.AreEqual(2, p.Steps.Count(s => s.Engine == UpscaleEngine.Flash)); Assert.AreEqual(.25, p.Steps[^2].Mix); }
         }
+        var vertical = UpscaleCatalog.Preset(UpscaleMode.Deno, vertical: true).Single();
+        Assert.AreEqual((2160, 3840), (vertical.Width, vertical.Height));
+        var unsupported = new UpscaleProject { Mode = UpscaleMode.Deno, Steps = [UpscaleCatalog.New(UpscaleEngine.Deno, 7680, 4320)] };
+        Assert.Throws<InvalidOperationException>(() => UpscaleCatalog.Validate(unsupported));
         var invalid = new UpscaleProject { Steps = [UpscaleCatalog.New(UpscaleEngine.Flash)] };
         invalid.Steps[0].Parameters["decode_every"] = "6";
         Assert.Throws<InvalidOperationException>(() => UpscaleCatalog.Validate(invalid));

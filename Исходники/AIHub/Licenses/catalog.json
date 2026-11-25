@@ -6130,5 +6130,149 @@
       "texts/Apache-2.0.txt"
     ],
     "Terms": "4D959BA09D8A75F97551B3550E99303EA1439B9AF776476F722280BECB130BFE"
+  },
+  {
+    "Id": "song-clip-deno-nvidia-vfx",
+    "Name": "NVIDIA Video Effects · Deno RTX",
+    "Version": "0.2.0.0",
+    "Author": "NVIDIA",
+    "License": "LicenseRef-NvidiaProprietary",
+    "Source": "https://pypi.nvidia.com/nvidia-vfx/",
+    "Checked": "2026-11-25",
+    "Ru": "Скачивается у NVIDIA. SDK используется локально для шумоподавления и увеличения видео. Оригинальные условия приложены к пакету в nvidia_vfx-0.2.0.0.dist-info/licenses/packaging.",
+    "En": "Downloaded from NVIDIA. The SDK runs locally for denoising and upscaling. Original terms are included in nvidia_vfx-0.2.0.0.dist-info/licenses/packaging.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "CEBAA12411F7E22B39293205C5C4D07B8073D14CA1E0E7727EE4375207A36445",
+    "Texts": []
+  },
+  {
+    "Id": "song-clip-deno-sageattention",
+    "Name": "SageAttention · Deno RTX",
+    "Version": "2.2.0+cu126torch2.10",
+    "Author": "THU-ML and Comfy-Org",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/THU-ML/SageAttention",
+    "Checked": "2026-11-25",
+    "Ru": "Ускоритель внимания H3 для совместимого CUDA-профиля. Готовый пакет скачивается из Comfy-Org/wheels.",
+    "En": "H3 attention accelerator for the compatible CUDA profile. The wheel is downloaded from Comfy-Org/wheels.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "08CB692A64E63769A5836C250F5F41972EABD8BC1E5FC3D0FD88C0D8291CFD01",
+    "Texts": [
+      "texts/song-clip-deno-sageattention-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-deno-triton",
+    "Name": "Triton Windows · Deno RTX",
+    "Version": "3.6.0.post26",
+    "Author": "Triton contributors and triton-windows",
+    "License": "MIT",
+    "Source": "https://pypi.org/project/triton-windows/3.6.0.post26/",
+    "Checked": "2026-11-25",
+    "Ru": "Зависимость SageAttention для Windows. Пакет скачивается с PyPI.",
+    "En": "SageAttention dependency for Windows. The wheel is downloaded from PyPI.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "92640FB97222FD0A698FF28CE0C3782C172623F8D6C609B557636A80F28FB946",
+    "Texts": [
+      "texts/song-clip-deno-triton-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-deno-sol-torch",
+    "Name": "PyTorch CUDA 13 · Deno RTX",
+    "Version": "2.10.0+cu130",
+    "Author": "PyTorch contributors",
+    "License": "BSD-3-Clause",
+    "Source": "https://download.pytorch.org/whl/cu130/torch/",
+    "Checked": "2026-11-25",
+    "Ru": "Отдельная среда для дополнительного ускорения Deno RTX. Исходные уведомления о сторонних компонентах входят в пакет PyTorch.",
+    "En": "Separate runtime for optional Deno RTX acceleration. The original third-party notices are included in the PyTorch wheel.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "224649FA0AB181EC483CC368E3303DDA1760E4BA31BEA806B88979F855436AAA",
+    "Texts": [
+      "texts/song-clip-deno-sol-torch-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-deno-sol-sage",
+    "Name": "SageAttention CUDA 13 · Deno RTX",
+    "Version": "2.2.0+cu130torch2.10",
+    "Author": "THU-ML and Comfy-Org",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/Comfy-Org/wheels/releases/tag/sageattention-latest",
+    "Checked": "2026-11-25",
+    "Ru": "Совместимая с PyTorch CUDA 13 сборка SageAttention для дополнительного ускорения Deno RTX.",
+    "En": "SageAttention build compatible with PyTorch CUDA 13 for optional Deno RTX acceleration.",
+    "Delivery": "download",
+    "Basic": false,
+    "Terms": "597737E3405E24F20DB10FF940B61FDD6E7454C91531001A91255CCEF89870D1",
+    "Texts": [
+      "texts/song-clip-deno-sageattention-LICENSE.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-pi-h3-adapters",
+    "Name": "pi-H3 DWD · INT8 ConvRot",
+    "Version": "4a864589b0fac3d14768f932c930c4dcf1a17b56",
+    "Author": "Lakonik/pi-H3",
+    "License": "MiniMax H3 Community License",
+    "Source": "https://huggingface.co/Lakonik/pi-H3/tree/4a864589b0fac3d14768f932c930c4dcf1a17b56",
+    "Checked": "2026-11-25",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "4814bff9b4072badcd2852bc4dc3f2d6a81db1a97e2306839a4cdc3cf6f0e55c",
+    "Texts": [
+      "texts/song-clip-pi-h3-LICENSE.txt",
+      "texts/song-clip-pi-h3-NOTICE.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-pi-h3-comfy",
+    "Name": "pi-H3 · ComfyUI 0.46.0",
+    "Version": "a277b5bf213e8a44fa34817b7770b54f86ef4cea",
+    "Author": "Comfy-Org/ComfyUI",
+    "License": "GPL-3.0",
+    "Source": "https://github.com/Comfy-Org/ComfyUI/tree/a277b5bf213e8a44fa34817b7770b54f86ef4cea",
+    "Checked": "2026-11-25",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "Texts": [
+      "texts/song-clip-pi-h3-ComfyUI-GPL-3.0.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-pi-h3-extension",
+    "Name": "pi-H3 · ComfyUI-piFlow",
+    "Version": "4355cc47944e3dbfb175d5f4be3f5af0cfdc08f1",
+    "Author": "Lakonik/ComfyUI-piFlow",
+    "License": "Apache-2.0",
+    "Source": "https://github.com/Lakonik/ComfyUI-piFlow/tree/4355cc47944e3dbfb175d5f4be3f5af0cfdc08f1",
+    "Checked": "2026-11-25",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "886ffd8ae8f056b55f011ab5d927ff9cc56a7fa5574eab2d0dbab5c4edaba935",
+    "Texts": [
+      "texts/song-clip-pi-h3-piFlow-Apache-2.0.txt"
+    ]
+  },
+  {
+    "Id": "song-clip-pi-h3-libraries",
+    "Name": "pi-H3 · Comfy Kitchen 0.2.41",
+    "Version": "0.2.41",
+    "Author": "Comfy-Org/Comfy-Kitchen",
+    "License": "Apache-2.0",
+    "Source": "https://pypi.org/project/comfy-kitchen/0.2.41/",
+    "Checked": "2026-11-25",
+    "Basic": false,
+    "Delivery": "download",
+    "Terms": "457609350489eb6ea2982cbd2d19695e54741dc9778c9140f89e7b4e5e64ba58",
+    "Texts": [
+      "texts/song-clip-pi-h3-Kitchen-Apache-2.0.txt"
+    ]
   }
 ]

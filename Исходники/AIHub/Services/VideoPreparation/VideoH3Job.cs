@@ -2,6 +2,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AIHub.Services.VideoPreparation;
 
@@ -12,6 +13,8 @@ internal sealed record VideoH3Job(string ProjectId, string ArchivePath, string M
     public DateTimeOffset? ScheduledUtc { get; init; }
     public bool FinalizeOnly { get; init; }
     public string ModelId { get; init; } = VideoH3Catalog.ModelId;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public VideoH3DenoProfile? Deno { get; init; }
     internal const string Kind = "video.h3.generate";
     internal string CompletionMessageKey => !Run.Complete ? "H3FragmentReady"
         : Settings.RunMode == "review" ? "H3FragmentsGenerated" : "H3Generated";
@@ -19,6 +22,8 @@ internal sealed record VideoH3Job(string ProjectId, string ArchivePath, string M
     {
         var state = VideoH3WorkspaceState.Ensure(project, modelId); VideoH3WorkspaceState.Validate(state);
         var settings = VideoShots.Copy(state.Settings);
+        var deno = VideoH3DenoProfile.FromSettings(settings);
+        deno?.Apply(settings);
         if (modelId == VideoH3LiteCatalog.ModelId && settings.Upscale) throw new InvalidDataException("VideoPrep.H3LiteUpscaleUnavailable");
         if (settings.ClipSeconds < 5 || settings.ClipSeconds > 15) throw new InvalidDataException("VideoPrep.H3PassDuration");
         if (settings.Continuation is not ("auto" or "new" or "extend")) throw new InvalidDataException("VideoPrep.H3OperationUnavailable");
@@ -41,11 +46,11 @@ internal sealed record VideoH3Job(string ProjectId, string ArchivePath, string M
         if (items.Length == 0) throw new InvalidDataException("VideoPrep.H3NoPlans");
         var total = items.Sum(i => i.Seconds);
         if (settings.TargetSeconds > 0) items = items.Select(i => i with { Seconds = i.Seconds / total * settings.TargetSeconds }).ToArray();
-        return CreateForItems(project, archive, root, connections, modelId, settings, items);
+        return CreateForItems(project, archive, root, connections, modelId, settings, items, deno);
     }
 
     internal static VideoH3Job CreateForItems(VideoPreparationProject project, string archive, string root,
-        int connections, string modelId, VideoH3Settings settings, VideoH3Item[] items)
+        int connections, string modelId, VideoH3Settings settings, VideoH3Item[] items, VideoH3DenoProfile? deno = null)
     {
         var state = VideoH3WorkspaceState.Ensure(project, modelId);
         var hashSettings = VideoShots.Copy(settings); hashSettings.ExportName = ""; hashSettings.RetryCount = 3;
@@ -61,6 +66,8 @@ internal sealed record VideoH3Job(string ProjectId, string ArchivePath, string M
             using var source = typeof(VideoH3Job).Assembly.GetManifestResourceStream(resource) ?? throw new InvalidDataException("VideoPrep.H3FilesRequired");
             hashInput.Append(Convert.ToHexString(SHA256.HashData(source)));
         }
+        if (deno is not null)
+            hashInput.Append(JsonSerializer.Serialize(deno)).Append(VideoH3DenoProfile.Pin().Sha256);
         foreach (var item in items)
         {
             hashInput.Append(JsonSerializer.Serialize(item with { Images = [] }));
@@ -69,6 +76,6 @@ internal sealed record VideoH3Job(string ProjectId, string ArchivePath, string M
         var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(hashInput.ToString())));
         var run = state.Runs.LastOrDefault(r => r.InputHash == hash && !r.Complete);
         if (run is null) { run = new() { InputHash = hash, GenerationSeconds = 0 }; state.Runs.Add(run); }
-        return new(project.Id, archive, root, connections, settings, items, run) { ModelId = modelId };
+        return new(project.Id, archive, root, connections, settings, items, run) { ModelId = modelId, Deno = deno };
     }
 }

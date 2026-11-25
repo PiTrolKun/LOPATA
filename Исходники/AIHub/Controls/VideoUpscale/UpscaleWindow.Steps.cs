@@ -16,15 +16,22 @@ internal sealed partial class UpscaleWindow
     private UpscaleMode? SelectMode()
     {
         UpscaleMode? value = null;
-        var window = new Window { Owner = this }; MusicWishUi.PrepareWindow(window, T("ChooseMode"), "VideoUpscale.Mode", 650); window.Height = 480;
+        var window = new Window { Owner = this };
+        MusicWishUi.PrepareWindow(window, T("ChooseMode"), "VideoUpscale.Mode", 650);
+        window.Resources.MergedDictionaries.Insert(0, Resources);
+        window.SizeToContent = SizeToContent.Height;
+        window.MaxHeight = Math.Min(660, SystemParameters.WorkArea.Height);
         var panel = new StackPanel { Margin = new(20) };
         foreach (var mode in Enum.GetValues<UpscaleMode>()) {
             var selected = mode; panel.Children.Add(MusicWishUi.Button(T("Mode." + mode), "VideoUpscale.Mode." + mode, () => { value = selected; window.DialogResult = true; }));
             panel.Children.Add(MusicWishUi.Text(T("Mode." + mode + ".Help")));
         }
-        window.Content = panel; window.ShowDialog(); return value;
+        var scroll = new ScrollViewer { Content = panel, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        scroll.SetResourceReference(ScrollViewer.BackgroundProperty, "WindowBackgroundBrush");
+        window.Content = scroll;
+        window.ShowDialog(); return value;
     }
-    private void SetMode(UpscaleMode mode) { _project.Mode = mode; _project.Steps = UpscaleCatalog.Preset(mode); RefreshSteps(); Save(); }
+    private void SetMode(UpscaleMode mode) { _project.Mode = mode; _project.Steps = UpscaleCatalog.Preset(mode, _project.Media.Height > _project.Media.Width); RefreshSteps(); Save(); }
     private void ChangeMode()
     {
         if (_busy) return; var mode = SelectMode(); if (mode is null) return;
@@ -84,7 +91,14 @@ internal sealed partial class UpscaleWindow
         var engines = new StackPanel(); engines.Children.Add(MusicWishUi.Text(T("ChooseEngine"), true));
         engines.Children.Add(EnginePicker(step.Engine, value => {
             if (step.Engine == value) return;
-            step.Engine = value; step.Parameters.Clear(); Render(); detail.ScrollToTop(); Save();
+            step.Engine = value; step.Parameters.Clear();
+            if (value == UpscaleEngine.Deno && !UpscaleDeno.SupportsSize(step.Width, step.Height))
+            {
+                var portrait = step.Height > step.Width;
+                step.Width = portrait ? 2160 : 3840;
+                step.Height = portrait ? 3840 : 2160;
+            }
+            Render(); detail.ScrollToTop(); Save();
         }));
         body.Children.Add(new ScrollViewer { Content = engines, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
         void Render() {

@@ -82,10 +82,11 @@ internal sealed partial class ShortsControl : UserControl
         layout.Children.Add(heading);
         layout.Children.Add(_inputs);
         AddProjectControls();
-        var choices = Row();
+        var choices = new WrapPanel { Margin = new(0, 8, 0, 8) };
         _inputs.Children.Add(choices);
         choices.Children.Add(_mode);
         choices.Children.Add(_duration);
+        AddDescriptionVariants(choices);
         _inputs.Children.Add(_songPanel);
         _inputs.Children.Add(_promptPanel);
         _songPanel.Children.Add(Action("Shorts.ChooseSong", "Song", PickSongAsync));
@@ -207,6 +208,7 @@ internal sealed partial class ShortsControl : UserControl
         _duration.SelectedItem = durations.FirstOrDefault(item => (int)item.Tag == _draft.Seconds) ?? durations[0];
         _prompt.Text = _draft.Prompt;
         _fadeEnding.IsChecked = _draft.FadeEnding;
+        BindDescriptionVariants();
         _binding = false;
         RefreshMode();
     }
@@ -236,6 +238,7 @@ internal sealed partial class ShortsControl : UserControl
     {
         _songPanel.Visibility = _draft.FromSong ? Visibility.Visible : Visibility.Collapsed;
         _promptPanel.Visibility = _draft.FromSong ? Visibility.Collapsed : Visibility.Visible;
+        ShowDescriptionVariants();
         if (_draft.FromSong) BindRange();
         else _songRead?.Cancel();
         ReloadImages();
@@ -483,7 +486,8 @@ internal sealed partial class ShortsControl : UserControl
         RefreshActions();
         try
         {
-            if (!await PrepareMissingComponentsAsync(retry ? previous!.ModelsRoot : _root, retry ? previous!.Connections : _connections, token))
+            var profile = retry ? ShortsGenerationProfile.FromJob(previous!) : ShortsGenerationProfile.FromDraft(draft);
+            if (!await PrepareMissingComponentsAsync(retry ? previous!.ModelsRoot : _root, retry ? previous!.Connections : _connections, profile, token))
                 return;
             var job = retry ? previous! : await ShortsJob.CreateAsync(draft with { OutputPath = output, ProjectId = _project.Id },
                 _root, _connections, token);
@@ -501,7 +505,7 @@ internal sealed partial class ShortsControl : UserControl
         try
         {
             RestoreJobProject(job);
-            if (!File.Exists(job.Output) && !await PrepareMissingComponentsAsync(job.ModelsRoot, job.Connections, token))
+            if (!File.Exists(job.Output) && !await PrepareMissingComponentsAsync(job.ModelsRoot, job.Connections, ShortsGenerationProfile.FromJob(job), token))
                 throw new BackgroundOperationWaitingException("Tray.NeedsInput");
             if (_draft.OutputPath is null) _suggestedOutput = job.Output;
             SaveProjectDraft();
@@ -511,9 +515,9 @@ internal sealed partial class ShortsControl : UserControl
         finally { _busy = false; RefreshActions(); }
     }
 
-    private async Task<bool> PrepareMissingComponentsAsync(string root, int connections, CancellationToken token) =>
-        !await ShortsComponents.NeedsPreparationAsync(root, connections, token) ||
-        ShortsComponentPreparation.Show(Window.GetWindow(this), _localize, root, connections, token);
+    private async Task<bool> PrepareMissingComponentsAsync(string root, int connections, ShortsGenerationProfile profile, CancellationToken token) =>
+        !await ShortsComponents.NeedsPreparationAsync(root, connections, profile, token) ||
+        ShortsComponentPreparation.Show(Window.GetWindow(this), _localize, root, connections, profile, token);
 
     private async Task RunAsync(ShortsJob job, BackgroundOperationState? state, CancellationToken token)
     {

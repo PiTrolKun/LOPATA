@@ -49,7 +49,7 @@ public sealed partial class SongClipControl
         finally { _syncingSizes = false; }
         var references = SongClipReferences.For(_project).ToArray();
         _project.References = references; _project.Reference = references.FirstOrDefault()?.File ?? "";
-        if (SongClipModes.IsMontage(_project.Settings.Motion.Mode) && _project.Settings.Montage is null)
+        if (_project.Settings.Motion.Mode == SongClipModes.Montage && _project.Settings.Montage is null)
             _project.Settings = _project.Settings with { Montage = new SongClipMontageSettings() };
         return new SongClipAttempt(Guid.NewGuid().ToString("N"), _project.Id,
             _project.Song, _project.Reference, _project.Name, _project.Lyrics, _project.Timings,

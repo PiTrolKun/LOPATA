@@ -10,8 +10,10 @@ internal static class SongClipModes
     {
         null or "" or "connected" => null,
         Montage => Montage,
+        SongClipDeno.Mode => SongClipDeno.Mode,
         _ => throw new InvalidDataException("SongClip.InvalidSettings")
     };
-    internal static bool IsMontage(string? mode) => Normalize(mode) == Montage;
+    internal static bool IsMontage(string? mode) => Normalize(mode) is Montage or SongClipDeno.Mode;
     internal static bool IsMontage(SongClipAttempt attempt) => IsMontage(attempt.Settings.Motion.Mode);
+    internal static bool IsDeno(SongClipAttempt attempt) => attempt.Settings.Motion.Mode == SongClipDeno.Mode;
 }

@@ -90,6 +90,80 @@ public sealed class SongClipMontageUiTests
     });
 
     [TestMethod]
+    [DataRow("1920 × 1080", 1920, 1080)]
+    [DataRow("3840 × 2160", 3840, 2160)]
+    [DataRow("1080 × 1920", 1080, 1920)]
+    [DataRow("2160 × 3840", 2160, 3840)]
+    public Task DenoPickerKeepsItsOwnFourOutputSizes(string choice, int width, int height) => OnUi(() =>
+    {
+        using var fixture = new Fixture("ru");
+        var project = fixture.Project();
+        var control = fixture.Control(project);
+        var output = Find<ComboBox>(control, "Size");
+        output.SelectedItem = output.Items.Cast<object>().Single(size => size.ToString() == "720 × 1280");
+
+        Assert.IsTrue(control.SelectVariant(SongClipDeno.Mode));
+        CollectionAssert.AreEqual(new[] { "1920 × 1080", "3840 × 2160", "1080 × 1920", "2160 × 3840" },
+            output.Items.Cast<object>().Select(size => size.ToString()).ToArray());
+        Assert.AreEqual(Visibility.Collapsed, ((FrameworkElement)Parent(Find<ComboBox>(control, "MotionSize")).Parent).Visibility);
+        output.SelectedItem = output.Items.Cast<object>().Single(item => item.ToString() == choice);
+
+        var saved = fixture.Store.Load(project.Id);
+        Assert.AreEqual(new SongClipDenoSettings(width, height), saved.Settings.Deno);
+        Assert.AreEqual((720, 1280), (saved.Settings.Width, saved.Settings.Height));
+        var reopened = fixture.Control(saved);
+        Assert.AreEqual(choice, Find<ComboBox>(reopened, "Size").SelectedItem?.ToString());
+        var attempt = reopened.SelectStartAttempt();
+        Assert.AreEqual(SongClipDeno.Mode, attempt.Settings.Motion.Mode);
+        H3MontageRunner.ValidateSettings(attempt);
+        var generation = SongClipDeno.Generation(attempt.Settings);
+        Assert.AreEqual(width.CompareTo(height), generation.Width.CompareTo(generation.Height));
+        Assert.ThrowsExactly<InvalidDataException>(() => H3MontageRunner.ValidateSettings(
+            attempt with { Settings = attempt.Settings with { Deno = new(1280, 720) } }));
+        Assert.IsTrue(reopened.SelectVariant("montage"));
+        Assert.AreEqual("720 × 1280", Find<ComboBox>(reopened, "Size").SelectedItem?.ToString());
+        Assert.IsTrue(reopened.SelectVariant(SongClipDeno.Mode));
+        Assert.AreEqual(choice, Find<ComboBox>(reopened, "Size").SelectedItem?.ToString());
+    });
+
+    [TestMethod]
+    [DataRow("ru")]
+    [DataRow("en")]
+    public Task DenoAccelerationIsOptionalAndSavedWithTheProject(string language) => OnUi(() =>
+    {
+        using var fixture = new Fixture(language);
+        var project = fixture.Project();
+        var control = fixture.Control(project);
+        var option = Find<CheckBox>(control, "DenoAccelerate");
+        Assert.AreEqual(Visibility.Collapsed, option.Visibility);
+        Assert.IsTrue(control.SelectVariant(SongClipDeno.Mode));
+        Assert.AreEqual(Visibility.Visible, option.Visibility);
+        Assert.AreEqual(false, option.IsChecked);
+        Assert.AreEqual(language == "ru" ? "Ускорить генерацию" : "Speed up generation", option.Content);
+        StringAssert.Contains((string)option.ToolTip, "1–2");
+        Assert.IsFalse(JsonSerializer.Serialize(fixture.Store.Load(project.Id).Settings.Deno).Contains("Accelerate", StringComparison.Ordinal));
+
+        option.IsChecked = true;
+        var reopened = fixture.Control(fixture.Store.Load(project.Id));
+        Assert.AreEqual(true, Find<CheckBox>(reopened, "DenoAccelerate").IsChecked);
+        var attempt = reopened.SelectStartAttempt();
+        Assert.IsTrue(SongClipDeno.Accelerated(attempt));
+        H3MontageRunner.ValidateSettings(attempt);
+        Assert.IsTrue(reopened.SelectVariant(SongClipModes.Montage));
+        Assert.AreEqual(Visibility.Collapsed, Find<CheckBox>(reopened, "DenoAccelerate").Visibility);
+        Assert.IsFalse(SongClipDeno.Accelerated(reopened.SelectStartAttempt()));
+        Assert.IsTrue(reopened.SelectVariant(SongClipDeno.Mode));
+        Assert.AreEqual(true, Find<CheckBox>(reopened, "DenoAccelerate").IsChecked);
+
+        var root = Path.GetFullPath(fixture.File("models"));
+        var ids = SongClipDenoComponents.AcceleratedCards(root).Select(card => card.ModelArtifactId).ToArray();
+        Assert.IsFalse(SongClipVariantCatalog.Cards(SongClipDeno.Mode, root).Any(card => ids.Contains(card.ModelArtifactId)));
+        Assert.IsTrue(ids.All(id => SongClipVariantCatalog.Cards(SongClipDeno.Mode, root, true).Any(card => card.ModelArtifactId == id)));
+        Assert.IsFalse(H3MontageBinding.AdapterFiles(deno: true).Any(file => file.Path == SongClipDeno.AcceleratedWorker));
+        Assert.IsTrue(H3MontageBinding.AdapterFiles(deno: true, accelerated: true).Any(file => file.Path == SongClipDeno.AcceleratedWorker));
+    });
+
+    [TestMethod]
     [DataRow("ru")]
     [DataRow("en")]
     public Task MontageJournalShowsDiskSpaceBeforeAndAfterFirstShot(string language) => OnUi(() =>

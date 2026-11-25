@@ -15,27 +15,40 @@ internal static class H3MontageBinding
         ("song_clip_motion.py", "AIHub.SongClip.MotionWorker"),
         ("song_clip_motion_state.py", "AIHub.SongClip.MotionState"), ("h3_memory.py", "AIHub.H3Memory")];
     private sealed record Binding(int Schema, string Mode, string Hash);
+    private static readonly (string File, string Resource)[] DenoScripts = [
+        (SongClipDeno.Worker, "AIHub.SongClip.DenoWorker"), (SongClipDeno.FinishWorker, "AIHub.SongClip.DenoFinishWorker")];
     internal static readonly PinnedTreeFile PriorMedia = new("song_clip_montage_media.py", 3741,
         "4132875023B58DDEB1EE5A8DF1775129964BEBBEAF193F92E6F2225EDEAE815A");
     internal const string PriorWorkerSha = "925C49C1E5DBD34DC4C77B642EBF1E8181E5DAD8DFC85B651D63D449B0987F1C";
+    private static readonly PinnedTreeFile PriorDenoFinisher = new(SongClipDeno.FinishWorker, 6025,
+        "14230B421A173E166F5D146EFBF16A98EA4DB7A8FD8921CDE5036448E3B6CAB5");
+    private static readonly PinnedTreeFile WorkshopDenoFinisher = new(SongClipDeno.FinishWorker, 6332,
+        "394F893A5E0325347F561E1771A2C192093E0D844974EABE54B0514CC6FAC9BC");
     private static readonly PinnedTreeFile[] PriorAdapters = [
         new("song_clip_montage.py", 33301, PriorWorkerSha),
         new("song_clip_montage_state.py", 9410, "69E1BD20BD7868DA3CF0AA852D054B52F6EC534E402D227A15079CC1CAB7D0A1"),
         PriorMedia,
         new("song_clip_motion.py", 39928, "14BD9498C755B2AEE2CE84EA2047BFA210F21B5D0D54FF74B8C0BC385F443F28")];
-    internal static PinnedTreeFile[] AdapterFiles() => Scripts.Select(item => {
-        using var source = typeof(H3MontageBinding).Assembly.GetManifestResourceStream(item.Resource)
-            ?? throw new InvalidDataException("Missing H3 montage adapter.");
-        return new PinnedTreeFile(item.File, source.Length, Convert.ToHexString(SHA256.HashData(source)));
-    }).ToArray();
+    internal static PinnedTreeFile[] AdapterFiles(bool deno = false, bool accelerated = false)
+    {
+        var scripts = deno ? Scripts.Concat(DenoScripts) : Scripts;
+        if (deno && accelerated)
+            scripts = scripts.Append((SongClipDeno.AcceleratedWorker, "AIHub.SongClip.DenoSolWorker"));
+        return scripts.Select(item => {
+            using var source = typeof(H3MontageBinding).Assembly.GetManifestResourceStream(item.Resource)
+                ?? throw new InvalidDataException("Missing H3 montage adapter.");
+            return new PinnedTreeFile(item.File, source.Length, Convert.ToHexString(SHA256.HashData(source)));
+        }).ToArray();
+    }
 
     internal static async Task EnsureAsync(SongClipAttempt attempt, SongClipStore store, string job,
         IReadOnlyList<ManagedModelArtifactCard> cards, CancellationToken token)
     {
         var song = await HashAsync(store.Resolve(attempt.ProjectId, attempt.Song), token);
         var references = await SongClipReferences.HashAsync(attempt, store, token);
-        var adapters = AdapterFiles();
-        Binding Identity(PinnedTreeFile[] scripts) => new(1, SongClipModes.Montage,
+        var deno = SongClipModes.IsDeno(attempt);
+        var adapters = AdapterFiles(deno, SongClipDeno.Accelerated(attempt));
+        Binding Identity(PinnedTreeFile[] scripts) => new(1, deno ? SongClipDeno.Mode : SongClipModes.Montage,
             Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new {
             attempt, song, references, adapters = scripts,
             pins = cards.OrderBy(c => c.ModelArtifactId, StringComparer.Ordinal).Select(c => new {
@@ -46,7 +59,8 @@ internal static class H3MontageBinding
         var path = Path.Combine(job, "montage-input-binding.json");
         if (File.Exists(path)) {
             var recorded = JsonSerializer.Deserialize<Binding>(await File.ReadAllTextAsync(path, token));
-            if (recorded != expected && recorded != Identity(WithAdapters(adapters, PriorAdapters)))
+            if (recorded != expected && recorded != Identity(WithAdapters(adapters, deno ? [PriorDenoFinisher] : PriorAdapters))
+                && (!deno || recorded != Identity(WithAdapters(adapters, [WorkshopDenoFinisher]))))
                 throw new InvalidDataException(SongClipMontageProtocol.Mismatch);
             return;
         }

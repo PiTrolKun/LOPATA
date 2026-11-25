@@ -14,22 +14,6 @@ public partial class MainWindow
     private string ShortsModelsRoot => _storageSettings.Models.Locations.Select(location => location.Path)
         .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path)) ?? "";
 
-    private bool PrepareShortsEntry()
-    {
-        try
-        {
-            return ShortsComponentPreparation.Show(this, L, ShortsModelsRoot,
-                _appSettings.ModelDownloads?.MaximumParallelConnections ?? 0, ApplicationBackgroundOperations.ExitToken);
-        }
-        catch (OperationCanceledException) { return false; }
-        catch (Exception error)
-        {
-            OwnedProcessRegistry.Log("shorts_preparation_failed", "Shorts", detail: error.Message);
-            System.Windows.MessageBox.Show(this, L(error.Message), L("Shorts.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
-            return false;
-        }
-    }
-
     private ShortsControl OpenShorts()
     {
         ShowBackgroundScenarioPage(WorkStartPage);

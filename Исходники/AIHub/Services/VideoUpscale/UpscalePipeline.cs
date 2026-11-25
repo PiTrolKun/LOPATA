@@ -27,6 +27,7 @@ internal sealed class UpscalePipeline
             ct => Run(UpscaleStore.Load<UpscaleJob>(UpscaleStore.JobPath(job)), modelsRoot, progress, ct), token, restored);
     private async Task<string> Run(UpscaleJob job, string modelsRoot, IProgress<UpscaleProgress> progress, CancellationToken token)
     {
+        using var audit = ComponentAudit.CaptureOperation();
         UpscaleCatalog.Validate(job.Project);
         if (!Guid.TryParseExact(job.Id, "N", out _) || job.ChunkFrames is < 1 or > 5000 || job.Frames < 1 || job.Fingerprint != UpscaleCatalog.Fingerprint(job.Project)) throw new InvalidDataException("VideoUpscale.InvalidProject");
         var project = job.Project; project.Workspace = UpscaleStore.Work(project.Id); var jobFile = UpscaleStore.JobPath(job); var root = Path.GetDirectoryName(jobFile)!;
@@ -41,6 +42,8 @@ internal sealed class UpscalePipeline
         if (cards.Count > 0) using (var preparation = new UpscaleComponents())
             if (!await preparation.PrepareAsync(modelsRoot, project, false, null, token)) throw new IOException("VideoUpscale.ComponentsRequired");
         var steps = project.Steps.Where(s => s.Enabled).ToArray(); var count = (int)((job.Frames + job.ChunkFrames - 1) / job.ChunkFrames);
+        var deno = steps.Any(s => s.Engine == UpscaleEngine.Deno)
+            ? await UpscaleDeno.PrepareAsync(steps, cards, progress, token) : null;
         var estimatedPart = steps.Max(s => (long)s.Width * s.Height) * Math.Min(job.ChunkFrames + 32, job.Frames) * 5 * 3;
         var drive = new DriveInfo(Path.GetPathRoot(root)!);
         if (drive.AvailableFreeSpace < estimatedPart + 512L * 1024 * 1024) throw new IOException("VideoUpscale.DiskSpace");
@@ -65,9 +68,12 @@ internal sealed class UpscalePipeline
                 var step = steps[index]; var output = Path.Combine(root, $"{part:D6}-step-{index:D3}.mkv"); var key = $"{part}/{step.Id}";
                 if (!await Reuse(key, output)) {
                     progress.Report(new((part + index / (double)steps.Length) / count, $"{part + 1}/{count} · {index + 1}/{steps.Length} · {step.Engine}"));
-                    await UpscaleNative.Run(step, input, output, cards, token, line => {
+                    void Report(string line) {
                         if (line.Length < 1000) progress.Report(new((part + index / (double)steps.Length) / count, line));
-                    });
+                    }
+                    if (step.Engine == UpscaleEngine.Deno)
+                        await deno!.RunAsync(step, input, output, project.Media.Rate, total, Report, token);
+                    else await UpscaleNative.Run(step, input, output, cards, token, Report);
                     if (step.Mix < 1) {
                         var mixed = output + ".mix.mkv";
                         await UpscaleFfmpeg.RunAsync(false, ["-v", "error", "-y", "-i", input, "-i", output, "-filter_complex",

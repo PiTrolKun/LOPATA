@@ -66,10 +66,11 @@ internal sealed partial class VideoH3WorkspaceControl
             b.Items[i] = new Choice(values[i].ToString(CultureInfo.InvariantCulture), values[i] == 0 && zeroKey is not null ? T(zeroKey) : values[i].ToString("0.###", CultureInfo.CurrentCulture));
         b.SelectedItem = b.Items.OfType<Choice>().Single(c => c.Id == value.ToString(CultureInfo.InvariantCulture));
     }
-    private void Check(StackPanel p, string key, bool value, Action<bool> set, bool enabled = true)
+    private void Check(StackPanel p, string key, bool value, Action<bool> set, bool enabled = true, string? hint = null)
     {
         var b = new CheckBox { Content = Label(T(key)), IsChecked = value, IsEnabled = enabled, MinHeight = 28, Margin = new Thickness(0, 2, 0, 2) };
         b.SetResourceReference(ForegroundProperty, "TextPrimaryBrush"); AutomationProperties.SetAutomationId(b, "VideoH3.Workspace." + key);
+        if (hint is not null) { b.ToolTip = hint; AutomationProperties.SetHelpText(b, hint); }
         b.Checked += (_, _) => { set(true); Changed(); }; b.Unchecked += (_, _) => { set(false); Changed(); }; p.Children.Add(b);
     }
     private void Number(StackPanel p, string key, double value, double min, double max, Action<double> set, bool integer = false, string? draftId = null)

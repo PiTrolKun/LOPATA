@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using AIHub.Services.SongClip;
 using AIHub.Services.VideoEditor;
 
 namespace AIHub.Services.VideoPreparation;
@@ -29,18 +30,29 @@ internal static class VideoH3Runner
             using var input = typeof(VideoH3Runner).Assembly.GetManifestResourceStream(resource)!;
             var size = input.Length; files.Add(new(name, size, Convert.ToHexString(SHA256.HashData(input))));
         }
+        if (job.Deno is not null) files.Add(VideoH3DenoProfile.Pin());
         await RuntimeFileAudit.VerifyAsync("Video.H3.Adapter", Path.Combine(AppContext.BaseDirectory, "Tools"), ApplicationBuildVersion.Value, files, token, log);
         var lite = job.ModelId == VideoH3LiteCatalog.ModelId;
         _ = VideoH3WorkspaceState.Get(project, job.ModelId);
-        var environment = await VideoH3Runtime.PrepareAsync(job.ModelsRoot, job.Connections, token, log, library, lite);
+        var environment = await VideoH3Runtime.PrepareAsync(job.ModelsRoot, job.Connections, token, log, library, lite,
+            device: job.Deno is null ? "auto" : "cuda", deno: job.Deno is not null);
+        var deno = job.Deno is { } profile
+            ? await SongClipDenoComponents.PrepareRuntimeAsync(job.ModelsRoot, job.Connections, environment.Python, profile.Accelerate, log, token)
+            : null;
         await VideoRuntime.PrepareAsync(token);
         var directory = DirectoryFor(job.Run.Id); var output = Path.Combine(directory, "output"); Directory.CreateDirectory(output);
         foreach (var folder in new[] { "input", "temp" }) Directory.CreateDirectory(Path.Combine(directory, folder));
         await RestoreFiles(project, job.Run, output, token);
         var models = lite ? VideoH3Profile.Facts(environment) : Models(environment, false);
+        if (deno is not null)
+            models = [.. models, .. environment.Cards.Concat(deno.Cards)
+                .Where(card => card.ModelArtifactId is "video-h3-upscale-model" or "video-h3-source-upscaler" or SongClipDenoComponents.SolTorchId)
+                .Select(card => new OutputModelUse(card.ModelArtifactId, card.DisplayName, card.Revision, "progressive H3 generation"))];
         if (job.FinalizeOnly)
             await VerifyFinalizationModels(job.Run, output, models, token);
-        var facts = new OutputProvenance { Scenario = "video-generation/minimax-h3", ModelHistory = "recorded-inference", Models = models };
+        var facts = new OutputProvenance { Scenario = "video-generation/minimax-h3", Models = models,
+            ModelHistory = deno is null ? "recorded-inference" : job.Deno!.Accelerate
+                ? "recorded-inference; deno; acceleration enabled" : "recorded-inference; deno" };
 
         var payload = new
         {
@@ -51,7 +63,13 @@ internal static class VideoH3Runner
             Ffmpeg = Path.Combine(VideoRuntime.DirectoryPath, "ffmpeg.exe"), Provenance = facts,
             UpscaleProvenance = facts with { Models = lite ? models : Models(environment, true) },
             Environment = new { environment.Libraries, environment.Comfy, environment.Timeline, environment.Upscaler, environment.Spectrum, environment.Turbo, environment.ClipProj, environment.Python.Device },
-            ModelFolders = VideoH3Profile.Folders(environment, lite),
+            Deno = deno is null ? null : new
+            {
+                torch = deno.AcceleratedTorch, kjNodes = environment.KjNodes,
+                libraries = deno.Attention.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries),
+                passes = job.Deno!.Passes(job.Settings)
+            },
+            ModelFolders = VideoH3Profile.Folders(environment, lite, deno is not null),
             Models = VideoH3Profile.Models(lite)
         };
         var requestPath = Path.Combine(directory, "request.json"); await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
@@ -76,13 +94,16 @@ internal static class VideoH3Runner
             catch { if (!process.HasExited) process.Kill(true); throw; }
         });
         string? workerError = null; var done = false;
+        var finishDeno = deno is not null && job.Deno!.Output != 0 && job.Settings.RunMode != "review";
+        JsonElement? denoSource = null;
+        var complete = false;
         try
         {
             while (await process.StandardOutput.ReadLineAsync() is { } line)
             {
                 if (!line.StartsWith("@h3 ", StringComparison.Ordinal)) { log(line); continue; }
                 using var json = JsonDocument.Parse(line[4..]); var message = json.RootElement; var kind = message.GetProperty("kind").GetString();
-                log("[H3 event] " + line[4..]);
+                if (!finishDeno || kind != "done") log("[H3 event] " + line[4..]);
                 log("[H3 event] " + JsonSerializer.Serialize(new { kind = "elapsed", elapsed_seconds = elapsed() }));
                 await File.AppendAllTextAsync(Path.Combine(directory, "events.jsonl"),
                     JsonSerializer.Serialize(new { utc = DateTimeOffset.UtcNow, message }) + "\n", CancellationToken.None);
@@ -96,6 +117,7 @@ internal static class VideoH3Runner
                     if (job.Run.GenerationSeconds is not null) job.Run.GenerationSeconds = elapsed();
                     await commit();
                 }
+                else if (kind == "whole" && finishDeno) denoSource = message.Clone();
                 else if (kind is "take" or "whole")
                 {
                     await AcceptFiles(message, job.Run, project, output, CancellationToken.None);
@@ -128,15 +150,40 @@ internal static class VideoH3Runner
                     if (job.Run.GenerationSeconds is not null) job.Run.GenerationSeconds = elapsed();
                     await commit();
                 }
-                else if (kind == "done") { done = true; job.Run.Complete = message.GetProperty("complete").GetBoolean(); await commit(); }
+                else if (kind == "done")
+                {
+                    done = true;
+                    complete = message.GetProperty("complete").GetBoolean();
+                    if (!finishDeno) { job.Run.Complete = complete; await commit(); }
+                }
                 else if (kind == "probe") done = true;
             }
             await process.WaitForExitAsync(CancellationToken.None); await stderr; token.ThrowIfCancellationRequested();
             if (process.ExitCode == unchecked((int)0xC0000005))
                 throw new VideoH3WorkerCrashException("VideoPrep.H3RuntimeFailed: native access violation\n" + errors);
             if (process.ExitCode != 0 || !done)
-                throw new IOException(workerError?.StartsWith("VideoPrep.", StringComparison.Ordinal) == true ? workerError
+                throw new IOException(workerError?.StartsWith("VideoPrep.", StringComparison.Ordinal) == true
+                    || workerError is "SongClip.DenoGpuRequired" or "SongClip.DenoAccelerateUnavailable" ? workerError
                     : "VideoPrep.H3RuntimeFailed: " + workerError + "\n" + errors);
+            if (finishDeno && !probeOnly && complete)
+            {
+                var source = denoSource ?? throw new InvalidDataException("VideoPrep.H3InvalidResult");
+                var video = source.GetProperty("video").GetString()!;
+                var artifact = source.GetProperty("files").Deserialize<WorkerFile[]>()!.Single(file => file.RelativePath == video);
+                var raw = RuntimeFileAudit.Contained(output, video);
+                await VerifyFile(raw, artifact.Size, artifact.Sha256, token);
+                var final = await VideoH3DenoFinish.WorkshopAsync(job, environment.Python, deno!, directory, raw, elapsed, log, token);
+                var name = Path.GetFileName(final.File);
+                var receipt = new WorkerFile(name, new FileInfo(final.File).Length, await H3MontageBinding.HashAsync(final.File, token));
+                await AcceptFile(receipt, job.Run, project, output, token);
+                var role = job.Run.Files.Single(file => file.RelativePath == name).Role;
+                job.Run.Results.Add(new(Guid.NewGuid().ToString("N"), "whole", role,
+                    source.GetProperty("seconds").GetDouble(), DateTimeOffset.UtcNow, final.Facts.Models));
+                if (job.Run.GenerationSeconds is not null) job.Run.GenerationSeconds = elapsed();
+                job.Run.Complete = true;
+                await commit();
+                log("[H3 event] " + JsonSerializer.Serialize(new { kind = "done", complete = true }));
+            }
         }
         finally { if (!process.HasExited) process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); await stderr; }
     }
@@ -157,14 +204,16 @@ internal static class VideoH3Runner
     private static async Task AcceptFiles(JsonElement message, VideoH3Run run, VideoPreparationProject project, string output, CancellationToken token)
     {
         foreach (var file in message.GetProperty("files").Deserialize<WorkerFile[]>()!)
-        {
-            if (!VideoH3Run.SafeRelative(file.RelativePath)) throw new InvalidDataException("VideoPrep.H3InvalidResult");
-            var path = RuntimeFileAudit.Contained(output, file.RelativePath);
-            await VerifyFile(path, file.Size, file.Sha256, token);
-            if (run.Files.Any(f => f.RelativePath == file.RelativePath)) continue;
-            var role = "h3-run/" + run.Id + "/" + Guid.NewGuid().ToString("N");
-            project.Attachments.Add(new(path, role)); run.Files.Add(new(file.RelativePath, role, file.Size, file.Sha256));
-        }
+            await AcceptFile(file, run, project, output, token);
+    }
+    private static async Task AcceptFile(WorkerFile file, VideoH3Run run, VideoPreparationProject project, string output, CancellationToken token)
+    {
+        if (!VideoH3Run.SafeRelative(file.RelativePath)) throw new InvalidDataException("VideoPrep.H3InvalidResult");
+        var path = RuntimeFileAudit.Contained(output, file.RelativePath);
+        await VerifyFile(path, file.Size, file.Sha256, token);
+        if (run.Files.Any(f => f.RelativePath == file.RelativePath)) return;
+        var role = "h3-run/" + run.Id + "/" + Guid.NewGuid().ToString("N");
+        project.Attachments.Add(new(path, role)); run.Files.Add(new(file.RelativePath, role, file.Size, file.Sha256));
     }
     internal static async Task RestoreFiles(VideoPreparationProject project, VideoH3Run run, string output, CancellationToken token)
     {

@@ -25,8 +25,8 @@ internal sealed class SongClipDownloadWindow:Window
     private readonly int _connections;
     private bool _busy;
     private readonly string _model, _root;
-    private readonly bool _montage, _acquisitionOnly;
-    internal SongClipDownloadWindow(Window owner,Func<string,string> l,string root,int connections,string model="glitchframe",string? mode=null,bool autoDownload=false,ManagedModelArtifactCard[]? requestedCards=null)
+    private readonly bool _montage, _deno, _acquisitionOnly, _denoAccelerated;
+    internal SongClipDownloadWindow(Window owner,Func<string,string> l,string root,int connections,string model="glitchframe",string? mode=null,bool autoDownload=false,ManagedModelArtifactCard[]? requestedCards=null,bool denoAccelerated=false)
     {
         if(SongClipVariantCatalog.IsRetiredModel(model))throw new InvalidOperationException(l(SongClipVariantCatalog.RetiredMessageKey));
         Owner=owner;_l=l;_connections=connections;MusicWishUi.PrepareWindow(this,l("SongClip.Components"),"SongClip.Download.Window",820);Height=580;MinWidth=600;MinHeight=400;
@@ -34,8 +34,11 @@ internal sealed class SongClipDownloadWindow:Window
         SetResourceReference(ForegroundProperty,"TextPrimaryBrush");
         Resources.MergedDictionaries.Insert(0,owner.Resources);
         _model=model;_root=root;_montage=model=="h3_music_context"&&SongClipModes.IsMontage(mode);
+        _deno = _montage && SongClipModes.Normalize(mode) == SongClipDeno.Mode;
+        _denoAccelerated = _deno && denoAccelerated;
         _acquisitionOnly=requestedCards is not null;
-        _cards=requestedCards??(model==InfiniteTalkRunner.ModelId?InfiniteTalkComponents.Cards(root):model==GeekatplayRunner.ModelId?GeekatplayComponents.Cards(root):model=="h3_music_context"?(_montage?H3MontageComponents.Cards(root):H3MusicComponents.Cards(root)).ToArray():GlitchframeComponents.Cards(root));foreach(var card in _cards)_store.Upsert(card);
+        _cards = requestedCards ?? SongClipVariantCatalog.Cards(SongClipVariantCatalog.Current(model, mode).Id, root, _denoAccelerated);
+        foreach (var card in _cards) _store.Upsert(card);
         foreach(var card in _cards) {
             _files.Children.Add(new TextBlock{Text=card.DisplayName,FontWeight=FontWeights.SemiBold,Margin=new(0,9,0,4)});
             foreach(var file in card.Files) {
@@ -75,7 +78,24 @@ internal sealed class SongClipDownloadWindow:Window
                 ready &= checkedCard.Status==ManagedModelStatuses.Installed;completed+=card.TotalBytes;
                 if(checkedCard.Status==ManagedModelStatuses.Installed)foreach(var f in card.Files)_rows[card.ModelArtifactId+"/"+f.RelativePath].Text="✓ "+f.RelativePath;
             }
-            if(ready){_status.Text=_l("SongClip.Preparing");if(_acquisitionOnly){}else if(_model==InfiniteTalkRunner.ModelId)await InfiniteTalkComponents.PrepareAsync(_root,_connections,_cancel.Token,m=>_status.Text=m);else if(_model==GeekatplayRunner.ModelId)await GeekatplayComponents.PrepareAsync(_root,_connections,_cancel.Token,m=>_status.Text=m);else if(_montage)await H3MontageComponents.PrepareAsync(_root,_connections,_cancel.Token,m=>_status.Text=m);else if(_model=="h3_music_context")await H3MusicComponents.PrepareAsync(_root,_connections,_cancel.Token,m=>_status.Text=m);else await GlitchframeComponents.PrepareTreesAsync(_cards,_cancel.Token,repair:true);_cancel.Token.ThrowIfCancellationRequested();_progress.Value=100;DialogResult=true;}
+            if (ready)
+            {
+                _status.Text = _l("SongClip.Preparing");
+                var token = _cancel.Token;
+                if (!_acquisitionOnly)
+                {
+                    void Report(string message) => _status.Text = message;
+                    if (_model == InfiniteTalkRunner.ModelId) await InfiniteTalkComponents.PrepareAsync(_root, _connections, token, Report);
+                    else if (GeekatplayRunner.Handles(_model)) await GeekatplayComponents.PrepareAsync(_root, _connections, token, Report, _model);
+                    else if (_deno) await SongClipDenoComponents.PrepareAsync(_root, _connections, token, Report, _denoAccelerated);
+                    else if (_montage) await H3MontageComponents.PrepareAsync(_root, _connections, token, Report);
+                    else if (_model == H3MusicRunner.ModelId) await H3MusicComponents.PrepareAsync(_root, _connections, token, Report);
+                    else await GlitchframeComponents.PrepareTreesAsync(_cards, token, repair: true);
+                }
+                token.ThrowIfCancellationRequested();
+                _progress.Value = 100;
+                DialogResult = true;
+            }
             else _status.Text=_l("SongClip.DownloadRequired");
         }
         catch(OperationCanceledException){_status.Text=_l("SongClip.Canceled");}

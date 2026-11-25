@@ -15,10 +15,11 @@ internal static class ShortsComponents
 
     private static UpscaleProject DlssProject() => new() { Steps = [DlssStep()] };
 
-    private static ManagedModelArtifactCard[] GenerationCards(string root, ManagedModelLibraryStore library)
+    private static ManagedModelArtifactCard[] GenerationCards(string root, ShortsGenerationProfile profile, ManagedModelLibraryStore library)
     {
         if (!Path.IsPathFullyQualified(root)) throw new InvalidOperationException("VideoEditor.StorageRequired");
-        var montage = ShortsJob.Cards(true, root);
+        var generation = profile.Cards(root);
+        if (!profile.FromSong) return generation;
         var expected = ManagedModelCatalog.CreateQwen36Executor(root);
         var installed = library.Load(expected.ModelArtifactId);
         var weight = expected.Files.Single();
@@ -30,25 +31,29 @@ internal static class ShortsComponents
         {
             expected.InstallDirectory = installed.InstallDirectory;
         }
-        return [.. montage, expected];
+        return [.. generation, expected];
     }
 
-    internal static ManagedModelArtifactCard[] Cards(string root, ManagedModelLibraryStore? library = null) =>
-        [.. GenerationCards(root, library ?? new()), .. UpscaleComponents.Cards(root, DlssProject())];
-
-    internal static async Task<bool> NeedsPreparationAsync(string root, int connections, CancellationToken token)
+    internal static ManagedModelArtifactCard[] Cards(string root, ShortsGenerationProfile profile, ManagedModelLibraryStore? library = null)
     {
-        if (SongClipAutomaticPreparation.NeedsDownload(Cards(root))) return true;
+        var generation = GenerationCards(root, profile, library ?? new());
+        return profile.Deno ? generation : [.. generation, .. UpscaleComponents.Cards(root, DlssProject())];
+    }
+
+    internal static async Task<bool> NeedsPreparationAsync(string root, int connections, ShortsGenerationProfile profile, CancellationToken token)
+    {
+        if (SongClipAutomaticPreparation.NeedsDownload(Cards(root, profile))) return true;
+        if (profile.Deno) return false;
         using var upscale = new UpscaleComponents(connections);
         return !await upscale.PrepareAsync(root, DlssProject(), false, null, token);
     }
 
-    internal static async Task<bool> PrepareAsync(string root, int connections, bool download,
+    internal static async Task<bool> PrepareAsync(string root, int connections, ShortsGenerationProfile profile, bool download,
         IProgress<ManagedModelDownloadProgress> progress, CancellationToken token)
     {
         using var audit = ComponentAudit.CaptureOperation();
         var library = new ManagedModelLibraryStore();
-        var cards = GenerationCards(root, library);
+        var cards = GenerationCards(root, profile, library);
         using var acquisition = new ManagedModelAcquisitionService(library) { MaximumParallelConnections = connections };
         var ready = true;
         foreach (var card in cards)
@@ -66,8 +71,13 @@ internal static class ShortsComponents
             ready &= installed;
         }
 
+        if (profile.Deno) return ready;
         using var upscale = new UpscaleComponents(connections);
         var dlssReady = await upscale.PrepareAsync(root, DlssProject(), download, progress, token);
         return ready && dlssReady;
     }
+
+    internal static Task<bool> PrepareAsync(string root, int connections, bool download,
+        IProgress<ManagedModelDownloadProgress> progress, CancellationToken token) =>
+        PrepareAsync(root, connections, default, download, progress, token);
 }
