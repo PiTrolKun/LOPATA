@@ -88,7 +88,7 @@ internal static partial class AgentProjects
                 options["audioMayChange"]!["description"] = "Allows the converter to re-encode audio when needed for the output container or size target.";
                 options["motionMayChange"]!["description"] = "Allows the converter to reduce the frame rate.";
                 options["omitIncompatibleTracks"]!["description"] = "Allows omitting incompatible tracks or changing subtitle styling.";
-                options["archive"]!["description"] = "Pack verified results into one ZIP. Original converted files remain available.";
+                options["archive"]!["description"] = "Save the verified videos inside a single ZIP in the output folder.";
                 break;
         }
 

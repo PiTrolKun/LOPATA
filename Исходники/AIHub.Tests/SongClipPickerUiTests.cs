@@ -15,6 +15,33 @@ namespace AIHub.Tests;
 public sealed class SongClipPickerUiTests
 {
     [TestMethod]
+    public Task ComponentVerificationUpdatesTheWindowFromAWorkerAndIgnoresStaleStatus() => OnUi(() =>
+    {
+        using var files = new VideoPreparationTests.TestFiles();
+        var component = files.File("component");
+        Directory.CreateDirectory(component);
+        byte[] content = [1, 2, 3];
+        File.WriteAllBytes(Path.Combine(component, "test.bin"), content);
+        PinnedTreeFile[] inventory = [new("test.bin", content.Length,
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(content)))];
+        using var audit = ComponentAudit.UseTestStore(files.File("audit"), enabled: true);
+        var active = true;
+        var status = new TextBlock();
+        var report = SongClipDownloadWindow.BindPreparationStatus(status, () => active);
+
+        Task.Run(() => PinnedFileTreeVerifier.VerifyAsync(component, inventory, CancellationToken.None,
+            (done, total) => report($"{done}/{total}"))).GetAwaiter().GetResult();
+        Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+        Assert.AreEqual("1/1", status.Text);
+
+        Task.Run(() => report("stale progress")).GetAwaiter().GetResult();
+        active = false;
+        status.Text = "Canceled";
+        Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+        Assert.AreEqual("Canceled", status.Text);
+    });
+
+    [TestMethod]
     [DataRow("ru",true,1050d)] [DataRow("en",false,1050d)]
     [DataRow("ru",false,740d)] [DataRow("en",true,740d)]
     public Task GroupsSelectionAndDownloadCloseBeforeReturningToOwner(string language,bool dark,double width)=>OnUi(()=>{

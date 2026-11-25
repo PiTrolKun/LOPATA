@@ -9,8 +9,15 @@ internal enum ConversionStatus { Pending, Running, Ready, Failed, Canceled, Over
 
 internal sealed record ConversionSource(long Size, DateTime WriteUtc, string Sha256);
 
+internal sealed record ConversionArchiveEntry(string ItemId, string Name, string Sha256);
+
 internal sealed record ConversionArtifact(string Path, string Extension, string Sha256, long Bytes, string Details,
-    double Seconds, long? Limit = null);
+    double Seconds, long? Limit = null)
+{
+    public string? ArchiveName { get; init; }
+    public ConversionArchiveEntry[]? Entries { get; init; }
+    internal string FileName => ArchiveName ?? System.IO.Path.GetFileName(Path);
+}
 
 internal sealed record ConversionItem(string Id, string Input)
 {
@@ -53,7 +60,8 @@ internal static class ConversionStore
     internal static void SaveDraft(ConversionDraft draft) => BackgroundOperationStore.SaveAtomic(DraftPath, draft, tolerateBriefFileLock: true);
 
     internal static string JobPath(ConversionJob job) => Path.Combine(
-        ManagedWorkStorage.Current.Job(JobFamily, job.Id, outputDirectory: job.Options.OutputDirectory), "queue.json");
+        ManagedWorkStorage.Current.Job(JobFamily, job.Id, outputDirectory: job.Options.Archive ? null : job.Options.OutputDirectory),
+        "queue.json");
     internal static string ExistingJobPath(string id)
     {
         if (!ValidId(id)) throw new InvalidDataException("Некорректный номер очереди конвертера.");
@@ -77,9 +85,36 @@ internal static class ConversionStore
     }
 
     private static bool ValidArtifact(ConversionArtifact? artifact, bool zip = false) => artifact is null
-        || artifact.Bytes > 0 && artifact.Sha256 is { Length: 64 } && artifact.Sha256.All(Uri.IsHexDigit)
+        || artifact.Bytes > 0 && ValidHash(artifact.Sha256)
         && Path.IsPathFullyQualified(artifact.Path) && Path.GetExtension(artifact.Path) == artifact.Extension
-        && (zip ? artifact.Extension == ".zip" : artifact.Extension is ".mp4" or ".mkv" or ".webm");
+        && (zip ? artifact.Extension == ".zip" && artifact.ArchiveName is null && ValidEntries(artifact.Entries)
+            : artifact.Extension is (".mp4" or ".mkv" or ".webm") && artifact.Entries is null
+              && (artifact.ArchiveName is null || IsFileName(artifact.ArchiveName) && Path.GetExtension(artifact.ArchiveName) == artifact.Extension));
+
+    private static bool ValidHash(string? hash) => hash is { Length: 64 } && hash.All(Uri.IsHexDigit);
+    private static bool IsFileName(string? name) => !string.IsNullOrWhiteSpace(name) && name is not ("." or "..")
+        && name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+
+    private static bool ValidEntries(ConversionArchiveEntry[]? entries) => entries is null
+        || entries.Length <= QueueLimit
+        && entries.All(entry => entry is not null && ValidId(entry.ItemId) && IsFileName(entry.Name) && ValidHash(entry.Sha256))
+        && entries.Select(entry => entry.ItemId).Distinct(StringComparer.Ordinal).Count() == entries.Length
+        && entries.Select(entry => entry.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() == entries.Length;
+
+    internal static ConversionArchiveEntry? ArchivedEntry(ConversionArtifact? archive, ConversionItem item) =>
+        item.Output is { } video
+            ? archive?.Entries?.FirstOrDefault(entry => entry.ItemId == item.Id && entry.Sha256 == video.Sha256)
+            : null;
+
+    internal static bool HasUnpackedOutput(ConversionJob job, ConversionItem item) =>
+        item.Output?.ArchiveName is not null && ArchivedEntry(job.Archive, item) is null;
+
+    internal static string? DeliveredPath(ConversionJob job, ConversionItem item)
+    {
+        if (item.Output is not { } output) return null;
+        if (output.ArchiveName is null) return output.Path;
+        return ArchivedEntry(job.Archive, item) is null ? null : job.Archive?.Path;
+    }
 
     internal static void SaveJob(ConversionJob job) => BackgroundOperationStore.SaveAtomic(JobPath(job), job, tolerateBriefFileLock: true);
 
@@ -105,6 +140,28 @@ internal static class ConversionStore
         var path = Path.Combine(scratch, $"{prefix}-{item}{extension}");
         SafeUpdatePath.RejectLinks(path);
         return path;
+    }
+
+    internal static (string Path, string? ArchiveName) VideoDestination(
+        ConversionJob job, ConversionItem item, string scratch, string extension)
+    {
+        var stem = Path.GetFileNameWithoutExtension(item.Input) + " — ЛОПАТА";
+        if (!job.Options.Archive)
+            return (AvailableName(job.Options.OutputDirectory, stem, extension, job.Items.Select(i => i.Input)), null);
+
+        var path = ScratchFile(scratch, item.Id, extension, "ready");
+        if (job.Items.Any(input => input.Input.Equals(path, StringComparison.OrdinalIgnoreCase)))
+            throw new IOException("Служебное имя результата занято исходником.");
+        return (path, stem[..Math.Min(stem.Length, 170)] + extension);
+    }
+
+    internal static void DiscardStagedOutput(ConversionJob job, ConversionItem item)
+    {
+        if (item.Output is not { ArchiveName: not null } output) return;
+        var staged = ScratchFile(Scratch(job), item.Id, output.Extension, "ready");
+        if (output.Path.Equals(staged, StringComparison.OrdinalIgnoreCase)
+            && !job.Items.Any(input => input.Input.Equals(staged, StringComparison.OrdinalIgnoreCase)))
+            ClearScratchFile(staged);
     }
 
     internal static string DefaultOutput => ManagedWorkStorage.Current.Results("VideoConverter/Результаты");
@@ -162,7 +219,8 @@ internal static class ConversionStore
             throw new IOException("Имя результата занято другим файлом. Можно повторить обработку.");
 
         var sameVolume = string.Equals(Path.GetPathRoot(draft), Path.GetPathRoot(target), StringComparison.OrdinalIgnoreCase);
-        using var capacity = ManagedWorkStorage.Current.Reserve(folder, sameVolume ? 0 : candidate.Bytes);
+        using var capacity = ManagedWorkStorage.Current.Reserve(folder, sameVolume ? 0 : candidate.Bytes,
+            temporary: candidate.ArchiveName is not null);
         token.ThrowIfCancellationRequested();
         Directory.CreateDirectory(folder);
         if (sameVolume)

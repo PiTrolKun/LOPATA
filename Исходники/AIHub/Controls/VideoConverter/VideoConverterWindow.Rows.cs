@@ -41,14 +41,16 @@ internal sealed partial class VideoConverterWindow
             }
             long? estimate = item?.Output?.Bytes ?? plan?.Estimate;
             if (estimate is long predicted) { estimates += predicted; estimated++; }
-            if (item?.Output is { } output) readyBytes += output.Bytes;
-            var status = T("State." + (item?.Status ?? ConversionStatus.Pending));
+            var waiting = _job is { } current && item is not null && ConversionStore.HasUnpackedOutput(current, item);
+            if (item?.Output is { } output && !waiting) readyBytes += output.Bytes;
+            var status = waiting && item?.Status == ConversionStatus.Ready
+                ? T("WaitingForSave") : T("State." + (item?.Status ?? ConversionStatus.Pending));
             if (probe.Error is not null && item is null) status = T("State.Failed");
-            var rowName = item?.Output is { } result ? Path.GetFileName(result.Path) : name;
+            var rowName = item?.Output is { } result ? result.FileName : name;
             var detail = item?.Output is { } complete
                 ? $"{status} · {Bytes(sourceBytes)} → {Bytes(complete.Bytes)} · {Savings(sourceBytes, complete.Bytes)} · {Elapsed(complete.Seconds)}"
                 : status + Forecast(plan, item);
-            var notes = item?.Output?.Details ?? error ?? (plan is not null ? string.Join(" · ", plan.Changes) : probe.Error);
+            var notes = error ?? item?.Output?.Details ?? (plan is not null ? string.Join(" · ", plan.Changes) : probe.Error);
             if (item is { Status: ConversionStatus.OverLimit, Candidate: { } larger })
                 notes = string.Join(Environment.NewLine, new[] { notes, larger.Details }.Where(line => !string.IsNullOrEmpty(line)));
             if (item?.RecycleNote is { } recycleNote) notes = string.IsNullOrWhiteSpace(notes) ? recycleNote : notes + Environment.NewLine + recycleNote;
@@ -80,8 +82,8 @@ internal sealed partial class VideoConverterWindow
         var lines = new List<string> { tally, string.Format(T("FromTo"), bytesBefore, forecast) };
         if (_job is { } job)
         {
-            lines.Add(string.Format(T("ReadyTotals"), job.Items.Count(i => i.Status == ConversionStatus.Ready), Bytes(readyBytes),
-                job.Items.Count(i => CanRetry(i.Status))));
+            var saved = job.Items.Count(item => item.Status == ConversionStatus.Ready && !ConversionStore.HasUnpackedOutput(job, item));
+            lines.Add(string.Format(T("ReadyTotals"), saved, Bytes(readyBytes), job.Items.Count(i => CanRetry(i.Status))));
             if (job.Archive is { } archive)
                 lines.Add(string.Format(T("ZipSize"), Bytes(archive.Bytes)));
             if (job.ArchiveError is { } zipError)
@@ -136,12 +138,13 @@ internal sealed partial class VideoConverterWindow
         _selectFolder.IsEnabled = idle;
         _begin.IsEnabled = idle && !_reading && (_paths.Count > items.Length
             || items.Any(i => i.Status is ConversionStatus.Pending or ConversionStatus.Running)
-            || _options.Archive && items.Any(i => i.Status == ConversionStatus.Ready));
+            || _options.Archive && items.Any(i => i.Status == ConversionStatus.Ready)
+            || _job is { } job && items.Any(i => ConversionStore.HasUnpackedOutput(job, i)));
         _cancel.IsEnabled = _run is not null;
         _retry.IsEnabled = idle && !_reading && (selected is null ? items.Any(i => CanRetry(i.Status)) : CanRetry(selected.Status));
         _larger.Visibility = selected?.Status == ConversionStatus.OverLimit ? Visibility.Visible : Visibility.Collapsed;
         _larger.IsEnabled = idle;
-        _reveal.IsEnabled = selected?.Output is not null;
+        _reveal.IsEnabled = selected?.Output is { ArchiveName: null };
         _openZip.Visibility = _job?.Archive is null ? Visibility.Collapsed : Visibility.Visible;
         _log.IsEnabled = _job is not null;
         _remove.IsEnabled = idle && Selected(_sources) is not null;

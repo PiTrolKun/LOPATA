@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using AIHub.Models;
 using AIHub.Services;
 using AIHub.Services.SongClip;
@@ -58,38 +59,43 @@ internal sealed class SongClipDownloadWindow:Window
     }
     private async Task Prepare(bool download)
     {
-        if(_busy)return;_busy=true;_download.IsEnabled=false;_stop.IsEnabled=true;_cancel=new CancellationTokenSource();
+        if(_busy)return;_busy=true;_download.IsEnabled=false;_stop.IsEnabled=true;
+        var cancel = _cancel = new CancellationTokenSource();
+        var token = cancel.Token;
+        bool IsCurrent() => _cancel == cancel && !token.IsCancellationRequested;
         var total=_cards.Sum(c=>c.TotalBytes);long completed=0;
+        var preparing = false;
         using var acquisition=new ManagedModelAcquisitionService(_store){MaximumParallelConnections=_connections};
         try {
             using var audit=ComponentAudit.CaptureOperation();
-            if(download)await ComponentLicenseGate.EnsureAsync(_cards.Select(c=>c.ModelArtifactId).ToArray(),_cancel.Token);
+            if(download)await ComponentLicenseGate.EnsureAsync(_cards.Select(c=>c.ModelArtifactId).ToArray(),token);
             var ready=true;
             foreach(var card in _cards) {
                 var offset=completed;
                 _status.Text=card.DisplayName;
                 var progress=new Progress<ManagedModelDownloadProgress>(p=>{
+                    if (!IsCurrent() || preparing) return;
                     _progress.Value=100d*(offset+p.DownloadedBytes)/Math.Max(1,total);
                     if(_rows.TryGetValue(card.ModelArtifactId+"/"+p.FileName,out var row))row.Text=(p.Stage=="verifying"?"… ":"↓ ")+p.FileName;
                     _status.Text=$"{card.DisplayName} · {(offset+p.DownloadedBytes)/1048576d:F0}/{total/1048576d:F0} MB · {p.BytesPerSecond/1048576d:F1} MB/s";
                 });
-                var checkedCard=await acquisition.VerifyAsync(card.ModelArtifactId,progress,_cancel.Token);
-                if(checkedCard.Status!=ManagedModelStatuses.Installed && download)checkedCard=await acquisition.DownloadAsync(card.ModelArtifactId,progress,_cancel.Token);
+                var checkedCard=await acquisition.VerifyAsync(card.ModelArtifactId,progress,token);
+                if(checkedCard.Status!=ManagedModelStatuses.Installed && download)checkedCard=await acquisition.DownloadAsync(card.ModelArtifactId,progress,token);
                 ready &= checkedCard.Status==ManagedModelStatuses.Installed;completed+=card.TotalBytes;
                 if(checkedCard.Status==ManagedModelStatuses.Installed)foreach(var f in card.Files)_rows[card.ModelArtifactId+"/"+f.RelativePath].Text="✓ "+f.RelativePath;
             }
             if (ready)
             {
+                preparing = true;
                 _status.Text = _l("SongClip.Preparing");
-                var token = _cancel.Token;
                 if (!_acquisitionOnly)
                 {
-                    void Report(string message) => _status.Text = message;
-                    if (_model == InfiniteTalkRunner.ModelId) await InfiniteTalkComponents.PrepareAsync(_root, _connections, token, Report);
-                    else if (GeekatplayRunner.Handles(_model)) await GeekatplayComponents.PrepareAsync(_root, _connections, token, Report, _model);
-                    else if (_deno) await SongClipDenoComponents.PrepareAsync(_root, _connections, token, Report, _denoAccelerated);
-                    else if (_montage) await H3MontageComponents.PrepareAsync(_root, _connections, token, Report);
-                    else if (_model == H3MusicRunner.ModelId) await H3MusicComponents.PrepareAsync(_root, _connections, token, Report);
+                    var report = BindPreparationStatus(_status, IsCurrent);
+                    if (_model == InfiniteTalkRunner.ModelId) await InfiniteTalkComponents.PrepareAsync(_root, _connections, token, report);
+                    else if (GeekatplayRunner.Handles(_model)) await GeekatplayComponents.PrepareAsync(_root, _connections, token, report, _model);
+                    else if (_deno) await SongClipDenoComponents.PrepareAsync(_root, _connections, token, report, _denoAccelerated);
+                    else if (_montage) await H3MontageComponents.PrepareAsync(_root, _connections, token, report);
+                    else if (_model == H3MusicRunner.ModelId) await H3MusicComponents.PrepareAsync(_root, _connections, token, report);
                     else await GlitchframeComponents.PrepareTreesAsync(_cards, token, repair: true);
                 }
                 token.ThrowIfCancellationRequested();
@@ -100,6 +106,21 @@ internal sealed class SongClipDownloadWindow:Window
         }
         catch(OperationCanceledException){_status.Text=_l("SongClip.Canceled");}
         catch(Exception error){_status.Text=error.Message;}
-        finally{_busy=false;_download.IsEnabled=true;_stop.IsEnabled=false;_cancel.Dispose();_cancel=null;}
+        finally{_cancel=null;cancel.Dispose();_busy=false;_download.IsEnabled=true;_stop.IsEnabled=false;}
+    }
+
+    internal static Action<string> BindPreparationStatus(TextBlock target, Func<bool> isCurrent)
+    {
+        var dispatcher = target.Dispatcher;
+        return message =>
+        {
+            void Update()
+            {
+                if (isCurrent()) target.Text = message;
+            }
+
+            if (dispatcher.CheckAccess()) Update();
+            else dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)Update);
+        };
     }
 }

@@ -279,6 +279,7 @@ internal sealed partial class VideoConverterWindow : Window
             if (_job?.Items.FirstOrDefault(item => item.Input.Equals(path, StringComparison.OrdinalIgnoreCase)) is { } item)
             {
                 ClearCandidate(_job, item);
+                ConversionStore.DiscardStagedOutput(_job, item);
                 _job = _job with { Items = _job.Items.Where(current => current != item).ToArray() };
                 ConversionStore.SaveJob(_job);
             }
@@ -296,7 +297,11 @@ internal sealed partial class VideoConverterWindow : Window
         {
             if (_job is { } job)
             {
-                foreach (var item in job.Items) ClearCandidate(job, item);
+                foreach (var item in job.Items)
+                {
+                    ClearCandidate(job, item);
+                    ConversionStore.DiscardStagedOutput(job, item);
+                }
                 if (job.ArchiveCandidate is { } archive) ConversionStore.DiscardCandidate(job, job.Id, archive, "archive");
             }
             _job = null;
@@ -341,7 +346,8 @@ internal sealed partial class VideoConverterWindow : Window
             var selected = retry ? ResultSelected() : null;
             string[] ids = job.Items.Where(item => saveLarger is not null ? item.Id == saveLarger
                 : retry ? CanRetry(item.Status) && (selected is null || item.Id == selected.Id)
-                : item.Status is ConversionStatus.Pending or ConversionStatus.Running).Select(item => item.Id).ToArray();
+                : item.Status is ConversionStatus.Pending or ConversionStatus.Running
+                  || !options.Archive && ConversionStore.HasUnpackedOutput(job, item)).Select(item => item.Id).ToArray();
             if (ids.Length == 0 && (!options.Archive || !job.Items.Any(i => i.Status == ConversionStatus.Ready))) return;
             if (saveLarger is null && _job is not null && (retry || options != _job.Options))
                 for (int i = 0; i < job.Items.Length; i++)
@@ -407,7 +413,7 @@ internal sealed partial class VideoConverterWindow : Window
         {
             await _ensureStartup();
             _job = await ConversionBatch.RunAsync(job, checkpoint, progress, run.Token, state);
-            var ready = _job.Items.Count(item => item.Status == ConversionStatus.Ready);
+            var ready = _job.Items.Count(item => item.Status == ConversionStatus.Ready && !ConversionStore.HasUnpackedOutput(_job, item));
             _activity.Text = string.Format(T("Summary"), ready, _job.Items.Count(item => CanRetry(item.Status)));
             completed = true;
         }
@@ -427,7 +433,9 @@ internal sealed partial class VideoConverterWindow : Window
             if (!_closed)
             {
                 if (!completed) try { _job = ConversionStore.ReadJob(job.Id) ?? _job; } catch (Exception error) when (Recoverable(error)) { ShowError(error); }
-                _progress.ShowProgress(false, completed && _job?.Items.All(item => item.Status == ConversionStatus.Ready) == true ? 1 : null);
+                _progress.ShowProgress(false, completed && _job is { ArchiveError: null } delivered
+                    && delivered.Items.All(item => item.Status == ConversionStatus.Ready && !ConversionStore.HasUnpackedOutput(delivered, item))
+                    ? 1 : null);
                 Render();
                 SaveDraft();
             }
@@ -449,13 +457,15 @@ internal sealed partial class VideoConverterWindow : Window
             {
                 var item = job.Items[i];
                 if (!allowed.Contains(item.Id) || item.Status != ConversionStatus.Ready
+                    || ConversionStore.DeliveredPath(job, item) is not { } path
                     || job.Items.Count(other => other.Input.Equals(item.Input, StringComparison.OrdinalIgnoreCase)) != 1
-                    || job.Items.Count(other => string.Equals(item.Output?.Path, other.Output?.Path, StringComparison.OrdinalIgnoreCase)) != 1
-                    || job.Items.Any(other => other.Input.Equals(item.Output?.Path, StringComparison.OrdinalIgnoreCase))) continue;
+                    || item.Output?.ArchiveName is null && job.Items.Count(other =>
+                        string.Equals(path, other.Output?.Path, StringComparison.OrdinalIgnoreCase)) != 1
+                    || job.Items.Any(other => other.Input.Equals(path, StringComparison.OrdinalIgnoreCase))) continue;
                 string? note = null;
                 try
                 {
-                    if (await ConversionRecycle.CheckAsync(item, token)) { eligible.Add((item, i)); continue; }
+                    if (await ConversionRecycle.CheckAsync(job, item, token)) { eligible.Add((item, i)); continue; }
                     note = T("RecycleMissing");
                 }
                 catch (Exception error) when (Recoverable(error)) { note = ConversionEncoder.ShortError(error); }
@@ -468,12 +478,12 @@ internal sealed partial class VideoConverterWindow : Window
                 return;
             }
             var question = T("ConfirmRecycle") + Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine + Environment.NewLine,
-                eligible.Select(entry => entry.Item.Input + Environment.NewLine + "→ " + entry.Item.Output!.Path));
+                eligible.Select(entry => entry.Item.Input + Environment.NewLine + "→ " + ConversionStore.DeliveredPath(job, entry.Item)));
             if (!PublisherUi.Confirm(this, _localize, question, T("Title"))) return;
             foreach (var (item, index) in eligible)
             {
                 string note;
-                try { note = await ConversionRecycle.RecycleAsync(item, new WindowInteropHelper(this).Handle, token); }
+                try { note = await ConversionRecycle.RecycleAsync(job, item, new WindowInteropHelper(this).Handle, token); }
                 catch (Exception error) when (Recoverable(error)) { note = T("RecycleMissing") + " " + ConversionEncoder.ShortError(error); }
                 job.Items[index] = item with { RecycleNote = note };
                 ConversionStore.SaveJob(job);

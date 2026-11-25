@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Security.Cryptography;
-using System.Text;
 using AIHub.Models;
 using AIHub.Services.VideoUpscale;
 using AIHub.Services.VoiceNotifications;
@@ -64,6 +62,10 @@ internal static partial class ConversionBatch
 
         Report("Проверка комплекта кодировщиков");
         await UpscaleFfmpeg.PrepareAsync(token);
+        if (job.ArchiveCandidate is { } interrupted && await ConversionStore.VerifyFile(interrupted.Path, interrupted, token))
+            job = await RecordArchiveAsync(job, interrupted, token);
+
+        bool? verifiedArchive = null;
         foreach (var index in indexes)
         {
             position++;
@@ -72,15 +74,29 @@ internal static partial class ConversionBatch
             var timer = Stopwatch.StartNew();
             try
             {
-                if (item.Output is { } existing && await ConversionStore.VerifyFile(existing.Path, existing, token))
-                    continue;
                 if (item.Candidate is { } published && await ConversionStore.VerifyFile(published.Path, published, token))
                 {
                     ConversionStore.DiscardCandidate(job, item.Id, published);
-                    Save(item with { Status = ConversionStatus.Ready, Output = published, Candidate = null, Error = null }, index);
+                    item = item with { Status = ConversionStatus.Ready, Output = published, Candidate = null, Error = null };
+                    Save(item, index);
                     Report("Проверенный результат восстановлен");
+                }
+                if (item.Output is { } existing && await ConversionStore.VerifyFile(existing.Path, existing, token))
+                {
+                    if (!job.Options.Archive && ConversionStore.HasUnpackedOutput(job, item))
+                    {
+                        var (path, _) = ConversionStore.VideoDestination(job, item, scratch, existing.Extension);
+                        var separate = existing with { Path = path, ArchiveName = null };
+                        item = item with { Candidate = separate };
+                        Save(item, index);
+                        item = await CommitAsync(job, item, separate, existing.Path, true, Report, token);
+                        Save(item, index);
+                    }
                     continue;
                 }
+                if (job.Archive is { } archive && ConversionStore.ArchivedEntry(archive, item) is not null
+                    && (verifiedArchive ??= await ConversionStore.VerifyFile(archive.Path, archive, token)))
+                    continue;
                 item = item with { Status = ConversionStatus.Running, Output = null, Error = null };
                 Save(item, index);
                 Report("Чтение исходника");
@@ -98,10 +114,10 @@ internal static partial class ConversionBatch
                     var earlierScratch = ConversionStore.ScratchFile(scratch, item.Id, earlier.Extension);
                     if (await ConversionStore.VerifyFile(earlierScratch, earlier, token))
                     {
-                        if (File.Exists(earlier.Path) || Directory.Exists(earlier.Path))
+                        var (path, archiveName) = ConversionStore.VideoDestination(job, item, scratch, earlier.Extension);
+                        if (earlier.Path != path || earlier.ArchiveName != archiveName)
                         {
-                            earlier = earlier with { Path = ConversionStore.AvailableName(job.Options.OutputDirectory,
-                                Path.GetFileNameWithoutExtension(item.Input) + " — ЛОПАТА", earlier.Extension, job.Items.Select(i => i.Input)) };
+                            earlier = earlier with { Path = path, ArchiveName = archiveName };
                             item = item with { Candidate = earlier };
                             Save(item, index);
                         }
@@ -160,6 +176,13 @@ internal static partial class ConversionBatch
                 ConversionStore.SaveJob(job);
             }
         }
+        else if (job.ArchiveCandidate is not null || job.ArchiveError is not null)
+        {
+            if (job.ArchiveCandidate is { } candidate)
+                ConversionStore.DiscardCandidate(job, job.Id, candidate, "archive");
+            job = job with { ArchiveCandidate = null, ArchiveError = null };
+            ConversionStore.SaveJob(job);
+        }
         Report("Обработка завершена");
         return job;
     }
@@ -177,81 +200,4 @@ internal static partial class ConversionBatch
     }
 
     private static string ItemState(ConversionItem item) => item.Status == ConversionStatus.Ready ? "Файл проверен" : "Размер выше цели";
-
-    private static async Task<ConversionJob> ArchiveAsync(ConversionJob job, string scratch, CancellationToken token)
-    {
-        List<(string Name, ConversionArtifact Video)> inputs = [];
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var item in job.Items.Where(i => i.Status == ConversionStatus.Ready && i.Output is not null))
-        {
-            var video = item.Output!;
-            if (!await ConversionStore.VerifyFile(video.Path, video, token))
-                throw new IOException($"Проверенный файл больше недоступен: {Path.GetFileName(video.Path)}.");
-            var stem = Path.GetFileNameWithoutExtension(video.Path);
-            var name = Path.GetFileName(video.Path);
-            for (int i = 2; !names.Add(name); i++) name = $"{stem} ({i}){video.Extension}";
-            inputs.Add((name, video));
-        }
-        if (inputs.Count == 0) return job;
-        var level = ZipLevel(job.Options);
-        var signature = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(level + "\n" +
-            string.Join("\n", inputs.Select(x => $"{x.Video.Sha256} {x.Name}")))));
-        var stage = ConversionStore.ScratchFile(scratch, job.Id, ".zip", "archive");
-        if (job.Archive is { } previous && previous.Details == signature && await ConversionStore.VerifyFile(previous.Path, previous, token))
-            return job;
-        var candidate = job.ArchiveCandidate;
-        try
-        {
-            if (candidate is null || candidate.Details != signature
-                || !(await ConversionStore.VerifyFile(stage, candidate, token) || await ConversionStore.VerifyFile(candidate.Path, candidate, token)))
-            {
-                ConversionStore.ClearScratchFile(stage);
-                using var reservation = ManagedWorkStorage.Current.Reserve(scratch, inputs.Sum(x => x.Video.Bytes) + 1024L * 1024, temporary: true);
-                await using (var file = new FileStream(stage, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 1024 * 1024, true))
-                {
-                    using (var zip = new ZipArchive(file, ZipArchiveMode.Create, leaveOpen: true, Encoding.UTF8))
-                        foreach (var (name, video) in inputs)
-                        {
-                            token.ThrowIfCancellationRequested();
-                            await using var original = File.OpenRead(video.Path);
-                            await using var member = zip.CreateEntry(name, level).Open();
-                            await original.CopyToAsync(member, token);
-                        }
-                    file.Flush(true);
-                }
-                using (var zip = ZipFile.OpenRead(stage))
-                {
-                    if (zip.Entries.Count != inputs.Count) throw new IOException("В ZIP отсутствуют готовые файлы.");
-                    foreach (var (entry, expected) in zip.Entries.Zip(inputs))
-                    {
-                        await using var member = entry.Open();
-                        if (entry.FullName != expected.Name || entry.Length != expected.Video.Bytes
-                            || Convert.ToHexString(await SHA256.HashDataAsync(member, token)) != expected.Video.Sha256)
-                            throw new IOException("Проверка содержимого ZIP не пройдена.");
-                    }
-                }
-                var target = job.Archive is { } old
-                    && Path.GetDirectoryName(old.Path)!.Equals(job.Options.OutputDirectory, StringComparison.OrdinalIgnoreCase)
-                    && await ConversionStore.VerifyFile(old.Path, old, token)
-                    ? old.Path : ConversionStore.AvailableName(job.Options.OutputDirectory, "Видео — ЛОПАТА", ".zip", []);
-                candidate = new(target, ".zip", await UpscaleMediaTools.Hash(stage, token), new FileInfo(stage).Length, signature, 0);
-                job = job with { ArchiveCandidate = candidate, ArchiveError = null };
-                ConversionStore.SaveJob(job);
-            }
-            await ConversionStore.PublishAsync(stage, candidate, job.Id, job.Archive, token);
-            job = job with { Archive = candidate, ArchiveCandidate = null, ArchiveError = null };
-            ConversionStore.SaveJob(job);
-            return job;
-        }
-        finally { if (job.ArchiveCandidate is null) ConversionStore.ClearScratchFile(stage); }
-    }
-
-    internal static CompressionLevel ZipLevel(ConversionOptions options) => options.Mode != ConversionMode.Percent
-        ? CompressionLevel.Optimal : options.Reduction switch
-        {
-            0 => CompressionLevel.NoCompression,
-            <= 25 => CompressionLevel.Fastest,
-            <= 65 => CompressionLevel.Optimal,
-            _ => CompressionLevel.SmallestSize
-        };
 }

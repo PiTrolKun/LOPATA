@@ -26,8 +26,7 @@ internal static partial class ConversionBatch
                 var (bytes, bitrate) = await EncodeProfileAsync(plan, encoder, item.Input, stage, scratch, report, token);
                 await ConversionEncoder.VerifyDecodingAsync(stage, token);
                 using (var stream = new FileStream(stage, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)) stream.Flush(true);
-                var target = ConversionStore.AvailableName(job.Options.OutputDirectory,
-                    Path.GetFileNameWithoutExtension(item.Input) + " — ЛОПАТА", extension, job.Items.Select(x => x.Input));
+                var (target, archiveName) = ConversionStore.VideoDestination(job, item, scratch, extension);
                 List<string> notes = [.. plan.Changes];
                 if (encoder.Name != "copy" && job.Options.Executor != ConversionExecutor.Auto && encoder.Executor != job.Options.Executor)
                     notes.Add($"Автоподбор исполнителя · {job.Options.Executor.ToString().ToUpperInvariant()} → {encoder.Executor.ToString().ToUpperInvariant()}");
@@ -36,7 +35,7 @@ internal static partial class ConversionBatch
                 var details = $"{label} · {encoder.Label} · {plan.Width} × {plan.Height}"
                     + (bitrate > 0 ? $" · {bitrate} кбит/с" : "") + Environment.NewLine + string.Join(" · ", notes);
                 var artifact = new ConversionArtifact(target, extension, await UpscaleMediaTools.Hash(stage, token), bytes,
-                    details, timer.Elapsed.TotalSeconds, plan.Limit);
+                    details, timer.Elapsed.TotalSeconds, plan.Limit) { ArchiveName = archiveName };
                 keepStage = true;
                 return (artifact, stage);
             }

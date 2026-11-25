@@ -124,7 +124,7 @@ public sealed class VideoConverterTests
             var hash = await UpscaleMediaTools.Hash(source, token);
             var outputFolder = fixture.File("Готовое");
             var options = new ConversionOptions { Executor = ConversionExecutor.Cpu, PictureMayChange = true, Mode = ConversionMode.Size,
-                LimitMb = 1, Archive = true, OutputDirectory = outputFolder };
+                LimitMb = 1, OutputDirectory = outputFolder };
             var first = new ConversionItem(ConversionStore.NewId(), source);
             var second = new ConversionItem(ConversionStore.NewId(), next);
             var bad = new ConversionItem(ConversionStore.NewId(), fixture.File("Недоступный.mkv"));
@@ -140,8 +140,8 @@ public sealed class VideoConverterTests
             Assert.HasCount(2, media.Tracks.Where(t => t.Type == "audio").ToArray());
             Assert.AreEqual("mini-test", media.Provenance!.Models.Single().Id);
             Assert.AreEqual(hash, await UpscaleMediaTools.Hash(source, token));
-            Assert.IsTrue(await ConversionRecycle.CheckAsync(first, token));
-            using (var zip = ZipFile.OpenRead(job.Archive!.Path)) Assert.HasCount(1, zip.Entries);
+            Assert.IsTrue(await ConversionRecycle.CheckAsync(job, first, token));
+            Assert.IsNull(job.Archive);
 
             // A crash after the atomic move can leave the journal a step behind the filesystem.
             job.Items[0] = first with { Status = ConversionStatus.Running, Output = null, Candidate = prepared };
@@ -151,14 +151,155 @@ public sealed class VideoConverterTests
             Assert.AreEqual(prepared, job.Items[0].Output);
             Assert.AreEqual(ConversionStatus.Ready, job.Items[1].Status, job.Items[1].Error);
             Assert.AreEqual(ConversionStatus.Failed, job.Items[2].Status);
-            Assert.IsFalse(await ConversionRecycle.CheckAsync(job.Items[0], token));
+            Assert.IsFalse(await ConversionRecycle.CheckAsync(job, job.Items[0], token));
             var vertical = await ConversionMedia.ProbeAsync(job.Items[1].Output!.Path, token);
             Assert.AreEqual((216, 384), (vertical.Width, vertical.Height));
             Assert.IsTrue(vertical.Bytes <= 1_000_000);
             Assert.HasCount(2, Directory.GetFiles(outputFolder, "*.mp4"));
-            Assert.HasCount(1, Directory.GetFiles(outputFolder, "*.zip"));
-            using var updated = ZipFile.OpenRead(job.Archive!.Path);
-            Assert.HasCount(2, updated.Entries);
+            Assert.HasCount(0, Directory.GetFiles(outputFolder, "*.zip"));
+
+            var previousOutputHash = await UpscaleMediaTools.Hash(prepared.Path, token);
+            job = job with { Options = options with { Archive = true } };
+            ConversionStore.SaveJob(job);
+            job = await ConversionBatch.RunAsync(job, new(job.Id, []), new Progress<ConversionProgress>(), token);
+            Assert.IsNotNull(job.Archive, job.ArchiveError);
+            Assert.AreEqual(previousOutputHash, await UpscaleMediaTools.Hash(prepared.Path, token));
+        }
+        finally { ComponentLicenseGate.ConfirmAsync = confirm; }
+    }
+
+    [TestMethod]
+    public async Task ZipModeDeliversOnlyTheArchiveAndCanResumeFromACommittedEntry()
+    {
+        using var fixture = new VideoPreparationTests.TestFiles();
+        using var storage = UseWorkspace(fixture);
+        using var audit = ComponentAudit.UseTestStore(fixture.File("audit"), enabled: true);
+        var confirm = ComponentLicenseGate.ConfirmAsync;
+        ComponentLicenseGate.ConfirmAsync = (_, _) => Task.CompletedTask;
+        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+        var token = stop.Token;
+        try
+        {
+            var source = fixture.File("one/Клип с аудио.mkv");
+            var secondSource = fixture.File("two/Клип с аудио.mkv");
+            Directory.CreateDirectory(Path.GetDirectoryName(source)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(secondSource)!);
+            await WriteClip(source, "384x216", 1.5, true, token);
+            await WriteClip(secondSource, "216x384", 1.25, false, token);
+            var sourceHash = await UpscaleMediaTools.Hash(source, token);
+            var outputFolder = fixture.File("Готовое");
+            var first = new ConversionItem(ConversionStore.NewId(), source);
+            var second = new ConversionItem(ConversionStore.NewId(), secondSource);
+            var job = new ConversionJob(ConversionStore.NewId(), new()
+            {
+                Executor = ConversionExecutor.Cpu, PictureMayChange = true, Mode = ConversionMode.Size,
+                LimitMb = 1, Archive = true, OutputDirectory = outputFolder
+            }, [first, second]);
+            ConversionStore.SaveJob(job);
+
+            // A file at the destination prevents the ZIP commit while the encoded video remains recoverable.
+            File.WriteAllText(outputFolder, "occupied");
+            job = await ConversionBatch.RunAsync(job, new(job.Id, [first.Id]), new Progress<ConversionProgress>(), token);
+            Assert.AreEqual(ConversionStatus.Ready, job.Items[0].Status, job.Items[0].Error);
+            Assert.IsNotNull(job.ArchiveError);
+            Assert.IsNull(job.Archive);
+            var staged = job.Items[0].Output!;
+            Assert.IsTrue(staged.Path.StartsWith(ConversionStore.Scratch(job) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(File.Exists(staged.Path));
+            Assert.IsFalse(await ConversionRecycle.CheckAsync(job, job.Items[0], token));
+
+            File.Delete(outputFolder);
+            job = ConversionStore.ReadJob(job.Id)!;
+            job = await ConversionBatch.RunAsync(job, new(job.Id, []), new Progress<ConversionProgress>(), token);
+            Assert.IsNotNull(job.Archive, job.ArchiveError);
+            Assert.IsFalse(File.Exists(staged.Path));
+            CollectionAssert.AreEqual(new[] { job.Archive.Path }, Directory.GetFileSystemEntries(outputFolder));
+            Assert.IsTrue(await ConversionRecycle.CheckAsync(job, job.Items[0], token));
+            Assert.AreEqual(sourceHash, await UpscaleMediaTools.Hash(source, token));
+
+            var archive = job.Archive;
+            var extracted = fixture.File("проверка.mp4");
+            using (var zip = ZipFile.OpenRead(archive.Path))
+            {
+                Assert.HasCount(1, zip.Entries);
+                zip.Entries[0].ExtractToFile(extracted);
+            }
+            var media = await ConversionMedia.ProbeAsync(extracted, token);
+            Assert.AreEqual(("av1", 384, 216), (media.Video.Codec, media.Width, media.Height));
+            Assert.HasCount(2, media.Tracks.Where(track => track.Type == "audio").ToArray());
+
+            // Simulate the crash after publishing the ZIP, with the journal still describing a candidate.
+            job = job with { Archive = null, ArchiveCandidate = archive };
+            ConversionStore.SaveJob(job);
+            File.Move(source, fixture.File("Исходник перемещён.mkv"));
+            job = await ConversionBatch.RunAsync(job, new(job.Id, [first.Id, second.Id]), new Progress<ConversionProgress>(), token);
+            Assert.IsNotNull(job.Archive, job.ArchiveError);
+            Assert.AreEqual(staged, job.Items[0].Output);
+            Assert.AreEqual(ConversionStatus.Ready, job.Items[1].Status, job.Items[1].Error);
+            Assert.IsFalse(File.Exists(job.Items[1].Output!.Path));
+            Assert.AreEqual(archive.Path, job.Archive.Path);
+            CollectionAssert.AreEqual(new[] { archive.Path }, Directory.GetFileSystemEntries(outputFolder));
+            using (var zip = ZipFile.OpenRead(archive.Path))
+            {
+                Assert.HasCount(2, zip.Entries);
+                Assert.AreNotEqual(zip.Entries[0].Name, zip.Entries[1].Name);
+            }
+            Assert.IsFalse(await ConversionRecycle.CheckAsync(job, job.Items[0], token));
+            Assert.IsTrue(await ConversionRecycle.CheckAsync(job, job.Items[1], token));
+
+            var delivered = job.Archive;
+            job = job with { Items = [job.Items[1]] };
+            ConversionStore.SaveJob(job);
+            job = await ConversionBatch.RunAsync(job, new(job.Id, []), new Progress<ConversionProgress>(), token);
+            Assert.IsNotNull(job.Archive, job.ArchiveError);
+            Assert.AreNotEqual(delivered.Path, job.Archive.Path);
+            Assert.IsTrue(await ConversionStore.VerifyFile(delivered.Path, delivered, token));
+        }
+        finally { ComponentLicenseGate.ConfirmAsync = confirm; }
+    }
+
+    [TestMethod]
+    public async Task TurningOffZipDeliversTheStagedVideoAndDiscardsTheUnfinishedArchive()
+    {
+        using var fixture = new VideoPreparationTests.TestFiles();
+        using var storage = UseWorkspace(fixture);
+        using var audit = ComponentAudit.UseTestStore(fixture.File("audit"), enabled: true);
+        var confirm = ComponentLicenseGate.ConfirmAsync;
+        ComponentLicenseGate.ConfirmAsync = (_, _) => Task.CompletedTask;
+        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(100));
+        var token = stop.Token;
+        try
+        {
+            var input = fixture.File("Видео.mkv");
+            await WriteClip(input, "384x216", 1.25, false, token);
+            var destination = fixture.File("Готовое");
+            var item = new ConversionItem(ConversionStore.NewId(), input);
+            var job = new ConversionJob(ConversionStore.NewId(), new()
+            {
+                Executor = ConversionExecutor.Cpu, PictureMayChange = true, Mode = ConversionMode.Size,
+                LimitMb = 1, Archive = true, OutputDirectory = destination
+            }, [item]);
+            ConversionStore.SaveJob(job);
+            File.WriteAllText(destination, "occupied");
+            job = await ConversionBatch.RunAsync(job, new(job.Id, [item.Id]), new Progress<ConversionProgress>(), token);
+            Assert.IsNotNull(job.ArchiveCandidate, job.ArchiveError);
+            var unfinished = ConversionStore.ScratchFile(ConversionStore.Scratch(job), job.Id, ".zip", "archive");
+            Assert.IsTrue(File.Exists(unfinished));
+            var staged = job.Items[0].Output!;
+
+            File.Delete(destination);
+            File.Move(input, fixture.File("Исходник перемещён.mkv"));
+            job = job with { Options = job.Options with { Archive = false } };
+            ConversionStore.SaveJob(job);
+            job = await ConversionBatch.RunAsync(job, new(job.Id, [item.Id]), new Progress<ConversionProgress>(), token);
+            Assert.AreEqual(ConversionStatus.Ready, job.Items[0].Status, job.Items[0].Error);
+            var saved = job.Items[0].Output!;
+            Assert.AreEqual(staged.Sha256, saved.Sha256);
+            CollectionAssert.AreEqual(new[] { saved.Path }, Directory.GetFileSystemEntries(destination));
+            Assert.IsNull(job.ArchiveCandidate);
+            Assert.IsNull(job.ArchiveError);
+            Assert.IsFalse(File.Exists(unfinished));
+            Assert.IsFalse(File.Exists(staged.Path));
         }
         finally { ComponentLicenseGate.ConfirmAsync = confirm; }
     }
