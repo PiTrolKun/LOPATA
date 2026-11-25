@@ -154,6 +154,7 @@ public static class ScenarioNavigationCatalog
         new ScenarioNavigationTag("image_layer_review", "ImageLayers.ReviewScene", "ImageLayers.ReviewSceneHelp", ImageLayers),
         new ScenarioNavigationTag("image_layer_background", "ImageLayers.CompleteFrame", "ImageLayers.CompleteFrameHelp", ImageLayers),
         new ScenarioNavigationTag("component_audit", "ComponentAudit.Title", "ComponentAudit.TagDescription", Utilities),
+        Tag("local_storage", Utilities),
         new ScenarioNavigationTag("pc_inspector", "Inspector.Title", "Inspector.Help", Utilities),
         new ScenarioNavigationTag("island_model_tasks", "Island.ModelTasks", "Island.ModelTasksDescription", Island),
         new ScenarioNavigationTag("island_core_chat", "Island.CoreChat", "Island.CoreChatDescription", Island),
