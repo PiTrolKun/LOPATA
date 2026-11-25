@@ -59,6 +59,9 @@ internal static partial class AgentProjects
         new(ScenarioNavigationCatalog.AnimatedAssets, ["Animation.Projects", "Animation.OpenProject"], "Describe the reference image and each requested reaction. Supply referenceBase64 if the reference image is ready.", typeof(AnimationDraft), ".lopatazipP"),
         new(ScenarioNavigationCatalog.VideoEditor, ["VideoEditor.OpenProject"], "Provide timed narration segments on the timeline, with start and end in seconds.", typeof(EditorDraft), ".lopataVideo"),
         new(ScenarioNavigationCatalog.VideoUpscale, ["VideoUpscale.OpenProject"], "Prepare a scaling pipeline for a source the user selects later. Dimensions must be even and between 128 and 16384.", typeof(UpscaleDraft), ".lopataUpscale"),
+        new(ScenarioNavigationCatalog.VideoConverter, ["VideoConverter.Advanced", "VideoConverter.OpenSettings"],
+            "Prepare a local conversion queue. Defaults are MP4 + AV1, Auto processor, 10% target reduction and original resolution. Provide paths only for videos the user selected. Processing starts in LOPATA after review. The prepared queue cannot request deletion of originals.",
+            typeof(ConverterDraft), ".lopata-converter.json"),
     ];
 
     public static object List(LocalizationService? language = null)

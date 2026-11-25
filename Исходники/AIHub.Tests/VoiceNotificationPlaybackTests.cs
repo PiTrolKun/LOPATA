@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Windows.Threading;
 using AIHub.Models;
 using AIHub.Services;
+using AIHub.Services.VideoConverter;
 using AIHub.Services.VoiceNotifications;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,6 +12,33 @@ namespace AIHub.Tests;
 
 public sealed partial class VoiceNotificationTests
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public Task ConverterStatusesWaitForTheVoicePack(bool olderPack) => OnUi(async () =>
+    {
+        using var fixture = new Fixture();
+        using var audit = ComponentAudit.UseTestStore(Path.Combine(fixture.Root, "audit"), false);
+        var catalog = fixture.Store.Catalog();
+        File.WriteAllText(Path.Combine(fixture.Store.BuiltIn, "catalog.json"), JsonSerializer.Serialize(catalog with
+        {
+            Events = [..catalog.Events, new(ConversionBatch.StartVoice, "voice.a", 2),
+                new(ConversionBatch.EndVoice, olderPack ? "voice.missing" : "voice.b", 2),
+                new("Tray.ResultReady", "voice.error", 2)]
+        }));
+        var audio = new FakeAudio();
+        using var service = new VoiceNotificationService(new(), fixture.Store, Dispatcher.CurrentDispatcher, audio);
+
+        var loading = service.SetLanguageAsync("en");
+        Assert.IsTrue(service.Publish(new(ConversionBatch.StartVoice, "job", [], "operation-start")));
+        Assert.IsTrue(service.Publish(new(ConversionBatch.EndVoice, "job", [], "operation", Terminal: true)));
+        await loading;
+        await Until(() => audio.Started.Count == 1);
+        audio.Finish();
+        await Until(() => audio.Started.Count == 2);
+        CollectionAssert.AreEqual(new[] { "voice.a", olderPack ? "voice.error" : "voice.b" }, audio.Started.Select(item => item.Clip).ToArray());
+    });
+
     [TestMethod]
     public Task ErrorInterruptsSpeechAndStatusesWaitWithoutDelayingUrgentPreemption() => OnUi(async () =>
     {

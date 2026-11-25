@@ -41,6 +41,7 @@ public partial class MainWindow
         RegisterLyricVideoBackgroundOperation();
         RegisterVideoEditorOperations();
         RegisterUpscaleOperations();
+        RegisterVideoConverterOperation();
         RegisterVideoConceptBackgroundOperations();
         RegisterSongClipBackgroundOperations();
         _backgroundOperations.Register(Services.Shorts.ShortsJob.Kind, (state, token) => OpenShorts().ResumeAsync(state, token));
@@ -90,7 +91,8 @@ public partial class MainWindow
         _backgroundOperations.Completed += notice => Dispatcher.BeginInvoke(() =>
         {
             var voiceContext = Services.VoiceNotifications.VoiceNotificationContext.Project(notice.Project);
-            if (Services.VoiceNotifications.VoiceNotificationEvents.CanSpeak?.Invoke("Tray.ResultReady", voiceContext) != true &&
+            var voiceKey = Services.VoiceNotifications.VoiceNotificationEvents.CompletionKey(notice.Kind);
+            if (Services.VoiceNotifications.VoiceNotificationEvents.CanSpeak?.Invoke(voiceKey, voiceContext) != true &&
                 Services.VoiceNotifications.VoicePlaybackHub.Allows(voiceContext)) System.Media.SystemSounds.Asterisk.Play();
             _applicationTray?.Notify(L("Tray.ResultReady"), notice.Title, onOpen: ViewBackgroundResult);
             RefreshBackgroundTray();
@@ -367,6 +369,16 @@ public partial class MainWindow
                 if (System.IO.File.Exists(job.Output)) _fileViewerService.Open(this, job.Output, _appSettings.FileViewer, _isDarkTheme, _localizationService);
                 else OpenUpscaleUtility(job.Project);
                 _backgroundOperations.Acknowledge(notice.Id); return;
+            }
+            if (notice.Kind == Services.VideoConverter.ConversionBatch.Kind)
+            {
+                var job = notice.Project is { } id ? Services.VideoConverter.ConversionStore.ReadJob(id) : null;
+                var lastId = Services.VideoConverter.ConversionStore.ReadDraft().JobId;
+                RestoreFromTray();
+                if (job is not null && job.Id != lastId && job.Items.Select(item => item.Output?.Path).FirstOrDefault(System.IO.File.Exists) is { } output)
+                    _fileViewerService.Open(this, output, _appSettings.FileViewer, _isDarkTheme, _localizationService);
+                else OpenVideoConverter();
+                _backgroundOperations!.Acknowledge(notice.Id); return;
             }
             if (notice.Kind == MusicRhymeWork.Kind)
             {

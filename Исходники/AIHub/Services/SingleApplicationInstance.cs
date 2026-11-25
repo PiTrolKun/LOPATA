@@ -15,6 +15,7 @@ internal sealed class SingleApplicationInstance : IDisposable
     private readonly Task _server;
     private readonly TaskCompletionSource<Func<ImageShellRequest, Task>> _imageHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<AudioShellRequest, Task>> _audioHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<Func<VideoConverterRequest, Task>> _converterHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<VectorEditor.VectorFileRequest, Task>> _vectorHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<VideoEditor.VideoFileRequest, Task>> _videoHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly TaskCompletionSource<Func<OfficeReader.ReaderFileRequest, Task>> _readerHandler = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -26,7 +27,7 @@ internal sealed class SingleApplicationInstance : IDisposable
     private SingleApplicationInstance(Mutex mutex, string pipe)
     { _mutex = mutex; _pipe = pipe; _server = ListenAsync(); }
 
-    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null, VideoEditor.VideoFileRequest? videoRequest = null, OfficeReader.ReaderFileRequest? readerRequest = null, bool inspectorReport = false)
+    public static SingleApplicationInstance? Acquire(bool background, ImageShellRequest? imageRequest = null, AudioShellRequest? audioRequest = null, VectorEditor.VectorFileRequest? vectorRequest = null, VideoEditor.VideoFileRequest? videoRequest = null, OfficeReader.ReaderFileRequest? readerRequest = null, bool inspectorReport = false, VideoConverterRequest? converterRequest = null)
     {
         var name = IslandLink.InstallationName(AppContext.BaseDirectory);
         var mutex = new Mutex(true, @"Local\" + name, out var first);
@@ -34,6 +35,7 @@ internal sealed class SingleApplicationInstance : IDisposable
         mutex.Dispose();
         if (readerRequest is not null) SendReaderAsync(name, readerRequest).GetAwaiter().GetResult();
         else if (videoRequest is not null) SendVideoAsync(name, videoRequest).GetAwaiter().GetResult();
+        else if (converterRequest is not null) SendConverterAsync(name, converterRequest).GetAwaiter().GetResult();
         else if (vectorRequest is not null)
         {
             SendVectorAsync(name, vectorRequest).GetAwaiter().GetResult();
@@ -59,6 +61,7 @@ internal sealed class SingleApplicationInstance : IDisposable
         => _imageHandler.TrySetResult(handler);
 
     public void SetAudioShellHandler(Func<AudioShellRequest, Task> handler) => _audioHandler.TrySetResult(handler);
+    public void SetVideoConverterHandler(Func<VideoConverterRequest, Task> handler) => _converterHandler.TrySetResult(handler);
     public void SetVectorHandler(Func<VectorEditor.VectorFileRequest, Task> handler) => _vectorHandler.TrySetResult(handler);
     public void SetVideoHandler(Func<VideoEditor.VideoFileRequest, Task> handler) => _videoHandler.TrySetResult(handler);
     public void SetReaderHandler(Func<OfficeReader.ReaderFileRequest, Task> handler) => _readerHandler.TrySetResult(handler);
@@ -100,6 +103,16 @@ internal sealed class SingleApplicationInstance : IDisposable
         await AudioShellProtocol.WriteAsync(pipe, request, timeout.Token).ConfigureAwait(false);
         var answer = new byte[1]; await pipe.ReadExactlyAsync(answer, timeout.Token).ConfigureAwait(false);
         if (answer[0] != ImageShellProtocol.Accepted) throw new IOException("Audio shell request was not accepted.");
+    }
+
+    private static async Task SendConverterAsync(string name, VideoConverterRequest request)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        await using var pipe = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        await pipe.ConnectAsync(timeout.Token).ConfigureAwait(false);
+        await AudioShellProtocol.WriteMessageAsync(pipe, VideoConverterRequest.Marker, request.Validate(), timeout.Token).ConfigureAwait(false);
+        var answer = new byte[1]; await pipe.ReadExactlyAsync(answer, timeout.Token).ConfigureAwait(false);
+        if (answer[0] != ImageShellProtocol.Accepted) throw new IOException("Video converter request was not accepted.");
     }
 
     private static async Task SendImageAsync(string name, ImageShellRequest request)
@@ -154,6 +167,12 @@ internal sealed class SingleApplicationInstance : IDisposable
                     read.CancelAfter(TimeSpan.FromSeconds(30));
                     var handler = await _audioHandler.Task.WaitAsync(read.Token).ConfigureAwait(false);
                     await AudioShellProtocol.ReceiveAsync(pipe, handler, read.Token).ConfigureAwait(false);
+                }
+                else if (request[0] == VideoConverterRequest.Marker)
+                {
+                    read.CancelAfter(TimeSpan.FromSeconds(30));
+                    var handler = await _converterHandler.Task.WaitAsync(read.Token).ConfigureAwait(false);
+                    await AudioShellProtocol.ReceiveMessageAsync<VideoConverterRequest>(pipe, item => handler(item.Validate()), read.Token).ConfigureAwait(false);
                 }
                 else if (request[0] == OfficeReader.ReaderFileProtocol.Marker)
                 {

@@ -302,6 +302,10 @@ begin
   Result := Exec(ExpandConstant('{#UpdateHost}'), '--unregister', '', SW_SHOWNORMAL, ewWaitUntilTerminated, Code) and (Code = 0);
 end;
 
+#ifndef StandDataRoot
+#include "VideoConverterShell.iss"
+#endif
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 #ifndef StandDataRoot
 var Marker, Executable, MenuKey: String;
@@ -309,6 +313,7 @@ var Marker, Executable, MenuKey: String;
 begin
 #ifndef StandDataRoot
   if CurUninstallStep = usPostUninstall then begin
+    RemoveVideoConverterShell(ExpandConstant('{app}\AIHub.exe'));
     MenuKey := 'Software\Classes\SystemFileAssociations\image\shell\LOPATA';
     if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and (Marker = 'AIHub.ImageShellIntegration.v1') and
       RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Executable', Executable) and

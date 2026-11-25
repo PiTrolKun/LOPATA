@@ -79,6 +79,7 @@ $privatePath = Join-Path $env:LOCALAPPDATA 'LOPATA-Publishing/Keys/file-updates-
 if (!(Test-Path -LiteralPath $privatePath)) { throw 'The release signing key is not available. Restore it from its secure backup.' }
 $config = [ordered]@{
     roots = $roots; publicKeysPath = Join-Path $root 'Исходники/LOPATA.Updates/release-keys.json'
+    appProjectPath = Join-Path $root 'Исходники/AIHub/AIHub.csproj'
     privateKeyPath = $privatePath; keyId = 'lopata-file-updates-1'; version = $Version
     sourceCommit = $commit; notes = $history; outputDirectory = $out
     previousManifestPath = $(if ($PreviousManifestPath) { (Resolve-Path -LiteralPath $PreviousManifestPath).Path } else { $null })

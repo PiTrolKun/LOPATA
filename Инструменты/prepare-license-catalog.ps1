@@ -1,22 +1,52 @@
-param([switch]$RefreshTexts, [string]$AppendEntries = '')
+param([switch]$RefreshTexts, [string]$AppendEntries = '', [switch]$UpdateInstallerTerms)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot -Parent
 $dest=Join-Path $root 'Исходники/AIHub/Licenses'
 New-Item -ItemType Directory -Force "$dest/texts" | Out-Null
+function Add-JsonArrayEntries($path, $additions, $encoding) {
+ $original=[IO.File]::ReadAllText($path).TrimEnd()
+ if (!$original.EndsWith(']')) { throw "Expected a JSON array: $path" }
+ $lineBreak=if($original.Contains("`r`n")){"`r`n"}else{"`n"}
+ $newJson=ConvertTo-Json -InputObject @($additions) -Depth 8
+ $newItems=$newJson.Substring(1,$newJson.Length-2).Trim("`r","`n") -replace '\r?\n', $lineBreak
+ $prefix=$original.Substring(0,$original.Length-1).TrimEnd()
+ $separator=if($prefix -eq '['){''}else{','}
+ [IO.File]::WriteAllText($path,"$prefix$separator$lineBreak$newItems$lineBreak]$lineBreak",$encoding)
+}
+function Write-InstallerTerms($catalog, [switch]$Append) {
+ $basic=@($catalog | Where-Object Basic)
+ if ($Append -and $basic.Count -eq 0) { return }
+ $existingText=if($Append){[IO.File]::ReadAllText("$dest/installer.txt")}else{''}
+ $text=if($Append){"`r`n"}else{"ЛОПАТА / LOPATA — лицензии компонентов`r`nПодтверждая ознакомление, вы обязуетесь соблюдать применимые условия. Это не изменяет лицензии и не предоставляет отсутствующих прав.`r`n`r`n"}
+ foreach($e in $basic){$delivery=if($e.Delivery -eq 'bundled'){'Входит в установку'}else{'Скачивается отдельно'};$text+="$($e.Name) — $($e.License)`r`n$delivery`r`n$($e.Author)`r`n$($e.Ru)`r`nПроверено: $($e.Checked)`r`n$($e.Source)`r`n`r`n"}
+ foreach($f in @($basic.Texts | Select-Object -Unique)) {
+  if (!$Append -or $existingText -notmatch ('(?m)^' + [regex]::Escape($f) + '\r?$')) {
+   $text+="`r`n$f`r`n"+[IO.File]::ReadAllText((Join-Path $dest $f))
+  }
+ }
+ $text=[regex]::Replace($text,'[ \t]+(?=\r?$)','',[Text.RegularExpressions.RegexOptions]::Multiline)
+ $text=$text.Replace([string][char]9,'    ')
+ [IO.File]::WriteAllText("$dest/installer.txt",$existingText+$text,[Text.UTF8Encoding]::new($true))
+ $receipts=@($basic | ForEach-Object {[ordered]@{Id=$_.Id;AcceptedAt='__ACCEPTED_AT__';Terms=$_.Terms;AppVersion='__APP_VERSION__';Source='installer'}})
+ if ($Append) { Add-JsonArrayEntries "$dest/installer-receipt.json" $receipts ([Text.Encoding]::ASCII) }
+ else { $receipts | ConvertTo-Json -Depth 5 | Set-Content "$dest/installer-receipt.json" -Encoding ascii }
+}
 if ($AppendEntries) {
- # Add optional model terms without regenerating the historical basic catalog
- # or invalidating acknowledgements for unrelated hardware runtimes.
+ # Add terms without rebuilding the existing catalogue from the historical snapshot.
  $existing = @(Get-Content "$dest/catalog.json" -Raw | ConvertFrom-Json)
  $additions = @(Get-Content -LiteralPath $AppendEntries -Raw | ConvertFrom-Json)
  foreach ($entry in $additions) {
-  if ($entry.Basic) { throw 'AppendEntries is for optional components only.' }
+  if ($entry.Basic -and (!$UpdateInstallerTerms -or $entry.Delivery -ne 'bundled')) {
+   throw 'A new basic bundled component requires UpdateInstallerTerms.'
+  }
   if ($existing.Id -contains $entry.Id) { throw "License entry already exists: $($entry.Id)" }
   $terms = $entry.License + $entry.Ru + $entry.En
   foreach ($file in $entry.Texts) { $terms += [IO.File]::ReadAllText((Join-Path $dest $file)) }
   $entry.Terms = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($terms)))
  }
- ConvertTo-Json -InputObject @($existing + $additions) -Depth 8 | Set-Content "$dest/catalog.json" -Encoding utf8
- Write-Host "Appended $($additions.Count) optional license entries; existing terms preserved."
+ if ($UpdateInstallerTerms) { Write-InstallerTerms $additions -Append }
+ Add-JsonArrayEntries "$dest/catalog.json" $additions ([Text.UTF8Encoding]::new($false))
+ Write-Host "Appended $($additions.Count) license entries. Existing terms preserved."
  return
 }
 $snapshot=Get-Content (Join-Path $root 'Документы_проекта/Лицензии/каталоги_2026-09-05.json') -Raw | ConvertFrom-Json
@@ -157,7 +187,7 @@ foreach($entryFile in @('neuroconstructor-entries.json','image-generation-entrie
   foreach($e in @(Get-Content $scenarioEntries -Raw | ConvertFrom-Json)){ $entries.Add($e) }
  }
 }
-foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entries.json','music-lora-entries.json','image-lora-entries.json','image-lora-entries.json','music-stems-entries.json','music-cover-entries.json','music-midi-entries.json','dictation-entries.json','svg-entries.json','video-narrator-entries.json','video-ltx-entries.json','video-h3lite-entries.json')) {
+foreach($entryFile in @('music-studio-002-entries.json','native-engine-002-entries.json','music-lora-entries.json','image-lora-entries.json','image-lora-entries.json','music-stems-entries.json','music-cover-entries.json','music-midi-entries.json','dictation-entries.json','svg-entries.json','video-narrator-entries.json','video-ltx-entries.json','video-h3lite-entries.json','video-converter-entries.json')) {
  $engineEntries=Join-Path $dest $entryFile
  if(Test-Path -LiteralPath $engineEntries) {
   foreach($entry in @(Get-Content -LiteralPath $engineEntries -Raw | ConvertFrom-Json)) { $entries.Add($entry) }
@@ -177,12 +207,5 @@ foreach($e in $entries){
  $e.Terms=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($terms)))
 }
 $entries | ConvertTo-Json -Depth 8 | Set-Content "$dest/catalog.json" -Encoding utf8
-$basic=@($entries | Where-Object Basic)
-$text="ЛОПАТА / LOPATA — лицензии компонентов`r`nПодтверждая ознакомление, вы обязуетесь соблюдать применимые условия. Это не изменяет лицензии и не предоставляет отсутствующих прав.`r`n`r`n"
-foreach($e in $basic){$delivery=if($e.Delivery -eq 'bundled'){'Входит в установку'}else{'Скачивается отдельно'};$text+="$($e.Name) — $($e.License)`r`n$delivery`r`n$($e.Author)`r`n$($e.Ru)`r`nПроверено: $($e.Checked)`r`n$($e.Source)`r`n`r`n"}
-foreach($f in @($basic.Texts | Select-Object -Unique)){$text+="`r`n$f`r`n"+[IO.File]::ReadAllText((Join-Path $dest $f))}
-$text=[regex]::Replace($text,'[ \t]+(?=\r?$)','',[Text.RegularExpressions.RegexOptions]::Multiline)
-$text=$text.Replace([string][char]9,'    ')
-[IO.File]::WriteAllText("$dest/installer.txt",$text,[Text.UTF8Encoding]::new($true))
-@($basic | ForEach-Object {[ordered]@{Id=$_.Id;AcceptedAt='__ACCEPTED_AT__';Terms=$_.Terms;AppVersion='__APP_VERSION__';Source='installer'}}) | ConvertTo-Json -Depth 5 | Set-Content "$dest/installer-receipt.json" -Encoding ascii
+Write-InstallerTerms $entries
 Write-Host "Prepared $($entries.Count) license entries. Review catalog and installer text before shipping."

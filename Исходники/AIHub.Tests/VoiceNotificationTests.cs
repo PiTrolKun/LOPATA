@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using AIHub.Models;
 using AIHub.Services;
+using AIHub.Services.VideoConverter;
 using AIHub.Services.VoiceNotifications;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -85,6 +86,53 @@ public sealed partial class VoiceNotificationTests
         Assert.AreEqual("voice.test", translated.Match("Saved file: document.docx")!.ClipId);
         translated.AddTranslation(new Dictionary<string, string> { ["save"] = "Fichier enregistré" });
         Assert.AreEqual("voice.test", translated.Match("Fichier enregistré")!.ClipId);
+    }
+
+    [TestMethod]
+    [DataRow("ru", "Начинаю перекодирование видео.", "Перекодирование видео завершено.")]
+    [DataRow("en", "Starting video conversion.", "Video conversion complete.")]
+    public async Task ConverterPhrasesLoadFromTheBuiltInPack(string language, string start, string complete)
+    {
+        using var fixture = new Fixture();
+        using var audit = ComponentAudit.UseTestStore(Path.Combine(fixture.Root, "audit"), enabled: false);
+        var store = new VoiceNotificationStore(localization: fixture.Localizations, cache: Path.Combine(fixture.Root, "Cache"));
+        var catalog = new VoiceNotificationCatalog(store.Catalog(), language);
+        var package = await store.LoadAsync(language, CancellationToken.None);
+        Assert.IsNotNull(package);
+        foreach (var (key, expected) in new[] { (ConversionBatch.StartVoice, start), (ConversionBatch.EndVoice, complete) })
+        {
+            var binding = catalog.Find(key);
+            Assert.IsNotNull(binding);
+            Assert.AreEqual(2, binding.Group);
+            Assert.AreEqual(binding, catalog.Match(expected));
+            var clip = package.Items[binding.ClipId];
+            Assert.AreEqual(expected, clip.SourceText);
+            Assert.AreEqual(expected, clip.SynthesisText);
+            Assert.AreEqual(".opus", Path.GetExtension(package.Resolve(clip)));
+        }
+    }
+
+    [TestMethod]
+    public void ConverterCompletionAndCancellationUseDifferentPhrases()
+    {
+        var previousDelivery = VoiceNotificationEvents.Deliver;
+        try
+        {
+            var requests = new List<VoiceEventRequest>();
+            VoiceNotificationEvents.Deliver = request => { requests.Add(request); return true; };
+            var running = new BackgroundOperationState { Kind = ConversionBatch.Kind, Title = ConversionBatch.Title, Project = "test-queue" };
+            VoiceNotificationEvents.Background(running, running with { Phase = BackgroundOperationPhase.Completed });
+            VoiceNotificationEvents.Background(running, running with { Phase = BackgroundOperationPhase.Canceled });
+
+            CollectionAssert.AreEqual(
+                new[] { ConversionBatch.EndVoice, "RagBooks.State.Canceled" },
+                requests.Select(request => request.Value).ToArray());
+            Assert.IsTrue(requests.All(request => request.Terminal && request.Scope == running.Id));
+        }
+        finally
+        {
+            VoiceNotificationEvents.Deliver = previousDelivery;
+        }
     }
 
     [TestMethod, DataRow(true), DataRow(false)]

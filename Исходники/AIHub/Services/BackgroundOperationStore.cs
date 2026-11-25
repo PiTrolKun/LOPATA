@@ -96,7 +96,7 @@ public sealed class BackgroundOperationStore(string path, bool archiveResults = 
         return new BackgroundOperationStore(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "Results", id + ".json")).Load();
     }
 
-    private static void SaveAtomic(string destination, BackgroundOperationState state)
+    internal static void SaveAtomic<T>(string destination, T state, bool tolerateBriefFileLock = false)
     {
         Lopata.Updates.SafeUpdatePath.RejectLinks(destination);
         var bytes = JsonSerializer.SerializeToUtf8Bytes(state, Options);
@@ -106,7 +106,18 @@ public sealed class BackgroundOperationStore(string path, bool archiveResults = 
         {
             using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None,
                 4096, FileOptions.WriteThrough)) { stream.Write(bytes); stream.Flush(true); }
-            Lopata.Updates.SafeUpdatePath.RejectLinks(destination); File.Move(temporary, destination, true);
+            for (var attempt = 0; ; attempt++)
+            {
+                Lopata.Updates.SafeUpdatePath.RejectLinks(destination);
+                try { File.Move(temporary, destination, overwrite: true); break; }
+                catch (Exception error) when (tolerateBriefFileLock && attempt < 3 &&
+                    error is IOException or UnauthorizedAccessException &&
+                    (error.HResult & 0xffff) is 5 or 32 or 33 && File.Exists(destination))
+                {
+                    // A reader without delete sharing can briefly block replacement on Windows.
+                    Thread.Sleep(25 << attempt);
+                }
+            }
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

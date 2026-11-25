@@ -13,7 +13,8 @@ public sealed class AgentModelPlanTests
     {
         var projects = JsonSerializer.SerializeToElement(AgentProjects.List()).EnumerateArray()
             .Select(p => p.GetProperty("scenario").GetString()!)
-            .Where(id => id != ScenarioNavigationCatalog.CharacterKnowledge && id != ScenarioNavigationCatalog.NeuroConstructor)
+            .Where(id => id is not (ScenarioNavigationCatalog.CharacterKnowledge
+                or ScenarioNavigationCatalog.NeuroConstructor or ScenarioNavigationCatalog.VideoConverter))
             .Order().ToArray();
         CollectionAssert.AreEqual(projects, AgentModelPlan.Operations.Keys.Order().ToArray());
         foreach (var (id, operations) in AgentModelPlan.Operations)

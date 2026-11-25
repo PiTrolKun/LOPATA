@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using Lopata.Updates;
 using Lopata.UpdateTool;
@@ -39,6 +40,67 @@ public sealed class ReleaseInputPreparationTests
         foreach (var package in next.Packages)
             await UpdatePackageExtractor.ExtractAsync(Path.Combine(fixture.Folder, "next-packages", package.Id), package, next, fixture.Stage);
         Assert.AreEqual("signed old module", File.ReadAllText(Path.Combine(fixture.Stage, "app/Collection/previous/module.dll")));
+    }
+
+    [TestMethod]
+    public async Task SignedUpdateReplacesAnOldScriptWithTheBytesRequiredByTheApplication()
+    {
+        using var fixture = new UpdateFixture();
+        var testAssembly = typeof(ReleaseInputPreparationTests).Assembly;
+        using var resource = testAssembly.GetManifestResourceStream("Tests.H3Memory")!;
+        using var buffer = new MemoryStream();
+        resource.CopyTo(buffer);
+        var currentBytes = buffer.ToArray();
+        var text = Encoding.UTF8.GetString(currentBytes);
+        var lf = text.Replace("\r\n", "\n", StringComparison.Ordinal);
+        var oldText = lf == text ? lf.Replace("\n", "\r\n", StringComparison.Ordinal) : lf;
+        const string script = "Tools/h3_memory.py";
+        fixture.Put(script, oldText);
+        File.Copy(testAssembly.Location, Path.Combine(fixture.App, "AIHub.dll"));
+        var oldPackages = Path.Combine(fixture.Folder, "old-packages");
+        var previous = await Build(fixture.App, oldPackages);
+
+        var current = Path.Combine(fixture.Folder, "publish");
+        Directory.CreateDirectory(Path.Combine(current, "Tools"));
+        File.Copy(testAssembly.Location, Path.Combine(current, "AIHub.dll"));
+        var project = Path.Combine(fixture.Folder, "AIHub.csproj");
+        File.WriteAllText(project, """
+            <Project><ItemGroup>
+              <EmbeddedResource Include="Tools\h3_memory.py" LogicalName="Tests.H3Memory" />
+            </ItemGroup></Project>
+            """);
+        var publishedScript = SafeUpdatePath.Resolve(current, script);
+        File.WriteAllText(publishedScript, oldText);
+        var wrong = await Assert.ThrowsAsync<InvalidDataException>(() => ReleaseScriptContracts.VerifyPublishedAsync(current, project));
+        StringAssert.Contains(wrong.Message, script);
+        File.WriteAllBytes(publishedScript, currentBytes);
+
+        var contracts = await ReleaseScriptContracts.VerifyPublishedAsync(current, project);
+        var roots = new Dictionary<string, string> { ["app"] = current };
+        var changes = await ReleaseInputPreparation.RestorePreviousAsync(roots, previous, oldPackages,
+            Path.Combine(fixture.Folder, "prep"), publishedFiles: contracts.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase));
+        CollectionAssert.DoesNotContain(changes.RestoredTextBytes, "app/" + script);
+        CollectionAssert.AreEqual(currentBytes, File.ReadAllBytes(publishedScript));
+
+        var nextPackages = Path.Combine(fixture.Folder, "next-packages");
+        const string version = "0.7.74-beta";
+        var target = await UpdatePackageBuilder.BuildAsync(roots, nextPackages, version, new('a', 40),
+            [new(version, DateTimeOffset.UtcNow, "Script repair test")], previous);
+        Assert.Throws<InvalidDataException>(() => ReleaseScriptContracts.VerifyManifest(previous, contracts));
+        ReleaseScriptContracts.VerifyManifest(target, contracts);
+        var package = target.Packages.Single(p => p.Id == target.Files.Single(f => f.Path == script).Package);
+        await UpdatePackageExtractor.ExtractAsync(Path.Combine(nextPackages, package.Id), package, target, fixture.Stage);
+
+        using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var keys = new Dictionary<string, string> { ["test"] = key.ExportSubjectPublicKeyInfoPem() };
+        var before = SignedManifest.Sign(previous, "test", key);
+        var transaction = new UpdateTransaction(fixture.Roots, keys, Path.Combine(fixture.Folder, "state"));
+        await transaction.RegisterInstalledAsync(before);
+        var id = await transaction.PrepareAsync(before, SignedManifest.Sign(target, "test", key), fixture.Stage);
+        await transaction.ApplyAsync(id);
+        await transaction.ConfirmHealthyAsync(id);
+        CollectionAssert.AreEqual(currentBytes, File.ReadAllBytes(SafeUpdatePath.Resolve(fixture.App, script)));
+        await ReleaseScriptContracts.VerifyPublishedAsync(fixture.App, project);
     }
 
     [TestMethod]

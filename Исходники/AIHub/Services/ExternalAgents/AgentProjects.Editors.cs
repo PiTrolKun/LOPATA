@@ -2,6 +2,7 @@ using System.IO;
 using AIHub.Services.ImageLayers;
 using AIHub.Services.OfficeEditor;
 using AIHub.Services.VectorEditor;
+using AIHub.Services.VideoConverter;
 using AIHub.Services.VideoEditor;
 using AIHub.Services.VideoUpscale;
 
@@ -64,6 +65,20 @@ internal static partial class AgentProjects
         }
     }
     private sealed record NarrationDraft(string Text, double Start, double End, string Language = "ru");
+
+    private sealed class ConverterDraft : Draft
+    {
+        public string[] Inputs { get; init; } = [];
+        public ConversionOptions Options { get; init; } = new();
+
+        internal override object Create(Scenario scenario)
+        {
+            Options.Validate();
+            var validated = Inputs.Length == 0 ? [] : new Models.VideoConverterRequest(ConversionStore.NewId(), Inputs).Validate().Paths.ToArray();
+            return SaveFile(scenario, ".lopata-converter.json",
+                path => BackgroundOperationStore.SaveAtomic(path, new ConversionDraft(Options, validated, null)));
+        }
+    }
 
     private sealed class UpscaleDraft : Draft
     {

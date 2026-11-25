@@ -13,7 +13,8 @@ public static class ReleaseInputPreparation
     private const long MaximumTextBytes = 32L * 1024 * 1024;
 
     public static async Task<ReleaseInputChanges> RestorePreviousAsync(IReadOnlyDictionary<string, string> sourceRoots,
-        UpdateManifest previous, string packageDirectory, string preparationDirectory, CancellationToken token = default)
+        UpdateManifest previous, string packageDirectory, string preparationDirectory, CancellationToken token = default,
+        IReadOnlySet<string>? publishedFiles = null)
     {
         previous.Validate();
         var roots = new UpdateRoots(sourceRoots);
@@ -25,6 +26,12 @@ public static class ReleaseInputPreparation
             if (!sourceRoots.ContainsKey(file.Root))
                 throw new InvalidDataException("A previous delivery root cannot be silently removed: " + file.Root);
             var destination = roots.Resolve(file);
+            if (publishedFiles?.Contains(file.Key) == true)
+            {
+                if (!File.Exists(destination))
+                    throw new InvalidDataException("A file verified against the current build disappeared: " + file.Key);
+                continue;
+            }
             if (!File.Exists(destination)) candidates.Add((file, destination, true));
             else if (IsTextContract(file) && file.Size <= MaximumTextBytes
                 && new FileInfo(destination).Length <= MaximumTextBytes

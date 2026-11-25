@@ -1,3 +1,13 @@
+## 2026-11-26 — Video converter and video upscale runtime
+
+The bundled LGPL 2.1+ FFmpeg revision `8.1.3-video-upscale-5` includes software
+AV1 encoding and decoding with libaom 3.12.1. It also includes SVT-AV1 3.0.2,
+its pinned BSD-2-Clause cpuinfo dependency and Kvazaar 2.3.2 (BSD-3-Clause).
+The libaom and SVT-AV1 notices include the Alliance for Open Media Patent
+License 1.0. NVIDIA NVENC uses the existing pinned Video Codec SDK headers
+and already installed drivers. Licenses, source URLs, archive hashes and build
+recipes accompany the FFmpeg payload. [Source manifest](Инструменты/VideoUpscaleRuntime/codec-sources.json)
+
 ## 2026-11-25 — Song to Clip / Deno RTX
 
 The optional generation speed-up uses the official PyTorch 2.10.0 CUDA 13 wheel (BSD-3-Clause with bundled third-party notices) and the CUDA 13 build of SageAttention 2.2.0 (Apache-2.0). The local runtime uses Comfy Kitchen for sparse sampling. [Component licenses](Исходники/AIHub/Licenses/catalog.json) · [Runtime file inventory](Исходники/AIHub/Tools/song-clip-deno-sol-trees.json.gz)

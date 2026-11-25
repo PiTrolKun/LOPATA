@@ -60,6 +60,9 @@ public partial class MainWindow
                 case ScenarioNavigationCatalog.VideoUpscale:
                     OpenUpscaleUtility();
                     break;
+                case ScenarioNavigationCatalog.VideoConverter:
+                    OpenVideoConverter();
+                    break;
                 case ScenarioNavigationCatalog.Metadata:
                     OpenMetadataUtility();
                     break;

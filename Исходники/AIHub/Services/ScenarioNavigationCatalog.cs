@@ -47,6 +47,7 @@ public static class ScenarioNavigationCatalog
     public const string LyricVideo = "music_video";
     public const string VideoEditor = "video_editor";
     public const string VideoUpscale = "video_upscale";
+    public const string VideoConverter = "video_converter";
     public const string BookConversion = "text_to_book";
     public const string OfficeReader = "office_reader";
     public const string OfficeEditor = "office_editor";
@@ -94,6 +95,8 @@ public static class ScenarioNavigationCatalog
             tags: ["video_editor", "video_narration", "video_subtitles", "video_svg"], related: [VectorGeneration, Capture]),
         Node(VideoUpscale, ScenarioNavigationKind.Scenario, "utilities_video", "VideoUpscale.Title", "VideoUpscale.Description", "tools",
             tags: ["video_upscale", "video_upscale_preview", "video_upscale_chain", "video_upscale_deno"], related: [VideoEditor]),
+        Node(VideoConverter, ScenarioNavigationKind.Scenario, "utilities_video", "VideoConverter.Title", "VideoConverter.Description", "tools",
+            tags: ["video_converter", "video_compression", "video_resolution"], related: [VideoUpscale, VideoEditor]),
         Node(ImageUtility, ScenarioNavigationKind.Scenario, "utilities_images", "ImageUtility.Title", "ImageUtility.Description", "tools",
             tags: ["image_resize", "image_upscale", "image_convert", "image_batch", "image_shell"], related: [ImageGeneration]),
         Node("creation_video", ScenarioNavigationKind.Group, Creation, "Navigation.Video", "", "create"),
@@ -205,6 +208,7 @@ public static class ScenarioNavigationCatalog
         new("video_generation_deno", "VideoUpscale.Mode.Deno", "VideoPrep.H3DenoSizeHint", VideoGeneration),
         Tag("video_upscale", VideoUpscale), Tag("video_upscale_preview", VideoUpscale), Tag("video_upscale_chain", VideoUpscale),
         Tag("video_upscale_deno", VideoUpscale),
+        Tag("video_converter", VideoConverter), Tag("video_compression", VideoConverter), Tag("video_resolution", VideoConverter),
         Tag("let_it_out", LetItOut),
         Tag("let_it_out_memory", LetItOut),
         Tag("let_it_out_tree", LetItOut),

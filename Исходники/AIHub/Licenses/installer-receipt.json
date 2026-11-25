@@ -537,5 +537,12 @@
     "Terms": "C6C76A7A5E9554CF9DC30094D495EE1DCFC7EC96AF56062871976C74499A8500",
     "AppVersion": "__APP_VERSION__",
     "Source": "installer"
+  },
+  {
+    "Id": "video.converter.ffmpeg",
+    "AcceptedAt": "__ACCEPTED_AT__",
+    "Terms": "1D7939D120AAE40012EBEA5A517552D1E84E1E54FD1BB242706A981E5BE6C6AF",
+    "AppVersion": "__APP_VERSION__",
+    "Source": "installer"
   }
 ]

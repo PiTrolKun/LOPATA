@@ -23,8 +23,7 @@ internal static class ModelStorageWindowsCopy
 
     private static void Copy(IReadOnlyList<ModelStorageCopyItem> files, nint owner, CancellationToken token)
     {
-        var type = Type.GetTypeFromCLSID(new Guid("3ad05575-8857-4850-9277-11b85bdb8e09"), throwOnError: true)!;
-        var operation = (IFileOperation)Activator.CreateInstance(type)!;
+        var operation = CreateOperation();
         var items = new List<IShellItem>();
         try
         {
@@ -64,6 +63,44 @@ internal static class ModelStorageWindowsCopy
         }
     }
 
+    internal static bool RecycleFile(string path, nint owner)
+    {
+        var volume = Path.GetPathRoot(path);
+        if (volume is null || volume.StartsWith(@"\\", StringComparison.Ordinal) || new DriveInfo(volume).DriveType != DriveType.Fixed)
+            return false;
+        var info = new RecycleBinInfo { Size = Marshal.SizeOf<RecycleBinInfo>() };
+        if (SHQueryRecycleBin(volume, ref info) != 0) return false;
+        var operation = CreateOperation();
+        IShellItem? item = null;
+        try
+        {
+            var id = typeof(IShellItem).GUID;
+            Marshal.ThrowExceptionForHR(SHCreateItemFromParsingName(path, 0, ref id, out item));
+            Marshal.ThrowExceptionForHR(operation.SetOwnerWindow(owner));
+            // Recycle-only, fail early, no second Shell confirmation or progress window.
+            const uint recycleOnly = 0x00080000, earlyFailure = 0x00100000, silent = 0x0004, noConfirmation = 0x0010, noErrorUi = 0x0400;
+            Marshal.ThrowExceptionForHR(operation.SetOperationFlags(recycleOnly | earlyFailure | silent | noConfirmation | noErrorUi));
+            Marshal.ThrowExceptionForHR(operation.DeleteItem(item, 0));
+            Marshal.ThrowExceptionForHR(operation.PerformOperations());
+            Marshal.ThrowExceptionForHR(operation.GetAnyOperationsAborted(out var aborted));
+            return !aborted && !File.Exists(path);
+        }
+        finally
+        {
+            Marshal.FinalReleaseComObject(operation);
+            if (item is not null) Marshal.ReleaseComObject(item);
+        }
+    }
+
+    private static IFileOperation CreateOperation() => (IFileOperation)Activator.CreateInstance(
+        Type.GetTypeFromCLSID(new Guid("3ad05575-8857-4850-9277-11b85bdb8e09"), throwOnError: true)!)!;
+
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    private struct RecycleBinInfo { public int Size; public long Bytes; public long Items; }
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, EntryPoint = "SHQueryRecycleBinW")]
+    private static extern int SHQueryRecycleBin(string volume, ref RecycleBinInfo info);
+
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern int SHCreateItemFromParsingName(string path, nint binding,
         ref Guid id, [MarshalAs(UnmanagedType.Interface)] out IShellItem item);
@@ -90,7 +127,7 @@ internal static class ModelStorageWindowsCopy
         [PreserveSig] int MoveItems();
         [PreserveSig] int CopyItem(IShellItem item, IShellItem folder, [MarshalAs(UnmanagedType.LPWStr)] string? name, nint sink);
         [PreserveSig] int CopyItems();
-        [PreserveSig] int DeleteItem();
+        [PreserveSig] int DeleteItem(IShellItem item, nint sink);
         [PreserveSig] int DeleteItems();
         [PreserveSig] int NewItem();
         [PreserveSig] int PerformOperations();

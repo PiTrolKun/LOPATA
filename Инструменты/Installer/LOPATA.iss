@@ -171,6 +171,10 @@ begin
   end;
 end;
 
+#ifndef StandDataRoot
+#include "VideoConverterShell.iss"
+#endif
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 #ifndef StandDataRoot
 var
@@ -182,6 +186,7 @@ begin
   if CurUninstallStep = usPostUninstall then
   begin
     MenuKey := 'Software\Classes\SystemFileAssociations\image\shell\LOPATA';
+    RemoveVideoConverterShell(ExpandConstant('{app}\{#AppExeName}'));
     { Only remove the image menu owned by this installation, never another copy or association. }
     if RegQueryStringValue(HKCU, MenuKey, 'LOPATA.Owner', Marker) and
         (Marker = 'AIHub.ImageShellIntegration.v1') and

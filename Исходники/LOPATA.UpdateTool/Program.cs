@@ -23,12 +23,16 @@ try
         if (config.PrivateKeyPath is null) throw new InvalidDataException("Signing key required for packaging.");
         using var signingKey = ECDsa.Create();
         signingKey.ImportFromPem(await File.ReadAllTextAsync(config.PrivateKeyPath));
+        var applicationFiles = config.AppProjectPath is { } projectPath
+            ? await ReleaseScriptContracts.VerifyPublishedAsync(config.Roots["app"], projectPath)
+            : null;
         var reuse = config.PreviousManifestPath is null ? null : Read(config.PreviousManifestPath).Verify(keys);
         var preparation = Path.Combine(config.OutputDirectory, "build-inputs");
         ReleaseInputChanges? changes = null;
         if (reuse is not null)
             changes = await ReleaseInputPreparation.RestorePreviousAsync(config.Roots, reuse,
-                Path.GetDirectoryName(Path.GetFullPath(config.PreviousManifestPath!))!, preparation);
+                Path.GetDirectoryName(Path.GetFullPath(config.PreviousManifestPath!))!, preparation,
+                publishedFiles: applicationFiles?.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase));
         string? legacyDirectory = null;
         UpdateManifest? legacySet = null;
         if (config.Roots.TryGetValue("app", out var appRoot) && Directory.Exists(Path.Combine(appRoot, "EngineSets")))
@@ -42,6 +46,7 @@ try
         WriteJson(Path.Combine(preparation, "input-preparation.json"), new { changes, legacyPrepared = legacyDirectory is not null });
         var manifest = await UpdatePackageBuilder.BuildAsync(config.Roots, config.OutputDirectory,
             config.Version, config.SourceCommit, config.Notes, reuse);
+        if (applicationFiles is not null) ReleaseScriptContracts.VerifyManifest(manifest, applicationFiles);
         if (reuse is not null) ReleaseInputPreparation.EnsurePreviousPaths(manifest, reuse);
         if (EngineSetTransition.UsesSets(manifest))
         {
@@ -121,6 +126,7 @@ catch (Exception ex)
 internal sealed record ToolConfig
 {
     public Dictionary<string, string> Roots { get; init; } = [];
+    public string? AppProjectPath { get; init; }
     public string PublicKeysPath { get; init; } = "";
     public string? PrivateKeyPath { get; init; }
     public string KeyId { get; init; } = "";

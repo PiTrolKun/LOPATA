@@ -65,9 +65,9 @@ internal static class PublisherUi
         Grid.SetRow(body, 1); Grid.SetRow(footer, 2); root.Children.Add(header); root.Children.Add(body); root.Children.Add(footer);
         return root;
     }
-    public static bool Confirm(Window owner, Func<string, string> text, string question)
+    public static bool Confirm(Window owner, Func<string, string> text, string question, string? title = null)
     {
-        var dialog = new Window(); Prepare(dialog, owner, text("Publisher.Title"), 580, 420);
+        var dialog = new Window(); Prepare(dialog, owner, title ?? text("Publisher.Title"), 580, 420);
         dialog.Content = Frame(out _, out var body, out var footer);
         body.Content = Text(question);
         var buttons = Buttons(); footer.Children.Add(buttons);

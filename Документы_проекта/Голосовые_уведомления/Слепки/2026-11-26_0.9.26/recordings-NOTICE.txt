@@ -1,0 +1,15 @@
+Voice notification recordings / Записи голосовых уведомлений
+
+RU: recordings prepared by the LOPATA project user with Silero v5.6 RU, xenia.
+Model source: https://github.com/snakers4/silero-models
+Upstream model licence: see VideoNarrator-Silero56-LICENSE.txt in this directory.
+Only generated audio is included in the notification archive, not model weights.
+
+EN: recordings prepared by the LOPATA project user with KittenTTS 2, Iris.
+Powered by KittenML
+This Stellon Labs Model is licensed under the Stellon Labs Community License, Copyright © Stellon Labs Inc. All Rights Reserved
+Model source and terms: https://huggingface.co/KittenML/kitten-tts-2/blob/main/LICENSE.md
+See VideoNarrator-Kitten2-LICENSE.txt in this directory. The model agreement distinguishes outputs from model weights and derivative models.
+
+Recording provenance, source and synthesis text, selected take and model identifiers remain in the supplied archive manifest and audio metadata.
+The model terms are separate from LOPATA source-code licensing; no universal commercial-use clearance of third-party voices is claimed.

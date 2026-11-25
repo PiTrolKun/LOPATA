@@ -1,4 +1,5 @@
 using AIHub.Models;
+using AIHub.Services.VideoConverter;
 
 namespace AIHub.Services.VoiceNotifications;
 
@@ -28,9 +29,10 @@ internal static class VoiceNotificationEvents
     internal static void Background(BackgroundOperationState before, BackgroundOperationState state)
     {
         if (before.Phase == state.Phase && before.Detail == state.Detail) return;
+        var contexts = VoiceNotificationContext.Project(state.Project);
         var key = state.Phase switch
         {
-            BackgroundOperationPhase.Completed => "Tray.ResultReady",
+            BackgroundOperationPhase.Completed => CompletionKey(state.Kind),
             BackgroundOperationPhase.Failed => "RagBooks.State.Failed",
             BackgroundOperationPhase.Canceled => "RagBooks.State.Canceled",
             BackgroundOperationPhase.Paused => "RagBooks.State.Paused",
@@ -39,10 +41,14 @@ internal static class VoiceNotificationEvents
             _ => null
         };
         if (key is null) return;
-        Publish(key, state.Id, VoiceNotificationContext.Project(state.Project), "operation",
+        Publish(key, state.Id, contexts, "operation",
             state.Phase is BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled,
             group: state.Phase == BackgroundOperationPhase.Failed || state.RequiresDecision && state.Detail is not null ? 1 : 2);
     }
+    internal static string CompletionKey(string kind) =>
+        kind == ConversionBatch.Kind ? ConversionBatch.EndVoice : "Tray.ResultReady";
+    internal static bool WaitForPackage(string key) => key is ConversionBatch.StartVoice or ConversionBatch.EndVoice;
+    internal static string? FallbackKey(string key) => key == ConversionBatch.EndVoice ? "Tray.ResultReady" : null;
     internal static void ModelLog(string kind, string component)
     {
         if (component.StartsWith("VoiceNotifications", StringComparison.Ordinal) || component == "Music.Audio") return;

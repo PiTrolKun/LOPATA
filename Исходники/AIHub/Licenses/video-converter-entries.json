@@ -1,0 +1,27 @@
+[
+  {
+    "Id": "video.converter.ffmpeg",
+    "Name": "FFmpeg for video conversion and upscale (LGPL shared)",
+    "Version": "8.1.3-video-upscale-5",
+    "Author": "FFmpeg, Alliance for Open Media, SVT-AV1, Kvazaar, cpuinfo and bundled dependency authors",
+    "License": "LGPL-2.1-or-later; BSD-2-Clause; BSD-3-Clause; AOM Patent License 1.0; see runtime notices",
+    "Source": "https://ffmpeg.org/",
+    "Checked": "2026-11-26",
+    "Ru": "Встроенная сборка для перекодирования, апскейла и шортсов. Кодировщики и программный декодер AV1 доступны офлайн. Исходники, контрольные суммы, рецепт сборки и применимые условия указаны рядом с комплектом FFmpeg.",
+    "En": "Bundled build for video conversion, upscale and Shorts. Encoders and a software AV1 decoder work offline. Source revisions, hashes, build recipes and applicable license terms accompany the FFmpeg payload.",
+    "Basic": true,
+    "Delivery": "bundled",
+    "Terms": "",
+    "Texts": [
+      "texts/FFmpeg-8.1-LGPL.txt",
+      "texts/FFmpeg-8.1-NOTICE.md",
+      "texts/VideoConverter-AOM-LICENSE.txt",
+      "texts/VideoConverter-AOM-PATENTS.txt",
+      "texts/VideoConverter-SVT-AV1-LICENSE.md",
+      "texts/VideoConverter-SVT-AV1-LICENSE-BSD2.md",
+      "texts/VideoConverter-SVT-AV1-PATENTS.md",
+      "texts/VideoConverter-Kvazaar-LICENSE.txt",
+      "texts/VideoConverter-cpuinfo-LICENSE.txt"
+    ]
+  }
+]

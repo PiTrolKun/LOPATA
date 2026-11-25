@@ -10,6 +10,7 @@
     <ProjectReference Include="..\LOPATA.Updates\LOPATA.Updates.csproj" />
     <ProjectReference Include="..\LOPATA.UpdateTool\LOPATA.UpdateTool.csproj" />
     <Compile Include="..\LOPATA.Updater\CollectionInstallation.cs" Link="Updater\CollectionInstallation.cs" />
+    <EmbeddedResource Include="..\AIHub\Tools\h3_memory.py" LogicalName="Tests.H3Memory" />
     <None Include="..\LOPATA.Updater\Localization\*.json" Link="UpdaterLocalization\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

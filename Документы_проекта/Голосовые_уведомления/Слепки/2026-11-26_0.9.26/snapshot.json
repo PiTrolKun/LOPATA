@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "snapshotId": "2026-11-26_0.9.26",
+  "createdUtc": "2026-11-25T21:22:00.567312+00:00",
+  "program": "LOPATA",
+  "programVersion": "0.9.26-dev",
+  "release": "0.9.26-beta",
+  "sourceTag": "refs/tags/v0.9.26-beta",
+  "previousSnapshot": "../2026-11-10_0.7.73/snapshot.json",
+  "counts": {
+    "clips": 1531,
+    "eventAliases": 5249,
+    "templates": 6398,
+    "eventAliasesByPriority": {
+      "1": 3076,
+      "2": 2095,
+      "3": 78
+    },
+    "audioEntriesVerified": 3062
+  },
+  "packages": {
+    "ru": {
+      "sourcePath": "Исходники/AIHub/Assets/VoiceNotifications/ru.zip",
+      "bytes": 48158498,
+      "sha256": "d1462d8500093ecb6f3d8ed144840f8dcac4f2b726f24aa18613d326c2a8573a",
+      "manifestSha256": "ea3e48a74a99d5cb37d271a7a53c8aa59ba357dbbf4e265d2f6147fc000d0d8b",
+      "clips": 1531,
+      "format": "Opus",
+      "bitrateKbps": 64
+    },
+    "en": {
+      "sourcePath": "Исходники/AIHub/Assets/VoiceNotifications/en.zip",
+      "bytes": 62106851,
+      "sha256": "d1c62f4ac289fe67b9f92dbff90521ca807cbe9b362c9a58ff2ffc004f4f3c85",
+      "manifestSha256": "789714c8808ba951c669f8a734c5c43bb70b3792114d965e9c7b36d433800d40",
+      "clips": 1531,
+      "format": "Opus",
+      "bitrateKbps": 64
+    }
+  },
+  "files": {
+    "catalog.json": {
+      "bytes": 1641086,
+      "sha256": "1574ef4750d8ddccb01ffc4251f41db37a19a05e2a70c56952eb0306af78d54e"
+    },
+    "bundles.json": {
+      "bytes": 157,
+      "sha256": "e2899e950ef1e51a0f5a9afe3f55f79ccf4e1dbba928074def1a3764a4cb7b33"
+    },
+    "inventory.csv": {
+      "bytes": 1254042,
+      "sha256": "b07d7dd94247f04dad66fa5ce0475ecadee9d8979f4f8da34c8e2b02998995cf"
+    },
+    "origins.json": {
+      "bytes": 1257,
+      "sha256": "835475014a9f27b818629ad8cce8481e30865712afb643ebeb83e0b67a508b1e"
+    },
+    "recordings-NOTICE.txt": {
+      "bytes": 1139,
+      "sha256": "e6f79340a8f035e95e5fc8db63df6bafc42dd9112873bdfc4e11919140179cc1"
+    },
+    "ru.manifest.json": {
+      "bytes": 2606415,
+      "sha256": "ea3e48a74a99d5cb37d271a7a53c8aa59ba357dbbf4e265d2f6147fc000d0d8b"
+    },
+    "en.manifest.json": {
+      "bytes": 2830888,
+      "sha256": "789714c8808ba951c669f8a734c5c43bb70b3792114d965e9c7b36d433800d40"
+    }
+  }
+}

@@ -102,7 +102,9 @@ internal static class AgentDiagnosticsProjection
                 {
                     "Shorts" => "shorts", "GameSounds" => "game_sounds", "MailHub" => "mail",
                     "AnimatedAssets.WebM" => "animated_assets", "Video.H3.Generate" or "Video.VACE.Generate" => "video",
-                    "VideoUpscale.FFmpeg" => "video_upscale", "SongClip.InfiniteTalk" => "song_clip",
+                    "VideoUpscale.FFmpeg" => "video_upscale",
+                    "VideoConverter.FFmpeg" or "VideoConverter.Probe" or "VideoConverter" => "video_converter",
+                    "SongClip.InfiniteTalk" => "song_clip",
                     _ when component?.StartsWith("Music.", StringComparison.Ordinal) == true => "music",
                     _ => null
                 };

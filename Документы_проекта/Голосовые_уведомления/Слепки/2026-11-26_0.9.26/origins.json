@@ -1,0 +1,35 @@
+{
+  "previousOrigins": "../2026-11-10_0.7.73/origins.json",
+  "added": [
+    {
+      "Id": "localization:VideoConverter.VoiceStart",
+      "ClipId": "voice.4e4f0cbec9e4db61",
+      "Group": 2,
+      "Texts": {
+        "ru": "Начинаю перекодирование видео.",
+        "en": "Starting video conversion."
+      },
+      "Sources": [
+        "Исходники/AIHub/Controls/VideoConverter/VideoConverterWindow.cs",
+        "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationEvents.cs",
+        "Исходники/AIHub/Localization/ru.json",
+        "Исходники/AIHub/Localization/en.json"
+      ]
+    },
+    {
+      "Id": "localization:VideoConverter.VoiceComplete",
+      "ClipId": "voice.a8eef31f6e1c63f2",
+      "Group": 2,
+      "Texts": {
+        "ru": "Перекодирование видео завершено.",
+        "en": "Video conversion complete."
+      },
+      "Sources": [
+        "Исходники/AIHub/Controls/VideoConverter/VideoConverterWindow.cs",
+        "Исходники/AIHub/Services/VoiceNotifications/VoiceNotificationEvents.cs",
+        "Исходники/AIHub/Localization/ru.json",
+        "Исходники/AIHub/Localization/en.json"
+      ]
+    }
+  ]
+}

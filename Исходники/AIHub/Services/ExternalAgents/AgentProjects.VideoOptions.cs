@@ -73,6 +73,23 @@ internal static partial class AgentProjects
                 Choices(properties["algorithm"]!, UpscaleCatalog.Algorithms, allowNull: true);
                 properties["algorithm"]!["description"] = "Applies to the manual preset.";
                 break;
+            case ScenarioNavigationCatalog.VideoConverter:
+                properties["inputs"]!["description"] = "Up to 128 ordinary absolute paths ending in .mp4, .m4v, .mov, .mkv, .webm or .avi.";
+                var options = properties["options"]!["properties"]!;
+                options["codec"]!["description"] = "Preferred codec per file. Avc is H.264, Hevc is H.265. FFV1 requires lossless video. An incompatible preference falls back to a verified compatible profile.";
+                options["container"]!["description"] = "Preferred container. Mp4 for Av1, Hevc and Avc. Mkv for all profiles. WebM for Av1 and Vp9. A compatible alternative may be used to retain streams.";
+                options["executor"]!["description"] = "Preferred executor. Auto tries supported hardware and then CPU. If the preferred executor cannot use the profile, the converter tries another available executor. FFV1 uses CPU.";
+                options["reduction"]!["description"] = "Target reduction of 0–95 percent per file in Percent mode. A smaller verified file can be kept if it misses the target. Also sets ZIP compression effort in that mode.";
+                options["limitMb"]!["description"] = "Upper size limit in decimal MB for each file in Size mode.";
+                options["shortEdge"]!["description"] = "0 keeps the source resolution. 144–4320 sets the shorter side in pixels, preserving orientation and proportions.";
+                options["framesPerSecond"]!["description"] = "Upper frame-rate preference. A positive value requires motionMayChange and never raises a lower source rate. 0 keeps the source rate unless automatic reduction is authorized.";
+                options["outputDirectory"]!["description"] = "Optional absolute destination folder. Empty uses the configured LOPATA workspace.";
+                options["pictureMayChange"]!["description"] = "Allows lossy video compression. Default false preserves the decoded picture where supported.";
+                options["audioMayChange"]!["description"] = "Allows the converter to re-encode audio when needed for the output container or size target.";
+                options["motionMayChange"]!["description"] = "Allows the converter to reduce the frame rate.";
+                options["omitIncompatibleTracks"]!["description"] = "Allows omitting incompatible tracks or changing subtitle styling.";
+                options["archive"]!["description"] = "Pack verified results into one ZIP. Original converted files remain available.";
+                break;
         }
 
         static void Choices(JsonNode property, IEnumerable<string> choices, bool allowNull = false)

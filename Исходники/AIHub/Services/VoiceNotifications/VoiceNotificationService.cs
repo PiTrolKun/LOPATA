@@ -11,6 +11,7 @@ internal sealed class VoiceNotificationService : IDisposable
     private readonly VoiceNotificationStore _store;
     private readonly IVoiceNotificationAudio _audio;
     private readonly VoiceNotificationQueue _queue = new();
+    private readonly Queue<VoiceEventRequest> _awaitingPackage = new();
     private readonly CancellationTokenSource _lifetime = new();
     private readonly Dictionary<string, string> _latest = [];
     private readonly HashSet<string> _spokenTerminalEvents = [];
@@ -36,7 +37,7 @@ internal sealed class VoiceNotificationService : IDisposable
     }
     internal async Task SetLanguageAsync(string language)
     {
-        var version = ++_languageVersion; Language = language; _catalog = null; _package = null; PackageError = null; Clear();
+        var version = ++_languageVersion; Language = language; _catalog = null; _package = null; PackageError = null; Clear(keepAwaitingPackage: true);
         try
         {
             var loaded = await Task.Run(async () => {
@@ -51,15 +52,36 @@ internal sealed class VoiceNotificationService : IDisposable
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested) { }
         catch (Exception error) when (error is not OutOfMemoryException and not StackOverflowException)
         { if (!_disposed && version == _languageVersion) { PackageError = "VoiceNotifications.PackageUnavailable"; OwnedProcessRegistry.Log("voice_package_failed", "VoiceNotifications", detail: error.GetType().Name); } }
-        if (!_disposed) Changed?.Invoke();
+        if (_disposed || version != _languageVersion) return;
+        while (_awaitingPackage.TryDequeue(out var request))
+            if (Ready) Publish(request);
+        Changed?.Invoke();
     }
-    internal bool CanSpeak(string key, string[] contexts) => !_disposed && _catalog?.Match(key) is { } binding &&
-        Settings.Allows(binding.Group) && VoicePlaybackHub.Allows(contexts) && HasClip(binding.ClipId);
+    internal bool CanSpeak(string key, string[] contexts) => !_disposed && VoicePlaybackHub.Allows(contexts) &&
+        Settings.Allows(FindRecording(key)?.Group ?? (WaitingForPackage(key) ? 2 : 0));
+
+    private bool WaitingForPackage(string key) =>
+        !Ready && PackageError is null && VoiceNotificationEvents.WaitForPackage(key);
+
+    private VoiceEventBinding? FindRecording(string key)
+    {
+        if (_catalog?.Match(key) is { } binding && HasClip(binding.ClipId)) return binding;
+        return VoiceNotificationEvents.FallbackKey(key) is { } fallback &&
+            _catalog?.Match(fallback) is { } alternative && HasClip(alternative.ClipId) ? alternative : null;
+    }
     private bool HasClip(string id) => _package?.Items.TryGetValue(id, out var item) == true &&
         (_catalog?.Text(id, Language) is not { } expected || item.SourceText == expected);
     internal bool Publish(VoiceEventRequest request)
     {
-        if (_disposed || _catalog?.Match(request.Value) is not { } binding || !HasClip(binding.ClipId)) return false;
+        if (_disposed) return false;
+        if (WaitingForPackage(request.Value))
+        {
+            if (!Settings.Allows(request.Group ?? 2) || !VoicePlaybackHub.Allows(request.Contexts)) return false;
+            if (_awaitingPackage.Count == 32) _awaitingPackage.Dequeue();
+            _awaitingPackage.Enqueue(request);
+            return true;
+        }
+        if (FindRecording(request.Value) is not { } binding) return false;
         var notice = new VoiceNotice(binding.Id, binding.ClipId, request.Group ?? binding.Group, request.Scope,
             request.Contexts, request.Family, request.Terminal, request.Occurrence);
         if (notice.EventId == "localization:Tray.ResultReady" && ApplicationBackgroundOperations.Current?.State is { Phase: BackgroundOperationPhase.Completed } completed &&
@@ -80,6 +102,7 @@ internal sealed class VoiceNotificationService : IDisposable
     internal void Configure()
     {
         _audio.Configure(Settings.Volume, Settings.Speed);
+        if (!Settings.Allows(2)) _awaitingPackage.Clear();
         _queue.RemoveWhere(item => !Allowed(item) || !CurrentState(item));
         if (_current is { } current && !Allowed(current)) _currentCancellation?.Cancel();
         if (!Settings.Enabled) Clear();
@@ -136,8 +159,11 @@ internal sealed class VoiceNotificationService : IDisposable
         _pump = null;
         if (!_disposed && Settings.Enabled && _queue.Pending.Any(item => Allowed(item) && (item.Group == 1 || !VoicePlaybackHub.SpeechActive))) StartPump();
     }
-    internal void Clear()
-    { _queue.Clear(); _latest.Clear(); _currentCancellation?.Cancel(); _gap?.Cancel(); Changed?.Invoke(); }
+    internal void Clear(bool keepAwaitingPackage = false)
+    {
+        if (!keepAwaitingPackage) _awaitingPackage.Clear();
+        _queue.Clear(); _latest.Clear(); _currentCancellation?.Cancel(); _gap?.Cancel(); Changed?.Invoke();
+    }
     public void Dispose()
     {
         if (_disposed) return; _disposed = true; VoicePlaybackHub.Changed -= PlaybackChanged;

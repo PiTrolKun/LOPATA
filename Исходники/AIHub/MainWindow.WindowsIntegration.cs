@@ -23,6 +23,11 @@ public partial class MainWindow
         if (Assembly.GetEntryAssembly()?.GetName().Name != typeof(MainWindow).Assembly.GetName().Name) return null;
         return Environment.ProcessPath is { Length: > 0 } executable ? new AudioShellIntegration(executable) : null;
     }
+    private MediaShellIntegration? VideoConverterShellRegistration()
+    {
+        if (Assembly.GetEntryAssembly()?.GetName().Name != typeof(MainWindow).Assembly.GetName().Name) return null;
+        return Environment.ProcessPath is { Length: > 0 } executable ? MediaShellIntegration.Video(executable) : null;
+    }
     private BookShellIntegration? BookShellRegistration()
     {
         if (Assembly.GetEntryAssembly()?.GetName().Name != typeof(MainWindow).Assembly.GetName().Name) return null;
@@ -41,6 +46,8 @@ public partial class MainWindow
                 L("WindowsIntegration.Menu"), L("WindowsIntegration.WebP"), L("WindowsIntegration.Upscale2"));
             AudioShellRegistration()?.Apply(_appSettings.Behavior.ImageShellIntegrationEnabled,
                 L("WindowsIntegration.Menu"), L("AudioShell.Title"));
+            VideoConverterShellRegistration()?.Apply(_appSettings.Behavior.ImageShellIntegrationEnabled,
+                L("WindowsIntegration.Menu"), L("VideoConverter.Shell"));
             _imageShellIntegrationLanguage = _appSettings.LanguageCode;
         }
         catch (Exception error)
@@ -65,6 +72,7 @@ public partial class MainWindow
         {
             registration?.Apply(enabled, L("WindowsIntegration.Menu"), L("WindowsIntegration.WebP"), L("WindowsIntegration.Upscale2"));
             AudioShellRegistration()?.Apply(enabled, L("WindowsIntegration.Menu"), L("AudioShell.Title"));
+            VideoConverterShellRegistration()?.Apply(enabled, L("WindowsIntegration.Menu"), L("VideoConverter.Shell"));
             _appSettings.Behavior.ImageShellIntegrationEnabled = enabled;
             _appSettingsStore.Save(_appSettings);
         }
@@ -75,6 +83,7 @@ public partial class MainWindow
             {
                 registration?.Apply(previous, L("WindowsIntegration.Menu"), L("WindowsIntegration.WebP"), L("WindowsIntegration.Upscale2"));
                 AudioShellRegistration()?.Apply(previous, L("WindowsIntegration.Menu"), L("AudioShell.Title"));
+                VideoConverterShellRegistration()?.Apply(previous, L("WindowsIntegration.Menu"), L("VideoConverter.Shell"));
             }
             catch (Exception restoreError) { OwnedProcessRegistry.Log("image_shell_restore_failed", "WindowsIntegration", detail: restoreError.GetType().Name); }
             OwnedProcessRegistry.Log("image_shell_setting_failed", "WindowsIntegration", detail: error.GetType().Name);
