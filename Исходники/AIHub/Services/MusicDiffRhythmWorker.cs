@@ -22,7 +22,7 @@ public sealed class MusicDiffRhythmWorker : IMusicYueWorker
     internal static async Task<PreparationReceipt> ProbeAsync(string root, CancellationToken token, Action<string> log)
     {
         var worker = new MusicDiffRhythmWorker(); worker.Log += log;
-        var path = Path.Combine(Path.GetTempPath(), "lopata-diff2-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("MusicWorkers"), "lopata-diff2-" + Guid.NewGuid().ToString("N"));
         try {
             var directory = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicDiffRhythmCatalog.RuntimeRevision);
             await ComponentAudit.RunAsync("Music.DiffRhythm.Probe", directory, MusicDiffRhythmCatalog.RuntimeRevision + MusicDiffRhythmCatalog.SourceRevision,

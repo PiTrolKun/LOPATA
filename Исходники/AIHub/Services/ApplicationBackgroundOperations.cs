@@ -40,6 +40,7 @@ public static class ApplicationBackgroundOperations
         Func<Task>? releaseModels = null, bool allowIdleQueue = false)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
+        using var storage = ManagedWorkStorage.Current.PinSettings();
         async Task<T> RunWithLease(CancellationToken attempt)
         {
             using var lease = await ModelStorageWorkGate.Current.EnterWorkAsync(attempt);

@@ -19,10 +19,10 @@ internal sealed record LayerAnalysisInput(Guid Document, Guid? Version, Rectangl
 
 internal sealed record LayerAnalysisResult(LayerDocument Preview, int Skipped, LayerSceneReview? Review = null);
 
-internal sealed class LayerAnalysisWork(string directory)
+internal sealed class LayerAnalysisWork(string directory, bool managed = false)
 {
     internal const string Kind = "image-layers.analysis";
-    internal static LayerAnalysisWork Default => new(Path.Combine(AppDataPaths.BaseDirectory, "Background", "ImageLayers"));
+    internal static LayerAnalysisWork Default => new(Path.Combine(AppDataPaths.BaseDirectory, "Background", "ImageLayers"), managed: true);
 
     internal BackgroundOperationState Capture(string title, LayerDocument snapshot, LayerAnalysisInput input)
     {
@@ -30,7 +30,7 @@ internal sealed class LayerAnalysisWork(string directory)
         var state = new BackgroundOperationState { Kind = Kind, Title = title, Project = snapshot.Id.ToString(),
             Input = JsonSerializer.SerializeToElement(input) };
         var path = FilePath(state.Id, "source");
-        Directory.CreateDirectory(directory);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         LayerProjectArchive.Save(path, snapshot);
         return state;
     }
@@ -176,6 +176,9 @@ internal sealed class LayerAnalysisWork(string directory)
     {
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("ImageLayers.InvalidProject");
         var path = Path.Combine(directory, $"{id}.{name}{LayerProjectArchive.Extension}");
+        if (managed && !File.Exists(path))
+            path = Path.Combine(ManagedWorkStorage.Current.Job("Background/ImageLayers", id, temporary: true),
+                name + LayerProjectArchive.Extension);
         SafeUpdatePath.RejectLinks(path);
         return path;
     }

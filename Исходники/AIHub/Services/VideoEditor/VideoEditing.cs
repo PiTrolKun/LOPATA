@@ -71,7 +71,7 @@ public sealed class VideoEditing
 public static class VideoProjectStore
 {
     public static string Root => Path.Combine(AppDataPaths.BaseDirectory, "VideoEditor");
-    public static string Work(string id) { if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException(); var path = Path.Combine(Root, "Projects", id); Lopata.Updates.SafeUpdatePath.RejectLinks(path); return path; }
+    public static string Work(string id) => ManagedWorkStorage.Current.Job("VideoEditor/Projects", id);
     public static string Recovery(string id) => Path.Combine(Work(id), "recovery.lopataVideo");
     public static void Save(VideoProject project, string path)
     {

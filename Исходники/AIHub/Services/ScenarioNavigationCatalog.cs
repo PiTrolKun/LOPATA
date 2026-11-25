@@ -60,7 +60,7 @@ public static class ScenarioNavigationCatalog
         Node(Creation, ScenarioNavigationKind.Direction, null, "Navigation.Creation", "Navigation.CreationHint", "create"),
         Node(Analysis, ScenarioNavigationKind.Direction, null, "Navigation.Analysis", "Navigation.AnalysisHint", "analyze"),
         Node(Experiments, ScenarioNavigationKind.Direction, null, "Navigation.Experiments", "Navigation.ExperimentsHint", "experiment"),
-        Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause", "component_audit", "pc_inspector", "voice_notifications"]),
+        Node(Utilities, ScenarioNavigationKind.Direction, null, "Navigation.Utilities", "Navigation.UtilitiesHint", "tools", tags: ["audio_convert", "audio_shell", "background_pause", "component_audit", "local_storage", "pc_inspector", "voice_notifications"]),
         Node("utilities_audio", ScenarioNavigationKind.Group, Utilities, "SpeechAssets.Group", "", "tools"),
         Node(SpeechAssets, ScenarioNavigationKind.Scenario, "utilities_audio", "SpeechAssets.Title", "SpeechAssets.Description", "tools", tags: ["speech_assets"]),
         Node("utilities_text", ScenarioNavigationKind.Group, Utilities, "BookConverter.Group", "", "tools"),

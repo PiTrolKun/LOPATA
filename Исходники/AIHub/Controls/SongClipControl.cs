@@ -176,8 +176,9 @@ public sealed partial class SongClipControl:UserControl
         _cancel=CancellationTokenSource.CreateLinkedTokenSource(token);_busy=true;_stopRequested=false;_deviceSummary="";SetInputs(false);RefreshActions();_started=DateTimeOffset.UtcNow;_fraction=0;_clock.Start();_progressTimer.Start();
         try{
             var result=await ApplicationBackgroundOperations.RunAsync(attempt.Model==InfiniteTalkRunner.ModelId?InfiniteTalkRunner.Kind:attempt.Model=="h3_music_context"?H3MusicRunner.Kind:SongClipAttempt.Kind,EngineName(attempt.Model),attempt.ProjectId,attempt,
-                ct=>RunEngineAsync(attempt,QueueGenerationProgress,ct),_cancel.Token,restored);
-            if(!_project.Results.Any(r=>r.Id==result.Id))_project.Results.Add(result);_project.PendingAttemptId="";_store.Save(_project);_stage=_l("SongClip.Complete");_fraction=1;
+                async ct => await _store.PublishAsync(attempt.ProjectId,
+                    await RunEngineAsync(attempt, QueueGenerationProgress, ct), ct),_cancel.Token,restored);
+            if(!_project.Results.Any(r=>r.Id==result.Id))_project.Results.Add(result);_project.PendingAttemptId="";_store.Save(_project);_store.ReleasePublished(_project.Id, result);_stage=_l("SongClip.Complete");_fraction=1;
         }catch(OperationCanceledException){if(_stopRequested){_project.PendingAttemptId="";_store.Save(_project);}_stage=_l("SongClip.Canceled");}
         catch(AIHub.Services.VideoPreparation.VideoStructuredContextException error)
         {_stage=string.Format(System.Globalization.CultureInfo.CurrentCulture,_l("SongClip.PlanningContextSize"),error.RequiredTokens,error.Capacity);}

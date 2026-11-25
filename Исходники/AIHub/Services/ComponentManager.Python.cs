@@ -17,7 +17,7 @@ public sealed partial class ComponentManager
         var original = JsonSerializer.Deserialize<ComponentInstallationRecord>(
             JsonSerializer.Serialize(FindRecord(state, entry)))!;
         var record = JsonSerializer.Deserialize<ComponentInstallationRecord>(JsonSerializer.Serialize(original))!;
-        var cacheDirectory = Path.Combine(AppDataPaths.ComponentDownloadsDirectory, entry.FileName);
+        var cacheDirectory = Path.Combine(DownloadDirectory, entry.FileName);
         var directory = GetInstallDirectory(entry);
         var stage = directory + ".installing";
         var previous = directory + ".previous";

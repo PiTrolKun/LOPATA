@@ -11,7 +11,6 @@ public sealed class ApplicationUpdateCoordinator
     internal static readonly TimeSpan CheckTimeout = TimeSpan.FromMinutes(3);
 
     private readonly HttpClient _http;
-    private readonly ApplicationUpdateService _installers;
     private readonly string _updatesDirectory;
     private readonly PreparedUpdateStore _prepared;
     public InstalledUpdateState? Installation { get; }
@@ -20,7 +19,6 @@ public sealed class ApplicationUpdateCoordinator
     public ApplicationUpdateCoordinator(HttpClient http, string updatesDirectory)
     {
         _http = http; _updatesDirectory = updatesDirectory;
-        _installers = new(http, updatesDirectory);
         var registered = InstalledUpdateState.Read();
         if (AppDataPaths.ProjectRoot is null && registered is not null
             && Path.GetFullPath(registered.AppDirectory).TrimEnd(Path.DirectorySeparatorChar)
@@ -74,7 +72,9 @@ public sealed class ApplicationUpdateCoordinator
         if (offer.Installer is { } installer && offer.Delivery == UpdateDelivery.FullInstaller)
         {
             var legacy = ToInstallerUpdate(offer);
-            var path = await _installers.DownloadAsync(legacy, connections, progress, token);
+            var directory = Installation is null ? _updatesDirectory
+                : ConfiguredUpdateWorkspace.Resolve(InstalledUpdateState.UserDataDirectory, _updatesDirectory);
+            var path = await new ApplicationUpdateService(_http, directory).DownloadAsync(legacy, connections, progress, token);
             prepared = new(offer.Version, offer.Delivery, installer, path, null, false, offer.Notes, offer.NotesIncomplete);
         }
         else

@@ -7,6 +7,11 @@ public sealed partial class UpdateTransaction
         using var lease = Acquire();
         var journal = ReadJournal();
         if (journal is null || journal.Phase is UpdatePhase.Healthy or UpdatePhase.RolledBack) return;
+        await RecoverLockedAsync(journal, checkpoint, token);
+    }
+
+    private async Task RecoverLockedAsync(UpdateJournal journal, Action<UpdateCheckpoint>? checkpoint, CancellationToken token)
+    {
         if (journal.Phase == UpdatePhase.Prepared)
         {
             // Nothing in the installation has been touched yet.

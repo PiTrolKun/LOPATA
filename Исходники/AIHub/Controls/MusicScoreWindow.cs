@@ -41,7 +41,7 @@ public sealed class MusicScoreWindow : Window
     private readonly MediaPlayer _player=new();
     private readonly CancellationTokenSource _lifetime=new();
     private readonly DispatcherTimer _draftTimer=new(){Interval=TimeSpan.FromMilliseconds(500)};
-    private readonly string _previewFolder=Path.Combine(Path.GetTempPath(),"LOPATA-Score-"+Guid.NewGuid().ToString("N"));
+    private readonly string _previewFolder=Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("MusicScores"),"LOPATA-Score-"+Guid.NewGuid().ToString("N"));
     private string? _editing;
     private MusicScoreInspection? _inspection;
     private int _epoch;

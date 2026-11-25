@@ -18,9 +18,9 @@ internal sealed record ShortsProject(string Id, DateTimeOffset CreatedAt, Shorts
     public ShortsProjectStep[] Steps { get; init; } = [];
 }
 
-internal sealed class ShortsProjects(string root)
+internal sealed class ShortsProjects(string root, bool managed = false)
 {
-    internal static ShortsProjects Default { get; } = new(ShortsJob.Root);
+    internal static ShortsProjects Default { get; } = new(ShortsJob.Root, managed: true);
     private string DirectoryPath => Path.Combine(root, "Projects");
     private string DraftPath => Path.Combine(root, "draft.json");
 
@@ -72,11 +72,13 @@ internal sealed class ShortsProjects(string root)
 
     internal IReadOnlyList<ShortsProject> List()
     {
-        if (!Directory.Exists(DirectoryPath)) return [];
         var projects = new List<ShortsProject>();
-        foreach (var file in Directory.EnumerateFiles(DirectoryPath, "*.json"))
+        var old = Directory.Exists(DirectoryPath) ? Directory.EnumerateFiles(DirectoryPath, "*.json")
+            .Select(Path.GetFileNameWithoutExtension).OfType<string>() : [];
+        var ids = managed ? old.Concat(ManagedWorkStorage.Current.Jobs("Shorts/Projects")).Distinct(StringComparer.OrdinalIgnoreCase) : old;
+        foreach (var id in ids)
         {
-            try { projects.Add(Load(Path.GetFileNameWithoutExtension(file))); }
+            try { projects.Add(Load(id)); }
             catch (Exception error) when (ExpectedReadError(error))
             { OwnedProcessRegistry.Log("shorts_project_read_failed", "Shorts", detail: error.Message); }
         }
@@ -130,12 +132,24 @@ internal sealed class ShortsProjects(string root)
         using var gate = Lock();
         var file = ProjectPath(project.Id);
         var next = update(File.Exists(file) ? Load(project.Id) : project);
-        SongClipStore.Atomic(file, next);
+        SongClipStore.Atomic(ProjectPath(project.Id, next.Workspace.OutputPath ?? ""), next);
         return next;
     }
 
-    private string ProjectPath(string id) => Guid.TryParseExact(id, "N", out _)
-        ? Path.Combine(DirectoryPath, id + ".json") : throw new InvalidDataException("Shorts.Projects.ReadError");
+    private string ProjectPath(string id, string? output = null)
+    {
+        if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Shorts.Projects.ReadError");
+        var legacy = Path.Combine(DirectoryPath, id + ".json");
+        if (!managed || File.Exists(legacy)) return legacy;
+        var resolved = ManagedWorkStorage.Current.ManagedFolder("Shorts/Projects", id);
+        if (resolved is null && output is null)
+        {
+            var local = Path.Combine(DirectoryPath, id, "project.json");
+            return File.Exists(local) ? local : legacy;
+        }
+        var parent = Path.IsPathFullyQualified(output ?? "") ? Path.GetDirectoryName(output) : null;
+        return Path.Combine(ManagedWorkStorage.Current.Job("Shorts/Projects", id, outputDirectory: parent), "project.json");
+    }
 
     private FileStream Lock()
     {

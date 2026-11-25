@@ -34,12 +34,12 @@ internal sealed partial class SpeechAssetStore
 
     internal IReadOnlyList<SpeechAssetSession> ListProjects()
     {
-        if (!Directory.Exists(Root)) return [];
         var projects = new List<SpeechAssetSession>();
-        foreach (var directory in Directory.EnumerateDirectories(Root))
+        var ids = _managed ? ManagedWorkStorage.Current.Jobs("SpeechAssets/Sessions")
+            : Directory.Exists(Root) ? Directory.EnumerateDirectories(Root).Select(Path.GetFileName).OfType<string>() : [];
+        foreach (var id in ids)
         {
-            var id = Path.GetFileName(directory);
-            if (!Guid.TryParseExact(id, "N", out _) || !File.Exists(Path.Combine(directory, "session.json"))) continue;
+            if (!Guid.TryParseExact(id, "N", out _) || !File.Exists(Path.Combine(DirectoryFor(id), "session.json"))) continue;
             var session = Load(id);
             if (session.Persistent) projects.Add(session);
         }

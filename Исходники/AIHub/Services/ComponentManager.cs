@@ -223,9 +223,8 @@ public sealed partial class ComponentManager
         }
 
         var fullPath = Path.GetFullPath(record.DownloadPath);
-        var downloadsRoot = Path.GetFullPath(AppDataPaths.ComponentDownloadsDirectory)
-            + Path.DirectorySeparatorChar;
-        if (!fullPath.StartsWith(downloadsRoot, StringComparison.OrdinalIgnoreCase))
+        if (!IsComponentDownload(fullPath) ||
+            !Path.GetFileName(fullPath).Equals(entry.FileName, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Refusing to launch an installer outside the component store.");
         }
@@ -285,7 +284,7 @@ public sealed partial class ComponentManager
                 return await InstallPythonProfileAsync(entry, progress, cancellationToken);
             var state = _stateStore.Load();
             var record = FindRecord(state, entry);
-            var downloadPath = Path.Combine(AppDataPaths.ComponentDownloadsDirectory, entry.FileName);
+            var downloadPath = Path.Combine(DownloadDirectory, entry.FileName);
             var partialPath = downloadPath + ".part";
             record.Status = ComponentInstallStatuses.Downloading;
             record.DownloadPath = downloadPath;
@@ -786,11 +785,25 @@ public sealed partial class ComponentManager
 
         var fullPath = Path.GetFullPath(path);
         var root = Path.GetFullPath(AppDataPaths.ComponentsDirectory) + Path.DirectorySeparatorChar;
-        if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+        if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) && !IsComponentDownload(fullPath))
         {
             throw new InvalidOperationException("Refusing to delete a file outside the component store.");
         }
 
+        Lopata.Updates.SafeUpdatePath.RejectLinks(fullPath);
         File.Delete(fullPath);
+    }
+
+    private static string DownloadDirectory => ManagedWorkStorage.Current.ConfiguredRoot is null
+        ? AppDataPaths.ComponentDownloadsDirectory : ManagedWorkStorage.Current.ScratchRoot("ComponentDownloads");
+
+    private static bool IsComponentDownload(string fullPath)
+    {
+        var legacy = Path.GetFullPath(AppDataPaths.ComponentDownloadsDirectory) + Path.DirectorySeparatorChar;
+        if (fullPath.StartsWith(legacy, StringComparison.OrdinalIgnoreCase)) return true;
+        return new StorageSettingsStore().Read().Results.Locations
+            .Where(location => Path.IsPathFullyQualified(location.Path))
+            .Select(location => Path.Combine(Path.GetFullPath(location.Path), "AI_HUB", "Temporary", "ComponentDownloads") + Path.DirectorySeparatorChar)
+            .Any(root => fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase));
     }
 }

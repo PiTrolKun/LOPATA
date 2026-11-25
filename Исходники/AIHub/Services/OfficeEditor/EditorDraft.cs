@@ -24,7 +24,8 @@ internal sealed class EditorDraft
     {
         Id = id ?? Guid.NewGuid().ToString("N");
         if (!Guid.TryParseExact(Id, "N", out _)) throw new InvalidDataException("OfficeEditor.InvalidPackage");
-        DirectoryPath = Path.Combine(Root, Id); Directory.CreateDirectory(DirectoryPath);
+        DirectoryPath = ManagedWorkStorage.Current.Job("OfficeEditor/Drafts", Id, temporary: true);
+        Directory.CreateDirectory(DirectoryPath);
         _lease = new FileStream(Path.Combine(DirectoryPath, "lease"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         try
         {
@@ -72,13 +73,13 @@ internal sealed class EditorDraft
 
     internal static IReadOnlyList<EditorDraftInfo> Recoverable()
     {
-        if (!Directory.Exists(Root)) return [];
         var drafts = new List<EditorDraftInfo>();
-        foreach (var directory in Directory.EnumerateDirectories(Root))
+        foreach (var id in ManagedWorkStorage.Current.Jobs("OfficeEditor/Drafts"))
         {
-            if (!Guid.TryParseExact(Path.GetFileName(directory), "N", out _)) continue;
             try
             {
+                var directory = ManagedWorkStorage.Current.Job("OfficeEditor/Drafts", id, temporary: true);
+                if (!Directory.Exists(directory)) continue;
                 using var lease = new FileStream(Path.Combine(directory, "lease"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                 var info = JsonSerializer.Deserialize<EditorDraftInfo>(File.ReadAllText(Path.Combine(directory, "draft.json")));
                 // Unsaved new documents remain available even after a normal close.

@@ -22,7 +22,7 @@ public sealed class MusicAceWorker : IMusicYueWorker
     internal static async Task<PreparationReceipt> ProbeAsync(string root, CancellationToken token, Action<string> log)
     {
         var worker = new MusicAceWorker(); worker.Log += log;
-        var path = Path.Combine(Path.GetTempPath(), "lopata-ace-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("MusicWorkers"), "lopata-ace-" + Guid.NewGuid().ToString("N"));
         try {
             var directory = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicAceCatalog.RuntimeRevision);
             await ComponentAudit.RunAsync("Music.ACE.Probe", directory, MusicAceCatalog.RuntimeRevision + MusicAceCatalog.SourceRevision,

@@ -20,21 +20,27 @@ public sealed partial class UpdateTransaction
 
     private Dictionary<string, UpdateFile> ReadCollectionOwnership()
     {
-        SafeUpdatePath.RejectLinks(CollectionOwnershipDirectory);
         var owned = new Dictionary<string, UpdateFile>(StringComparer.OrdinalIgnoreCase);
-        if (!Directory.Exists(CollectionOwnershipDirectory)) return owned;
-        foreach (var path in Directory.EnumerateFiles(CollectionOwnershipDirectory, "*.signed.json"))
-        {
-            SafeUpdatePath.RejectLinks(path);
-            if (new FileInfo(path).Length > SignedManifest.MaximumEnvelopeBytes) throw new InvalidDataException("Oversized collection ownership receipt.");
-            var manifest = SignedManifest.Read(File.ReadAllBytes(path)).Verify(_keys);
+        foreach (var (manifest, _) in CollectionManifests())
             foreach (var file in manifest.Files.Where(CollectionPayloadRetention.IsVersioned))
             {
                 if (owned.TryGetValue(file.Key, out var previous) && (previous.Sha256 != file.Sha256 || previous.Size != file.Size))
                     throw new InvalidDataException("A collection generation changed its signed content.");
                 owned[file.Key] = file;
             }
-        }
         return owned;
+    }
+
+    private IEnumerable<(UpdateManifest Manifest, DateTime Remembered)> CollectionManifests()
+    {
+        SafeUpdatePath.RejectLinks(CollectionOwnershipDirectory);
+        if (!Directory.Exists(CollectionOwnershipDirectory)) yield break;
+        foreach (var path in Directory.EnumerateFiles(CollectionOwnershipDirectory, "*.signed.json"))
+        {
+            SafeUpdatePath.RejectLinks(path);
+            var info = new FileInfo(path);
+            if (info.Length > SignedManifest.MaximumEnvelopeBytes) throw new InvalidDataException("Oversized collection ownership receipt.");
+            yield return (SignedManifest.Read(File.ReadAllBytes(path)).Verify(_keys), info.LastWriteTimeUtc);
+        }
     }
 }

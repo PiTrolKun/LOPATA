@@ -34,7 +34,7 @@ internal sealed partial class OfficeTextEditorView
     }
     private long _sheetEdits, _savedSheetEdits;
     private static string PrivateSheetPath(string extension) =>
-        Path.Combine(Path.GetTempPath(),"LOPATA-office-" + Guid.NewGuid().ToString("N") + extension);
+        Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("Office"),"LOPATA-office-" + Guid.NewGuid().ToString("N") + extension);
 
     private async Task ShowMaterialSheetAsync(OfficeSheet sheet, CancellationToken token)
     {

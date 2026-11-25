@@ -8,6 +8,8 @@ public sealed class ApplicationUpdateSettings
     public bool? IncludeBeta { get; set; }
     public DateTimeOffset? LastCheckUtc { get; set; }
     public string? LastNotifiedVersion { get; set; }
+    public double StorageLimitGb { get; set; } = 10;
+    public string? LastStorageOffer { get; set; }
 }
 
 public sealed record ApplicationReleaseVersion(int Major, int Minor, int Patch, string Channel)

@@ -48,7 +48,11 @@ internal static class NeuroFiles
     {
         public void Dispose() => TestRoot.Value = previous;
     }
-    internal static string Project(string id) => Path.Combine(Root,"projects", Key(id));
+    internal static string Project(string id) => TestRoot.Value is not null ? Path.Combine(Root, "projects", Key(id))
+        : ManagedWorkStorage.Current.Job("NeuroConstructor/projects", Key(id));
+    internal static IEnumerable<string> Projects() => TestRoot.Value is null ? ManagedWorkStorage.Current.Jobs("NeuroConstructor/projects")
+        : Directory.Exists(Path.Combine(Root, "projects")) ? Directory.EnumerateDirectories(Path.Combine(Root, "projects"))
+            .Select(Path.GetFileName).OfType<string>().Where(id => Guid.TryParseExact(id, "N", out _)) : [];
     internal static string Run(string project, string run) => Path.Combine(Project(project),"runs",Key(run));
     private static string Key(string id) => Guid.TryParseExact(id,"N",out var value)
         ? value.ToString("N") : throw new InvalidDataException("Neuro.ProjectId");

@@ -10,9 +10,7 @@ namespace AIHub.Services.VideoPreparation;
 /// <summary>Owns a native Comfy VACE worker and accepts only independently verified complete checkpoints.</summary>
 internal static class VideoVaceRunner
 {
-    internal static string DirectoryFor(string id) => Guid.TryParseExact(id, "N", out _)
-        ? Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "VaceJobs", id)
-        : throw new InvalidDataException("VideoPrep.InvalidArchive");
+    internal static string DirectoryFor(string id) => ManagedWorkStorage.Current.Job("VideoPreparation/VaceJobs", id, temporary: true);
 
     internal static Task RunAsync(VideoVaceJob job, VideoPreparationProject project, Func<Task> commit,
         Action<string> log, CancellationToken token, bool probeOnly = false, ManagedModelLibraryStore? library = null) =>
@@ -35,6 +33,8 @@ internal static class VideoVaceRunner
         var environment = await VideoVaceRuntime.PrepareAsync(job.ModelsRoot, job.Connections, token, log, library);
         await VideoRuntime.PrepareAsync(token);
         var directory = DirectoryFor(job.Run.Id); var output = Path.Combine(directory, "output"); Directory.CreateDirectory(output);
+        using var capacity = ManagedWorkStorage.Current.Reserve(directory,
+            checked((long)(Math.Min(240, job.Items.Sum(item => item.Seconds)) * 12 * 1024 * 1024)), temporary: true);
         foreach (var folder in new[] { "input", "temp" }) Directory.CreateDirectory(Path.Combine(directory, folder));
         await RestoreFiles(project, job.Run, output, token);
         var models = Models(environment);

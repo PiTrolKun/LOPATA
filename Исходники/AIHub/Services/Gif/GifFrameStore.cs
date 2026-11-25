@@ -12,6 +12,7 @@ public sealed class GifManifest
     public int Width { get; set; }
     public int Height { get; set; }
     public bool Loop { get; set; }
+    public string? OutputDirectory { get; set; }
     public double DurationMilliseconds { get; set; }
     public int MissedFrames { get; set; }
     public bool ReducedDetail { get; set; }
@@ -24,8 +25,8 @@ public sealed class GifFrameStore
 {
     public string DirectoryPath { get; }
     public GifManifest Manifest { get; }
-    public GifFrameStore(string directory, bool loop)
-    { DirectoryPath = Path.GetFullPath(directory); Directory.CreateDirectory(DirectoryPath); Manifest = new() { Loop = loop, Provenance = OutputProvenance.Capture("gif") }; SaveManifest(); }
+    public GifFrameStore(string directory, bool loop, string? outputDirectory = null)
+    { DirectoryPath = Path.GetFullPath(directory); Directory.CreateDirectory(DirectoryPath); Manifest = new() { Loop = loop, OutputDirectory = outputDirectory, Provenance = OutputProvenance.Capture("gif") }; SaveManifest(); }
     private GifFrameStore(string directory, GifManifest manifest) { DirectoryPath = directory; Manifest = manifest; }
     public static GifFrameStore Open(string directory)
     {

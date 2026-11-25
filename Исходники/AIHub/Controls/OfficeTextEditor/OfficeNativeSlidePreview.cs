@@ -252,7 +252,7 @@ internal sealed partial class OfficeNativeSlidePreview : Grid, IAsyncDisposable
     private async Task<ReaderDocument> OpenSnapshotAsync(CancellationToken token)
     {
         var bytes = await _snapshot(token);
-        var path = Path.Combine(Path.GetTempPath(), "LOPATA-slide-" + Guid.NewGuid().ToString("N") + _extension);
+        var path = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("Office"), "LOPATA-slide-" + Guid.NewGuid().ToString("N") + _extension);
         try
         {
             var snapshot = await Task.Run(() => OfficeSlideFormat.ForEditorPreview(bytes, _extension), token);

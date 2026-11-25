@@ -59,19 +59,19 @@ internal sealed class GameSoundProject
     }
 }
 
-internal sealed class GameSoundProjects(string root)
+internal sealed class GameSoundProjects(string root, bool managed = false)
 {
-    internal static GameSoundProjects Default { get; } = new(Path.Combine(AppDataPaths.BaseDirectory, "GameSounds", "Projects"));
+    internal static GameSoundProjects Default { get; } = new(Path.Combine(AppDataPaths.BaseDirectory, "GameSounds", "Projects"), managed: true);
     internal static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
     private static readonly object Gate = new();
 
     internal IReadOnlyList<GameSoundProject> List()
     {
-        if (!Directory.Exists(root)) return [];
         var result = new List<GameSoundProject>();
-        foreach (var file in Directory.EnumerateFiles(root, "*.json"))
+        var legacy = Directory.Exists(root) ? Directory.EnumerateFiles(root, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>() : [];
+        var ids = managed ? legacy.Concat(ManagedWorkStorage.Current.Jobs("GameSounds/Projects")).Distinct() : legacy;
+        foreach (var id in ids)
         {
-            var id = Path.GetFileNameWithoutExtension(file);
             if (!Guid.TryParseExact(id, "N", out _)) continue;
             try { result.Add(Load(id)); }
             catch (Exception error) when (error is IOException or JsonException or UnauthorizedAccessException)
@@ -120,12 +120,17 @@ internal sealed class GameSoundProjects(string root)
         lock (Gate)
         {
             var path = PathFor(project.Id);
-            Directory.CreateDirectory(root);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             GameSoundFiles.WriteAtomic(path, JsonSerializer.SerializeToUtf8Bytes(project, Json), CancellationToken.None);
             project.Persistent = true;
         }
     }
 
-    private string PathFor(string id) => Guid.TryParseExact(id, "N", out _) ?
-        Path.Combine(root, id + ".json") : throw new InvalidDataException("GameSounds.InvalidProject");
+    private string PathFor(string id)
+    {
+        if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("GameSounds.InvalidProject");
+        var old = Path.Combine(root, id + ".json");
+        return !managed || File.Exists(old) ? old
+            : Path.Combine(ManagedWorkStorage.Current.Job("GameSounds/Projects", id), "project.json");
+    }
 }

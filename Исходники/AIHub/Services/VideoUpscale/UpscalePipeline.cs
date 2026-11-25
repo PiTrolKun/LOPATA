@@ -45,6 +45,7 @@ internal sealed class UpscalePipeline
         var deno = steps.Any(s => s.Engine == UpscaleEngine.Deno)
             ? await UpscaleDeno.PrepareAsync(steps, cards, progress, token) : null;
         var estimatedPart = steps.Max(s => (long)s.Width * s.Height) * Math.Min(job.ChunkFrames + 32, job.Frames) * 5 * 3;
+        using var capacity = ManagedWorkStorage.Current.Reserve(root, estimatedPart, temporary: true);
         var drive = new DriveInfo(Path.GetPathRoot(root)!);
         if (drive.AvailableFreeSpace < estimatedPart + 512L * 1024 * 1024) throw new IOException("VideoUpscale.DiskSpace");
         job.Components = cards.Select(c => (object)new OutputModelUse(c.ModelArtifactId, c.DisplayName, c.Revision, "video processing")).ToList();

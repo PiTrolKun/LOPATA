@@ -25,6 +25,7 @@ public partial class MainWindow
     private void InitializeApplicationUpdates()
     {
         _updateNoticeAttention = new(ApplicationUpdateNotice);
+        IsVisibleChanged += (_, _) => { if (IsVisible) _ = CheckStorageMaintenanceAsync(); };
         Closed += (_, _) => _updateNoticeAttention.Dispose();
         _appSettings.Updates ??= new();
         _betaUpdateTimer.Tick += async (_, _) =>
@@ -58,7 +59,9 @@ public partial class MainWindow
                 return;
             }
         if (finishingUpdate && System.Windows.Application.Current is App application) application.StartRecoveryMonitoring();
-            await CheckAutomaticUpdateAsync();
+        _storageMaintenanceReady = true;
+        _ = CheckStorageMaintenanceAsync();
+        await CheckAutomaticUpdateAsync();
     }
 
     private void ScheduleBetaUpdateCheck()
@@ -149,7 +152,8 @@ public partial class MainWindow
             _updateWindow = new(this, _updateService, _appSettings.Updates, GetAppVersion(), L,
                 () => _appSettingsStore.Save(_appSettings), () => _appSettings.ModelDownloads.MaximumParallelConnections,
                 InstallApplicationUpdateAsync, _availableUpdate, UpdateSettingsChanged,
-                () => _checkAfterUpdateWindow = false);
+                () => _checkAfterUpdateWindow = false,
+                CanMaintainInstalledStorage ? () => CheckStorageMaintenanceAsync(manual: true) : null);
         }
         catch (Exception)
         {

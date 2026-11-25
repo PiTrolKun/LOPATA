@@ -60,7 +60,7 @@ internal static class BookSmartImage
         var converter = BookConverterRuntime.FindCalibre() ?? throw new FileNotFoundException("BookConverter.Error.CalibreRequired");
         var executable = Path.Combine(Path.GetDirectoryName(converter)!, "calibre-debug.exe");
         if (!File.Exists(executable)) throw new FileNotFoundException("BookConverter.Error.CalibreRequired");
-        var work = Path.Combine(Path.GetTempPath(), "LOPATA-BookSmartImage-" + Guid.NewGuid().ToString("N"));
+        var work = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("BookSmartImages"), "LOPATA-BookSmartImage-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(work);
         try
         {

@@ -17,6 +17,7 @@ internal static class ManagedPythonLaunch
 
     internal static void ScriptArguments(ProcessStartInfo info, IEnumerable<string> arguments)
     {
+        ManagedWorkStorage.Current.SetWorkerTemporary(info);
         var values = arguments.ToArray();
         if (values.Length >= 2 && values[0] == "-c")
         {

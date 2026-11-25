@@ -21,7 +21,7 @@ public sealed class MusicBf16Worker : IMusicYueWorker
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeout.CancelAfter(TimeSpan.FromSeconds(60));
         var worker = new MusicBf16Worker(); worker.Log += log;
-        var path = Path.Combine(Path.GetTempPath(), "lopata-bf16-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("MusicWorkers"), "lopata-bf16-" + Guid.NewGuid().ToString("N"));
         try {
             var directory = Path.Combine(AppDataPaths.BaseDirectory, "Music", "Python", MusicModelVariants.RuntimeRevision);
             Task Check(CancellationToken ct, bool quick) => worker.RunAsync(

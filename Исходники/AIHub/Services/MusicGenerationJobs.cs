@@ -62,10 +62,11 @@ public sealed record MusicGenerationJob(string Id, string ModelsRoot, string Out
     public int? ProjectStep { get; init; }
 }
 
-public sealed class MusicGenerationJobs(string directory)
+public sealed class MusicGenerationJobs(string? directory)
 {
-    public static MusicGenerationJobs Default { get; } = new(Path.Combine(AppDataPaths.BaseDirectory, "Music", "Jobs"));
-    public string Folder(string id) => Guid.TryParseExact(id, "N", out _) ? Path.Combine(directory, id)
+    public static MusicGenerationJobs Default { get; } = new(null);
+    public string Folder(string id) => Guid.TryParseExact(id, "N", out _) ? directory is null
+        ? ManagedWorkStorage.Current.Job("Music/Jobs", id) : Path.Combine(directory, id)
         : throw new InvalidDataException("Invalid music job identifier.");
     public MusicGenerationJob Load(string id)
     {
@@ -128,11 +129,19 @@ public sealed class MusicGenerationJobs(string directory)
                 RuntimePack = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.RuntimeRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.RuntimeRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.RuntimeRevision : studioProfile is not null ? studioProfile.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(), DurationAutomatic = durationAutomatic,
                 Output = outputSettings, Artist = artist.Trim(), Comment = comment, Cover = cover, Loras = loras?.ToArray() ?? [], SeparateTracks = separateTracks };
         if (settings.Variation == MusicModelVariants.Bf16 || MusicModelVariants.ExternalPipeline(settings.Variation)) job = job with { Variants = job.Variants.Select(v => v with { LanguageSeed = v.SoundSeed }).ToArray() };
+        if (directory is null) _ = ManagedWorkStorage.Current.Job("Music/Jobs", job.Id, outputDirectory: output);
         Save(job); return job;
         int Seed(string key, int index) => !settings.Values.ContainsKey(key) || settings.Integer(key) < 0 ? RandomNumberGenerator.GetInt32(1, int.MaxValue)
             : (int)(((long)settings.Integer(key) + index) % ((long)int.MaxValue + 1));
     }
-    public string StagePath(string id, string suffix) => Path.Combine(Folder(id), Guid.NewGuid().ToString("N") + suffix);
+    public string StagePath(string id, string suffix)
+    {
+        var durable = Folder(id);
+        var scratch = directory is not null || suffix.EndsWith(".abc", StringComparison.OrdinalIgnoreCase)
+            ? durable : ManagedWorkStorage.Current.Job("Music/Stages", id, temporary: true);
+        Directory.CreateDirectory(scratch);
+        return Path.Combine(scratch, Guid.NewGuid().ToString("N") + suffix);
+    }
     public MusicGenerationJob SetKaraokeReadiness(string id, int index, MusicKaraokeReadiness readiness)
     {
         lock (MusicLyricsTimingStore.Gate(Folder(id))) {
@@ -180,6 +189,13 @@ public sealed class MusicGenerationJobs(string directory)
         if (job.ProjectId is not null && (!Guid.TryParseExact(job.ProjectId, "N", out _) || job.ProjectStep is null or < 1)
             || job.ProjectId is null && job.ProjectStep is not null) throw new InvalidDataException("Invalid music project link.");
         var folder = Path.GetFullPath(Folder(job.Id)) + Path.DirectorySeparatorChar;
+        var stage = directory is null ? ManagedWorkStorage.Current.ManagedFolder("Music/Stages", job.Id) : null;
+        bool OwnsStage(string path)
+        {
+            var full = Path.GetFullPath(path);
+            return full.StartsWith(folder, StringComparison.OrdinalIgnoreCase)
+                || stage is not null && full.StartsWith(stage + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
         foreach(var use in job.Variants.Select(v=>v.AceIdea).OfType<MusicAceIdeas.MusicAceIdeaUse>()) {
             use.Validate();if(!MusicAceCatalog.IsAce(job.Variation)||job.AudioTask?.Enabled==true||job.Melody?.Enabled==true)
                 throw new InvalidDataException("Music.AceIdeas.Conflict");
@@ -191,7 +207,7 @@ public sealed class MusicGenerationJobs(string directory)
         foreach (var receipt in job.Variants.Select(v => v.AudioTask).OfType<MusicAudioTaskReceipt>()) {
             foreach (var path in new[] { receipt.ScorePath, receipt.RenderPath, receipt.OutputPath, receipt.FittedLayerPath,
                 receipt.OriginalStems?.VoicePcm, receipt.OriginalStems?.MusicPcm, receipt.RenderedStems?.VoicePcm, receipt.RenderedStems?.MusicPcm }.OfType<string>())
-                if (!Path.GetFullPath(path).StartsWith(folder, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Music.Transform.InvalidInput");
+                if (!OwnsStage(path)) throw new InvalidDataException("Music.Transform.InvalidInput");
         }
         var bf16 = job.Variation == MusicModelVariants.Bf16;
         var studio = job.Variation == MusicStudioRuntime.Variation;
@@ -228,7 +244,7 @@ public sealed class MusicGenerationJobs(string directory)
                     if (r.SourceHash != v.AudioHash || r.ModelRevision != MusicStemsCatalog.ModelRevision || r.ModelHash != MusicStemsCatalog.ModelHash ||
                         !double.IsFinite(r.Gain) || r.Gain is <= 0 or > 1) throw new InvalidDataException("Invalid separation receipt.");
                     foreach (var path in new[] { r.VoicePcm, r.MusicPcm })
-                        if (!Path.GetFullPath(path).StartsWith(folder, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Separation stage escapes job.");
+                        if (!OwnsStage(path)) throw new InvalidDataException("Separation stage escapes job.");
                 }
             }
             if (job.Output is { } output && (Path.GetExtension(v.ResultPath) != MusicOutputSettings.Extension(output.Format) ||
@@ -243,7 +259,7 @@ public sealed class MusicGenerationJobs(string directory)
                 throw new InvalidDataException("Music.Midi.Invalid");
             if((v.EffectivePlanFile is null)!=(v.EffectivePlanHash is null))throw new InvalidDataException("Music.Score.Invalid");
             foreach (var path in new[] { v.PlanFile, v.AudioFile, v.MelodyInputPath, v.EffectivePlanFile }.OfType<string>())
-                if (!Path.GetFullPath(path).StartsWith(folder, StringComparison.OrdinalIgnoreCase))
+                if (!OwnsStage(path))
                     throw new InvalidDataException("Music stage path escapes its job folder.");
         }
         if (job.Variants.Select(v => v.ResultPath).Distinct(StringComparer.OrdinalIgnoreCase).Count() != job.Variants.Length)

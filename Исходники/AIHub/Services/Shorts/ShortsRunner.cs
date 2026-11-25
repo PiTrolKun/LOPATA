@@ -26,10 +26,13 @@ internal static class ShortsRunner
         if (File.Exists(job.Output))
         {
             await VerifyAsync(job.Output, job, token);
+            ReleaseWorkingMedia(job);
             return job.Output;
         }
 
         report("Shorts.Preparing");
+        using var capacity = ManagedWorkStorage.Current.Reserve(
+            ManagedWorkStorage.Current.Temporary("Shorts"), (long)Math.Ceiling(job.OutputSeconds * 32 * 1024 * 1024), temporary: true);
         if (job.SourceSha256 is null)
         {
             await ApplicationBackgroundOperations.RetireModelsAsync();
@@ -42,8 +45,35 @@ internal static class ShortsRunner
             throw new InvalidDataException("Shorts.InvalidResult");
 
         await PublishAsync(job, job.SourcePath(), report, token);
+        ReleaseWorkingMedia(job);
         OwnedProcessRegistry.Log("shorts_result_ready", "Shorts", detail: $"{job.Id} {watch.Elapsed.TotalSeconds:F1}s");
         return job.Output;
+    }
+
+    private static void ReleaseWorkingMedia(ShortsJob job)
+    {
+        var storage = ManagedWorkStorage.Current;
+        try
+        {
+            if (job.Song is { } song)
+            {
+                if (storage.ManagedFolder("Shorts/Audio", job.Id) is { } audio)
+                    File.Delete(RuntimeFileAudit.Contained(audio, "song.wav"));
+                if (storage.ManagedFolder("SongClip/Attempts", song.Id) is { } attempt)
+                    File.Delete(RuntimeFileAudit.Contained(attempt, "clip.mp4"));
+            }
+            else if (job.Description is { } description
+                && storage.ManagedFolder("VideoPreparation/H3Jobs", description.Run.Id) is { } work)
+            {
+                var media = job.SourcePath();
+                if (media.StartsWith(work + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    File.Delete(media);
+            }
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            OwnedProcessRegistry.Log("shorts_cleanup_pending", "Shorts", detail: error.GetType().Name);
+        }
     }
 
     private static async Task GenerateAsync(ShortsJob job, Action<string> report, CancellationToken token)
@@ -118,6 +148,7 @@ internal static class ShortsRunner
         (string File, OutputModelUse Model)? dlss, CancellationToken token, bool direct = false)
     {
         var file = job.Output;
+        using var capacity = ManagedWorkStorage.Current.Reserve(Path.GetDirectoryName(file)!, new FileInfo(source).Length);
         Lopata.Updates.SafeUpdatePath.RejectLinks(file);
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         var staging = Path.Combine(Path.GetDirectoryName(file)!, $".lopata-shorts-{job.Id}-{Guid.NewGuid():N}.partial.mp4");

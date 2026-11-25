@@ -94,7 +94,7 @@ internal sealed class UpdateHost(Action<string> status,
         var journal = transaction.ReadJournal();
         var voiceRecovery = new CoreVoiceRollbackStore(state.StateDirectory, new(InstalledUpdateState.UserDataDirectory));
         var noticePending = journal is { Phase: UpdatePhase.RolledBack } && !voiceRecovery.WasReported(journal.Id);
-        if (!worker && mode != "--confirm" && !noticePending
+        if (!worker && mode is not ("--confirm" or "--rollback-to") && !noticePending
             && await WorkerDispatch.TryStartAsync(state, transaction, args, waitForExit: mode is "--unregister" or "--recover")) return;
         await WaitForCallerAsync(args);
         if (mode == "--confirm")
@@ -102,6 +102,20 @@ internal sealed class UpdateHost(Action<string> status,
             if (args.Length != 2) throw new ArgumentException("Health confirmation requires a transaction id.");
             await transaction.ConfirmHealthyAsync(args[1]);
             new PreparedUpdateStore(state.StateDirectory, Keys).Clear();
+            return;
+        }
+        if (mode == "--rollback-to")
+        {
+            if (args.Length < 2) throw new ArgumentException("Rollback requires a version.");
+            var prepared = new PreparedUpdateStore(state.StateDirectory, Keys);
+            if (prepared.Read() is not null) throw new IOException("Cancel the prepared update before rolling back.");
+            await WaitForInstallationMutationAsync(state, token);
+            status(HostText.Get("UpdateHost.Recovering"));
+            if (!transaction.RollbackVersions().Contains(args[1])) throw new IOException("The selected rollback point is no longer available.");
+            if (UpdateManifest.NumericVersion(args[1]) < Version.Parse(LegacyWorkspaceMoves.FirstSupportedVersion))
+                await LegacyWorkspaceMoves.RestoreAsync(InstalledUpdateState.UserDataDirectory, token);
+            await transaction.RollbackToAsync(args[1], token);
+            StartApplication(state, null, false);
             return;
         }
         if (mode is not ("--launch" or "--apply" or "--unregister" or "--recover")) throw new ArgumentException("Unknown updater command.");

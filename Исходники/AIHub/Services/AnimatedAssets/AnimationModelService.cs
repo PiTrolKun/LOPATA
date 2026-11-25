@@ -202,7 +202,7 @@ internal sealed partial class AnimationModelService
     private static string JobDirectory(Job job)
     {
         if (!Guid.TryParseExact(job.Id, "N", out var id)) throw new InvalidDataException("Visual.InvalidProject");
-        var directory = Path.Combine(AppDataPaths.BaseDirectory, "AnimatedAssets", "ModelJobs", id.ToString("N"));
+        var directory = ManagedWorkStorage.Current.Job("AnimatedAssets/ModelJobs", id.ToString("N"), temporary: true);
         SafeUpdatePath.RejectLinks(directory);
         return directory;
     }

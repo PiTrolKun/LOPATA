@@ -36,7 +36,7 @@ public partial class MainWindow
         _backgroundOperations!.Register(UpscalePipeline.Kind, async (state, token) => {
             var checkpoint = state.Input.Deserialize<UpscaleCheckpoint>() ?? throw new InvalidDataException("VideoUpscale.InvalidProject");
             var full = Path.GetFullPath(checkpoint.JobFile);
-            if (!full.StartsWith(Path.GetFullPath(UpscaleStore.WorkRoot) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("VideoUpscale.InvalidProject");
+            if (!UpscaleStore.IsJobPath(full)) throw new InvalidDataException("VideoUpscale.InvalidProject");
             var job = UpscaleStore.Load<UpscaleJob>(full); OpenUpscaleUtility(job.Project);
             if (_upscaleWindow is not {} window) return;
             await window.Ready.Task.WaitAsync(token);
@@ -48,7 +48,7 @@ public partial class MainWindow
         _backgroundOperations.Register(UpscaleAssembly.PartialKind, async (state, token) => {
             var checkpoint = state.Input.Deserialize<UpscaleCheckpoint>() ?? throw new InvalidDataException("VideoUpscale.InvalidProject");
             var full = Path.GetFullPath(checkpoint.JobFile);
-            if (!full.StartsWith(Path.GetFullPath(UpscaleStore.WorkRoot) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("VideoUpscale.InvalidProject");
+            if (!UpscaleStore.IsJobPath(full)) throw new InvalidDataException("VideoUpscale.InvalidProject");
             var job = UpscaleStore.Load<UpscaleJob>(full); OpenUpscaleUtility(job.Project);
             if (_upscaleWindow is not {} window) return;
             await window.Ready.Task.WaitAsync(token);

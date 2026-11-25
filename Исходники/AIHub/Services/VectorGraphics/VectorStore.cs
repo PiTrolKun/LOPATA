@@ -16,12 +16,14 @@ public static class VectorStore
     public static string Folder(string id)
     {
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Vector.Error.Job");
-        var folder = Path.Combine(Root, id); Lopata.Updates.SafeUpdatePath.RejectLinks(folder); return folder;
+        return ManagedWorkStorage.Current.Job("VectorGraphics/Jobs", id);
     }
     public static string FilePath(string id, string name) => Path.Combine(Folder(id), name);
     public static void Save(VectorResult state)
     {
-        var folder = Folder(state.Request.Id); Directory.CreateDirectory(folder);
+        var output = Path.IsPathFullyQualified(state.Request.OutputDirectory) ? state.Request.OutputDirectory : null;
+        var folder = ManagedWorkStorage.Current.Job("VectorGraphics/Jobs", state.Request.Id, outputDirectory: output);
+        Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, "job.json"); var temp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try { File.WriteAllText(temp, JsonSerializer.Serialize(state)); File.Move(temp, path, true); }
         finally { if (File.Exists(temp)) File.Delete(temp); }
@@ -35,11 +37,10 @@ public static class VectorStore
     }
     public static VectorResult[] History()
     {
-        if (!Directory.Exists(Root)) return [];
         var result = new List<VectorResult>();
-        foreach (var dir in Directory.EnumerateDirectories(Root))
+        foreach (var id in ManagedWorkStorage.Current.Jobs("VectorGraphics/Jobs"))
         {
-            try { result.Add(Load(Path.GetFileName(dir))); }
+            try { result.Add(Load(id)); }
             catch (Exception error) when (error is IOException or JsonException or UnauthorizedAccessException)
             { OwnedProcessRegistry.Log("vector_history_unavailable", "Vector", detail: error.GetType().Name); }
         }

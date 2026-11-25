@@ -76,7 +76,7 @@ public sealed class ApplicationUpdateWindow : Window
 
     public ApplicationUpdateWindow(Window owner, ApplicationUpdateCoordinator service, ApplicationUpdateSettings settings,
         string version, Func<string, string> text, Action save, Func<int> connections, Func<Task> install, UpdateOffer? knownUpdate,
-        Action? settingsChanged = null, Action? checkCompleted = null)
+        Action? settingsChanged = null, Action? checkCompleted = null, Func<Task>? storage = null)
     {
         Owner = owner; Resources = owner.Resources;
         _service = service; _settings = settings; _version = version; _text = text;
@@ -102,6 +102,7 @@ public sealed class ApplicationUpdateWindow : Window
         _beta = ApplicationUpdateChoices.Direction(text, beta: true);
         AddDirection(panel, _stable, UpdateDelivery.FullInstaller);
         AddDirection(panel, _beta, UpdateDelivery.FilePatch);
+        if (storage is not null) AddButton(panel, new Button(), "StorageWork.Title", storage);
         panel.Children.Add(new TextBlock { Text = text("Updates.DirectionHelp"), TextWrapping = TextWrapping.Wrap, Margin = new(0, 4, 0, 0) });
         _notes.SetResourceReference(Control.ForegroundProperty, "TextPrimaryBrush");
         _notes.SetResourceReference(Control.BackgroundProperty, "PanelBrush");

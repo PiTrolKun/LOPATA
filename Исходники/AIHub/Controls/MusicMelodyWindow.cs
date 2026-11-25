@@ -30,7 +30,7 @@ public sealed class MusicMelodyWindow : Window
     private readonly ComboBox _meter = new() { Width = 85 }, _snap = new() { Width = 85 };
     private readonly TextBlock _status = MusicAudioUi.Text(), _selection = MusicAudioUi.Text();
     private readonly System.Windows.Media.MediaPlayer _player = new();
-    private readonly string _previewFolder = Path.Combine(Path.GetTempPath(), "LOPATA-Melody-" + Guid.NewGuid().ToString("N"));
+    private readonly string _previewFolder = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("MusicPreviews"), "LOPATA-Melody-" + Guid.NewGuid().ToString("N"));
     private readonly CancellationTokenSource _closed = new();
     private readonly string _variation;
     private bool _previewing, _refreshing;

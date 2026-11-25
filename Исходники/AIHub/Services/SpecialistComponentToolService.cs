@@ -252,7 +252,7 @@ public sealed class SpecialistComponentToolService
         var executable = ResolveInstalledArtifact(runtime);
         var modelPath = ResolveInstalledArtifact(model);
         var outputDirectory = Path.Combine(
-            Path.GetTempPath(),
+            AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("SpecialistTools"),
             "AI_HUB",
             "Whisper",
             Guid.NewGuid().ToString("N"));

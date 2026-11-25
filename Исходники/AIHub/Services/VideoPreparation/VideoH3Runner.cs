@@ -10,9 +10,7 @@ namespace AIHub.Services.VideoPreparation;
 
 internal static class VideoH3Runner
 {
-    internal static string DirectoryFor(string id) => Guid.TryParseExact(id, "N", out _)
-        ? Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3Jobs", id)
-        : throw new InvalidDataException("VideoPrep.InvalidArchive");
+    internal static string DirectoryFor(string id) => ManagedWorkStorage.Current.Job("VideoPreparation/H3Jobs", id, temporary: true);
     internal static async Task RunAsync(VideoH3Job job, VideoPreparationProject project, Func<Task> commit,
         Action<string> log, CancellationToken token, bool probeOnly = false, ManagedModelLibraryStore? library = null)
     {
@@ -41,6 +39,8 @@ internal static class VideoH3Runner
             : null;
         await VideoRuntime.PrepareAsync(token);
         var directory = DirectoryFor(job.Run.Id); var output = Path.Combine(directory, "output"); Directory.CreateDirectory(output);
+        using var capacity = ManagedWorkStorage.Current.Reserve(directory,
+            checked((long)(Math.Min(240, job.Items.Sum(item => item.Seconds)) * 12 * 1024 * 1024)), temporary: true);
         foreach (var folder in new[] { "input", "temp" }) Directory.CreateDirectory(Path.Combine(directory, folder));
         await RestoreFiles(project, job.Run, output, token);
         var models = lite ? VideoH3Profile.Facts(environment) : Models(environment, false);

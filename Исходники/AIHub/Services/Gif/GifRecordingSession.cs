@@ -17,6 +17,7 @@ public sealed class GifRecordingSession
     private readonly CancellationTokenSource _stop = new(), _assembly = new();
     private readonly ScreenCaptureSettings _settings;
     private readonly string _stem;
+    private readonly string _output;
     public string CacheDirectory { get; }
     public event Action<GifRecordingProgress>? Progress;
     public bool Assembling { get; private set; }
@@ -24,9 +25,9 @@ public sealed class GifRecordingSession
     {
         if (source == CaptureSource.Desktop) throw new ArgumentException("GIF does not capture all monitors.", nameof(source));
         _settings = JsonSerializer.Deserialize<ScreenCaptureSettings>(JsonSerializer.Serialize(settings))!; _settings.Normalize();
-        var folder = ScreenshotFiles.Folder(_settings); Directory.CreateDirectory(folder);
+        _output = ScreenshotFiles.Folder(_settings); Directory.CreateDirectory(_output);
         _stem = DateTime.Now.ToString("yyyy-MM-dd_HHmmss_fff") + "_" + source.ToString().ToLowerInvariant() + "_" + Guid.NewGuid().ToString("N")[..8];
-        CacheDirectory = Path.Combine(folder, ".lopata-gif-" + _stem);
+        CacheDirectory = ManagedWorkStorage.Current.Temporary(Path.Combine("Capture", ".lopata-gif-" + _stem));
     }
     public void Stop() { try { _stop.Cancel(); } catch (ObjectDisposedException) { } }
     public void CancelAssembly() { Stop(); try { _assembly.Cancel(); } catch (ObjectDisposedException) { } }
@@ -35,7 +36,8 @@ public sealed class GifRecordingSession
         Func<Int32Rect, int, bool, GifPixels>? cpuCapture = null)
     {
         using var limit = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token, lifetime);
-        var clock = Stopwatch.StartNew(); var store = new GifFrameStore(CacheDirectory, _settings.GifLoop);
+        using var capacity = ManagedWorkStorage.Current.Reserve(CacheDirectory, 64L * 1024 * 1024, temporary: true);
+        var clock = Stopwatch.StartNew(); var store = new GifFrameStore(CacheDirectory, _settings.GifLoop, _output);
         var channel = Channel.CreateBounded<(GifPixels Pixels, double At)>(new BoundedChannelOptions(1) { SingleWriter = true, SingleReader = true });
         var missed = 0; var reduced = false; var width = 0; var height = 0; var errorText = "";
         var writer = Task.Run(async () =>
@@ -104,7 +106,7 @@ public sealed class GifRecordingSession
         try
         {
             using var assembleToken = CancellationTokenSource.CreateLinkedTokenSource(_assembly.Token, lifetime);
-            var destination = Path.Combine(ScreenshotFiles.Folder(_settings), _stem + ".gif");
+            var destination = Path.Combine(_output, _stem + ".gif");
             await Task.Run(() => store.Assemble(destination, assembleToken.Token,
                 percent => Progress?.Invoke(new(clock.Elapsed, width, height, true, percent, reduced, missed))));
             committedFile = destination;
@@ -120,7 +122,9 @@ public sealed class GifRecordingSession
     }
     public static Task<string> RecoverAsync(string directory, CancellationToken token, Action<int>? progress = null) => Task.Run(() =>
     {
-        var store = GifFrameStore.Open(directory); var folder = Directory.GetParent(store.DirectoryPath)?.FullName ?? throw new IOException("No recovery folder.");
+        var store = GifFrameStore.Open(directory);
+        var folder = store.Manifest.OutputDirectory is { } saved && Path.IsPathFullyQualified(saved)
+            ? Path.GetFullPath(saved) : Directory.GetParent(store.DirectoryPath)?.FullName ?? throw new IOException("No recovery folder.");
         var path = Path.Combine(folder, DateTime.Now.ToString("yyyy-MM-dd_HHmmss_fff") + "_recovered_" + Guid.NewGuid().ToString("N")[..8] + ".gif");
         store.Assemble(path, token, progress); return path;
     }, token);

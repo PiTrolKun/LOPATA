@@ -21,6 +21,7 @@ public sealed class VideoManifest
     public bool ReducedDetail { get; set; }
     public string Error { get; set; } = "";
     public ScreenCaptureSettings Settings { get; set; } = new();
+    public string? OutputDirectory { get; set; }
     public List<VideoAudioTrack> Audio { get; set; } = [];
 }
 
@@ -34,10 +35,10 @@ public sealed class VideoFrameStore
     private byte[]? _previous;
     private string? _previousName;
     private GifPixels? _previousPixels;
-    public VideoFrameStore(string directory, ScreenCaptureSettings settings)
+    public VideoFrameStore(string directory, ScreenCaptureSettings settings, string? outputDirectory = null)
     {
         DirectoryPath = Path.GetFullPath(directory); Directory.CreateDirectory(DirectoryPath);
-        Manifest = new() { Settings = settings, Provenance = OutputProvenance.Capture("video") }; Save();
+        Manifest = new() { Settings = settings, OutputDirectory = outputDirectory, Provenance = OutputProvenance.Capture("video") }; Save();
     }
     private VideoFrameStore(string directory, VideoManifest manifest) { DirectoryPath = directory; Manifest = manifest; }
     public static VideoFrameStore Open(string directory)

@@ -82,7 +82,7 @@ internal static class GameSoundAudio
     private static async Task<byte[]> DecodePcmAsync(string path, MusicAudioFormat format, CancellationToken token)
     {
         var inputFormat = format == MusicAudioFormat.Opus ? "ogg" : format.ToString().ToLowerInvariant();
-        var temporary = Path.Combine(Path.GetTempPath(), $"lopata-sfx-{Guid.NewGuid():N}.wav");
+        var temporary = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("GameSounds"), $"lopata-sfx-{Guid.NewGuid():N}.wav");
         try
         {
             var maxSeconds = (GameSoundRecipes.MaxMilliseconds / 1000d + .02).ToString(CultureInfo.InvariantCulture);

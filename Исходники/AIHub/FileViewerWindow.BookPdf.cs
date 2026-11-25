@@ -57,7 +57,7 @@ public partial class FileViewerWindow
 
     private async Task RenderBookPdfPageAsync(int page)
     {
-        var output = Path.Combine(Path.GetTempPath(), "LOPATA-original-pdf-" + Guid.NewGuid().ToString("N") + ".png");
+        var output = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("BookViewer"), "LOPATA-original-pdf-" + Guid.NewGuid().ToString("N") + ".png");
         _bookPdfPrevious!.IsEnabled = false; _bookPdfNext!.IsEnabled = false;
         StatusText.Text = T("BookConverter.Review.PdfLoading");
         try

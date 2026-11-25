@@ -18,8 +18,9 @@ public sealed record InstalledUpdateState(string AppDirectory, string LlamaDirec
     public static string LauncherPath => Path.Combine(UserDataDirectory, "UpdateHost", "LOPATA.Updater.exe");
     [JsonIgnore] public string StateDirectory => Path.Combine(UserDataDirectory, "Updates", "Installations",
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(AppDirectory).TrimEnd(Path.DirectorySeparatorChar).ToUpperInvariant())))[..24]);
-    [JsonIgnore] public string CacheDirectory => Path.Combine(StateDirectory, "packages");
-    public string StageDirectory(string version) => SafeUpdatePath.Resolve(StateDirectory, "staging/" + UpdateManifest.NumericVersion(version));
+    [JsonIgnore] public string WorkspaceDirectory => ConfiguredUpdateWorkspace.Resolve(UserDataDirectory, StateDirectory);
+    [JsonIgnore] public string CacheDirectory => Path.Combine(WorkspaceDirectory, "packages");
+    public string StageDirectory(string version) => SafeUpdatePath.Resolve(WorkspaceDirectory, "staging/" + UpdateManifest.NumericVersion(version));
     public UpdateRoots Roots() => new(new Dictionary<string, string>
         { ["app"] = AppDirectory, ["llama"] = LlamaDirectory, ["chatllm"] = ChatLlmDirectory });
 

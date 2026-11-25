@@ -50,7 +50,7 @@ internal sealed record ShortsJob(string Id, bool FromSong, int Seconds, string M
         var artifact = run.Files.Single(file => file.Role == result.VideoRole);
         return RuntimeFileAudit.Contained(Path.Combine(VideoH3Runner.DirectoryFor(run.Id), "output"), artifact.RelativePath);
     }
-    internal static SongClipStore Assets => new(Path.Combine(Root, "Jobs"));
+    internal static SongClipStore Assets => new(family: "Shorts/Jobs");
     private static string JobFile(string id) => Assets.Resolve(id, "shorts.json");
 
     internal static ShortsJob Load(string id) =>
@@ -65,6 +65,7 @@ internal sealed record ShortsJob(string Id, bool FromSong, int Seconds, string M
         var profile = ShortsGenerationProfile.FromDraft(draft);
         var id = Guid.NewGuid().ToString("N");
         var output = ValidateOutputPath(draft.OutputPath ?? SuggestOutputPath());
+        _ = Assets.Folder(id, Path.GetDirectoryName(output));
         var owned = new List<SongClipReference>();
         foreach (var image in draft.Images)
         {

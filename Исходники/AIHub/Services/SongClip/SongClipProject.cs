@@ -104,13 +104,13 @@ internal sealed record SongClipAttempt(string Id, string ProjectId, string Song,
 }
 
 /// <summary>Small atomic workspace documents, immutable per-attempt inputs and owned binary attachments.</summary>
-internal sealed class SongClipStore(string? directory = null)
+internal sealed class SongClipStore(string? directory = null, string family = "SongClip/Projects")
 {
-    internal string Root { get; } = Path.GetFullPath(directory ?? Path.Combine(AppDataPaths.BaseDirectory, "SongClip", "Projects"));
-    internal string Folder(string id)
+    internal string Root => directory is null ? ManagedWorkStorage.Current.Results(family) : Path.GetFullPath(directory);
+    internal string Folder(string id, string? outputDirectory = null)
     {
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Invalid song-clip identity.");
-        return Path.Combine(Root, id);
+        return directory is null ? ManagedWorkStorage.Current.Job(family, id, outputDirectory: outputDirectory) : Path.Combine(Root, id);
     }
     internal void Save(SongClipProject project)
     {
@@ -141,9 +141,10 @@ internal sealed class SongClipStore(string? directory = null)
     }
     internal IReadOnlyList<SongClipProject> List()
     {
-        if (!Directory.Exists(Root)) return [];
-        return Directory.EnumerateDirectories(Root).Where(p => Guid.TryParseExact(Path.GetFileName(p), "N", out _))
-            .Where(p => File.Exists(Path.Combine(p, "project.json"))).Select(p => Load(Path.GetFileName(p)))
+        var ids = directory is null ? ManagedWorkStorage.Current.Jobs(family)
+            : Directory.Exists(Root) ? Directory.EnumerateDirectories(Root).Select(Path.GetFileName).OfType<string>() : [];
+        return ids.Where(id => Guid.TryParseExact(id, "N", out _))
+            .Where(id => File.Exists(Path.Combine(Folder(id), "project.json"))).Select(Load)
             .Where(p => HasDraftContent(p) || HasStoredMaterial(Folder(p.Id)))
             .OrderByDescending(p => p.Pinned).ThenByDescending(p => p.UpdatedUtc).ToArray();
     }
@@ -157,7 +158,82 @@ internal sealed class SongClipStore(string? directory = null)
     // keeps the project visible. Listing never removes history or user material.
     private static bool HasStoredMaterial(string folder) => Directory.Exists(folder)
         && Directory.EnumerateFileSystemEntries(folder).Any(path => Path.GetFileName(path) != "project.json");
-    internal string Resolve(string id, string relative) => RuntimeFileAudit.Contained(Folder(id), relative);
+    internal string Resolve(string id, string relative)
+    {
+        var path = RuntimeFileAudit.Contained(Folder(id), relative);
+        if (directory is null && family == "Shorts/Jobs" && relative == "song.wav" && !File.Exists(path))
+        {
+            var audio = ManagedWorkStorage.Current.Job("Shorts/Audio", id, temporary: true);
+            return RuntimeFileAudit.Contained(audio, relative);
+        }
+        if (directory is null && relative.StartsWith("attempts/", StringComparison.Ordinal))
+        {
+            var parts = relative.Split('/', 3);
+            if (parts.Length >= 2 && Guid.TryParseExact(parts[1], "N", out _))
+            {
+                var legacy = RuntimeFileAudit.Contained(Folder(id), "attempts/" + parts[1]);
+                if (!Directory.Exists(legacy))
+                {
+                    var work = ManagedWorkStorage.Current.Job("SongClip/Attempts", parts[1], temporary: true);
+                    return parts.Length == 2 ? work : RuntimeFileAudit.Contained(work, parts[2]);
+                }
+            }
+        }
+        if (!relative.StartsWith("sources/", StringComparison.Ordinal) || Path.GetExtension(path) != ".json") return path;
+        if (new FileInfo(path).Length > 65536) throw new InvalidDataException("Invalid source reference.");
+        var source = JsonSerializer.Deserialize<string>(File.ReadAllText(path));
+        return source is not null && Path.IsPathFullyQualified(source)
+            ? Path.GetFullPath(source) : throw new InvalidDataException("Invalid source reference.");
+    }
+
+    internal async Task<SongClipResult> PublishAsync(string id, SongClipResult result, CancellationToken token)
+    {
+        if (directory is not null || !result.File.StartsWith("attempts/", StringComparison.Ordinal)) return result;
+        var source = Resolve(id, result.File);
+        if (source.StartsWith(Folder(id) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return result;
+        var relative = "results/" + Guid.ParseExact(result.Id, "N").ToString("N") + ".mp4";
+        var destination = RuntimeFileAudit.Contained(Folder(id), relative);
+        using var capacity = ManagedWorkStorage.Current.Reserve(Path.GetDirectoryName(destination)!, new FileInfo(source).Length);
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        var stage = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            await using var input = File.OpenRead(source);
+            var hash = await SHA256.HashDataAsync(input, token);
+            if (!File.Exists(destination))
+            {
+                input.Position = 0;
+                await using (var output = new FileStream(stage, FileMode.CreateNew, FileAccess.Write,
+                    FileShare.None, 65536, FileOptions.Asynchronous | FileOptions.WriteThrough))
+                {
+                    await input.CopyToAsync(output, token);
+                    output.Flush(true);
+                }
+                var stagedHash = await Hash(stage, token);
+                if (!hash.SequenceEqual(stagedHash)) throw new IOException("Song clip transfer was incomplete.");
+                File.Move(stage, destination);
+            }
+            var writtenHash = await Hash(destination, token);
+            if (!hash.SequenceEqual(writtenHash)) throw new IOException("Another file occupies the song clip result.");
+        }
+        finally { if (File.Exists(stage)) File.Delete(stage); }
+        return result with { File = relative };
+
+        static async Task<byte[]> Hash(string path, CancellationToken token)
+        {
+            await using var stream = File.OpenRead(path);
+            return await SHA256.HashDataAsync(stream, token);
+        }
+    }
+
+    internal void ReleasePublished(string id, SongClipResult result)
+    {
+        if (directory is not null || result.File != "results/" + result.Id + ".mp4") return;
+        var path = Resolve(id, "attempts/" + result.Id + "/clip.mp4");
+        if (path.StartsWith(Folder(id) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return;
+        try { File.Delete(path); }
+        catch (IOException error) { OwnedProcessRegistry.Log("song_clip_cleanup_pending", "SongClip", detail: error.Message); }
+    }
     internal void EnsureAttemptSnapshot(SongClipAttempt attempt)
     {
         SongClipReferences.ValidateNewAttempt(attempt);
@@ -173,6 +249,16 @@ internal sealed class SongClipStore(string? directory = null)
     }
     internal async Task<string> ImportAsync(string id, string source, CancellationToken token)
     {
+        if (directory is null)
+        {
+            token.ThrowIfCancellationRequested();
+            source = Path.GetFullPath(source);
+            using var check = File.OpenRead(source);
+            var referenceHash = Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(source.ToUpperInvariant())));
+            var reference = "sources/" + referenceHash + ".json";
+            Atomic(RuntimeFileAudit.Contained(Folder(id), reference), source);
+            return reference;
+        }
         using var input = File.OpenRead(source);
         var hash = Convert.ToHexStringLower(await SHA256.HashDataAsync(input, token)); input.Position = 0;
         var extension = Path.GetExtension(source).ToLowerInvariant();

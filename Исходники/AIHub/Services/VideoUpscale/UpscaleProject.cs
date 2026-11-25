@@ -81,12 +81,45 @@ internal static class UpscaleStore
     private static readonly AsyncLocal<string?> TestRoot = new();
     internal static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
     internal static string Root => TestRoot.Value ?? Path.Combine(AppDataPaths.BaseDirectory, "VideoUpscale");
-    private static readonly string ConfiguredWorkRoot = Path.Combine(new StorageSettingsStore().LoadOrCreate().Results.Locations.Select(l => l.Path?.Trim()).FirstOrDefault(p => !string.IsNullOrWhiteSpace(p)) ?? Path.Combine(AppDataPaths.BaseDirectory, "VideoUpscale"), "VideoUpscaleWork");
-    internal static string WorkRoot => TestRoot.Value is {} test ? Path.Combine(test, "Work") : ConfiguredWorkRoot;
+    private static string LegacyWorkRoot => Path.Combine(ManagedWorkStorage.Current.ConfiguredRoot
+        ?? Path.Combine(AppDataPaths.BaseDirectory, "VideoUpscale"), "VideoUpscaleWork");
+    internal static string WorkRoot => TestRoot.Value is {} test ? Path.Combine(test, "Work")
+        : ManagedWorkStorage.Current.Temporary("VideoUpscaleWork");
     internal static IDisposable UseTestRoot(string root) { var previous = TestRoot.Value; TestRoot.Value = Path.GetFullPath(root); return new TestScope(() => TestRoot.Value = previous); }
     private sealed class TestScope(Action restore) : IDisposable { public void Dispose() => restore(); }
-    internal static string ProjectPath(string id) => Path.Combine(Root, "Projects", Id(id) + ".lopataUpscale");
-    internal static string Work(string id) => Path.Combine(WorkRoot, Id(id));
+    internal static string ProjectPath(string id)
+    {
+        var legacy = Path.Combine(Root, "Projects", Id(id) + ".lopataUpscale");
+        return TestRoot.Value is not null || File.Exists(legacy) ? legacy
+            : Path.Combine(ManagedWorkStorage.Current.Job("VideoUpscale/Projects", id), "project.lopataUpscale");
+    }
+    internal static string Work(string id)
+    {
+        Id(id);
+        if (TestRoot.Value is not null) return Path.Combine(WorkRoot, id);
+        var pinned = ManagedWorkStorage.Current.ManagedFolder("VideoUpscaleWork", id);
+        if (pinned is not null) return ManagedWorkStorage.Current.Job("VideoUpscaleWork", id, temporary: true);
+        if (TryProject(ProjectPath(id))?.Workspace is { Length: > 0 } saved && Path.IsPathFullyQualified(saved)
+            && Path.GetFileName(saved) == id && Path.GetFileName(Path.GetDirectoryName(saved)) == "VideoUpscaleWork"
+            && Directory.Exists(saved))
+        {
+            Lopata.Updates.SafeUpdatePath.RejectLinks(saved);
+            return saved;
+        }
+        var legacy = Path.Combine(LegacyWorkRoot, id);
+        return Directory.Exists(legacy)
+            ? legacy : ManagedWorkStorage.Current.Job("VideoUpscaleWork", id, temporary: true);
+    }
+    internal static bool IsJobPath(string file)
+    {
+        var full = Path.GetFullPath(file);
+        var job = Path.GetDirectoryName(full);
+        var jobs = job is null ? null : Path.GetDirectoryName(job);
+        var project = jobs is null ? null : Path.GetDirectoryName(jobs);
+        if (project is null || Path.GetFileName(jobs) != "Jobs" || Path.GetFileName(full) != "job.json"
+            || !Guid.TryParseExact(Path.GetFileName(job), "N", out _) || !Guid.TryParseExact(Path.GetFileName(project), "N", out _)) return false;
+        return Work(Path.GetFileName(project)).Equals(project, StringComparison.OrdinalIgnoreCase);
+    }
     private static string Id(string id) => Guid.TryParseExact(id, "N", out _) ? id : throw new InvalidDataException("VideoUpscale.InvalidProject");
     internal static string JobPath(UpscaleJob job) => Path.Combine(Work(job.Project.Id), "Jobs", Id(job.Id), "job.json");
     internal static T Clone<T>(T value) => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value, Json), Json)!;
@@ -113,7 +146,13 @@ internal static class UpscaleStore
     private static T Read<T>(string path) => JsonSerializer.Deserialize<T>(File.ReadAllText(path), Json) ?? throw new InvalidDataException("VideoUpscale.InvalidProject");
     internal static void SaveProject(UpscaleProject project)
     { project.Modified = DateTimeOffset.UtcNow; Save(ProjectPath(project.Id), project); }
-    internal static IReadOnlyList<UpscaleProject> Projects() => !Directory.Exists(Path.Combine(Root, "Projects")) ? [] :
-        Directory.EnumerateFiles(Path.Combine(Root, "Projects"), "*.lopataUpscale").Select(TryProject).OfType<UpscaleProject>().OrderByDescending(x => x.Modified).ToArray();
+    internal static IReadOnlyList<UpscaleProject> Projects()
+    {
+        var root = Path.Combine(Root, "Projects");
+        var old = Directory.Exists(root) ? Directory.EnumerateFiles(root, "*.lopataUpscale") : [];
+        var all = TestRoot.Value is not null ? old : old.Concat(ManagedWorkStorage.Current.Jobs("VideoUpscale/Projects").Select(ProjectPath));
+        return all.Distinct(StringComparer.OrdinalIgnoreCase).Select(TryProject).OfType<UpscaleProject>()
+            .OrderByDescending(x => x.Modified).ToArray();
+    }
     private static UpscaleProject? TryProject(string path) { try { return Load<UpscaleProject>(path); } catch { return null; } }
 }

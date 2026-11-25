@@ -35,8 +35,10 @@ public sealed partial class UpdateTransaction
         CancellationToken token = default)
     {
         using var lease = Acquire();
-        if (ReadJournal() is { Phase: not (UpdatePhase.Healthy or UpdatePhase.RolledBack) })
+        var current = ReadJournal();
+        if (current is { Phase: not (UpdatePhase.Healthy or UpdatePhase.RolledBack) })
             throw new IOException("Recover the unfinished update first.");
+        if (current is { Phase: UpdatePhase.Healthy }) RememberHealthyTransaction(current);
         var before = previous?.Verify(_keys);
         var after = target.Verify(_keys);
         CheckInstalledManifest(previous);
@@ -114,8 +116,9 @@ public sealed partial class UpdateTransaction
         var journal = Require(id, UpdatePhase.AwaitingHealth);
         await VerifyTargetAsync(journal, token);
         CheckInstalledManifest(journal.Target);
-        Save(journal with { Phase = UpdatePhase.Healthy });
-        // Backups are retained. A later explicit retention operation may remove them.
+        var healthy = journal with { Phase = UpdatePhase.Healthy };
+        RememberHealthyTransaction(healthy);
+        Save(healthy);
     }
 
     private async Task VerifyTargetAsync(UpdateJournal journal, CancellationToken token)
@@ -149,7 +152,7 @@ public sealed partial class UpdateTransaction
         if (actual != expected) throw new IOException("Installed ownership manifest changed or is missing.");
     }
 
-    private IDisposable Acquire()
+    internal IDisposable Acquire()
     {
         SafeUpdatePath.RejectLinks(_stateDirectory);
         Directory.CreateDirectory(_stateDirectory);

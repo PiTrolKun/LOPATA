@@ -13,6 +13,8 @@ internal sealed class BookSmartWork(string? directory = null)
 {
     public const string Kind = "books.smart";
     public static string DirectoryPath => Path.Combine(AppDataPaths.BaseDirectory, "Books", "Smart");
+    private string RunDirectory(string id) => directory is null
+        ? ManagedWorkStorage.Current.Job("Books/Smart/runs", id, temporary: true) : Path.Combine(directory, "runs", id);
     private sealed record Publication(string Destination, string Pending, string Hash);
     private sealed record Receipt(BookConversionResult Result, string? Hash);
 
@@ -46,7 +48,7 @@ internal sealed class BookSmartWork(string? directory = null)
 
     public BookConversionResult? LoadResult(BookSmartWorkInput input)
     {
-        Validate(input); var path = Path.Combine(directory ?? DirectoryPath, "runs", input.Id, "last-result.json");
+        Validate(input); var path = Path.Combine(RunDirectory(input.Id), "last-result.json");
         return File.Exists(path) ? Read<BookConversionResult>(path) : null;
     }
 
@@ -54,7 +56,7 @@ internal sealed class BookSmartWork(string? directory = null)
         Func<BookReviewSession, CancellationToken, Task<BookReviewDecision>>? review,
         IProgress<BookConversionProgress>? progress, CancellationToken token)
     {
-        var root = Path.Combine(directory ?? DirectoryPath, "runs", input.Id); Directory.CreateDirectory(root);
+        var root = RunDirectory(input.Id); Directory.CreateDirectory(root);
         using var lease = new FileStream(Path.Combine(root, "run.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         var inputPath = Path.Combine(root, "input.json");
         var captured = JsonSerializer.SerializeToUtf8Bytes(input);
@@ -189,7 +191,7 @@ internal sealed class BookSmartWork(string? directory = null)
     internal Dictionary<string, string> LoadSourceOutputs(BookSmartWorkInput input)
     {
         Validate(input); var outputs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var root = Path.Combine(directory ?? DirectoryPath, "runs", input.Id);
+        var root = RunDirectory(input.Id);
         var groups = input.Request.Merge ? new[] { input.Request.Sources } : input.Request.Sources.Select(source => new[] { source }).ToArray();
         for (var index = 0; index < groups.Length; index++)
         {

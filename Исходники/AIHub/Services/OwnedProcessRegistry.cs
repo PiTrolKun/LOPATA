@@ -33,6 +33,7 @@ public sealed class OwnedProcessRegistry : IDisposable
             if (process.StartInfo.UseShellExecute) throw new ArgumentException("External shell launches cannot be owned workers.");
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            ManagedWorkStorage.Current.SetWorkerTemporary(process.StartInfo);
             var job = new WindowsProcessJob();
             try
             {
@@ -61,6 +62,7 @@ public sealed class OwnedProcessRegistry : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             GuardStart(component);
+            ManagedWorkStorage.Current.SetWorkerTemporary(info);
             var job = new WindowsProcessJob();
             try
             {

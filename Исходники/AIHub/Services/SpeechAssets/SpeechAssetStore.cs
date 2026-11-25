@@ -14,7 +14,12 @@ internal sealed partial class SpeechAssetStore(string? root = null)
     internal static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
     internal static void Id(string id)
     { if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("SpeechAssets.Invalid"); }
-    internal string DirectoryFor(string id) { Id(id); return Path.Combine(Root, id); }
+    internal string DirectoryFor(string id)
+    {
+        Id(id);
+        return _managed ? ManagedWorkStorage.Current.Job("SpeechAssets/Sessions", id) : Path.Combine(Root, id);
+    }
+    private readonly bool _managed = root is null;
     internal string FileFor(string id, string relative)
     {
         var directory = Path.GetFullPath(DirectoryFor(id)) + Path.DirectorySeparatorChar;

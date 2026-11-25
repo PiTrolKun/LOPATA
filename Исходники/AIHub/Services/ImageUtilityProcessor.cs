@@ -30,7 +30,7 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
     public async Task<ImageUtilityImageInfo> InspectAsync(string path, CancellationToken token = default)
     {
         if (!File.Exists(path)) throw new ImageUtilityException("ImageUtility.Error.SourceMissing");
-        var temporary = Path.Combine(Path.GetTempPath(), "lopata-inspect-" + Guid.NewGuid().ToString("N") + SafeInputExtension(path));
+        var temporary = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("ImageUtility"), "lopata-inspect-" + Guid.NewGuid().ToString("N") + SafeInputExtension(path));
         try
         {
             await CopyAsync(path, temporary, token);
@@ -64,7 +64,7 @@ public sealed partial class ImageUtilityProcessor : IImageUtilityProcessor
         ValidateOptions(options);
         var folder = ResolveOutputFolder(outputFolder, item.RelativeFolder);
         Directory.CreateDirectory(folder);
-        var scratch = Path.Combine(Path.GetTempPath(), "LOPATA", "ImageUtility", Guid.NewGuid().ToString("N"));
+        var scratch = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("ImageUtility"), "LOPATA", "ImageUtility", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(scratch);
         var temporaryOutput = Path.Combine(folder, ".lopata-" + Guid.NewGuid().ToString("N") + ".tmp");
         try

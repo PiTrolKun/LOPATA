@@ -15,6 +15,7 @@ public sealed class VideoRecordingSession
 {
     private readonly ScreenCaptureSettings _settings;
     private readonly string _stem;
+    private readonly string _output;
     private readonly CancellationTokenSource _stop = new(), _assembly = new();
     public string CacheDirectory { get; }
     public bool Assembling { get; private set; }
@@ -22,9 +23,9 @@ public sealed class VideoRecordingSession
     public VideoRecordingSession(ScreenCaptureSettings settings, CaptureSource source)
     {
         _settings = JsonSerializer.Deserialize<ScreenCaptureSettings>(JsonSerializer.Serialize(settings))!; _settings.Normalize();
-        var folder = ScreenshotFiles.Folder(_settings); Directory.CreateDirectory(folder);
+        _output = ScreenshotFiles.Folder(_settings); Directory.CreateDirectory(_output);
         _stem = DateTime.Now.ToString("yyyy-MM-dd_HHmmss_fff") + "_" + source.ToString().ToLowerInvariant() + "_" + Guid.NewGuid().ToString("N")[..8];
-        CacheDirectory = Path.Combine(folder, ".lopata-video-" + _stem);
+        CacheDirectory = ManagedWorkStorage.Current.Temporary(Path.Combine("Capture", ".lopata-video-" + _stem));
     }
     public void Stop() { try { _stop.Cancel(); } catch (ObjectDisposedException) { } }
     public void CancelAssembly() { Stop(); try { _assembly.Cancel(); } catch (ObjectDisposedException) { } }
@@ -33,7 +34,8 @@ public sealed class VideoRecordingSession
     {
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token, lifetime);
         var epoch = Stopwatch.GetTimestamp(); var clock = Stopwatch.StartNew();
-        var store = new VideoFrameStore(CacheDirectory, _settings);
+        using var capacity = ManagedWorkStorage.Current.Reserve(CacheDirectory, 64L * 1024 * 1024, temporary: true);
+        var store = new VideoFrameStore(CacheDirectory, _settings, _output);
         if (!window) (store.Manifest.Width, store.Manifest.Height) = VideoFrameStore.OutputSize(bounds.Width, bounds.Height, _settings.VideoQuality);
         var queue = Channel.CreateBounded<(GifPixels Pixels, double At)>(new BoundedChannelOptions(1) { SingleReader = true, SingleWriter = true });
         var frames = 0; var missed = 0; var reduced = false; var errorText = ""; double ended = 0; var overloaded = 0;
@@ -137,7 +139,7 @@ public sealed class VideoRecordingSession
         try
         {
             using var assemble = CancellationTokenSource.CreateLinkedTokenSource(_assembly.Token, lifetime);
-            var destination = Path.Combine(ScreenshotFiles.Folder(_settings), _stem + "." + _settings.VideoFormat);
+            var destination = Path.Combine(_output, _stem + "." + _settings.VideoFormat);
             var result = await VideoEncoder.AssembleAsync(store, destination, assemble.Token, percent => Progress?.Invoke(new(TimeSpan.FromMilliseconds(ended), store.Manifest.Width, store.Manifest.Height, true, percent, reduced, missed)));
             committed = result.Path;
             File.WriteAllText(destination + ".json", JsonSerializer.Serialize(new { store.Manifest.Width, store.Manifest.Height, store.Manifest.MinFrameWidth, store.Manifest.MinFrameHeight, ended, missedFrames = missed, reducedDetail = reduced, error = errorText, result.Encoder, result.Fallback }));
@@ -152,7 +154,8 @@ public sealed class VideoRecordingSession
         store.Manifest.DurationMilliseconds = Math.Max(store.Manifest.DurationMilliseconds, last.At + 1000d / store.Manifest.Settings.VideoFps);
         foreach (var audio in store.Manifest.Audio)
         { var file = new FileInfo(Path.Combine(store.DirectoryPath, audio.Name)); if (file.Exists) store.Manifest.DurationMilliseconds = Math.Max(store.Manifest.DurationMilliseconds, file.Length * 1000d / audio.Rate / audio.BlockAlign); }
-        var folder = Directory.GetParent(store.DirectoryPath)!.FullName;
+        var folder = store.Manifest.OutputDirectory is { } saved && Path.IsPathFullyQualified(saved)
+            ? Path.GetFullPath(saved) : Directory.GetParent(store.DirectoryPath)!.FullName;
         var destination = Path.Combine(folder, DateTime.Now.ToString("yyyy-MM-dd_HHmmss_fff") + "_recovered_" + Guid.NewGuid().ToString("N")[..8] + "." + store.Manifest.Settings.VideoFormat);
         var result = await VideoEncoder.AssembleAsync(store, destination, token, progress);
         File.WriteAllText(destination + ".json", JsonSerializer.Serialize(new { recovered = true, store.Manifest, result.Encoder, result.Fallback })); return destination;

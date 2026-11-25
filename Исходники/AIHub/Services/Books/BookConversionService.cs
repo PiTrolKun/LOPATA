@@ -44,7 +44,7 @@ public sealed class BookConversionService
         var sources = request.Sources.Select(Path.GetFullPath).ToArray(); var format = BookConversionFormats.Normalize(request.OutputFormat);
         Validate(request, sources, format);
         if (request.Smart is not null && _smart is null) throw new InvalidOperationException("BookConverter.Smart.NotPrepared");
-        var total = request.Merge ? 1 : sources.Length; var work = Path.Combine(Path.GetTempPath(), "LOPATA-Books", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(work);
+        var total = request.Merge ? 1 : sources.Length; var work = Path.Combine(AIHub.Services.ManagedWorkStorage.Current.ScratchRoot("BookConverter"), "LOPATA-Books", Guid.NewGuid().ToString("N")); Directory.CreateDirectory(work);
         try
         {
             var groups = request.Merge ? new[] { sources } : sources.Select(s => new[] { s }).ToArray();

@@ -59,9 +59,7 @@ public static partial class NeuroService
     }
     public static IReadOnlyList<NeuroProject> Projects()
     {
-        var directory = Path.Combine(NeuroFiles.Root,"projects");
-        if (!Directory.Exists(directory)) return [];
-        return Directory.EnumerateDirectories(directory).Select(p => Path.Combine(p,"project.json"))
+        return NeuroFiles.Projects().Select(id => Path.Combine(NeuroFiles.Project(id), "project.json"))
             .Where(File.Exists).OrderByDescending(File.GetLastWriteTimeUtc).Select(NeuroFiles.Read<NeuroProject>)
             .Where(p => p.Mode != "auto").ToArray();
     }

@@ -5,7 +5,10 @@ using AIHub.Models;
 namespace AIHub.Services.VisualScenario;
 
 internal sealed record VisualFragment(string Id, string Text, bool Selected = false);
-internal sealed record VisualImage(string Id, string Name, string LocalName, bool Selected = false);
+internal sealed record VisualImage(string Id, string Name, string LocalName, bool Selected = false)
+{
+    public string? SourcePath { get; init; }
+}
 internal sealed record VisualMessage(string Id, bool User, string Text, VisualFragment[] Fragments, string[] Images);
 internal sealed record VisualInput(string ImageId, string Role, bool IsBase = false);
 internal sealed record VisualPrompt(string Text, VisualInput[] Images, OutputModelUse? Advisor = null)
@@ -69,15 +72,15 @@ internal sealed class VisualProject
         .Select((group, index) => new VisualPromptCard(index + 1, group.ToArray())).ToArray();
 }
 
-internal sealed class VisualProjects(string root)
+internal sealed class VisualProjects(string root, bool managed = false)
 {
-    internal static VisualProjects Default => new(Path.Combine(AppDataPaths.BaseDirectory, "VisualScenario"));
+    internal static VisualProjects Default => new(Path.Combine(AppDataPaths.BaseDirectory, "VisualScenario"), managed: true);
     private string CurrentPath => Path.Combine(root, "current.json");
 
     internal string DirectoryFor(string id)
     {
         if (!Guid.TryParseExact(id, "N", out _)) throw new InvalidDataException("Visual.InvalidProject");
-        return Path.Combine(root, id);
+        return managed ? ManagedWorkStorage.Current.Job("VisualScenario", id) : Path.Combine(root, id);
     }
 
     internal void EnsureDrawingSession(VisualJob job)
@@ -91,6 +94,7 @@ internal sealed class VisualProjects(string root)
     internal string ImagePath(VisualProject project, string id)
     {
         var image = project.Images.FirstOrDefault(image => image.Id == id) ?? throw new InvalidDataException("Visual.MissingImage");
+        if (image.SourcePath is { } source && Path.IsPathFullyQualified(source)) return Path.GetFullPath(source);
         return Path.Combine(DirectoryFor(project.Id), "images", Path.GetFileName(image.LocalName));
     }
 
@@ -100,6 +104,13 @@ internal sealed class VisualProjects(string root)
         if (extension is not (".png" or ".jpg" or ".jpeg" or ".webp" or ".bmp"))
             throw new InvalidDataException("Visual.InvalidImage");
         var id = Guid.NewGuid().ToString("N");
+        if (managed)
+        {
+            using var input = File.OpenRead(path);
+            var linked = new VisualImage(id, Path.GetFileName(path), "") { SourcePath = Path.GetFullPath(path) };
+            project.Images.Add(linked);
+            return linked;
+        }
         var directory = Path.Combine(DirectoryFor(project.Id), "images");
         Directory.CreateDirectory(directory);
         var image = new VisualImage(id, Path.GetFileName(path), id + extension);
@@ -125,8 +136,9 @@ internal sealed class VisualProjects(string root)
 
     internal IReadOnlyList<VisualProject> List()
     {
-        if (!Directory.Exists(root)) return [];
-        return Directory.EnumerateDirectories(root).Select(Path.GetFileName)
+        var ids = managed ? ManagedWorkStorage.Current.Jobs("VisualScenario")
+            : Directory.Exists(root) ? Directory.EnumerateDirectories(root).Select(Path.GetFileName).OfType<string>() : [];
+        return ids
             .Where(id => Guid.TryParseExact(id, "N", out _) && File.Exists(ProjectPath(id!)))
             .Select(id => Load(id!)).Where(project => project.Persistent)
             .OrderByDescending(project => project.CreatedAt).ToArray();
