@@ -34,6 +34,7 @@ internal sealed partial class ImageInspectorAttempt
         {
             Engine = "sd.cpp/" + selection.Revision,
             Backend = selection.Backend,
+            Device = selection.UsesGpu ? null : "cpu",
             ExpectedVideoBytes = selection.UsesGpu && modelBytes > 0 ? modelBytes : null,
             ExpectedRamBytes = !selection.UsesGpu && modelBytes is > 0 and <= long.MaxValue / 2 ? modelBytes * 2 : null,
             Stage = warmup ? "model_loading" : "preparing"
@@ -83,6 +84,18 @@ internal sealed partial class ImageInspectorAttempt
             _finished = true;
             Publish(InspectorEventKind.AttemptFinished, _stage, outcome: outcome);
         }
+    }
+
+    internal async Task FailAsync(Exception error, InspectorOutcome outcome, CancellationToken token)
+    {
+        InspectorEvent item;
+        lock (_sync)
+        {
+            if (_finished) return;
+            _finished = true;
+            item = _context with { Stage = _stage ?? _context.Stage };
+        }
+        await ApplicationInspector.ReportFailureAsync(error, item, token, outcome);
     }
 
     internal void Emit(InspectorEventKind kind)
@@ -135,11 +148,11 @@ internal sealed partial class ImageInspectorAttempt
         bool usesGpu)
     {
         if (exit == 0) return InspectorOutcome.Success;
-        if (usesGpu && (placement == ImageGenerationGpuPlacement.MemoryUnavailable
-            || log.Contains("VK_ERROR_OUT_OF_DEVICE_MEMORY", StringComparison.OrdinalIgnoreCase)
-            || log.Contains("CUDA error: out of memory", StringComparison.OrdinalIgnoreCase)
-            || log.Contains("video memory", StringComparison.OrdinalIgnoreCase)
-                && log.Contains("failed to allocate", StringComparison.OrdinalIgnoreCase)))
+        var native = GenerationFailureClassifier.FromWorker(exit, log, usesGpu ? null : "cpu");
+        if (native != InspectorOutcome.Failure) return native;
+        if (usesGpu && placement == ImageGenerationGpuPlacement.MemoryUnavailable) return InspectorOutcome.VideoMemoryAdmissionDenied;
+        if (usesGpu && log.Contains("video memory", StringComparison.OrdinalIgnoreCase)
+            && log.Contains("failed to allocate", StringComparison.OrdinalIgnoreCase))
             return InspectorOutcome.OutOfVideoMemory;
         if (!usesGpu && (log.Contains("std::bad_alloc", StringComparison.OrdinalIgnoreCase)
             || log.Contains("out of memory", StringComparison.OrdinalIgnoreCase))) return InspectorOutcome.OutOfMemory;
@@ -151,7 +164,7 @@ internal sealed partial class ImageInspectorAttempt
             ? InspectorOutcome.Cancelled
             : error is BackgroundOperationWaitingException or HttpRequestException or OperationCanceledException
                 ? InspectorOutcome.Disconnected
-                : InspectorOutcome.Failure;
+                : GenerationFailureClassifier.FromException(error, token);
 
     [GeneratedRegex(@"\|\s*(\d{1,4})\s*/\s*(\d{1,4})\s*-\s*[\d.]+\s*(?<unit>[KMGT]?B/s|it/s|s/it)",
         RegexOptions.CultureInvariant)]

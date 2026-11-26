@@ -46,6 +46,19 @@ public sealed class CatalogTests
     }
 
     [TestMethod]
+    public async Task SignedPatchIsFoundAfterOldReleasesInAFeedLargerThanFourMiB()
+    {
+        using var fixture = new CatalogFixture { LargeFeed = true };
+        var offer = await new PublishedUpdateCatalog(fixture.Http, fixture.Keys)
+            .CheckAsync("0.2.43-beta", UpdateDelivery.FilePatch);
+
+        Assert.AreEqual("0.2.44-beta", offer!.Version);
+        Assert.AreEqual(offer.Version, offer.SignedFiles!.Verify(fixture.Keys).Version);
+        Assert.AreEqual("0.2.44-beta", offer.Notes.Single().Version);
+        Assert.AreEqual(2, fixture.Requests.Count);
+    }
+
+    [TestMethod]
     public async Task UniversalInstallerSelectsLatestCompatibleSignedPublishedRelease()
     {
         using var fixture = new CatalogFixture { SetupCompatible = true };
@@ -61,6 +74,7 @@ public sealed class CatalogTests
         public HttpClient Http { get; }
         public bool Corrupt;
         public bool SetupCompatible;
+        public bool LargeFeed;
         public List<string> Requests { get; } = [];
         public IReadOnlyDictionary<string, string> Keys => new Dictionary<string, string> { ["test"] = _key.ExportSubjectPublicKeyInfoPem() };
         public CatalogFixture() => Http = new HttpClient(this, false);
@@ -71,13 +85,18 @@ public sealed class CatalogTests
             byte[] payload;
             if (request.RequestUri.Host == "api.github.com")
             {
-                object Release(string version, bool full) => new
+                object Release(string version, bool full, string? body = null) => new
                 {
-                    tag_name = "v" + version, draft = false, prerelease = true, published_at = "2026-09-27T00:00:00Z", body = version,
+                    tag_name = "v" + version, draft = false, prerelease = true, published_at = "2026-09-27T00:00:00Z", body = body ?? version,
                     assets = new[] { "lopata-files.json" }.Concat(full ? new[] { "lopata-update.json", $"LOPATA_Setup_{version}.exe" } : [])
                         .Select(name => new { name, size = 100, browser_download_url = $"https://github.com/PiTrolKun/LOPATA/releases/download/v{version}/{name}" })
                 };
-                payload = JsonSerializer.SerializeToUtf8Bytes(new[] { Release("0.2.44-beta", false), Release("0.2.43-beta", true) });
+                var releases = LargeFeed
+                    ? Enumerable.Range(1, 70).Select(index => Release($"0.1.{index}-beta", false, new string('x', 65536)))
+                    : [];
+                payload = JsonSerializer.SerializeToUtf8Bytes(releases.Append(Release("0.2.44-beta", false))
+                    .Append(Release("0.2.43-beta", true)));
+                if (LargeFeed) Assert.IsTrue(payload.Length > 4 * 1024 * 1024);
             }
             else if (url.EndsWith("lopata-update.json", StringComparison.Ordinal))
                 payload = JsonSerializer.SerializeToUtf8Bytes(new { version = "0.2.43-beta", fileName = "LOPATA_Setup_0.2.43-beta.exe", size = 100, sha256 = new string('a', 64) });

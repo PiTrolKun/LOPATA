@@ -129,41 +129,55 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
                 info.ArgumentList.Add(_minimumImageTokens.ToString(CultureInfo.InvariantCulture));
             }
             RuntimeDeviceProbe.ClearBackendOverrides(info);
+            var free = await RuntimeDeviceProbe.ReadSelectedFreeAsync(_selectedRuntime, cancellationToken);
+            var inspection = await ApplicationInspector.BeginAttemptAsync("Omni llama-server", _selectedRuntime.Bundle.Backend,
+                _selectedRuntime.Device?.Id ?? "cpu", cancellationToken, _selectedRuntime.UsesGpu ? gpuRequired : null, free,
+                _profile.ArtifactId, "model_loading");
             lock (_stderr) _stderr.Clear();
             var timer = Stopwatch.StartNew();
             var process = new Process { StartInfo = info };
             _process = process;
             process.OutputDataReceived += (_, e) => { if (e.Data is { } line) RetainLine(line, log); };
             process.ErrorDataReceived += (_, e) => { if (e.Data is { } line) RetainLine(line, log); };
-            if (!OwnedProcessRegistry.Shared.Start(process, "OmniLlamaRuntimeService")) throw new InvalidOperationException("Omni llama-server failed to start.");
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-            log(RuntimeResourceDiagnostics.DescribeLaunch(_profile.Label, process, DeviceMapJson, model));
-            progress?.Report(new(ManagedModelRoles.Vision, "runtime_loading", "Preparing Omni model and projector."));
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(TimeSpan.FromMinutes(_selectedRuntime.UsesGpu ? 8 : 15));
-            while (true)
+            try
             {
-                timeout.Token.ThrowIfCancellationRequested();
-                if (process.HasExited) throw new InvalidOperationException($"Omni runtime exited ({process.ExitCode}): {ErrorTail()}");
-                try
+                if (!OwnedProcessRegistry.Shared.Start(process, "OmniLlamaRuntimeService")) throw new InvalidOperationException("Omni llama-server failed to start.");
+                inspection.Attach(process);
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                log(RuntimeResourceDiagnostics.DescribeLaunch(_profile.Label, process, DeviceMapJson, model));
+                progress?.Report(new(ManagedModelRoles.Vision, "runtime_loading", "Preparing Omni model and projector."));
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                timeout.CancelAfter(TimeSpan.FromMinutes(_selectedRuntime.UsesGpu ? 8 : 15));
+                while (true)
                 {
-                    using var response = await _http.GetAsync($"http://127.0.0.1:{_port}/health", timeout.Token);
-                    if (response.IsSuccessStatusCode) break;
+                    timeout.Token.ThrowIfCancellationRequested();
+                    if (process.HasExited) throw new InvalidOperationException($"Omni runtime exited ({process.ExitCode}): {ErrorTail()}");
+                    try
+                    {
+                        using var response = await _http.GetAsync($"http://127.0.0.1:{_port}/health", timeout.Token);
+                        if (response.IsSuccessStatusCode) break;
+                    }
+                    catch (HttpRequestException) { }
+                    await Task.Delay(300, timeout.Token);
                 }
-                catch (HttpRequestException) { }
-                await Task.Delay(300, timeout.Token);
+                var after = await _resources.CaptureForRuntimeAsync(_selectedRuntime, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(_process, process)) throw new OperationCanceledException("Omni startup was stopped.");
+                _ready = true;
+                _warmup = new(false, timer.ElapsedMilliseconds, CurrentPlan, RuntimeVersion, DeviceMapJson,
+                    RuntimeResourceDiagnostics.Capture(process).PeakWorkingSetBytes,
+                    before.AvailableRamBytes, after.AvailableRamBytes, before.CommitAvailableBytes, after.CommitAvailableBytes,
+                    before.AvailableVramBytes, after.AvailableVramBytes);
+                log(RuntimeResourceDiagnostics.DescribeSnapshot(_profile.Label, process, "loaded"));
+                inspection.Succeed();
+                return _warmup;
             }
-            var after = await _resources.CaptureForRuntimeAsync(_selectedRuntime, cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-            if (!ReferenceEquals(_process, process)) throw new OperationCanceledException("Omni startup was stopped.");
-            _ready = true;
-            _warmup = new(false, timer.ElapsedMilliseconds, CurrentPlan, RuntimeVersion, DeviceMapJson,
-                RuntimeResourceDiagnostics.Capture(process).PeakWorkingSetBytes,
-                before.AvailableRamBytes, after.AvailableRamBytes, before.CommitAvailableBytes, after.CommitAvailableBytes,
-                before.AvailableVramBytes, after.AvailableVramBytes);
-            log(RuntimeResourceDiagnostics.DescribeSnapshot(_profile.Label, process, "loaded"));
-            return _warmup;
+            catch (Exception error)
+            {
+                await inspection.FailAsync(error, cancellationToken, ClassifyOmniFailure(cancellationToken));
+                throw;
+            }
     }
 
     public async Task<OmniTextGenerationResult> GenerateAsync(string command, string imagePath,
@@ -230,6 +244,16 @@ public sealed partial class OmniLlamaRuntimeService(ManagedModelLibraryStore lib
         log(_profile.Label + " backend: " + line);
     }
     private string ErrorTail() { lock (_stderr) return string.Join(Environment.NewLine, _stderr); }
+
+    private Lopata.Inspector.InspectorOutcome? ClassifyOmniFailure(CancellationToken token)
+    {
+        if (token.IsCancellationRequested) return Lopata.Inspector.InspectorOutcome.Cancelled;
+        int code = 0;
+        try { if (_process is { HasExited: true } process) code = process.ExitCode; }
+        catch (InvalidOperationException) { }
+        var outcome = GenerationFailureClassifier.FromWorker(code, ErrorTail(), _selectedRuntime?.Device?.Id ?? "cpu");
+        return outcome == Lopata.Inspector.InspectorOutcome.Failure ? null : outcome;
+    }
     private static string ResolveFile(ManagedModelArtifactCard card, string purpose)
     {
         var file = card.Files.Single(f => f.Purpose == purpose);

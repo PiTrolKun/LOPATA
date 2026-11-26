@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Lopata.Inspector;
 
 namespace AIHub.Models;
 
@@ -24,6 +25,9 @@ public sealed record BackgroundOperationState
     public IReadOnlyList<BackgroundOperationNotice> Notices { get; init; } = [];
     public double ElapsedSeconds { get; init; }
     public string? Detail { get; init; }
+    public int InspectorAttempts { get; init; }
+    public InspectorEvent? LastInspectorFailure { get; init; }
+    public string? InspectorPreflightWarning { get; init; }
     public DateTimeOffset UpdatedUtc { get; init; } = DateTimeOffset.UtcNow;
 }
 

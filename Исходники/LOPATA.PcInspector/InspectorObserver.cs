@@ -6,7 +6,7 @@ namespace Lopata.PcInspector;
 
 internal sealed class InspectorObserver(InspectorStore store, Func<string, string, bool> show)
 {
-    private readonly Dictionary<(string Operation, int Attempt), ObservedAttempt> _attempts = [];
+    private readonly Dictionary<(string Operation, int Attempt, Guid AttemptId), ObservedAttempt> _attempts = [];
     private readonly Dictionary<(int Pid, DateTimeOffset Start), (InspectorEvent Event, DateTimeOffset Due)> _releasing = [];
     private readonly Dictionary<string, DateTimeOffset> _diagnosedFailures = [];
     private TelemetryFrame? _frame;
@@ -39,9 +39,11 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
                         _frame = telemetry.Read(now);
                         _nextSample = now + TimeSpan.FromSeconds(1);
                     }
-                    store.Record(item);
-                    var preflight = Apply(item, now, live);
-                    store.CompleteEvent(path, item, preflight);
+                    var details = item.Kind == InspectorEventKind.Preflight && live && _frame is { } current
+                        ? MeasurePreflight(item, current) : item;
+                    store.Record(details);
+                    var preflight = Apply(details, now, live);
+                    store.CompleteEvent(path, details, preflight);
                 }
                 CheckReleased(now);
                 if (now >= _nextRotation)
@@ -61,7 +63,7 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
 
     private InspectorNotice? Apply(InspectorEvent item, DateTimeOffset now, bool live)
     {
-        var key = (item.OperationId, item.Attempt);
+        var key = (item.OperationId, item.Attempt, item.AttemptId);
         switch (item.Kind)
         {
             case InspectorEventKind.Preflight:
@@ -84,7 +86,7 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
                 {
                     _diagnosedFailures[item.OperationId] = now;
                     if (live) OutcomeNotice(item);
-                    store.FinishNotices(item.OperationId, item.Attempt, item.Outcome, null);
+                    store.FinishNotices(item.OperationId, item.Attempt, item.Outcome, null, item.AttemptId);
                 }
                 break;
             case InspectorEventKind.AttemptFinished:
@@ -96,10 +98,9 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
                     if (experience is not null) store.RecordExperience(experience);
                 }
                 if (live) OutcomeNotice(item);
-                if (item.Outcome is InspectorOutcome.Failure or InspectorOutcome.OutOfVideoMemory
-                    or InspectorOutcome.OutOfMemory or InspectorOutcome.Disconnected or InspectorOutcome.SaveFailure)
+                if (InspectorDiagnostics.IsFailure(item.Outcome))
                     _diagnosedFailures[item.OperationId] = now;
-                store.FinishNotices(item.OperationId, item.Attempt, item.Outcome, experience);
+                store.FinishNotices(item.OperationId, item.Attempt, item.Outcome, experience, item.AttemptId);
                 break;
             case InspectorEventKind.OperationFinished:
                 foreach (var entry in _attempts.Keys.Where(entry => entry.Operation == item.OperationId).ToArray())
@@ -126,7 +127,7 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
 
     private void Track(InspectorEvent item)
     {
-        var key = (item.OperationId, item.Attempt);
+        var key = (item.OperationId, item.Attempt, item.AttemptId);
         if (!_attempts.TryGetValue(key, out var tracked))
         {
             tracked = new ObservedAttempt(item);
@@ -144,28 +145,32 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
             available < item.ExpectedRamBytes)
             return Notice(item, "ram_pressure", delegateToApp: item.UiErrorShown);
 
+        if (item.PreflightStatus != InspectorPreflightStatus.Insufficient) return null;
+        var competitor = item.Adapter is { } adapter ? frame.CompetingApplication(adapter, WorkerPids()) : null;
+        return Notice(item, "gpu_preflight", competitor, delegateToApp: item.UiErrorShown);
+    }
+
+    private InspectorEvent MeasurePreflight(InspectorEvent item, TelemetryFrame frame)
+    {
+        if (item.Device is "cpu" or "remote") return item;
+        if (item.PreflightStatus != InspectorPreflightStatus.Unknown)
+        {
+            if (item.Adapter is not null || !SameProcess(item.ProcessId, item.ProcessStartedUtc)) return item;
+            var owned = frame.Consumers.Where(consumer => consumer.Pid == item.ProcessId && consumer.DedicatedBytes > 0)
+                .Select(consumer => consumer.Adapter).Distinct(StringComparer.Ordinal).Take(2).ToArray();
+            return owned is [var exact] ? item with { Adapter = exact } : item;
+        }
         var resident = item.Warm == true && SameProcess(item.ProcessId, item.ProcessStartedUtc)
             ? frame.ResolveWorker(item.ProcessId) : null;
-        var requested = frame.MatchAdapter(resident?.Adapter ?? item.Adapter);
-        if (requested is not null)
-        {
-            var context = ObservedAttempt.FindContext(item, requested);
-            var expected = EstimatePeak(item.ExpectedVideoBytes, context, frame.Sample.TimestampUtc);
-            if (expected is > 0 && resident is { DedicatedBytes: > 0 } && resident.Adapter == requested.Adapter)
-                expected = Math.Max(0, expected.Value - resident.DedicatedBytes.Value);
-            if (!WaitingForVideoMemory(requested, expected)) return null;
-            var competitor = FavorDirectAdvice(context, frame.Sample.TimestampUtc)
-                ? frame.CompetingApplication(requested.Adapter, WorkerPids()) : null;
-            return Notice(item, "gpu_pressure", competitor, delegateToApp: item.UiErrorShown);
-        }
-
-        // An ambiguous adapter can only justify an unnamed warning when all available
-        // hardware adapters report inadequate space for the same measured requirement.
-        var possible = frame.Sample.Gpus.Where(gpu => gpu.CapacityBytes > 0).ToArray();
-        return possible.Length > 0 && possible.All(gpu => WaitingForVideoMemory(gpu,
-                   EstimatePeak(item.ExpectedVideoBytes, ObservedAttempt.FindContext(item, gpu), frame.Sample.TimestampUtc)))
-            ? Notice(item, "gpu_pressure", delegateToApp: item.UiErrorShown)
-            : null;
+        var adapter = resident?.Adapter ?? item.Adapter;
+        var requested = frame.Sample.Gpus.FirstOrDefault(gpu => gpu.Adapter == adapter);
+        if (requested is null || requested.CapacityBytes is not > 0 || requested.DedicatedBytes is not >= 0) return item;
+        var expected = EstimatePeak(item.ExpectedVideoBytes, ObservedAttempt.FindContext(item, requested), frame.Sample.TimestampUtc);
+        if (expected is null || item.Warm == true && resident?.DedicatedBytes is not >= 0) return item;
+        if (resident is { DedicatedBytes: { } bytes }) expected = Math.Max(0, expected.Value - bytes);
+        var free = Math.Max(0, requested.CapacityBytes.Value - requested.DedicatedBytes.Value);
+        return item with { Adapter = requested.Adapter, AvailableVideoBytes = free, ExpectedVideoBytes = expected,
+            PreflightStatus = InspectorDiagnostics.CheckVideoMemory(requested.Adapter, expected, free) };
     }
 
     internal static bool WaitingForVideoMemory(InspectorGpuSample item, long? expected) =>
@@ -239,6 +244,7 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
             {
                 OperationId = item.OperationId,
                 Attempt = item.Attempt,
+                AttemptId = item.AttemptId,
                 WorkerProcessId = worker?.Pid ?? (item.ProcessId > 0 ? item.ProcessId : null),
                 WorkerAdapter = adapter?.Adapter,
                 WorkerDedicatedBytes = worker?.DedicatedBytes,
@@ -282,11 +288,14 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
         if (item.UiErrorShown) return;
         var code = item.Outcome switch
         {
+            InspectorOutcome.VideoMemoryAdmissionDenied => "vram_admission_denied",
             InspectorOutcome.OutOfVideoMemory => "out_of_video_memory",
             InspectorOutcome.OutOfMemory => "out_of_memory",
+            InspectorOutcome.DriverFailure => "driver_failed",
+            InspectorOutcome.WorkerFailure => "worker_failed",
             InspectorOutcome.SaveFailure => "save_failed",
-            InspectorOutcome.Disconnected => "disconnected",
-            InspectorOutcome.Failure => item.Kind == InspectorEventKind.OperationFinished ? "task_failed" : "worker_failed",
+            InspectorOutcome.Disconnected => "connection_failed",
+            InspectorOutcome.Failure => "task_failed",
             _ => null
         };
         if (code is not null) Notice(item, code, canRate: false);
@@ -295,14 +304,19 @@ internal sealed class InspectorObserver(InspectorStore store, Func<string, strin
     private InspectorNotice? Notice(InspectorEvent item, string code, string? competitor = null,
         bool during = false, bool canRate = true, bool delegateToApp = false)
     {
-        var id = InspectorStore.Hash(item.OperationId + "\n" + code);
+        var id = InspectorStore.Hash(item.OperationId + "\n" + item.Attempt + "\n" + item.AttemptId + "\n" + code
+            + (code == "gpu_preflight" ? "\n" + item.Stage : ""));
         if (store.HasNotice(id)) return null;
         var russian = store.ReadRussian();
         var title = russian ? "Фоновый ИИ-инспектор ПК" : "Background PC inspector";
-        var text = InspectorMessages.Get(code, competitor, item.Stage, during, russian);
+        var text = code == "gpu_preflight" && item.ExpectedVideoBytes is { } needed && item.AvailableVideoBytes is { } free
+            ? InspectorDiagnostics.VideoMemoryWarning(needed, free, russian)
+                + (competitor is null ? "" : " " + InspectorMessages.Get("gpu_pressure", competitor, item.Stage, false, russian))
+            : InspectorDiagnostics.FailureExplanation(item.Outcome, russian)
+                ?? InspectorMessages.Get(code, competitor, item.Stage, during, russian);
         var notice = new InspectorNotice(id, DateTimeOffset.UtcNow, item.OperationId, text,
             item.Outcome == InspectorOutcome.Unknown ? null : item.Outcome.ToString())
-        { Code = code, Attempt = item.Attempt, CanRate = canRate, Shown = false };
+        { Code = code, Attempt = item.Attempt, AttemptId = item.AttemptId, CanRate = canRate, Shown = false };
         if (!store.RecordNotice(notice)) return null;
         if (!delegateToApp && show(title, text)) _ = store.ConfirmNoticeDisplayed(id);
         return notice;

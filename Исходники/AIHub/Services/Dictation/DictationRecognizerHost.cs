@@ -25,14 +25,21 @@ public sealed class DictationRecognizerHost(string? operationComponent = null) :
             WorkingDirectory=AppContext.BaseDirectory
         };
         info.ArgumentList.Add("--dictation-worker");
-        var process=OwnedProcessRegistry.Shared.Start(info,operationComponent ?? "VoiceInput.Parakeet");_process=process;
+        var process=await ApplicationInspector.StartWorkerAsync(info,operationComponent ?? "VoiceInput.Parakeet",token,
+            backend:"ONNX Runtime", device:"cpu");_process=process;
         var ready=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);_ready=ready;
         _reader=Read(process,ready);
         _stderr=Task.Run(async()=>{while(await process.StandardError.ReadLineAsync() is {} _) { /* Native diagnostics may contain model text: do not persist them. */ }});
-        await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new DictationWorkerInit(files,threads,ComponentAudit.Enabled,testAuditStore)));
-        await process.StandardInput.FlushAsync(token);
-        try{await ready.Task.WaitAsync(TimeSpan.FromMinutes(4),token);}
-        catch{await DisposeAsync();throw;}
+        try {
+            await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new DictationWorkerInit(files,threads,ComponentAudit.Enabled,testAuditStore)));
+            await process.StandardInput.FlushAsync(token);
+            await ready.Task.WaitAsync(TimeSpan.FromMinutes(4),token);
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch(Exception error) {
+            await ApplicationInspector.WorkerFailedAsync(process,error,token);
+            await DisposeAsync();throw;
+        }
     }
     private async Task Read(Process process,TaskCompletionSource ready)
     {
@@ -57,12 +64,28 @@ public sealed class DictationRecognizerHost(string? operationComponent = null) :
     public async Task<string> DecodeAsync(byte[] pcm,CancellationToken token)
     {
         await _serial.WaitAsync(token);var id=Interlocked.Increment(ref _sequence);
+        GenerationInspectorAttempt? inspection = null;
         try {
             if(!Ready)throw new IOException("Dictation worker is not ready.");
+            inspection=await ApplicationInspector.BeginAttemptAsync(operationComponent ?? "VoiceInput.Parakeet",
+                "ONNX Runtime","cpu",token,stage:"generating");
+            inspection.LinkRequest(id.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            inspection.Attach(_process!);
             var result=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);_pending[id]=result;
             await _process!.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new DictationAudioRequest(id,Convert.ToBase64String(pcm))));
             await _process.StandardInput.FlushAsync(token);
-            return await result.Task.WaitAsync(TimeSpan.FromMinutes(2),token);
+            var text=await result.Task.WaitAsync(TimeSpan.FromMinutes(2),token);
+            inspection.Succeed();return text;
+        }
+        catch(Exception error) {
+            if(inspection is not null)
+            {
+                var outcome=_process is { HasExited:true } process ? GenerationFailureClassifier.FromWorker(process.ExitCode,null,"cpu")
+                    : Lopata.Inspector.InspectorOutcome.Unknown;
+                await inspection.FailAsync(error,token,token.IsCancellationRequested || outcome is Lopata.Inspector.InspectorOutcome.Unknown
+                    or Lopata.Inspector.InspectorOutcome.Failure ? null : outcome);
+            }
+            throw;
         }
         finally{_pending.TryRemove(id,out _);_serial.Release();}
     }

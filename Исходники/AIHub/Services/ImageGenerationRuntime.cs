@@ -95,6 +95,7 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         IReadOnlyList<ManagedModelArtifactCard> cards, string promptFile, string output, CancellationToken token)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
+        using var operation = ApplicationInspector.EnsureOperation("image.generate");
         token.ThrowIfCancellationRequested();
         var model = ImageGenerationCatalog.Get(request.ModelId);
         var setId = request.EngineSetId ?? EngineSetSelection.ActiveId;
@@ -118,45 +119,55 @@ public sealed class ImageGenerationNativeWorker : IImageGenerationWorker
         }
         catch (Exception error)
         {
-            inspection?.Complete(ImageInspectorAttempt.Evaluate(error, token));
+            if (inspection is not null) await inspection.FailAsync(error, ImageInspectorAttempt.Evaluate(error, token), token);
             throw;
         }
         var retryOnCpu = !model.RequiresGpu && result.ExitCode != 0 && selection.UsesGpu && IsHardwareFailure(result.Log);
-        inspection?.Complete(ImageInspectorAttempt.Evaluate(result.ExitCode, result.Log, result.Placement, selection.UsesGpu));
+        var outcome = ImageInspectorAttempt.Evaluate(result.ExitCode, result.Log, result.Placement, selection.UsesGpu);
         if (retryOnCpu)
         {
+            if (inspection is not null) await inspection.FailAsync(new IOException("Image GPU attempt failed."), outcome, token);
             token.ThrowIfCancellationRequested();
             var cpu = await SdRuntimeSelector.SelectAsync(cards, true, token, setId);
-            var cpuInspection = ImageInspectorAttempt.Create(request, cpu, cards, index, retry: true);
+            inspection = ImageInspectorAttempt.Create(request, cpu, cards, index, retry: true);
             try
             {
-                var retry = await AttemptAsync(request, index, cards, promptFile, output, cpu, false, token, cpuInspection);
-                cpuInspection?.Complete(ImageInspectorAttempt.Evaluate(retry.ExitCode, retry.Log, retry.Placement, false));
+                var retry = await AttemptAsync(request, index, cards, promptFile, output, cpu, false, token, inspection);
+                outcome = ImageInspectorAttempt.Evaluate(retry.ExitCode, retry.Log, retry.Placement, false);
                 result = (retry.ExitCode, result.Log + "\nCPU retry:\n" + retry.Log, retry.Placement);
                 selection = cpu;
             }
             catch (Exception error)
             {
-                cpuInspection?.Complete(ImageInspectorAttempt.Evaluate(error, token));
+                if (inspection is not null) await inspection.FailAsync(error, ImageInspectorAttempt.Evaluate(error, token), token);
                 throw;
             }
         }
         await File.WriteAllTextAsync(Path.Combine(request.SessionDirectory, request.Id + "_" + index + ".runtime.log"), result.Log, token);
+        string? failure = null;
         if (model.RequiresGpu)
         {
             if (result.Placement == ImageGenerationGpuPlacement.GpuUnavailable)
-                throw new BackgroundOperationFailedException("Generation.Qwen.GpuUnavailable");
-            if (result.Placement == ImageGenerationGpuPlacement.MemoryUnavailable
+                failure = "Generation.Qwen.GpuUnavailable";
+            else if (result.Placement == ImageGenerationGpuPlacement.MemoryUnavailable
                 || (result.ExitCode != 0 && (result.Log.Contains("out of memory", StringComparison.OrdinalIgnoreCase)
                     || result.Log.Contains("failed to allocate", StringComparison.OrdinalIgnoreCase)
                     || result.Log.Contains("VK_ERROR_OUT_OF", StringComparison.OrdinalIgnoreCase))))
-                throw new BackgroundOperationFailedException("Generation.Qwen.MemoryUnavailable");
-            if (result.ExitCode != 0 || result.Placement == ImageGenerationGpuPlacement.Unknown)
-                throw new BackgroundOperationFailedException("Generation.Qwen.RuntimeError");
+                failure = "Generation.Qwen.MemoryUnavailable";
+            else if (result.ExitCode != 0 || result.Placement == ImageGenerationGpuPlacement.Unknown)
+                failure = "Generation.Qwen.RuntimeError";
         }
-        if (result.ExitCode != 0) throw new BackgroundOperationFailedException("Generation.RuntimeError");
+        if (result.ExitCode != 0) failure ??= "Generation.RuntimeError";
         if (request.Loras.Length > 0 && (LoraRejected(result.Log) || !LorasApplied(result.Log, request.Loras)))
-            throw new BackgroundOperationFailedException("Generation.Lora.NotApplied");
+            failure ??= "Generation.Lora.NotApplied";
+        if (failure is not null)
+        {
+            var error = new BackgroundOperationFailedException(failure);
+            if (inspection is not null)
+                await inspection.FailAsync(error, outcome == InspectorOutcome.Success ? InspectorOutcome.Failure : outcome, token);
+            throw error;
+        }
+        inspection?.Complete(InspectorOutcome.Success);
         return new(selection.PackageRevision is null ? selection.EngineSetId : null,
             selection.Version, selection.Revision, selection.Backend, selection.ComponentId) {
             Placement = model.RequiresGpu ? result.Placement.ToString() : null,

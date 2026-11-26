@@ -121,6 +121,25 @@ public sealed class InspectorTests
     }
 
     [TestMethod]
+    public void PrivateTelemetryNeverEntersTheSharedQueueAndFinalStateKeepsEarlierAttemptReasons()
+    {
+        using var profile = new Fixture();
+        var store = profile.Store;
+        Assert.IsFalse(store.Publish(new InspectorEvent { OperationId = "private-attempt", InMemoryOnly = true }));
+        Assert.HasCount(0, store.PendingEvents());
+        var id = Guid.NewGuid();
+        var retry = Guid.NewGuid();
+        var first = new InspectorNotice(InspectorStore.Hash("first"), DateTimeOffset.UtcNow, "task", "Started") { AttemptId = id };
+        var second = new InspectorNotice(InspectorStore.Hash("second"), DateTimeOffset.UtcNow, "task", "Started") { AttemptId = retry };
+        Assert.IsTrue(store.RecordNotice(first));
+        Assert.IsTrue(store.RecordNotice(second));
+        store.FinishNotices("task", 1, InspectorOutcome.OutOfVideoMemory, null, id);
+        store.FinishNotices("task", null, InspectorOutcome.Success, null);
+        Assert.AreEqual("OutOfVideoMemory", store.ReadNotices().Single(item => item.AttemptId == id).Outcome);
+        Assert.AreEqual("Success", store.ReadNotices().Single(item => item.AttemptId == retry).Outcome);
+    }
+
+    [TestMethod]
     public async Task IndependentWorkerAcceptsPreflightKeepsOneInstanceAndStopsForServicing()
     {
         using var profile = new Fixture();
@@ -153,6 +172,21 @@ public sealed class InspectorTests
             Assert.IsTrue(store.ConfirmNoticeDisplayed(preflight.NoticeId));
             Assert.HasCount(1, store.ReadNotices());
             Assert.IsTrue(store.ReadReport().Samples.Any(item => item.TotalRamBytes > 0));
+
+            var measuredNeeded = (long)(3.7 * (1L << 30));
+            var gpu = await store.PublishPreflightAsync(new InspectorEvent
+            {
+                OperationId = "ace-fixture", AttemptId = Guid.NewGuid(), Kind = InspectorEventKind.Preflight,
+                Stage = "generating", Device = "cuda:1", ExpectedVideoBytes = measuredNeeded, AvailableVideoBytes = 3L << 30,
+                PreflightStatus = InspectorPreflightStatus.Insufficient, UiErrorShown = true
+            }, timeout.Token);
+            Assert.IsTrue(gpu.Acknowledged);
+            Assert.AreEqual(InspectorPreflightStatus.Insufficient, gpu.Status);
+            StringAssert.Contains(gpu.Warning!, "3,7 ГБ");
+            StringAssert.Contains(gpu.Warning!, "3,0 ГБ");
+            Assert.HasCount(1, store.ReadNotices());
+            Assert.IsTrue(store.ConfirmNoticeDisplayed(gpu.NoticeId));
+            Assert.HasCount(2, store.ReadNotices());
 
             Assert.IsTrue(store.RequestStop());
             await worker.WaitForExitAsync(timeout.Token);

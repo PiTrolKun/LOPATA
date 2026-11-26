@@ -15,7 +15,8 @@ internal static partial class InfiniteTalkRunner
             RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "song_clip_infinitetalk.py"), action, "--request", request],
             extendedImportRoot: VideoH3Runtime.RuntimeRoot);
-        using var process=OwnedProcessRegistry.Shared.Start(info,"SongClip.InfiniteTalk");
+        using var process=await ApplicationInspector.StartWorkerAsync(info,"SongClip.InfiniteTalk",token,
+            backend:"python",inspect:action!="--analyze");
         using var cancel=token.Register(()=>{try {if(!process.HasExited)process.Kill(true);}catch(InvalidOperationException){}});
         var diagnostics=new StringBuilder();
         var stderr=Task.Run(async()=>{
@@ -37,6 +38,11 @@ internal static partial class InfiniteTalkRunner
             if(process.ExitCode!=0)throw new IOException("InfiniteTalk: "+diagnostics);
             if(!File.Exists(Path.Combine(job,action=="--analyze"?"infinitetalk-analysis.json":"worker-result.json")))
                 throw new InvalidDataException("SongClip.InfiniteResultInvalid");
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error) {
+            await ApplicationInspector.WorkerFailedAsync(process,error,token,stderr.IsCompletedSuccessfully?diagnostics.ToString():null);
+            throw;
         }
         finally {
             if(!process.HasExited)process.Kill(true);

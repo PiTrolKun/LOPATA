@@ -77,7 +77,8 @@ internal static class VideoH3Runner
             RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "h3_worker.py"), requestPath],
             extendedImportRoot: VideoH3Runtime.RuntimeRoot);
-        using var process = OwnedProcessRegistry.Shared.Start(info, "Video.H3.Generate");
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "Video.H3.Generate", token,
+            environment.Python.Entry.Id, environment.Python.Device, job.ModelId, inspect: !probeOnly);
         using var activity = new VideoH3GpuActivity(process.Id, log);
         using var cancelled = token.Register(() => { try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { } });
         var errors = new StringBuilder();
@@ -166,6 +167,7 @@ internal static class VideoH3Runner
                 throw new IOException(workerError?.StartsWith("VideoPrep.", StringComparison.Ordinal) == true
                     || workerError is "SongClip.DenoGpuRequired" or "SongClip.DenoAccelerateUnavailable" ? workerError
                     : "VideoPrep.H3RuntimeFailed: " + workerError + "\n" + errors);
+            ApplicationInspector.WorkerFinished(process);
             if (finishDeno && !probeOnly && complete)
             {
                 var source = denoSource ?? throw new InvalidDataException("VideoPrep.H3InvalidResult");
@@ -185,6 +187,12 @@ internal static class VideoH3Runner
                 await commit();
                 log("[H3 event] " + JsonSerializer.Serialize(new { kind = "done", complete = true }));
             }
+        }
+        catch (Exception error)
+        {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token,
+                workerError ?? (stderr.IsCompletedSuccessfully ? errors.ToString() : null));
+            throw;
         }
         finally { if (!process.HasExited) process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); await stderr; }
     }

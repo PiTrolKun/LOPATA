@@ -72,18 +72,22 @@ public sealed class MusicBf16Worker : IMusicYueWorker
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "music_bf16_worker.py"),
             overlay, stage, Path.GetDirectoryName(model)!, Path.GetDirectoryName(decoder)!, requestPath, temporary, runtime.Device]);
         token.ThrowIfCancellationRequested();
-        using var process = OwnedProcessRegistry.Shared.Start(info, "Music.YuE2.BF16");
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "Music.YuE2.BF16", token,
+            runtime.Entry.Id, runtime.Device);
         var errors = new Queue<string>();
-        async Task Pump(StreamReader reader) {
+        var diagnostics = new Queue<string>();
+        async Task Pump(StreamReader reader, bool errorStream) {
             string? line; while ((line = await reader.ReadLineAsync()) is not null) {
                 if (line.Length > 4096) line = line[..4096];
                 if (line.StartsWith("[Hardware]", StringComparison.Ordinal)) LastHardware = line[10..].Trim();
                 lock (errors) { errors.Enqueue(line); while (errors.Count > 12) errors.Dequeue(); }
+                if (errorStream) { diagnostics.Enqueue(line); while (diagnostics.Count > 32) diagnostics.Dequeue(); }
                 try { Log?.Invoke(line); }
                 catch (Exception callback) { OwnedProcessRegistry.Log("music_log_callback_failed", "Music.YuE2.BF16", detail: callback.GetType().Name); }
             }
         }
-        var stdout = Pump(process.StandardOutput); var stderr = Pump(process.StandardError);
+        var stdout = Pump(process.StandardOutput, false); var stderr = Pump(process.StandardError, true);
+        var writing = false;
         try {
             await process.WaitForExitAsync(token);
             await Task.WhenAll(stdout, stderr);
@@ -91,7 +95,15 @@ public sealed class MusicBf16Worker : IMusicYueWorker
             if (process.ExitCode != 0) throw new IOException("YuE2 BF16 worker failed (" + process.ExitCode + "). " + string.Join("\n", errors));
             if (stage == "synth") _ = MusicWaveFile.ReadDuration(temporary);
             else { if (new FileInfo(temporary).Length > 1_048_576) throw new InvalidDataException("Oversized BF16 plan."); using var plan = JsonDocument.Parse(await File.ReadAllTextAsync(temporary, token)); }
+            writing = true;
             File.Move(temporary, outputPath, false);
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error) {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token,
+                stderr.IsCompletedSuccessfully ? string.Join('\n', diagnostics) : null,
+                writing ? Lopata.Inspector.InspectorOutcome.SaveFailure : null);
+            throw;
         }
         finally {
             if (!process.HasExited) { process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); }

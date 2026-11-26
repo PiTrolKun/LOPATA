@@ -23,14 +23,21 @@ internal sealed class VideoNarratorSession : IDisposable
 
     internal async Task RunAsync(ManagedPythonSelection runtime, string overlay, string expanded, string modelKey, string request, string output, string component, CancellationToken token, Action<double>? progress = null)
     {
+        using var privacy = !VideoNarrationWorkspace.PublishOutput ? ApplicationInspector.PrivateScope() : null;
         await _gate.WaitAsync(token);
+        GenerationInspectorAttempt? inspection = null;
+        string? diagnostic = null;
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             var key = Key(runtime, overlay, expanded, modelKey);
             var firstResponse = !IsRunning || _key != key;
+            inspection = await ApplicationInspector.BeginAttemptAsync(component, runtime.Entry.Id, runtime.Device,
+                token, stage: firstResponse ? "model_loading" : "generating");
             if (firstResponse) Start(runtime, overlay, expanded, output, component, key);
             var process = _process!; var id = Guid.NewGuid().ToString("N");
+            inspection.LinkRequest(id);
+            inspection.Attach(process);
             await process.StandardInput.WriteLineAsync(JsonSerializer.Serialize(new { id, request, output }).AsMemory(), token);
             await process.StandardInput.FlushAsync(token);
             while (await process.StandardOutput.ReadLineAsync(token).ConfigureAwait(false) is {} line)
@@ -47,8 +54,13 @@ internal sealed class VideoNarratorSession : IDisposable
                 if (!line.StartsWith(prefix, StringComparison.Ordinal)) { Append(line); continue; }
                 using var response = JsonDocument.Parse(line[prefix.Length..]); var root = response.RootElement;
                 if (root.GetProperty("id").GetString() != id) throw new IOException("Narrator returned an out-of-order response.");
-                if (!root.GetProperty("ok").GetBoolean()) throw new IOException("Narrator failed: " + root.GetProperty("error").GetString() + "\n" + Tail());
+                if (!root.GetProperty("ok").GetBoolean())
+                {
+                    diagnostic = root.GetProperty("error").GetString();
+                    throw new IOException("Narrator failed: " + diagnostic + "\n" + Tail());
+                }
                 if (firstResponse) VoiceNotifications.VoiceNotificationEvents.Publish("model.loaded", family: "model");
+                inspection.Succeed();
                 return;
             }
             await process.WaitForExitAsync(token).ConfigureAwait(false);
@@ -58,7 +70,19 @@ internal sealed class VideoNarratorSession : IDisposable
             OwnedProcessRegistry.Log("narrator_native_exit", component, detail: failure);
             throw new IOException("Narrator exited with code " + process.ExitCode + ": " + Tail());
         }
-        catch (Exception error) { Stop(); if (error is not OperationCanceledException) VoiceNotifications.VoiceNotificationEvents.Publish("model.failed", family: "model"); throw; }
+        catch (Exception error)
+        {
+            if (inspection is not null)
+            {
+                var outcome = token.IsCancellationRequested ? Lopata.Inspector.InspectorOutcome.Cancelled
+                    : GenerationFailureClassifier.FromWorker(_process is { HasExited: true } exited ? exited.ExitCode : 0,
+                        diagnostic ?? Tail(), runtime.Device);
+                await inspection.FailAsync(error, token, outcome == Lopata.Inspector.InspectorOutcome.Failure ? null : outcome);
+            }
+            Stop();
+            if (error is not OperationCanceledException) VoiceNotifications.VoiceNotificationEvents.Publish("model.failed", family: "model");
+            throw;
+        }
         finally { _gate.Release(); }
     }
     private void Start(ManagedPythonSelection runtime, string overlay, string expanded, string output, string component, string key)

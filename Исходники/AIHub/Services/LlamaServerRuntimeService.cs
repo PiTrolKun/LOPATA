@@ -27,6 +27,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
     private bool _disposed;
     private readonly bool _forceCpu;
     private volatile bool _hardwareStartupFailure;
+    private volatile Lopata.Inspector.InspectorOutcome _nativeFailure;
     private LlamaRuntimeSelection? _selectedRuntime;
 
     public string ExpectedExecutablePath => _selectedRuntime?.Bundle.Server
@@ -342,13 +343,12 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 await StartPoetryPlacementAsync(model, memory, log, cancellationToken, forceCpuFallback);
                 return;
             }
-            var selection = await LlamaRuntimeSelector.SelectAsync(LlamaDenseMemoryPolicy.GpuRequired(memory,
-                    RequestedContextTokens), _forceCpu || forceCpuFallback, log, cancellationToken);
+            var required = LlamaDenseMemoryPolicy.GpuRequired(memory, RequestedContextTokens);
+            var selection = await LlamaRuntimeSelector.SelectAsync(required, _forceCpu || forceCpuFallback, log, cancellationToken);
             if (!selection.UsesGpu) LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens);
-            StartProcess(model, selection, log);
             try
             {
-                await WaitForHealthAsync(log, cancellationToken);
+                await StartInspectedAsync(model, selection, required, log, cancellationToken);
             }
             catch (Exception ex) when ((ex is InvalidOperationException or TimeoutException)
                 && selection.UsesGpu && _hardwareStartupFailure && !cancellationToken.IsCancellationRequested)
@@ -358,8 +358,7 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
                 await ModelProcessRetirement.StopAsync(_process, Stop);
                 var cpu = await LlamaRuntimeSelector.SelectAsync(0, true, log, cancellationToken);
                 LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, RequestedContextTokens);
-                StartProcess(model, cpu, log);
-                await WaitForHealthAsync(log, cancellationToken);
+                await StartInspectedAsync(model, cpu, 0, log, cancellationToken);
             }
         }
         catch (Exception error)
@@ -374,11 +373,47 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
         }
     }
 
+    private async Task StartInspectedAsync(DebugModelInfo model, LlamaRuntimeSelection selection, long required,
+        Action<string> log, CancellationToken token)
+    {
+        var free = await RuntimeDeviceProbe.ReadSelectedFreeAsync(selection, token);
+        var attempt = await ApplicationInspector.BeginAttemptAsync("llama-server", selection.Bundle.Backend,
+            selection.Device?.Id ?? "cpu", token, selection.UsesGpu ? required : null, free, stage: "model_loading");
+        try
+        {
+            StartProcess(model, selection, log);
+            if (_process is { } process) attempt.Attach(process);
+            await WaitForHealthAsync(log, token);
+            attempt.Succeed();
+        }
+        catch (Exception error)
+        {
+            if (_process is { HasExited: true })
+            {
+                try { await _stderrPumpTask.WaitAsync(TimeSpan.FromSeconds(2), token); }
+                catch (TimeoutException) { }
+                catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+            }
+            await attempt.FailAsync(error, token, NativeOutcome(token));
+            throw;
+        }
+    }
+
+    private Lopata.Inspector.InspectorOutcome? NativeOutcome(CancellationToken token)
+    {
+        if (token.IsCancellationRequested) return Lopata.Inspector.InspectorOutcome.Cancelled;
+        if (Lopata.Inspector.InspectorDiagnostics.IsFailure(_nativeFailure)) return _nativeFailure;
+        if (_process is not { HasExited: true } process) return null;
+        var outcome = GenerationFailureClassifier.FromWorker(process.ExitCode, null, _selectedRuntime?.Device?.Id);
+        return outcome == Lopata.Inspector.InspectorOutcome.Failure ? null : outcome;
+    }
+
     private void StartProcess(DebugModelInfo model, LlamaRuntimeSelection selection, Action<string> log,
         LlamaStartupActivity? startupActivity = null)
     {
         _selectedRuntime = selection;
         _hardwareStartupFailure = false;
+        _nativeFailure = Lopata.Inspector.InspectorOutcome.Unknown;
         var gpuLayers = selection.GpuLayers;
         _port = FindFreeLoopbackPort();
         _currentModelPath = model.Path;
@@ -460,6 +495,8 @@ public sealed partial class LlamaServerRuntimeService : IDisposable
             {
                 _poetryAllocation?.Observe(line);
                 if (IsHardwareAllocationFailure(line)) _hardwareStartupFailure = true;
+                var outcome = GenerationFailureClassifier.FromWorker(0, line, selection.Device?.Id ?? "cpu");
+                if (outcome != Lopata.Inspector.InspectorOutcome.Failure) _nativeFailure = outcome;
             }
         });
     }

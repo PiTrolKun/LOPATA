@@ -224,7 +224,8 @@ internal static class H3MusicRunner
             info.Environment["LOPATA_GEEK_PROGRAM_VERSION"] = ApplicationBuildVersion.Value;
         var label = geek ? "SongClip.Geekatplay" : glitch ? "SongClip.Glitchframe" : worker is SongClipDeno.Worker or SongClipDeno.AcceleratedWorker or SongClipDeno.FinishWorker
             ? "SongClip.Deno" : montage ? "SongClip.H3Montage" : "SongClip.H3Motion";
-        using var process = OwnedProcessRegistry.Shared.Start(info, label);
+        using var process = await ApplicationInspector.StartWorkerAsync(info, label, token,
+            backend: "python", inspect: !verify && !analyze);
         void StopWorker()
         {
             try { if (!process.HasExited) process.Kill(true); }
@@ -251,9 +252,10 @@ internal static class H3MusicRunner
                 diagnostics.AppendLine(line); if (diagnostics.Length > 20000) diagnostics.Remove(0, 12000);
             }
         });
+        string? workerError = null;
         try
         {
-            string? workerError = null, failureType = null;
+            string? failureType = null;
             var started = false;
             var log = true;
             while (await process.StandardOutput.ReadLineAsync() is { } line)
@@ -287,12 +289,24 @@ internal static class H3MusicRunner
             await process.WaitForExitAsync(CancellationToken.None); await stderr; token.ThrowIfCancellationRequested();
             if (process.ExitCode != 0)
             {
-                if (failureType == "DiskSpaceError") throw new IOException("SongClip.MuxDiskSpace");
+                if (failureType == "DiskSpaceError")
+                {
+                    var error = new IOException("SongClip.MuxDiskSpace");
+                    await ApplicationInspector.WorkerFailedAsync(process, error, token, confirmed: Lopata.Inspector.InspectorOutcome.SaveFailure);
+                    throw error;
+                }
                 if (workerError is "SongClip.DenoGpuRequired" or "SongClip.DenoAccelerateUnavailable") throw new IOException(workerError);
                 throw new WorkerFailure(process.ExitCode, failureType, started, workerError,
                     $"{label} (0x{process.ExitCode:X8}) {workerError ?? diagnostics.ToString()}".TrimEnd());
             }
             if (worker is null && !File.Exists(Path.Combine(job, analyze ? "montage-analysis.json" : "worker-result.json"))) throw new InvalidDataException("H3 music worker did not commit its result.");
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error)
+        {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token,
+                workerError ?? (stderr.IsCompletedSuccessfully ? diagnostics.ToString() : null));
+            throw;
         }
         finally
         {

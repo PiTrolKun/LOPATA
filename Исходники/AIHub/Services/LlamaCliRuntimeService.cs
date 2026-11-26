@@ -32,6 +32,7 @@ public sealed class LlamaCliRuntimeService
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
         using var auditLog = ComponentAudit.CaptureLog(log);
+        using var operation = ApplicationInspector.EnsureOperation("local-text");
         if (!IsAvailable)
         {
             throw new FileNotFoundException("llama-cli.exe was not found.", ExpectedExecutablePath);
@@ -40,20 +41,20 @@ public sealed class LlamaCliRuntimeService
         await CoreModelManager.VerifyPathForUseAsync(model.Path, cancellationToken, log);
         await ExecutorModelInstaller.VerifyPathForUseAsync(model.Path, cancellationToken, log);
         var memory = await Task.Run(() => LiteraryModelMemoryMetadata.Read(model.Path), cancellationToken);
-        var selection = await LlamaRuntimeSelector.SelectAsync(LlamaDenseMemoryPolicy.GpuRequired(memory,
-            CoreContextRuntimeLimits.CurrentBackendContextLimit), _forceCpu, log, cancellationToken);
+        var required = LlamaDenseMemoryPolicy.GpuRequired(memory, CoreContextRuntimeLimits.CurrentBackendContextLimit);
+        var selection = await LlamaRuntimeSelector.SelectAsync(required, _forceCpu, log, cancellationToken);
         if (!selection.UsesGpu) LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, CoreContextRuntimeLimits.CurrentBackendContextLimit);
 
         var promptPath = CreatePromptFile(model, history, userMessage);
         try
         {
-            try { return await GenerateAttemptAsync(model, promptPath, selection, log, cancellationToken); }
+            try { return await GenerateAttemptAsync(model, promptPath, selection, required, log, cancellationToken); }
             catch (NativeGpuExecutionException) when (selection.UsesGpu && !cancellationToken.IsCancellationRequested)
             {
                 log("GPU hardware failure; discarded incomplete output and retrying once on CPU.");
                 var cpu = await LlamaRuntimeSelector.SelectAsync(0, true, log, cancellationToken);
                 LlamaDenseMemoryPolicy.EnsureCurrentCpuMemory(memory, CoreContextRuntimeLimits.CurrentBackendContextLimit);
-                return await GenerateAttemptAsync(model, promptPath, cpu, log, cancellationToken);
+                return await GenerateAttemptAsync(model, promptPath, cpu, 0, log, cancellationToken);
             }
         }
         finally
@@ -63,7 +64,7 @@ public sealed class LlamaCliRuntimeService
     }
 
     private static async Task<string> GenerateAttemptAsync(DebugModelInfo model, string promptPath,
-        LlamaRuntimeSelection selection, Action<string> log, CancellationToken cancellationToken)
+        LlamaRuntimeSelection selection, long required, Action<string> log, CancellationToken cancellationToken)
     {
             var startInfo = new ProcessStartInfo
             {
@@ -102,9 +103,10 @@ public sealed class LlamaCliRuntimeService
             AddArgument(startInfo, "0");
             AddArgument(startInfo, "--offline");
 
-            using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             log($"Starting llama-cli: {Path.GetFileName(model.Path)}");
-            OwnedProcessRegistry.Shared.Start(process, "LlamaCliRuntimeService");
+            var free = await RuntimeDeviceProbe.ReadSelectedFreeAsync(selection, cancellationToken);
+            using var process = await ApplicationInspector.StartWorkerAsync(startInfo, "llama-cli", cancellationToken,
+                selection.Bundle.Backend, selection.Device?.Id ?? "cpu", needed: selection.UsesGpu ? required : null, free: free);
 
             var outputTask = process.StandardOutput.ReadToEndAsync();
             var errorTask = process.StandardError.ReadToEndAsync();
@@ -121,7 +123,14 @@ public sealed class LlamaCliRuntimeService
 
                 LlamaCliExitPolicy.EnsureSuccessful(process.ExitCode, error, selection.UsesGpu);
 
+                ApplicationInspector.WorkerFinished(process);
                 return CleanOutput(output);
+            }
+            catch (Exception error)
+            {
+                await ApplicationInspector.WorkerFailedAsync(process, error, cancellationToken,
+                    errorTask.IsCompletedSuccessfully ? await errorTask : null);
+                throw;
             }
             finally
             {

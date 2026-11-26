@@ -58,7 +58,7 @@ public sealed partial class InspectorStore
         return new InspectorState(Enabled: true, FullAudit: appSettings?.Behavior?.ComponentAuditEnabled ?? true);
     }
 
-    internal bool ReadRussian() =>
+    public bool ReadRussian() =>
         !string.Equals(Read<AppSettings>(Path.Combine(ProfileRoot, "settings.json"))?.LanguageCode, "en",
             StringComparison.OrdinalIgnoreCase);
 
@@ -101,7 +101,7 @@ public sealed partial class InspectorStore
 
     public bool Publish(InspectorEvent item)
     {
-        if (string.IsNullOrWhiteSpace(item.OperationId) || !ReadState().Enabled) return false;
+        if (item.InMemoryOnly || string.IsNullOrWhiteSpace(item.OperationId) || !ReadState().Enabled) return false;
         return TryWrite(EventPath(item), item);
     }
 
@@ -145,7 +145,7 @@ public sealed partial class InspectorStore
     internal void CompleteEvent(string file, InspectorEvent item, InspectorNotice? preflight = null)
     {
         if (item.Kind == InspectorEventKind.Preflight)
-            TryWrite(AckPath(item), new InspectorPreflightResult(true, preflight?.Text, preflight?.Id));
+            TryWrite(AckPath(item), new InspectorPreflightResult(true, preflight?.Text, preflight?.Id, item.PreflightStatus));
         Delete(file);
     }
 

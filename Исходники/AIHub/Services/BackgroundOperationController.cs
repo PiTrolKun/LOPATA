@@ -127,7 +127,10 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
             if (_loadFailed) throw new InvalidOperationException("A damaged background checkpoint requires review before starting a new operation.");
             if (_state is { Phase: not (BackgroundOperationPhase.Completed or BackgroundOperationPhase.Failed or BackgroundOperationPhase.Canceled) }
                 && _state.Id != input.Id) throw new InvalidOperationException("Resume or discard the pending operation first.");
+            if (_state is { } same && same.Id == input.Id)
+                input = input with { InspectorAttempts = same.InspectorAttempts, LastInspectorFailure = same.LastInspectorFailure };
             Persist(input with { Phase = BackgroundOperationPhase.Running, UserPaused = false, RequiresDecision = false, Detail = null,
+                InspectorPreflightWarning = null,
                 Notice = _state?.Notice ?? input.Notice, Notices = _state?.Notices ?? input.Notices,
                 NeedsAttention = _state?.NeedsAttention ?? input.NeedsAttention });
             _running = true; _pauseRequested = false; _runCancellation = runCancellation;
@@ -136,6 +139,7 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
         }
         _scope.Value = input.Id;
         using var inspection = ApplicationInspector.Enter(input);
+        GenerationInspectorAttempt? execution = null;
         NotifyChanged();
         try
         {
@@ -147,8 +151,17 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
                 lock (_gate) { _attempt = attempt; cancelAttempt = _pauseRequested; }
                 if (cancelAttempt) attempt.Cancel();
                 T result = default!;
-                try { result = await execute(attempt.Token); }
-                catch (OperationCanceledException) when (!lifetime.IsCancellationRequested && PauseRequested) { }
+                execution = null;
+                try
+                {
+                    execution = await ApplicationInspector.BeginAttemptAsync(input.Kind, null, null, attempt.Token);
+                    result = await execute(attempt.Token);
+                    execution.Succeed();
+                }
+                catch (OperationCanceledException error) when (!lifetime.IsCancellationRequested && PauseRequested)
+                {
+                    if (execution is not null) await execution.FailAsync(error, attempt.Token);
+                }
                 lifetime.ThrowIfCancellationRequested();
                 BackgroundOperationNotice? notice = null;
                 bool finished;
@@ -193,8 +206,9 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
                 _elapsed.Start(); NotifyChanged();
             }
         }
-        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
+        catch (OperationCanceledException error) when (lifetime.IsCancellationRequested)
         {
+            if (execution is not null) await execution.FailAsync(error, lifetime);
             if (!EmergencyStopRequested) await releaseModels();
             lock (_gate) Persist(_state! with { Phase = BackgroundOperationPhase.Waiting,
                 RequiresDecision = _emergencyStopRequested || _state!.RequiresDecision,
@@ -204,15 +218,23 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
         catch (Exception error)
         {
             var emergencyStop = EmergencyStopRequested;
-            if (!emergencyStop) ComponentAuditFailures.Report(error);
+            var deferred = error as InspectorDeferredException;
+            if (!emergencyStop && deferred is null) ComponentAuditFailures.Report(error);
             var terminal = error is BackgroundOperationFailedException && !emergencyStop;
-            if (terminal) {
+            if ((terminal || deferred is not null) && !emergencyStop) {
                 try { await releaseModels(); }
                 catch (Exception releaseError) {
                     terminal = false; // Do not advertise a free model gate when retirement was not confirmed.
                     OwnedProcessRegistry.Log("background_failure_retirement_failed", "Application", detail: releaseError.GetType().Name);
                 }
             }
+            var prior = ApplicationInspector.LastFailure(input.Id);
+            var workerReportedCurrentFailure = prior is not null && prior.Attempt == ApplicationInspector.AttemptCount(input.Id)
+                && GenerationFailureClassifier.FromException(error, lifetime) == Lopata.Inspector.InspectorOutcome.Failure;
+            if (!emergencyStop && execution is not null)
+                await execution.FailAsync(error, lifetime, error is BackgroundOperationWaitingException || workerReportedCurrentFailure
+                    ? Lopata.Inspector.InspectorOutcome.Unknown : null);
+            var diagnosis = emergencyStop ? null : workerReportedCurrentFailure ? prior : GenerationInspectorAttempt.Evidence(error);
             lock (_gate)
             {
                 if (!_emergencyStopRequested && error is not (BackgroundOperationWaitingException or OperationCanceledException))
@@ -222,6 +244,9 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
                     RequiresDecision = !terminal,
                     UserPaused = terminal ? false : _state!.UserPaused,
                     Detail = FailureDetail(error),
+                    LastInspectorFailure = diagnosis is { InMemoryOnly: false } issue && Lopata.Inspector.InspectorDiagnostics.IsFailure(issue.Outcome)
+                        ? issue : _state!.LastInspectorFailure,
+                    InspectorPreflightWarning = deferred?.Warning,
                     ElapsedSeconds = Elapsed }); }
                 catch (Exception saveError) { OwnedProcessRegistry.Log("background_checkpoint_failed", "Application", detail: saveError.GetType().Name); }
                 _paused?.TrySetException(error);
@@ -263,7 +288,9 @@ internal sealed partial class BackgroundOperationExecution(BackgroundOperationSt
         using var ownership = TryOwnProcess();
         if (ownership is null) return false;
         var previous = _state;
-        var next = state with { UpdatedUtc = DateTimeOffset.UtcNow };
+        var next = state with { UpdatedUtc = DateTimeOffset.UtcNow,
+            InspectorAttempts = Math.Max(state.InspectorAttempts, ApplicationInspector.AttemptCount(state.Id)),
+            LastInspectorFailure = ApplicationInspector.LastFailure(state.Id) ?? state.LastInspectorFailure };
         _store.Save(next); _state = next;
         ApplicationInspector.StateChanged(previous, next);
         if (previous is not null) VoiceNotifications.VoiceNotificationEvents.Background(previous, next);

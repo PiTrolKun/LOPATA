@@ -46,7 +46,7 @@ internal static class UpscaleNative
             info.Environment["PYTHONUTF8"] = "1"; info.Environment["PYTHONIOENCODING"] = "utf-8";
             var cache = Path.Combine(UpscaleStore.Root, "RuntimeCache"); Directory.CreateDirectory(cache);
             info.Environment["TRITON_CACHE_DIR"] = Path.Combine(cache, "triton"); info.Environment["TORCHINDUCTOR_CACHE_DIR"] = Path.Combine(cache, "torch");
-            await Execute(info, token, log, output + ".log");
+            await Execute(info, token, log, output + ".log", "FlashVSR", step.Get("device", "auto"));
         } else {
             var root = UpscaleRuntime.Expanded(cards.Single(c => c.ModelArtifactId == "video-upscale-visual-enhancer"));
             var executable = Directory.EnumerateFiles(root, "VE_CLI.exe", SearchOption.AllDirectories).Single();
@@ -87,7 +87,8 @@ internal static class UpscaleNative
             }
             var preset = output + ".preset.json";
             UpscaleStore.Save(preset, new { format = "dlss5-visual-enhancer-settings-preset", schema_version = 41, name = "LOPATA", settings });
-            await Execute(Info(executable, ["render", input, "-o", raw, "--preset", preset, "--gpu", step.Get("gpu", "auto"), "--codec", "ffv1", "--container", "mkv", "--quality", "max", "--json", "--quiet"]), token, log, output + ".log");
+            await Execute(Info(executable, ["render", input, "-o", raw, "--preset", preset, "--gpu", step.Get("gpu", "auto"), "--codec", "ffv1", "--container", "mkv", "--quality", "max", "--json", "--quiet"]),
+                token, log, output + ".log", step.Engine.ToString(), step.Get("gpu", "auto"));
         }
         await UpscaleMediaTools.Filter(raw, output, UpscaleMediaTools.ScaleFilter(step.Width, step.Height), token);
         File.Delete(raw);
@@ -98,18 +99,28 @@ internal static class UpscaleNative
             StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8, WorkingDirectory = Path.GetDirectoryName(executable)! };
         foreach (var arg in args) info.ArgumentList.Add(arg); return info;
     }
-    internal static async Task Execute(ProcessStartInfo info, CancellationToken token, Action<string> log, string? logFile = null)
+    internal static async Task Execute(ProcessStartInfo info, CancellationToken token, Action<string> log, string? logFile = null,
+        string? engine = null, string? device = null)
     {
         using var journal = logFile is null ? null : new StreamWriter(logFile, append: true, Encoding.UTF8) { AutoFlush = true };
         var gate = new object();
         journal?.WriteLine(DateTimeOffset.UtcNow + " " + info.FileName + " " + JsonSerializer.Serialize(info.ArgumentList));
-        using var process = OwnedProcessRegistry.Shared.Start(info, "VideoUpscale.Native");
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "VideoUpscale.Native", token, engine, device);
         using var stop = token.Register(() => { try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { } });
         var stdout = Read(process.StandardOutput); var stderr = Read(process.StandardError);
-        await process.WaitForExitAsync(CancellationToken.None); await stdout; var error = await stderr;
-        journal?.WriteLine($"{DateTimeOffset.UtcNow:o} PID={process.Id} exit={process.ExitCode}");
-        token.ThrowIfCancellationRequested();
-        if (process.ExitCode != 0) throw new IOException("VideoUpscale.NativeFailed (" + process.ExitCode + "): " + error);
+        try
+        {
+            await process.WaitForExitAsync(CancellationToken.None); await stdout; var error = await stderr;
+            journal?.WriteLine($"{DateTimeOffset.UtcNow:o} PID={process.Id} exit={process.ExitCode}");
+            token.ThrowIfCancellationRequested();
+            if (process.ExitCode != 0) throw new IOException("VideoUpscale.NativeFailed (" + process.ExitCode + "): " + error);
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error)
+        {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token, stderr.IsCompletedSuccessfully ? await stderr : null);
+            throw;
+        }
         async Task<string> Read(StreamReader reader) {
             StringBuilder tail = new();
             while (await reader.ReadLineAsync() is {} line) { lock (gate) journal?.WriteLine(line); log(line); tail.AppendLine(line); if (tail.Length > 32768) tail.Remove(0, tail.Length - 16384); }

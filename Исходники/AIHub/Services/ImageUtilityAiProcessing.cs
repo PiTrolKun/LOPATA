@@ -12,6 +12,7 @@ public sealed partial class ImageUtilityAiService
         CancellationToken token)
     {
         using var auditOperation = ComponentAudit.CaptureOperation();
+        using var inspection = ApplicationInspector.EnsureOperation("image-utility");
         if (!ImageUtilityAiCatalog.IsAi(methodId)) throw new ArgumentException("Unknown image AI method.");
         if (string.Equals(Path.GetFullPath(inputPath), Path.GetFullPath(outputPngPath), StringComparison.OrdinalIgnoreCase)
             || File.Exists(outputPngPath)) throw new IOException("AI output must be a new separate file.");
@@ -36,14 +37,14 @@ public sealed partial class ImageUtilityAiService
             IEnumerable<string> Arguments(string selected) => PythonArguments(card, "--input", inputPath, "--output", outputPngPath, "--weights",
                 Path.Combine(card.InstallDirectory, weight.RelativePath), "--scale", scale.ToString(CultureInfo.InvariantCulture),
                 "--tile", tile.ToString(CultureInfo.InvariantCulture), "--overlap", overlap.ToString(CultureInfo.InvariantCulture), "--device", selected);
-            try { await RunAsync(runtime.Python, Arguments(runtime.Device), progress, token); }
+            try { await RunAsync(runtime.Python, Arguments(runtime.Device), progress, token, "SwinIR", runtime.Device); }
             catch (ImageUtilityException error) when (device == "auto" && runtime.Device != "cpu"
                 && !token.IsCancellationRequested && !File.Exists(outputPngPath) && PythonHardwareFailure.IsRecoverable(error.Message))
             {
                 // The previous worker has exited. Never retry storage/input failures or replace a partial file.
                 new ComponentEventLog().Write("swinir_cpu_fallback", new { runtime.Device, error.Message });
                 var cpu = await ManagedPythonRuntime.ResolveAsync("cpu", token);
-                await RunAsync(cpu.Python, Arguments("cpu"), progress, token);
+                await RunAsync(cpu.Python, Arguments("cpu"), progress, token, "SwinIR", "cpu");
             }
         }
         else
@@ -54,7 +55,7 @@ public sealed partial class ImageUtilityAiService
             var available = await NcnnDeviceProbe.ReadAsync(executable, token);
             var selected = Value(parameters, "device", "auto");
             ValidateNativeDevices(methodId, selected, available);
-            try { await RunAsync(executable, args, progress, token); }
+            try { await RunAsync(executable, args, progress, token, methodId, selected == "-1" ? "cpu" : selected); }
             catch (ImageUtilityException error) when (methodId == "real-cugan" && selected == "auto"
                 && available.Count > 0 && !token.IsCancellationRequested && !File.Exists(outputPngPath)
                 && NativeHardwareFailure.IsRecoverable(error.Message))
@@ -62,7 +63,7 @@ public sealed partial class ImageUtilityAiService
                 new ComponentEventLog().Write("ncnn_cpu_fallback", new { methodId, error.Message });
                 var cpu = new Dictionary<string, string>(parameters) { ["device"] = "-1" };
                 await RunAsync(executable, BuildNativeArguments(methodId, Path.GetDirectoryName(executable)!,
-                    inputPath, outputPngPath, cpu), progress, token);
+                    inputPath, outputPngPath, cpu), progress, token, methodId, "cpu");
             }
         }
         if (!File.Exists(outputPngPath) || new FileInfo(outputPngPath).Length == 0)

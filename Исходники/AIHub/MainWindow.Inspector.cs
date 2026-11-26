@@ -6,7 +6,6 @@ using AIHub.Controls;
 using AIHub.Services;
 using Lopata.Inspector;
 using CheckBox = System.Windows.Controls.CheckBox;
-using MessageBox = System.Windows.MessageBox;
 
 namespace AIHub;
 
@@ -22,15 +21,31 @@ public partial class MainWindow
     internal void InitializeSystemInspector()
     {
         ApplicationInspector.Initialize();
+        Window? ActiveWindow() => _processShutdownPending ? null : System.Windows.Application.Current.Windows
+            .OfType<Window>().FirstOrDefault(window => window.IsVisible && window.IsActive);
         ApplicationInspector.CanConfirmPreflight = token => Dispatcher.InvokeAsync(
-            () => IsVisible && IsActive && !_processShutdownPending, DispatcherPriority.Background, token).Task;
+            () => ActiveWindow() is not null, DispatcherPriority.Background, token).Task;
         ApplicationInspector.ConfirmPreflight = (result, token) => Dispatcher.InvokeAsync(() =>
         {
+            if (ActiveWindow() is not { } owner) return false;
             if (result.NoticeId is { } notice)
                 try { ApplicationInspector.Store?.ConfirmNoticeDisplayed(notice); }
                 catch (Exception error) { ApplicationInspector.LogUnavailable(error); }
-            return MessageBox.Show(this, result.Warning + "\n\n" + L("Inspector.Preflight.Continue"),
-                L("Inspector.Title"), MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) == MessageBoxResult.Yes;
+            var panel = new StackPanel();
+            panel.Children.Add(LiteraryUi.Text(result.Warning ?? ""));
+            var buttons = new WrapPanel { HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0) };
+            panel.Children.Add(buttons);
+            var dialog = LiteraryEditorDialogs.Create(owner, L("Inspector.Title"), panel, 500);
+            var proceed = LiteraryUi.Button(L("Inspector.Preflight.Run"), () => dialog.DialogResult = true);
+            var defer = LiteraryUi.Button(L("Inspector.Preflight.Defer"), () => dialog.DialogResult = false);
+            proceed.Margin = new Thickness(0, 0, 8, 0);
+            AutomationProperties.SetAutomationId(proceed, "Inspector.Preflight.Run");
+            AutomationProperties.SetAutomationId(defer, "Inspector.Preflight.Defer");
+            defer.IsCancel = true;
+            defer.IsDefault = true;
+            buttons.Children.Add(proceed);
+            buttons.Children.Add(defer);
+            return BackgroundUserDecision.ShowDialog(dialog, owner, token) == true;
         }, DispatcherPriority.Normal, token).Task;
         QueueInspectorChange();
     }

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using AIHub.Models;
 using AIHub.Services;
+using Lopata.Inspector;
 
 namespace AIHub.Tests;
 
@@ -56,6 +57,57 @@ public sealed class BackgroundOperationTests
         var controller = new BackgroundOperationController(Store); controller.Load(); controller.SetCountdown(true);
         Assert.AreEqual(BackgroundOperationPhase.Waiting, controller.State!.Phase);
         Assert.IsTrue(controller.State.UserPaused); Assert.AreEqual(4, controller.State.Checkpoint!.Value.GetInt32());
+    }
+
+    [TestMethod]
+    public async Task MemoryWarningParksTheQueueAndRuntimeFailureSurvivesReloadAndCpuRetry()
+    {
+        var operation = Input();
+        var controller = new BackgroundOperationController(Store);
+        var warning = InspectorDiagnostics.VideoMemoryWarning((long)(3.7 * (1L << 30)), 3L << 30, true);
+        var released = false;
+        async Task<int> Defer(CancellationToken token)
+        {
+            controller.SaveCheckpoint(7);
+            await ApplicationInspector.ConfirmOrDeferAsync(new(true, warning), null, token);
+            return 7;
+        }
+        await Assert.ThrowsAsync<InspectorDeferredException>(() => controller.RunAsync(operation, Defer,
+            () => { released = true; return Task.CompletedTask; }, CancellationToken.None));
+        var waiting = Store.Load()!;
+        Assert.IsTrue(released);
+        Assert.IsTrue(waiting.RequiresDecision);
+        Assert.AreEqual(BackgroundOperationPhase.Waiting, waiting.Phase);
+        Assert.AreEqual(warning, waiting.InspectorPreflightWarning);
+        Assert.AreEqual(7, waiting.Checkpoint!.Value.GetInt32());
+
+        var failure = new IOException("Local worker memory failure");
+        async Task<int> Fail(CancellationToken token)
+        {
+            var attempt = await ApplicationInspector.BeginAttemptAsync("ACE fixture", "cuda", "cuda:1", token,
+                3L << 30, 4L << 30, stage: "generating");
+            await attempt.FailAsync(failure, token, InspectorOutcome.OutOfVideoMemory);
+            throw failure;
+        }
+        await Assert.ThrowsAsync<IOException>(() => controller.RunAsync(waiting, Fail, () => Task.CompletedTask, CancellationToken.None));
+        var failedAttempt = Store.Load()!.LastInspectorFailure!;
+        Assert.AreEqual("cuda:1", failedAttempt.Device);
+        Assert.AreEqual(InspectorOutcome.OutOfVideoMemory, failedAttempt.Outcome);
+        Assert.AreEqual(operation.Id, failedAttempt.OperationId);
+
+        var restarted = new BackgroundOperationController(Store);
+        restarted.Load();
+        Assert.AreEqual(failedAttempt, restarted.State!.LastInspectorFailure);
+        await restarted.RunAsync(restarted.State, async token =>
+        {
+            var retry = await ApplicationInspector.BeginAttemptAsync("ACE fixture", "CPU", "cpu", token);
+            retry.Succeed();
+            return 7;
+        }, () => Task.CompletedTask, CancellationToken.None);
+        var completed = Store.Load()!;
+        Assert.IsTrue(completed.InspectorAttempts > failedAttempt.Attempt);
+        Assert.AreEqual(failedAttempt, completed.LastInspectorFailure);
+        Assert.AreEqual(BackgroundOperationPhase.Completed, completed.Phase);
     }
 
     [TestMethod]

@@ -70,6 +70,56 @@ def configure_duration(request, requested, gpu_config, llm, use_cot_metas):
     return requested, info
 
 
+def vram_sample(torch, index, needed):
+    from acestep.gpu_config import DEBUG_MAX_CUDA_VRAM_ENV, get_effective_free_vram_gb
+    try:
+        free, total = torch.cuda.mem_get_info(index)
+        available = get_effective_free_vram_gb(index)
+    except (RuntimeError, OSError):
+        return None
+    if not (0 <= free <= total and total > 0 and math.isfinite(available) and 0 <= available <= total / (1024 ** 3)):
+        return None
+    if available == 0 and free > 0 and not os.environ.get(DEBUG_MAX_CUDA_VRAM_ENV):
+        return None
+    return int(needed * (1024 ** 3)), int(available * (1024 ** 3))
+
+
+def inspector_preflight(stage, device, measurement):
+    if os.environ.get('LOPATA_ACE_INSPECTOR') != '1':
+        return
+    needed, free = measurement if measurement is not None else ('?', '?')
+    print(f'[LOPATA Inspector] {stage}|{device}|{needed}|{free}', flush=True)
+    if sys.stdin.readline().strip() != 'continue':
+        raise SystemExit(75)
+
+
+def use_selected_vram_check(handler, torch, device, index):
+    # This pinned XL pipeline checks activations after the weights are resident.
+    # Use the same budget formula with the actual CUDA ordinal. The upstream
+    # call defaults to ordinal zero even after torch.cuda.set_device().
+    if handler.offload_to_cpu or device.split(':')[0] != 'cuda':
+        handler._vram_preflight_check = lambda **_: None
+        return
+
+    def check(actual_batch_size, audio_duration, guidance_scale):
+        from acestep.gpu_config import DIT_INFERENCE_VRAM_PER_BATCH, VRAM_SAFETY_MARGIN_GB
+        mode = 'xl_base' if guidance_scale > 1.0 else 'xl_turbo'
+        seconds = audio_duration or 60.0
+        needed = DIT_INFERENCE_VRAM_PER_BATCH[mode] * actual_batch_size * max(1.0, seconds / 60.0) + VRAM_SAFETY_MARGIN_GB
+        sample = vram_sample(torch, index, needed)
+        inspector_preflight('generating', device, sample)
+        if sample is not None and sample[0] > sample[1]:
+            # The user may free memory while the confirmation window is open.
+            sample = vram_sample(torch, index, needed)
+        if sample is None or sample[0] <= sample[1]:
+            return None
+        needed, free = (size / (1024 ** 3) for size in sample)
+        message = f'Insufficient free VRAM: need ~{needed:.1f} GB, only {free:.1f} GB available.'
+        return {'audios': [], 'status_message': 'Error: ' + message, 'extra_outputs': {}, 'success': False, 'error': message}
+
+    handler._vram_preflight_check = check
+
+
 def main():
     overlay, source, model, companions, request_path, output, device, mode = sys.argv[1:]
     sys.path[:0] = [source, overlay]
@@ -153,12 +203,18 @@ def main():
                 offload_to_cpu=automatic('offload_to_cpu', gpu_config.offload_to_cpu_default),
                 offload_dit_to_cpu=automatic('offload_dit_to_cpu', gpu_config.offload_dit_to_cpu_default))
     receipt['initialization'] = init
+    if execution_device == 'cuda' and not init['offload_to_cpu'] and not init['offload_dit_to_cpu']:
+        from acestep.gpu_config import MODEL_VRAM
+        # The model is cold; the CUDA context already exists after mem_get_info.
+        needed = sum(MODEL_VRAM[key] for key in ('dit_xl_turbo', 'vae', 'text_encoder', 'silence_latent'))
+        inspector_preflight('model_loading', device, vram_sample(torch, index, needed))
     handler = AceStepHandler()
     print('[Load] ACE XL Turbo, VAE and text encoder', flush=True)
     status, ok = handler.initialize_service(**init)
     print('[ACE] ' + str(status), flush=True)
     if not ok:
         raise RuntimeError(status)
+    use_selected_vram_check(handler, torch, device, index if execution_device == 'cuda' else None)
     retake_runtime = runpy.run_path(str(Path(__file__).with_name('music_ace_retake.py')))
     receipt['retake_adapter'] = retake_runtime['install'](handler.model, params.retake_variance, params.retake_seed)
     receipt['references'] = cover_runtime['attach_references'](handler, request.get('audio_task'))

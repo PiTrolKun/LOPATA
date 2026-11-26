@@ -11,6 +11,7 @@ public partial class MainWindow
     private readonly DispatcherTimer _backgroundTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly CancellationTokenSource _backgroundLifetime = new();
     private bool _backgroundCommandRunning;
+    private Guid _shownBackgroundDiagnosis;
     private bool _applicationReady;
     internal bool CanStartInTray => _applicationTray?.IsAvailable == true;
     internal void OpenFromSecondInstance() { CompleteApplicationStartup(); RestoreFromTray(); }
@@ -116,6 +117,7 @@ public partial class MainWindow
             if (_backgroundCountdown.IsActive && _backgroundCountdown.Remaining(DateTimeOffset.UtcNow) == 0)
             {
                 _backgroundCountdown.Cancel(); _backgroundOperations.SetCountdown(false);
+                using var unattended = ApplicationInspector.UnattendedScope();
                 await ResumeBackgroundOperationAsync();
             }
         };
@@ -173,6 +175,12 @@ public partial class MainWindow
     private void RefreshBackgroundTray()
     {
         var state = _backgroundOperations?.State;
+        if (IsActive && state is { Phase: BackgroundOperationPhase.Waiting or BackgroundOperationPhase.Paused or BackgroundOperationPhase.Failed,
+                LastInspectorFailure: { } issue } && issue.Id != _shownBackgroundDiagnosis && ApplicationInspector.Explain(issue) is { } reason)
+        {
+            _shownBackgroundDiagnosis = issue.Id;
+            StatusText.Text = reason;
+        }
         _applicationTray?.SetOperation(_backgroundOperations?.HasPending == true ? state?.Phase : null,
             _backgroundCountdown.IsActive ? _backgroundCountdown.Remaining(DateTimeOffset.UtcNow) : null);
         _applicationTray?.SetPausedOperations(_backgroundOperations?.PausedOperations ?? [], _backgroundOperations?.BlocksNewWork == true,
@@ -220,6 +228,7 @@ public partial class MainWindow
         {
             if (_backgroundOperations is null) return;
             var state = _backgroundOperations.State;
+            if (state?.InspectorPreflightWarning is not null && !IsVisible) RestoreFromTray();
             if (state?.Kind == Services.ImageLayers.LayerAnalysisWork.Kind && !_backgroundOperations.HasLiveOperation(state.Id))
             {
                 if (state.RequiresDecision) RestoreFromTray();
@@ -257,6 +266,9 @@ public partial class MainWindow
     private void ReportBackgroundFailure(Exception error)
     {
         OwnedProcessRegistry.Log("background_command_failed", "Application", detail: error.GetType().Name);
+        if (error is InspectorDeferredException deferred) { StatusText.Text = deferred.Warning; return; }
+        if (ApplicationInspector.Explain(GenerationInspectorAttempt.Evidence(error)) is { } explanation)
+        { StatusText.Text = explanation; return; }
         StatusText.Text = L(error is BackgroundOperationWaitingException waiting ? waiting.Message : "Tray.OperationFailed");
         _applicationTray?.Notify(L("Settings.Title"), StatusText.Text, warning: true);
     }

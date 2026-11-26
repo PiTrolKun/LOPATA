@@ -83,14 +83,16 @@ public sealed partial class InspectorStore
         catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return false; }
     }
 
-    internal void FinishNotices(string operationId, int? attempt, InspectorOutcome outcome, InspectorExperience? experience)
+    internal void FinishNotices(string operationId, int? attempt, InspectorOutcome outcome, InspectorExperience? experience,
+        Guid attemptId = default)
     {
         WithLock("notices", () =>
         {
             var now = DateTimeOffset.UtcNow;
             foreach (var notice in RecentNotices(now).Where(item => item.OperationId == operationId
-                         && (attempt is null || item.Attempt == attempt)))
+                         && (attempt is null || item.Attempt == attempt && item.AttemptId == attemptId)))
             {
+                if (attempt is null && notice.Outcome is not null) continue;
                 var updated = notice with
                 {
                     Outcome = outcome.ToString(),

@@ -18,6 +18,7 @@ internal sealed class MusicStudioLease : IAsyncDisposable
     private readonly HashSet<string> _seen = new(StringComparer.Ordinal);
     private readonly string _data;
     public Uri Address { get; }
+    internal Process HostProcess => _process;
     private MusicStudioLease(Process process, Uri address, string data, Action<string> log)
     {
         _process = process; Address = address; _data = data; _log = log;

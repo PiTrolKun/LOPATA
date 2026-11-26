@@ -25,22 +25,31 @@ public sealed partial class LlamaServerRuntimeService
         }, log, progress, token);
 
     // Private consumers retain their exact payload, sampling policy and response usage checks.
-    internal Task<string> GeneratePrivateJsonAsync(DebugModelInfo model, string json, CancellationToken token) =>
-        CompletePayloadAsync(model, json, async (stream, _, cancellation) =>
+    internal async Task<string> GeneratePrivateJsonAsync(DebugModelInfo model, string json, CancellationToken token)
+    {
+        using var privacy = ApplicationInspector.PrivateScope();
+        return await CompletePayloadAsync(model, json, async (stream, _, cancellation) =>
         {
             using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
             return await reader.ReadToEndAsync(cancellation);
         }, text => _poetryJournal?.Record("inference", text), null, token);
+    }
 
-    internal Task<StructuredChatResult> GeneratePrivateStreamAsync(DebugModelInfo model, string json,
-        Action tokenReceived, CancellationToken token) => CompletePayloadAsync(model, json,
+    internal async Task<StructuredChatResult> GeneratePrivateStreamAsync(DebugModelInfo model, string json,
+        Action tokenReceived, CancellationToken token)
+    {
+        using var privacy = ApplicationInspector.PrivateScope();
+        return await CompletePayloadAsync(model, json,
         (stream, _, cancellation) => OpenAiSseStreamParser.ReadAsync(stream, null, cancellation, tokenReceived, retainInterruptedContent: true),
         text => _poetryJournal?.Record("inference", text), null, token);
+    }
 
     private async Task<T> CompletePayloadAsync<T>(DebugModelInfo model, string json,
         Func<Stream, IProgress<ModelStreamChunk>?, CancellationToken, Task<T>> readResponse,
         Action<string> log, IProgress<ModelStreamChunk>? progress, CancellationToken token)
     {
+        using var privacy = _letItOutEnabled ? ApplicationInspector.PrivateScope() : null;
+        using var operation = ApplicationInspector.EnsureOperation("local-text");
         await _completionGate.WaitAsync(token);
         try
         {
@@ -55,10 +64,17 @@ public sealed partial class LlamaServerRuntimeService
                 {
                     token.ThrowIfCancellationRequested();
                     _hardwareStartupFailure = false;
+                    _nativeFailure = Lopata.Inspector.InspectorOutcome.Unknown;
+                    var inspection = await ApplicationInspector.BeginAttemptAsync("llama-server", _selectedRuntime?.Bundle.Backend,
+                        _selectedRuntime is { } selected ? selected.Device?.Id ?? "cpu" : null, token, stage: "generating");
+                    var requestId = Guid.NewGuid();
+                    inspection.LinkRequest(requestId);
+                    if (_process is { } process) inspection.Attach(process);
                     try
                     {
                         using var content = new StringContent(json, Encoding.UTF8, "application/json");
                         using var message = new HttpRequestMessage(HttpMethod.Post, $"{Endpoint}/v1/chat/completions") { Content = content };
+                        message.Headers.Add("X-LOPATA-Request-Id", requestId.ToString("N"));
                         using var response = await _httpClient.SendAsync(message, HttpCompletionOption.ResponseHeadersRead, token);
                         await using var stream = await response.Content.ReadAsStreamAsync(token);
                         if (!response.IsSuccessStatusCode)
@@ -75,7 +91,9 @@ public sealed partial class LlamaServerRuntimeService
                             throw new HttpRequestException($"Model HTTP {(int)response.StatusCode}: {new string(buffer, 0, length)}",
                                 null, response.StatusCode);
                         }
-                        return await readResponse(stream, trackedProgress, token);
+                        var result = await readResponse(stream, trackedProgress, token);
+                        inspection.Succeed();
+                        return result;
                     }
                     catch (Exception error) when (error is IOException or HttpRequestException)
                     {
@@ -85,6 +103,12 @@ public sealed partial class LlamaServerRuntimeService
                             try { await _stderrPumpTask.WaitAsync(TimeSpan.FromSeconds(2), token); }
                             catch (TimeoutException) { log("Native diagnostics did not drain within the bounded deadline."); }
                         }
+                        await inspection.FailAsync(error, token, NativeOutcome(token));
+                        throw;
+                    }
+                    catch (Exception error)
+                    {
+                        await inspection.FailAsync(error, token);
                         throw;
                     }
                 }

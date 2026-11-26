@@ -330,7 +330,7 @@ public sealed class MusicGenerationSession : IDisposable
                         System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information));
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException error)
         {
             var explicitCancel = _cancelRequested && !ApplicationBackgroundOperations.ExitToken.IsCancellationRequested;
             if (explicitCancel) {
@@ -342,6 +342,7 @@ public sealed class MusicGenerationSession : IDisposable
             if (explicitCancel && _controller is { IsRunning: false, State.Kind: MusicGenerationRunner.BackgroundKind })
                 _controller.DiscardPending(_controller.State!.Id);
             _view.Status.Telemetry.Report(_telemetry, settled ? MusicGenerationStage.Completed : explicitCancel ? MusicGenerationStage.Cancelled : MusicGenerationStage.Paused);
+            if (error is InspectorDeferredException deferred) _view.Status.AppendLog(deferred.Warning);
         }
         catch (Exception error) { Outcome(job, MusicProjectOutcome.Failed, error.Message); ReportFailure(error); }
         finally { _cancel.Dispose(); _cancel = null; _working = false; _cancelRequested = false; if (!_disposed) RefreshButtons(); }
@@ -451,6 +452,12 @@ public sealed class MusicGenerationSession : IDisposable
             : error is MusicStemsException || error.Message.StartsWith("Music.Lora.", StringComparison.Ordinal) ||
                 error.Message.StartsWith("Music.Transform.", StringComparison.Ordinal) || error.Message.StartsWith("Music.Midi.", StringComparison.Ordinal)
                 ? _l(error.Message) : error.Message;
+        if (GenerationInspectorAttempt.Evidence(error) is { Outcome: not Lopata.Inspector.InspectorOutcome.Failure } diagnosis
+            && ApplicationInspector.Explain(diagnosis) is { } explanation)
+        {
+            _view.Status.AppendLog(reason);
+            reason = explanation;
+        }
         _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + reason);
         if (error.Message is "Music.Lora.ScoreCombinationFailure" or "Music.Lora.ScoreFailure") MusicLoraNotices.Show(_view, error.Message, _l);
     }

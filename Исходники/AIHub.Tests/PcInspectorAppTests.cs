@@ -52,6 +52,58 @@ public sealed class PcInspectorAppTests
     }
 
     [TestMethod]
+    public async Task AceChecksTheSelectedCardAndRequiresAnExplicitDecisionWhenMemoryIsShort()
+    {
+        const long free = 3L << 30;
+        var needed = (long)(3.7 * (1L << 30));
+        var line = FormattableString.Invariant($"[LOPATA Inspector] generating|cuda:1|{needed}|{free}");
+        Assert.IsTrue(MusicAceWorker.TryReadMemoryCheck(line, "cuda:1", out var stage, out var need, out var remaining));
+        Assert.AreEqual("generating", stage);
+        Assert.AreEqual(InspectorPreflightStatus.Insufficient, InspectorDiagnostics.CheckVideoMemory("cuda:1", need, remaining));
+        Assert.IsFalse(MusicAceWorker.TryReadMemoryCheck(line, "cuda:0", out _, out _, out _));
+        Assert.AreEqual(InspectorPreflightStatus.NotApplicable, InspectorDiagnostics.CheckVideoMemory("cpu", needed, free));
+        Assert.AreEqual(InspectorPreflightStatus.NotApplicable, InspectorDiagnostics.CheckVideoMemory("remote", needed, free));
+        Assert.AreEqual(InspectorPreflightStatus.Unknown, InspectorDiagnostics.CheckVideoMemory("cuda:1", needed, null));
+        Assert.AreEqual(InspectorPreflightStatus.Sufficient, InspectorDiagnostics.CheckVideoMemory("cuda:1", needed, 4L << 30));
+
+        var warning = InspectorDiagnostics.VideoMemoryWarning(need!.Value, remaining!.Value, true);
+        StringAssert.Contains(warning, "3,7 ГБ");
+        StringAssert.Contains(warning, "3,0 ГБ");
+        var decision = new InspectorPreflightResult(true, warning, Status: InspectorPreflightStatus.Insufficient);
+        await ApplicationInspector.ConfirmOrDeferAsync(decision, (_, _) => Task.FromResult(true), CancellationToken.None);
+        var deferred = await Assert.ThrowsExactlyAsync<InspectorDeferredException>(() =>
+            ApplicationInspector.ConfirmOrDeferAsync(decision, (_, _) => Task.FromResult(false), CancellationToken.None));
+        Assert.AreEqual(warning, deferred.Warning);
+        await Assert.ThrowsExactlyAsync<InspectorDeferredException>(() =>
+            ApplicationInspector.ConfirmOrDeferAsync(decision, null, CancellationToken.None));
+    }
+
+    [TestMethod]
+    public void ExplainsAdmissionFailureSeparatelyFromRuntimeMemoryAndNativeCrash()
+    {
+        Assert.AreEqual(InspectorOutcome.VideoMemoryAdmissionDenied,
+            GenerationFailureClassifier.FromWorker(1, "RuntimeError: Insufficient free VRAM: need ~3.7 GB, only 3.0 GB available.", "cuda:1"));
+        Assert.AreEqual(InspectorOutcome.OutOfVideoMemory,
+            GenerationFailureClassifier.FromWorker(1, "torch.OutOfMemoryError: CUDA out of memory.", "cuda:1"));
+        Assert.AreEqual(InspectorOutcome.OutOfMemory, GenerationFailureClassifier.FromWorker(1, "MemoryError", "cpu"));
+        Assert.AreEqual(InspectorOutcome.DriverFailure, GenerationFailureClassifier.FromWorker(1, "VK_ERROR_DEVICE_LOST", "Vulkan1"));
+        Assert.AreEqual(InspectorOutcome.WorkerFailure, GenerationFailureClassifier.FromWorker(unchecked((int)0xc0000005), null, null));
+        Assert.AreEqual(InspectorOutcome.Failure, GenerationFailureClassifier.FromWorker(1, "GPU utilization 100%", "cuda:1"));
+        Assert.AreEqual(InspectorOutcome.Cancelled,
+            GenerationFailureClassifier.FromException(new OperationCanceledException(), new CancellationToken(true)));
+    }
+
+    [TestMethod]
+    public void SameNamedGpusAreMatchedByTheBackendDeviceAndAmbiguousInventoryIsUnknown()
+    {
+        var chosen = new RuntimeDevice("Vulkan1", "Identical adapter", 16000, 7000);
+        var other = chosen with { Id = "Vulkan0", FreeBytes = 3000 };
+        Assert.AreEqual(7000L, RuntimeDeviceProbe.FindSameDevice([other, chosen], chosen)?.FreeBytes);
+        Assert.IsNull(RuntimeDeviceProbe.FindSameDevice([other, chosen, chosen], chosen));
+        Assert.IsNull(RuntimeDeviceProbe.FindSameDevice([other], chosen));
+    }
+
+    [TestMethod]
     public void ReportIncludesOnlyDisplayedAdviceWithoutIslandRatings()
     {
         var recent = DateTimeOffset.UtcNow;

@@ -68,7 +68,8 @@ public sealed class MusicHeartMuLaWorker : IMusicYueWorker
             MusicModelVariants.Artifact(root, MusicHeartMuLaCatalog.Variation, MusicHeartMuLaCatalog.Companions), requestPath, temporary, runtime.Device, probe ? "probe" : "generate"]);
         token.ThrowIfCancellationRequested();
         Log?.Invoke(probe ? "[Check] Importing official HeartMuLa API · timeout=90s" : "[Load] Starting official HeartMuLa pipeline");
-        using var process = OwnedProcessRegistry.Shared.Start(info, "Music.HeartMuLa");
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "Music.HeartMuLa", token,
+            runtime.Entry.Id, runtime.Device, inspect: !probe);
         var errors = new Queue<string>();
         var messages = new Queue<string>();
         async Task Pump(StreamReader reader, bool stderr) {
@@ -82,6 +83,7 @@ public sealed class MusicHeartMuLaWorker : IMusicYueWorker
             }
         }
         var stdout = Pump(process.StandardOutput, false); var stderr = Pump(process.StandardError, true);
+        var writing = false;
         try {
             // The API deadline starts only after preparation and process launch.
             // Hashing/extracting libraries is cancellable, but is not an API hang.
@@ -101,7 +103,15 @@ public sealed class MusicHeartMuLaWorker : IMusicYueWorker
             LastRequestReceipt = await File.ReadAllTextAsync(receipt, token);
             using var json = JsonDocument.Parse(LastRequestReceipt);
             ValidateReceipt(json.RootElement, payload);
+            writing = true;
             File.Move(temporary, output, false);
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error) {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token,
+                stderr.IsCompletedSuccessfully ? string.Join('\n', errors) : null,
+                writing ? Lopata.Inspector.InspectorOutcome.SaveFailure : null);
+            throw;
         }
         finally {
             if (!process.HasExited) { process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); }

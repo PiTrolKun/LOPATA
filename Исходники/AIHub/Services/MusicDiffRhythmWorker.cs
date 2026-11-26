@@ -76,7 +76,8 @@ public sealed class MusicDiffRhythmWorker : IMusicYueWorker
             MusicModelVariants.Artifact(root, MusicDiffRhythmCatalog.Variation, MusicDiffRhythmCatalog.Companions), requestPath, temporary, runtime.Device, probe ? "probe" : "generate"]);
         token.ThrowIfCancellationRequested();
         Log?.Invoke(probe ? "[Check] Importing official DiffRhythm API · timeout=90s" : "[Load] Starting official DiffRhythm pipeline");
-        using var process = OwnedProcessRegistry.Shared.Start(info, "Music.DiffRhythm2");
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "Music.DiffRhythm2", token,
+            runtime.Entry.Id, runtime.Device, inspect: !probe);
         var errors = new Queue<string>();
         var messages = new Queue<string>();
         async Task Pump(StreamReader reader, bool stderr) {
@@ -90,6 +91,7 @@ public sealed class MusicDiffRhythmWorker : IMusicYueWorker
             }
         }
         var stdout = Pump(process.StandardOutput, false); var stderr = Pump(process.StandardError, true);
+        var writing = false;
         try {
             // The API deadline starts only after preparation and process launch.
             // Hashing/extracting libraries is cancellable, but is not an API hang.
@@ -108,7 +110,15 @@ public sealed class MusicDiffRhythmWorker : IMusicYueWorker
             if (!File.Exists(receipt) || new FileInfo(receipt).Length > 1_048_576) throw new InvalidDataException("Missing or oversized DiffRhythm receipt.");
             LastRequestReceipt = await File.ReadAllTextAsync(receipt, token);
             using var json = JsonDocument.Parse(LastRequestReceipt);
+            writing = true;
             File.Move(temporary, output, false);
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error) {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token,
+                stderr.IsCompletedSuccessfully ? string.Join('\n', errors) : null,
+                writing ? Lopata.Inspector.InspectorOutcome.SaveFailure : null);
+            throw;
         }
         finally {
             if (!process.HasExited) { process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); }

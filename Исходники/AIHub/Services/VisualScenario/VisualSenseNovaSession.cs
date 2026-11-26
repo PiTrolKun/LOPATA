@@ -12,6 +12,7 @@ internal sealed class VisualSenseNovaSession : IImageGenerationWorker
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Process? _process;
     private Task<string>? _errors;
+    private string? _device;
     private DirectoryInfo? _scratch;
     private string? _root;
     private int _capacity;
@@ -61,6 +62,7 @@ internal sealed class VisualSenseNovaSession : IImageGenerationWorker
     {
         await ApplicationBackgroundOperations.RetireModelsExceptAsync(this);
         await _gate.WaitAsync(token);
+        GenerationInspectorAttempt? attempt = null;
         try
         {
             if (!IsRunning || _root is null || !ManagedModelPathIdentity.SameDirectory(root, _root))
@@ -68,10 +70,22 @@ internal sealed class VisualSenseNovaSession : IImageGenerationWorker
                 await StopAsync();
                 await StartAsync(root, token);
             }
-            return await action(_process!);
+            attempt = await ApplicationInspector.BeginAttemptAsync(Component, VisualSenseNova.Profile, _device, token,
+                model: VisualSenseNova.Id, stage: "generating");
+            attempt.Attach(_process!);
+            var result = await action(_process!);
+            attempt.Succeed();
+            return result;
         }
-        catch
+        catch (Exception error)
         {
+            if (attempt is not null)
+            {
+                var outcome = _process is { HasExited: true } process && !token.IsCancellationRequested
+                    ? GenerationFailureClassifier.FromWorker(process.ExitCode, _errors is { IsCompletedSuccessfully: true } ? await _errors : null, _device)
+                    : (Lopata.Inspector.InspectorOutcome?)null;
+                await attempt.FailAsync(error, token, outcome);
+            }
             await StopAsync();
             throw;
         }
@@ -97,11 +111,22 @@ internal sealed class VisualSenseNovaSession : IImageGenerationWorker
         foreach (var value in new[] { "-X", "utf8", "-B", Path.Combine(AppContext.BaseDirectory, "Tools", "SenseNova", "worker.py"),
                      "--model-root", root, "--packages", Path.Combine(_scratch.FullName, "packages"), "--device", runtime.Device })
             info.ArgumentList.Add(value);
-        var process = _process = OwnedProcessRegistry.Shared.Start(info, Component);
+        var process = _process = await ApplicationInspector.StartWorkerAsync(info, Component, token,
+            runtime.Entry.Id, runtime.Device, VisualSenseNova.Id);
+        _device = runtime.Device;
         _errors = ReadErrorsAsync(process.StandardError);
-        var ready = await ReadAsync(process, token);
-        _capacity = ready.GetProperty("capacity").GetInt32();
-        _root = root;
+        try
+        {
+            var ready = await ReadAsync(process, token);
+            _capacity = ready.GetProperty("capacity").GetInt32();
+            _root = root;
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error)
+        {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token, _errors.IsCompletedSuccessfully ? await _errors : null);
+            throw;
+        }
         OwnedProcessRegistry.Log("model_ready", Component, process.Id, $"device={runtime.Device}; capacity={_capacity}");
     }
 

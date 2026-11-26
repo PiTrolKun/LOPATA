@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using Lopata.Inspector;
 
 namespace AIHub.Services;
 
@@ -86,13 +87,19 @@ public sealed class MusicStudioWorker : IMusicYueWorker
                 Volatile.Write(ref semanticStopReason, reason);
             Emit(line);
         }
+        var inspection = await ApplicationInspector.BeginAttemptAsync("YuE2 Studio", profile.Pack, null, token,
+            model: MusicStudioRuntime.Variation, stage: "model_loading");
         await using var lease = await MusicStudioLease.StartAsync(modelsRoot, requestPath + ".studio", choice.Demand.ContextTokens,
             StudioLog, token, profile, request.Loras.Length > 0);
+        inspection.Attach(lease.HostProcess);
         var route = plan ? "v1/scores" : "v1/music/jobs";
         var submitted = await lease.SendAsync(route, body, token);
         var id = submitted.GetProperty("id").GetString() ?? throw new InvalidDataException("Studio job ID missing.");
         if (id.Length > 128 || id.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-')) throw new InvalidDataException("Invalid Studio job ID.");
+        inspection.LinkRequest(id);
+        inspection.Stage("generating");
         var last = "";
+        InspectorOutcome? outcome = null;
         try { while (true)
         {
             token.ThrowIfCancellationRequested(); await lease.ReadLogsAsync(token);
@@ -102,6 +109,7 @@ public sealed class MusicStudioWorker : IMusicYueWorker
             if (last != message) { Emit("[Studio] job=" + id + "; " + message); last = message ?? ""; }
             if (state is "failed" or "cancelled") {
                 var failure = "Studio " + state + ": " + (status.TryGetProperty("error", out var error) ? error.GetString() : message);
+                outcome = state == "cancelled" ? InspectorOutcome.Cancelled : GenerationFailureClassifier.FromWorker(1, failure, null);
                 Emit(failure); // Retain the native diagnostic alongside the human explanation.
                 throw new InvalidOperationException(request.Loras.Length > 0 && MusicLora.MusicLoraUsageHints.InvalidScore(failure)
                     ? request.Loras.Length > 1 ? "Music.Lora.ScoreCombinationFailure" : "Music.Lora.ScoreFailure" : failure);
@@ -149,18 +157,23 @@ public sealed class MusicStudioWorker : IMusicYueWorker
                         } else await lease.CopyAudioAsync(song.GetProperty("audio_url").GetString()!, temporary, token);
                         _ = MusicWaveFile.ReadDuration(temporary);
                     }
-                    File.Move(temporary, output, false);
+                    inspection.Stage("output_write");
+                    try { File.Move(temporary, output, false); }
+                    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                    { outcome = InspectorOutcome.SaveFailure; throw; }
                 } finally { if (File.Exists(temporary)) File.Delete(temporary); }
-                await lease.ReadLogsAsync(token); return;
+                await lease.ReadLogsAsync(token); inspection.Succeed(); return;
             }
             await Task.Delay(500, token);
         } }
-        catch (OperationCanceledException) when (token.IsCancellationRequested) {
+        catch (OperationCanceledException error) when (token.IsCancellationRequested) {
+            await inspection.FailAsync(error, token);
             using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             try { await lease.SendAsync(route + "/" + id, new { }, stop.Token); }
-            catch (Exception error) { Emit("[Studio] cancel acknowledgement: " + error.GetType().Name); }
+            catch (Exception cancelError) { Emit("[Studio] cancel acknowledgement: " + cancelError.GetType().Name); }
             throw;
         }
+        catch (Exception error) { await inspection.FailAsync(error, token, outcome); throw; }
         // Disposal then stops the owned process tree before the runner confirms pause.
     }
     private void Emit(string text)

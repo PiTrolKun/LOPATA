@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AIHub.Models;
+using Lopata.Updates;
 
 namespace AIHub.Services;
 
@@ -27,16 +28,17 @@ public sealed class ApplicationUpdateService
         var candidates = new List<(ApplicationReleaseVersion Version, JsonElement Release)>();
         for (var page = 1; page <= 5; page++)
         {
-            using var document = await ReadJsonAsync($"https://api.github.com/repos/{Repository}/releases?per_page=100&page={page}", token);
-            foreach (var release in document.RootElement.EnumerateArray())
+            var count = 0;
+            await foreach (var release in PublishedUpdateCatalog.ReadReleasePageAsync(_http, page, token))
             {
+                count++;
                 var version = ApplicationReleaseVersion.Parse(release.GetProperty("tag_name").GetString());
                 if (version is null || version.Channel == "dev" || release.GetProperty("draft").GetBoolean()
                     || version.CompareTo(current) <= 0
                     || (!includeBeta && (version.Channel == "beta" || release.GetProperty("prerelease").GetBoolean()))) continue;
-                candidates.Add((version, release.Clone()));
+                candidates.Add((version, release));
             }
-            if (document.RootElement.GetArrayLength() < 100) break;
+            if (count < 100) break;
         }
 
         foreach (var candidate in candidates.OrderByDescending(item => item.Version))

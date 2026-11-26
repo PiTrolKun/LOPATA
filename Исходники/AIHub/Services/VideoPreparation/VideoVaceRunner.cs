@@ -62,7 +62,8 @@ internal static class VideoVaceRunner
             RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "vace_worker.py"), request],
             extendedImportRoot: VideoH3Runtime.RuntimeRoot);
-        using var process = OwnedProcessRegistry.Shared.Start(info, "Video.VACE.Generate");
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "Video.VACE.Generate", token,
+            environment.Python.Entry.Id, environment.Python.Device, VideoVaceCatalog.ComponentId, inspect: !probeOnly);
         using var cancelled = token.Register(() => { try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { } });
         var errors = new StringBuilder();
         var stderr = Task.Run(async () =>
@@ -121,6 +122,13 @@ internal static class VideoVaceRunner
             if (process.ExitCode != 0 || !done)
                 throw new IOException(workerError?.StartsWith("VideoPrep.", StringComparison.Ordinal) == true
                     ? workerError : "VideoPrep.VaceRuntimeFailed: " + workerError + "\n" + errors);
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error)
+        {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token,
+                workerError ?? (stderr.IsCompletedSuccessfully ? errors.ToString() : null));
+            throw;
         }
         finally { if (!process.HasExited) process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); await stderr; }
     }

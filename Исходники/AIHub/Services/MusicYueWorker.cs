@@ -154,7 +154,7 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
             var args = new List<string> { "--model", model, "--request", requestPath, "--out", temporary,
                 "--max-seq", selected.Demand.ContextTokens.ToString(System.Globalization.CultureInfo.InvariantCulture) };
             if (synthesis) { args.Add("--vae"); args.Add(decoder); }
-            try { await RunAsync(directory, selected.Device.Name, executable, args, token); File.Move(temporary, outputPath, false); }
+            try { await RunAsync(directory, selected.Device, executable, args, token); File.Move(temporary, outputPath, false); }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }, async () => await MusicHardwareProbe.CheckAsync(runtimeDirectory, model, decoder, request, synthesis, token,
             line => Log?.Invoke(line), "GpuFailed"), line => Log?.Invoke(line), token);
@@ -174,15 +174,16 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
         await stream.FlushAsync(token);
         stream.Flush(flushToDisk: true);
     }
-    private async Task RunAsync(string directory, string backend, string executable, IReadOnlyList<string> arguments, CancellationToken token)
+    private async Task RunAsync(string directory, MusicDevice device, string executable, IReadOnlyList<string> arguments, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         var info = new ProcessStartInfo(Path.Combine(directory, executable))
         { WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true,
             RedirectStandardOutput = true, StandardErrorEncoding = Encoding.UTF8, StandardOutputEncoding = Encoding.UTF8 };
         foreach (var argument in arguments) info.ArgumentList.Add(argument);
-        MusicHardwareProbe.CleanEnvironment(info); info.Environment["GGML_BACKEND"] = backend;
-        using var process = OwnedProcessRegistry.Shared.Start(info, "Music.YuE2");
+        MusicHardwareProbe.CleanEnvironment(info); info.Environment["GGML_BACKEND"] = device.Name;
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "Music.YuE2", token,
+            device.Backend, device.Backend == "CPU" ? "cpu" : device.Name);
         var tail = new StringBuilder();
         var output = DrainAsync(process.StandardOutput, false);
         var errors = DrainAsync(process.StandardError, true);
@@ -194,9 +195,15 @@ public sealed class MusicYueWorker(string runtimeDirectory) : IMusicYueWorker
             if (process.ExitCode != 0)
             {
                 var diagnostic = $"YuE2 {executable} exited with {process.ExitCode}: {tail}";
-                if (backend != "CPU" && MusicHardwarePolicy.IsRecoverableGpuFailure(diagnostic)) throw new MusicGpuException(diagnostic);
+                if (device.Backend != "CPU" && MusicHardwarePolicy.IsRecoverableGpuFailure(diagnostic)) throw new MusicGpuException(diagnostic);
                 throw new InvalidOperationException(diagnostic);
             }
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error)
+        {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token, errors.IsCompletedSuccessfully ? tail.ToString() : null);
+            throw;
         }
         finally
         {

@@ -35,6 +35,28 @@ public static partial class RuntimeDeviceProbe
             .OrderByDescending(device => device.FreeBytes).ThenBy(device => device.Id, StringComparer.Ordinal).FirstOrDefault();
     }
 
+    internal static RuntimeDevice? FindSameDevice(IEnumerable<RuntimeDevice> devices, RuntimeDevice selected)
+    {
+        var matches = devices.Where(item => item.Id == selected.Id).Take(2).ToArray();
+        return matches is [var match] && match.Name == selected.Name && match.TotalBytes == selected.TotalBytes
+            ? match : null;
+    }
+
+    internal static async Task<long?> ReadSelectedFreeAsync(LlamaRuntimeSelection selection, CancellationToken token)
+    {
+        if (selection.Device is not { } selected || !ApplicationInspector.CheckEnabled) return null;
+        try
+        {
+            var output = await RunAsync(selection.Bundle.Server, "--list-devices", token);
+            return FindSameDevice(ParseDevices(output), selected)?.FreeBytes;
+        }
+        catch (Exception error) when (error is IOException or InvalidOperationException or TimeoutException or System.ComponentModel.Win32Exception)
+        {
+            ApplicationInspector.LogUnavailable(error);
+            return null;
+        }
+    }
+
     public static async Task<string> RunAsync(string executable, string argument, CancellationToken token)
     {
         if (argument is not ("--version" or "--list-devices")) throw new ArgumentException("Only runtime inventory is allowed.", nameof(argument));

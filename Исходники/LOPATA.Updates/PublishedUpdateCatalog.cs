@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -23,22 +24,25 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
     {
         var current = UpdateManifest.NumericVersion(currentVersion.EndsWith("-dev", StringComparison.Ordinal)
             ? currentVersion[..^4] : currentVersion);
-        var releases = new List<JsonElement>();
+        var releases = new List<(JsonElement Release, string Version)>();
         var feedComplete = false;
         // GitHub returns newest publication first, not numeric version order. Collect before selecting.
         for (var page = 1; page <= 10; page++)
         {
-            using var data = await ReadJsonAsync($"https://api.github.com/repos/{Repository}/releases?per_page=100&page={page}", token);
-            if (data.RootElement.ValueKind != JsonValueKind.Array) throw new InvalidDataException("Invalid release feed.");
-            releases.AddRange(data.RootElement.EnumerateArray().Where(r => !r.GetProperty("draft").GetBoolean()).Select(r => r.Clone()));
-            if (data.RootElement.GetArrayLength() < 100) { feedComplete = true; break; }
+            var count = 0;
+            await foreach (var release in ReadReleasePageAsync(http, page, token))
+            {
+                count++;
+                if (!release.GetProperty("draft").GetBoolean()
+                    && VersionFromTag(release.GetProperty("tag_name").GetString()) is { } version
+                    && UpdateManifest.NumericVersion(version) > current)
+                    releases.Add((release, version));
+            }
+            if (count < 100) { feedComplete = true; break; }
         }
-        var candidates = releases.Select(r => (Release: r, Version: VersionFromTag(r.GetProperty("tag_name").GetString())))
-            .Where(r => r.Version is not null && UpdateManifest.NumericVersion(r.Version) > current)
-            .OrderByDescending(r => UpdateManifest.NumericVersion(r.Version!)).ToArray();
-        foreach (var (release, versionOrNull) in candidates)
+        var candidates = releases.OrderByDescending(r => UpdateManifest.NumericVersion(r.Version)).ToArray();
+        foreach (var (release, version) in candidates)
         {
-            var version = versionOrNull!;
             var tag = release.GetProperty("tag_name").GetString()!;
             var manifestName = (requireSetup || preferFreshManifest) && Asset(release, EngineSetTransition.FreshManifestName) is not null
                 ? EngineSetTransition.FreshManifestName : FileManifestName;
@@ -72,22 +76,22 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
                 artifact = new(installerName, AssetUrl(installer.Value, tag, installerName), size, hash.ToLowerInvariant());
             }
             var notes = files?.Notes.Where(n => UpdateManifest.NumericVersion(n.Version) > current).ToArray()
-                ?? candidates.Where(c => UpdateManifest.NumericVersion(c.Version!) <= UpdateManifest.NumericVersion(version))
-                    .Select(c => new UpdateNote(c.Version!,
+                ?? candidates.Where(c => UpdateManifest.NumericVersion(c.Version) <= UpdateManifest.NumericVersion(version))
+                    .Select(c => new UpdateNote(c.Version,
                         c.Release.TryGetProperty("published_at", out var date) && date.ValueKind == JsonValueKind.String
                             && DateTimeOffset.TryParse(date.GetString(), out var parsed) ? parsed : DateTimeOffset.MinValue,
                         c.Release.TryGetProperty("body", out var body) ? body.GetString() ?? "" : "")).ToArray();
             var missing = notes.Any(n => string.IsNullOrWhiteSpace(n.Text))
                 || (files is null && !feedComplete)
-                || candidates.Where(c => UpdateManifest.NumericVersion(c.Version!) <= UpdateManifest.NumericVersion(version))
+                || candidates.Where(c => UpdateManifest.NumericVersion(c.Version) <= UpdateManifest.NumericVersion(version))
                     .Any(c => !notes.Any(n => n.Version == c.Version));
             var published = candidates
-                .Where(c => UpdateManifest.NumericVersion(c.Version!) <= UpdateManifest.NumericVersion(version))
+                .Where(c => UpdateManifest.NumericVersion(c.Version) <= UpdateManifest.NumericVersion(version))
                 .Where(c => delivery == UpdateDelivery.FilePatch
                     ? Asset(c.Release, FileManifestName) is not null ||
                       (preferFreshManifest && Asset(c.Release, EngineSetTransition.FreshManifestName) is not null)
                     : Asset(c.Release, $"LOPATA_Setup_{c.Version}.exe") is not null && Asset(c.Release, "lopata-update.json") is not null)
-                .Select(c => new PublishedUpdateVersion(c.Version!, c.Release.GetProperty("tag_name").GetString()!))
+                .Select(c => new PublishedUpdateVersion(c.Version, c.Release.GetProperty("tag_name").GetString()!))
                 .DistinctBy(c => UpdateManifest.NumericVersion(c.Version)).ToArray();
             return new(version, delivery, notes.OrderBy(n => UpdateManifest.NumericVersion(n.Version)).ToArray(), artifact, envelope, files, missing)
                 { PublishedVersions = published };
@@ -123,6 +127,19 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
 
     private async Task<JsonDocument> ReadJsonAsync(string url, CancellationToken token) =>
         JsonDocument.Parse(await ReadBytesAsync(url, 4 * 1024 * 1024, token));
+
+    public static async IAsyncEnumerable<JsonElement> ReadReleasePageAsync(HttpClient client, int page,
+        [EnumeratorCancellation] CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            $"https://api.github.com/repos/{Repository}/releases?per_page=100&page={page}");
+        request.Headers.UserAgent.ParseAdd("LOPATA-Updater/2.0");
+        using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+        response.EnsureSuccessStatusCode();
+        await using var input = await response.Content.ReadAsStreamAsync(token);
+        await foreach (var release in JsonSerializer.DeserializeAsyncEnumerable<JsonElement>(input, cancellationToken: token))
+            yield return release;
+    }
 
     private async Task<byte[]> ReadBytesAsync(string url, int maximumBytes, CancellationToken token)
     {

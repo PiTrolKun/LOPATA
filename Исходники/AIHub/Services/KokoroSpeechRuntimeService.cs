@@ -555,6 +555,36 @@ public sealed class KokoroSpeechRuntimeService : IDisposable
         }
 
         var requestId = Interlocked.Increment(ref _nextRequestId);
+        var inspection = await ApplicationInspector.BeginAttemptAsync("Kokoro", "PyTorch", "cpu", cancellationToken,
+            stage: command == "load" ? "model_loading" : "generating").ConfigureAwait(false);
+        inspection.LinkRequest(requestId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        inspection.Attach(process);
+        try
+        {
+            var reply = await SendWorkerRequestAsync(process, requestId, command, payload, cancellationToken).ConfigureAwait(false);
+            if (reply.Success) inspection.Succeed();
+            else
+            {
+                var error = new IOException("Kokoro request failed.");
+                var outcome = reply.ErrorType == "MemoryError" ? Lopata.Inspector.InspectorOutcome.OutOfMemory
+                    : reply.FailureExitCode is { } exit ? GenerationFailureClassifier.FromWorker(exit, reply.Diagnostics, "cpu")
+                    : Lopata.Inspector.InspectorOutcome.Failure;
+                await inspection.FailAsync(error, cancellationToken, outcome).ConfigureAwait(false);
+                if (outcome != Lopata.Inspector.InspectorOutcome.Failure && ApplicationInspector.Explain(GenerationInspectorAttempt.Evidence(error)) is { } reason)
+                    reply.Error = reason + "\n" + reply.Error;
+            }
+            return reply;
+        }
+        catch (Exception error)
+        {
+            await inspection.FailAsync(error, cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private async Task<KokoroWorkerResponse> SendWorkerRequestAsync(Process process, int requestId, string command,
+        object payload, CancellationToken cancellationToken)
+    {
         if (process.HasExited)
         {
             return await CaptureWorkerFailureAsync(process, requestId, command, cancellationToken).ConfigureAwait(false);
@@ -601,7 +631,8 @@ public sealed class KokoroSpeechRuntimeService : IDisposable
             ErrorStage = command,
             ErrorType = "WorkerProcessFailure",
             Error = failure.Error,
-            Diagnostics = failure.StandardError
+            Diagnostics = failure.StandardError,
+            FailureExitCode = process.HasExited ? process.ExitCode : null
         };
         StopWorker();
         return response;
@@ -785,6 +816,8 @@ public sealed class KokoroSpeechRuntimeService : IDisposable
         public string Error { get; set; } = string.Empty;
         public string Diagnostics { get; set; } = string.Empty;
         public string Traceback { get; set; } = string.Empty;
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int? FailureExitCode { get; set; }
     }
 
     private sealed record ProcessCpuSample(double AveragePercent, double PeakPercent);

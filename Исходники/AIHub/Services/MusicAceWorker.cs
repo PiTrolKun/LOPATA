@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using AIHub.Models;
+using Lopata.Inspector;
 
 namespace AIHub.Services;
 
@@ -63,37 +65,64 @@ public sealed class MusicAceWorker : IMusicYueWorker
         if (runtime.Device != "cpu") MusicLora.MusicLoraForecast.ObserveFreeGpu(MusicAceCatalog.Variation, runtime.FreeBytes);
         await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
         var temporary = output + "." + Guid.NewGuid().ToString("N") + ".partial";
+        var inspection = probe ? null : await ApplicationInspector.BeginAttemptAsync("ACE XL Turbo", runtime.Entry.Id,
+            runtime.Device, token, model: MusicAceCatalog.Variation, stage: "model_loading");
         var info = new ProcessStartInfo(runtime.Python) { UseShellExecute = false, CreateNoWindow = true,
-            RedirectStandardOutput = true, RedirectStandardError = true,
+            RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = !probe && !plan,
             StandardOutputEncoding = System.Text.Encoding.UTF8, StandardErrorEncoding = System.Text.Encoding.UTF8 };
+        if (info.RedirectStandardInput) info.StandardInputEncoding = new System.Text.UTF8Encoding(false);
         foreach (var key in new[] { "HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE" }) info.Environment[key] = "1";
         info.Environment["PYTHONNOUSERSITE"] = "1"; info.Environment["PYTHONDONTWRITEBYTECODE"] = "1";
         info.Environment["GRADIO_ANALYTICS_ENABLED"] = "False";
+        if (info.RedirectStandardInput) info.Environment["LOPATA_ACE_INSPECTOR"] = "1";
+        else info.Environment.Remove("LOPATA_ACE_INSPECTOR");
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "music_ace_worker.py"),
             prepared.Overlay, MusicAceSource.DirectoryPath, MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Variation),
             MusicModelVariants.Artifact(root, MusicAceCatalog.Variation, MusicAceCatalog.Companions), requestPath, temporary, runtime.Device, probe ? "probe" : plan?"plan":"generate"]);
         token.ThrowIfCancellationRequested();
         Log?.Invoke(probe ? "[Check] Importing official ACE API · timeout=90s" : "[Load] Starting official ACE pipeline");
         using var process = OwnedProcessRegistry.Shared.Start(info, "Music.ACE.XL");
+        inspection?.Attach(process);
         var errors = new Queue<string>();
-        async Task Pump(StreamReader reader) {
+        var diagnostic = new Queue<string>();
+        InspectorDeferredException? deferred = null;
+        async Task Pump(StreamReader reader, bool control) {
             string? line; while ((line = await reader.ReadLineAsync()) is not null) {
                 if (line.Length > 4096) line = line[..4096];
+                if (control && info.RedirectStandardInput && line.StartsWith(InspectorPrefix, StringComparison.Ordinal))
+                {
+                    try
+                    {
+                        if (TryReadMemoryCheck(line, runtime.Device, out var stage, out var needed, out var available)
+                            && inspection is not null)
+                            await inspection.CheckAsync(stage, needed, available, token);
+                    }
+                    catch (InspectorDeferredException error) { deferred = error; }
+                    try { await process.StandardInput.WriteLineAsync(deferred is null ? "continue" : "defer"); }
+                    catch (IOException) when (process.HasExited || token.IsCancellationRequested) { }
+                    continue;
+                }
                 if (line.StartsWith("[Hardware]", StringComparison.Ordinal)) LastHardware = line[10..].Trim();
                 lock (errors) { errors.Enqueue(line); while (errors.Count > 12) errors.Dequeue(); }
+                if (!control) { diagnostic.Enqueue(line); while (diagnostic.Count > 32) diagnostic.Dequeue(); }
                 try { Log?.Invoke(line); }
                 catch (Exception error) { OwnedProcessRegistry.Log("music_log_callback_failed", "Music.ACE.XL", detail: error.GetType().Name); }
             }
         }
-        var stdout = Pump(process.StandardOutput); var stderr = Pump(process.StandardError);
+        var stdout = Pump(process.StandardOutput, true); var stderr = Pump(process.StandardError, false);
+        var writing = false;
+        var failed = false;
         try {
             // The API deadline starts only after preparation and process launch.
             // Hashing/extracting libraries is cancellable, but is not an API hang.
             await ExecuteProcessPhaseAsync(async phaseToken => {
-                await process.WaitForExitAsync(phaseToken);
-                await Task.WhenAll(stdout, stderr);
+                var exit = process.WaitForExitAsync(phaseToken);
+                var first = await Task.WhenAny(exit, stdout, stderr);
+                await first;
+                await Task.WhenAll(exit, stdout, stderr);
             }, probe, token);
             token.ThrowIfCancellationRequested();
+            if (deferred is not null) throw deferred;
             if (process.ExitCode != 0) throw new IOException("ACE worker failed (" + process.ExitCode + "). " + string.Join('\n', errors));
             if(plan) {
                 if(new FileInfo(temporary).Length>200000)throw new InvalidDataException("Music.AceIdeas.Invalid");
@@ -104,13 +133,46 @@ public sealed class MusicAceWorker : IMusicYueWorker
             if (!File.Exists(receipt) || new FileInfo(receipt).Length > 1_048_576) throw new InvalidDataException("Missing or oversized ACE receipt.");
             LastRequestReceipt = await File.ReadAllTextAsync(receipt, token);
             using var json = JsonDocument.Parse(LastRequestReceipt);
+            writing = true;
+            inspection?.Stage("output_write");
             File.Move(temporary, output, false);
+            inspection?.Succeed();
+        }
+        catch (Exception error) {
+            failed = true;
+            if (inspection is not null)
+            {
+                InspectorOutcome? outcome = writing ? InspectorOutcome.SaveFailure
+                    : !token.IsCancellationRequested && error is not OperationCanceledException && process.HasExited && process.ExitCode != 0
+                        ? GenerationFailureClassifier.FromWorker(process.ExitCode,
+                            stderr.IsCompletedSuccessfully ? string.Join('\n', diagnostic) : null, runtime.Device) : null;
+                await inspection.FailAsync(error, token, outcome);
+            }
+            throw;
         }
         finally {
             if (!process.HasExited) { process.Kill(true); await process.WaitForExitAsync(CancellationToken.None); }
-            await Task.WhenAll(stdout, stderr);
-            foreach (var path in new[] { temporary, temporary + ".receipt.json" }) if (File.Exists(path)) File.Delete(path);
+            try { await Task.WhenAll(stdout, stderr); }
+            catch (Exception) when (failed) { }
+            finally { foreach (var path in new[] { temporary, temporary + ".receipt.json" }) if (File.Exists(path)) File.Delete(path); }
         }
+    }
+    private const string InspectorPrefix = "[LOPATA Inspector] ";
+
+    internal static bool TryReadMemoryCheck(string line, string device, out string stage, out long? needed, out long? available)
+    {
+        stage = "";
+        needed = available = null;
+        if (!line.StartsWith(InspectorPrefix, StringComparison.Ordinal)) return false;
+        var fields = line[InspectorPrefix.Length..].Split('|');
+        if (fields.Length != 4 || fields[1] != device || fields[0] is not ("model_loading" or "generating")) return false;
+        stage = fields[0];
+        if (fields[2] == "?" && fields[3] == "?") return true;
+        if (!long.TryParse(fields[2], NumberStyles.None, CultureInfo.InvariantCulture, out var required) || required <= 0
+            || !long.TryParse(fields[3], NumberStyles.None, CultureInfo.InvariantCulture, out var free) || free < 0) return false;
+        needed = required;
+        available = free;
+        return true;
     }
     private void StageFinished(string stage, TimeSpan elapsed)
     {

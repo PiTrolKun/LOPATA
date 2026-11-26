@@ -191,7 +191,7 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
             }, token);
 
     private static async Task RunAsync(string executable, IEnumerable<string> arguments,
-        IProgress<ImageUtilityProgress>? progress, CancellationToken token)
+        IProgress<ImageUtilityProgress>? progress, CancellationToken token, string? engine = null, string? device = null)
     {
         token.ThrowIfCancellationRequested();
         var info = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true,
@@ -205,24 +205,33 @@ public sealed partial class ImageUtilityAiService : IImageUtilityAiProcessor, ID
         else foreach (var value in arguments) info.ArgumentList.Add(value);
         info.Environment["PYTHONUTF8"] = "1"; info.Environment["PYTHONUNBUFFERED"] = "1";
         info.Environment["HF_HUB_OFFLINE"] = "1";
-        using var process = OwnedProcessRegistry.Shared.Start(info, "ImageUtility.AI");
+        using var process = await ApplicationInspector.StartWorkerAsync(info, "ImageUtility.AI", token,
+            engine, device, inspect: engine is not null);
         var errors = new System.Text.StringBuilder();
-        async Task Pump(StreamReader reader)
+        var diagnostic = new System.Text.StringBuilder();
+        async Task Pump(StreamReader reader, bool errorStream)
         {
             while (await reader.ReadLineAsync(token) is { } line)
             {
                 lock (errors) { if (errors.Length < 12000) errors.AppendLine(line); }
+                if (errorStream && diagnostic.Length < 12000) diagnostic.AppendLine(line);
                 if (line.StartsWith("LOPATA_PROGRESS ", StringComparison.Ordinal)
                     && double.TryParse(line[16..], System.Globalization.NumberStyles.Float,
                         System.Globalization.CultureInfo.InvariantCulture, out var fraction))
                     progress?.Report(new("ImageUtility.Ai.Processing", Fraction: Math.Clamp(fraction, 0, 1)));
             }
         }
-        var stdout = Pump(process.StandardOutput); var stderr = Pump(process.StandardError);
+        var stdout = Pump(process.StandardOutput, false); var stderr = Pump(process.StandardError, true);
         try
         {
             await Task.WhenAll(process.WaitForExitAsync(token), stdout, stderr);
             if (process.ExitCode != 0) throw new ImageUtilityException("ImageUtility.Ai.WorkerFailed", errors.ToString(), retryable: true);
+            ApplicationInspector.WorkerFinished(process);
+        }
+        catch (Exception error)
+        {
+            await ApplicationInspector.WorkerFailedAsync(process, error, token, stderr.IsCompletedSuccessfully ? diagnostic.ToString() : null);
+            throw;
         }
         finally
         {
