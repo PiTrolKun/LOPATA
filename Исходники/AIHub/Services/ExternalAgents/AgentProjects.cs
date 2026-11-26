@@ -44,7 +44,7 @@ internal static partial class AgentProjects
         new(ScenarioNavigationCatalog.VideoGeneration, ["VideoPrep.Open"],
             "Provide an idea and a title. Form is story or imagery. Scenes, shots, development, translations and reference prompts may be supplied as drafts. Missing images remain pending.", typeof(VideoDraft), ".lopataAIVid"),
         new(ScenarioNavigationCatalog.Literary, ["Literary.Select"], "Provide a premise and genre. The title becomes the work title and project folder name (up to 100 valid filename characters).", typeof(LiteraryDraft)),
-        new(ScenarioNavigationCatalog.Music, ["Music.Projects.Title"], "Prepare lyrics, artist and comments. Optional duration is 1–360 seconds.", typeof(MusicDraft)),
+        new(ScenarioNavigationCatalog.Music, ["Music.Projects.Title"], "Prepare lyrics, artist and comments. Let the model choose the duration or request a number of seconds supported by the selected variation and engine.", typeof(MusicDraft)),
         new(ScenarioNavigationCatalog.SongClip, ["SongClip.Projects"], "Prepare the lyrics, timings and visual prompt. The user can attach audio before generating.", typeof(SongDraft)),
         new(ScenarioNavigationCatalog.Shorts, ["Shorts.Projects.Manage"], "Prepare a description for a vertical video. Duration in seconds is 1–179.", typeof(ShortDraft)),
         new(ScenarioNavigationCatalog.VisualScenario, ["Visual.Projects"], "Provide the final image prompt for review before drawing.", typeof(VisualDraft)),
@@ -89,15 +89,18 @@ internal static partial class AgentProjects
             mechanics = ScenarioMechanics(scenario).Select(tag => new { tag.Id, title = language.T(tag.TitleKey), description = language.T(tag.DescriptionKey) }) };
     }
 
-    internal static object Contracts() => Scenarios.Select(type => new { type.Id, type.Instructions, schema = Schema(type) });
+    internal static object Contracts(string musicStudioRevision) => Scenarios.Select(type => new { type.Id, type.Instructions, schema = Schema(type, musicStudioRevision) });
 
     private static IEnumerable<ScenarioNavigationTag> ScenarioMechanics(string scenario) =>
         ScenarioNavigationCatalog.CloudTags.Where(tag => tag.TargetId == scenario);
 
-    private static JsonNode Schema(ProjectType type)
+    private static JsonNode Schema(ProjectType type, string? musicStudioRevision = null)
     {
         var schema = Json.GetJsonSchemaAsNode(type.Input, new() { TreatNullObliviousAsNonNullable = true });
-        DescribeVideoOptions(type.Id, schema);
+        if (type.Id == ScenarioNavigationCatalog.Music)
+            DescribeMusicDuration(schema, musicStudioRevision ?? MusicStudioRevisionForAgent());
+        else
+            DescribeVideoOptions(type.Id, schema);
         return schema;
     }
 

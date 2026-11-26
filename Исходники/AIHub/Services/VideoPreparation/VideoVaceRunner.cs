@@ -60,7 +60,8 @@ internal static class VideoVaceRunner
         var request = Path.Combine(directory, "request.json"); await File.WriteAllTextAsync(request, JsonSerializer.Serialize(payload), token);
         var info = new ProcessStartInfo(environment.Python.Python) { UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
-        ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "vace_worker.py"), request]);
+        ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "vace_worker.py"), request],
+            extendedImportRoot: VideoH3Runtime.ComfyImportRoot);
         using var process = OwnedProcessRegistry.Shared.Start(info, "Video.VACE.Generate");
         using var cancelled = token.Register(() => { try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { } });
         var errors = new StringBuilder();

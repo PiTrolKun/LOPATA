@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Globalization;
+using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -24,6 +25,7 @@ public sealed record MusicGenerationOptions(string Title, int Variants, int? Dur
     public bool SeparateTracks { get; init; }
     public MusicAudioTask AudioTask { get; init; } = new();
     public MusicMelody Melody { get; init; } = new();
+    internal bool UsesSourceDuration => Melody.Enabled || AudioTask.Enabled && AudioTask.NeedsSource;
 }
 
 public sealed class MusicGenerationControl : UserControl
@@ -36,6 +38,11 @@ public sealed class MusicGenerationControl : UserControl
     private Exception? _outputError;
     private readonly MusicOutputPreferences _outputPreferences;
     private readonly ComboBox _count = new() { Width = 65, MinHeight = 30 }, _duration = new() { Width = 190, MinHeight = 30 };
+    private const int CustomDurationOption = -1;
+    private int? _durationSeconds;
+    private bool _refreshingDuration;
+    private (int Manual, int Automatic) _displayedDurationLimits;
+    private readonly TextBlock _durationLimit = MusicAudioUi.Text(11);
     private readonly Button _start, _cancel, _poetry, _expert, _recipes, _video;
     private readonly MusicPoetryButtonIndicator _poetryIndicator;
     private MusicExpertSettings _expertSettings = new();
@@ -58,7 +65,7 @@ public sealed class MusicGenerationControl : UserControl
     private readonly Grid _settings = new();
     private readonly TextBlock _hardware = MusicAudioUi.Text(11);
     private Func<string, string> _l = key => key;
-    private bool _busy, _paused, _runtimeReady;
+    private bool _busy, _paused, _runtimeReady, _canStart;
     public Func<Task>? StartPause { get; set; }
     public Func<Task>? Cancel { get; set; }
     public event Action? OptionsChanged;
@@ -92,8 +99,7 @@ public sealed class MusicGenerationControl : UserControl
     public bool SeparateTracks { get => _output.SeparateTracks; set { _output.SeparateTracks = value; OptionsChanged?.Invoke(); } }
     public bool CanSeparate { set => _output.CanSeparate = value; }
     public Func<Task<bool>>? PrepareSeparation { get => _output.PrepareSeparation; set => _output.PrepareSeparation = value; }
-    public MusicGenerationOptions Options => new(_title.Text.Trim(), (int)(_count.SelectedItem ?? 1),
-        _duration.SelectedIndex <= 0 ? null : (int?)((ComboBoxItem)_duration.SelectedItem).Tag)
+    public MusicGenerationOptions Options => new(_title.Text.Trim(), (int)(_count.SelectedItem ?? 1), _durationSeconds)
         { Artist = _artistInput.Input.Text.Trim(), Comment = _commentInput.Input.Text, Output = _output.Settings, SeparateTracks = SeparateTracks, Melody = Melody, AudioTask = Variation == MusicAceCatalog.Variation || Variation == MusicStudioRuntime.Variation || AudioTask.Mode == MusicAudioTaskMode.Restore ? AudioTask : AudioTask with { Enabled = false } };
 
     public MusicGenerationControl(MusicOutputPreferences? outputPreferences = null)
@@ -117,7 +123,12 @@ public sealed class MusicGenerationControl : UserControl
         _countLabel.Width = _count.Width;
         _durationLabel.SetBinding(FrameworkElement.WidthProperty, new System.Windows.Data.Binding(nameof(Width)) { Source = _duration });
         var counts = new StackPanel { Margin = new(0, 4, 12, 0) }; counts.Children.Add(_countLabel); counts.Children.Add(_count);
-        var durations = new StackPanel { Margin = new(0, 4, 0, 0) }; durations.Children.Add(_durationLabel); durations.Children.Add(_duration);
+        var durations = new StackPanel { Margin = new(0, 4, 0, 0) };
+        durations.Children.Add(_durationLabel);
+        durations.Children.Add(_duration);
+        _durationLimit.SetBinding(FrameworkElement.WidthProperty, new System.Windows.Data.Binding(nameof(Width)) { Source = _duration });
+        _durationLimit.Margin = new(0, 3, 0, 0);
+        durations.Children.Add(_durationLimit);
         _output.Margin = new(0, 4, 0, 0); durations.Margin = new(0, 4, 12, 0);
         choices.Children.Add(counts); choices.Children.Add(durations); choices.Children.Add(_output); Add(choices, 0, 3, 2);
         _settings.SizeChanged += (_, _) => SizeChoices(_settings.ActualWidth);
@@ -192,12 +203,14 @@ public sealed class MusicGenerationControl : UserControl
         AutomationProperties.SetAutomationId(_title, "Music.Generation.Title");
         AutomationProperties.SetAutomationId(_count, "Music.Generation.Variants");
         AutomationProperties.SetAutomationId(_duration, "Music.Generation.Duration");
+        AutomationProperties.SetAutomationId(_durationLimit, "Music.Generation.DurationLimit");
+        ToolTipService.SetShowOnDisabled(_duration, true);
         ToolTipService.SetShowOnDisabled(_start, true);
         _start.Click += async (_, _) => { if (StartPause is not null) await StartPause(); };
         _cancel.Click += async (_, _) => { if (Cancel is not null) await Cancel(); };
         _title.TextChanged += (_, _) => OptionsChanged?.Invoke(); _count.SelectionChanged += (_, _) => OptionsChanged?.Invoke();
         _artistInput.Input.TextChanged += (_, _) => OptionsChanged?.Invoke(); _commentInput.Input.TextChanged += (_, _) => OptionsChanged?.Invoke();
-        _duration.SelectionChanged += (_, _) => OptionsChanged?.Invoke();
+        _duration.SelectionChanged += (_, _) => DurationChanged();
         Content = root; UpdateState(false, false, false, false);
     }
     public void SetHardware(string text) => _hardware.Text = text;
@@ -206,7 +219,8 @@ public sealed class MusicGenerationControl : UserControl
     {
         _title.Text = options.Title; _artistInput.Input.Text = options.Artist; _commentInput.Input.Text = options.Comment;
         _count.SelectedItem = options.Variants;
-        SelectDuration(options.DurationSeconds??0);
+        _durationSeconds = options.DurationSeconds == 0 ? null : options.DurationSeconds;
+        RefreshDuration();
         _output.Set(options.Output); _output.SeparateTracks = options.SeparateTracks; AudioTask = options.AudioTask; Melody = options.Melody; OptionsChanged?.Invoke();
     }
 
@@ -225,13 +239,9 @@ public sealed class MusicGenerationControl : UserControl
     public void Localize(Func<string, string> localize)
     {
         MusicAudioUi.Label(_video, localize("LyricVideo.Title"));
-        _l = localize; var selected = _duration.SelectedItem is ComboBoxItem durationItem?(int)durationItem.Tag:0; _duration.Items.Clear();
-        _duration.Items.Add(DurationItem(L("Automatic"), 0));
-        foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 })
-            _duration.Items.Add(DurationItem(seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), seconds));
-        SelectDuration(selected);
-        _heading.Text = L("Heading"); _titleLabel.Text = L("Title"); _countLabel.Text = L("Variants"); _durationLabel.Text = L("Duration");
-        _title.ToolTip = L("TitleHint"); _duration.ToolTip = L("DurationHint");
+        _l = localize;
+        _heading.Text = L("Heading"); _titleLabel.Text = L("Title"); _countLabel.Text = L("Variants");
+        _title.ToolTip = L("TitleHint");
         _titleInput.Localize(_l("Music.Output.Title")); _artistInput.Localize(_l("Music.Output.Artist"));
         _commentInput.Localize(_l("Music.Output.Comment")); _output.Localize(localize);
         MusicAudioUi.Label(_poetry, L("Poetry")); MusicAudioUi.Label(_cancel, L("Cancel"));
@@ -246,7 +256,9 @@ public sealed class MusicGenerationControl : UserControl
     public void UpdateState(bool canStart, bool busy, bool paused, bool runtimeReady, bool commandsDisabled = false)
     {
         _poetry.IsEnabled = OpenPoetry is not null;
+        _canStart = canStart;
         _busy = busy; _paused = paused; _commandsDisabled=commandsDisabled; _runtimeReady = runtimeReady; _settings.IsEnabled = !busy && !paused && !commandsDisabled;
+        if (_displayedDurationLimits != DurationLimits()) RefreshDuration();
         _expert.IsEnabled = !busy && !paused && !commandsDisabled;
         _recipes.IsEnabled = !busy && !paused && !commandsDisabled;
         Tuning.IsEnabled = !busy && !paused && !commandsDisabled;
@@ -254,24 +266,120 @@ public sealed class MusicGenerationControl : UserControl
         AudioTaskButton.IsEnabled = !busy && !paused && !commandsDisabled;
         MelodyButton.IsEnabled = !busy && !paused && !commandsDisabled;
         RefreshScores();
-        _start.IsEnabled = paused || busy || canStart && runtimeReady && _expertLoadError is null && _outputError is null; _cancel.IsEnabled = busy || paused;
-        if (commandsDisabled) _start.IsEnabled = _cancel.IsEnabled = false;
-        _readiness.Text = runtimeReady ? "" : L("RuntimeMissing"); UpdateCaption();
+        _cancel.IsEnabled = !commandsDisabled && (busy || paused);
+        UpdateCaption();
     }
+
+    private (int Manual, int Automatic) DurationLimits()
+    {
+        var studioRevision = Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.SelectedProfile.Revision : null;
+        return (MusicDurationPolicy.MaximumManualSeconds(Variation, studioRevision),
+            MusicDurationPolicy.AutomaticSeconds(Variation, studioRevision));
+    }
+
     private void RefreshDuration()
     {
-        var value = _duration.SelectedItem is ComboBoxItem item ? (int)item.Tag : 0;
-        _duration.Items.Clear(); _duration.Items.Add(DurationItem(L("Automatic"), 0));
-        foreach (var seconds in new[] { 30, 60, 120, 180, 240, 300, 360 }.Where(s => !MusicDiffRhythmCatalog.IsDiff(Variation) || s <= MusicDiffRhythmCatalog.MaximumDuration))
-            _duration.Items.Add(DurationItem(seconds < 60 ? L("ThirtySeconds") : string.Format(L("Minutes"), seconds / 60), seconds));
-        SelectDuration(value);
+        _displayedDurationLimits = DurationLimits();
+        var maximum = _displayedDurationLimits.Manual;
+        var current = _durationSeconds ?? 0;
+        _refreshingDuration = true;
+        try
+        {
+            _duration.Items.Clear();
+            _duration.Items.Add(DurationItem(L("Automatic"), 0));
+            var choices = Enumerable.Range(1, maximum / 60).Select(minutes => minutes * 60)
+                .Prepend(30).Append(maximum).Where(seconds => seconds >= 1 && seconds <= maximum);
+            if (current != 0) choices = choices.Append(current);
+            foreach (var seconds in choices.Distinct().Order())
+            {
+                var label = seconds switch
+                {
+                    30 => L("ThirtySeconds"),
+                    _ when seconds % 60 == 0 => string.Format(L("Minutes"), seconds / 60),
+                    _ => DurationText(seconds)
+                };
+                _duration.Items.Add(DurationItem(label, seconds));
+            }
+            _duration.Items.Add(DurationItem(L("DurationCustom"), CustomDurationOption));
+            _duration.SelectedItem = _duration.Items.Cast<ComboBoxItem>().First(item => (int)item.Tag == current);
+        }
+        finally { _refreshingDuration = false; }
+        UpdateDurationLimit();
+        UpdateCaption();
     }
-    private void SelectDuration(int value) {
-        if(value is >0 and <=360&&(!MusicDiffRhythmCatalog.IsDiff(Variation)||value<=MusicDiffRhythmCatalog.MaximumDuration)
-            &&!_duration.Items.Cast<ComboBoxItem>().Any(i=>(int)i.Tag==value))
-            _duration.Items.Add(DurationItem(TimeSpan.FromSeconds(value).ToString(@"mm\:ss"),value));
-        _duration.SelectedIndex=Enumerable.Range(0,_duration.Items.Count).FirstOrDefault(i=>(int)((ComboBoxItem)_duration.Items[i]).Tag==value);
+
+    private static string DurationText(int seconds) => MusicAudioUi.Time(TimeSpan.FromSeconds(seconds));
+
+    private void UpdateDurationLimit()
+    {
+        _durationLabel.Text = L(MusicAceCatalog.IsAce(Variation) ? "Duration" : "DurationCeiling");
+        var seconds = _durationSeconds is null ? _displayedDurationLimits.Automatic : _displayedDurationLimits.Manual;
+        _durationLimit.Text = string.Format(L("DurationUpTo"), DurationText(seconds));
+        var help = L(_durationSeconds is null ? "DurationHint" : "DurationManualHint");
+        _duration.ToolTip = help + " " + _durationLimit.Text;
+        AutomationProperties.SetName(_duration, _durationLabel.Text);
+        AutomationProperties.SetHelpText(_duration, (string)_duration.ToolTip);
     }
+
+    private bool IsDurationValid => _melody.Enabled || _audioTask.Enabled && _audioTask.NeedsSource
+        || _durationSeconds is null || _durationSeconds >= 1 && _durationSeconds <= _displayedDurationLimits.Manual;
+
+    private void DurationChanged()
+    {
+        if (_refreshingDuration || _duration.SelectedItem is not ComboBoxItem { Tag: int seconds }) return;
+        if (seconds == CustomDurationOption)
+        {
+            _duration.IsDropDownOpen = false;
+            ChooseCustomDuration();
+            RefreshDuration();
+        }
+        else
+        {
+            _durationSeconds = seconds == 0 ? null : seconds;
+            UpdateDurationLimit();
+            UpdateCaption();
+        }
+        OptionsChanged?.Invoke();
+    }
+
+    private void ChooseCustomDuration()
+    {
+        var maximum = _displayedDurationLimits.Manual;
+        var window = new Window { ResizeMode = ResizeMode.NoResize, ShowInTaskbar = false, SizeToContent = SizeToContent.Height };
+        PromptDialogUi.Configure(window, Window.GetWindow(this), L("DurationCustom"));
+        window.MinWidth = 320;
+        window.Width = 390;
+        window.MinHeight = 0;
+        window.Height = double.NaN;
+        var hint = string.Format(L("DurationCustomHint"), maximum);
+        var label = MusicAudioUi.Text();
+        label.Text = hint;
+        label.TextWrapping = TextWrapping.Wrap;
+        var input = new TextBox { Text = (_durationSeconds ?? Math.Min(60, maximum)).ToString(CultureInfo.CurrentCulture),
+            Margin = new(0, 8, 0, 8), MaxLength = 9, MinHeight = 32 };
+        AutomationProperties.SetAutomationId(input, "Music.Generation.DurationSecondsInput");
+        AutomationProperties.SetName(input, hint);
+        var apply = PromptDialogUi.Button(_l("Music.Wishes.Apply"), () => window.DialogResult = true, true);
+        var cancel = PromptDialogUi.Button(_l("Common.Cancel"), () => window.DialogResult = false);
+        apply.IsDefault = true;
+        cancel.IsCancel = true;
+        var value = 0;
+        void Validate() => apply.IsEnabled = int.TryParse(input.Text, NumberStyles.None, CultureInfo.CurrentCulture, out value)
+            && value >= 1 && value <= maximum;
+        input.TextChanged += (_, _) => Validate();
+        Validate();
+        var footer = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        footer.Children.Add(apply);
+        footer.Children.Add(cancel);
+        var root = new StackPanel { Margin = new(16) };
+        root.Children.Add(label);
+        root.Children.Add(input);
+        root.Children.Add(footer);
+        window.Content = root;
+        window.Loaded += (_, _) => { input.Focus(); input.SelectAll(); };
+        if (window.ShowDialog() == true) _durationSeconds = value;
+    }
+
     private static ComboBoxItem DurationItem(string label, int seconds) => new() {
         Content = new TextBlock { Text = label, TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis },
         Tag = seconds, ToolTip = label
@@ -285,7 +393,11 @@ public sealed class MusicGenerationControl : UserControl
     }
     private void UpdateCaption()
     {
-        _readiness.Text = _outputError is not null ? _l("Music.Output.Invalid") : _expertLoadError is not null ? _l("Music.Expert.Invalid") : _runtimeReady ? "" : L("RuntimeMissing");
+        _readiness.Text = !IsDurationValid ? string.Format(L("DurationInvalid"), DurationText(_durationSeconds!.Value),
+            DurationText(_displayedDurationLimits.Manual)) : _outputError is not null ? _l("Music.Output.Invalid")
+            : _expertLoadError is not null ? _l("Music.Expert.Invalid") : _runtimeReady ? "" : L("RuntimeMissing");
+        _start.IsEnabled = !_commandsDisabled && (_paused || _busy || _canStart && _runtimeReady
+            && _expertLoadError is null && _outputError is null && IsDurationValid);
         var key = _paused ? "Resume" : _busy ? "Pause" : "Start";
         _start.Content = _busy && !_paused ? Icon("M7,4 V20 M17,4 V20") : Icon("M7,4 L20,12 L7,20 Z");
         MusicAudioUi.Label(_start, L(key));

@@ -36,8 +36,11 @@ public sealed class MusicAceIdeaTests
     public void PreviewIsBoundedAndMalformedCodeStreamsAreRejected() {
         var idea=Idea();var use=new MusicAceIdeaUse(idea,Preview:true);use.Validate();
         Assert.HasCount(100,use.EffectiveData.Tokens());Assert.AreEqual(20,use.EffectiveData.Duration);
-        foreach(var codes in new[]{"bad",idea.Data.Codes+"injected",idea.Data.Codes.Replace("123","64000"),string.Concat(Enumerable.Repeat("<|audio_code_1|>",1801))})
+        foreach(var codes in new[]{"bad",idea.Data.Codes+"injected",idea.Data.Codes.Replace("123","64000"),string.Concat(Enumerable.Repeat("<|audio_code_1|>",3001))})
             Assert.Throws<InvalidDataException>(()=>(idea.Data with {Codes=codes}).Validate());
+        var longIdea = idea.Data with { Codes = string.Concat(Enumerable.Repeat("<|audio_code_1|>", 2000)), Duration = 400 };
+        longIdea.Validate();
+        Assert.HasCount(2000, longIdea.Tokens());
     }
     [TestMethod]
     public void ChangedInputsAndConflictingSourcesCannotSilentlyUseAnOldIdea() {

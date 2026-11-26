@@ -18,14 +18,18 @@ public static class MusicHeartMuLaRequest
         if (request.Wishes?.Performers.Length > 1 || request.Wishes?.NoChoir == true || request.Wishes?.NoBacking == true || request.Wishes?.Selections.GetValueOrDefault("avoid")?.Length > 0)
             warnings.Add("Vocal roles, exclusions and restrictions are tag wishes; the author API has no hard role or negative-prompt control.");
         if (Regex.IsMatch(lyrics, "[А-Яа-яЁё]")) warnings.Add("Russian quality is not verified; text is sent unchanged to the author tokenizer.");
-        return new() { ["lyrics"] = lyrics, ["original_lyrics"] = request.Lyrics, ["tags"] = tags, ["original_style"] = request.Style,
+        var payload = new Dictionary<string, object?> { ["lyrics"] = lyrics, ["original_lyrics"] = request.Lyrics, ["tags"] = tags, ["original_style"] = request.Style,
             ["seed"] = request.SoundSeed,
-            ["max_audio_length_ms"] = checked((request.DurationAutomatic ? settings.Integer("max_duration") : request.DurationSeconds) * 1000),
+            ["max_audio_length_ms"] = request.UseNativeDurationPolicy && request.DurationAutomatic ? null
+                : checked((request.DurationAutomatic ? settings.Integer("max_duration") : request.DurationSeconds) * 1000),
             ["topk"] = settings.Integer("topk"), ["temperature"] = settings.Get("temperature"), ["cfg_scale"] = settings.Get("cfg_scale"),
             ["lazy_load"] = settings.Integer("lazy_load") == 1,
             ["mula_dtype"] = settings.Integer("mula_dtype"), ["codec_dtype"] = settings.Integer("codec_dtype"),
             ["codec_on_cpu"] = settings.Integer("codec_on_cpu") == 1, ["warnings"] = warnings,
             ["source_revision"] = MusicHeartMuLaCatalog.SourceRevision, ["model_revision"] = MusicHeartMuLaCatalog.ModelRevision,
             ["codec_revision"] = MusicHeartMuLaCatalog.CompanionRevision, ["config_revision"] = MusicHeartMuLaCatalog.ConfigRevision };
+        if (request.UseNativeDurationPolicy)
+            payload["use_native_duration_policy"] = true;
+        return payload;
     }
 }

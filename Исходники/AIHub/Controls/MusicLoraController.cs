@@ -58,7 +58,7 @@ public sealed class MusicLoraController : IDisposable
         try {
             var window = new MusicLoraWindow(Window.GetWindow(_view), _root, _view.Generation.Variation, Selection,
                 _view.Wishes.RequestStyle, _view.Editor.Lyrics, _view.Generation.ExpertSettings,
-                _view.Generation.Options.DurationSeconds ?? 360, _l, _view.Wishes.State);
+                _view.Generation.Options.DurationSeconds ?? MusicDurationPolicy.AutomaticSeconds(_view.Generation.Variation), _l, _view.Wishes.State);
             if (window.ShowDialog() == true) Change(window.Selection);
         } catch (Exception error) { _view.Status.AppendLog(_l("Music.Lora.Failed") + " " + _l(error.Message)); }
     }

@@ -188,6 +188,87 @@ public sealed class MusicStudioTests
     });
 
     [TestMethod]
+    public void LongStudioBudgetKeepsModelEndingAndFitsTheAvailableContext()
+    {
+        var settings = MusicModelVariants.Defaults(MusicStudioRuntime.Variation);
+        var automatic = new MusicYueRequest("style", "lyrics", 1, 2, 600)
+        {
+            Expert = settings, UseNativeDurationPolicy = true, DurationAutomatic = true,
+            StudioRuntimeRevision = MusicStudioRuntime.Current.Revision, StudioRuntimePack = MusicStudioRuntime.Current.Pack
+        };
+        var fitted = automatic.FitContext(new DurationTokenizer(1800), automatic.Style, default);
+        Assert.AreEqual(15000, fitted.SequenceLimit);
+        Assert.AreEqual(MusicTextBudget.FillLimit - 1802 - 15000, fitted.EffectivePlanLimit);
+        Assert.AreEqual(MusicTextBudget.FillLimit - 1802, fitted.OutputReserve);
+        var shorter = automatic.FitContext(new DurationTokenizer(10000), automatic.Style, default);
+        Assert.IsTrue(shorter.SequenceLimit < 15000 && shorter.SequenceLimit > 9000);
+        Assert.Throws<MusicDurationContextException>(() =>
+            (automatic with { DurationAutomatic = false }).FitContext(new DurationTokenizer(10000), automatic.Style, default));
+        Assert.Throws<ArgumentOutOfRangeException>(() => (automatic with { DurationSeconds = 601 }).Validate());
+        Assert.Throws<ArgumentOutOfRangeException>(() => (automatic with { StudioRuntimeRevision = MusicStudioRuntime.Legacy.Revision }).Validate());
+        Assert.Throws<ArgumentOutOfRangeException>(() => (automatic with { UseNativeDurationPolicy = false }).Validate());
+
+        var custom = settings.Snapshot();
+        custom.Values["semantic_sampling.max_tokens"] = 11000;
+        custom.Values["abc_sampling.max_tokens"] = 3000;
+        var explicitBudget = (automatic with { Expert = custom }).FitContext(new DurationTokenizer(1800), automatic.Style, default);
+        Assert.AreEqual(11000, explicitBudget.SequenceLimit);
+        Assert.AreEqual(3000, explicitBudget.EffectivePlanLimit);
+    }
+
+    private sealed class DurationTokenizer(int tokens) : IMusicTokenizer
+    {
+        public int Count(string text, CancellationToken cancellation = default) => tokens;
+    }
+
+    [TestMethod]
+    public async Task RealStudioPromptWithExtendedAutomaticDuration()
+    {
+        var fixture = Environment.GetEnvironmentVariable("LOPATA_LONG_MUSIC_PROMPT");
+        var root = Environment.GetEnvironmentVariable("LOPATA_LONG_MUSIC_MODELS");
+        var output = Environment.GetEnvironmentVariable("LOPATA_LONG_MUSIC_OUTPUT");
+        if (string.IsNullOrWhiteSpace(fixture) || string.IsNullOrWhiteSpace(root) || string.IsNullOrWhiteSpace(output))
+            Assert.Inconclusive("Opt in with a local prompt, installed model files and a fresh output directory.");
+        if (Directory.Exists(output)) throw new IOException("Technical output directory must be new.");
+        Directory.CreateDirectory(output!);
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(fixture!));
+        var input = document.RootElement;
+        var style = input.GetProperty("style").GetString() ?? "";
+        var lyrics = input.GetProperty("lyrics").GetString() ?? "";
+        Assert.IsFalse(string.IsNullOrWhiteSpace(lyrics));
+
+        var settings = MusicModelVariants.Defaults(MusicStudioRuntime.Variation);
+        // This optional control proves the extended budget even for a model that would end the same prompt early.
+        if (Environment.GetEnvironmentVariable("LOPATA_LONG_MUSIC_MIN_TOKENS") is { } floor)
+        {
+            settings.Values["semantic_sampling.max_tokens"] = 15000;
+            settings.Values["semantic_sampling.min_tokens"] = int.Parse(floor, System.Globalization.CultureInfo.InvariantCulture);
+        }
+        var worker = new MusicStudioWorker();
+        var gate = new object();
+        worker.Log += line => { lock (gate) File.AppendAllText(Path.Combine(output!, "technical.log"), line + "\n"); };
+        var jobs = new MusicGenerationJobs(Path.Combine(output!, "jobs"));
+        var job = jobs.Create(root!, output!, "Проверка длительности YuE2", 1, 360, style, lyrics,
+            expert: settings, outputSettings: new(), durationAutomatic: true);
+        Assert.AreEqual(MusicStudioRuntime.Current.Revision, job.RuntimeRevision);
+        Assert.AreEqual(600, job.DurationSeconds);
+        using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(15));
+        await MusicAudioRuntime.Default.PrepareAsync(deadline.Token);
+        await new MusicGenerationRunner(jobs, worker).RunAsync(job.Id, deadline.Token);
+        var variant = jobs.Load(job.Id).Variants.Single();
+        Assert.IsTrue(variant.Completed);
+        Assert.IsTrue(variant.EffectiveDurationLimitSeconds > 360);
+        Assert.IsNotNull(variant.DurationStopReason);
+        var summary = JsonSerializer.Serialize(new {
+            job.DurationAutomatic, job.DurationSeconds, variant.EffectiveDurationLimitSeconds,
+            variant.DurationStopReason, ActualSeconds = variant.DurationSeconds,
+            variant.ResultPath, variant.Hardware, job.RuntimeRevision
+        });
+        await File.WriteAllTextAsync(Path.Combine(output!, "result.json"), summary);
+        Assert.IsTrue(variant.DurationSeconds > 360, $"The model ended in {variant.DurationSeconds} seconds ({variant.DurationStopReason}).");
+    }
+
+    [TestMethod]
     public async Task RealStudioPlanAndAudioAndCancellationReleaseOwnedProcesses()
     {
         var root = Environment.GetEnvironmentVariable("LOPATA_STUDIO_TEST_MODELS");

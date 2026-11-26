@@ -18,6 +18,8 @@ public sealed record MusicGenerationVariant(int LanguageSeed, int SoundSeed, str
     public string? AdditionalPath { get; init; }
     public string? AdditionalHash { get; init; }
     public double? DurationSeconds { get; init; }
+    public double? EffectiveDurationLimitSeconds { get; init; }
+    public string? DurationStopReason { get; init; }
     public double? GenerationSeconds { get; init; }
     public string? Hardware { get; init; }
     public string? PlanHardware { get; init; }
@@ -50,6 +52,8 @@ public sealed record MusicGenerationJob(string Id, string ModelsRoot, string Out
     public string Comment { get; init; } = "";
     public MusicCoverSelection? Cover { get; init; }
     public bool DurationAutomatic { get; init; }
+    // Missing in saved jobs predating model-specific duration. They keep their original worker contract.
+    public bool UseNativeDurationPolicy { get; init; }
     public bool SeparateTracks { get; init; }
     public MusicAudioTask? AudioTask { get; init; }
     public MusicMelody? Melody { get; init; }
@@ -90,20 +94,31 @@ public sealed class MusicGenerationJobs(string? directory)
     public MusicGenerationJob Create(string modelsRoot, string output, string title, int count, int duration, string style, string lyrics,
         MusicGenerationVariant? repeat = null, MusicExpertSettings? expert = null, MusicWishSnapshot? wishes = null,
         MusicOutputSettings? outputSettings = null, string artist = "", string comment = "", bool durationAutomatic = false,
-        MusicCoverSelection? cover = null, MusicLora.MusicLoraUse[]? loras = null, bool separateTracks = false)
+        MusicCoverSelection? cover = null, MusicLora.MusicLoraUse[]? loras = null, bool separateTracks = false,
+        MusicGenerationJob? repeatSource = null)
     {
         if (count is < 1 or > 8) throw new ArgumentOutOfRangeException(nameof(count));
         var settings = (expert ?? new()).Snapshot(); settings.Validate();
-        var engineSetId = EngineSetSelection.ActiveId;
-        var studioProfile = settings.Variation == MusicStudioRuntime.Variation
-            ? new[] { MusicStudioRuntime.Legacy, MusicStudioRuntime.Current }.Single(p => p.EngineSetId == engineSetId) : null;
+        if (repeatSource is not null && repeatSource.Variation != settings.Variation)
+            throw new InvalidDataException("Music repeat requires the original variation.");
+        var engineSetId = repeatSource is null ? EngineSetSelection.ActiveId : repeatSource.EngineSetId;
+        var studioProfile = settings.Variation != MusicStudioRuntime.Variation ? null : repeatSource is null
+            ? new[] { MusicStudioRuntime.Legacy, MusicStudioRuntime.Current }.Single(p => p.EngineSetId == engineSetId)
+            : MusicStudioRuntime.ResolveProfile(repeatSource.RuntimeRevision, repeatSource.RuntimePack);
         outputSettings?.Validate();
         if (separateTracks && (outputSettings is null || wishes?.Instrumental == true)) throw new InvalidDataException("Invalid separation request.");
-        if (MusicHeartMuLaCatalog.IsHeart(settings.Variation) && durationAutomatic) duration = settings.Integer("max_duration");
-        if (MusicDiffRhythmCatalog.IsDiff(settings.Variation)) {
-            if (durationAutomatic) duration = MusicDiffRhythmCatalog.MaximumDuration;
-            if (duration > MusicDiffRhythmCatalog.MaximumDuration) throw new InvalidDataException("DiffRhythm duration exceeds 240 seconds.");
+        var useNativeDurationPolicy = repeatSource?.UseNativeDurationPolicy ?? true;
+        if (repeatSource is not null)
+        {
+            duration = repeatSource.DurationSeconds;
+            durationAutomatic = repeatSource.DurationAutomatic;
         }
+        else if (durationAutomatic)
+            duration = MusicDurationPolicy.AutomaticSeconds(settings.Variation, studioProfile?.Revision);
+
+        var maximum = useNativeDurationPolicy ? MusicDurationPolicy.MaximumManualSeconds(settings.Variation, studioProfile?.Revision)
+            : MusicDurationPolicy.LegacyMaximumSeconds(settings.Variation);
+        if (duration < 1 || duration > maximum) throw new InvalidDataException($"Music duration must be between 1 and {maximum} seconds.");
         if (string.IsNullOrWhiteSpace(output)) throw new ArgumentException("Choose an audio output folder.");
         output = Path.GetFullPath(output); Directory.CreateDirectory(output);
         var now = DateTime.Now; var name = CleanTitle(string.Join(" — ", new[] { artist.Trim(), title.Trim() }.Where(s => s.Length != 0)));
@@ -127,7 +142,7 @@ public sealed class MusicGenerationJobs(string? directory)
                 DecoderRevision = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.CompanionRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.CompanionRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.CompanionRevision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision,
                 RuntimeRevision = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.SourceRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.SourceRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.SourceRevision : studioProfile is not null ? studioProfile.Revision : settings.Variation == MusicModelVariants.Bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision,
                 RuntimePack = MusicHeartMuLaCatalog.IsHeart(settings.Variation) ? MusicHeartMuLaCatalog.RuntimeRevision : MusicDiffRhythmCatalog.IsDiff(settings.Variation) ? MusicDiffRhythmCatalog.RuntimeRevision : MusicAceCatalog.IsAce(settings.Variation) ? MusicAceCatalog.RuntimeRevision : studioProfile is not null ? studioProfile.Pack : settings.Variation == MusicModelVariants.Bf16 ? "pytorch-bf16" : Path.GetFileName(MusicYueRuntime.DirectoryPath), Expert = settings, Wishes = wishes?.Snapshot(), DurationAutomatic = durationAutomatic,
-                Output = outputSettings, Artist = artist.Trim(), Comment = comment, Cover = cover, Loras = loras?.ToArray() ?? [], SeparateTracks = separateTracks };
+                UseNativeDurationPolicy = useNativeDurationPolicy, Output = outputSettings, Artist = artist.Trim(), Comment = comment, Cover = cover, Loras = loras?.ToArray() ?? [], SeparateTracks = separateTracks };
         if (settings.Variation == MusicModelVariants.Bf16 || MusicModelVariants.ExternalPipeline(settings.Variation)) job = job with { Variants = job.Variants.Select(v => v with { LanguageSeed = v.SoundSeed }).ToArray() };
         if (directory is null) _ = ManagedWorkStorage.Current.Job("Music/Jobs", job.Id, outputDirectory: output);
         Save(job); return job;
@@ -177,6 +192,7 @@ public sealed class MusicGenerationJobs(string? directory)
             : Path.GetFileName(variant.ResultPath), variant.DurationSeconds is { } seconds ? TimeSpan.FromSeconds(seconds)
             : MusicWaveFile.ReadDuration(variant.ResultPath), job.CreatedAt)
         { JobId = job.Id, Variant = index, AdditionalPath = variant.AdditionalPath, KaraokeReadiness = variant.KaraokeReadiness,
+            DurationStopReason = variant.DurationStopReason,
             BundleFolder = variant.Stems?.Published == true ? Path.GetDirectoryName(variant.ResultPath) : null,
             MusicPath = variant.Stems?.Published == true ? MusicStemBundle.MusicPath(variant) : null,
             AdditionalMusicPath = variant.Stems?.Published == true && variant.AdditionalPath is not null ? MusicStemBundle.MusicPath(variant, true) : null };
@@ -217,17 +233,21 @@ public sealed class MusicGenerationJobs(string? directory)
         if (job.Melody is { Enabled: true } melody && (job.DurationAutomatic
             || job.DurationSeconds != Math.Max(1, (int)Math.Ceiling(melody.Seconds)) || studio && job.Expert.Cot != "melody"))
             throw new InvalidDataException("Music.Midi.Invalid");
+        var maximum = job.UseNativeDurationPolicy ? MusicDurationPolicy.MaximumManualSeconds(job.Variation, job.RuntimeRevision)
+            : MusicDurationPolicy.LegacyMaximumSeconds(job.Variation);
         if (job.Schema is not (1 or 2) || job.Schema == 1 && (bf16 || studio || ace || diff || heart) || !MusicModelVariants.Supported(job.Variation) || job.Expert.Variation != job.Variation
             || job.ModelRevision != MusicModelVariants.Revision(job.Variation)
             || job.DecoderRevision != (heart ? MusicHeartMuLaCatalog.CompanionRevision : diff ? MusicDiffRhythmCatalog.CompanionRevision : ace ? MusicAceCatalog.CompanionRevision : bf16 ? MusicModelVariants.VaeRevision : MusicComponentCatalog.Revision)
             || (studio ? !MusicStudioRuntime.IsSupported(job.RuntimeRevision, job.RuntimePack) : job.RuntimeRevision != (heart ? MusicHeartMuLaCatalog.SourceRevision : diff ? MusicDiffRhythmCatalog.SourceRevision : ace ? MusicAceCatalog.SourceRevision : bf16 ? MusicModelVariants.RuntimeRevision : MusicYueRuntime.Revision))
             || (heart ? job.RuntimePack != MusicHeartMuLaCatalog.RuntimeRevision : diff ? job.RuntimePack != MusicDiffRhythmCatalog.RuntimeRevision : ace ? job.RuntimePack != MusicAceCatalog.RuntimeRevision : studio ? false : bf16 ? job.RuntimePack != "pytorch-bf16" : job.RuntimePack is not (MusicYueRuntime.CpuPack or MusicYueRuntime.CudaPack))
             || job.Variants.Length is < 1 or > 8 || !Path.IsPathFullyQualified(job.ModelsRoot)
-            || !Path.IsPathFullyQualified(job.OutputFolder) || job.DurationSeconds is < 1 or > 360
-            || diff && job.DurationSeconds > MusicDiffRhythmCatalog.MaximumDuration)
+            || !Path.IsPathFullyQualified(job.OutputFolder) || job.DurationSeconds < 1 || job.DurationSeconds > maximum)
             throw new InvalidDataException("Unsupported music job.");
         foreach (var v in job.Variants)
         {
+            if (v.EffectiveDurationLimitSeconds is { } limit && (!double.IsFinite(limit) || limit <= 0) ||
+                v.DurationStopReason is not (null or "duration_limit" or "natural_end"))
+                throw new InvalidDataException("Invalid music duration receipt.");
             if (v.KaraokeReadiness is { } readiness && (!Enum.IsDefined(readiness) ||
                 readiness != MusicKaraokeReadiness.Pending && !v.Completed)) throw new InvalidDataException("Invalid karaoke readiness.");
             if ((bf16 || ace || diff || heart) && v.LanguageSeed != v.SoundSeed) throw new InvalidDataException("This model requires one seed for all stages.");

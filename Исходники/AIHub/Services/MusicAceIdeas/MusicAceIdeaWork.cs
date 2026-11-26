@@ -7,7 +7,10 @@ namespace AIHub.Services.MusicAceIdeas;
 
 public sealed record MusicAceIdeaCandidate(int Seed,MusicAceIdea? Idea=null,string? Error=null);
 public sealed record MusicAceIdeaWorkRequest(string Id,string ProjectId,string ModelsRoot,string Style,
-    MusicProjectSnapshot Input,MusicAceIdeaCandidate[] Candidates);
+    MusicProjectSnapshot Input,MusicAceIdeaCandidate[] Candidates)
+{
+    public bool UseNativeDurationPolicy { get; init; }
+}
 
 public sealed class MusicAceIdeaStore(string root)
 {
@@ -45,8 +48,11 @@ public static class MusicAceIdeaWork
                 if(candidate.Idea is not null||candidate.Error is not null)continue;
                 try {
                     var plan=Path.Combine(store.Folder(work.Id),Guid.NewGuid().ToString("N")+".plan.json");
-                    var request=new MusicYueRequest(work.Style,work.Input.Lyrics,candidate.Seed,candidate.Seed,work.Input.DurationSeconds??360) {
-                        DurationAutomatic=work.Input.DurationSeconds is null,Expert=work.Input.Expert.Snapshot(),Wishes=work.Input.Wishes.Snapshot(),Loras=loras};
+                    int automaticDuration = work.UseNativeDurationPolicy
+                        ? MusicDurationPolicy.AutomaticSeconds(MusicAceCatalog.Variation) : 360;
+                    var request=new MusicYueRequest(work.Style,work.Input.Lyrics,candidate.Seed,candidate.Seed,work.Input.DurationSeconds??automaticDuration) {
+                        DurationAutomatic=work.Input.DurationSeconds is null,UseNativeDurationPolicy=work.UseNativeDurationPolicy,
+                        Expert=work.Input.Expert.Snapshot(),Wishes=work.Input.Wishes.Snapshot(),Loras=loras};
                     await worker.PlanAsync(MusicModelVariants.Artifact(work.ModelsRoot,MusicAceCatalog.Variation,MusicAceCatalog.Variation),
                         request,Path.ChangeExtension(plan,".request.json"),plan,attempt);
                     if(new FileInfo(plan).Length>200000)throw new InvalidDataException("Music.AceIdeas.Invalid");

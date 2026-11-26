@@ -1,4 +1,6 @@
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using AIHub.Models;
 using AIHub.Services.CharacterKnowledge;
 using AIHub.Services.GameSounds;
@@ -8,6 +10,7 @@ using AIHub.Services.Shorts;
 using AIHub.Services.SongClip;
 using AIHub.Services.SpeechAssets;
 using AIHub.Services.VisualScenario;
+using Lopata.Updates;
 
 namespace AIHub.Services.ExternalAgents;
 
@@ -31,16 +34,80 @@ internal static partial class AgentProjects
         }
     }
 
+    private static readonly string[] MusicProjectVariations = MusicModelSelectionCatalog.All.SelectMany(model => model.Variants)
+        .Where(variation => variation.Connected).Select(variation => MusicModelVariants.Normalize(variation.Id)).ToArray();
+
+    internal static string MusicStudioRevisionForAgent()
+    {
+        // A standalone agent has its own process selection. Read the saved preference shared with the desktop.
+        var path = Path.Combine(AppDataPaths.BaseDirectory, "engine-sets.json");
+        try
+        {
+            SafeUpdatePath.RejectLinks(path);
+            if (!File.Exists(path)) return MusicStudioRuntime.SelectedProfile.Revision;
+            using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+            if (stream.Length <= 64 * 1024 &&
+                JsonSerializer.Deserialize<EngineSetState>(stream, EngineSetCatalog.JsonOptions)?.ActiveId == MusicStudioRuntime.Current.EngineSetId)
+                return MusicStudioRuntime.Current.Revision;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException or JsonException)
+        {
+            // A damaged or unavailable preference must not advertise the longer Studio contract.
+        }
+        return MusicStudioRuntime.Legacy.Revision;
+    }
+
+    private static void DescribeMusicDuration(JsonNode schema, string studioRevision)
+    {
+        var properties = schema["properties"]!;
+        var variation = properties["variation"]!;
+        var studioId = MusicStudioRuntime.Variation;
+        variation["default"] = studioId;
+        var choices = new JsonArray(MusicProjectVariations.Select(id => (JsonNode?)JsonValue.Create(id)).ToArray());
+        choices.Add((JsonNode?)null);
+        variation["enum"] = choices;
+        var limits = MusicProjectVariations.ToDictionary(id => id, id => MusicDurationPolicy.MaximumManualSeconds(id, studioRevision));
+        var duration = properties["durationSeconds"]!;
+        duration["minimum"] = 1;
+        duration["maximum"] = limits.Values.Max();
+        duration["description"] = "Omit or send null to use the model’s Automatic mode. Manual limits (seconds): "
+            + string.Join(", ", limits.Select(pair => $"{pair.Key}: {pair.Value}")) + ".";
+        var modelLimits = new JsonArray();
+        foreach (var (id, maximum) in limits)
+        {
+            var acceptedVariations = new JsonArray(JsonValue.Create(id));
+            if (id == studioId) acceptedVariations.Add((JsonNode?)null);
+            var appliesTo = new JsonObject { ["properties"] = new JsonObject
+                { ["variation"] = new JsonObject { ["enum"] = acceptedVariations } } };
+            if (id != studioId) appliesTo["required"] = new JsonArray(JsonValue.Create("variation"));
+            modelLimits.Add(new JsonObject
+            {
+                ["if"] = appliesTo,
+                ["then"] = new JsonObject { ["properties"] = new JsonObject
+                    { ["durationSeconds"] = new JsonObject { ["maximum"] = maximum } } }
+            });
+        }
+        schema["allOf"] = modelLimits;
+    }
+
     private sealed class MusicDraft : Draft
     {
         public required string Lyrics { get; init; }
         public string Artist { get; init; } = "";
         public string Comment { get; init; } = "";
+        public string? Variation { get; init; }
         public int? DurationSeconds { get; init; }
         internal override object Create(Scenario scenario)
         {
-            var snapshot = new MusicProjectSnapshot { Title = Title, Artist = Artist, Lyrics = Lyrics,
-                Comment = Comment, DurationSeconds = DurationSeconds };
+            var variation = Variation ?? MusicStudioRuntime.Variation;
+            if (!MusicProjectVariations.Contains(variation, StringComparer.Ordinal))
+                throw new InvalidDataException("Unknown music variation. Read project_instructions for current variations.");
+            var maximum = MusicDurationPolicy.MaximumManualSeconds(variation, MusicStudioRevisionForAgent());
+            if (DurationSeconds is { } seconds && (seconds < 1 || seconds > maximum))
+                throw new InvalidDataException($"durationSeconds must be between 1 and {maximum} for {variation}. Omit it for Automatic.");
+            var snapshot = new MusicProjectSnapshot { Title = Title, Artist = Artist, Lyrics = Lyrics, Comment = Comment,
+                DurationSeconds = DurationSeconds, Model = MusicModelVariants.Family(variation), Variation = variation,
+                ModelRevision = MusicModelVariants.Revision(variation), Expert = MusicModelVariants.Defaults(variation) };
             snapshot.Validate();
             var store = MusicProjects.Default;
             var project = store.Fix(store.CreateDraft() with { Name = Title, ExternalAgentProject = true }, snapshot);

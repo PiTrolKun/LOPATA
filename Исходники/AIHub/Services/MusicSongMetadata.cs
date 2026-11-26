@@ -13,6 +13,8 @@ public static class MusicSongMetadata
         var studioProfile = job.Variation == MusicStudioRuntime.Variation
             ? MusicStudioRuntime.ResolveProfile(job.RuntimeRevision, job.RuntimePack) : null;
         var engineSetId = studioProfile?.EngineSetId ?? job.EngineSetId;
+        var sequenceLimit = variant.EffectiveDurationLimitSeconds is { } limit && !MusicModelVariants.ExternalPipeline(job.Variation)
+            ? (int)Math.Round(limit * 25) : job.Expert.SequenceLimit(job.DurationSeconds);
         var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
             ["title"] = string.IsNullOrWhiteSpace(job.Title) ? System.IO.Path.GetFileNameWithoutExtension(variant.ResultPath) : job.Title,
             ["artist"] = job.Artist, ["comment"] = job.Comment,
@@ -34,9 +36,15 @@ public static class MusicSongMetadata
             ["LOPATA_PARAMETERS"] = string.Join('\n', job.Expert.Values.Where(p => MusicModelVariants.SupportsParameter(job.Variation, p.Key)).OrderBy(p => p.Key).Select(p => p.Key + "=" +
                 (p.Key == "lm_seed" ? variant.LanguageSeed : p.Key == "seed" ? variant.SoundSeed : p.Value).ToString("R", culture))) +
                 (MusicModelVariants.ExternalPipeline(job.Variation) ? "\n" + string.Join('\n', job.Expert.TextValues.OrderBy(p => p.Key).Select(p => p.Key + "=" + p.Value)) : "\ncot_mode=" + job.Expert.Cot + "\neffective_cfg=" + job.Expert.Guidance.ToString("R", culture) +
-                "\nsemantic_output_limit=" + job.Expert.SequenceLimit(job.DurationSeconds).ToString(culture) +
-                "\neffective_semantic_min_tokens=" + Math.Min(job.Expert.Integer("semantic_sampling.min_tokens"), job.Expert.SequenceLimit(job.DurationSeconds)).ToString(culture))
+                "\nsemantic_output_limit=" + sequenceLimit.ToString(culture) +
+                "\neffective_semantic_min_tokens=" + Math.Min(job.Expert.Integer("semantic_sampling.min_tokens"), sequenceLimit).ToString(culture))
         };
+        if (variant.EffectiveDurationLimitSeconds is { } effectiveDuration)
+            result["LOPATA_DURATION_EFFECTIVE_LIMIT_SECONDS"] = effectiveDuration.ToString("R", culture);
+        if (variant.DurationSeconds is { } actualDuration)
+            result["LOPATA_DURATION_ACTUAL_SECONDS"] = actualDuration.ToString("R", culture);
+        if (variant.DurationStopReason is { } stopReason)
+            result["LOPATA_DURATION_STOP_REASON"] = stopReason;
         EngineSetMetadataIdentity.AddTags(result, engineSetId);
         if(variant.AceIdea is {} aceIdea)result["LOPATA_ACE_IDEA"]=JsonSerializer.Serialize(new {
             aceIdea.Idea.Id,aceIdea.Idea.Hash,aceIdea.Idea.Origin,aceIdea.Idea.Created,aceIdea.Idea.Seed,aceIdea.Idea.SourceJob,aceIdea.Idea.SourceVariant,
@@ -116,6 +124,8 @@ public static class MusicSongMetadata
             result["LOPATA_AUDIO_PROCESSING"] = variant.AudioTask?.Detail ?? "";
             if (!transform.UsesGenerator) {
                 foreach (var key in new[] { "LOPATA_VARIATION", "LOPATA_DURATION_REQUEST_SECONDS", "LOPATA_MODEL", "LOPATA_MODEL_REVISION", "LOPATA_DECODER_REVISION", "LOPATA_RUNTIME_REVISION", "LOPATA_RUNTIME_PACK", "LOPATA_ENGINE_REVISION", "LOPATA_STUDIO_SOURCE", "LOPATA_STUDIO_POLICY", "LOPATA_STUDIO_SOLVER", "LOPATA_PRECISION", "LOPATA_PARAMETERS", "LOPATA_LORAS", "LOPATA_LORA_RUNTIME", "LOPATA_SEED", "LOPATA_LM_SEED", "LOPATA_ACE_REQUEST", "LOPATA_STUDIO_REQUEST" }) result.Remove(key);
+                result.Remove("LOPATA_DURATION_EFFECTIVE_LIMIT_SECONDS");
+                result.Remove("LOPATA_DURATION_STOP_REASON");
                 result["LOPATA_ADAPTER"] = "LOPATA PCM soft pause gate / peak normalization; no music generation model used; input model history unknown";
             }
         }

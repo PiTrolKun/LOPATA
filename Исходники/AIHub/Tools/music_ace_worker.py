@@ -1,5 +1,6 @@
 """Offline process adapter to the unmodified, pinned official ACE-Step API."""
 import json
+import math
 import os
 from pathlib import Path
 import sys
@@ -23,6 +24,50 @@ class BoundedTokenizer:
                 if count > maximum:
                     raise ValueError(f'ACE text conditioning exceeds {maximum} tokens ({count}); shorten lyrics/caption. No text was silently truncated.')
         return self._tokenizer(text, **kwargs)
+
+
+def configure_duration(request, requested, gpu_config, llm, use_cot_metas):
+    policy = request.get('duration_policy')
+    if policy is None:
+        return requested, None
+    from acestep.constants import DURATION_MIN, DURATION_MAX
+    hardware_limit = gpu_config.max_duration_with_lm if llm is not None else gpu_config.max_duration_without_lm
+    maximum = min(hardware_limit, DURATION_MAX)
+    info = {'effective_limit_seconds': None, 'stop_reason': None}
+
+    def selected(seconds, source):
+        info.update(effective_limit_seconds=seconds, source=source)
+        print(f'[ACE] Duration {seconds:g}s ({source}); device limit {maximum:g}s.', flush=True)
+        return seconds
+
+    if requested is not None and requested > 0:
+        if requested > maximum:
+            raise ValueError(f'ACE requested duration {requested:g}s exceeds the limit for the selected device and mode ({maximum:g}s).')
+        return selected(requested, 'manual'), info
+
+    fallback = min(policy['fallback_seconds'], maximum)
+    if llm is None or not use_cot_metas:
+        return selected(fallback, 'fallback'), info
+
+    # This pinned API parses the CoT response before setting the Phase 2 code
+    # budget. Supply a missing duration there so CoT and DiT use the same value.
+    parse = llm.parse_lm_output
+
+    def parse_cot(text):
+        llm.parse_lm_output = parse
+        metadata, codes = parse(text)
+        try:
+            duration = float(metadata.get('duration'))
+        except (TypeError, ValueError):
+            duration = math.nan
+        if not math.isfinite(duration) or not DURATION_MIN <= duration <= maximum:
+            metadata = dict(metadata, duration=selected(fallback, 'fallback'))
+        else:
+            selected(duration, 'model')
+        return metadata, codes
+
+    llm.parse_lm_output = parse_cot
+    return requested, info
 
 
 def main():
@@ -59,7 +104,7 @@ def main():
     from acestep.handler import AceStepHandler
     from acestep.llm_inference import LLMHandler
     from acestep.inference import GenerationParams, GenerationConfig, generate_music
-    from acestep.gpu_config import get_global_gpu_config
+    from acestep.gpu_config import get_global_gpu_config, get_gpu_config, set_global_gpu_config
     import soundfile as sf
 
     with open(request_path, encoding='utf-8-sig') as file:
@@ -82,6 +127,15 @@ def main():
 
     runtime = request['runtime']
     gpu_config = get_global_gpu_config()
+    if request.get('duration_policy') is not None:
+        # The default upstream probe uses device zero. Keep all duration
+        # checks on the same tier as the adapter chosen for this process.
+        memory_gb = 0.0
+        if execution_device in ('cuda', 'xpu'):
+            selected = getattr(torch, execution_device).get_device_properties(index)
+            memory_gb = selected.total_memory / (1024 ** 3)
+        gpu_config = get_gpu_config(memory_gb)
+        set_global_gpu_config(gpu_config)
 
     def automatic(key, default):
         value = runtime[key]
@@ -90,7 +144,7 @@ def main():
     if mode == 'plan':
         ideas = runpy.run_path(str(Path(__file__).with_name('music_ace_ideas.py')))
         ideas['generate_plan'](request, companions, execution_device, output, receipt, LLMHandler,
-                               automatic('lm_offload_to_cpu', gpu_config.offload_to_cpu_default))
+                               automatic('lm_offload_to_cpu', gpu_config.offload_to_cpu_default), configure_duration)
         return
 
     init = dict(project_root=source, config_path=str(Path(model) / 'acestep-v15-xl-turbo'),
@@ -127,6 +181,10 @@ def main():
         receipt['lm_initialization'] = {'backend': 'pt', 'model': 'acestep-5Hz-lm-1.7B', 'offload_to_cpu': lm_offload}
         if not ok:
             raise RuntimeError(status)
+    params.duration, duration_info = configure_duration(
+        request, params.duration, get_global_gpu_config(), llm, params.use_cot_metas)
+    if duration_info is not None:
+        receipt['duration_policy'] = duration_info
     print('[Synth] Official ACE generation pipeline', flush=True)
 
     def progress(value, desc='', **kwargs):

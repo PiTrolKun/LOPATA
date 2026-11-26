@@ -75,7 +75,8 @@ internal static class VideoH3Runner
         var requestPath = Path.Combine(directory, "request.json"); await File.WriteAllTextAsync(requestPath, JsonSerializer.Serialize(payload), token);
         var info = new ProcessStartInfo(environment.Python.Python) { UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
-        ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "h3_worker.py"), requestPath]);
+        ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "h3_worker.py"), requestPath],
+            extendedImportRoot: VideoH3Runtime.ComfyImportRoot);
         using var process = OwnedProcessRegistry.Shared.Start(info, "Video.H3.Generate");
         using var activity = new VideoH3GpuActivity(process.Id, log);
         using var cancelled = token.Register(() => { try { if (!process.HasExited) process.Kill(true); } catch (InvalidOperationException) { } });

@@ -55,7 +55,7 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         using var auditLog = ComponentAudit.CaptureLog(line => Log?.Invoke(line));
         request.Validate(); LastRequestReceipt = null; LastRuntimePack = null; _devices.Clear();
         var profile = Profile(request);
-        var body = Request(request, plan, profile); // Reject unsupported settings before loading models.
+        _ = Request(request, plan, profile); // Reject unsupported settings before loading models.
         foreach (var warning in MusicLora.MusicLoraUsageHints.Warnings(request.Loras)) Emit(warning);
         if (request.EffectiveExpert.Variation != MusicStudioRuntime.Variation) throw new InvalidDataException("Studio settings required.");
         if (!plan && request.EffectiveExpert.Cot != "off" && string.IsNullOrWhiteSpace(request.Abc)) throw new InvalidDataException("Studio synthesis needs a saved score.");
@@ -64,8 +64,10 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(MusicStudioRuntime.Variation), token);
         if (profile.SeparateNormalization) await ComponentLicenseGate.EnsureAsync(MusicStudioRuntime.CurrentComponentId, token);
         await MusicStudioRuntime.VerifyAsync(profile, token); await MusicStudioRuntime.VerifyModelsAsync(modelsRoot, token);
-        await Task.Run(() => (request with { Style = MusicLora.MusicLoraCatalog.EffectiveStyle(request.Style, request.Loras) })
-            .CheckContext(new MusicTokenizer(MusicTokenizerMetadata.Read(model, token)), token), token);
+        var effectiveStyle = MusicLora.MusicLoraCatalog.EffectiveStyle(request.Style, request.Loras);
+        request = await Task.Run(() => request.FitContext(new MusicTokenizer(MusicTokenizerMetadata.Read(model, token)),
+            effectiveStyle, token), token);
+        var body = Request(request, plan, profile);
         var choice = await MusicHardwareProbe.CheckAsync(MusicYueRuntime.DirectoryPath, model,
             MusicModelVariants.Artifact(modelsRoot, MusicStudioRuntime.Variation, MusicComponentCatalog.DecoderId), request, !plan, token, Emit);
         // The original policy is a preflight estimate. Studio independently validates its device and may fall back.
@@ -77,7 +79,15 @@ public sealed class MusicStudioWorker : IMusicYueWorker
         await MusicLora.MusicLoraAssets.EnsureAsync(modelsRoot, request.Loras, request.EffectiveExpert.Variation, token);
         using var adapters = await MusicLora.MusicLoraStudioStage.CreateAsync(modelsRoot, requestPath + ".studio", request.Loras, token);
         if (request.Loras.Length > 0) Emit("[LoRA] " + string.Join(", ", request.Loras.Select(x => x.Id + "=" + x.Strength)));
-        await using var lease = await MusicStudioLease.StartAsync(modelsRoot, requestPath + ".studio", choice.Demand.ContextTokens, Emit, token, profile, request.Loras.Length > 0);
+        string? semanticStopReason = null;
+        void StudioLog(string line)
+        {
+            if (!plan && MusicStudioOutput.SemanticStopReason(line) is { } reason)
+                Volatile.Write(ref semanticStopReason, reason);
+            Emit(line);
+        }
+        await using var lease = await MusicStudioLease.StartAsync(modelsRoot, requestPath + ".studio", choice.Demand.ContextTokens,
+            StudioLog, token, profile, request.Loras.Length > 0);
         var route = plan ? "v1/scores" : "v1/music/jobs";
         var submitted = await lease.SendAsync(route, body, token);
         var id = submitted.GetProperty("id").GetString() ?? throw new InvalidDataException("Studio job ID missing.");
@@ -98,13 +108,18 @@ public sealed class MusicStudioWorker : IMusicYueWorker
             }
             if (state is "done" or "completed")
             {
+                await lease.ReadLogsAsync(token);
                 if (!plan && status.TryGetProperty("generation_settings", out var effective)) {
                     if (profile.SeparateNormalization && (effective.ValueKind != JsonValueKind.Object
                         || effective.GetProperty("output_format").GetString() != "wav32"
                         || effective.GetProperty("companion_scale").GetDouble() != 1
                         || effective.GetProperty("solver").GetString() != request.EffectiveExpert.StudioSolver))
                         throw new InvalidDataException("Studio effective decoder policy differs from the submitted request.");
-                    var receipt = effective.GetRawText();
+                    var settings = effective.Deserialize<Dictionary<string, JsonElement>>() ??
+                        throw new InvalidDataException("Missing Studio request settings.");
+                    settings["duration_policy"] = JsonSerializer.SerializeToElement(
+                        MusicStudioOutput.DurationPolicy(effective, Volatile.Read(ref semanticStopReason)));
+                    var receipt = JsonSerializer.Serialize(settings);
                     if (receipt.Length > 1_048_576) throw new InvalidDataException("Oversized Studio request receipt.");
                     LastRequestReceipt = receipt;
                 }
@@ -123,6 +138,8 @@ public sealed class MusicStudioWorker : IMusicYueWorker
                             var receipt = JsonSerializer.Serialize(new { schema = 2, engine_set = profile.EngineSetId,
                                 runtime_revision = profile.Revision, studio_source = profile.SourceRevision, engine_revision = profile.EngineRevision,
                                 generation_settings = status.GetProperty("generation_settings"),
+                                duration_policy = MusicStudioOutput.DurationPolicy(status.GetProperty("generation_settings"),
+                                    Volatile.Read(ref semanticStopReason)),
                                 ignored_generation_fields = new[] { "peak_clip" },
                                 submitted_policy = new { companion_scale = 1, lyric_timing = request.ScoreLyricTiming, solver = request.EffectiveExpert.StudioSolver },
                                 processing, conversion = "Studio normalized FLAC24 -> FFmpeg PCM16 stereo 48000 Hz" });

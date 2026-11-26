@@ -12,6 +12,7 @@ internal static class VideoH3Runtime
 {
     private static readonly SemaphoreSlim Gate = new(1);
     private static string Root => Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3", VideoH3RuntimeCatalog.Data.Revision);
+    internal static string ComfyImportRoot => Path.Combine(Root, "video-h3-source-comfy");
 
     internal static async Task<string> PrepareSharedLibrariesAsync(ManagedModelArtifactCard libraries, CancellationToken token, Action<string> log)
     {

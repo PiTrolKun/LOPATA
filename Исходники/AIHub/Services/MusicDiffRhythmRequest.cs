@@ -9,8 +9,10 @@ public static class MusicDiffRhythmRequest
     {
         request.Validate(); var settings = request.EffectiveExpert;
         if (!MusicDiffRhythmCatalog.IsDiff(settings.Variation)) throw new InvalidDataException("DiffRhythm settings required.");
-        var duration = request.DurationAutomatic ? MusicDiffRhythmCatalog.MaximumDuration : request.DurationSeconds;
-        if (duration > MusicDiffRhythmCatalog.MaximumDuration) throw new InvalidDataException("DiffRhythm duration: 1–240 seconds; automatic = 240 second ceiling.");
+        var maximum = request.UseNativeDurationPolicy ? MusicDurationPolicy.MaximumManualSeconds(settings.Variation) : MusicDiffRhythmCatalog.MaximumDuration;
+        var automatic = request.UseNativeDurationPolicy ? MusicDurationPolicy.AutomaticSeconds(settings.Variation) : MusicDiffRhythmCatalog.MaximumDuration;
+        var duration = request.DurationAutomatic ? automatic : request.DurationSeconds;
+        if (duration > maximum) throw new InvalidDataException($"DiffRhythm duration must be between 1 and {maximum} seconds.");
         var warnings = new List<string>();
         if (request.Wishes?.Instrumental == true)
             throw new InvalidDataException("The pinned DiffRhythm 2 pipeline does not implement instrumental generation.");
@@ -30,13 +32,16 @@ public static class MusicDiffRhythmRequest
             warnings.Add("Vocal roles and restrictions are style wishes; this pipeline provides no separate hard control for them.");
         if (settings.Integer("experimental_ru") == 1 && Regex.IsMatch(lyrics, "[А-Яа-яЁё]"))
             warnings.Add("Experimental Russian eSpeak frontend; author model and decoder unchanged. Russian quality is unverified.");
-        return new() { ["lyrics"] = lyrics, ["original_lyrics"] = request.Lyrics, ["style"] = style,
+        var payload = new Dictionary<string, object?> { ["lyrics"] = lyrics, ["original_lyrics"] = request.Lyrics, ["style"] = style,
             ["original_style"] = request.Style,
             ["seed"] = request.SoundSeed, ["duration"] = duration, ["steps"] = settings.Integer("steps"),
             ["cfg"] = settings.Get("cfg"), ["solver"] = MusicDiffRhythmCatalog.Parameters.Single(p => p.Key == "solver").Choices![settings.Integer("solver")],
             ["fake_stereo"] = settings.Integer("fake_stereo") == 1, ["experimental_ru"] = settings.Integer("experimental_ru") == 1,
             ["warnings"] = warnings, ["source_revision"] = MusicDiffRhythmCatalog.SourceRevision,
             ["model_revision"] = MusicDiffRhythmCatalog.ModelRevision, ["companion_revision"] = MusicDiffRhythmCatalog.CompanionRevision };
+        if (request.UseNativeDurationPolicy)
+            payload["duration_policy"] = new { maximum_seconds = maximum };
+        return payload;
     }
     internal static bool HasUnsupportedLegacySection(string lyrics)
     {

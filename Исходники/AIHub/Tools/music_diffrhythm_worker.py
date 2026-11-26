@@ -106,7 +106,11 @@ def main():
             blocks = api.parse_lyrics(tokenizer, request['lyrics'])
             tokens = [token for line in blocks for token in line]
             if not tokens: raise ValueError('Empty lyrics after preprocessing.')
-            print(f'[AR] Lyrics: {len(tokens)} tokens; {len(tokenizer.rows)} lines; duration ceiling={request["duration"]}s', flush=True)
+            duration = request['duration']
+            policy = request.get('duration_policy')
+            if policy is not None and (type(duration) is not int or not 1 <= duration <= policy['maximum_seconds']):
+                raise ValueError(f'DiffRhythm duration must be between 1 and {policy["maximum_seconds"]} seconds.')
+            print(f'[AR] Lyrics: {len(tokens)} tokens; {len(tokenizer.rows)} lines; duration ceiling={duration}s', flush=True)
             for warning in request['warnings']: print('[Request] ' + warning, flush=True)
             random.seed(request['seed']); np.random.seed(request['seed']); torch.manual_seed(request['seed'])
             dtype = torch.float32 if device == 'cpu' else torch.float16
@@ -129,17 +133,42 @@ def main():
                 tick[0] += 1; now = time.monotonic()
                 if now - tick[1] >= 2:
                     tick[1] = now; print(f'[Synth] Model evaluations={tick[0]}; elapsed={now-started:.1f}s', flush=True)
+            duration_info = None
+            sampler = song.sample_block_cache
+            if policy is not None:
+                duration_info = {'effective_limit_seconds': duration, 'stop_reason': None}
+
+                def sample(*args, **kwargs):
+                    latent = sampler(*args, **kwargs)
+                    permitted_frames = kwargs['duration']
+                    blocks = (permitted_frames + song.block_size - 1) // song.block_size
+                    frame_limit = blocks * song.block_size
+                    frames = latent.shape[1]
+                    # The pinned flow loop trims the stream only on its
+                    # end marker. Keep the same outcome when it fits the budget.
+                    if 0 < frames <= frame_limit:
+                        duration_info['stop_reason'] = 'natural_end' if frames < frame_limit and frames <= permitted_frames else 'duration_limit'
+                    # The author loop rounds up to a complete block. Limit any
+                    # excess frames before the author decoder renders them.
+                    return latent[:, :permitted_frames] if frames > permitted_frames else latent
+
+                song.sample_block_cache = sample
             hook = song.transformer.register_forward_hook(progress)
             try:
                 print('[Synth] Block flow matching', flush=True)
                 rate, audio = api.inference(song, decoder, torch.tensor(tokens, dtype=torch.long, device=device), style,
-                    request['duration'], cfg_strength=request['cfg'], sample_steps=request['steps'],
+                    duration, cfg_strength=request['cfg'], sample_steps=request['steps'],
                     fake_stereo=request['fake_stereo'], odeint_method=request['solver'], file_type='wav')
-            finally: hook.remove()
+            finally:
+                hook.remove()
+                if duration_info is not None:
+                    song.sample_block_cache = sampler
             if not np.isfinite(audio).all() or audio.size == 0: raise ValueError('Invalid generated audio.')
             sf.write(output, audio, rate, format='WAV', subtype='PCM_16')
             receipt = dict(request=request, frontend=tokenizer.rows, hardware=device, precision=str(dtype), sample_rate=rate,
                 samples=len(audio), duration=len(audio)/rate, source=request['source_revision'], elapsed=time.monotonic()-started)
+            if duration_info is not None:
+                receipt['duration_policy'] = duration_info
             print('[Done] DiffRhythm audio and effective request saved.', flush=True)
         Path(output + '.receipt.json').write_text(json.dumps(receipt, ensure_ascii=False), encoding='utf-8')
 

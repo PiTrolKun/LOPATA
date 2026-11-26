@@ -42,7 +42,16 @@ public sealed class MusicHeartMuLaTests
         var job = jobs.Create(files.Root, Path.Combine(files.Root, "audio"), "Тест", 1, 360, "rock", "Слова", expert: settings,
             wishes: MusicWishSnapshot.Capture(new()), outputSettings: new(), durationAutomatic: true);
         var restored = jobs.Load(job.Id);
-        Assert.AreEqual(240, restored.DurationSeconds);
+        Assert.AreEqual(655, restored.DurationSeconds);
+        Assert.IsTrue(restored.DurationAutomatic && restored.UseNativeDurationPolicy);
+        var legacy = restored with { DurationSeconds = 240, UseNativeDurationPolicy = false };
+        jobs.Save(legacy);
+        Assert.AreEqual(240, jobs.Load(legacy.Id).DurationSeconds);
+        var replay = jobs.Create(files.Root, legacy.OutputFolder, "Повтор", 1, legacy.DurationSeconds, legacy.Style, legacy.Lyrics,
+            repeat: legacy.Variants[0], expert: legacy.Expert, repeatSource: legacy);
+        Assert.IsTrue(replay.DurationAutomatic);
+        Assert.IsFalse(replay.UseNativeDurationPolicy);
+        Assert.AreEqual(240, replay.DurationSeconds);
         Assert.AreEqual(17, restored.Variants[0].SoundSeed); Assert.AreEqual(17, restored.Variants[0].LanguageSeed);
         var tags = MusicSongMetadata.Create(restored, restored.Variants[0] with { ExecutionReceipt = "{\"test\":true}" }, 0);
         Assert.AreEqual("{\"test\":true}", tags["LOPATA_HEARTMULA_REQUEST"]);
@@ -115,7 +124,9 @@ public sealed class MusicHeartMuLaTests
         view.Editor.Lyrics = "New words"; Assert.IsTrue(start.IsEnabled);
         var window = new ModelExpertWindow(MusicHeartMuLaCatalog.Defaults(), l.T);
         var controls = ScenarioNavigationTests.LogicalDescendants(window).OfType<FrameworkElement>().ToArray();
-        foreach (var p in MusicHeartMuLaCatalog.Parameters) Assert.IsTrue(controls.Any(e => AutomationProperties.GetAutomationId(e) == "Music.Expert." + p.Key));
+        Assert.IsFalse(controls.Any(e => AutomationProperties.GetAutomationId(e) == "Music.Expert.max_duration"));
+        foreach (var p in MusicHeartMuLaCatalog.Parameters.Where(p => p.Key != "max_duration"))
+            Assert.IsTrue(controls.Any(e => AutomationProperties.GetAutomationId(e) == "Music.Expert." + p.Key));
         window.Close();
         var bad = MusicHeartMuLaCatalog.Defaults(); bad.Values["cfg"] = 2; Assert.Throws<InvalidDataException>(bad.Validate);
     }

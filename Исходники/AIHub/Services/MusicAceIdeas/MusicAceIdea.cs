@@ -11,11 +11,13 @@ namespace AIHub.Services.MusicAceIdeas;
 public sealed record MusicAceIdeaData(string Codes,string Caption,string Lyrics,int? Bpm,string Keyscale,
     string Timesignature,string VocalLanguage,double Duration)
 {
+    private const int CodesPerSecond = 5;
     private static readonly Regex Token=new(@"<\|audio_code_(\d{1,5})\|>",RegexOptions.CultureInvariant);
     public string[] Tokens() {
         if(Codes is null||Codes.Length>100000)throw new InvalidDataException("Music.AceIdeas.Invalid");
         var matches=Token.Matches(Codes);
-        if(matches.Count is <5 or >1800||Token.Replace(Codes,"").Trim().Length!=0
+        if(matches.Count < CodesPerSecond || matches.Count > CodesPerSecond * MusicDurationPolicy.MaximumManualSeconds(MusicAceCatalog.Variation)
+            ||Token.Replace(Codes,"").Trim().Length!=0
             ||matches.Any(m=>int.Parse(m.Groups[1].Value,System.Globalization.CultureInfo.InvariantCulture)>63999))
             throw new InvalidDataException("Music.AceIdeas.Invalid");
         return matches.Select(m=>m.Value).ToArray();
@@ -23,7 +25,7 @@ public sealed record MusicAceIdeaData(string Codes,string Caption,string Lyrics,
     public void Validate() {
         _=Tokens();
         if(Caption is null||Caption.Length>20000||Lyrics is null||Lyrics.Length>100000||Keyscale is null||Timesignature is null||VocalLanguage is null
-            ||!double.IsFinite(Duration)||Duration is <1 or >360||Bpm is <1 or >300)
+            ||!double.IsFinite(Duration)||Duration < 1 || Duration > MusicDurationPolicy.MaximumManualSeconds(MusicAceCatalog.Variation)||Bpm is <1 or >300)
             throw new InvalidDataException("Music.AceIdeas.Invalid");
     }
 }

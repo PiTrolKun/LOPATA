@@ -7,7 +7,7 @@ namespace AIHub.Services.MusicScore;
 public static class MusicScorePreview
 {
     public static void Write(string path,MusicScoreSheet sheet,CancellationToken token) {
-        if(sheet.Seconds is <=0 or >360 || sheet.Notes.Vocal.Length+sheet.Notes.Ins.Length>40000)
+        if(!double.IsFinite(sheet.Seconds) || sheet.Seconds is <=0 or >MusicDurationPolicy.FallbackSeconds || sheet.Notes.Vocal.Length+sheet.Notes.Ins.Length>40000)
             throw new InvalidDataException("Music.Score.Invalid");
         const int rate=48000; var frames=checked((int)Math.Ceiling(sheet.Seconds*rate));
         using var output=new BinaryWriter(new FileStream(path,FileMode.CreateNew,FileAccess.Write));

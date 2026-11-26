@@ -14,7 +14,7 @@ public sealed partial class ModelExpertWindow
     {
         string Heart(string key) => _l("Music.HeartMuLa." + key);
         _parameters.Children.Add(MusicWishUi.Text(Heart("ExpertHint")));
-        foreach (var group in MusicHeartMuLaCatalog.Parameters.GroupBy(p => p.Group)) {
+        foreach (var group in MusicHeartMuLaCatalog.Parameters.Where(p => p.Key != "max_duration").GroupBy(p => p.Group)) {
             _parameters.Children.Add(MusicWishUi.Text(Heart("Group." + group.Key), true));
             foreach (var p in group) {
                 var panel = new StackPanel { Margin = new(0, 4, 8, 12) };

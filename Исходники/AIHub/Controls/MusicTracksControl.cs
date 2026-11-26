@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using AIHub.Models;
+using AIHub.Services;
 using Button = System.Windows.Controls.Button;
 using Clipboard = System.Windows.Clipboard;
 using ListBox = System.Windows.Controls.ListBox;
@@ -94,6 +95,14 @@ public sealed class MusicTracksControl : UserControl
             title.Text = track.IsExample ? _l(track.Title) : track.Title; title.ToolTip = title.Text; labels.Children.Add(title);
             var detail = MusicAudioUi.Text(11); detail.Margin = new(0, 4, 0, 0);
             detail.Text = MusicAudioUi.Time(track.Duration) + " · " + track.CreatedAt.ToString("dd.MM.yyyy HH:mm"); labels.Children.Add(detail);
+            if (track.DurationStopReason == MusicDurationResult.LimitReached) {
+                var warning = MusicAudioUi.Text(11);
+                warning.Text = _l("Music.Track.DurationLimitReached");
+                warning.Margin = new(0, 4, 0, 0);
+                warning.TextWrapping = TextWrapping.Wrap;
+                AutomationProperties.SetAutomationId(warning, "Music.Track.DurationLimitReached");
+                labels.Children.Add(warning);
+            }
             if (track.KaraokeUnavailable) {
                 var warning = MusicAudioUi.Text(11); warning.Text = _l("Music.Audio.KaraokeUnavailable");
                 warning.Margin = new(0, 4, 0, 0); warning.TextWrapping = TextWrapping.Wrap;

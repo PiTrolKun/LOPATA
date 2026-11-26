@@ -10,7 +10,8 @@ internal static class VideoBackgroundMusic
 {
     private sealed record Receipt(string JobId, string CompanionRevision);
     internal const string Style = "instrumental, neutral background music for a tutorial, calm, unobtrusive, warm soft piano, gentle electronic textures, light steady rhythm, no vocals, no singing, no choir, no dramatic changes";
-    internal static int RequestedSeconds(double target) => (int)Math.Clamp(Math.Ceiling(target), 1, 360);
+    internal static int RequestedSeconds(double target, string? studioRevision = null) =>
+        (int)Math.Clamp(Math.Ceiling(target), 1, MusicDurationPolicy.MaximumManualSeconds(MusicStudioRuntime.Variation, studioRevision));
     internal static async Task RunAsync(VideoProject p, VideoMusicSpec spec, string work, Action<string> status, CancellationToken token, IMusicYueWorker? worker = null)
     {
         if (!double.IsFinite(spec.TargetSeconds) || spec.TargetSeconds <= 0 || !Path.IsPathFullyQualified(spec.ModelsRoot)) throw new InvalidDataException("VideoEditor.MusicInvalid");
@@ -19,9 +20,10 @@ internal static class VideoBackgroundMusic
         if (File.Exists(identity)) { receipt = JsonSerializer.Deserialize<Receipt>(await File.ReadAllTextAsync(identity, token)) ?? throw new InvalidDataException("VideoEditor.MusicInvalid"); job = jobs.Load(receipt.JobId); }
         else {
             var expert = new MusicExpertSettings { Variation = MusicStudioRuntime.Variation };
-            expert.Values["semantic_sampling.min_tokens"] = Math.Min(expert.Integer("semantic_sampling.min_tokens"), RequestedSeconds(spec.TargetSeconds) * 25);
+            var duration = RequestedSeconds(spec.TargetSeconds);
+            expert.Values["semantic_sampling.min_tokens"] = Math.Min(expert.Integer("semantic_sampling.min_tokens"), duration * MusicDurationPolicy.FramesPerSecond);
             // The user's music workspace, lyrics, LoRAs and expert presets must not leak into this one-button tool.
-            job = jobs.Create(spec.ModelsRoot, Path.Combine(work, "Music"), spec.TrackName, 1, RequestedSeconds(spec.TargetSeconds), Style, "", expert: expert,
+            job = jobs.Create(spec.ModelsRoot, Path.Combine(work, "Music"), spec.TrackName, 1, duration, Style, "", expert: expert,
                 wishes: new MusicWishSnapshot(true, true, true, new(), []));
             receipt = new(job.Id, MusicStudioRuntime.CompanionRevision);
             var temp = identity + ".tmp"; await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(receipt), token); File.Move(temp, identity);
@@ -45,7 +47,11 @@ internal static class VideoBackgroundMusic
             var temporary = Path.Combine(work, "music-background.partial.m4a"); if (File.Exists(temporary)) File.Delete(temporary);
             try {
                 var args = new List<string> { "-v", "error", "-nostdin", "-n" }; if (input == tile) args.AddRange(["-stream_loop", "-1"]);
-                args.AddRange(["-i", input, "-t", VideoExport.N(spec.TargetSeconds), "-vn", "-ar", "48000", "-ac", "2", "-c:a", "aac", "-b:a", "192k", "-metadata", "LOPATA_PROVENANCE=" + facts.Json(), "-movflags", "+faststart+use_metadata_tags", "-f", "mp4", temporary]);
+                args.AddRange(["-i", input, "-t", VideoExport.N(spec.TargetSeconds), "-vn", "-ar", "48000", "-ac", "2", "-c:a", "aac", "-b:a", "192k",
+                    "-metadata", "LOPATA_PROVENANCE=" + facts.Json()]);
+                foreach (var tag in MusicSongMetadata.Create(job, variant, 0).Where(tag => tag.Key.StartsWith("LOPATA_DURATION_", StringComparison.Ordinal)))
+                    args.AddRange(["-metadata", "LOPATA_GENERATED_MUSIC_" + tag.Key["LOPATA_".Length..] + "=" + tag.Value]);
+                args.AddRange(["-movflags", "+faststart+use_metadata_tags", "-f", "mp4", temporary]);
                 await VideoRuntime.RunAsync(false, args, token); token.ThrowIfCancellationRequested(); File.Move(temporary, final);
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }

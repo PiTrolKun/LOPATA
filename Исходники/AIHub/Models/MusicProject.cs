@@ -35,7 +35,7 @@ public sealed record MusicProjectSnapshot
     {
         if (Lyrics is null || Title is null || Artist is null || Comment is null || string.IsNullOrWhiteSpace(Model)
             || string.IsNullOrWhiteSpace(Variation) || string.IsNullOrWhiteSpace(ModelRevision)
-            || OutputFolder is null || Variants is < 1 or > 8 || DurationSeconds is { } seconds && seconds is < 1 or > 360
+            || OutputFolder is null || Variants is < 1 or > 8 || DurationSeconds is { } seconds && !AcceptsStoredDuration(Variation, seconds)
             || Expert is null || Output is null || Loras is null || Wishes is null || Wishes.Selections is null || Wishes.Performers is null)
             throw new System.IO.InvalidDataException("Invalid music project snapshot.");
         Expert.Validate(); Output.Validate(); Loras.Validate();
@@ -57,6 +57,12 @@ public sealed record MusicProjectSnapshot
             || Wishes.Performers.Any(p => p is null || p.Name is null || p.Id is null || p.Timbres is null || p.Delivery is null))
             throw new System.IO.InvalidDataException("Invalid music project wishes.");
     }
+    // Older drafts could store up to six minutes for any variation. Projects also remain readable
+    // when the installed Studio set has a smaller limit than the one used to create the project.
+    private static bool AcceptsStoredDuration(string variation, int seconds) =>
+        seconds > 0 && (seconds <= MusicDurationPolicy.LegacySeconds || MusicModelVariants.Supported(variation)
+            && seconds <= MusicDurationPolicy.MaximumManualSeconds(variation, MusicStudioRuntime.Current.Revision));
+
     public static MusicProjectSnapshot FromJob(MusicGenerationJob job) => new() {
         Model = MusicModelVariants.Family(job.Variation),
         Lyrics = job.Lyrics, Title = job.Title, Artist = job.Artist, Comment = job.Comment, ModelRevision = job.ModelRevision, Variation = job.Variation,

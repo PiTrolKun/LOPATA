@@ -66,7 +66,8 @@ public static class MusicAceRequest
             if(request.AudioTask?.Enabled==true)throw new InvalidDataException("Music.AceIdeas.Conflict");
             MusicAceIdeas.MusicAceIdeaPipeline.Apply(result,idea);
         }
-        return new() { ["params"] = result, ["runtime"] = MusicAceCatalog.Parameters.Where(p => p.Group == "Runtime").ToDictionary(p => p.Key, p => expert.Get(p.Key)),
+        var payload = new Dictionary<string, object?> {
+            ["params"] = result, ["runtime"] = MusicAceCatalog.Parameters.Where(p => p.Group == "Runtime").ToDictionary(p => p.Key, p => expert.Get(p.Key)),
             ["config"] = new { batch_size = 1, allow_lm_batch = false, use_random_seed = false, seeds = new[] { request.SoundSeed },
                 audio_format = "wav", constrained_decoding_debug = expert.Get("constrained_decoding_debug") == 1 },
             ["warnings"] = warnings.ToArray(), ["source_revision"] = MusicAceCatalog.SourceRevision,
@@ -74,6 +75,9 @@ public static class MusicAceRequest
             ["tuning"] = expert.Tuning,
             ["audio_task"] = request.AudioTask is { Enabled: true } operation ? new {
                 mode = operation.Mode.ToString(), source = operation.Source, references = operation.References, public_receipt = operation.PublicReceipt() } : null };
+        if (request.UseNativeDurationPolicy && request.AceIdea is null && result["task_type"] is "text2music")
+            payload["duration_policy"] = new { fallback_seconds = MusicDurationPolicy.FallbackSeconds };
+        return payload;
     }
     private static string Language(string value) => value switch {
         "russian" => "ru", "english" => "en", "chinese" => "zh", "japanese" => "ja", "korean" => "ko",

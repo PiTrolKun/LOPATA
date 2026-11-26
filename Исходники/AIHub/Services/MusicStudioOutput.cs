@@ -7,6 +7,36 @@ namespace AIHub.Services;
 /// <summary>Studio 3.6 keeps native float audio. Its own normalizer preserves our former peak_clip contract.</summary>
 internal static class MusicStudioOutput
 {
+    internal static string? SemanticStopReason(string log)
+    {
+        const string prefix = "[AR] Semantic song 0: ";
+        const string tokens = " tokens";
+        const string truncated = " (truncated)";
+        if (!log.StartsWith(prefix, StringComparison.Ordinal)) return null;
+        var counter = log.AsSpan(prefix.Length);
+        var limitReached = counter.EndsWith(truncated, StringComparison.Ordinal);
+        if (limitReached) counter = counter[..^truncated.Length];
+        if (!counter.EndsWith(tokens, StringComparison.Ordinal)
+            || !int.TryParse(counter[..^tokens.Length], NumberStyles.None, CultureInfo.InvariantCulture, out var frames)
+            || frames <= 0) return null;
+        return limitReached ? MusicDurationResult.LimitReached : MusicDurationResult.NaturalEnd;
+    }
+
+    internal static object DurationPolicy(JsonElement effective, string? stopReason)
+    {
+        double? limit = null;
+        if (effective.ValueKind == JsonValueKind.Object) {
+            if (effective.TryGetProperty("duration", out var duration) && duration.ValueKind == JsonValueKind.Number
+                && duration.TryGetDouble(out var seconds) && double.IsFinite(seconds) && seconds > 0)
+                limit = seconds;
+            if (effective.TryGetProperty("semantic_sampling", out var sampling) && sampling.ValueKind == JsonValueKind.Object
+                && sampling.TryGetProperty("max_tokens", out var maximum) && maximum.ValueKind == JsonValueKind.Number
+                && maximum.TryGetInt32(out var frames) && frames > 0)
+                limit = Math.Min(limit ?? double.PositiveInfinity, frames / 25d);
+        }
+        return new { effective_limit_seconds = limit, stop_reason = stopReason };
+    }
+
     public static async Task<JsonElement> NormalizeAndDecodeAsync(MusicStudioLease lease, JsonElement song,
         int peakClip, string destination, Action<string> log, CancellationToken token)
     {

@@ -49,7 +49,8 @@ public sealed class MusicAceIdeaController:IDisposable
         var snapshot=view.Projects.Capture() with {Lyrics=lyrics,AceIdeas=new(),Scores=new()};
         var work=new MusicAceIdeaWorkRequest(Guid.NewGuid().ToString("N"),view.Projects.Current.Id,_modelsRoot,view.Wishes.RequestStyle,snapshot,
             Enumerable.Range(0,Math.Clamp(count,1,8)).Select(i=>new MusicAceIdeaCandidate(snapshot.Expert.Integer("seed")<0?
-                RandomNumberGenerator.GetInt32(1,int.MaxValue):(int)(((long)snapshot.Expert.Integer("seed")+i)%int.MaxValue))).ToArray());
+                RandomNumberGenerator.GetInt32(1,int.MaxValue):(int)(((long)snapshot.Expert.Integer("seed")+i)%int.MaxValue))).ToArray())
+            { UseNativeDurationPolicy = true };
         MusicAceIdeaStore.Default.Save(work);Update(State with {PendingWorkId=work.Id,Errors=[]});
         _run=RunAsync(work,null,ApplicationBackgroundOperations.ExitToken);await _run;
     }

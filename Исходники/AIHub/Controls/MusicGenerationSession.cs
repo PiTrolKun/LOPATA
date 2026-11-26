@@ -66,8 +66,7 @@ public sealed class MusicGenerationSession : IDisposable
             if (variation == MusicStudioRuntime.Variation) {
                 await ComponentLicenseGate.EnsureAsync(MusicModelVariants.Components(variation), token);
                 await MusicStudioRuntime.VerifyAsync(token); await MusicStudioRuntime.VerifyModelsAsync(_modelsRoot, token);
-                var studioRequest = new MusicYueRequest(_view.Wishes.RequestStyle, _view.Editor.Lyrics, 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
-                    { Expert = _view.Generation.ExpertSettings };
+                var studioRequest = EditorRequest();
                 var studioChoice = await MusicHardwareProbe.CheckAsync(MusicYueRuntime.DirectoryPath,
                     MusicModelVariants.Artifact(_modelsRoot, variation, MusicComponentCatalog.ModelId),
                     MusicModelVariants.Artifact(_modelsRoot, variation, MusicComponentCatalog.DecoderId), studioRequest, true, token, NativeLog);
@@ -87,8 +86,7 @@ public sealed class MusicGenerationSession : IDisposable
             await MusicYueRuntime.VerifyAsync(directory, token);
             var cards = MusicComponentCatalog.CreateCards(_modelsRoot);
             string Artifact(string id) { var card = cards.Single(c => c.ModelArtifactId == id); return Path.Combine(card.InstallDirectory, card.Files.Single().RelativePath); }
-            var request = new MusicYueRequest(_view.Wishes.RequestStyle, _view.Editor.Lyrics, 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
-                { Expert = _view.Generation.ExpertSettings };
+            var request = EditorRequest();
             var choice = await MusicHardwareProbe.CheckAsync(directory, Artifact(MusicComponentCatalog.ModelId),
                 Artifact(MusicComponentCatalog.DecoderId), request, true, token, NativeLog);
             if (!_disposed && check == _modelCheck) { HardwareChanged(choice); _ready = true; }
@@ -139,12 +137,28 @@ public sealed class MusicGenerationSession : IDisposable
     public bool CanChangeModel => !_starting && !_working &&
         (_controller?.IsRunning != true || _controller.State?.Phase == BackgroundOperationPhase.Paused) &&
         (_controller?.BlocksNewWork != true || _controller.State?.Phase == BackgroundOperationPhase.Paused);
+    private MusicYueRequest EditorRequest()
+    {
+        var expert = _view.Generation.ExpertSettings;
+        var options = _view.Generation.Options;
+        var duration = options.UsesSourceDuration ? null : options.DurationSeconds;
+        var profile = expert.Variation == MusicStudioRuntime.Variation ? MusicStudioRuntime.SelectedProfile : null;
+        return new(_view.Wishes.RequestStyle, _view.Editor.Lyrics, 1, 1,
+            duration ?? MusicDurationPolicy.AutomaticSeconds(expert.Variation, profile?.Revision))
+        {
+            Expert = expert,
+            DurationAutomatic = duration is null,
+            UseNativeDurationPolicy = true,
+            StudioRuntimeRevision = profile?.Revision,
+            StudioRuntimePack = profile?.Pack
+        };
+    }
+
     private void RefreshBudget()
     {
         if (_disposed) return;
-        var request = new MusicYueRequest("", "", 1, 1, _view.Generation.Options.DurationSeconds ?? 360)
-            { Expert = _view.Generation.ExpertSettings };
-        _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, request.Instruction, request.OutputReserve, _view.Wishes.State.Instrumental,
+        var request = EditorRequest();
+        _view.Editor.ConfigureRequest(_view.Wishes.RequestStyle, request.Instruction, request.EditorOutputReserve, _view.Wishes.State.Instrumental,
             MusicModelVariants.ExternalPipeline(_view.Generation.Variation),
             MusicHeartMuLaCatalog.IsHeart(_view.Generation.Variation) ? "Music.HeartMuLa.EditorHint" : MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation) ? "Music.Diff.EditorHint" : "Music.Ace.EditorHint");
         RefreshButtons();
@@ -197,9 +211,12 @@ public sealed class MusicGenerationSession : IDisposable
             if (options.AudioTask.Enabled && !ConfirmAudioTask(options.AudioTask)) return;
             var loras = processingOnly ? Array.Empty<AIHub.Services.MusicLora.MusicLoraUse>() : AIHub.Services.MusicLora.MusicLoraCatalog.Capture(_view.Lora.Selection, _view.Generation.Variation);
             if (loras.Length > 0) await AIHub.Services.MusicLora.MusicLoraAssets.EnsureAsync(_modelsRoot, loras, _view.Generation.Variation, ApplicationBackgroundOperations.ExitToken);
+            // Source-led operations set the real duration after the input is prepared.
+            var initialDuration = options.UsesSourceDuration ? 1 : options.DurationSeconds ?? MusicDurationPolicy.AutomaticSeconds(_view.Generation.Variation);
             var job = _jobs.Create(_modelsRoot, _view.Tracks.OutputFolder, _aceIdeaPreview?options.Title+" · "+_l("Music.AceIdeas.PreviewName"):options.Title, totalVariants,
-                (options.DurationSeconds ?? (MusicDiffRhythmCatalog.IsDiff(_view.Generation.Variation) ? MusicDiffRhythmCatalog.MaximumDuration : 360)), _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
-                wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment, durationAutomatic: options.DurationSeconds is null,
+                initialDuration, _view.Wishes.RequestStyle, lyrics, expert: _view.Generation.ExpertSettings,
+                wishes: MusicWishSnapshot.Capture(_view.Wishes.State), outputSettings: options.Output, artist: options.Artist, comment: options.Comment,
+                durationAutomatic: options.DurationSeconds is null && !options.UsesSourceDuration,
                 cover: _view.Covers.CaptureSelection(options.Artist, options.Title), loras: loras, separateTracks: options.SeparateTracks);
             job = await CaptureAudioTaskAsync(job, options.AudioTask, ApplicationBackgroundOperations.ExitToken);
             job = AIHub.Services.MusicMidi.MusicMelodyPipeline.Capture(job, options.Melody);
@@ -233,7 +250,7 @@ public sealed class MusicGenerationSession : IDisposable
             if (split && !await MusicStemsPreparationWindow.EnsureAsync(_view, _l, ApplicationBackgroundOperations.ExitToken)) return;
             var repeat = _jobs.Create(original.ModelsRoot, _view.Tracks.OutputFolder, original.Title, 1, original.DurationSeconds,
                 original.Style, original.Lyrics, variant, original.Expert, original.Wishes, original.Output, original.Artist, original.Comment, original.DurationAutomatic,
-                _view.Covers.CaptureSelection(original.Artist, original.Title), original.Loras.ToArray(), split);
+                _view.Covers.CaptureSelection(original.Artist, original.Title), original.Loras.ToArray(), split, repeatSource: original);
             if (!await MusicAudioTaskPreparationWindow.EnsureAsync(_view, original.AudioTask, original.Variation, _l, ApplicationBackgroundOperations.ExitToken)) return;
             repeat = await CaptureAudioTaskAsync(repeat, original.AudioTask ?? new(), ApplicationBackgroundOperations.ExitToken);
             repeat = AIHub.Services.MusicMidi.MusicMelodyPipeline.Capture(repeat, original.Melody ?? new());
@@ -429,7 +446,12 @@ public sealed class MusicGenerationSession : IDisposable
         }
         if (!_view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error))
         { _telemetry = _view.Status.Telemetry.Begin(); _view.Status.Telemetry.Report(_telemetry, MusicGenerationStage.Error); }
-        _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + (error is MusicStemsException || (error.Message.StartsWith("Music.Lora.", StringComparison.Ordinal) || error.Message.StartsWith("Music.Transform.", StringComparison.Ordinal) || error.Message.StartsWith("Music.Midi.", StringComparison.Ordinal)) ? _l(error.Message) : error.Message));
+        var reason = error is MusicDurationContextException duration
+            ? string.Format(_l("Music.Duration.ContextLimit"), duration.AvailableSeconds)
+            : error is MusicStemsException || error.Message.StartsWith("Music.Lora.", StringComparison.Ordinal) ||
+                error.Message.StartsWith("Music.Transform.", StringComparison.Ordinal) || error.Message.StartsWith("Music.Midi.", StringComparison.Ordinal)
+                ? _l(error.Message) : error.Message;
+        _view.Status.AppendLog(_l("Music.Generation.Failed") + " " + reason);
         if (error.Message is "Music.Lora.ScoreCombinationFailure" or "Music.Lora.ScoreFailure") MusicLoraNotices.Show(_view, error.Message, _l);
     }
     private void Outcome(MusicGenerationJob job, MusicProjectOutcome outcome, string message = "")
@@ -446,7 +468,8 @@ public sealed class MusicGenerationSession : IDisposable
         if (job.Variation == MusicStudioRuntime.Variation && captured.NeedsSource && captured.UsesGenerator)
             expert.Values["cot"] = captured.KeepHarmony ? 0 : 1;
         job = job with { AudioTask = captured, Expert = expert,
-            DurationSeconds = captured.UsesGenerator && captured.Source?.End is { } end ? Math.Clamp((int)Math.Ceiling(end), 1, 360) : job.DurationSeconds,
+            DurationSeconds = captured.NeedsSource && captured.Source?.End is { } end
+                ? Math.Clamp((int)Math.Ceiling(end), 1, MusicDurationPolicy.LegacyMaximumSeconds(job.Variation)) : job.DurationSeconds,
             DurationAutomatic = captured.NeedsSource ? false : job.DurationAutomatic };
         _jobs.Save(job); return job;
     }

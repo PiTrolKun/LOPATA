@@ -75,7 +75,10 @@ public sealed class VideoMusicTests
             Assert.IsTrue(previous.Assets.All(a => File.Exists(a.Path))); edit.Undo(); Assert.AreEqual(previous.Tracks.Single(t => t.BackgroundMusic).Clips.Single().AssetId, edit.Project.Tracks.Single(t => t.BackgroundMusic).Clips.Single().AssetId);
             var locked = p.Clone(); locked.Tracks.Single(t => t.BackgroundMusic).Locked = true;
             await Assert.ThrowsAsync<InvalidOperationException>(() => VideoBackgroundMusic.RunAsync(locked, new(f.Path, 5, "Music"), work2, _ => { }, default, worker));
-            Assert.AreEqual(360, VideoBackgroundMusic.RequestedSeconds(900)); Assert.AreEqual(1, VideoBackgroundMusic.RequestedSeconds(.5));
+            Assert.AreEqual(360, VideoBackgroundMusic.RequestedSeconds(900, MusicStudioRuntime.Legacy.Revision));
+            Assert.AreEqual(600, VideoBackgroundMusic.RequestedSeconds(900, MusicStudioRuntime.Current.Revision));
+            Assert.AreEqual(425, VideoBackgroundMusic.RequestedSeconds(425, MusicStudioRuntime.Current.Revision));
+            Assert.AreEqual(1, VideoBackgroundMusic.RequestedSeconds(.5, MusicStudioRuntime.Current.Revision));
         }
         finally { ComponentLicenseGate.ConfirmAsync = gate; }
     }

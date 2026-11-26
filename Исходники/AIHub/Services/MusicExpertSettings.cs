@@ -11,6 +11,8 @@ public static class MusicExpertCatalog
 {
     public const string Model = "YuE2";
     public const int ContractVersion = 1;
+    internal const int DefaultScoreTokens = 4096;
+    internal const int DefaultSequenceTokens = 9000;
     public static IReadOnlyList<ExpertParameter> Parameters { get; } = Build();
     private static ExpertParameter[] Build()
     {
@@ -22,8 +24,8 @@ public static class MusicExpertCatalog
             new("lm_seed", "Random", -1, -1, int.MaxValue),
             new("seed", "Random", -1, -1, int.MaxValue) };
         foreach (var (prefix, group, temperature, probability, candidates, penalty, window, minimum, maximum) in new[] {
-            ("abc_sampling", "PlanSampling", .7, .9, 30, 1.005, 100, 32, 4096),
-            ("semantic_sampling", "Sequence", 1.0, .95, 100, 1.2, 50, 200, 9000) })
+            ("abc_sampling", "PlanSampling", .7, .9, 30, 1.005, 100, 32, DefaultScoreTokens),
+            ("semantic_sampling", "Sequence", 1.0, .95, 100, 1.2, 50, 200, DefaultSequenceTokens) })
         {
             result.Add(new(prefix + ".temperature", group, temperature, 0, 5, .01));
             result.Add(new(prefix + ".top_p", group, probability, .001, 1, .001));
@@ -49,7 +51,7 @@ public sealed record MusicExpertSettings
     public int Integer(string key) => checked((int)Get(key));
     [JsonIgnore] public string Cot => MusicModelVariants.ExternalPipeline(Variation) ? "off" : new[] { "full", "melody", "off" }[Integer("cot")];
     [JsonIgnore] public int PlanLimit => Cot == "off" ? 0 : Integer("abc_sampling.max_tokens");
-    public int SequenceLimit(int duration) => MusicModelVariants.ExternalPipeline(Variation) ? 0 : Math.Min(Integer("semantic_sampling.max_tokens"), checked(duration * 25));
+    public int SequenceLimit(int duration) => MusicModelVariants.ExternalPipeline(Variation) ? 0 : Math.Min(Integer("semantic_sampling.max_tokens"), checked(duration * MusicDurationPolicy.FramesPerSecond));
     [JsonIgnore] public double Guidance => MusicHeartMuLaCatalog.IsHeart(Variation) ? Get("cfg_scale") : MusicDiffRhythmCatalog.IsDiff(Variation) ? Get("cfg") : MusicAceCatalog.IsAce(Variation) ? 1 : Get("cfg_scale") < 0 ? Cot == "off" ? 1.01 : 1 : Get("cfg_scale");
     [JsonIgnore] public string Instruction => MusicHeartMuLaCatalog.IsHeart(Variation) ? "Generate music from lyrics and tags." : MusicDiffRhythmCatalog.IsDiff(Variation) ? "Generate music from lyrics and style." : MusicAceCatalog.IsAce(Variation) ? "Fill the audio semantic mask based on the given conditions:" : Cot switch {
         "melody" => "Generate a melody-only ABC transcription without chord symbols, then generate music with codec tokens from the given conditions.",

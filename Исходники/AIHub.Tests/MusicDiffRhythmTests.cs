@@ -70,6 +70,7 @@ public sealed class MusicDiffRhythmTests
             Wishes = MusicWishSnapshot.Capture(new() { Instrumental = true }) }));
         Assert.Throws<InvalidDataException>(() => MusicDiffRhythmRequest.Build(request with { DurationSeconds = 300 }));
         Assert.AreEqual(240, MusicDiffRhythmRequest.Build(request with { DurationAutomatic = true })["duration"]);
+        Assert.AreEqual(600, MusicDiffRhythmRequest.Build(request with { DurationAutomatic = true, UseNativeDurationPolicy = true })["duration"]);
     }
 
     [TestMethod]
@@ -93,7 +94,10 @@ public sealed class MusicDiffRhythmTests
         var snapshot = new MusicExampleMetadata(tags, "").Restore();
         Assert.AreEqual(MusicDiffRhythmCatalog.ModelName, snapshot.Model); Assert.AreEqual("ЛАПАТА", snapshot.Lyrics);
         Assert.IsTrue(expert.SameAs(snapshot.Expert));
-        Assert.Throws<InvalidDataException>(() => jobs.Save(job with { DurationSeconds = 300 }));
+        Assert.Throws<InvalidDataException>(() => jobs.Save(job with { DurationSeconds = 300, UseNativeDurationPolicy = false }));
+        Assert.Throws<InvalidDataException>(() => jobs.Save(job with { DurationSeconds = 601 }));
+        jobs.Save(job with { DurationSeconds = 600 });
+        Assert.AreEqual(600, jobs.Load(job.Id).DurationSeconds);
         var projectStore = new MusicProjects(Path.Combine(files.Root, "projects"));
         var first = MusicProjectSnapshot.FromJob(job) with { ModelSettings = new() {
             [expert.Variation] = expert, [MusicStudioRuntime.Variation] = MusicModelVariants.Defaults(MusicStudioRuntime.Variation),

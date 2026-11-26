@@ -13,6 +13,27 @@ import sys
 import time
 
 
+def duration_budget(request, prompt_tokens):
+    context = 8192
+    frame_ms = 80
+    requested = request['max_audio_length_ms']
+    if not request.get('use_native_duration_policy', False):
+        maximum_frames = requested // frame_ms
+        if prompt_tokens + maximum_frames + 1 > context:
+            raise ValueError(f'Text/tags plus audio exceed the 8192-position author context ({prompt_tokens} + {maximum_frames} + 1). Shorten the request; no text was truncated.')
+        return requested, None
+
+    available = context - prompt_tokens
+    # The pinned API generates the first frame before its bounded loop. Reserve
+    # at least one frame for that loop so it can also observe the end marker.
+    if available < 2:
+        raise ValueError('HeartMuLa has no audio room left in its 8192-position context. Shorten the lyrics or tags.')
+    limit = available if requested is None else requested // frame_ms
+    if not 2 <= limit <= available:
+        raise ValueError(f'HeartMuLa duration does not fit the context. This text and tags allow up to {available * frame_ms / 1000:g}s.')
+    return (limit - 1) * frame_ms, {'effective_limit_seconds': limit * frame_ms / 1000, 'stop_reason': None}
+
+
 def main():
     overlay, source, model, codec, request_path, output, device, mode = sys.argv[1:]
     sys.path[:0] = [str(Path(source) / 'src'), overlay]
@@ -86,16 +107,17 @@ def main():
     inputs = {'lyrics': request['lyrics'], 'tags': request['tags']}
     prompt = pipe.preprocess(inputs, request['cfg_scale'])
     prompt_tokens = prompt['tokens'].shape[1]
-    maximum_frames = request['max_audio_length_ms'] // 80
-    if prompt_tokens + maximum_frames + 1 > 8192:
-        raise ValueError(f'Text/tags plus audio exceed the 8192-position author context ({prompt_tokens} + {maximum_frames} + 1). Shorten the request; no text was truncated.')
+    audio_length_ms, duration_info = duration_budget(request, prompt_tokens)
     model_config = json.loads((Path(model) / 'HeartMuLa-oss-3B' / 'config.json').read_text(encoding='utf-8-sig'))
     if request['topk'] > model_config['audio_vocab_size']:
         raise ValueError('topk exceeds the audio vocabulary.')
-    print(f'[Request] Text/tags={prompt_tokens} tokens; audio ceiling={request["max_audio_length_ms"]/1000:g}s', flush=True)
+    duration_ceiling = duration_info['effective_limit_seconds'] if duration_info is not None else audio_length_ms / 1000
+    print(f'[Request] Text/tags={prompt_tokens} tokens; audio ceiling={duration_ceiling:g}s', flush=True)
     receipt = dict(request=request, hardware=device, codec_hardware=str(codec_device), mula_precision=str(mula_dtype),
         codec_precision=str(codec_dtype), lazy_load=lazy, prompt_tokens=prompt_tokens,
         adapter='windows-eager-device-unload-soundfile-v1', source=request['source_revision'])
+    if duration_info is not None:
+        receipt['duration_policy'] = duration_info
     if mode == 'probe':
         Path(output).write_text('HeartMuLa API ready', encoding='utf-8')
         receipt['check'] = 'imports-and-author-preprocess-no-weights'
@@ -135,7 +157,14 @@ def main():
         try:
             print('[Load] Starting official HeartMuLa generation', flush=True)
             with torch.no_grad():
-                generated = pipe._forward(prompt, request['max_audio_length_ms'], request['temperature'], request['topk'], request['cfg_scale'])
+                generated = pipe._forward(prompt, audio_length_ms, request['temperature'], request['topk'], request['cfg_scale'])
+                if duration_info is not None:
+                    frames = generated['frames'].shape[-1]
+                    # EOS consumes one sampler call but is never stored as audio.
+                    if tick[0] == frames + 1:
+                        duration_info['stop_reason'] = 'natural_end'
+                    elif tick[0] == frames == audio_length_ms // 80 + 1:
+                        duration_info['stop_reason'] = 'duration_limit'
                 print('[Synth] Decoding with official HeartCodec', flush=True)
                 pipe.postprocess(generated, output)
         finally:

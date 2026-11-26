@@ -28,7 +28,8 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                 var previousSeconds = variant.GenerationSeconds ?? 0;
                 try {
                 var request = new MusicYueRequest(job.Style, job.Lyrics, variant.LanguageSeed, variant.SoundSeed, job.DurationSeconds)
-                    { Expert = job.Expert.Snapshot(), Wishes = job.Wishes?.Snapshot(), DurationAutomatic = job.DurationAutomatic, Loras = job.Loras.ToArray(),
+                    { Expert = job.Expert.Snapshot(), Wishes = job.Wishes?.Snapshot(), DurationAutomatic = job.DurationAutomatic,
+                        UseNativeDurationPolicy = job.UseNativeDurationPolicy, Loras = job.Loras.ToArray(),
                         StudioRuntimeRevision = job.Variation == MusicStudioRuntime.Variation ? job.RuntimeRevision : null,
                         StudioRuntimePack = job.Variation == MusicStudioRuntime.Variation ? job.RuntimePack : null,
                         FollowScoreSections=job.Scores?.FollowSections==true,ScoreLyricTiming=job.Scores?.LyricTiming==true,AceIdea=variant.AceIdea };
@@ -61,18 +62,23 @@ public sealed class MusicGenerationRunner(MusicGenerationJobs jobs, IMusicYueWor
                     await MusicScore.MusicScorePipeline.CheckSchedulingAsync(request,token);
                     await worker.SynthesizeAsync(Artifact(job.Variation), Artifact(MusicModelVariants.Decoder(job.Variation)), request,
                         jobs.StagePath(id, ".json"), audio, token);
-                    MusicAceIdeas.MusicAceIdeaPipeline.Confirm(variant.AceIdea,worker.LastRequestReceipt,variant.SoundSeed);
-                    variant=await MusicScore.MusicScorePipeline.SaveEffectiveAsync(jobs,job,variant,worker.LastRequestReceipt,token);
-                    _ = MusicWaveFile.ReadDuration(audio);
+                    var receipt = worker.LastRequestReceipt;
+                    MusicAceIdeas.MusicAceIdeaPipeline.Confirm(variant.AceIdea, receipt, variant.SoundSeed);
+                    variant = await MusicScore.MusicScorePipeline.SaveEffectiveAsync(jobs, job, variant, receipt, token);
+                    var duration = MusicWaveFile.ReadDuration(audio).TotalSeconds;
+                    var durationResult = MusicDurationResult.FromReceipt(receipt);
+                    variant = variant with { Hardware = worker.LastHardware, UsedRuntimePack = worker.LastRuntimePack,
+                        ExecutionReceipt = receipt, EffectiveDurationLimitSeconds = durationResult.EffectiveLimitSeconds,
+                        DurationStopReason = durationResult.StopReason };
+                    var audioHash = await HashAsync(audio, token);
                     if (job.AudioTask is { Enabled: true }) {
-                        variant = variant with { AudioTask = new() { RenderPath = audio, RenderHash = await HashAsync(audio, token) },
-                            Hardware = worker.LastHardware, UsedRuntimePack = worker.LastRuntimePack, ExecutionReceipt = worker.LastRequestReceipt };
-                        Save(variant); variant = await transform.FinishAsync(job, variant, Save, token);
+                        variant = variant with { AudioTask = new() { RenderPath = audio, RenderHash = audioHash } };
+                        Save(variant);
+                        variant = await transform.FinishAsync(job, variant, Save, token);
                     } else {
-                    variant = variant with { AudioFile = audio, AudioHash = await HashAsync(audio, token),
-                        DurationSeconds = MusicWaveFile.ReadDuration(audio).TotalSeconds, GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds,
-                        Hardware = worker.LastHardware, UsedRuntimePack = worker.LastRuntimePack,
-                        ExecutionReceipt = worker.LastRequestReceipt }; Save(variant);
+                        variant = variant with { AudioFile = audio, AudioHash = audioHash,
+                            DurationSeconds = duration, GenerationSeconds = previousSeconds + elapsed.Elapsed.TotalSeconds };
+                        Save(variant);
                     }
                     }
                 }

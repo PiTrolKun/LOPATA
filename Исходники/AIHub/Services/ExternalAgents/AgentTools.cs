@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -53,9 +54,11 @@ internal static class AgentTools
 
     internal static object List() => Tools;
 
-    private static readonly Lazy<string> CapabilitiesRevision = new(() => Convert.ToHexStringLower(SHA256.HashData(
-        JsonSerializer.SerializeToUtf8Bytes(new { tools = Tools, projects = AgentProjects.Contracts(),
-            operations = AgentModelPlan.Operations, mechanics = ScenarioNavigationCatalog.CloudTags }, AgentProtocol.Json))));
+    private static readonly ConcurrentDictionary<string, string> CapabilitiesRevisions = new(StringComparer.Ordinal);
+    private static string CapabilitiesRevision() => CapabilitiesRevisions.GetOrAdd(AgentProjects.MusicStudioRevisionForAgent(),
+        static revision => Convert.ToHexStringLower(SHA256.HashData(
+            JsonSerializer.SerializeToUtf8Bytes(new { tools = Tools, projects = AgentProjects.Contracts(revision),
+                operations = AgentModelPlan.Operations, mechanics = ScenarioNavigationCatalog.CloudTags }, AgentProtocol.Json))));
 
     internal static async Task<object> CallAsync(string name, JsonElement args, AgentIdentity? client = null)
     {
@@ -84,7 +87,7 @@ internal static class AgentTools
             case "lopata_info":
                 return new { version = ApplicationBuildVersion.Value, executable = Environment.ProcessPath, directory = AppContext.BaseDirectory,
                     developmentTools = Tools.Any(t => t.Name.StartsWith("dev_", StringComparison.Ordinal)),
-                    capabilitiesRevision = CapabilitiesRevision.Value,
+                    capabilitiesRevision = CapabilitiesRevision(),
                     modelOperations = AgentModelPlan.Operations,
                     mechanics = ScenarioNavigationCatalog.CloudTags.Select(tag => new { tag.Id, scenario = tag.TargetId }) };
             case "project_scenarios": return AgentProjects.List();

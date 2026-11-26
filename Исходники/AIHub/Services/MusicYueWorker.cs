@@ -15,13 +15,18 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
     public AIHub.Models.MusicWishSnapshot? Wishes { get; init; }
     public MusicLora.MusicLoraUse[] Loras { get; init; } = [];
     public bool DurationAutomatic { get; init; }
+    public bool UseNativeDurationPolicy { get; init; }
+    internal (int Score, int Sound)? FittedDurationBudget { get; init; }
+    internal bool ExpandsStudioBudget => UseNativeDurationPolicy && DurationSeconds > MusicDurationPolicy.LegacySeconds &&
+        EffectiveExpert.Variation == MusicStudioRuntime.Variation &&
+        MusicDurationPolicy.MaximumManualSeconds(EffectiveExpert.Variation, StudioRuntimeRevision) > MusicDurationPolicy.LegacySeconds;
     public string? StudioRuntimeRevision { get; init; }
     public string? StudioRuntimePack { get; init; }
     public MusicAudioTask? AudioTask { get; init; }
     public MusicAceIdeas.MusicAceIdeaUse? AceIdea {get;init;}
     public MusicExpertSettings EffectiveExpert => Expert ?? new();
-    public int EffectivePlanLimit => Expert?.PlanLimit ?? PlanTokenLimit;
-    public int SequenceLimit => EffectiveExpert.SequenceLimit(DurationSeconds);
+    public int EffectivePlanLimit => FittedDurationBudget?.Score ?? MusicDurationPolicy.ScoreTokens(this);
+    public int SequenceLimit => FittedDurationBudget?.Sound ?? MusicDurationPolicy.SequenceTokens(this);
     public string Instruction => EffectiveExpert.Instruction;
     public object NativeRequest => new { style = Style, lyrics = Lyrics, abc = Abc, cot = EffectiveExpert.Cot, duration = DurationSeconds,
         lm_seed = LanguageSeed, seed = SoundSeed, steps = EffectiveExpert.Integer("steps"), lm_batch_size = 1, synth_batch_size = 1,
@@ -29,18 +34,45 @@ public sealed record MusicYueRequest(string Style, string Lyrics, int LanguageSe
         output_format = "wav16", abc_sampling = EffectiveExpert.Sampling("abc_sampling", Math.Max(1, EffectivePlanLimit)),
         semantic_sampling = EffectiveExpert.Sampling("semantic_sampling", SequenceLimit) };
     public int OutputReserve => checked(EffectivePlanLimit + SequenceLimit);
-    public void CheckContext(IMusicTokenizer tokenizer, CancellationToken token)
+    private int MinimumScoreTokens => EffectivePlanLimit == 0 ? 0 :
+        Math.Min(EffectivePlanLimit, Math.Max(32, EffectiveExpert.Integer("abc_sampling.min_tokens")));
+    private int MinimumSoundTokens => Math.Min(SequenceLimit, MusicDurationPolicy.FramesPerSecond);
+
+    internal int EditorOutputReserve => !ExpandsStudioBudget ? OutputReserve :
+        checked(MinimumScoreTokens + (DurationAutomatic ? MinimumSoundTokens : SequenceLimit));
+
+    public void CheckContext(IMusicTokenizer tokenizer, CancellationToken token) =>
+        _ = FitContext(tokenizer, Style, token);
+
+    internal MusicYueRequest FitContext(IMusicTokenizer tokenizer, string effectiveStyle, CancellationToken token)
     {
         Validate();
-        var prefix = checked(tokenizer.Count(MusicTextBudget.BuildText(Lyrics, Style, Instruction), token) + 2);
-        var needed = string.IsNullOrWhiteSpace(Abc) ? checked(prefix + OutputReserve)
-            : checked(prefix + tokenizer.Count(Abc, token) + 2 + SequenceLimit);
-        if (needed > MusicTextBudget.FillLimit) throw new InvalidDataException("Music request exceeds the context budget including generated output.");
+        var prefix = checked(tokenizer.Count(MusicTextBudget.BuildText(Lyrics, effectiveStyle, Instruction), token) + 2);
+        var hasScore = !string.IsNullOrWhiteSpace(Abc);
+        var room = MusicTextBudget.FillLimit - prefix - (hasScore ? checked(tokenizer.Count(Abc, token) + 2) : 0);
+        if (!ExpandsStudioBudget)
+        {
+            if (room < (hasScore ? SequenceLimit : OutputReserve))
+                throw new InvalidDataException("Music request exceeds the context budget including generated output.");
+            return this;
+        }
+
+        var scoreFloor = hasScore ? 0 : MinimumScoreTokens;
+        var soundRoom = room - scoreFloor;
+        if (soundRoom < (DurationAutomatic ? MinimumSoundTokens : SequenceLimit))
+            throw new MusicDurationContextException(Math.Max(0, soundRoom / MusicDurationPolicy.FramesPerSecond));
+
+        var sound = Math.Min(SequenceLimit, soundRoom);
+        var score = hasScore ? 0 : Math.Min(EffectivePlanLimit, room - sound);
+        return this with { FittedDurationBudget = (score, sound) };
     }
     public void Validate()
     {
         Expert?.Validate(); MusicLora.MusicLoraCatalog.Validate(Loras, EffectiveExpert.Variation);
-        if (LanguageSeed < 0 || SoundSeed < 0 || DurationSeconds is < 1 or > 360 || PlanTokenLimit is < 32 or > 4096)
+        var maximum = UseNativeDurationPolicy
+            ? MusicDurationPolicy.MaximumManualSeconds(EffectiveExpert.Variation, StudioRuntimeRevision)
+            : MusicDurationPolicy.LegacySeconds;
+        if (LanguageSeed < 0 || SoundSeed < 0 || DurationSeconds < 1 || DurationSeconds > maximum || PlanTokenLimit is < 32 or > 4096)
             throw new ArgumentOutOfRangeException(nameof(DurationSeconds), "YuE2 seeds and duration must be fixed before execution.");
     }
 }

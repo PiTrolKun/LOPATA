@@ -4,10 +4,11 @@ import re
 from pathlib import Path
 
 
-def generate_plan(request, companions, device, output, receipt, llm_type, offload):
+def generate_plan(request, companions, device, output, receipt, llm_type, offload, configure_duration):
     import random
     import numpy as np
     import torch
+    from acestep.gpu_config import get_global_gpu_config
     from acestep.inference import _update_metadata_from_lm
     params = request['params']
     seed = int(params['seed'])
@@ -24,14 +25,14 @@ def generate_plan(request, companions, device, output, receipt, llm_type, offloa
                                 backend='pt', device=device, offload_to_cpu=offload)
     if not ok:
         raise RuntimeError(status)
-    # Keep the application's six-minute bound even on GPUs whose upstream
-    # automatic-duration tier allows longer music. Reuse the author's decoder.
-    if llm.constrained_processor.max_duration > 360:
+    # Restored legacy plans retain the original six-minute shaping.
+    if 'duration_policy' not in request and llm.constrained_processor.max_duration > 360:
         from acestep.constrained_logits_processor import MetadataConstrainedLogitsProcessor
         llm.constrained_processor = MetadataConstrainedLogitsProcessor(
             tokenizer=llm.llm_tokenizer, enabled=True, debug=False, max_duration=360)
     metadata = {k: params[k] for k in ('bpm', 'keyscale', 'timesignature') if params.get(k)}
-    duration = params.get('duration')
+    gpu_config = get_global_gpu_config()
+    duration, duration_info = configure_duration(request, params.get('duration'), gpu_config, llm, params['use_cot_metas'])
     if duration is not None and duration > 0:
         metadata['duration'] = duration
     if params.get('vocal_language') not in ('', 'unknown', 'auto', None):
@@ -51,7 +52,12 @@ def generate_plan(request, companions, device, output, receipt, llm_type, offloa
     if isinstance(codes, list):
         codes = codes[0] if len(codes) == 1 else ''
     tokens = re.findall(r'<\|audio_code_(\d{1,5})\|>', codes)
-    if (not 5 <= len(tokens) <= 1800 or re.sub(r'<\|audio_code_\d{1,5}\|>', '', codes).strip()
+    maximum_codes = 1800
+    if duration_info is not None:
+        from acestep.constants import DURATION_MAX
+        maximum_codes = min(DURATION_MAX, gpu_config.max_duration_with_lm) * 5
+        receipt['duration_policy'] = duration_info
+    if (not 5 <= len(tokens) <= maximum_codes or re.sub(r'<\|audio_code_\d{1,5}\|>', '', codes).strip()
             or any(int(token) > 63999 for token in tokens)):
         raise ValueError('Music.AceIdeas.Invalid')
     native_meta = result.get('metadata') or {}

@@ -12,6 +12,7 @@ public sealed record MusicTrack(string? Path, string Title, TimeSpan Duration, D
     public string? MusicPath { get; init; }
     public string? AdditionalMusicPath { get; init; }
     public bool IsLayered => BundleFolder is not null && MusicPath is not null;
+    public string? DurationStopReason { get; init; }
     public MusicKaraokeReadiness? KaraokeReadiness { get; init; }
     public bool KaraokeUnavailable => KaraokeReadiness == MusicKaraokeReadiness.Unavailable;
 }
