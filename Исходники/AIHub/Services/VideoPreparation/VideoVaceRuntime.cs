@@ -31,7 +31,7 @@ internal static class VideoVaceRuntime
         await RuntimeFileAudit.VerifyAsync("Video.VACE.Launch." + weights.ModelArtifactId, weights.InstallDirectory, weights.Revision,
             weights.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray(), token, log);
         var python = await ManagedPythonRuntime.ResolveAsync("auto", token, log: log);
-        var root = Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3", VideoH3RuntimeCatalog.Data.Revision);
+        var root = VideoH3Runtime.RuntimeRoot;
         var libraries = cards.Single(c => c.ModelArtifactId == VideoH3RuntimeCatalog.Id);
         var core = cards.Single(c => c.ModelArtifactId == "video-h3-source-comfy");
         await Gate.WaitAsync(token);

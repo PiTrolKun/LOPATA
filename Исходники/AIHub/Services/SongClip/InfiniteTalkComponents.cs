@@ -103,7 +103,7 @@ internal static class InfiniteTalkComponents
                 card.Files.Select(file => new PinnedTreeFile(file.RelativePath, file.SizeBytes, file.Sha256)).ToArray(), token, log);
         // A failed GPU discovery is not evidence for silently selecting CPU.
         var python = await ManagedPythonRuntime.ResolveAsync("auto", token, log: log, requireReliableGpuProbe: true);
-        var commonRoot = Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3", VideoH3RuntimeCatalog.Data.Revision);
+        var commonRoot = VideoH3Runtime.RuntimeRoot;
         var ownRoot = Path.Combine(AppDataPaths.BaseDirectory, "SongClip", "Runtime", "infinitetalk");
         string libraries, comfy, wrapper, extras;
         await Gate.WaitAsync(token);

@@ -11,15 +11,14 @@ internal sealed record VideoH3Environment(ManagedPythonSelection Python, string 
 internal static class VideoH3Runtime
 {
     private static readonly SemaphoreSlim Gate = new(1);
-    private static string Root => Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3", VideoH3RuntimeCatalog.Data.Revision);
-    internal static string ComfyImportRoot => Path.Combine(Root, "video-h3-source-comfy");
+    internal static string RuntimeRoot => Path.Combine(AppDataPaths.BaseDirectory, "VideoPreparation", "H3", VideoH3RuntimeCatalog.Data.Revision);
 
     internal static async Task<string> PrepareSharedLibrariesAsync(ManagedModelArtifactCard libraries, CancellationToken token, Action<string> log)
     {
         await Gate.WaitAsync(token);
-        try { await Tree(Root, libraries, "libraries", VideoH3RuntimeCatalog.Data.Library, true, token, log); }
+        try { await Tree(RuntimeRoot, libraries, "libraries", VideoH3RuntimeCatalog.Data.Library, true, token, log); }
         finally { Gate.Release(); }
-        return Path.Combine(Root, "libraries", libraries.Revision, "Lib", "site-packages");
+        return Path.Combine(RuntimeRoot, "libraries", libraries.Revision, "Lib", "site-packages");
     }
     internal static async Task<VideoH3Environment> PrepareAsync(string modelsRoot, int connections, CancellationToken token, Action<string> log, ManagedModelLibraryStore? library = null, bool lite = false, bool requireReliableGpuProbe = false, IReadOnlyList<ManagedModelArtifactCard>? profile = null, string device = "auto", bool deno = false)
     {
@@ -43,7 +42,7 @@ internal static class VideoH3Runtime
             await RuntimeFileAudit.VerifyAsync("Video.H3.Launch." + c.ModelArtifactId, c.InstallDirectory, c.Revision,
                 c.Files.Select(f => new PinnedTreeFile(f.RelativePath, f.SizeBytes, f.Sha256)).ToArray(), token, log);
         var python = await ManagedPythonRuntime.ResolveAsync(device, token, log: log, requireReliableGpuProbe: requireReliableGpuProbe);
-        var root = Root;
+        var root = RuntimeRoot;
         string? clipProj = null;
         await Gate.WaitAsync(token);
         try

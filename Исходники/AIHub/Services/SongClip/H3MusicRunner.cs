@@ -214,9 +214,9 @@ internal static class H3MusicRunner
             StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8
         };
         var script = Path.Combine(AppContext.BaseDirectory, "Tools", worker ?? (montage ? "song_clip_montage.py" : "song_clip_motion.py"));
-        var usesComfy = worker is null or SongClipDeno.Worker or SongClipDeno.AcceleratedWorker or "song_clip_geek.py";
+        var usesH3Runtime = worker is null or SongClipDeno.Worker or SongClipDeno.AcceleratedWorker or "song_clip_geek.py";
         ManagedPythonLaunch.ScriptArguments(info, action is not null ? [script, action, request] : analyze ? [script, "--analyze", request] : verify ? [script, "--verify", request] : [script, request],
-            extendedImportRoot: usesComfy ? VideoH3Runtime.ComfyImportRoot : null);
+            extendedImportRoot: usesH3Runtime ? VideoH3Runtime.RuntimeRoot : null);
         info.Environment["LOPATA_H3_RETRY_OFFLOAD"] = preferOffload ? "1" : "0";
         var geek = worker == "song_clip_geek.py";
         var glitch = worker == "song_clip_glitch.py";

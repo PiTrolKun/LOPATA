@@ -19,18 +19,42 @@ internal static class ManagedPythonLaunch
     // Workers insert audited source directories after the initial sys.path setup.
     // Normalize at import time so a persisted worker request keeps its original bytes.
     private const string ExtendImports = """
+        import importlib.util as _lopata_import_util
+
         _lopata_import_root = os.path.normcase(os.path.normpath(os.environ.pop('LOPATA_PYTHON_EXTENDED_IMPORT_ROOT')))
         _lopata_import_hooks = tuple(sys.path_hooks)
-        def _lopata_extended_import(path):
-            normalized = os.path.normcase(os.path.normpath(path))
+        _lopata_original_spec = _lopata_import_util.spec_from_file_location
+
+        def _lopata_runtime_path(path):
+            if path is None:
+                return path
+            location = os.fspath(path)
+            if not isinstance(location, str):
+                return path
+            full_path = os.path.normpath(location)
+            normalized = os.path.normcase(full_path)
             if normalized == _lopata_import_root or normalized.startswith(_lopata_import_root + os.sep):
+                return _lopata_extended_path(full_path)
+            return path
+
+        def _lopata_extended_import(path):
+            extended = _lopata_runtime_path(path)
+            if extended != path:
                 for hook in _lopata_import_hooks:
                     try:
-                        return hook(_lopata_extended_path(path))
+                        return hook(extended)
                     except ImportError:
                         continue
             raise ImportError(path)
+
+        def _lopata_runtime_spec(name, location=None, **options):
+            extended = _lopata_runtime_path(location)
+            if extended != location and (locations := options.get('submodule_search_locations')):
+                options['submodule_search_locations'] = [_lopata_runtime_path(path) for path in locations]
+            return _lopata_original_spec(name, extended, **options)
+
         sys.path_hooks.insert(0, _lopata_extended_import)
+        _lopata_import_util.spec_from_file_location = _lopata_runtime_spec
         """ + "\n";
 
     internal static void ScriptArguments(ProcessStartInfo info, IEnumerable<string> arguments, string? extendedImportRoot = null)

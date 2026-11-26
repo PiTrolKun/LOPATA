@@ -14,7 +14,7 @@ internal static partial class InfiniteTalkRunner
         var info=new ProcessStartInfo(python) {UseShellExecute=false,CreateNoWindow=true,
             RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};
         ManagedPythonLaunch.ScriptArguments(info, [Path.Combine(AppContext.BaseDirectory, "Tools", "song_clip_infinitetalk.py"), action, "--request", request],
-            extendedImportRoot: VideoH3Runtime.ComfyImportRoot);
+            extendedImportRoot: VideoH3Runtime.RuntimeRoot);
         using var process=OwnedProcessRegistry.Shared.Start(info,"SongClip.InfiniteTalk");
         using var cancel=token.Register(()=>{try {if(!process.HasExited)process.Kill(true);}catch(InvalidOperationException){}});
         var diagnostics=new StringBuilder();
