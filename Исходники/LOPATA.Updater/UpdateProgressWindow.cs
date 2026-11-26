@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Lopata.Updater;
 
 /// <summary>Content-sized, DPI-aware progress UI; installation remains owned by UpdateHost.</summary>
@@ -29,7 +31,7 @@ internal sealed class UpdateProgressWindow : Form
         {
             Dock = DockStyle.Fill, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink,
             Padding = new Padding(20), ColumnCount = 1, RowCount = 3,
-            Margin = Padding.Empty
+            Margin = Padding.Empty, BackColor = BackColor
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         for (var row = 0; row < 3; row++) layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -37,12 +39,12 @@ internal sealed class UpdateProgressWindow : Form
         {
             AutoSize = true, Dock = DockStyle.Top, MaximumSize = new Size(480, 0),
             Text = initialStatus, AutoEllipsis = false, Margin = new Padding(0, 0, 0, 20),
-            UseMnemonic = false
+            UseMnemonic = false, ForeColor = ForeColor, BackColor = Color.Transparent
         };
-        var progress = new ProgressBar
+        var progress = new ActivityIndicator
         {
-            Dock = DockStyle.Top, Height = 8, Style = ProgressBarStyle.Marquee,
-            MarqueeAnimationSpeed = 35, Margin = new Padding(0, 0, 0, 16)
+            Dock = DockStyle.Top, Height = 8, Margin = new Padding(0, 0, 0, 16),
+            BackColor = Color.FromArgb(44, 54, 72), ForeColor = Color.FromArgb(59, 130, 246)
         };
         _cancel = new Button
         {
@@ -66,10 +68,40 @@ internal sealed class UpdateProgressWindow : Form
         ResumeLayout(true);
     }
 
-    public void SetStatus(string text)
+    public void SetStatus(string text) => _status.Text = text;
+
+    private sealed class ActivityIndicator : Control
     {
-        if (IsDisposed || Disposing) return;
-        if (InvokeRequired) { BeginInvoke(new Action(() => SetStatus(text))); return; }
-        _status.Text = text;
+        private readonly System.Windows.Forms.Timer _timer = new() { Interval = 25 };
+        private readonly Stopwatch _elapsed = Stopwatch.StartNew();
+
+        public ActivityIndicator()
+        {
+            DoubleBuffered = true;
+            AccessibleRole = AccessibleRole.ProgressBar;
+            _timer.Tick += (_, _) => Invalidate();
+        }
+
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (!Disposing && !IsDisposed) _timer.Enabled = Visible;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            var length = Math.Max(1, ClientSize.Width / 4);
+            const int period = 1500;
+            var offset = (int)((_elapsed.ElapsedMilliseconds % period) * (ClientSize.Width + length) / period) - length / 2;
+            using var accent = new SolidBrush(ForeColor);
+            e.Graphics.FillRectangle(accent, offset, 0, length, ClientSize.Height);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _timer.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }

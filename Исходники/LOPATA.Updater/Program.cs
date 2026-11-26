@@ -16,22 +16,38 @@ internal static class Program
         }
         ApplicationConfiguration.Initialize();
         using var cancellation = new CancellationTokenSource();
-        using var window = new UpdateProgressWindow(HostText.Get("UpdateHost.Starting"), HostText.Get("UpdateHost.Cancel"));
+        using var icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+        using var window = new UpdateProgressWindow(HostText.Get("UpdateHost.Starting"), HostText.Get("UpdateHost.Cancel"))
+        {
+            Icon = icon
+        };
         var startHidden = args.Contains("--background", StringComparer.Ordinal) && args.Contains("--launch", StringComparer.Ordinal);
         using var hiddenContext = startHidden ? new ApplicationContext() : null;
+        var finished = false;
         window.CancelRequested += (_, _) => cancellation.Cancel();
+        window.FormClosing += (_, e) =>
+        {
+            if (finished || e.CloseReason != CloseReason.UserClosing) return;
+            e.Cancel = true;
+            cancellation.Cancel();
+        };
         async Task RunAsync()
         {
             try
             {
-                var host = new UpdateHost(status =>
+                IProgress<string> display = new Progress<string>(status =>
                 {
+                    if (finished || window.IsDisposed) return;
                     window.SetStatus(status);
                     // Ordinary autostart has no progress window. Recovery or an explicitly
                     // prepared update can still expose its existing installation progress.
                     if (startHidden && !window.Visible) { hiddenContext!.MainForm = window; window.Show(); }
-                }, (store, id) => SettingsRollbackPrompt.Show(window, store, id));
-                await host.RunAsync(args, cancellation.Token);
+                });
+                var host = new UpdateHost(display.Report, (store, id) =>
+                    window.Invoke(() => SettingsRollbackPrompt.Show(window, store, id)));
+                // The first startup checks include synchronous manifest and journal reads.
+                // Keep the message loop free to paint and service Cancel during those reads.
+                await Task.Run(() => host.RunAsync(args, cancellation.Token), cancellation.Token);
                 Environment.ExitCode = 0;
             }
             catch (OperationCanceledException)
@@ -52,7 +68,12 @@ internal static class Program
                 MessageBox.Show(window, HostText.Get("UpdateHost.Failed") + Environment.NewLine + report,
                     "ЛОПАТА / LOPATA", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            finally { window.Close(); hiddenContext?.ExitThread(); }
+            finally
+            {
+                finished = true;
+                window.Close();
+                hiddenContext?.ExitThread();
+            }
         }
         if (startHidden)
         {
