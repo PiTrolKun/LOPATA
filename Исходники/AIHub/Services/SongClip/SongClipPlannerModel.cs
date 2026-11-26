@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using AIHub.Models;
 using AIHub.Services.VideoPreparation;
 
@@ -46,6 +47,57 @@ internal static class SongClipPlannerModel
         string? plannerId = null, int? context = null)
     {
         var model = await ResolveAsync(attempt, token, plannerId, context);
+        return CreateSession(model);
+    }
+
+    internal static async Task<SongClipPlannerSession> OpenForPlanningAsync(SongClipAttempt attempt,
+        Action<double, string> progress, CancellationToken token, string? plannerId = null)
+    {
+        var model = await ResolveForPlanningAsync(attempt, (card, ct) =>
+            DownloadPlannerAsync(card, attempt.Connections, progress, ct), token, plannerId);
+        return CreateSession(model);
+    }
+
+    internal static async Task<VideoConceptModelRequest> ResolveForPlanningAsync(SongClipAttempt attempt,
+        Func<ManagedModelArtifactCard, CancellationToken, Task<string>> acquire, CancellationToken token,
+        string? plannerId = null)
+    {
+        try { return await ResolveAsync(attempt, token, plannerId); }
+        catch (FileNotFoundException error) when (plannerId is null && error.Message == "SongClip.PlannerModelMissing")
+        {
+            token.ThrowIfCancellationRequested();
+            var id = ModelIdFor(attempt.Model);
+            var card = id == "core" ? ManagedModelCatalog.CreateCore(attempt.ModelsRoot)
+                : ManagedModelCatalog.CreateQwen36Executor(attempt.ModelsRoot);
+            var path = await acquire(card, token);
+            token.ThrowIfCancellationRequested();
+            if (!File.Exists(path)) throw new FileNotFoundException("SongClip.PlannerModelMissing");
+            return new(id, path, EngineSetSelection.ActiveId);
+        }
+    }
+
+    private static async Task<string> DownloadPlannerAsync(ManagedModelArtifactCard card, int connections,
+        Action<double, string> progress, CancellationToken token)
+    {
+        var library = new ManagedModelLibraryStore();
+        if (card.ModelArtifactId == ManagedModelCatalog.Qwen36ExecutorArtifactId)
+            ManagedModelCatalog.ReuseQwen36ExecutorDirectory(card, library);
+        card = library.Upsert(card);
+        void Report(long bytes, long total) => progress(0, JsonSerializer.Serialize(new
+        {
+            kind = "planner-download", model = card.Family, downloaded = bytes, total
+        }));
+        Report(0, card.TotalBytes);
+        using var acquisition = new ManagedModelAcquisitionService(library) { MaximumParallelConnections = connections };
+        var installed = await acquisition.DownloadAsync(card.ModelArtifactId,
+            new InlineProgress<ManagedModelDownloadProgress>(value => Report(value.DownloadedBytes, value.TotalBytes)), token);
+        if (installed.Status != ManagedModelStatuses.Installed)
+            throw new IOException("SongClip.PlannerModelMissing");
+        return RuntimeFileAudit.Contained(installed.InstallDirectory, installed.Files.Single(file => file.IsRequired).RelativePath);
+    }
+
+    private static SongClipPlannerSession CreateSession(VideoConceptModelRequest model)
+    {
         // Construct the existing local profile service, but never initialize IP
         // location/network discovery. The inference payload contains only caller messages.
         var assistant = new VideoConceptAssistant(new UserContextService(new UserProfileStore(), new IpLocationService()), adaptiveContext: true);

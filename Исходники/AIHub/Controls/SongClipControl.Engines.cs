@@ -125,9 +125,13 @@ public sealed partial class SongClipControl
             int Number(string key) => value.TryGetProperty(key, out var number) && number.TryGetInt32(out var result) ? result : 0;
             long? Bytes(string key) => value.TryGetProperty(key, out var number) && number.ValueKind == JsonValueKind.Number
                 && number.TryGetInt64(out var result) && result >= 0 ? result : null;
+            string Text(string key) => value.TryGetProperty(key, out var property) && property.ValueKind == JsonValueKind.String
+                ? property.GetString() ?? "" : "";
             string Format(string key, params object[] values) => string.Format(CultureInfo.CurrentCulture, _l("SongClip." + key), values);
             return kind.GetString() switch
             {
+                "planner-download" => Format("PlannerDownloading", Text("model"),
+                    ComponentCardViewModel.FormatBytes(Bytes("downloaded") ?? 0), ComponentCardViewModel.FormatBytes(Bytes("total") ?? 0)),
                 "planner" => Format("PlanningBatch", Number("current"), Number("total"),
                     value.TryGetProperty("model", out var plannerModel) ? plannerModel.GetString() switch
                     {

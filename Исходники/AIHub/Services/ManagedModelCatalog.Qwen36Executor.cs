@@ -11,6 +11,17 @@ public static partial class ManagedModelCatalog
     internal const string Qwen36ExecutorFile = "qwen3.6-27b-q4_k_m.gguf";
     internal const string Qwen36ExecutorSha256 = "2ac61afbc9c600899ab57fe6333116179b9b08a6230c9bcaca5afd62ad75b7d7";
 
+    internal static void ReuseQwen36ExecutorDirectory(ManagedModelArtifactCard card, ManagedModelLibraryStore library)
+    {
+        var registered = library.Load(card.ModelArtifactId);
+        var weight = card.Files.Single();
+        if (registered is { IsManaged: true } && Path.IsPathFullyQualified(registered.InstallDirectory) &&
+            ModelStorageAddresses.IsBelow(card.ModelsRoot, registered.InstallDirectory) &&
+            registered.Files.Any(file => file.IsRequired && file.RelativePath == weight.RelativePath &&
+                file.SizeBytes == weight.SizeBytes && file.Sha256.Equals(weight.Sha256, StringComparison.OrdinalIgnoreCase)))
+            card.InstallDirectory = registered.InstallDirectory;
+    }
+
     internal static ManagedModelArtifactCard CreateQwen36Executor(string root) => new()
     {
         ModelArtifactId = Qwen36ExecutorArtifactId, Family = "Qwen3.6-27B", DisplayName = Qwen36ExecutorRepository,

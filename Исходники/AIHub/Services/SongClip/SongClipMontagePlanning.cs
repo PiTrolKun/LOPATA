@@ -24,7 +24,7 @@ internal static class SongClipMontagePlanning
         var session = warmedSession;
         try {
             return await EnsureCoreAsync(attempt, job, analysis, boundInput, async (system, body, schema, ct) => {
-                session ??= await SongClipPlannerModel.OpenAsync(attempt, ct, plannerId);
+                session ??= await SongClipPlannerModel.OpenForPlanningAsync(attempt, progress, ct, plannerId);
                 return await session.GenerateAsync(system, body, schema, SongClipPlannerRecovery.Reserve(body), ct);
             }, progress, token, prepareStory: true, growBatches: true);
         }

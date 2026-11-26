@@ -30,7 +30,7 @@ internal static class SongClipPlanning
         {
             return await EnsureCoreAsync(attempt, job, input.Duration, input.Hash, async (system, body, schema, ct) =>
             {
-                session ??= await SongClipPlannerModel.OpenAsync(attempt, ct);
+                session ??= await SongClipPlannerModel.OpenForPlanningAsync(attempt, progress, ct);
                 return await session.GenerateAsync(system, body, schema, SongClipPlannerRecovery.Reserve(body), ct);
             }, progress, token, prepareStory: true, suppliedSlots: slots, growBatches: true);
         }

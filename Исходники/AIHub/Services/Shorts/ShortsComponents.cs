@@ -21,16 +21,7 @@ internal static class ShortsComponents
         var generation = profile.Cards(root);
         if (!profile.FromSong) return generation;
         var expected = ManagedModelCatalog.CreateQwen36Executor(root);
-        var installed = library.Load(expected.ModelArtifactId);
-        var weight = expected.Files.Single();
-        if (installed is { IsManaged: true } && Path.IsPathFullyQualified(installed.InstallDirectory) &&
-            Path.GetFullPath(installed.InstallDirectory).StartsWith(
-                Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-            installed.Files.Any(file => file.IsRequired && file.RelativePath == weight.RelativePath &&
-                file.SizeBytes == weight.SizeBytes && file.Sha256.Equals(weight.Sha256, StringComparison.OrdinalIgnoreCase)))
-        {
-            expected.InstallDirectory = installed.InstallDirectory;
-        }
+        ManagedModelCatalog.ReuseQwen36ExecutorDirectory(expected, library);
         return [.. generation, expected];
     }
 
