@@ -38,30 +38,30 @@ public sealed class ApplicationUpdateCoordinator
     }
     public void CancelPrepared() => _prepared.Clear();
 
-    public Task<UpdateOffer?> CheckAsync(string current, UpdateDelivery delivery, CancellationToken token) =>
-        new PublishedUpdateCatalog(_http, UpdateReleaseKeys.Trusted).CheckAsync(current, delivery, token, preferFreshManifest: true);
+    public Task<PublishedUpdateCandidate?> CheckAsync(string current, UpdateDelivery delivery, CancellationToken token,
+        Action<PublishedUpdateCandidate> onFirstCandidate) =>
+        new PublishedUpdateCatalog(_http, UpdateReleaseKeys.Trusted).DiscoverAsync(current, delivery, token,
+            preferFreshManifest: true, onFirstCandidate: onFirstCandidate);
+
+    public async Task<UpdateOffer> VerifyAsync(PublishedUpdateCandidate candidate, CancellationToken token)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+        timeout.CancelAfter(CheckTimeout);
+        try
+        {
+            return await new PublishedUpdateCatalog(_http, UpdateReleaseKeys.Trusted).ResolveAsync(candidate, timeout.Token);
+        }
+        catch (OperationCanceledException error) when (!token.IsCancellationRequested && timeout.IsCancellationRequested)
+        {
+            throw new TimeoutException("Timed out reading signed release metadata.", error);
+        }
+    }
 
     public static UpdateOffer PreparedOffer(PreparedApplicationUpdate prepared)
     {
         var manifest = prepared.Files?.Verify(UpdateReleaseKeys.Trusted);
         return new(prepared.Version, prepared.Delivery, prepared.Notes ?? manifest?.Notes ?? [],
             prepared.Installer, prepared.Files, manifest, prepared.NotesIncomplete);
-    }
-
-    public async Task<long> DownloadSizeAsync(UpdateOffer offer, CancellationToken token)
-    {
-        if (offer.Installer is { } installer) return installer.Size;
-        if (Installation is null) return offer.Files?.Packages.Sum(p => p.Size) ?? 0;
-        return (await PlanAsync(offer, token)).DownloadBytes;
-    }
-
-    private async Task<UpdatePlan> PlanAsync(UpdateOffer offer, CancellationToken token)
-    {
-        var installation = Installation ?? throw new InvalidOperationException("A transition installer is required.");
-        var transaction = new UpdateTransaction(installation.Roots(), UpdateReleaseKeys.Trusted, installation.StateDirectory);
-        var previous = SignedManifest.Read(await File.ReadAllBytesAsync(transaction.InstalledManifestPath, token)).Verify(UpdateReleaseKeys.Trusted);
-        return await Task.Run(() => UpdatePlanner.CreateAsync(previous,
-            offer.SignedFiles!.Verify(UpdateReleaseKeys.Trusted), installation.Roots(), token), token);
     }
 
     public async Task PrepareAsync(UpdateOffer offer, int connections, IProgress<ManagedModelDownloadProgress>? progress,
@@ -79,17 +79,23 @@ public sealed class ApplicationUpdateCoordinator
         }
         else
         {
-            var plan = await PlanAsync(offer, token);
-            var completed = new UpdateBatchProgress(plan.Packages);
-            var transfer = new Progress<UpdateTransferProgress>(p =>
+            var installation = Installation ?? throw new InvalidOperationException("A transition installer is required.");
+            var signed = offer.SignedFiles ?? throw new InvalidDataException("The verified release has no signed manifest.");
+            UpdateBatchProgress? completed = null;
+            long downloadBytes = 0;
+            var transfer = new InlineProgress<UpdateTransferProgress>(p =>
             {
-                var batch = completed.Accept(p);
-                progress?.Report(new("application-update", p.Package, batch.Bytes, plan.DownloadBytes, 0, batch.Stage));
+                var batch = completed!.Accept(p);
+                progress?.Report(new("application-update", p.Package, batch.Bytes, downloadBytes, 0, batch.Stage));
             });
             await Task.Run(() => new FileUpdatePreparation(_http, UpdateReleaseKeys.Trusted)
                 { MaximumParallelConnections = connections }
-                .StageAsync(Installation!, offer.SignedFiles!, transfer, token), token);
-            prepared = new(offer.Version, offer.Delivery, null, null, offer.SignedFiles, false, offer.Notes, offer.NotesIncomplete);
+                .StageAsync(installation, signed, transfer, token, planReady: plan =>
+                {
+                    completed = new UpdateBatchProgress(plan.Packages);
+                    downloadBytes = plan.DownloadBytes;
+                }), token);
+            prepared = new(offer.Version, offer.Delivery, null, null, signed, false, offer.Notes, offer.NotesIncomplete);
         }
         _prepared.Save(prepared);
     }

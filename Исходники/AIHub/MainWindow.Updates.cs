@@ -15,11 +15,10 @@ public partial class MainWindow
     private readonly CancellationTokenSource _updateLifetime = new();
     private ApplicationUpdateCoordinator? _updateService;
     private ApplicationUpdateWindow? _updateWindow;
-    private UpdateOffer? _availableUpdate;
+    private PublishedUpdateCandidate? _availableUpdate;
     private ProcessStartInfo? _applicationUpdateStart;
     private readonly DispatcherTimer _betaUpdateTimer = new() { Interval = TimeSpan.FromMinutes(30) };
     private bool _automaticUpdateCheckRunning, _checkAfterUpdateWindow;
-    private string? _lastOfferedUpdateVersion;
     private Controls.ApplicationUpdateAttention? _updateNoticeAttention;
 
     private void InitializeApplicationUpdates()
@@ -84,46 +83,66 @@ public partial class MainWindow
         _automaticUpdateCheckRunning = true;
         _updateWindow?.SetBackgroundCheckBusy(true);
         var checkSucceeded = false;
-        UpdateOffer? checkedOffer = null;
+        PublishedUpdateCandidate? checkedOffer = null;
+        string? checkFailure = null;
         try
         {
             if (_updateService.ReadPrepared() is { } prepared)
             {
+                checkSucceeded = true;
                 ApplicationUpdateNotice.Visibility = Visibility.Visible;
                 NotifyUpdateFound(prepared.Version);
                 return;
             }
-            if (!_appSettings.Updates.CheckOnStartup || _updateService.ReadDirection() is not { } direction) return;
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_updateLifetime.Token);
-            timeout.CancelAfter(ApplicationUpdateCoordinator.CheckTimeout);
-            var offer = await _updateService.CheckAsync(GetAppVersion(), direction, timeout.Token);
-            if (_updateLifetime.IsCancellationRequested) return;
-            checkSucceeded = true;
-            checkedOffer = offer;
-            _availableUpdate = offer;
-            _appSettings.Updates.LastCheckUtc = offer is null ? DateTimeOffset.UtcNow : null;
-            _appSettingsStore.Save(_appSettings);
-            if (offer is null)
+            if (!_appSettings.Updates.CheckOnStartup || _updateService.ReadDirection() is not { } direction)
             {
-                ApplicationUpdateNotice.Visibility = Visibility.Collapsed;
+                checkSucceeded = true;
+                checkedOffer = _availableUpdate;
                 return;
             }
-            if (_lastOfferedUpdateVersion != offer.Version)
-            {
-                _lastOfferedUpdateVersion = offer.Version;
-                ApplicationUpdateNotice.Visibility = Visibility.Visible;
-            }
-            NotifyUpdateFound(offer.Version);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_updateLifetime.Token);
+            timeout.CancelAfter(ApplicationUpdateCoordinator.CheckTimeout);
+            var offer = await _updateService.CheckAsync(GetAppVersion(), direction, timeout.Token, candidate =>
+                Dispatcher.Invoke(() =>
+                {
+                    if (_updateLifetime.IsCancellationRequested) return;
+                    if (_availableUpdate is { } previous && previous.Delivery == candidate.Delivery
+                        && UpdateManifest.NumericVersion(previous.Version) >= UpdateManifest.NumericVersion(candidate.Version)) return;
+                    _updateWindow?.ShowBackgroundCandidate(candidate);
+                    PublishUpdateCandidate(candidate, preliminary: true);
+                }));
+            timeout.Token.ThrowIfCancellationRequested();
+            checkSucceeded = true;
+            checkedOffer = offer;
+            PublishUpdateCandidate(offer);
+            _appSettings.Updates.LastCheckUtc = offer is null ? DateTimeOffset.UtcNow : null;
+            _appSettingsStore.Save(_appSettings);
         }
-        catch (Exception) { /* Background checks are silent offline; manual checks explain errors. */ }
+        catch (Exception) when (_updateLifetime.IsCancellationRequested) { }
+        catch (Exception error)
+        {
+            checkFailure = ApplicationUpdateWindow.CheckFailureKey(error);
+            ApplicationUpdateDiagnostics.RecordFailure(_availableUpdate?.Version, error, "discovery");
+        }
         finally
         {
             _automaticUpdateCheckRunning = false;
             if (!_updateLifetime.IsCancellationRequested)
-                _updateWindow?.CompleteBackgroundCheck(checkedOffer, checkSucceeded);
+                _updateWindow?.CompleteBackgroundCheck(checkedOffer, checkSucceeded, checkFailure);
             ScheduleBetaUpdateCheck();
             RefreshBackgroundTray();
         }
+    }
+
+    private void PublishUpdateCandidate(PublishedUpdateCandidate? candidate, bool preliminary = false)
+    {
+        _availableUpdate = candidate;
+        ApplicationUpdateNotice.Visibility = candidate is not null ? Visibility.Visible : Visibility.Collapsed;
+        RefreshBackgroundTray();
+        if (candidate is null) return;
+        var previous = PublishedUpdateCatalog.VersionFromTag(_appSettings.Updates.LastNotifiedVersion);
+        if (!preliminary || previous is null || UpdateManifest.NumericVersion(candidate.Version) > UpdateManifest.NumericVersion(previous))
+            NotifyUpdateFound(candidate.Version);
     }
 
     private void UpdateSettingsChanged()
@@ -153,7 +172,8 @@ public partial class MainWindow
                 () => _appSettingsStore.Save(_appSettings), () => _appSettings.ModelDownloads.MaximumParallelConnections,
                 InstallApplicationUpdateAsync, _availableUpdate, UpdateSettingsChanged,
                 () => _checkAfterUpdateWindow = false,
-                CanMaintainInstalledStorage ? () => CheckStorageMaintenanceAsync(manual: true) : null);
+                CanMaintainInstalledStorage ? () => CheckStorageMaintenanceAsync(manual: true) : null,
+                PublishUpdateCandidate);
         }
         catch (Exception)
         {

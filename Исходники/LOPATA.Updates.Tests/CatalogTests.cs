@@ -1,5 +1,6 @@
 using System.Net;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Lopata.Updates;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -68,6 +69,80 @@ public sealed class CatalogTests
         Assert.IsFalse(fixture.Requests.Any(u => u.EndsWith(".zip")));
     }
 
+    [TestMethod]
+    public async Task FirstAnnouncementArrivesBeforeTheRestOfTheFeedAndResolution()
+    {
+        var resumeFeed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstNotice = new TaskCompletionSource<PublishedUpdateCandidate>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var fixture = new CatalogFixture { ResumeFeed = resumeFeed.Task };
+        var catalog = new PublishedUpdateCatalog(fixture.Http, fixture.Keys);
+        var notices = 0;
+        var discovery = catalog.DiscoverAsync("0.2.42-beta", UpdateDelivery.FilePatch, onFirstCandidate: candidate =>
+        {
+            Interlocked.Increment(ref notices);
+            firstNotice.TrySetResult(candidate);
+        });
+
+        try
+        {
+            var early = await firstNotice.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.AreEqual("0.2.43-beta", early.Version);
+            Assert.IsFalse(discovery.IsCompleted);
+            Assert.AreEqual("api.github.com", new Uri(fixture.Requests.Single()).Host);
+        }
+        finally
+        {
+            resumeFeed.TrySetResult();
+        }
+
+        var newest = await discovery;
+        Assert.IsNotNull(newest);
+        Assert.AreEqual("0.2.44-beta", newest.Version);
+        Assert.AreEqual(1, notices);
+        Assert.AreEqual(1, fixture.Requests.Count);
+
+        var verified = await catalog.ResolveAsync(newest);
+        Assert.AreEqual(newest.Version, verified.SignedFiles!.Verify(fixture.Keys).Version);
+        Assert.AreEqual("First", verified.Notes[0].Text);
+        Assert.AreEqual(2, fixture.Requests.Count);
+        StringAssert.EndsWith(fixture.Requests[1], "/v0.2.44-beta/lopata-files.json");
+    }
+
+    [TestMethod]
+    public async Task CorruptSignatureIsRejectedOnlyWhenResolvingDiscoveredRelease()
+    {
+        using var fixture = new CatalogFixture { Corrupt = true };
+        var catalog = new PublishedUpdateCatalog(fixture.Http, fixture.Keys);
+
+        var candidate = await catalog.DiscoverAsync("0.2.42-beta", UpdateDelivery.FilePatch);
+
+        Assert.IsNotNull(candidate);
+        Assert.AreEqual("0.2.44-beta", candidate.Version);
+        Assert.AreEqual("api.github.com", new Uri(fixture.Requests.Single()).Host);
+        await Assert.ThrowsAsync<InvalidDataException>(() => catalog.ResolveAsync(candidate));
+        Assert.AreEqual(2, fixture.Requests.Count);
+        StringAssert.EndsWith(fixture.Requests[1], "/v0.2.44-beta/lopata-files.json");
+    }
+
+    [TestMethod]
+    public async Task InstallerDiscoveryUsesOnlyFeedMetadataAndResolvesTheMatchingInstaller()
+    {
+        using var fixture = new CatalogFixture();
+        var catalog = new PublishedUpdateCatalog(fixture.Http, fixture.Keys);
+
+        var candidate = await catalog.DiscoverAsync("0.2.42-beta", UpdateDelivery.FullInstaller);
+
+        Assert.IsNotNull(candidate);
+        Assert.AreEqual("0.2.43-beta", candidate.Version);
+        Assert.AreEqual(UpdateDelivery.FullInstaller, candidate.Delivery);
+        Assert.AreEqual("api.github.com", new Uri(fixture.Requests.Single()).Host);
+
+        var verified = await catalog.ResolveAsync(candidate);
+        Assert.AreEqual("LOPATA_Setup_0.2.43-beta.exe", verified.Installer!.FileName);
+        Assert.IsTrue(fixture.Requests.Any(url => url.EndsWith("/v0.2.43-beta/lopata-update.json", StringComparison.Ordinal)));
+        Assert.IsFalse(fixture.Requests.Any(url => url.EndsWith(".exe", StringComparison.Ordinal)));
+    }
+
     private sealed class CatalogFixture : HttpMessageHandler
     {
         private readonly ECDsa _key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -75,6 +150,7 @@ public sealed class CatalogTests
         public bool Corrupt;
         public bool SetupCompatible;
         public bool LargeFeed;
+        public Task? ResumeFeed;
         public List<string> Requests { get; } = [];
         public IReadOnlyDictionary<string, string> Keys => new Dictionary<string, string> { ["test"] = _key.ExportSubjectPublicKeyInfoPem() };
         public CatalogFixture() => Http = new HttpClient(this, false);
@@ -91,6 +167,13 @@ public sealed class CatalogTests
                     assets = new[] { "lopata-files.json" }.Concat(full ? new[] { "lopata-update.json", $"LOPATA_Setup_{version}.exe" } : [])
                         .Select(name => new { name, size = 100, browser_download_url = $"https://github.com/PiTrolKun/LOPATA/releases/download/v{version}/{name}" })
                 };
+                if (ResumeFeed is { } resume)
+                {
+                    var prefix = "[" + JsonSerializer.Serialize(Release("0.2.43-beta", true)) + "," + new string(' ', 65536);
+                    var completeFeed = prefix + JsonSerializer.Serialize(Release("0.2.44-beta", false)) + "]";
+                    var stream = new PausedFeed(Encoding.UTF8.GetBytes(completeFeed), Encoding.UTF8.GetByteCount(prefix), resume);
+                    return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(stream) });
+                }
                 var releases = LargeFeed
                     ? Enumerable.Range(1, 70).Select(index => Release($"0.1.{index}-beta", false, new string('x', 65536)))
                     : [];
@@ -119,6 +202,18 @@ public sealed class CatalogTests
         {
             if (disposing) { Http.Dispose(); _key.Dispose(); }
             base.Dispose(disposing);
+        }
+    }
+
+    private sealed class PausedFeed(byte[] bytes, int pauseAt, Task resume) : MemoryStream(bytes)
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            var available = pauseAt - (int)Position;
+            if (available > 0)
+                return await base.ReadAsync(buffer[..Math.Min(buffer.Length, available)], cancellationToken);
+            await resume.WaitAsync(cancellationToken);
+            return await base.ReadAsync(buffer, cancellationToken);
         }
     }
 }

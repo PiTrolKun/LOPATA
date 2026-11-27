@@ -6,7 +6,7 @@ namespace AIHub.Services;
 
 internal static class ApplicationUpdateDiagnostics
 {
-    public static void RecordFailure(string? version, Exception error)
+    public static void RecordFailure(string? version, Exception error, string stage = "prepare")
     {
         try
         {
@@ -16,7 +16,7 @@ internal static class ApplicationUpdateDiagnostics
             var path = Path.Combine(folder, $"download-{DateTime.UtcNow:yyyyMMddTHHmmss}-{Guid.NewGuid():N}.json");
             File.WriteAllText(path, JsonSerializer.Serialize(new
             {
-                utc = DateTimeOffset.UtcNow, version, stage = "prepare", error = error.ToString()
+                utc = DateTimeOffset.UtcNow, version, stage, error = error.ToString()
             }));
         }
         catch (Exception) { /* Diagnostic storage cannot change update or cancellation state. */ }

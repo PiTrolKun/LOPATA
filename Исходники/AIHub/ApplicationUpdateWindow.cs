@@ -1,4 +1,6 @@
 using System.IO;
+using System.Net.Http;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using AIHub.Models;
@@ -27,6 +29,7 @@ public sealed class ApplicationUpdateWindow : Window
     private readonly Action _save;
     private readonly Action _settingsChanged;
     private readonly Action _checkCompleted;
+    private readonly Action<PublishedUpdateCandidate?, bool> _candidateChanged;
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, Margin = new(0, 16, 0, 12) };
     private readonly TextBlock _checkStatus = new() { TextWrapping = TextWrapping.Wrap, Margin = new(0, 12, 0, 12) };
     private readonly TextBox _notes = new()
@@ -38,52 +41,53 @@ public sealed class ApplicationUpdateWindow : Window
     private readonly Button _retry = new(), _download = new(), _cancel = new();
     private readonly RadioButton _stable, _beta;
     private CancellationTokenSource? _operation;
-    private UpdateOffer? _update;
+    private PublishedUpdateCandidate? _update;
     private PreparedApplicationUpdate? _ready;
     private UpdateDelivery? _direction;
     private bool _backgroundCheckBusy, _receivedBackgroundCheck;
     private bool _checkFailed, _downloading, _choosing, _installing, _closed;
     public bool IsBusy => _operation is not null || _choosing || _installing;
-    public UpdateOffer? AvailableUpdate => _update;
+    public PublishedUpdateCandidate? AvailableUpdate => _update;
 
     public void SetBackgroundCheckBusy(bool busy)
     {
         _backgroundCheckBusy = busy;
-        if (busy) _checkStatus.Text = _text("Updates.Checking");
+        if (busy && _update is null && _ready is null) _checkStatus.Text = _text("Updates.Checking");
         RefreshButtons();
     }
 
-    public void CompleteBackgroundCheck(UpdateOffer? offer, bool succeeded)
+    public void ShowBackgroundCandidate(PublishedUpdateCandidate candidate)
+    {
+        if (_closed || !_backgroundCheckBusy || _operation is not null || _ready is not null || _direction != candidate.Delivery) return;
+        ShowCandidate(candidate);
+    }
+
+    public void CompleteBackgroundCheck(PublishedUpdateCandidate? offer, bool succeeded, string? failure = null)
     {
         _backgroundCheckBusy = false;
         _receivedBackgroundCheck = true;
         if (_closed) return;
         if (_operation is null)
         {
-            _checkFailed = !succeeded;
-            _checkStatus.Text = _text(succeeded ? offer is null ? "Updates.CurrentLatest" : "Updates.Available" : "Updates.CheckFailed")
-                + (succeeded && offer is not null ? " " + offer.Version : "");
-            if (succeeded)
-            {
-                if (_ready is null) _update = offer;
-                ShowRelease();
-                if (_ready is null && offer is not null) _ = ShowDownloadSizeAsync();
-            }
-            else if (_ready is null) { _update = null; ShowRelease(); }
+            if (_ready is not null) _checkStatus.Text = "";
+            else if (succeeded) ShowCandidate(offer);
+            else ShowCheckFailure(failure ?? "Updates.CheckFailed");
         }
         RefreshButtons();
     }
 
     public ApplicationUpdateWindow(Window owner, ApplicationUpdateCoordinator service, ApplicationUpdateSettings settings,
-        string version, Func<string, string> text, Action save, Func<int> connections, Func<Task> install, UpdateOffer? knownUpdate,
-        Action? settingsChanged = null, Action? checkCompleted = null, Func<Task>? storage = null)
+        string version, Func<string, string> text, Action save, Func<int> connections, Func<Task> install, PublishedUpdateCandidate? knownUpdate,
+        Action? settingsChanged = null, Action? checkCompleted = null, Func<Task>? storage = null,
+        Action<PublishedUpdateCandidate?, bool>? candidateChanged = null)
     {
         Owner = owner; Resources = owner.Resources;
         _service = service; _settings = settings; _version = version; _text = text;
         _save = save; _settingsChanged = settingsChanged ?? save; _checkCompleted = checkCompleted ?? (() => { });
+        _candidateChanged = candidateChanged ?? ((_, _) => { });
         _connections = connections; _install = install;
         _direction = service.ReadDirection(); _ready = service.ReadPrepared();
-        _update = _ready is null ? knownUpdate : ApplicationUpdateCoordinator.PreparedOffer(_ready);
+        _update = _ready is null && knownUpdate?.Delivery == _direction ? knownUpdate : null;
         Title = text("Updates.Title"); Width = 740; Height = 710; MinWidth = 540; MinHeight = 470;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         SetResourceReference(BackgroundProperty, "PanelBrush"); SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
@@ -113,6 +117,7 @@ public sealed class ApplicationUpdateWindow : Window
         AddButton(buttons, _download, "Updates.DownloadAction", ChooseTimingAsync, primary: true);
         AddButton(buttons, _cancel, "Updates.Pause", () => { _operation?.Cancel(); return Task.CompletedTask; });
         Closed += (_, _) => { _closed = true; _operation?.Cancel(); };
+        if (_update is not null) _checkStatus.Text = _text("Updates.Available") + " " + _update.Version;
         ShowRelease(); RefreshButtons();
         Loaded += async (_, _) =>
         {
@@ -133,8 +138,13 @@ public sealed class ApplicationUpdateWindow : Window
             try
             {
                 _service.SaveDirection(delivery); _direction = delivery; _settings.LastCheckUtc = null; _settingsChanged();
-                if (_ready is null) _update = null;
-                ShowRelease(); RefreshButtons();
+                if (_ready is null)
+                {
+                    _update = null;
+                    _candidateChanged(null, false);
+                    ShowRelease();
+                }
+                RefreshButtons();
                 await CheckAsync();
             }
             catch (Exception)
@@ -155,30 +165,64 @@ public sealed class ApplicationUpdateWindow : Window
 
     private async Task CheckAsync()
     {
-        if (_closed || _backgroundCheckBusy || IsBusy || _direction is null) return;
+        if (_closed || _backgroundCheckBusy || IsBusy || _direction is null || _ready is not null) return;
         var operation = new CancellationTokenSource(ApplicationUpdateCoordinator.CheckTimeout);
-        _operation = operation; _checkFailed = false; RefreshButtons(); _checkStatus.Text = _text("Updates.Checking");
+        _operation = operation; _checkFailed = false;
+        ShowRelease(); RefreshButtons();
+        if (_update is null) _checkStatus.Text = _text("Updates.Checking");
         try
         {
-            var offer = await _service.CheckAsync(_version, _direction.Value, operation.Token);
+            var offer = await _service.CheckAsync(_version, _direction.Value, operation.Token, candidate =>
+                Dispatcher.Invoke(() =>
+                {
+                    if (_closed || !ReferenceEquals(_operation, operation)) return;
+                    if (_update is not null && UpdateManifest.NumericVersion(_update.Version) >= UpdateManifest.NumericVersion(candidate.Version)) return;
+                    ShowCandidate(candidate);
+            _candidateChanged(candidate, true);
+                }));
             operation.Token.ThrowIfCancellationRequested();
             if (_closed) return;
-            if (_ready is null) _update = offer;
+            ShowCandidate(offer);
+            _candidateChanged(offer, false);
             _settings.LastCheckUtc = offer is null ? DateTimeOffset.UtcNow : null; _save();
-            _checkStatus.Text = _text(offer is null ? "Updates.CurrentLatest" : "Updates.Available") + (offer is null ? "" : " " + offer.Version);
-            ShowRelease();
-            if (_ready is null && _update is not null) await ShowDownloadSizeAsync(operation.Token);
         }
-        catch (Exception)
+        catch (Exception error)
         {
             if (!_closed)
             {
-                _checkFailed = true; _checkStatus.Text = _text("Updates.CheckFailed");
-                if (_ready is null) { _update = null; ShowRelease(); }
+                ApplicationUpdateDiagnostics.RecordFailure(_update?.Version, error, "discovery");
+                ShowCheckFailure(CheckFailureKey(error));
             }
         }
         finally { operation.Dispose(); _operation = null; _checkCompleted(); RefreshButtons(); }
     }
+
+    private void ShowCandidate(PublishedUpdateCandidate? offer)
+    {
+        _update = offer;
+        _checkFailed = false;
+        _checkStatus.Text = offer is null ? _text("Updates.CurrentLatest") : _text("Updates.Available") + " " + offer.Version;
+        ShowRelease();
+    }
+
+    private void ShowCheckFailure(string key)
+    {
+        _checkFailed = true;
+        if (_update is null) _checkStatus.Text = _text(key);
+        else
+        {
+            _status.Text = _text(key);
+            _status.Visibility = Visibility.Visible;
+        }
+    }
+
+    internal static string CheckFailureKey(Exception error) => error switch
+    {
+        OperationCanceledException or TimeoutException => "Updates.CheckTimedOut",
+        HttpRequestException => "Updates.ReleaseUnavailable",
+        InvalidDataException or JsonException => "Updates.ReleaseInvalid",
+        _ => "Updates.CheckFailed"
+    };
 
     private void ShowRelease()
     {
@@ -186,34 +230,23 @@ public sealed class ApplicationUpdateWindow : Window
             : _direction is null ? _text("Updates.ChooseDirection")
             : "";
         _status.Visibility = string.IsNullOrEmpty(_status.Text) ? Visibility.Collapsed : Visibility.Visible;
-        _notes.Visibility = _update is null ? Visibility.Collapsed : Visibility.Visible;
-        _notes.Text = _update is null ? "" : string.Join(Environment.NewLine + Environment.NewLine,
-            _update.Notes.Select(n => n.Version + (n.PublishedUtc == DateTimeOffset.MinValue ? "" : " · " + n.PublishedUtc.ToLocalTime().ToString("d"))
+        var notes = _ready is { } prepared ? prepared.Notes ?? ApplicationUpdateCoordinator.PreparedOffer(prepared).Notes : _update?.Notes;
+        var notesIncomplete = (_ready?.NotesIncomplete ?? _update?.NotesIncomplete) == true;
+        _notes.Visibility = notes?.Any() == true || notesIncomplete ? Visibility.Visible : Visibility.Collapsed;
+        _notes.Text = notes is null ? "" : string.Join(Environment.NewLine + Environment.NewLine,
+            notes.Select(n => n.Version + (n.PublishedUtc == DateTimeOffset.MinValue ? "" : " · " + n.PublishedUtc.ToLocalTime().ToString("d"))
                 + Environment.NewLine + n.Text));
-        if (_update?.NotesIncomplete == true) _notes.Text = _text("Updates.NotesIncomplete") + Environment.NewLine + Environment.NewLine + _notes.Text;
-        if (_update?.Delivery == UpdateDelivery.FilePatch && _service.Installation is null)
+        if (notesIncomplete)
+            _notes.Text = _text("Updates.NotesIncomplete") + Environment.NewLine + Environment.NewLine + _notes.Text;
+        if (_ready is null && _update?.Delivery == UpdateDelivery.FilePatch && _service.Installation is null)
         {
             _status.Text = _text("Updates.TransitionRequired"); _status.Visibility = Visibility.Visible;
         }
     }
 
-    private async Task ShowDownloadSizeAsync(CancellationToken token = default)
-    {
-        if (_update is null) return;
-        var offer = _update;
-        try
-        {
-            var size = await _service.DownloadSizeAsync(offer, token);
-            if (!_closed && ReferenceEquals(offer, _update) && _ready is null)
-                _checkStatus.Text = _text("Updates.Available") + " " + offer.Version + $" · {size / 1048576d:F1} MB";
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
-        catch (Exception) { if (!_closed && ReferenceEquals(offer, _update)) { _status.Text = _text("Updates.PlanFailed"); _status.Visibility = Visibility.Visible; } }
-    }
-
     private async Task ChooseTimingAsync()
     {
-        if (_closed || _backgroundCheckBusy || IsBusy || _update is null) return;
+        if (_closed || _backgroundCheckBusy || IsBusy || (_update is null && _ready is null)) return;
         _choosing = true; RefreshButtons();
         bool? nextLaunch;
         try
@@ -242,15 +275,17 @@ public sealed class ApplicationUpdateWindow : Window
 
     private async Task DownloadAsync(bool nextLaunch)
     {
-        if (_closed || _backgroundCheckBusy || IsBusy || _update is null || _ready is not null) return;
+        if (_closed || _backgroundCheckBusy || IsBusy || _update is not { } candidate || _ready is not null) return;
         var operation = new CancellationTokenSource();
         _operation = operation; _downloading = true; RefreshButtons();
-        _progress.Value = 0; _progress.Visibility = Visibility.Visible; _status.Visibility = Visibility.Visible;
-        _status.Text = _text("Updates.Downloading");
+        _progress.Value = 0; _progress.IsIndeterminate = true; _progress.Visibility = Visibility.Visible;
+        _status.Visibility = Visibility.Visible; _status.Text = _text("Updates.VerifyingRelease");
         var verified = false;
+        var checkingRelease = true;
         var progress = new Progress<ManagedModelDownloadProgress>(p =>
         {
             if (_closed || operation.IsCancellationRequested || !ReferenceEquals(_operation, operation) || !_downloading) return;
+            _progress.IsIndeterminate = p.TotalBytes == 0;
             _progress.Value = p.TotalBytes == 0 ? 0 : Math.Clamp(p.DownloadedBytes * 100d / p.TotalBytes, 0, 100);
             _status.Text = p.Stage is "verifying" or "extracting" ? _text("Updates.Verifying")
                 : p.Stage == "retrying" ? _text("Updates.RetryingDownload")
@@ -258,21 +293,30 @@ public sealed class ApplicationUpdateWindow : Window
         });
         try
         {
-            await _service.PrepareAsync(_update, _connections(), progress, operation.Token);
+            var offer = await _service.VerifyAsync(candidate, operation.Token);
+            operation.Token.ThrowIfCancellationRequested();
+            checkingRelease = false;
+            _status.Text = _text(offer.Delivery == UpdateDelivery.FilePatch ? "Updates.PreparingPlan" : "Updates.Downloading");
+            await _service.PrepareAsync(offer, _connections(), progress, operation.Token);
             operation.Token.ThrowIfCancellationRequested();
             if (_closed) return;
             _ready = _service.ReadPrepared(); _progress.Value = 100; ShowRelease();
             verified = _ready is not null;
         }
         catch (OperationCanceledException) { _status.Text = _text("Updates.Paused"); }
+        catch (Exception error) when (checkingRelease)
+        {
+            ApplicationUpdateDiagnostics.RecordFailure(candidate.Version, error, "verify_release");
+            _status.Text = _text(CheckFailureKey(error));
+        }
         catch (InvalidDataException error)
         {
-            ApplicationUpdateDiagnostics.RecordFailure(_update?.Version, error);
+            ApplicationUpdateDiagnostics.RecordFailure(candidate.Version, error);
             _status.Text = _text("Updates.InvalidFile");
         }
         catch (Exception error)
         {
-            ApplicationUpdateDiagnostics.RecordFailure(_update?.Version, error);
+            ApplicationUpdateDiagnostics.RecordFailure(candidate.Version, error);
             _status.Text = _text("Updates.DownloadFailed");
         }
         finally { operation.Dispose(); _operation = null; _downloading = false; _progress.Visibility = Visibility.Collapsed; RefreshButtons(); }
@@ -287,8 +331,9 @@ public sealed class ApplicationUpdateWindow : Window
         _retry.IsEnabled = idle && _direction is not null;
         ApplicationUpdateChoices.Button(_download, _text(_ready is null ? "Updates.DownloadAction"
             : _ready.ApplyOnNextLaunch ? "Updates.ChangeTiming" : "Updates.Install"), primary: true);
-        _download.Visibility = _update is null || _downloading ? Visibility.Collapsed : Visibility.Visible;
-        _download.IsEnabled = idle && _update is not null && (_ready is not null || _update.Delivery == UpdateDelivery.FullInstaller || _service.Installation is not null);
+        _download.Visibility = (_update is null && _ready is null) || _downloading ? Visibility.Collapsed : Visibility.Visible;
+        _download.IsEnabled = idle && (_ready is not null || _update is { } candidate
+            && (candidate.Delivery == UpdateDelivery.FullInstaller || _service.Installation is not null));
         _cancel.Visibility = _downloading ? Visibility.Visible : Visibility.Collapsed;
         _cancel.IsEnabled = !_closed && _operation?.IsCancellationRequested == false;
         foreach (var button in new[] { _retry, _download, _cancel }) button.Opacity = button.IsEnabled ? 1 : 0.45;

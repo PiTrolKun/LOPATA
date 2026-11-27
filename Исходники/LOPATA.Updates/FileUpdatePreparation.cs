@@ -4,7 +4,8 @@ public sealed class FileUpdatePreparation(HttpClient http, IReadOnlyDictionary<s
 {
     public int MaximumParallelConnections { get; set; }
     public async Task<UpdatePlan> StageAsync(InstalledUpdateState installation, SignedManifest signed,
-        IProgress<UpdateTransferProgress>? progress = null, CancellationToken token = default)
+        IProgress<UpdateTransferProgress>? progress = null, CancellationToken token = default,
+        Action<UpdatePlan>? planReady = null)
     {
         var target = signed.Verify(keys);
         var transaction = new UpdateTransaction(installation.Roots(), keys, installation.StateDirectory);
@@ -13,6 +14,7 @@ public sealed class FileUpdatePreparation(HttpClient http, IReadOnlyDictionary<s
             throw new InvalidDataException("A transition installer is required before file updates.");
         var previous = SignedManifest.Read(await File.ReadAllBytesAsync(transaction.InstalledManifestPath, token)).Verify(keys);
         var plan = await UpdatePlanner.CreateAsync(previous, target, installation.Roots(), token);
+        planReady?.Invoke(plan);
         var workspace = installation.WorkspaceDirectory;
         var staging = SafeUpdatePath.Resolve(workspace, "staging/" + UpdateManifest.NumericVersion(target.Version));
         var downloader = new UpdatePackageDownloader(http, Path.Combine(workspace, "packages"))

@@ -14,19 +14,73 @@ public sealed record UpdateOffer(string Version, UpdateDelivery Delivery, Update
     public PublishedUpdateVersion[] PublishedVersions { get; init; } = [];
 }
 
+/// <summary>A published release identified from the catalogue, with its downloadable metadata still unchecked.</summary>
+public sealed class PublishedUpdateCandidate
+{
+    internal PublishedUpdateCandidate(PublishedUpdateCatalog.ReleaseSelection selection, UpdateDelivery delivery, UpdateNote[] notes)
+    {
+        Selection = selection;
+        Delivery = delivery;
+        Notes = notes;
+    }
+
+    internal PublishedUpdateCatalog.ReleaseSelection Selection { get; }
+    public string Version => Selection.Selected.Version;
+    public UpdateDelivery Delivery { get; }
+    public UpdateNote[] Notes { get; }
+    public bool NotesIncomplete => !Selection.FeedComplete || Notes.Any(note => string.IsNullOrWhiteSpace(note.Text));
+}
+
 public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<string, string> publicKeys)
 {
     public const string Repository = "PiTrolKun/LOPATA";
     public const string FileManifestName = "lopata-files.json";
 
+    internal sealed record ReleaseEntry(JsonElement Release, string Version);
+    internal sealed record ReleaseSelection(ReleaseEntry Selected, ReleaseEntry[] Releases, Version CurrentVersion,
+        bool FeedComplete, string ManifestName, bool PreferFreshManifest);
+
     public async Task<UpdateOffer?> CheckAsync(string currentVersion, UpdateDelivery delivery, CancellationToken token = default,
         bool requireSetup = false, bool preferFreshManifest = false)
     {
-        var current = UpdateManifest.NumericVersion(currentVersion.EndsWith("-dev", StringComparison.Ordinal)
-            ? currentVersion[..^4] : currentVersion);
-        var releases = new List<(JsonElement Release, string Version)>();
+        var current = ParseCurrentVersion(currentVersion);
+        var preferFresh = requireSetup || preferFreshManifest;
+        var (releases, feedComplete) = await ReadFeedAsync(current, delivery, preferFresh, null, token);
+        foreach (var entry in releases)
+        {
+            var candidate = CreateCandidate(entry, releases, current, feedComplete, delivery, preferFresh);
+            if (candidate is null) continue;
+            var offer = await ResolveAsync(candidate, token);
+            if (requireSetup && offer.Files is { } manifest
+                && !manifest.Files.Any(f => f.Root == "app" && f.Path == BootstrapPreparation.ProtocolFile)) continue;
+            return offer;
+        }
+        return null;
+    }
+
+    public async Task<PublishedUpdateCandidate?> DiscoverAsync(string currentVersion, UpdateDelivery delivery,
+        CancellationToken token = default, bool preferFreshManifest = false,
+        Action<PublishedUpdateCandidate>? onFirstCandidate = null)
+    {
+        var current = ParseCurrentVersion(currentVersion);
+        var (releases, feedComplete) = await ReadFeedAsync(current, delivery, preferFreshManifest, onFirstCandidate, token);
+        foreach (var entry in releases)
+        {
+            var candidate = CreateCandidate(entry, releases, current, feedComplete, delivery, preferFreshManifest);
+            if (candidate is not null) return candidate;
+        }
+        return null;
+    }
+
+    private static Version ParseCurrentVersion(string version) =>
+        UpdateManifest.NumericVersion(version.EndsWith("-dev", StringComparison.Ordinal) ? version[..^4] : version);
+
+    private async Task<(ReleaseEntry[] Releases, bool Complete)> ReadFeedAsync(Version current, UpdateDelivery delivery,
+        bool preferFreshManifest, Action<PublishedUpdateCandidate>? onFirstCandidate, CancellationToken token)
+    {
+        var releases = new List<ReleaseEntry>();
         var feedComplete = false;
-        // GitHub returns newest publication first, not numeric version order. Collect before selecting.
+        // Announce the first eligible item while the feed is streaming. Select by version after the full scan.
         for (var page = 1; page <= 10; page++)
         {
             var count = 0;
@@ -36,67 +90,90 @@ public sealed class PublishedUpdateCatalog(HttpClient http, IReadOnlyDictionary<
                 if (!release.GetProperty("draft").GetBoolean()
                     && VersionFromTag(release.GetProperty("tag_name").GetString()) is { } version
                     && UpdateManifest.NumericVersion(version) > current)
-                    releases.Add((release, version));
+                {
+                    var entry = new ReleaseEntry(release, version);
+                    releases.Add(entry);
+                    if (onFirstCandidate is not null && CreateCandidate(entry, [entry], current, false, delivery,
+                            preferFreshManifest) is { } announcement)
+                    {
+                        onFirstCandidate(announcement);
+                        onFirstCandidate = null;
+                    }
+                }
             }
             if (count < 100) { feedComplete = true; break; }
         }
-        var candidates = releases.OrderByDescending(r => UpdateManifest.NumericVersion(r.Version)).ToArray();
-        foreach (var (release, version) in candidates)
+        return (releases.OrderByDescending(r => UpdateManifest.NumericVersion(r.Version)).ToArray(), feedComplete);
+    }
+
+    private static PublishedUpdateCandidate? CreateCandidate(ReleaseEntry entry, ReleaseEntry[] releases,
+        Version current, bool feedComplete, UpdateDelivery delivery, bool preferFreshManifest)
+    {
+        var manifestName = preferFreshManifest && Asset(entry.Release, EngineSetTransition.FreshManifestName) is not null
+            ? EngineSetTransition.FreshManifestName : FileManifestName;
+        if (delivery == UpdateDelivery.FilePatch && Asset(entry.Release, manifestName) is null) return null;
+        if (delivery == UpdateDelivery.FullInstaller && !HasInstaller(entry)) return null;
+        var upper = UpdateManifest.NumericVersion(entry.Version);
+        var applicable = releases.Where(r => UpdateManifest.NumericVersion(r.Version) <= upper).ToArray();
+        var notes = applicable.Select(r => new UpdateNote(r.Version,
+                r.Release.TryGetProperty("published_at", out var date) && date.ValueKind == JsonValueKind.String
+                    && DateTimeOffset.TryParse(date.GetString(), out var parsed) ? parsed : DateTimeOffset.MinValue,
+                r.Release.TryGetProperty("body", out var body) ? body.GetString() ?? "" : ""))
+            .OrderBy(note => UpdateManifest.NumericVersion(note.Version)).ToArray();
+        return new PublishedUpdateCandidate(new ReleaseSelection(entry, applicable, current, feedComplete,
+            manifestName, preferFreshManifest), delivery, notes);
+    }
+
+    public async Task<UpdateOffer> ResolveAsync(PublishedUpdateCandidate candidate, CancellationToken token = default)
+    {
+        var selection = candidate.Selection;
+        var release = selection.Selected.Release;
+        var version = candidate.Version;
+        var tag = release.GetProperty("tag_name").GetString()!;
+        SignedManifest? envelope = null;
+        UpdateManifest? files = null;
+        if (Asset(release, selection.ManifestName) is { } asset)
         {
-            var tag = release.GetProperty("tag_name").GetString()!;
-            var manifestName = (requireSetup || preferFreshManifest) && Asset(release, EngineSetTransition.FreshManifestName) is not null
-                ? EngineSetTransition.FreshManifestName : FileManifestName;
-            var signedAsset = Asset(release, manifestName);
-            var installerName = $"LOPATA_Setup_{version}.exe";
-            var installer = Asset(release, installerName);
-            var installerMetadata = Asset(release, "lopata-update.json");
-            if (delivery == UpdateDelivery.FilePatch && signedAsset is null) continue;
-            if (delivery == UpdateDelivery.FullInstaller && (installer is null || installerMetadata is null)) continue;
-            SignedManifest? envelope = null;
-            UpdateManifest? files = null;
-            if (signedAsset is { } asset)
-            {
-                var bytes = await ReadBytesAsync(AssetUrl(asset, tag, manifestName), SignedManifest.MaximumEnvelopeBytes, token);
-                envelope = SignedManifest.Read(bytes);
-                files = envelope.Verify(publicKeys);
-                if (files.Version != version) throw new InvalidDataException("Release tag and signed manifest differ.");
-                if (requireSetup && !files.Files.Any(f => f.Root == "app" && f.Path == BootstrapPreparation.ProtocolFile)) continue;
-            }
-            InstallerArtifact? artifact = null;
-            if (delivery == UpdateDelivery.FullInstaller)
-            {
-                using var metadata = await ReadJsonAsync(AssetUrl(installerMetadata!.Value, tag, "lopata-update.json"), token);
-                var root = metadata.RootElement;
-                var size = root.GetProperty("size").GetInt64();
-                var hash = root.GetProperty("sha256").GetString()!;
-                if (root.GetProperty("version").GetString() != version || root.GetProperty("fileName").GetString() != installerName
-                    || size <= 0 || size >= 2L * 1024 * 1024 * 1024 || size != installer!.Value.GetProperty("size").GetInt64())
-                    throw new InvalidDataException("Installer metadata does not match release.");
-                UpdateManifest.ValidateHash(hash.ToLowerInvariant());
-                artifact = new(installerName, AssetUrl(installer.Value, tag, installerName), size, hash.ToLowerInvariant());
-            }
-            var notes = files?.Notes.Where(n => UpdateManifest.NumericVersion(n.Version) > current).ToArray()
-                ?? candidates.Where(c => UpdateManifest.NumericVersion(c.Version) <= UpdateManifest.NumericVersion(version))
-                    .Select(c => new UpdateNote(c.Version,
-                        c.Release.TryGetProperty("published_at", out var date) && date.ValueKind == JsonValueKind.String
-                            && DateTimeOffset.TryParse(date.GetString(), out var parsed) ? parsed : DateTimeOffset.MinValue,
-                        c.Release.TryGetProperty("body", out var body) ? body.GetString() ?? "" : "")).ToArray();
-            var missing = notes.Any(n => string.IsNullOrWhiteSpace(n.Text))
-                || (files is null && !feedComplete)
-                || candidates.Where(c => UpdateManifest.NumericVersion(c.Version) <= UpdateManifest.NumericVersion(version))
-                    .Any(c => !notes.Any(n => n.Version == c.Version));
-            var published = candidates
-                .Where(c => UpdateManifest.NumericVersion(c.Version) <= UpdateManifest.NumericVersion(version))
-                .Where(c => delivery == UpdateDelivery.FilePatch
-                    ? Asset(c.Release, FileManifestName) is not null ||
-                      (preferFreshManifest && Asset(c.Release, EngineSetTransition.FreshManifestName) is not null)
-                    : Asset(c.Release, $"LOPATA_Setup_{c.Version}.exe") is not null && Asset(c.Release, "lopata-update.json") is not null)
-                .Select(c => new PublishedUpdateVersion(c.Version, c.Release.GetProperty("tag_name").GetString()!))
-                .DistinctBy(c => UpdateManifest.NumericVersion(c.Version)).ToArray();
-            return new(version, delivery, notes.OrderBy(n => UpdateManifest.NumericVersion(n.Version)).ToArray(), artifact, envelope, files, missing)
-                { PublishedVersions = published };
+            var bytes = await ReadBytesAsync(AssetUrl(asset, tag, selection.ManifestName), SignedManifest.MaximumEnvelopeBytes, token);
+            envelope = SignedManifest.Read(bytes);
+            files = envelope.Verify(publicKeys);
+            if (files.Version != version) throw new InvalidDataException("Release tag and signed manifest differ.");
         }
-        return null;
+
+        var installer = candidate.Delivery == UpdateDelivery.FullInstaller
+            ? await ReadInstallerAsync(release, version, tag, token) : null;
+        var notes = files?.Notes.Where(n => UpdateManifest.NumericVersion(n.Version) > selection.CurrentVersion)
+            .OrderBy(n => UpdateManifest.NumericVersion(n.Version)).ToArray() ?? candidate.Notes;
+        var missing = notes.Any(n => string.IsNullOrWhiteSpace(n.Text))
+            || (files is null && !selection.FeedComplete)
+            || selection.Releases.Any(c => !notes.Any(n => n.Version == c.Version));
+        var published = selection.Releases
+            .Where(c => candidate.Delivery == UpdateDelivery.FilePatch
+                ? Asset(c.Release, FileManifestName) is not null ||
+                  (selection.PreferFreshManifest && Asset(c.Release, EngineSetTransition.FreshManifestName) is not null)
+                : HasInstaller(c))
+            .Select(c => new PublishedUpdateVersion(c.Version, c.Release.GetProperty("tag_name").GetString()!))
+            .DistinctBy(c => UpdateManifest.NumericVersion(c.Version)).ToArray();
+        return new(version, candidate.Delivery, notes, installer, envelope, files, missing) { PublishedVersions = published };
+    }
+
+    private static bool HasInstaller(ReleaseEntry release) => Asset(release.Release, $"LOPATA_Setup_{release.Version}.exe") is not null
+        && Asset(release.Release, "lopata-update.json") is not null;
+
+    private async Task<InstallerArtifact> ReadInstallerAsync(JsonElement release, string version, string tag, CancellationToken token)
+    {
+        var installerName = $"LOPATA_Setup_{version}.exe";
+        var installer = Asset(release, installerName)!.Value;
+        var installerMetadata = Asset(release, "lopata-update.json")!.Value;
+        using var metadata = await ReadJsonAsync(AssetUrl(installerMetadata, tag, "lopata-update.json"), token);
+        var root = metadata.RootElement;
+        var size = root.GetProperty("size").GetInt64();
+        var hash = root.GetProperty("sha256").GetString()!.ToLowerInvariant();
+        if (root.GetProperty("version").GetString() != version || root.GetProperty("fileName").GetString() != installerName
+            || size <= 0 || size >= 2L * 1024 * 1024 * 1024 || size != installer.GetProperty("size").GetInt64())
+            throw new InvalidDataException("Installer metadata does not match release.");
+        UpdateManifest.ValidateHash(hash);
+        return new(installerName, AssetUrl(installer, tag, installerName), size, hash);
     }
 
     public static bool IsAssetUrl(string url, string tag, string name) =>
