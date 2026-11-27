@@ -38,6 +38,34 @@ public sealed class MusicAudioTaskTests
         var source = Wave(files.Root, "source", 1700); var silence = Wave(files.Root, "silence", 0); var output = Path.Combine(files.Root, "mix.wav");
         MusicAudioTaskDsp.MixKeeping(source, silence, output, default);
         CollectionAssert.AreEqual(MusicPcm16.Read(source), MusicPcm16.Read(output));
+        var replacedVoice = Path.Combine(files.Root, "replace-voice.wav");
+        MusicAudioTaskDsp.MixKeeping(source, silence, replacedVoice, default, limitVocalLocally: true);
+        CollectionAssert.AreEqual(MusicPcm16.Read(source), MusicPcm16.Read(replacedVoice));
+    }
+    [TestMethod]
+    public void ReplacingVoiceLimitsStereoPeakLocallyAndPreservesBalanceWithOutputHeadroom()
+    {
+        using var files = new MusicProjectTests.Files(); Directory.CreateDirectory(files.Root);
+        var music = Wave(files.Root, "music", 16000);
+        var voice = Wave(files.Root, "voice", 6000);
+        var output = Path.Combine(files.Root, "mix.wav");
+        const int peak = 24000 * 4;
+        var backing = MusicPcm16.Read(music);
+        BinaryPrimitives.WriteInt16LittleEndian(backing.AsSpan(peak, 2), 32000);
+        MusicPcm16.Write(music, backing, replaceOwned: true);
+        var vocal = MusicPcm16.Read(voice);
+        vocal.AsSpan(0, 4).Clear();
+        MusicPcm16.Write(voice, vocal, replaceOwned: true);
+
+        MusicAudioTaskDsp.MixKeeping(music, voice, output, default, limitVocalLocally: true);
+
+        var mixed = MusicPcm16.Read(output);
+        CollectionAssert.AreEqual(backing, MusicPcm16.Read(music));
+        Assert.AreEqual((short)13465, BinaryPrimitives.ReadInt16LittleEndian(mixed));
+        Assert.AreEqual((short)18515, BinaryPrimitives.ReadInt16LittleEndian(mixed.AsSpan(12000 * 4, 2)));
+        Assert.AreEqual((short)27570, BinaryPrimitives.ReadInt16LittleEndian(mixed.AsSpan(peak, 2)));
+        Assert.AreEqual((short)14105, BinaryPrimitives.ReadInt16LittleEndian(mixed.AsSpan(peak + 2, 2)));
+        Assert.AreEqual((short)18515, BinaryPrimitives.ReadInt16LittleEndian(mixed.AsSpan(28000 * 4, 2)));
     }
     [TestMethod]
     public async Task RestoreUsesNoGeneratorAndHasHonestMetadata()

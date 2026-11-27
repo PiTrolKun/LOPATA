@@ -94,8 +94,11 @@ public sealed class MusicAudioTaskPipeline(IMusicCoverScoreWorker? scoreWorker =
             }
             if (receipt.FittedLayerPath is null || receipt.Alignment is null) throw new InvalidDataException("Music.Transform.InvalidInput");
             await MusicOutputPublisher.MatchHashAsync(receipt.FittedLayerPath, receipt.FittedLayerHash, token);
-            await Task.Run(() => MusicAudioTaskDsp.MixKeeping(kept, receipt.FittedLayerPath, output, token), token);
-            Emit("Kept source stem unchanged; new layer level adjusted if required for headroom.");
+            var replaceVoice = task.Mode == MusicAudioTaskMode.ReplaceVoice;
+            await Task.Run(() => MusicAudioTaskDsp.MixKeeping(kept, receipt.FittedLayerPath, output, token,
+                limitVocalLocally: replaceVoice), token);
+            Emit(replaceVoice ? "Limited vocal peaks locally; kept the balance while leaving output peak margin."
+                : "Kept source stem unchanged; new layer level adjusted if required for headroom.");
         } else output = rendered;
         receipt = receipt with { OutputPath = output, OutputHash = await MusicAudioTaskFiles.HashAsync(output, token),
             Detail = JsonSerializer.Serialize(new { operation = task.Mode.ToString(), task.KeepHarmony, task.Crossfade,
@@ -103,7 +106,8 @@ public sealed class MusicAudioTaskPipeline(IMusicCoverScoreWorker? scoreWorker =
                 score_revision = task.UsesGenerator && job.Variation == MusicStudioRuntime.Variation ? MusicCoverScoreCatalog.Revision : null,
                 reference_method = !task.UsesGenerator ? "none" : job.Variation == MusicStudioRuntime.Variation ? "SheetSage2 measured musical attributes; source ABC for covers" : "official ACE packed timbre references",
                 alignment = receipt.Alignment,
-                processing = task.Mode == MusicAudioTaskMode.Restore ? "soft pause gate / peak normalization, not declipping or spectral reconstruction" : "owned PCM" }) };
+                processing = task.Mode == MusicAudioTaskMode.Restore ? "soft pause gate / peak normalization, not declipping or spectral reconstruction"
+                    : task.Mode == MusicAudioTaskMode.ReplaceVoice ? "local stereo-linked vocal peak control; output peak margin" : "owned PCM" }) };
         variant = variant with { AudioTask = receipt, AudioFile = output, AudioHash = receipt.OutputHash, DurationSeconds = MusicWaveFile.ReadDuration(output).TotalSeconds }; save(variant);
         return variant;
     }

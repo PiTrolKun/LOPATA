@@ -43,23 +43,92 @@ internal static class MusicAudioTaskDsp
         }
         MusicPcm16.Write(output, data);
     }
-    internal static void MixKeeping(string kept, string fresh, string output, CancellationToken token)
+    internal static void MixKeeping(string kept, string fresh, string output, CancellationToken token, bool limitVocalLocally = false)
     {
         var original = MusicPcm16.Read(kept); var layer = MusicPcm16.Read(fresh);
         if (Math.Abs(original.Length - layer.Length) > 48000 * 4 * .25) throw new InvalidDataException("Music.Transform.AlignmentFailed");
+        var length = Math.Min(original.Length, layer.Length);
+        if (limitVocalLocally)
+        {
+            MixVocalWithLocalHeadroom(original, layer, length, token);
+            LeavePeakMargin(original, token);
+        }
+        else
+        {
+            var gain = MeasureHeadroom(original, layer, 0, length, token);
+            if (gain < .05) throw new InvalidDataException("Music.Transform.HeadroomFailed");
+            MixRange(original, layer, 0, length, gain, gain, token);
+        }
+        MusicPcm16.Write(output, original);
+    }
+
+    private static void LeavePeakMargin(byte[] mix, CancellationToken token)
+    {
+        const int outputPeak = 27570; // -1.5 dBFS, leaving room for peaks during playback and lossy encoding.
+        var peak = 0;
+        for (var i = 0; i < mix.Length; i += 2)
+        {
+            if ((i & 65535) == 0) token.ThrowIfCancellationRequested();
+            peak = Math.Max(peak, Math.Abs((int)BinaryPrimitives.ReadInt16LittleEndian(mix.AsSpan(i, 2))));
+        }
+        if (peak <= outputPeak) return;
+
+        // A common gain preserves the vocal-to-instrumental balance and the stereo image.
+        var gain = (double)outputPeak / peak;
+        for (var i = 0; i < mix.Length; i += 2)
+        {
+            if ((i & 65535) == 0) token.ThrowIfCancellationRequested();
+            var sample = mix.AsSpan(i, 2);
+            BinaryPrimitives.WriteInt16LittleEndian(sample, (short)Math.Round(BinaryPrimitives.ReadInt16LittleEndian(sample) * gain));
+        }
+    }
+
+    private static void MixVocalWithLocalHeadroom(byte[] music, byte[] voice, int length, CancellationToken token)
+    {
+        const int blockBytes = 240 * 4; // Five milliseconds of stereo PCM at 48 kHz.
+        const double recoveryPerBlock = .125; // About 40 ms to recover from zero gain.
+        var limit = MeasureHeadroom(music, voice, 0, Math.Min(blockBytes, length), token);
+        var gain = limit;
+        for (var start = 0; start < length;)
+        {
+            token.ThrowIfCancellationRequested();
+            var end = start + Math.Min(blockBytes, length - start);
+            var nextEnd = end + Math.Min(blockBytes, length - end);
+            var nextLimit = MeasureHeadroom(music, voice, end, nextEnd, token);
+            // Start reducing before the next peak. Both stereo channels follow the same gain.
+            var nextGain = Math.Min(Math.Min(limit, nextLimit), gain + recoveryPerBlock);
+            MixRange(music, voice, start, end, gain, nextGain, token);
+            gain = nextGain;
+            limit = nextLimit;
+            start = end;
+        }
+    }
+
+    private static double MeasureHeadroom(byte[] original, byte[] layer, int start, int end, CancellationToken token)
+    {
         double gain = 1;
-        for (var i = 0; i < Math.Min(original.Length, layer.Length); i += 2) {
+        for (var i = start; i < end; i += 2) {
             if ((i & 65535) == 0) token.ThrowIfCancellationRequested();
             var a = BinaryPrimitives.ReadInt16LittleEndian(original.AsSpan(i, 2)); var b = BinaryPrimitives.ReadInt16LittleEndian(layer.AsSpan(i, 2));
             if (b > 0) gain = Math.Min(gain, (32760d - a) / b);
             else if (b < 0) gain = Math.Min(gain, (-32760d - a) / b);
         }
-        gain = Math.Clamp(gain, 0, 1); if (gain < .05) throw new InvalidDataException("Music.Transform.HeadroomFailed");
-        for (var i = 0; i < Math.Min(original.Length, layer.Length); i += 2) {
+        return Math.Clamp(gain, 0, 1);
+    }
+
+    private static void MixRange(byte[] original, byte[] layer, int start, int end, double from, double to, CancellationToken token)
+    {
+        var increment = (to - from) / Math.Max(1, (end - start) / 4);
+        for (var i = start; i < end; i += 4) {
             if ((i & 65535) == 0) token.ThrowIfCancellationRequested();
-            var a = BinaryPrimitives.ReadInt16LittleEndian(original.AsSpan(i, 2)); var b = BinaryPrimitives.ReadInt16LittleEndian(layer.AsSpan(i, 2));
-            BinaryPrimitives.WriteInt16LittleEndian(original.AsSpan(i, 2), (short)Math.Clamp(a + Math.Round(b * gain), short.MinValue, short.MaxValue));
+            var gain = from + ((i - start) / 4) * increment;
+            for (var channel = 0; channel < 4; channel += 2)
+            {
+                var sample = original.AsSpan(i + channel, 2);
+                var kept = BinaryPrimitives.ReadInt16LittleEndian(sample);
+                var added = BinaryPrimitives.ReadInt16LittleEndian(layer.AsSpan(i + channel, 2));
+                BinaryPrimitives.WriteInt16LittleEndian(sample, (short)Math.Clamp(kept + Math.Round(added * gain), short.MinValue, short.MaxValue));
+            }
         }
-        MusicPcm16.Write(output, original);
     }
 }
