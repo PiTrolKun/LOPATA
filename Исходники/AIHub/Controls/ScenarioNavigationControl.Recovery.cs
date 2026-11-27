@@ -10,6 +10,7 @@ public sealed partial class ScenarioNavigationControl
         IsImageLayers ? ScenarioNavigationCatalog.ImageLayers :
         IsGameSounds ? ScenarioNavigationCatalog.GameSounds :
         IsOneC ? ScenarioNavigationCatalog.OneC :
+        IsVisualConstructor ? ScenarioNavigationCatalog.VisualConstructor :
         IsSpeechAssets ? ScenarioNavigationCatalog.SpeechAssets :
         IsLivingArcade ? ScenarioNavigationCatalog.LivingArcade :
         IsLetItOutChat ? ScenarioNavigationCatalog.LetItOut :

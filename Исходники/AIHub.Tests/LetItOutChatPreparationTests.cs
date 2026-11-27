@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -7,6 +8,7 @@ using System.Windows.Threading;
 using AIHub.Controls;
 using AIHub.Models;
 using AIHub.Services;
+using AIHub.Services.VisualConstructor;
 using Button = System.Windows.Controls.Button;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -147,6 +149,58 @@ public sealed class LetItOutChatPreparationTests
         }
         finally { window.Close(); owner.Close(); }
     });
+
+    [TestMethod]
+    public async Task ReadinessUsesTheCurrentJobAndRejectsAnotherCallerWithoutAnAuditNotice()
+    {
+        using var stand = ConstructorDirectory.Create(Path.GetTempPath());
+        var controller = new BackgroundOperationController(new BackgroundOperationStore(Path.Combine(stand.FullPath, "operation.json")));
+        var previous = ApplicationBackgroundOperations.Current;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var outside = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var input = new BackgroundOperationState
+        {
+            Kind = ConstructorGemmaWork.Kind, Title = "Gemma readiness fixture",
+            Input = JsonSerializer.SerializeToElement(new { Fixture = true }), Private = true
+        };
+        ApplicationBackgroundOperations.Current = controller;
+        Task<string>? job = null;
+        try
+        {
+            job = controller.RunAsync(input, async token =>
+            {
+                started.TrySetResult();
+                await outside.Task.WaitAsync(token);
+                try
+                {
+                    await LetItOutChatPreparation.PrepareAsync(new StorageSettings(), 1, false, new ReadinessProbe(), token);
+                    throw new InvalidOperationException("The readiness probe did not run.");
+                }
+                catch (ReadinessReached reached) { return reached.Message; }
+            }, () => Task.CompletedTask, timeout.Token);
+            await started.Task.WaitAsync(timeout.Token);
+            var blocked = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+                LetItOutChatPreparation.PrepareAsync(new StorageSettings(), 1, false, new ReadinessProbe(), timeout.Token));
+            Assert.IsTrue(ComponentAuditFailures.IsWorkConflict(blocked.Message));
+            Assert.IsFalse(ComponentAuditFailures.IsEligible(blocked));
+            outside.TrySetResult();
+            Assert.AreEqual("CheckingCore", await job.WaitAsync(timeout.Token));
+        }
+        finally
+        {
+            outside.TrySetResult();
+            try { if (job is { IsCompleted: false }) await job.WaitAsync(timeout.Token); }
+            finally { ApplicationBackgroundOperations.Current = previous; }
+        }
+    }
+
+    private sealed class ReadinessReached(string stage) : Exception(stage);
+
+    private sealed class ReadinessProbe : IProgress<LetItOutChatPreparationProgress>
+    {
+        public void Report(LetItOutChatPreparationProgress value) => throw new ReadinessReached(value.StageKey);
+    }
 
     private static LetItOutChatReadiness Ready() => new("fixture-core.gguf", true, true, 1024, 0, "Ready", "CPU");
     private static LetItOutChatReadiness Missing() => new(null, false, true, 1024, 1024, "Missing", "CPU", CanDownload: true);

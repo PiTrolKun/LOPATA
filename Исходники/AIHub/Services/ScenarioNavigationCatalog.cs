@@ -18,6 +18,7 @@ public static class ScenarioNavigationCatalog
     public const string Experiments = "experiments";
     public const string Utilities = "processing_utilities";
     public const string OneC = "onec";
+    public const string VisualConstructor = "visual_constructor";
     public const string GameSounds = "game_sounds";
     public const string VibeCoding = "creation_vibe_coding";
     public const string SpeechAssets = "speech_assets";
@@ -105,6 +106,8 @@ public static class ScenarioNavigationCatalog
         Node("creation_literature", ScenarioNavigationKind.Group, Creation, "Navigation.Literature", "", "create"),
         Node(VibeCoding, ScenarioNavigationKind.Group, Creation, "OneC.Group", "", "create"),
         Node(OneC, ScenarioNavigationKind.Scenario, VibeCoding, "OneC.Title", "OneC.Description", "create", tags: ["onec_assistance", "onec_projects", "onec_checks"]),
+        Node(VisualConstructor, ScenarioNavigationKind.Scenario, VibeCoding, "VisualConstructor.Title", "VisualConstructor.Description", "create",
+            tags: ["visual_constructor", "wpf_project", "build_exe", "constructor_forms", "constructor_transitions", "constructor_actions", "constructor_gemma", "constructor_preview_scale", "constructor_research"]),
         Node(VideoGeneration, ScenarioNavigationKind.Scenario, "creation_video", "VideoGeneration.Title", "VideoGeneration.Description", "create",
             tags: ["video_generation", "video_concept", "video_concept_ai", "video_development", "video_world", "video_assistant_warmup", "video_reference_prompts", "video_storyboard", "video_preparation_export", "video_generator_plan", "video_h3_preparation", "video_generation_deno"]),
         Node(SongClip, ScenarioNavigationKind.Scenario, "creation_video", "SongClip.Title", "SongClip.Description", "create", tags: ["song_clip", "pi_h3_dwd", "song_clip_deno"]),
@@ -165,6 +168,15 @@ public static class ScenarioNavigationCatalog
         new ScenarioNavigationTag("onec_assistance", "OneC.Title", "OneC.Description", OneC),
         new ScenarioNavigationTag("onec_projects", "OneC.Projects", "OneC.ProjectsDescription", OneC),
         new ScenarioNavigationTag("onec_checks", "OneC.CheckFile", "OneC.CheckerPreparationHint", OneC),
+        new ScenarioNavigationTag("visual_constructor", "VisualConstructor.Title", "VisualConstructor.Description", VisualConstructor),
+        new ScenarioNavigationTag("wpf_project", "VisualConstructor.ProjectTag", "VisualConstructor.ProjectTagDescription", VisualConstructor),
+        new ScenarioNavigationTag("build_exe", "VisualConstructor.ExportTag", "VisualConstructor.ExportTagDescription", VisualConstructor),
+        new ScenarioNavigationTag("constructor_forms", "VisualConstructor.FormTag", "VisualConstructor.FormTagDescription", VisualConstructor),
+        new ScenarioNavigationTag("constructor_transitions", "VisualConstructor.TransitionTag", "VisualConstructor.TransitionTagDescription", VisualConstructor),
+        new ScenarioNavigationTag("constructor_actions", "VisualConstructor.ActionsTag", "VisualConstructor.ActionsTagDescription", VisualConstructor),
+        new ScenarioNavigationTag("constructor_gemma", "VisualConstructor.GemmaTag", "VisualConstructor.GemmaTagDescription", VisualConstructor),
+        new ScenarioNavigationTag("constructor_research", "VisualConstructor.Researcher", "VisualConstructor.ResearcherTagDescription", VisualConstructor),
+        new ScenarioNavigationTag("constructor_preview_scale", "VisualConstructor.PreviewTag", "VisualConstructor.PreviewTagDescription", VisualConstructor),
         new ScenarioNavigationTag("game_sounds", "GameSounds.Title", "GameSounds.Description", GameSounds),
         new ScenarioNavigationTag("game_sound_layers", "GameSounds.Orchestration", "GameSounds.LayersDescription", GameSounds),
         new ScenarioNavigationTag("game_sound_projects", "GameSounds.Projects", "GameSounds.ProjectsDescription", GameSounds),

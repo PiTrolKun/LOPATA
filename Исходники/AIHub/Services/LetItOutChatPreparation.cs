@@ -27,7 +27,10 @@ public static class LetItOutChatPreparation
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(token, ApplicationBackgroundOperations.ExitToken);
         var ct = lifetime.Token;
         ct.ThrowIfCancellationRequested();
-        using var auxiliary = ApplicationBackgroundOperations.Current?.BeginAuxiliary();
+        var controller = ApplicationBackgroundOperations.Current;
+        // A read-only check inside a running job uses that job's existing model lease.
+        using var auxiliary = controller is not null && (download || !controller.IsInOperationScope)
+            ? controller.BeginAuxiliary() : null;
         using var audit = ComponentAudit.CaptureOperation();
         using var auditLog = ComponentAudit.CaptureLog(Log);
         var setId = EngineSetSelection.ActiveId;

@@ -101,7 +101,8 @@ public sealed class LetItOutChatPreparationWindow : Window
         {
             ComponentAuditFailures.Report(error);
             OwnedProcessRegistry.Log("preparation_failed", "LetItOutChat", detail: error.GetType().Name);
-            _status.Text = T("Failed");
+            _status.Text = ComponentAuditFailures.IsWorkConflict(error.Message) ? T("Busy")
+                : error.Message == "Background.Stop.InProgress" ? _l(error.Message) : T("Failed");
         }
         finally
         {

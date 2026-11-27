@@ -79,6 +79,8 @@ public sealed partial class ScenarioNavigationControl : UserControl
     {
         if (oldContent is NeuroConstructorControl && !ReferenceEquals(oldContent, newContent))
             IsNeuroConstructor = false;
+        if (oldContent is VisualConstructor.ConstructorEditor && !ReferenceEquals(oldContent, newContent))
+            IsVisualConstructor = false;
         base.OnContentChanged(oldContent, newContent);
     }
 
@@ -111,6 +113,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         if (IsVisualScenario) { if (LeaveVisualScenario() && !ReturnFromScenario()) Render(); return true; }
         if (IsGameSounds) { if (LeaveGameSounds() && !ReturnFromScenario()) Render(); return true; }
         if (IsOneC) { if (OneCView?.Checkpoint() == false) return true; IsOneC = false; Render(); return true; }
+        if (IsVisualConstructor) { IsVisualConstructor = false; if (!ReturnFromScenario()) Render(); return true; }
         if (IsSpeechAssets) { LeaveSpeechAssets(); Render(); return true; }
         if (IsLivingArcade)
         {
@@ -167,6 +170,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         IsSongClip = false;
         IsShorts = false;
         if (VideoPreparation?.Checkpoint() == false) return;
+        IsVisualConstructor = false;
         IsNeuroConstructor = false;
         IsVideoPreparation = false;
         IsLetItOutChat = false;
@@ -193,6 +197,7 @@ public sealed partial class ScenarioNavigationControl : UserControl
         var node = ScenarioNavigationCatalog.Get(id);
         if (node.Kind != ScenarioNavigationKind.Direction || !node.IsAvailable) return;
         if (VideoPreparation?.Checkpoint() == false) return;
+        IsVisualConstructor = false;
         IsNeuroConstructor = false;
         IsVideoPreparation = false;
         IsLetItOutChat = false;
@@ -240,6 +245,8 @@ public sealed partial class ScenarioNavigationControl : UserControl
             return;
         }
         var group = ScenarioNavigationCatalog.Get(node.ParentId!);
+        var leftVisualConstructor = IsVisualConstructor && id != ScenarioNavigationCatalog.VisualConstructor;
+        if (leftVisualConstructor) IsVisualConstructor = false;
         SelectedDirectionId = group.ParentId;
         IsNeuroConstructor = id == ScenarioNavigationCatalog.NeuroConstructor;
         PlaceholderScenarioId = null;
@@ -310,7 +317,11 @@ public sealed partial class ScenarioNavigationControl : UserControl
             IsSandboxLanding = true;
             Render();
         }
-        else ScenarioRequested?.Invoke(node.EntryTargetId);
+        else
+        {
+            if (leftVisualConstructor) Render();
+            ScenarioRequested?.Invoke(node.EntryTargetId);
+        }
     }
 
     public void ShowLetItOutChat()
@@ -427,6 +438,13 @@ public sealed partial class ScenarioNavigationControl : UserControl
         if (IsVisualScenario) { Content = VisualWorkspace; StateChanged?.Invoke(); return; }
         if (IsGameSounds) { GameSoundsView!.Configure(_localize); Content = GameSoundsView; StateChanged?.Invoke(); return; }
         if (IsOneC) { OneCView!.Configure(_localize); Content = OneCView; StateChanged?.Invoke(); return; }
+        if (IsVisualConstructor)
+        {
+            VisualConstructorView!.Configure(_localize);
+            Content = VisualConstructorView;
+            StateChanged?.Invoke();
+            return;
+        }
         if (IsSpeechAssets) { Content = SpeechAssetsView; StateChanged?.Invoke(); return; }
         if (Content == LivingArcade) Content = null;
         if (IsLivingArcade)

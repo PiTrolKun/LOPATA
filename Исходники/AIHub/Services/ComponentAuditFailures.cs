@@ -12,11 +12,16 @@ public static class ComponentAuditFailures
     private static readonly object Gate = new();
     private static DateTime _lastNotice;
     public static event Action<Exception>? Failure;
+
+    internal static bool IsWorkConflict(string reason) => reason is "Music.Poetry.OtherOperation"
+        or "Another background operation requires attention or is running." or "Another model operation is active.";
+
     public static bool IsEligible(Exception error)
     {
         IEnumerable<Exception> errors = error is AggregateException group ? group.Flatten().InnerExceptions : [error];
         foreach (var current in errors)
         {
+            if (IsWorkConflict(current.Message) || current.Message == "Background.Stop.InProgress") return false;
             // A rejected literal-preservation response is a known model-output error, not an installation failure.
             if (current.Message is "VideoPrep.TranslationLiteralLost" or "VideoPrep.AiContextLimit" or "VideoPrep.ShotsInvalidReply"
                 or "VideoPrep.ShotsDuplicateReply" or "VideoPrep.ShotsQualityFailed" or "LetItOut.ModelChanged") return false;

@@ -9,6 +9,8 @@ public partial class MainWindow
         if (ScenarioNavigationPage.GameSoundsView?.Checkpoint() == false)
             throw new System.IO.IOException("Game sound project checkpoint failed.");
         if (ScenarioNavigationPage.OneCView?.Checkpoint() == false) throw new System.IO.IOException("1C project checkpoint failed.");
+        if (ScenarioNavigationPage.VisualConstructorView is { } constructor)
+            await constructor.CheckpointForExitAsync();
         if (ScenarioNavigationPage.CharacterKnowledgeView?.Checkpoint() == false)
             throw new System.IO.IOException(L("CharacterKnowledge.SaveFailed"));
         CheckpointRagBooks();

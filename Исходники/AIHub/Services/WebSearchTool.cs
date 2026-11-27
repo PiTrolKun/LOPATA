@@ -25,7 +25,8 @@ public sealed partial class WebSearchTool
     public async Task<WebSearchResponse> SearchAsync(
         string query,
         StorageSettings storageSettings,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool archiveAndRerank = true)
     {
         var searchAttempt = await TrySearchAsync(
             () => SearchDuckDuckGoAsync(query, "https://lite.duckduckgo.com/lite/?q=", cancellationToken),
@@ -66,6 +67,7 @@ public sealed partial class WebSearchTool
         };
         result.ResultCount = result.Results.Count;
         ApplySearchDiagnostics(result, searchAttempt.Html);
+        if (!archiveAndRerank) return result;
         result.Rerank = await _rerankerService.RerankAsync(query, result.Results, storageSettings, cancellationToken);
 
         var path = WebToolPathService.CreateStampedPath(

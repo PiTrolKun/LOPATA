@@ -23,6 +23,7 @@ public sealed partial class WebPageReaderTool
     {
         Timeout = TimeSpan.FromSeconds(30)
     };
+    private static readonly HttpClient PreviewHttp = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 
     public async Task<WebPageReadResponse> ReadAsync(
         string url,
@@ -61,6 +62,31 @@ public sealed partial class WebPageReaderTool
         result.SavedPath = path;
         await File.WriteAllTextAsync(path, JsonSerializer.Serialize(result, JsonOptions), Encoding.UTF8, cancellationToken);
         return result;
+    }
+
+    internal async Task<WebPageReadResponse> ReadPreviewAsync(string url, CancellationToken token)
+    {
+        var address = NormalizeHttpUrl(url);
+        if (address.UserInfo.Length > 0) throw new InvalidOperationException("VisualConstructor.ResearchUrlInvalid");
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(30));
+        using var request = new HttpRequestMessage(HttpMethod.Get, address);
+        request.Headers.UserAgent.ParseAdd("LOPATA-TechnicalResearch/1.0");
+        request.Headers.Accept.ParseAdd("text/html,text/plain,application/xhtml+xml");
+        using var response = await PreviewHttp.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, deadline.Token);
+        response.EnsureSuccessStatusCode();
+        var type = response.Content.Headers.ContentType?.MediaType ?? "";
+        if (!type.StartsWith("text/", StringComparison.OrdinalIgnoreCase) && type != "application/xhtml+xml")
+            throw new InvalidOperationException("VisualConstructor.ResearchPageType");
+        await response.Content.LoadIntoBufferAsync(2 * 1024 * 1024, deadline.Token);
+        var body = await response.Content.ReadAsStringAsync(deadline.Token);
+        var isHtml = type is "text/html" or "application/xhtml+xml";
+        var text = isHtml ? ExtractText(body) : body;
+        return new WebPageReadResponse
+        {
+            Url = address.AbsoluteUri, Title = isHtml ? ExtractTitle(body) : "",
+            Text = text[..Math.Min(text.Length, MaxReturnedCharacters)]
+        };
     }
 
     private static Uri NormalizeHttpUrl(string url)

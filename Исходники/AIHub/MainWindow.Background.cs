@@ -57,6 +57,18 @@ public partial class MainWindow
         RegisterChatSpeech();
         _backgroundOperations.Register(Services.OneC.OneCWork.Kind,
             (state, token) => ScenarioNavigationPage.ShowOneC(this).ResumeAsync(state, token));
+        _backgroundOperations.Register(Services.VisualConstructor.ConstructorGemmaWork.Kind, (state, token) =>
+        {
+            PrepareScenarioNavigation(ScenarioNavigationCatalog.VisualConstructor);
+            ScenarioNavigationPage.ShowVisualConstructor();
+            return ScenarioNavigationPage.VisualConstructorView!.ResumeGemmaAsync(state, token);
+        });
+        _backgroundOperations.Register(Services.VisualConstructor.ConstructorResearchWork.Kind, (state, token) =>
+        {
+            PrepareScenarioNavigation(ScenarioNavigationCatalog.VisualConstructor);
+            ScenarioNavigationPage.ShowVisualConstructor();
+            return ScenarioNavigationPage.VisualConstructorView!.ResumeResearcherAsync(state, token);
+        });
         _backgroundOperations.Register(Services.GameSounds.GameSoundModelSession.Kind,
             (state, token) => ScenarioNavigationPage.RestoreGameSoundsAsync(this, () => _localizationService.CurrentLanguageCode, state, token));
         _backgroundOperations.Register(Services.SpeechAssets.SpeechAssetWork.Kind,
